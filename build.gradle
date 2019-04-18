@@ -12,6 +12,9 @@ apply plugin: 'java'
 // Apply the application plugin to add support for building an application
 apply plugin: 'application'
 
+// Apply the antlr plugin to add support for our parser and lexer
+apply plugin: 'antlr'
+
 // In this section you declare where to find the dependencies of your project
 repositories {
     // Use jcenter for resolving your dependencies.
@@ -25,6 +28,29 @@ dependencies {
 
     // Use JUnit test framework
     testCompile 'junit:junit:4.12'
+
+    // Use Antlr
+    antlr "org.antlr:antlr4:4.7.1"
+}
+
+generateGrammarSource {
+    maxHeapSize = "64m"
+    outputDirectory = new File("generated-src/antlr/".toString())
+}
+
+compileJava.dependsOn generateGrammarSource
+
+sourceSets {
+    generated {
+        java.srcDir 'generated-src/antlr/'
+    }
+}
+
+compileJava.source sourceSets.generated.java, sourceSets.main.java
+
+// Make sure that cleaning also deletes the Antlr file.
+clean {
+    delete "generated-src"
 }
 
 // Define the main class for the application
