@@ -27,7 +27,7 @@ public class Var implements Variable {
   }
 
   public TermKind queryTermKind() {
-    return TermKind.FUNCTIONALTERM;
+    return TermKind.VARTERM;
   }
 
   public int queryVariableIndex() {
