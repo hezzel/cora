@@ -1,0 +1,54 @@
+include "filename.txt"
+
+sort Bool { true false }
+sort Int { [1-9][0-9]* "(+|-)[1-9][0-9]*" "(+|-) [1-9][0-9]*" }
+
+sort BitVec 8 { #x[0..A][0..A] }
+
+Sort unit
+
+/* Boolean type: /* standard */ */
+
+operator {
+  not : Bool -> Bool
+  => : Bool -> Bool -> Bool (right-assoc)
+  and : Bool->Bool->Bool (left-assoc 10)
+  or : Bool -> Bool -> Bool (left-assoc 9)
+  xor : Bool -> Bool -> Bool (left-assoc 9)
+}
+
+theory core (Bool) {not, =>, /\ as and, \/ as or, xor}
+
+alias <=> : =
+
+alias {
+  /\ : and
+  ∧ : "and"
+  \/ : or
+}
+
+translate x >! y : (and (> x y) (>= x 0))
+
+  or also: "(and (> x y) (>= x 0))"
+
+display {
+  and : ∧
+}
+
+chain { x > y > z : x > y /\ y > z , (x > y >= z) : (x > y /\ y >= z) x >= y = z : x >= y /\ y = z x = y = z : x = y /\ y = z }
+  commas are allowed, but not compulsary to separate items within { }
+
+/*
+Simple proposal: do not allow -> to occur in any symbol, nor { or } or ( or ) or : or , unless escaped.
+We can handle that using aliasing, which can be handled using strings.
+*/
+
+eval :: Int -> Int
+eval(x) -> eval(x*5) -1 [x % 10 = 0]
+eval(x) -> eval(x-2] [x % 10 = 1]
+eval(3) -> eval(9) + 2
+eval(4) -> eval(50)
+
+fst :: Int -> unit -> Int
+fst(x, y) -> x
+

@@ -33,26 +33,6 @@ dependencies {
     antlr "org.antlr:antlr4:4.7.1"
 }
 
-generateGrammarSource {
-    maxHeapSize = "64m"
-    outputDirectory = new File("generated-src/antlr/".toString())
-}
-
-compileJava.dependsOn generateGrammarSource
-
-sourceSets {
-    generated {
-        java.srcDir 'generated-src/antlr/'
-    }
-}
-
-compileJava.source sourceSets.generated.java, sourceSets.main.java
-
-// Make sure that cleaning also deletes the Antlr file.
-clean {
-    delete "generated-src"
-}
-
 // Define the main class for the application
 mainClassName = 'cora.Main'
 
