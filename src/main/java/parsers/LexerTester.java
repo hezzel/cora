@@ -17,6 +17,7 @@ package cora.parsers;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.Token;
 
@@ -33,8 +34,12 @@ public class LexerTester {
   }
 
   private static void printLexerOutput(CoraLexer lexer) {
+    int n = 0;
     while (true) {
       Token tk = lexer.nextToken();
+      ArrayList<String> warnings = lexer.queryWarnings();
+      int w = warnings.size();
+      for ( ; n < w; n++) System.out.println(warnings.get(n));
       if (tk.getType() == Token.EOF) break;
       else printToken(tk);
     }
