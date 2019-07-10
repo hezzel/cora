@@ -61,8 +61,6 @@ public class CoraParserTest {
                         "')',ARROW,type(constant(IDENTIFIER(e)))))";
     CoraParser parser = createParser(str);
     ParseTree tree = parser.type();
-    System.out.println(toStringParseTree(tree));
-    System.out.println(expected);
     assertTrue(toStringParseTree(tree).equals(expected));
   }
 }
