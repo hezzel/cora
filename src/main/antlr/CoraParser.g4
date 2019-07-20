@@ -33,10 +33,16 @@ constant            : IDENTIFIER
                     | STRING
                     ;
 
+
 type                : constant
-                    | constant ARROW type
-                    | BRACKETOPEN type BRACKETCLOSE ARROW type
+                    | lowarrowtype
+                    | higherarrowtype
                     ;
+
+lowarrowtype        : constant ARROW type ;
+higherarrowtype     : BRACKETOPEN type BRACKETCLOSE ARROW type ;
+
+onlytype            : type EOF ;
 
 declaration         : constant DECLARE type ;
 

@@ -21,6 +21,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.ParserRuleContext;
+import cora.exceptions.ParserError;
 import cora.exceptions.ParserException;
 import cora.interfaces.types.Type;
 import cora.immutabledata.types.*;
@@ -31,79 +32,151 @@ import cora.immutabledata.types.*;
  * instance, quickly construct a term (especially as part of unit testing).
  */
 public class CoraInputReader {
-  /** Throws an exception to indicate that the given parse tree does not have the expected form. */
-  private static Type throwParserException(ParseTree tree, String encountered,
-                                           String expected) throws ParserException {
-    // we need the first token of the tree to get the line and position for the exception
-    if (tree instanceof TerminalNode) {
-      Token token = ((TerminalNode)tree).getSymbol();
-      throw new ParserException(token, encountered, expected);
-    }
-    if (tree instanceof ParserRuleContext) {
-      ParserRuleContext cxt = (ParserRuleContext)tree;
-      Token token = cxt.getStart();
-      if (token != null) throw new ParserException(token, encountered, expected);
-      String rulename = CoraParser.ruleNames[cxt.getRuleIndex()];
-      throw new ParserException(0, 0, "Empty rule occurrence " + rulename + " at unknown " +
-                                "position; encountered '" + encountered + "', expected '" +
-                                expected + "'.");
-    }
-    throw new ParserException(0, 0, "Unexpected kind of parsetree at unknown position.");
+  /** If the current tree is a terminal, returns its display name; otherwise returns null. */
+  private static String getTerminalNodeName(ParseTree tree) {
+    if (!(tree instanceof TerminalNode)) return null;
+    Token token = ((TerminalNode)tree).getSymbol();
+    return CoraParser.VOCABULARY.getSymbolicName(token.getType());
   }
 
+  /** If the current tree is a rule context, returns the corresponding rulename; otherwise null. */
+  private static String getRuleName(ParseTree tree) {
+    if (!(tree instanceof ParserRuleContext)) return null;
+    ParserRuleContext cxt = (ParserRuleContext)tree;
+    return CoraParser.ruleNames[cxt.getRuleIndex()];
+  }
+
+  /** Gets the first Token of the given parse tree, for use in ParseExceptions and ParseErrors. */
+  private static Token firstToken(ParseTree tree) {
+    if (tree instanceof TerminalNode) return ((TerminalNode)tree).getSymbol();
+    if (tree instanceof ParserRuleContext) return ((ParserRuleContext)tree).getStart();
+    return null;
+  }
+
+  /** Builds an exception to indicate that the given parse tree does not have the expected form. */
+  private static ParserException buildException(ParseTree tree, String encountered,
+                                                String expected) {
+    Token start = firstToken(tree);
+    String text = tree.getText();
+    if (start != null) return new ParserException(start, text, encountered, expected);
+    throw new ParserError(0, 0, text,
+                          "Unexpected kind of parse tree: no tokens and cannot find position.");
+  }
+
+  /** Builds an Error to indicate that there is a problem with the given parse tree. */
+  private static ParserError buildError(ParseTree tree, String message) {
+    Token start = firstToken(tree);
+    String text = tree.getText();
+    if (start != null) return new ParserError(start, text, message);
+    return new ParserError(0, 0, text,
+                           message + " [Also: parse tree does not include any tokens.]");
+  }
+
+  /** This returns a description (including "token" or "rule" of the given child of tree. */
+  private static String checkChild(ParseTree tree, int childindex) {
+    int childcount = tree.getChildCount();
+    if (childcount <= childindex) return "<empty>";
+    ParseTree child = tree.getChild(childindex);
+    if (child == null) return "<null>";
+    String ret = getTerminalNodeName(child);
+    if (ret != null) return "token " + ret;
+    ret = getRuleName(child);
+    if (ret != null) return "rule " + ret;
+    return "unexpected tree [" + child.getText() + "]";
+  }
 
   /**
-   * Turns the given node into a Sort if it is an identifier or string;
-   * if not, throws a ParserException.
+   * This function checks that the given child of tree is a rule with the given name.
+   * If that is not the case, then a ParserException is thrown.
    */
-  private static Type readSort(TerminalNode node) throws ParserException {
-    Token token = node.getSymbol();
-    String text = token.getText();
-    int type = token.getType();
-    if (type == CoraParser.STRING || type == CoraParser.IDENTIFIER) return new Sort(text);
-    else {
-      return throwParserException(node, CoraLexer.tokenNames[token.getType()],
-                                       "identifier or string (to represent a sort)");
+  private static void verifyChildIsRule(ParseTree tree, int childindex, String rulename,
+                                        String description) throws ParserException {
+    String actual = checkChild(tree, childindex);
+    if (!actual.equals("rule " + rulename)) throw buildException(tree, actual, description);
+  }
+
+  /**
+   * This function checks that the given child of tree is a token with the given name.
+   * If that is not the case, then a ParserException is thrown.
+   */
+  private static void verifyChildIsToken(ParseTree tree, int childindex, String tokenname,
+                                         String description) throws ParserException {
+    String actual = checkChild(tree, childindex);
+    if (!actual.equals("token " + tokenname)) throw buildException(tree, actual, description);
+  }
+
+  /**
+   * This function returns the relevant token text string if the given tree is
+   * constant(STRING) or constant(IDENTIFIER).
+   * If not, null is returned. However, if the tree has a form constant(<something else>) a
+   * ParsingError is thrown since this should not happen.
+   */
+  private static String readConstant(ParseTree tree) throws ParserError {
+    if (!(tree instanceof ParserRuleContext)) return null;
+    String rulename = CoraParser.ruleNames[((ParserRuleContext)tree).getRuleIndex()];
+    if (!rulename.equals("constant")) return null;
+    if (tree.getChildCount() != 1) {
+      throw buildError(tree, "constant tree has " + tree.getChildCount() + " children.");
     }
+    ParseTree child = tree.getChild(0);
+    String kind = getTerminalNodeName(child);
+    if (kind != null && (kind.equals("IDENTIFIER") || kind.equals("STRING"))) {
+      return ((TerminalNode)child).getSymbol().getText();
+    }
+    kind = getRuleName(child);
+    if (kind == null) kind = "an unknown tree";
+    throw buildError(tree, "Child of constant is " + kind + "!");
+  }
+
+  /* ========== TYPE PARSING ========== */
+
+  /** Turns the given tree, whose root rule must be "constant", into a Sort. */
+  private static Type readTypeConstant(ParseTree tree) {
+    String constant = readConstant(tree);
+    if (constant != null) return new Sort(constant);
+    throw buildError(tree, "readTypeConstant called with a parsetree that is not constant.");
+  }
+
+  /** Turns the given tree, whose root rule must be "lowarrowtype", into a Type. */
+  private static Type readLowArrowType(ParseTree tree) throws ParserException {
+    verifyChildIsRule(tree, 0, "constant", "a (string or identifier) constant");
+    verifyChildIsToken(tree, 1, "ARROW", "type arrow (->)");
+    verifyChildIsRule(tree, 2, "type", "a type");
+    Type input = readTypeConstant(tree.getChild(0));
+    Type output = readType(tree.getChild(2));
+    return new ArrowType(input, output);
+  }
+
+  /** Turns the given tree, whose root rule must be "higherarrowtype", into a Type. */
+  private static Type readHigherArrowType(ParseTree tree) throws ParserException {
+    verifyChildIsToken(tree, 0, "BRACKETOPEN", "opening bracket '('");
+    verifyChildIsRule(tree, 1, "type", "input type");
+    verifyChildIsToken(tree, 2, "BRACKETCLOSE", "closing bracket '('");
+    verifyChildIsToken(tree, 3, "ARROW", "type arrow (->)");
+    verifyChildIsRule(tree, 4, "type", "output type");
+    Type input = readType(tree.getChild(1));
+    Type output = readType(tree.getChild(4));
+    return new ArrowType(input, output);
   }
   
   /** Reads a Type from an Antlr ParseTree. */
   private static Type readType(ParseTree tree) throws ParserException {
-    if (tree instanceof TerminalNode) return readSort((TerminalNode)tree);
-    if (tree instanceof ParserRuleContext) {
-      String rulename = CoraParser.ruleNames[((ParserRuleContext)tree).getRuleIndex()];
-      if (rulename.equals("constant")) return readConstantType(tree);
-      if (rulename.equals("type")) return readArrowType(tree);
-      return throwParserException(tree, rulename, "arrow type or sort constant");
-    }
-    return throwParserException(tree, "unknown tree", "type");
-  }
-
-  private static Type readConstantType(ParseTree tree) throws ParserException {
-    int childcount = tree.getChildCount();
-    if (childcount != 1) throwParserException(tree, "constant with " + childcount + " children",
-                                                    "one child");
-    return readType(tree.getChild(0));
-  }
-
-  private static Type readArrowType(ParseTree tree) throws ParserException {
-    int childcount = tree.getChildCount();
-    if (childcount == 1) return readType(tree.getChild(0));
-    if (childcount == 3) {
-      return new ArrowType(readType(tree.getChild(0)), readType(tree.getChild(2)));
-    }
-    if (childcount == 5) {
-      return new ArrowType(readType(tree.getChild(1)), readType(tree.getChild(4)));
-    }
-    return throwParserException(tree, "arrow type tree with " + childcount + " children",
-                                      "1, 3 or 5 children");
+    String kind = checkChild(tree, 0);
+    if (kind == null) throw buildError(tree, "Type has " + tree.getChildCount() + " children.");
+    if (kind.equals("rule constant")) return readTypeConstant(tree.getChild(0));
+    if (kind.equals("rule lowarrowtype")) return readLowArrowType(tree.getChild(0));
+    if (kind.equals("rule higherarrowtype")) return readHigherArrowType(tree.getChild(0));
+    throw buildError(tree, "Child of type has an unexpected shape (" + kind + ").");
   }
 
   /** Returns the Type represented by the given string. */
   public static Type readTypeFromString(String str) throws ParserException {
     CoraLexer lexer = new CoraLexer(CharStreams.fromString(str));
     CoraParser parser = new CoraParser(new CommonTokenStream(lexer));
-    return readType(parser.type());
+    ParseTree tree = parser.onlytype();
+    verifyChildIsRule(tree, 0, "type", "a type");
+    verifyChildIsToken(tree, 1, "EOF", "end of input");
+    return readType(tree.getChild(0));
   }
 }
 

@@ -26,12 +26,13 @@ import java.util.ArrayList;
 import cora.parsers.CoraLexer;
 import cora.parsers.CoraParser;
 import cora.parsers.CoraParserBaseListener;
+import cora.parsers.ErrorCollector;
 
 public class CoraParserTest {
   private String toStringParseTree(ParseTree t) {
     if (t instanceof TerminalNode) {
       Token token = ((TerminalNode)t).getSymbol();
-      String tokenname = CoraLexer.tokenNames[token.getType()];
+      String tokenname = CoraParser.VOCABULARY.getSymbolicName(token.getType());
       if (tokenname.equals("IDENTIFIER") || tokenname.equals("STRING"))
         return tokenname + "(" + t.getText() + ")";
       else return tokenname;
@@ -47,21 +48,29 @@ public class CoraParserTest {
     else return "ERROR";
   }
 
-  private CoraParser createParser(String str) {
+  private CoraParser createParser(String str, ErrorCollector collector) {
     CoraLexer lexer = new CoraLexer(CharStreams.fromString(str));
-    return new CoraParser(new CommonTokenStream(lexer));
+    CoraParser parser = new CoraParser(new CommonTokenStream(lexer));
+    if (collector != null) {
+      parser.removeErrorListeners();
+      parser.addErrorListener(collector);
+    }
+    return parser;
   }
 
   @Test
   public void parseCorrectType() {
     String str = "a -> (b -> cd) -> e";
-    String expected = "type(constant(IDENTIFIER(a)),ARROW," +
-                        "type('('," +
-                          "type(constant(IDENTIFIER(b)),ARROW,type(constant(IDENTIFIER(cd))))," +
-                        "')',ARROW,type(constant(IDENTIFIER(e)))))";
-    CoraParser parser = createParser(str);
+    String expected = "type(lowarrowtype(constant(IDENTIFIER(a)),ARROW," +
+                        "type(higherarrowtype(BRACKETOPEN," +
+                          "type(lowarrowtype(constant(IDENTIFIER(b)),ARROW," +
+                          "type(constant(IDENTIFIER(cd)))))," +
+                        "BRACKETCLOSE,ARROW,type(constant(IDENTIFIER(e)))))))";
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createParser(str, collector);
     ParseTree tree = parser.type();
     assertTrue(toStringParseTree(tree).equals(expected));
+    assertTrue(collector.queryErrorCount() == 0);
   }
 }
 

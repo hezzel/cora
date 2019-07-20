@@ -13,29 +13,32 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.exceptions;
+package cora.parsers;
 
-import org.antlr.v4.runtime.Token;
+import java.util.ArrayList;
+import org.antlr.v4.runtime.BaseErrorListener;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 
-/**
- * A ParserException may arise during parsing, if the input has an unexpected shape.
- */
-public class ParserException extends Exception {
-  private String _text;
+public class ErrorCollector extends BaseErrorListener {
+  private ArrayList<String> _messages;
 
-  public ParserException(int line, int pos, String text, String message) {
-    super(line + ":" + pos + ": Parser exception on input [" + text + "]: " + message);
-    _text = text;
+  public ErrorCollector() {
+    _messages = new ArrayList<String>();
   }
 
-  public ParserException(Token token, String text, String encountered, String expected) {
-    super(token.getLine() + ":" + token.getCharPositionInLine() + ": Parser exception on input [" +
-      text + "]: Unexpected " + encountered + "; expected " + expected + ".");
-    _text = text;
+  @Override
+  public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line,
+                          int charPositionInLine, String msg, RecognitionException e) {
+    _messages.add("" + line + ":" + charPositionInLine + ": " + msg);
   }
 
-  public String getProblematicInput() {
-    return _text;
+  public int queryErrorCount() {
+    return _messages.size();
+  }
+
+  public String queryError(int index) {
+    return _messages.get(index);
   }
 }
 
