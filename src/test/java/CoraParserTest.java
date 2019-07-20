@@ -59,18 +59,120 @@ public class CoraParserTest {
   }
 
   @Test
-  public void parseCorrectType() {
-    String str = "a -> (b -> cd) -> e";
-    String expected = "type(lowarrowtype(constant(IDENTIFIER(a)),ARROW," +
-                        "type(higherarrowtype(BRACKETOPEN," +
-                          "type(lowarrowtype(constant(IDENTIFIER(b)),ARROW," +
-                          "type(constant(IDENTIFIER(cd)))))," +
-                        "BRACKETCLOSE,ARROW,type(constant(IDENTIFIER(e)))))))";
+  public void testBaseType() {
+    String str = "aKKaO";
+    String expected = "onlytype(type(constant(IDENTIFIER(aKKaO))),EOF)";
     ErrorCollector collector = new ErrorCollector();
     CoraParser parser = createParser(str, collector);
-    ParseTree tree = parser.type();
-    assertTrue(toStringParseTree(tree).equals(expected));
+    ParseTree tree = parser.onlytype();
     assertTrue(collector.queryErrorCount() == 0);
+    assertTrue(toStringParseTree(tree).equals(expected));
+  }
+
+  @Test
+  public void testArrowType() {
+    String str = "xx -> yy";
+    String expected = "onlytype(type(lowarrowtype(constant(IDENTIFIER(xx))," +
+                        "ARROW,type(constant(IDENTIFIER(yy))))),EOF)";
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createParser(str, collector);
+    ParseTree tree = parser.onlytype();
+    assertTrue(collector.queryErrorCount() == 0);
+    assertTrue(toStringParseTree(tree).equals(expected));
+  }
+
+  @Test
+  public void testRightAssociativeType() {
+    String str = "xx -> yy -> zz";
+    String expected = "onlytype(type(lowarrowtype(constant(IDENTIFIER(xx))," +
+                        "ARROW,type(lowarrowtype(constant(IDENTIFIER(yy))," +
+                        "ARROW,type(constant(IDENTIFIER(zz))))))),EOF)";
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createParser(str, collector);
+    ParseTree tree = parser.onlytype();
+    assertTrue(collector.queryErrorCount() == 0);
+    assertTrue(toStringParseTree(tree).equals(expected));
+  }
+
+  @Test
+  public void testHigherArrowType() {
+    String str = "(xx -> yy) -> zz";
+    String expected = "onlytype(type(higherarrowtype(BRACKETOPEN,type(" +
+                        "lowarrowtype(constant(IDENTIFIER(xx)),ARROW,type(" +
+                        "constant(IDENTIFIER(yy))))),BRACKETCLOSE,ARROW,type(" +
+                        "constant(IDENTIFIER(zz))))),EOF)";
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createParser(str, collector);
+    ParseTree tree = parser.onlytype();
+    assertTrue(collector.queryErrorCount() == 0);
+    assertTrue(toStringParseTree(tree).equals(expected));
+  }
+
+  @Test
+  public void testUnnecessaryHigherType() {
+    String str = "(a) -> b";
+    String expected = "onlytype(type(higherarrowtype(BRACKETOPEN,type(" +
+                        "constant(IDENTIFIER(a))),BRACKETCLOSE,ARROW,type(" +
+                        "constant(IDENTIFIER(b))))),EOF)";
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createParser(str, collector);
+    ParseTree tree = parser.onlytype();
+    assertTrue(collector.queryErrorCount() == 0);
+    assertTrue(toStringParseTree(tree).equals(expected));
+  }
+
+  @Test
+  public void testCombinedType() {
+    String str = "a -> (b -> cd) -> e";
+    String expected = "onlytype(" +
+                        "type(lowarrowtype(constant(IDENTIFIER(a)),ARROW," +
+                          "type(higherarrowtype(BRACKETOPEN," +
+                            "type(lowarrowtype(constant(IDENTIFIER(b)),ARROW," +
+                            "type(constant(IDENTIFIER(cd)))))," +
+                          "BRACKETCLOSE,ARROW,type(constant(IDENTIFIER(e)))))))," +
+                        "EOF)";
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createParser(str, collector);
+    ParseTree tree = parser.onlytype();
+    assertTrue(collector.queryErrorCount() == 0);
+    assertTrue(toStringParseTree(tree).equals(expected));
+  }
+
+  @Test
+  public void testTypeMissingArrow() {
+    String str = "a b";
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createParser(str, collector);
+    ParseTree tree = parser.onlytype();
+    assertTrue(collector.queryErrorCount() == 1);
+  }
+
+  @Test
+  public void testTypeMissingInput() {
+    String str = "-> b";
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createParser(str, collector);
+    ParseTree tree = parser.onlytype();
+    assertTrue(collector.queryErrorCount() == 1);
+    System.out.println(collector.queryError(0));
+  }
+
+  @Test
+  public void testTypeMissingOutput() {
+    String str = "b ->";
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createParser(str, collector);
+    ParseTree tree = parser.onlytype();
+    assertTrue(collector.queryErrorCount() == 1);
+  }
+
+  @Test
+  public void testMultipleTypeErrors() {
+    String str = "x -> ((a -> b c) ->) ->";
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createParser(str, collector);
+    ParseTree tree = parser.onlytype();
+    assertTrue(collector.queryErrorCount() == 3);
   }
 }
 
