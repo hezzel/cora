@@ -53,16 +53,6 @@ public class CoraInputReader {
     return null;
   }
 
-  /** Builds an exception to indicate that the given parse tree does not have the expected form. */
-  private static ParserException buildException(ParseTree tree, String encountered,
-                                                String expected) {
-    Token start = firstToken(tree);
-    String text = tree.getText();
-    if (start != null) return new ParserException(start, text, encountered, expected);
-    throw new ParserError(0, 0, text,
-                          "Unexpected kind of parse tree: no tokens and cannot find position.");
-  }
-
   /** Builds an Error to indicate that there is a problem with the given parse tree. */
   private static ParserError buildError(ParseTree tree, String message) {
     Token start = firstToken(tree);
@@ -87,31 +77,35 @@ public class CoraInputReader {
 
   /**
    * This function checks that the given child of tree is a rule with the given name.
-   * If that is not the case, then a ParserException is thrown.
+   * If that is not the case, then a ParserError is thrown.
    */
   private static void verifyChildIsRule(ParseTree tree, int childindex, String rulename,
-                                        String description) throws ParserException {
+                                        String description) {
     String actual = checkChild(tree, childindex);
-    if (!actual.equals("rule " + rulename)) throw buildException(tree, actual, description);
+    if (!actual.equals("rule " + rulename)) {
+      throw buildError(tree, "encountered " + actual + "; expected " + description + ".");
+    }
   }
 
   /**
    * This function checks that the given child of tree is a token with the given name.
-   * If that is not the case, then a ParserException is thrown.
+   * If that is not the case, then a ParserError is thrown.
    */
   private static void verifyChildIsToken(ParseTree tree, int childindex, String tokenname,
-                                         String description) throws ParserException {
+                                         String description) {
     String actual = checkChild(tree, childindex);
-    if (!actual.equals("token " + tokenname)) throw buildException(tree, actual, description);
+    if (!actual.equals("token " + tokenname)) {
+      throw buildError(tree, "encountered " + actual + "; expected " + description + ".");
+    }
   }
 
   /**
    * This function returns the relevant token text string if the given tree is
    * constant(STRING) or constant(IDENTIFIER).
    * If not, null is returned. However, if the tree has a form constant(<something else>) a
-   * ParsingError is thrown since this should not happen.
+   * ParserError is thrown since this should not happen.
    */
-  private static String readConstant(ParseTree tree) throws ParserError {
+  private static String readConstant(ParseTree tree) {
     if (!(tree instanceof ParserRuleContext)) return null;
     String rulename = CoraParser.ruleNames[((ParserRuleContext)tree).getRuleIndex()];
     if (!rulename.equals("constant")) return null;
@@ -138,7 +132,7 @@ public class CoraInputReader {
   }
 
   /** Turns the given tree, whose root rule must be "lowarrowtype", into a Type. */
-  private static Type readLowArrowType(ParseTree tree) throws ParserException {
+  private static Type readLowArrowType(ParseTree tree) {
     verifyChildIsRule(tree, 0, "constant", "a (string or identifier) constant");
     verifyChildIsToken(tree, 1, "ARROW", "type arrow (->)");
     verifyChildIsRule(tree, 2, "type", "a type");
@@ -148,7 +142,7 @@ public class CoraInputReader {
   }
 
   /** Turns the given tree, whose root rule must be "higherarrowtype", into a Type. */
-  private static Type readHigherArrowType(ParseTree tree) throws ParserException {
+  private static Type readHigherArrowType(ParseTree tree) {
     verifyChildIsToken(tree, 0, "BRACKETOPEN", "opening bracket '('");
     verifyChildIsRule(tree, 1, "type", "input type");
     verifyChildIsToken(tree, 2, "BRACKETCLOSE", "closing bracket '('");
@@ -160,7 +154,7 @@ public class CoraInputReader {
   }
   
   /** Reads a Type from an Antlr ParseTree. */
-  private static Type readType(ParseTree tree) throws ParserException {
+  private static Type readType(ParseTree tree) {
     String kind = checkChild(tree, 0);
     if (kind == null) throw buildError(tree, "Type has " + tree.getChildCount() + " children.");
     if (kind.equals("rule constant")) return readTypeConstant(tree.getChild(0));
@@ -169,11 +163,23 @@ public class CoraInputReader {
     throw buildError(tree, "Child of type has an unexpected shape (" + kind + ").");
   }
 
+  /** Sets up a (lexer and) parser with the given error collector as listeners. */
+  private static CoraParser createCoraParser(String str, ErrorCollector collector) {
+    CoraLexer lexer = new CoraLexer(CharStreams.fromString(str));
+    lexer.removeErrorListeners();
+    lexer.addErrorListener(collector);
+    CoraParser parser = new CoraParser(new CommonTokenStream(lexer));
+    parser.removeErrorListeners();
+    parser.addErrorListener(collector);
+    return parser;
+  }
+
   /** Returns the Type represented by the given string. */
   public static Type readTypeFromString(String str) throws ParserException {
-    CoraLexer lexer = new CoraLexer(CharStreams.fromString(str));
-    CoraParser parser = new CoraParser(new CommonTokenStream(lexer));
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createCoraParser(str, collector);
     ParseTree tree = parser.onlytype();
+    collector.throwCollectedExceptions();
     verifyChildIsRule(tree, 0, "type", "a type");
     verifyChildIsToken(tree, 1, "EOF", "end of input");
     return readType(tree.getChild(0));

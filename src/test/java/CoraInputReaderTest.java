@@ -16,6 +16,7 @@
 import org.junit.Test;
 import static org.junit.Assert.*;
 import cora.exceptions.ParserException;
+import cora.exceptions.AntlrParserException;
 import cora.interfaces.types.Type;
 import cora.parsers.CoraInputReader;
 
@@ -35,6 +36,19 @@ public class CoraInputReaderTest {
     assertTrue(bcd.queryArrowOutputType().toString().equals("cd"));
     Type e = bcde.queryArrowOutputType();
     assertTrue(e.queryTypeKind() == Type.TypeKind.BASETYPE);
+  }
+
+  @Test
+  public void testReadBrokenType() throws ParserException {
+    String str = "a -> b -> -> c";
+    try {
+      CoraInputReader.readTypeFromString(str);
+    }
+    catch (AntlrParserException e) {
+      assertTrue(e.getTotalErrorCount() == 1);
+      return;
+    }
+    assertTrue(false);
   }
 }
 

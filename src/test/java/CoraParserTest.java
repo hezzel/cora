@@ -154,7 +154,6 @@ public class CoraParserTest {
     CoraParser parser = createParser(str, collector);
     ParseTree tree = parser.onlytype();
     assertTrue(collector.queryErrorCount() == 1);
-    System.out.println(collector.queryError(0));
   }
 
   @Test
