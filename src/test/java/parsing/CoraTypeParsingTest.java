@@ -28,36 +28,9 @@ import cora.parsers.CoraParser;
 import cora.parsers.CoraParserBaseListener;
 import cora.parsers.ErrorCollector;
 
-public class CoraParserTest {
-  private String toStringParseTree(ParseTree t) {
-    if (t instanceof TerminalNode) {
-      Token token = ((TerminalNode)t).getSymbol();
-      String tokenname = CoraParser.VOCABULARY.getSymbolicName(token.getType());
-      if (tokenname.equals("IDENTIFIER") || tokenname.equals("STRING"))
-        return tokenname + "(" + t.getText() + ")";
-      else return tokenname;
-    }
-    else if (t instanceof ParserRuleContext) {
-      String ret = CoraParser.ruleNames[((ParserRuleContext)t).getRuleIndex()] + "(";
-      for (int i = 0; i < t.getChildCount(); i++) {
-        if (i != 0) ret += ",";
-        ret += toStringParseTree(t.getChild(i));
-      }
-      return ret + ")";
-    }
-    else return "ERROR";
-  }
+/** This class tests the antlr code for parsing types. */
 
-  private CoraParser createParser(String str, ErrorCollector collector) {
-    CoraLexer lexer = new CoraLexer(CharStreams.fromString(str));
-    CoraParser parser = new CoraParser(new CommonTokenStream(lexer));
-    if (collector != null) {
-      parser.removeErrorListeners();
-      parser.addErrorListener(collector);
-    }
-    return parser;
-  }
-
+public class CoraTypeParsingTest extends CoraParsingTestInherit {
   @Test
   public void testBaseType() {
     String str = "aKKaO";

@@ -20,7 +20,7 @@ import cora.exceptions.AntlrParserException;
 import cora.interfaces.types.Type;
 import cora.parsers.CoraInputReader;
 
-public class CoraInputReaderTest {
+public class TypeReadingTest {
   @Test
   public void testReadTypeValidType() throws ParserException {
     String str = "a -> (b -> cd) -> e";

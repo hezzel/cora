@@ -27,24 +27,36 @@ options {
 @parser::members {
 }
 
-/* Parser */
-
 constant            : IDENTIFIER
                     | STRING
                     ;
 
+/*** Parsing types ***/
 
 type                : constant
                     | lowarrowtype
                     | higherarrowtype
                     ;
-
 lowarrowtype        : constant ARROW type ;
 higherarrowtype     : BRACKETOPEN type BRACKETCLOSE ARROW type ;
 
 onlytype            : type EOF ;
 
 declaration         : constant DECLARE type ;
+
+/*** Parsing terms ***/
+
+term                : constant
+                    | emptyfunction
+                    | truefunction
+                    ;
+emptyfunction       : constant BRACKETOPEN BRACKETCLOSE ;
+truefunction        : constant BRACKETOPEN term commatermlist ;
+commatermlist       : BRACKETCLOSE
+                    | COMMA term commatermlist
+                    ;
+
+onlyterm            : term EOF ;
 
 /*
 sortdec             : SORT constant BRACEOPEN constant+ BRACECLOSE
