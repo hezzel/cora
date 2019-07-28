@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2018 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,10 +13,15 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.interfaces;
+package cora.exceptions;
 
-public interface FunctionSymbol {
-  /** Returns a string representation of the symbol. */
-  String toString();
+/**
+ * An ArityError is thrown when the arity of a type constructor or function symbol is violated, for
+ * example by giving it too many or too few arguments.
+ */
+public class ArityError extends Error {
+  public ArityError(String classname, String functionname, String message) {
+    super("Arity error when calling " + classname + "::" + functionname + ": " + message + ".");
+  }
 }
 

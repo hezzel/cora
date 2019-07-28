@@ -13,17 +13,22 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.immutabledata;
+package cora.exceptions;
 
-public class UserDefinedSymbol {
-  private String _name;
-
-  public UserDefinedSymbol(String name) {
-    _name = name;
+/**
+ * An IndexingError is thrown when argument i is requested of some type/term/whatnot, and i is not
+ * in the range 1...numberOfArguments.
+ */
+public class IndexingError extends Error {
+  public IndexingError(String classname, String functionname, int given, int min, int max) {
+    super("Called " + classname + "::" + functionname + "(" + given + "), when available " +
+      "indexes range from " + min + " to " + max + ".");
   }
 
-  public String toString() {
-    return _name;
+  /** Use this constructor when attempting to index an empty list. */
+  public IndexingError(String classname, String functionname, int given) {
+    super("Called " + classname + "::" + functionname + "(" + given + "), when there are no " +
+      "indexes available.");
   }
 }
 

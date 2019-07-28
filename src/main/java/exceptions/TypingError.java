@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2018 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,33 +13,18 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.immutabledata;
+package cora.exceptions;
 
-import java.util.ArrayList;
-import cora.interfaces.FunctionSymbol;
-import cora.interfaces.Term;
-
-public class FunctionalTerm implements Term {
-  private FunctionSymbol _root;
-  private ArrayList<Term> _args;
-
-  public FunctionalTerm(FunctionSymbol root, ArrayList<Term> args) {
-    _root = root;
-    _args = new ArrayList<Term>(args);
-  }
-
-  public TermKind queryTermKind() {
-    return TermKind.FUNCTIONALTERM;
-  }
-
-  public String toString() {
-    String ret = _root.toString() + "(";
-    for (int i = 0; i < _args.size(); i++) {
-      if (i != 0) ret += ", ";
-      ret += _args.get(i).toString();
-    }
-    ret += ")";
-    return ret;
+/**
+ * A TypingError is thrown when the typing of some term fails, for example because something tries
+ * to assign a non-integer type to an integer value, or when a function of type A -> B -> C is
+ * applied on two arguments of type A.
+ */
+public class TypingError extends Error {
+  public TypingError(String classname, String functionname, String what, String given,
+                     String expected) {
+    super("Type error when calling " + classname + "::" + functionname + ": " + what + " should " +
+      "have type " + expected + " but has type " + given + ".");
   }
 }
 
