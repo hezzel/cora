@@ -47,11 +47,9 @@ declaration         : constant DECLARE type ;
 /*** Parsing terms ***/
 
 term                : constant
-                    | emptyfunction
-                    | truefunction
+                    | constant BRACKETOPEN BRACKETCLOSE
+                    | constant BRACKETOPEN term commatermlist
                     ;
-emptyfunction       : constant BRACKETOPEN BRACKETCLOSE ;
-truefunction        : constant BRACKETOPEN term commatermlist ;
 commatermlist       : BRACKETCLOSE
                     | COMMA term commatermlist
                     ;

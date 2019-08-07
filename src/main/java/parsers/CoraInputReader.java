@@ -15,16 +15,24 @@
 
 package cora.parsers;
 
+import java.util.ArrayList;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.ParserRuleContext;
+
 import cora.exceptions.ParserError;
 import cora.exceptions.ParserException;
+import cora.exceptions.DeclarationException;
+import cora.exceptions.TypingException;
 import cora.interfaces.types.Type;
+import cora.interfaces.terms.Term;
+import cora.interfaces.terms.FunctionSymbol;
+import cora.interfaces.terms.Variable;
 import cora.immutabledata.types.*;
+import cora.immutabledata.terms.*;
 
 /**
  * This class reads text from string or file written in the Cora input format.
@@ -145,7 +153,7 @@ public class CoraInputReader {
   private static Type readHigherArrowType(ParseTree tree) {
     verifyChildIsToken(tree, 0, "BRACKETOPEN", "opening bracket '('");
     verifyChildIsRule(tree, 1, "type", "input type");
-    verifyChildIsToken(tree, 2, "BRACKETCLOSE", "closing bracket '('");
+    verifyChildIsToken(tree, 2, "BRACKETCLOSE", "closing bracket ')'");
     verifyChildIsToken(tree, 3, "ARROW", "type arrow (->)");
     verifyChildIsRule(tree, 4, "type", "output type");
     Type input = readType(tree.getChild(1));
@@ -183,6 +191,135 @@ public class CoraInputReader {
     verifyChildIsRule(tree, 0, "type", "a type");
     verifyChildIsToken(tree, 1, "EOF", "end of input");
     return readType(tree.getChild(0));
+  }
+
+  /* ========== TERM PARSING ========== */
+
+  /**
+   * This function determines whether the given string is a valid variable.
+   * Variables may consist only of letters, digits and the underscore, and must start with a letter
+   * or underscore.
+   */
+  private static boolean isValidVariable(String txt) {
+    if (txt == null || txt.equals("")) return false;
+    for (int i = 0; i < txt.length(); i++) {
+      Character a = txt.charAt(i);
+      if (!Character.isLetterOrDigit(a) && !a.equals('_')) return false;
+    }
+    return !Character.isDigit(txt.charAt(0));
+  }
+
+  /**
+   * Given that tree wraps the given constant, and given that the given constant is not declard as
+   * a function symbol, this function tries to parse it into a Variable, updating expectedType if
+   * appropriate.
+   */
+  private static Variable readVariable(ParseTree tree, String constant, ParseData pd,
+                                       Type expectedType) throws ParserException {
+    if (!isValidVariable(constant)) {
+      throw new DeclarationException(firstToken(tree), constant, "not a valid variable");
+    }
+    // Variables do not need to be declared, but they must be used consistently; the same name
+    // should always return tothe same variable. To this end, we save them in the parser data once
+    // we're done
+    Variable x = pd.lookupVariable(constant);
+    if (x == null) {
+      if (expectedType == null) {
+        throw new DeclarationException(firstToken(tree), constant, "If this is a variable, " +
+            "its type cannot be derived from context.");
+      }
+      x = new Var(constant, expectedType);
+      pd.addVariable(x);
+    }
+    else if (expectedType != null && !x.queryType().equals(expectedType)) {
+      throw new TypingException(firstToken(tree), constant, x.queryType().toString(),
+                                expectedType.toString());
+    }
+    return x;
+  }
+
+  /**
+   * Given that tree is a parse tree for a term of the form <function symbol> <bracket> <term>
+   * <commatermlist>, this function reads the entire argument list into an arraylist. No term
+   * parsing is yet done.
+   */
+  private static ArrayList<ParseTree> readCommaSeparatedList(ParseTree tree) {
+    ArrayList<ParseTree> ret = new ArrayList<ParseTree>();
+    verifyChildIsToken(tree, 1, "BRACKETOPEN", "an opening bracket '('");
+    verifyChildIsRule(tree, 2, "term", "a term");
+    ret.add(tree.getChild(2));
+    verifyChildIsRule(tree, 3, "commatermlist", "a comma-separated list of terms");
+    ParseTree list = tree.getChild(3);
+    while (true) {
+      String kind = checkChild(list, 0);
+      if (kind.equals("token BRACKETCLOSE")) return ret;
+      verifyChildIsToken(list, 0, "COMMA", "comma ','");
+      verifyChildIsRule(list, 1, "term", "a term");
+      verifyChildIsRule(list, 2, "commatermlist", "a comma-separated list of terms");
+      ret.add(list.getChild(1));
+      list = list.getChild(2);
+    }
+  }
+
+  /**
+   * Reads the given parsetree (which is assumed to map to a "term" rule occurrence) into a term.
+   * @see readTermFromString.
+   */
+  private static Term readTerm(ParseTree tree, ParseData pd,
+                               Type expectedType) throws ParserException {
+    verifyChildIsRule(tree, 0, "constant", "a declared function symbol or variable");
+    String constant = readConstant(tree.getChild(0));
+    FunctionSymbol f = pd.lookupFunctionSymbol(constant);
+    if (f == null) {
+      if (tree.getChildCount() == 1) return readVariable(tree, constant, pd, expectedType);
+      throw new DeclarationException(firstToken(tree), constant);
+    }
+
+    // find the (possibly empty) arguments list for this functional term
+    ArrayList<ParseTree> arguments;
+    if (tree.getChildCount() == 1 || checkChild(tree,2).equals("token BRACKETCLOSE")) {
+      arguments = new ArrayList<ParseTree>();
+    }
+    else arguments = readCommaSeparatedList(tree);
+
+    // parse the arguments and typecheck them against the input types of f
+    ArrayList<Term> args = new ArrayList<Term>();
+    Type type = f.queryType();
+    for (int i = 0; i < arguments.size(); i++) {
+      if (type.queryTypeKind() != Type.TypeKind.ARROWTYPE) {
+        throw new TypingException(firstToken(tree), constant, type.toString(),
+                                  "type of arity at least " + arguments.size());
+      }
+      args.add(readTerm(arguments.get(i), pd, type.queryArrowInputType()));
+      type = type.queryArrowOutputType();
+    }
+    
+    // also typecheck the overall type of the term against the expected type
+    if (expectedType != null && !type.equals(expectedType)) {
+      throw new TypingException(firstToken(tree), tree.getText(), type.toString(),
+                                expectedType.toString());
+    }
+    return new FunctionalTerm(f, args);
+  }
+
+  /**
+   * Reads the given string into a term, using ParseData for the declarations of function symbols
+   * and variables.
+   * Function symbols must be predeclared; variables do not need to be, as long as their type can
+   * be derived from the input. These variable type mappings are added into the parse data.
+   * A parser exception is thrown if the given string cannot be (unambiguously) translated into a
+   * term of the expected type. If expected = null, this final typecheck is omitted, but parsing
+   * (and internal typechecking) may of course still fail for other reasons.
+   */
+  public static Term readTermFromString(String str, ParseData pd,
+                                        Type expectedType) throws ParserException {
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createCoraParser(str, collector);
+    ParseTree tree = parser.onlyterm();
+    collector.throwCollectedExceptions();
+    verifyChildIsRule(tree, 0, "term", "a term");
+    verifyChildIsToken(tree, 1, "EOF", "end of input");
+    return readTerm(tree.getChild(0), pd, expectedType);
   }
 }
 

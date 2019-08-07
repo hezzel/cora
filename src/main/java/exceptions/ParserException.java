@@ -15,6 +15,8 @@
 
 package cora.exceptions;
 
+import org.antlr.v4.runtime.Token;
+
 /**
  * A ParserException is simply an Exception that is used as the base class for some Exceptions that
  * only arise during parsing.
@@ -22,8 +24,10 @@ package cora.exceptions;
  * exceptions can be easily tested for.
  */
 public class ParserException extends Exception {
-  public ParserException(String message) {
-    super(message);
+  /** token is allowed to be null; message is not */
+  public ParserException(Token token, String message) {
+    super(token == null ? message :
+          token.getLine() + ":" + token.getCharPositionInLine() + ": " + message);
   }
 }
 

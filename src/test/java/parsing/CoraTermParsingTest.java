@@ -45,8 +45,7 @@ public class CoraTermParsingTest extends CoraParsingTestInherit {
   @Test
   public void testEmptyFunctionApplication() {
     String str = "xx()";
-    String expected = "onlyterm(term(emptyfunction(constant(IDENTIFIER(xx))," +
-                        "BRACKETOPEN,BRACKETCLOSE)),EOF)";
+    String expected = "onlyterm(term(constant(IDENTIFIER(xx)),BRACKETOPEN,BRACKETCLOSE),EOF)";
     ErrorCollector collector = new ErrorCollector();
     CoraParser parser = createParser(str, collector);
     ParseTree tree = parser.onlyterm();
@@ -57,9 +56,8 @@ public class CoraTermParsingTest extends CoraParsingTestInherit {
   @Test
   public void testUnitaryFunctionApplication() {
     String str = "xx(a)";
-    String expected = "onlyterm(term(truefunction(constant(IDENTIFIER(xx))," +
-                        "BRACKETOPEN,term(constant(IDENTIFIER(a)))," +
-                        "commatermlist(BRACKETCLOSE))),EOF)";
+    String expected = "onlyterm(term(constant(IDENTIFIER(xx)),BRACKETOPEN,term(constant(" +
+                        "IDENTIFIER(a))),commatermlist(BRACKETCLOSE)),EOF)";
     ErrorCollector collector = new ErrorCollector();
     CoraParser parser = createParser(str, collector);
     ParseTree tree = parser.onlyterm();
@@ -70,11 +68,10 @@ public class CoraTermParsingTest extends CoraParsingTestInherit {
   @Test
   public void testTripleFunctionApplication() {
     String str = "xx(a,b, cc)";
-    String expected = "onlyterm(term(truefunction(constant(IDENTIFIER(xx))," +
-                        "BRACKETOPEN,term(constant(IDENTIFIER(a)))," +
-                        "commatermlist(COMMA,term(constant(IDENTIFIER(b)))," +
+    String expected = "onlyterm(term(constant(IDENTIFIER(xx)),BRACKETOPEN,term(constant(" +
+                        "IDENTIFIER(a))),commatermlist(COMMA,term(constant(IDENTIFIER(b)))," +
                         "commatermlist(COMMA,term(constant(IDENTIFIER(cc)))," +
-                        "commatermlist(BRACKETCLOSE))))),EOF)";
+                        "commatermlist(BRACKETCLOSE)))),EOF)";
     ErrorCollector collector = new ErrorCollector();
     CoraParser parser = createParser(str, collector);
     ParseTree tree = parser.onlyterm();
@@ -92,9 +89,6 @@ public class CoraTermParsingTest extends CoraParsingTestInherit {
     assertTrue(tree.getChildCount() == 2);
     tree = tree.getChild(0);
     assertEquals(describeTop(tree), "term");
-    assertTrue(tree.getChildCount() == 1);
-    tree = tree.getChild(0);
-    assertEquals(describeTop(tree), "truefunction");
     assertTrue(tree.getChildCount() == 4);
     assertEquals(toStringParseTree(tree.getChild(0)), "constant(IDENTIFIER(xx))");
     assertEquals(toStringParseTree(tree.getChild(2)), "term(constant(IDENTIFIER(a)))");
@@ -108,9 +102,7 @@ public class CoraTermParsingTest extends CoraParsingTestInherit {
     assertEquals(toStringParseTree(tree.getChild(1)), "term(constant(IDENTIFIER(e)))");
     assertEquals(toStringParseTree(tree.getChild(2)), "commatermlist(BRACKETCLOSE)");
     assertEquals(describeTop(bccd), "term");
-    assertTrue(bccd.getChildCount() == 1);
-    tree = bccd.getChild(0);
-    assertEquals(describeTop(tree), "truefunction");
+    tree = bccd;
     assertTrue(tree.getChildCount() == 4);
     assertEquals(toStringParseTree(tree.getChild(0)), "constant(IDENTIFIER(b))");
     assertEquals(toStringParseTree(tree.getChild(2)), "term(constant(STRING(cc)))");
@@ -120,9 +112,6 @@ public class CoraTermParsingTest extends CoraParsingTestInherit {
     assertEquals(toStringParseTree(tree.getChild(2)), "commatermlist(BRACKETCLOSE)");
     tree = tree.getChild(1);
     assertEquals(describeTop(tree), "term");
-    assertTrue(tree.getChildCount() == 1);
-    tree = tree.getChild(0);
-    assertEquals(describeTop(tree), "emptyfunction");
     assertTrue(tree.getChildCount() == 3);
     assertEquals(toStringParseTree(tree.getChild(0)), "constant(STRING(d))");
   }
