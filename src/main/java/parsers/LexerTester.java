@@ -29,7 +29,7 @@ import org.antlr.v4.runtime.Token;
  */
 public class LexerTester {
   private static void printToken(Token token) {
-    String name = CoraLexer.tokenNames[token.getType()];
+    String name = CoraLexer.VOCABULARY.getSymbolicName(token.getType());
     System.out.println(name + " " + token.getText());
   }
 

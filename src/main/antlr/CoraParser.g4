@@ -56,6 +56,19 @@ commatermlist       : BRACKETCLOSE
 
 onlyterm            : term EOF ;
 
+/*** Parsing rules ***/
+
+simplerule          : term ARROW term ;
+
+/*** The whole program ***/
+
+program             : simplerule program
+                    | declaration program
+                    |
+                    ;
+
+input               : program EOF ;
+
 /*
 sortdec             : SORT constant BRACEOPEN constant+ BRACECLOSE
                     | SORT constant

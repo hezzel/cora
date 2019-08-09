@@ -18,14 +18,9 @@ import static org.junit.Assert.*;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import java.util.ArrayList;
-import cora.parsers.CoraLexer;
 import cora.parsers.CoraParser;
-import cora.parsers.CoraParserBaseListener;
 import cora.parsers.ErrorCollector;
 
 /** This class tests the antlr code for parsing types. */
