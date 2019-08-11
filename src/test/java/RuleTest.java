@@ -21,9 +21,9 @@ import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.Term;
 import cora.interfaces.rewriting.Rule;
-import cora.immutabledata.types.*;
-import cora.immutabledata.terms.*;
-import cora.immutabledata.rewriting.SimpleRule;
+import cora.core.types.*;
+import cora.core.terms.*;
+import cora.rewriting.SimpleRule;
 
 public class RuleTest {
   private Type baseType(String name) {

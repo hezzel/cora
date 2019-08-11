@@ -19,7 +19,7 @@ import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullInitialisationError;
 import java.util.ArrayList;
 import cora.interfaces.types.*;
-import cora.immutabledata.types.*;
+import cora.core.types.*;
 
 public class TypeTest {
   private BaseType intType() {
@@ -120,9 +120,9 @@ public class TypeTest {
     ArrowType at1 = new ArrowType(boolType(), intType());
     ArrowType at2 = new ArrowType(at1, new Sort("Array"));
     ArrowType at3 = new ArrowType(at1, at1);
-    assertTrue(at1.toString().equals("Bool => Int"));
-    assertTrue(at2.toString().equals("(Bool => Int) => Array"));
-    assertTrue(at3.toString().equals("(Bool => Int) => Bool => Int"));
+    assertTrue(at1.toString().equals("Bool → Int"));
+    assertTrue(at2.toString().equals("(Bool → Int) → Array"));
+    assertTrue(at3.toString().equals("(Bool → Int) → Bool → Int"));
   }
 
   @Test

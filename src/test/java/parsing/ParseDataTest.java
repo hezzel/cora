@@ -17,9 +17,9 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import cora.parsers.ParseData;
 import cora.exceptions.TypingError;
-import cora.immutabledata.types.Sort;
-import cora.immutabledata.terms.UserDefinedSymbol;
-import cora.immutabledata.terms.Var;
+import cora.core.types.Sort;
+import cora.core.terms.UserDefinedSymbol;
+import cora.core.terms.Var;
 
 /** This class tests the antlr code for parsing types. */
 
@@ -35,6 +35,24 @@ public class ParseDataTest {
     data.addVariable(bong);
     assertTrue(data.lookupVariable("bong").equals(bong));
     assertTrue(data.lookupVariable("bing") == null);
+    data.clearVariables();
+    assertTrue(data.lookupVariable("bong") == null);
+  }
+
+  @Test
+  public void testCounts() {
+    ParseData data = new ParseData();
+    UserDefinedSymbol bing = new UserDefinedSymbol("bing", new Sort("a"));
+    Var bongv = new Var("bong", new Sort("b"));
+    UserDefinedSymbol bongf = new UserDefinedSymbol("bong", new Sort("a"));
+    data.addFunctionSymbol(bing);
+    data.addFunctionSymbol(bongf);
+    data.addFunctionSymbol(bing);
+    assertTrue(data.queryNumberFunctionSymbols() == 2);
+    assertTrue(data.queryNumberVariables() == 0);
+    data.addVariable(bongv);
+    assertTrue(data.queryNumberFunctionSymbols() == 2);
+    assertTrue(data.queryNumberVariables() == 1);
   }
 
   @Test

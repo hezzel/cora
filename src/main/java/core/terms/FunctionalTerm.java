@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.immutabledata.terms;
+package cora.core.terms;
 
 import java.util.ArrayList;
 import cora.exceptions.ArityError;

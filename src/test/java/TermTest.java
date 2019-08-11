@@ -25,8 +25,8 @@ import cora.interfaces.types.Type;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.Term;
-import cora.immutabledata.types.*;
-import cora.immutabledata.terms.*;
+import cora.core.types.*;
+import cora.core.terms.*;
 
 public class TermTest {
   private Type baseType(String name) {

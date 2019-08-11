@@ -68,7 +68,22 @@ public class ParseData {
                       "previously declared variable " + varname);
     }
     _environment.put(varname, variable);
-   }
+  }
+
+  /** This function removes all variable declarations from the current parse data. */
+  public void clearVariables() {
+    _environment.clear();
+  }
+
+  /** Returns the number of variables declared in the current parser data. */
+  public int queryNumberVariables() {
+    return _environment.size();
+  }
+
+  /** Returns the number of function symbols declared in the current parser data. */
+  public int queryNumberFunctionSymbols() {
+    return _alphabet.size();
+  }
 
   /** If the given symbol has been declared, this returns its type, otherwise null. */
   public FunctionSymbol lookupFunctionSymbol(String symbol) {

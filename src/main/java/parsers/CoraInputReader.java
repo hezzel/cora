@@ -15,7 +15,10 @@
 
 package cora.parsers;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -31,8 +34,10 @@ import cora.interfaces.types.Type;
 import cora.interfaces.terms.Term;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Variable;
-import cora.immutabledata.types.*;
-import cora.immutabledata.terms.*;
+import cora.interfaces.rewriting.Rule;
+import cora.core.types.*;
+import cora.core.terms.*;
+import cora.rewriting.*;
 
 /**
  * This class reads text from string or file written in the Cora input format.
@@ -320,6 +325,99 @@ public class CoraInputReader {
     verifyChildIsRule(tree, 0, "term", "a term");
     verifyChildIsToken(tree, 1, "EOF", "end of input");
     return readTerm(tree.getChild(0), pd, expectedType);
+  }
+
+  /* ========== WHOLE PROGRAM PARSING ========== */
+
+  private static Rule readRule(ParseTree tree, ParseData pd) throws ParserException {
+    verifyChildIsRule(tree, 0, "term", "the left-hand side (a term)");
+    verifyChildIsToken(tree, 1, "ARROW", "the rule arrow");
+    verifyChildIsRule(tree, 2, "term", "the right-hand side (a term)");
+    Term left = readTerm(tree.getChild(0), pd, null);
+    Type type = left.queryType();
+    Term right = readTerm(tree.getChild(2), pd, type);
+    pd.clearVariables();
+    return new SimpleRule(left, right);
+  }
+
+  /**
+   * Given that the top of tree is a declaration, this function parses the declaration and adds it
+   * to the parsing data.
+   * If the declaration changes an existing declaration in pd, a parserexception is thrown.
+   */
+  private static void updateDataForDeclaration(ParseTree tree,
+                                               ParseData pd) throws ParserException {
+    verifyChildIsRule(tree, 0, "constant", "a function symbol name (an identifier or string)");
+    verifyChildIsToken(tree, 1, "DECLARE", "the declaration token ::");
+    verifyChildIsRule(tree, 2, "type", "a type");
+    String constant = readConstant(tree.getChild(0));
+    Type type = readType(tree.getChild(2));
+    FunctionSymbol declaring = new UserDefinedSymbol(constant, type);
+    FunctionSymbol existing = pd.lookupFunctionSymbol(constant);
+    if (existing == null) pd.addFunctionSymbol(declaring);
+    else if (!declaring.equals(existing)) {
+      throw new ParserException(firstToken(tree), "Redeclaration of " + constant +
+        "; previously declared with type " + existing.queryType().toString());
+    }
+  }
+
+  /**
+   * Reads a program into the set of all its rules, while also updating pd with all variable
+   * declarations. The parsedata should not contain any variables.
+   * Here, it is assumed that the tree is a "program" context.
+   */
+  private static ArrayList<Rule> readProgram(ParseTree tree, ParseData pd) throws ParserException {
+    if (pd.queryNumberVariables() != 0) {
+      throw new Error("Calling readProgramFromString with > 0 variable declarations in pd.");
+    }
+    ArrayList<Rule> ret = new ArrayList<Rule>();
+
+    while (tree.getChildCount() != 0) {
+      verifyChildIsRule(tree, 1, "program", "a program");
+      String kind = checkChild(tree, 0);
+      if (kind.equals("rule simplerule")) ret.add(readRule(tree.getChild(0), pd));
+      else if (kind.equals("rule declaration")) updateDataForDeclaration(tree.getChild(0), pd);
+      else {
+        throw buildError(tree, "Child of program is " + kind + "!");
+      }
+      tree = tree.getChild(1);
+    }
+    return ret;
+  }
+
+  /**
+   * Parses the given program, and returns all the rules that were read.
+   * The parsedata is updated with all the declarations in the program.  The parsedata should only
+   * contain function symbol declarations (or nothing at all); variable declarations are not
+   * allowed, and will not be added.
+   */
+  public static ArrayList<Rule> readProgramFromString(String str,
+                                                      ParseData pd) throws ParserException {
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createCoraParser(str, collector);
+    ParseTree tree = parser.input();
+    collector.throwCollectedExceptions();
+    verifyChildIsRule(tree, 0, "program", "a program");
+    verifyChildIsToken(tree, 1, "EOF", "end of input");
+    return readProgram(tree.getChild(0), pd);
+  }
+
+  public static ArrayList<Rule> readProgramFromFile(String filename, ParseData pd)
+                                                              throws ParserException, IOException {
+    ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(filename));
+    CoraLexer lexer = new CoraLexer(input);
+    ErrorCollector collector = new ErrorCollector();
+    lexer.removeErrorListeners();
+    lexer.addErrorListener(collector);
+    CoraParser parser = new CoraParser(new CommonTokenStream(lexer));
+    parser.removeErrorListeners();
+    parser.addErrorListener(collector);
+    
+    ParseTree tree = parser.input();
+    collector.throwCollectedExceptions();
+    verifyChildIsRule(tree, 0, "program", "a program");
+    verifyChildIsToken(tree, 1, "EOF", "end of input");
+    return readProgram(tree.getChild(0), pd);
   }
 }
 

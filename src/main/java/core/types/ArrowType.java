@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.immutabledata.types;
+package cora.core.types;
 
 import java.util.ArrayList;
 import cora.exceptions.InappropriatePatternDataError;
@@ -53,7 +53,7 @@ public class ArrowType implements Type {
       default:
         throw new Error("Missed a case in a switch for type kinds.");
     }
-    return left + " => " + rightstring;
+    return left + " → " + rightstring;
   }
 
   public boolean equals(Type type) {

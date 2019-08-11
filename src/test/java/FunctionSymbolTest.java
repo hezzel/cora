@@ -20,8 +20,8 @@ import java.util.ArrayList;
 import cora.exceptions.NullInitialisationError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.FunctionSymbol;
-import cora.immutabledata.types.*;
-import cora.immutabledata.terms.UserDefinedSymbol;
+import cora.core.types.*;
+import cora.core.terms.UserDefinedSymbol;
 
 public class FunctionSymbolTest {
   private Type baseType(String name) {
