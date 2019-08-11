@@ -13,19 +13,27 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora;
+package cora.interfaces.rewriting;
 
-import cora.interfaces.rewriting.TRS;
-import cora.parsers.CoraInputReader;
+import java.util.ArrayList;
+import cora.interfaces.terms.FunctionSymbol;
 
-public class Main {
-  public static void main(String[] args) {
-    TRS trs;
-    try { trs = CoraInputReader.readProgramFromFile("test.trs"); }
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-      return;
-    }
-    System.out.print(trs.toString());
-  }
+/**
+ * An Alphabet is a (possibly infinite) set of function symbols, which does not have any duplicate
+ * name uses.
+ * It is used for recognising (and typing) function symbols in various kinds of input.
+ */
+public interface Alphabet {
+  /**
+   * Returns the FunctionSymbol with the given name (there should be at most one) if it exists,
+   * otherwise returns null.
+   */
+  FunctionSymbol lookup(String name);
+
+  /**
+   * Returns a copy of the same alphabet (since implementations of Alphabet are not necessarily
+   * immutable).
+   */
+  Alphabet copy();
 }
+

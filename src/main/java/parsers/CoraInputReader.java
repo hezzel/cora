@@ -35,6 +35,7 @@ import cora.interfaces.terms.Term;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.rewriting.Rule;
+import cora.interfaces.rewriting.TRS;
 import cora.core.types.*;
 import cora.core.terms.*;
 import cora.rewriting.*;
@@ -362,14 +363,11 @@ public class CoraInputReader {
   }
 
   /**
-   * Reads a program into the set of all its rules, while also updating pd with all variable
-   * declarations. The parsedata should not contain any variables.
-   * Here, it is assumed that the tree is a "program" context.
+   * Reads a program into the TRS it defines.  Here, it is assumed that the tree is a "program"
+   * context.
    */
-  private static ArrayList<Rule> readProgram(ParseTree tree, ParseData pd) throws ParserException {
-    if (pd.queryNumberVariables() != 0) {
-      throw new Error("Calling readProgramFromString with > 0 variable declarations in pd.");
-    }
+  private static TRS readProgram(ParseTree tree) throws ParserException {
+    ParseData pd = new ParseData();
     ArrayList<Rule> ret = new ArrayList<Rule>();
 
     while (tree.getChildCount() != 0) {
@@ -382,7 +380,8 @@ public class CoraInputReader {
       }
       tree = tree.getChild(1);
     }
-    return ret;
+
+    return new TermRewritingSystem(pd.queryCurrentAlphabet(), ret);
   }
 
   /**
@@ -391,19 +390,17 @@ public class CoraInputReader {
    * contain function symbol declarations (or nothing at all); variable declarations are not
    * allowed, and will not be added.
    */
-  public static ArrayList<Rule> readProgramFromString(String str,
-                                                      ParseData pd) throws ParserException {
+  public static TRS readProgramFromString(String str) throws ParserException {
     ErrorCollector collector = new ErrorCollector();
     CoraParser parser = createCoraParser(str, collector);
     ParseTree tree = parser.input();
     collector.throwCollectedExceptions();
     verifyChildIsRule(tree, 0, "program", "a program");
     verifyChildIsToken(tree, 1, "EOF", "end of input");
-    return readProgram(tree.getChild(0), pd);
+    return readProgram(tree.getChild(0));
   }
 
-  public static ArrayList<Rule> readProgramFromFile(String filename, ParseData pd)
-                                                              throws ParserException, IOException {
+  public static TRS readProgramFromFile(String filename) throws ParserException, IOException {
     ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(filename));
     CoraLexer lexer = new CoraLexer(input);
     ErrorCollector collector = new ErrorCollector();
@@ -417,7 +414,7 @@ public class CoraInputReader {
     collector.throwCollectedExceptions();
     verifyChildIsRule(tree, 0, "program", "a program");
     verifyChildIsToken(tree, 1, "EOF", "end of input");
-    return readProgram(tree.getChild(0), pd);
+    return readProgram(tree.getChild(0));
   }
 }
 

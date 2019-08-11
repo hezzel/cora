@@ -13,19 +13,25 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora;
+package cora.interfaces.rewriting;
 
-import cora.interfaces.rewriting.TRS;
-import cora.parsers.CoraInputReader;
+import cora.interfaces.terms.FunctionSymbol;
 
-public class Main {
-  public static void main(String[] args) {
-    TRS trs;
-    try { trs = CoraInputReader.readProgramFromFile("test.trs"); }
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-      return;
-    }
-    System.out.print(trs.toString());
-  }
+/**
+ * A TRS (term rewriting system) is an abstract rewriting system based on a set of rules.
+ * It is key to rewriting, and it is that which we analyse for various properties.
+ */
+public interface TRS {
+  /** @return the number of rules in the TRS that can be queried. */
+  int queryRuleCount();
+
+  /** For 0 <= index < queryRuleCount(), this returns one of the rules in the system. */
+  Rule queryRule(int index);
+
+  /**
+   * Returns the FunctionSymbol associated to the given name in this TRS, if there is a unique
+   * one.
+   */
+  FunctionSymbol lookupSymbol(String name);
 }
+

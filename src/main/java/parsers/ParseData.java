@@ -21,6 +21,8 @@ import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Variable;
+import cora.interfaces.rewriting.Alphabet;
+import cora.rewriting.UserDefinedAlphabet;
 
 /**
  * This class maintains information used for parsing (user) input to Cora, such as the alphabet of
@@ -93,6 +95,11 @@ public class ParseData {
   /** If the given variable has been declared, this returns its type, otherwise null. */
   public Variable lookupVariable(String name) {
     return _environment.get(name);
+  }
+
+  /** Returns an Alphabet containing all the currently declared function symbols. */
+  public Alphabet queryCurrentAlphabet() {
+    return new UserDefinedAlphabet(_alphabet.values());
   }
 }
 

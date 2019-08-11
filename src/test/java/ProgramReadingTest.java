@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import cora.exceptions.ParserException;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.rewriting.Rule;
+import cora.interfaces.rewriting.TRS;
 import cora.core.types.Sort;
 import cora.core.types.ArrowType;
 import cora.core.terms.UserDefinedSymbol;
@@ -29,61 +30,38 @@ import cora.parsers.CoraInputReader;
 public class ProgramReadingTest {
   @Test
   public void testReadDeclaration() throws ParserException {
-    ParseData sigma = new ParseData();
     String str = "0 :: N s :: N -> N add :: N -> N -> N add(0,y) -> y add(s(x),y) -> s(add(x,y))";
-    CoraInputReader.readProgramFromString(str, sigma);
-    assertTrue(sigma.queryNumberFunctionSymbols() == 3);
-    FunctionSymbol nul = sigma.lookupFunctionSymbol("0");
-    FunctionSymbol suc = sigma.lookupFunctionSymbol("s");
-    FunctionSymbol add = sigma.lookupFunctionSymbol("add");
-    assertTrue(nul.queryType().toString().equals("N"));
-    assertTrue(suc.queryType().toString().equals("N → N"));
-    assertTrue(add.queryType().toString().equals("N → N → N"));
+    TRS trs = CoraInputReader.readProgramFromString(str);
+    assertTrue(trs.lookupSymbol("0").queryType().toString().equals("N"));
+    assertTrue(trs.lookupSymbol("s").queryType().toString().equals("N → N"));
+    assertTrue(trs.lookupSymbol("add").queryType().toString().equals("N → N → N"));
   }
 
   @Test
   public void testSimpleProgram() throws ParserException {
-    ParseData sigma = new ParseData();
-    sigma.addFunctionSymbol(new UserDefinedSymbol("0", new Sort("N")));
-    sigma.addFunctionSymbol(new UserDefinedSymbol("s",
-        new ArrowType(new Sort("N"), new Sort("N"))));
-    sigma.addFunctionSymbol(new UserDefinedSymbol("add", new ArrowType(new Sort("N"),
-        new ArrowType(new Sort("N"), new Sort("N")))));
-    String str = "add(0,y) -> y add(s(x),y) -> s(add(x,y))";
-    ArrayList<Rule> rules = CoraInputReader.readProgramFromString(str, sigma);
-    assertTrue(rules.size() == 2);
-    assertTrue(rules.get(0).toString().equals("add(0, y) → y"));
-    assertTrue(rules.get(1).toString().equals("add(s(x), y) → s(add(x, y))"));
+    String str = "0 :: N s :: N -> N add :: N -> N -> N add(0,y) -> y add(s(x),y) -> s(add(x,y))";
+    TRS trs = CoraInputReader.readProgramFromString(str);
+    assertTrue(trs.queryRuleCount() == 2);
+    assertTrue(trs.queryRule(0).toString().equals("add(0, y) → y"));
+    assertTrue(trs.queryRule(1).toString().equals("add(s(x), y) → s(add(x, y))"));
   }
 
   @Test
-  public void testNoRemainingVariables() throws ParserException {
-    ParseData sigma = new ParseData();
-    String str = "0 :: N s :: N -> N add :: N -> N -> N add(0,y) -> y add(s(x),y) -> s(add(x,y))";
-    CoraInputReader.readProgramFromString(str, sigma);
-    assertTrue(sigma.queryNumberVariables() == 0);
+  public void testNoVariableConflictsBetweenRules() throws ParserException {
+    String str = "f :: a -> a  g :: b -> b f(x) -> x  g(x) -> x";
+    CoraInputReader.readProgramFromString(str);
   }
 
   @Test(expected = cora.exceptions.DeclarationException.class)
   public void testUndeclaredSymbol() throws ParserException {
-    ParseData sigma = new ParseData();
     String str = "0 :: N add :: N -> N -> N add(0,y) -> y add(s(x),y) -> s(add(x,y))";
-    CoraInputReader.readProgramFromString(str, sigma);
-  }
-
-  @Test(expected = Error.class)
-  public void testParseDataHasVariables() throws ParserException {
-    ParseData sigma = new ParseData();
-    sigma.addVariable(new Var("x", new Sort("a")));
-    String str = "0 :: N add :: N -> N -> N add(0,y) -> y add(s(x),y) -> s(add(x,y))";
-    CoraInputReader.readProgramFromString(str, sigma);
+    CoraInputReader.readProgramFromString(str);
   }
 
   @Test(expected = cora.exceptions.TypingException.class)
   public void testReadRuleWithInconsistentTypes() throws ParserException {
-    ParseData sigma = new ParseData();
     String str = "a :: type1 b :: type2 a -> b";
-    CoraInputReader.readProgramFromString(str, sigma);
+    CoraInputReader.readProgramFromString(str);
   }
 }
 
