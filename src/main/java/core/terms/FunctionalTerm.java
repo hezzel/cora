@@ -26,6 +26,7 @@ import cora.interfaces.types.Type;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.Term;
+import cora.interfaces.terms.Substitution;
 
 /**
  * FunctionalTerms are terms of the form f(s1,...,sn) where s1,...,sn are all terms and f is a
@@ -158,6 +159,40 @@ public class FunctionalTerm implements Term {
   /** This method returns the output type of the term. */
   public Type queryType() {
     return _outputType;
+  }
+
+  /** 
+   * This method applies the substitution recursively to the arguments and returns the term that
+   * results from replacing our old arguments by these substituted ones.
+   */
+  public Term substitute(Substitution gamma) {
+    ArrayList<Term> args = new ArrayList<Term>(_args);
+    for (int i = 0; i < args.size(); i++) {
+      Term t = args.get(i).substitute(gamma);
+      if (t == null) {
+        throw new Error("Substituting " + args.get(i).toString() + " results in null!");
+      }   
+      args.set(i, t); 
+    }
+    return new FunctionalTerm(args, _f, _outputType);
+  }
+
+  /** 
+   * This method checks that other has the same root symbol as we do, and if so, that all the
+   * parameters match (updating the substitution as we go along).
+   * If everything matches, null is returned; otherwise a description of the instantiation failure.
+   */
+  public String match(Term other, Substitution gamma) {
+    if (other == null) throw new NullCallError("FunctionalTerm", "match", "argument term (other)");
+    if (other.queryTermKind() != TermKind.FUNCTIONALTERM ||
+        !_f.equals(other.queryRoot()) || _args.size() != other.numberImmediateSubterms()) {
+      return "functional term " + toString() + " is not instantiated by " + other.toString() + ".";
+    }   
+    for (int i = 0; i < _args.size(); i++) {
+      String warning = _args.get(i).match(other.queryImmediateSubterm(i+1), gamma);
+      if (warning != null) return warning;
+    }
+    return null;
   }
 
   /** This method gives a string representation of the term. */

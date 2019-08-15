@@ -20,11 +20,10 @@ import cora.exceptions.ArityError;
 import cora.exceptions.IndexingError;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullInitialisationError;
+import cora.exceptions.NullCallError;
 import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
-import cora.interfaces.terms.FunctionSymbol;
-import cora.interfaces.terms.Variable;
-import cora.interfaces.terms.Term;
+import cora.interfaces.terms.*;
 import cora.core.types.*;
 import cora.core.terms.*;
 
@@ -136,6 +135,32 @@ public class TermTest {
     x.queryImmediateSubterm(1);
   }
 
+  @Test(expected = NullCallError.class)
+  public void testNullSubstitution() {
+    Term t = new Var("x", baseType("Int"));
+    t.substitute(null);
+  }
+
+  @Test(expected = NullCallError.class)
+  public void testNullMatchVar1() {
+    Term t = new Var("x", baseType("Int"));
+    t.match(constantTerm("37", baseType("Int")), null);
+  }
+
+  @Test(expected = NullCallError.class)
+  public void testNullMatchVar2() {
+    Term t = new Var("x", baseType("Int"));
+    Substitution subst = new Subst();
+    t.match(null, subst);
+  }
+
+  @Test(expected = NullCallError.class)
+  public void testNullMatchFunctional() {
+    Term t = twoArgTerm();
+    Substitution subst = new Subst();
+    t.match(null, subst);
+  }
+
   @Test
   public void testImmediateSubterms() {
     Term t = twoArgTerm();
@@ -193,5 +218,113 @@ public class TermTest {
     assertFalse(s1.equals(s2));
     assertFalse(s2.equals(s1));
     assertTrue(s1.toString().equals(s2.toString()));
+  }
+
+  @Test
+  public void testSubstituteVar() {
+    Variable x = new Var("x", baseType("Int"));
+    Variable y = new Var("y", baseType("Int"));
+    Variable z = new Var("z", baseType("Bool"));
+    Term xterm = constantTerm("37", baseType("Int"));
+    Substitution gamma = new Subst(x, xterm);
+    gamma.extend(y, x); 
+    assertTrue(x.substitute(gamma).equals(xterm));
+    assertTrue(y.substitute(gamma).equals(x));
+    assertTrue(z.substitute(gamma).equals(z));
+  }
+
+  @Test
+  public void testSubstituteFunctional() {
+    Variable x = new Var("x", baseType("Int"));
+    Variable y = new Var("y", baseType("Int"));
+    Type plustype = new ArrowType(baseType("Int"),new ArrowType(baseType("Int"), baseType("Int")));
+    Type geqtype = new ArrowType(baseType("Int"),new ArrowType(baseType("Int"), baseType("Bool")));
+    FunctionSymbol plus = new UserDefinedSymbol("plus", plustype);
+    FunctionSymbol geq = new UserDefinedSymbol("geq", geqtype);
+    Term addition = new FunctionalTerm(plus, x, constantTerm("42", baseType("Int")));
+    Term comparison = new FunctionalTerm(geq, addition, y);
+    // comparison = geq(plus(x, 42), y)
+
+    Term thirtyseven = constantTerm("37", baseType("Int"));
+
+    Substitution gamma = new Subst(x, thirtyseven);
+    gamma.extend(y, x);
+
+    Term additionsub = addition.substitute(gamma);
+    assertTrue(additionsub.toString().equals("plus(37, 42)"));
+    Term comparisonsub = comparison.substitute(gamma);
+    assertTrue(comparisonsub.queryTermKind() == Term.TermKind.FUNCTIONALTERM);
+    assertTrue(comparisonsub.numberImmediateSubterms() == 2);
+    assertTrue(comparisonsub.queryImmediateSubterm(1).equals(additionsub));
+    assertTrue(comparisonsub.queryImmediateSubterm(2).equals(x));
+  }
+
+  @Test
+  public void testVarMatchingNoMapping() {
+    Variable x = new Var("x", baseType("a"));
+    Term t = twoArgTerm();
+    Subst gamma = new Subst();
+    assertTrue(x.match(t, gamma) == null);
+    assertTrue(gamma.get(x).equals(t));
+    assertTrue(gamma.domain().size() == 1);
+  }
+
+  @Test
+  public void testVarMatchingExistingMapping() {
+    Variable x = new Var("x", baseType("a"));
+    Term t = twoArgTerm();
+    Subst gamma = new Subst(x, t);
+    assertTrue(x.match(t, gamma) == null);
+    assertTrue(gamma.get(x).equals(t));
+    assertTrue(gamma.domain().size() == 1);
+  }
+
+  @Test
+  public void testVarMatchingConflictingMapping() {
+    Variable x = new Var("x", baseType("a"));
+    Term t = twoArgTerm();
+    Term q = new Var("y", baseType("a"));
+    Subst gamma = new Subst(x, q);
+    assertTrue(x.match(t, gamma) != null);
+    assertTrue(gamma.get(x).equals(q));
+    assertTrue(gamma.domain().size() == 1);
+  }
+
+  @Test
+  public void testFirstOrderMatching() {
+    Type ii = baseType("Int");
+    Variable x = new Var("x", ii);
+    Variable y = new Var("y", ii);
+    Variable z = new Var("z", ii);
+    Type ty = new ArrowType(ii, new ArrowType(ii, ii));
+    FunctionSymbol plus = new UserDefinedSymbol("plus", ty);
+    FunctionSymbol f = new UserDefinedSymbol("f", ty);
+
+    Term pattern1 = new FunctionalTerm(f, x, new FunctionalTerm(plus, y, z));
+    Term pattern2 = new FunctionalTerm(f, x, new FunctionalTerm(plus, y, x));
+    Term pattern3 = new FunctionalTerm(f, x, new FunctionalTerm(plus, y, y));
+    Term pattern4 = new FunctionalTerm(plus, x, new FunctionalTerm(f, y, z));
+
+    Term a = new FunctionalTerm(f, constantTerm("37", ii), z);
+    Term combi = new FunctionalTerm(f, a, new FunctionalTerm(plus, y, a));
+
+    Substitution subst1 = new Subst();
+    Substitution subst2 = new Subst();
+    Substitution subst3 = new Subst();
+    Substitution subst4 = new Subst();
+
+    assertTrue(pattern1.match(combi, subst1) == null);
+    assertTrue(pattern2.match(combi, subst2) == null);
+    assertTrue(pattern3.match(combi, subst3) != null);
+    assertTrue(pattern4.match(combi, subst4) != null);
+
+    assertTrue(subst1.domain().size() == 3);
+    assertTrue(subst1.get(x).equals(a));
+    assertTrue(subst1.get(y).equals(y));
+    assertTrue(subst1.get(z).equals(a));
+
+    assertTrue(subst2.domain().size() == 2);
+    assertTrue(subst2.get(x).equals(a));
+    assertTrue(subst2.get(y).equals(y));
   }
 }

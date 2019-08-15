@@ -23,6 +23,7 @@ import cora.interfaces.types.Type;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Term;
 import cora.interfaces.terms.Variable;
+import cora.interfaces.terms.Substitution;
 
 /**
  * Variables are both used as parts of constraints, as binders in an abstraction, as generic
@@ -90,6 +91,35 @@ public class Var implements Variable {
   /** @throws IndexingError, as a variable does not have subterms */
   public Term queryImmediateSubterm(int i) {
     throw new IndexingError("Var", "queryImmediateSubterm", i);
+  }
+
+  /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */
+  public Term substitute(Substitution gamma) {
+    if (gamma == null) throw new NullCallError("Var", "substitute", "substitution gamma");
+    return gamma.getReplacement(this);
+  }
+
+  /** 
+   * This method updates gamma by adding the extension from x to the given other term, if x is not
+   * yet mapped to anything.
+   * If this works, then null is returned.
+   * If x is already mapped to the given other term, then nothing is done but null is returned.
+   * If x is mapped to a different term, then an explanation of the match failure is returned.
+   * If other or gamma is null, then a NullCallError is thrown instead.
+   */
+  public String match(Term other, Substitution gamma) {
+    if (other == null) throw new NullCallError("Var", "match", "other (matched term)");
+    if (gamma == null) throw new NullCallError("Var", "match", "gamma (matching substitution");
+
+    Term previous = gamma.get(this);
+    
+    if (previous == null) {
+      gamma.extend(this, other);
+      return null;
+    }   
+    else if (previous.equals(other)) return null;
+    else return "Variable " + _name + " mapped both to " + previous.toString() + " and to " +
+      other.toString() + ".";
   }
 
   /**

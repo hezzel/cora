@@ -56,6 +56,22 @@ public interface Term {
    */
   Variable queryVariable();
 
+  /**
+   * This method replaces each variable x in the term by gamma(x) (or leaves x alone if x is not
+   * in the domain of gamma); the result is returned.
+   * The original term remains unaltered.  Gamma may be *temporarily* altered to apply the
+   * substitution, but is the same at the end of the function as at the start.
+   */
+  Term substitute(Substitution gamma);
+
+  /**
+   * This method either extends gamma so that <this term> gamma = other and returns null, or
+   * returns a string describing why other is not an instance of gamma.
+   * Whether or not null is returned, gamma is likely to be extended (although without overriding)
+   * by this function.
+   */
+  public String match(Term other, Substitution gamma);
+
   /**Returns a string representation of the term. */
   String toString();
 
