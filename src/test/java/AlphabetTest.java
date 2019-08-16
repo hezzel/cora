@@ -22,8 +22,8 @@ import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.rewriting.Alphabet;
-import cora.core.types.*;
-import cora.core.terms.UserDefinedSymbol;
+import cora.types.*;
+import cora.terms.UserDefinedSymbol;
 import cora.rewriting.UserDefinedAlphabet;
 
 public class AlphabetTest {

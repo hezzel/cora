@@ -22,10 +22,10 @@ import cora.interfaces.types.Type;
 import cora.interfaces.terms.Term;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.FunctionSymbol;
-import cora.core.types.Sort;
-import cora.core.terms.UserDefinedSymbol;
-import cora.core.terms.FunctionalTerm;
-import cora.core.terms.Var;
+import cora.types.Sort;
+import cora.terms.UserDefinedSymbol;
+import cora.terms.FunctionalTerm;
+import cora.terms.Var;
 import cora.parsers.ParseData;
 import cora.parsers.CoraInputReader;
 

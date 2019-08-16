@@ -20,10 +20,10 @@ import cora.exceptions.ParserException;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.rewriting.Rule;
 import cora.interfaces.rewriting.TRS;
-import cora.core.types.Sort;
-import cora.core.types.ArrowType;
-import cora.core.terms.UserDefinedSymbol;
-import cora.core.terms.Var;
+import cora.types.Sort;
+import cora.types.ArrowType;
+import cora.terms.UserDefinedSymbol;
+import cora.terms.Var;
 import cora.parsers.ParseData;
 import cora.parsers.CoraInputReader;
 

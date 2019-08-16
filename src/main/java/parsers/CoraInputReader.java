@@ -36,8 +36,8 @@ import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.rewriting.Rule;
 import cora.interfaces.rewriting.TRS;
-import cora.core.types.*;
-import cora.core.terms.*;
+import cora.types.*;
+import cora.terms.*;
 import cora.rewriting.*;
 
 /**

@@ -19,8 +19,8 @@ import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.Term;
+import cora.interfaces.terms.Substitution;
 import cora.interfaces.rewriting.Rule;
-import cora.core.terms.Subst;
 
 /**
  * SimpleRules are rules of the form l -> r, where l and r have the same type.
@@ -56,15 +56,14 @@ public class SimpleRule implements Rule {
     return _left.queryType();
   }
 
-  public String testApplicability(Term t) {
-    Subst sub = new Subst();
-    return _left.match(t, sub);
+  public boolean applicable(Term t) {
+    return _left.match(t) != null;
   }
 
   public Term apply(Term t) {
-    Subst sub = new Subst();
-    if (_left.match(t, sub) != null) return null;
-    return _right.substitute(sub);
+    Substitution subst = _left.match(t);
+    if (subst == null) return null;
+    return _right.substitute(subst);
   }
 
   public String toString() {

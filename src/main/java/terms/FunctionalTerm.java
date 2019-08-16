@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.core.terms;
+package cora.terms;
 
 import java.util.ArrayList;
 import cora.exceptions.ArityError;
@@ -192,6 +192,13 @@ public class FunctionalTerm implements Term {
       String warning = _args.get(i).match(other.queryImmediateSubterm(i+1), gamma);
       if (warning != null) return warning;
     }
+    return null;
+  }
+
+  /** Same as match(other, subst), but it creates a fresh substitution and returns the result. */
+  public Substitution match(Term other) {
+    Substitution gamma = new Subst();
+    if (match(other, gamma) == null) return gamma;
     return null;
   }
 

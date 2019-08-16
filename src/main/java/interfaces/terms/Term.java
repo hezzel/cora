@@ -72,6 +72,12 @@ public interface Term {
    */
   public String match(Term other, Substitution gamma);
 
+  /**
+   * This method returns the substitution gamma such that <this term> gamma = other, if such a
+   * substitution exists; if it does not, then null is returned instead.
+   */
+  public Substitution match(Term other);
+
   /**Returns a string representation of the term. */
   String toString();
 

@@ -17,9 +17,9 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import cora.parsers.ParseData;
 import cora.exceptions.TypingError;
-import cora.core.types.Sort;
-import cora.core.terms.UserDefinedSymbol;
-import cora.core.terms.Var;
+import cora.types.Sort;
+import cora.terms.UserDefinedSymbol;
+import cora.terms.Var;
 
 /** This class tests the antlr code for parsing types. */
 

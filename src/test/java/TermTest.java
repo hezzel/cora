@@ -24,8 +24,8 @@ import cora.exceptions.NullCallError;
 import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.*;
-import cora.core.types.*;
-import cora.core.terms.*;
+import cora.types.*;
+import cora.terms.*;
 
 public class TermTest {
   private Type baseType(String name) {

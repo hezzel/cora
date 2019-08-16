@@ -24,8 +24,8 @@ import cora.interfaces.terms.Term;
 import cora.interfaces.terms.Substitution;
 import cora.exceptions.NullStorageError;
 import cora.exceptions.TypingError;
-import cora.core.types.Sort;
-import cora.core.terms.*;
+import cora.types.Sort;
+import cora.terms.*;
 
 public class SubstitutionTest {
   private Type baseType(String name) {

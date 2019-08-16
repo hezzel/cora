@@ -21,8 +21,8 @@ import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.Term;
 import cora.interfaces.rewriting.Rule;
-import cora.core.types.*;
-import cora.core.terms.*;
+import cora.types.*;
+import cora.terms.*;
 import cora.rewriting.SimpleRule;
 
 public class RuleTest {
@@ -91,7 +91,7 @@ public class RuleTest {
     Term target = new FunctionalTerm(h, new FunctionalTerm(h, constantTerm("5", baseType("Int")),
       z), constantTerm("3", baseType("Int")));
 
-    assertTrue(rule.testApplicability(instance) == null);
+    assertTrue(rule.applicable(instance));
     assertTrue(rule.apply(instance).equals(target));
   }
 
@@ -104,7 +104,7 @@ public class RuleTest {
     Term noninstance = new FunctionalTerm(f, constantTerm("1", baseType("Int")),
       constantTerm("2", baseType("Int")));
 
-    assertTrue(rule.testApplicability(noninstance) != null);
+    assertFalse(rule.applicable(noninstance));
     assertTrue(rule.apply(noninstance) == null);
   }
 }

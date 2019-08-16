@@ -19,7 +19,7 @@ import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullInitialisationError;
 import java.util.ArrayList;
 import cora.interfaces.types.*;
-import cora.core.types.*;
+import cora.types.*;
 
 public class TypeTest {
   private BaseType intType() {

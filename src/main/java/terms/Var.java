@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.core.terms;
+package cora.terms;
 
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.IndexingError;
@@ -121,6 +121,13 @@ public class Var implements Variable {
     else return "Variable " + _name + " mapped both to " + previous.toString() + " and to " +
       other.toString() + ".";
   }
+
+  /** Same as match(other, subst), but it creates a fresh substitution and returns the result. */
+  public Substitution match(Term other) {
+    Substitution gamma = new Subst();
+    if (match(other, gamma) == null) return gamma;
+    return null;
+  } 
 
   /**
    * As we do not have a copy constructor, and do not consider variables equal if they share the

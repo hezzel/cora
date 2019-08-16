@@ -35,11 +35,8 @@ public interface Rule {
   /** For a rule l -> r, returns the type of l (which should also be the type of r). */
   Type queryType();
 
-  /**
-   * If the current rule can be applied to t at the top, this returns null; otherwise it returns
-   * an explanation why the rule does not match.
-   */
-  String testApplicability(Term t);
+  /** This returns whether the current rule can be applied to t at the top. */
+  boolean applicable(Term t);
 
   /**
    * If the current rule can be applied to t at the top, this returns the result of a top-most
