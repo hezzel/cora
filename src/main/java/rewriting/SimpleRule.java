@@ -20,6 +20,7 @@ import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.Term;
 import cora.interfaces.rewriting.Rule;
+import cora.core.terms.Subst;
 
 /**
  * SimpleRules are rules of the form l -> r, where l and r have the same type.
@@ -53,6 +54,17 @@ public class SimpleRule implements Rule {
 
   public Type queryType() {
     return _left.queryType();
+  }
+
+  public String testApplicability(Term t) {
+    Subst sub = new Subst();
+    return _left.match(t, sub);
+  }
+
+  public Term apply(Term t) {
+    Subst sub = new Subst();
+    if (_left.match(t, sub) != null) return null;
+    return _right.substitute(sub);
   }
 
   public String toString() {

@@ -71,5 +71,41 @@ public class RuleTest {
     assertTrue(rule.queryType().equals(baseType("a")));
     assertTrue(rule.toString().equals("id(x) → x"));
   }
+
+  @Test
+  public void testSuccessfulApplication() {
+    Var x = new Var("x", baseType("Int"));
+    Var y = new Var("y", baseType("Bool"));
+    Var z = new Var("z", baseType("Int"));
+    UserDefinedSymbol g = new UserDefinedSymbol("g", arrowType("Int", "Bool"));
+    UserDefinedSymbol f =
+      new UserDefinedSymbol("f", new ArrowType(baseType("Bool"), arrowType("Bool", "Int")));
+    UserDefinedSymbol h =
+      new UserDefinedSymbol("h", new ArrowType(baseType("Int"), arrowType("Int", "Int")));
+    Term left = new FunctionalTerm(f, new FunctionalTerm(g, x), y);
+    Term right = new FunctionalTerm(h, x, constantTerm("3", baseType("Int")));
+    Rule rule = new SimpleRule(left, right);
+
+    Term instance = new FunctionalTerm(f, new FunctionalTerm(g, new FunctionalTerm(h,
+      constantTerm("5", baseType("Int")), z)), constantTerm("true", baseType("Bool")));
+    Term target = new FunctionalTerm(h, new FunctionalTerm(h, constantTerm("5", baseType("Int")),
+      z), constantTerm("3", baseType("Int")));
+
+    assertTrue(rule.testApplicability(instance) == null);
+    assertTrue(rule.apply(instance).equals(target));
+  }
+
+  @Test
+  public void testFailedApplication() {
+    Var x = new Var("x", baseType("Int"));
+    UserDefinedSymbol f =
+      new UserDefinedSymbol("f", new ArrowType(baseType("Int"), arrowType("Int", "Int")));
+    Rule rule = new SimpleRule(new FunctionalTerm(f, x, x), x);
+    Term noninstance = new FunctionalTerm(f, constantTerm("1", baseType("Int")),
+      constantTerm("2", baseType("Int")));
+
+    assertTrue(rule.testApplicability(noninstance) != null);
+    assertTrue(rule.apply(noninstance) == null);
+  }
 }
 

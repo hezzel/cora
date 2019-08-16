@@ -72,8 +72,8 @@ public class FunctionalTerm implements Term {
       }
       Type input = type.queryArrowInputType();
       if (!input.equals(arg.queryType())) {
-        throw new TypingError("FunctionalTerm", "constructor", "arg " + i,
-          arg.queryType() == null ? "null" : arg.queryType().toString(),
+        throw new TypingError("FunctionalTerm", "constructor", "arg " + i + " of " +
+          f.toString(), arg.queryType() == null ? "null" : arg.queryType().toString(),
           input.toString());
       }
       type = type.queryArrowOutputType();
