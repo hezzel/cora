@@ -30,5 +30,11 @@ public class IndexingError extends Error {
     super("Called " + classname + "::" + functionname + "(" + given + "), when there are no " +
       "indexes available.");
   }
+
+  /** Use this constructor when attempting to access a position that does not exist. */
+  public IndexingError(String classname, String functionname, String term, String position) {
+    super("Called " + classname + "::" + functionname + " with position " + position + " in " +
+      "term " + term + ".");
+  }
 }
 

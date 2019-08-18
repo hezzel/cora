@@ -27,6 +27,9 @@ import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.Term;
 import cora.interfaces.terms.Substitution;
+import cora.interfaces.terms.Position;
+import cora.terms.positions.EmptyPosition;
+import cora.terms.positions.ArgumentPosition;
 
 /**
  * FunctionalTerms are terms of the form f(s1,...,sn) where s1,...,sn are all terms and f is a
@@ -159,6 +162,44 @@ public class FunctionalTerm implements Term {
   /** This method returns the output type of the term. */
   public Type queryType() {
     return _outputType;
+  }
+
+  /** Returns the positions in all subterms, from left to right, followed by the empty position. */
+  public ArrayList<Position> queryAllPositions() {
+    ArrayList<Position> ret = new ArrayList<Position>();
+    for (int i = 0; i < _args.size(); i++) {
+      ArrayList<Position> subposses = _args.get(i).queryAllPositions();
+      for (int j = 0; j < subposses.size(); j++) {
+        ret.add(new ArgumentPosition(i+1, subposses.get(j)));
+      }
+    }
+    ret.add(new EmptyPosition());
+    return ret;
+  }
+
+  /** @return this if the position is empty; otherwise throws an IndexingError */
+  public Term querySubterm(Position pos) {
+    if (pos.isEmpty()) return this;
+    int index = pos.queryArgumentPosition();
+    if (index < 1 || index > _args.size()) {
+      throw new IndexingError("FunctionalTerm", "querySubterm", toString(), pos.toString());
+    }
+    return _args.get(index-1).querySubterm(pos.queryTail());
+  }
+
+  /**
+   * @return a copy of the term with the subterm at the given position replaced by replacement, if
+   * such a position exists; otherwise throws an IndexingError
+   */
+  public Term replaceSubterm(Position pos, Term replacement) {
+    if (pos.isEmpty()) return replacement;
+    int index = pos.queryArgumentPosition();
+    if (index < 1 || index > _args.size()) {
+      throw new IndexingError("FunctionalTerm", "querySubterm", toString(), pos.toString());
+    }
+    ArrayList<Term> args = new ArrayList<Term>(_args);
+    args.set(index-1, args.get(index-1).replaceSubterm(pos.queryTail(), replacement));
+    return new FunctionalTerm(args, _f, _outputType);
   }
 
   /** 

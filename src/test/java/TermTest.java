@@ -26,6 +26,7 @@ import cora.interfaces.types.Type;
 import cora.interfaces.terms.*;
 import cora.types.*;
 import cora.terms.*;
+import cora.terms.positions.*;
 
 public class TermTest {
   private Type baseType(String name) {
@@ -218,6 +219,93 @@ public class TermTest {
     assertFalse(s1.equals(s2));
     assertFalse(s2.equals(s1));
     assertTrue(s1.toString().equals(s2.toString()));
+  }
+
+  @Test
+  public void testVarPositions() {
+    Term s = new Var("x", baseType("o"));
+    ArrayList<Position> lst = s.queryAllPositions();
+    assertTrue(lst.size() == 1);
+    assertTrue(lst.get(0).toString().equals("ε"));
+  }
+
+  @Test
+  public void testFunctionalTermPositions() {
+    Type type = new ArrowType(baseType("a"), arrowType("b", "a"));
+    FunctionSymbol f = new UserDefinedSymbol("f", type);
+    Term arg1 = constantTerm("c", baseType("a"));
+    Term arg2 = unaryTerm("g", baseType("b"), new Var("x", baseType("b")));
+    Term term = new FunctionalTerm(f, arg1, arg2);    // f(c,g(x))
+    ArrayList<Position> lst = term.queryAllPositions();
+    assertTrue(lst.size() == 4);
+    assertTrue(lst.get(0).toString().equals("1.ε"));
+    assertTrue(lst.get(1).toString().equals("2.1.ε"));
+    assertTrue(lst.get(2).toString().equals("2.ε"));
+    assertTrue(lst.get(3).toString().equals("ε"));
+  }
+
+  @Test
+  public void testVarSubtermGood() {
+    Term s = new Var("x", baseType("o"));
+    Position p = new EmptyPosition();
+    assertTrue(s.querySubterm(p).equals(s));
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testVarSubtermBad() {
+    Term s = new Var("x", baseType("o"));
+    Position p = new ArgumentPosition(1, new EmptyPosition());
+    Term t = s.querySubterm(p);
+  }
+
+  @Test
+  public void testVarSubtermReplacementGood() {
+    Term s = new Var("x", baseType("a"));
+    Term t = twoArgTerm();
+    Position p = new EmptyPosition();
+    assertTrue(s.replaceSubterm(p, t).equals(t));
+    assertTrue(s.toString().equals("x"));
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testVarSubtermReplacementBad() {
+    Term s = new Var("x", baseType("o"));
+    Position p = new ArgumentPosition(1, new EmptyPosition());
+    Term t = s.replaceSubterm(p, twoArgTerm());
+  }
+
+  @Test
+  public void testFunctionalTermSubtermGood() {
+    Position p;
+    Term s = twoArgTerm();
+    p = new EmptyPosition();
+    assertTrue(s.querySubterm(p).equals(s));
+    p = new ArgumentPosition(1, new EmptyPosition());
+    assertTrue(s.querySubterm(p).equals(constantTerm("c", baseType("a"))));
+    p = new ArgumentPosition(2, new ArgumentPosition(1, new EmptyPosition()));
+    assertTrue(s.querySubterm(p).equals(constantTerm("d", baseType("b"))));
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testFunctionalTermSubtermBad() {
+    Term s = twoArgTerm();
+    Position pos = new ArgumentPosition(1, new ArgumentPosition(2, new EmptyPosition()));
+    Term t = s.querySubterm(pos);
+  }
+
+  @Test
+  public void testFunctionalTermSubtermReplacementGood() {
+    Term s = unaryTerm("f", baseType("o"), constantTerm("37", baseType("Int")));
+    Term t = s.replaceSubterm(new ArgumentPosition(1, new EmptyPosition()), s);
+    assertTrue(s.toString().equals("f(37)"));
+    assertTrue(t.queryImmediateSubterm(1).equals(s));
+    assertTrue(t.toString().equals("f(f(37))"));
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testFunctionalTermSubtermReplacementBad() {
+    Term s = unaryTerm("f", baseType("o"), constantTerm("37", baseType("Int")));
+    Term t = s.replaceSubterm(new ArgumentPosition(2, new EmptyPosition()), s);
   }
 
   @Test

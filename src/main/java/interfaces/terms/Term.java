@@ -57,6 +57,23 @@ public interface Term {
   Variable queryVariable();
 
   /**
+   * Returns the set of all positions of subterms in the current Term.
+   * Note that this set is non-epmty as it always contains the empty position (representing the
+   * current term).
+   */
+  ArrayList<Position> queryAllPositions();
+
+  /**
+   * Returns the subterm at the given position, assuming that this is indeed a position of the
+   * current term.
+   * If not, an IndexingError is thrown.
+   */
+  Term querySubterm(Position pos);
+
+  /** Returns the term obtained by replacing the subterm at the given position by replacement. */
+  Term replaceSubterm(Position pos, Term replacement);
+
+  /**
    * This method replaces each variable x in the term by gamma(x) (or leaves x alone if x is not
    * in the domain of gamma); the result is returned.
    * The original term remains unaltered.  Gamma may be *temporarily* altered to apply the

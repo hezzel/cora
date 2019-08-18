@@ -15,6 +15,7 @@
 
 package cora.terms;
 
+import java.util.ArrayList;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.IndexingError;
 import cora.exceptions.NullCallError;
@@ -24,6 +25,8 @@ import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Term;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.Substitution;
+import cora.interfaces.terms.Position;
+import cora.terms.positions.EmptyPosition;
 
 /**
  * Variables are both used as parts of constraints, as binders in an abstraction, as generic
@@ -91,6 +94,25 @@ public class Var implements Variable {
   /** @throws IndexingError, as a variable does not have subterms */
   public Term queryImmediateSubterm(int i) {
     throw new IndexingError("Var", "queryImmediateSubterm", i);
+  }
+
+  /** @return a list containing only the empty Position. */
+  public ArrayList<Position> queryAllPositions() {
+    ArrayList<Position> ret = new ArrayList<Position>();
+    ret.add(new EmptyPosition());
+    return ret;
+  }
+
+  /** @return this if the position is empty; otherwise throws an IndexingError */
+  public Term querySubterm(Position pos) {
+    if (pos.isEmpty()) return this;
+    throw new IndexingError("Var", "querySubterm", toString(), pos.toString());
+  }
+
+  /** @return the replacement if pos is the empty position; otherwise throws an IndexingError */
+  public Term replaceSubterm(Position pos, Term replacement) {
+    if (pos.isEmpty()) return replacement;
+    throw new IndexingError("Var", "replaceSubterm", toString(), pos.toString());
   }
 
   /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */
