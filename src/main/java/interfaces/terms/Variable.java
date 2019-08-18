@@ -31,12 +31,12 @@ public interface Variable extends Term {
    * @return a string representation of the variable.
    * Variable names are not unique, and variables are not identified by their name.
    */
-  public String queryName();
+  String queryName();
 
   /** @return the type of the variable */
-  public Type queryType();
+  Type queryType();
 
   /** @return equality to another Variable */
-  public boolean equals(Variable x);
+  boolean equals(Variable x);
 }
 

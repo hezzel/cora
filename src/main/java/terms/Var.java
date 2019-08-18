@@ -36,17 +36,13 @@ import cora.terms.positions.EmptyPosition;
  * they are not defined by their name (although they must have one for printing purposes).
  */
 public class Var implements Variable {
-  private static int COUNTER = 0;
   private String _name;
   private Type _type;
-  private int _index;
 
   /** Create a variable with the given name and type. */
   public Var(String name, Type type) {
     _name = name;
     _type = type;
-    _index = COUNTER;
-    COUNTER++;
     if (name == null) throw new NullInitialisationError("Var", "name");
     if (type == null) throw new NullInitialisationError("Var", "type");
   }
@@ -64,11 +60,6 @@ public class Var implements Variable {
   /** @return the type of the variable */
   public Type queryType() {
     return _type;
-  }
-
-  /** @return an integer uniquely identifying this variable */
-  public int queryVariableIndex() {
-    return _index;
   }
 
   /** @return the name of the variable, along with its index. */
