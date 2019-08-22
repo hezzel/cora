@@ -57,7 +57,8 @@ public interface Term {
   Variable queryVariable();
 
   /**
-   * Returns the set of all positions of subterms in the current Term.
+   * Returns the set of all positions of subterms in the current Term, in leftmost innermost
+   * order.
    * Note that this set is non-epmty as it always contains the empty position (representing the
    * current term).
    */

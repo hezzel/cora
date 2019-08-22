@@ -15,11 +15,18 @@
 
 import org.junit.Test;
 import static org.junit.Assert.*;
+import java.util.ArrayList;
 import cora.parsers.ParseData;
 import cora.exceptions.TypingError;
+import cora.interfaces.terms.FunctionSymbol;
+import cora.interfaces.rewriting.Alphabet;
+import cora.interfaces.rewriting.Rule;
+import cora.interfaces.rewriting.TRS;
 import cora.types.Sort;
 import cora.terms.UserDefinedSymbol;
 import cora.terms.Var;
+import cora.rewriting.UserDefinedAlphabet;
+import cora.rewriting.TermRewritingSystem;
 
 /** This class tests the antlr code for parsing types. */
 
@@ -104,6 +111,57 @@ public class ParseDataTest {
     //  variables with the same name and type are not equal if they are different objects
     data.addVariable(new Var("bing", new Sort("a")));
     data.addVariable(new Var("bing", new Sort("a")));
+  }
+
+  @Test
+  public void testGenerateAlphabet() {
+    ParseData data = new ParseData();
+    UserDefinedSymbol bing = new UserDefinedSymbol("bing", new Sort("a"));
+    UserDefinedSymbol bong = new UserDefinedSymbol("bong", new Sort("a"));
+    Var bang = new Var("bang", new Sort("b"));
+    data.addFunctionSymbol(bing);
+    data.addFunctionSymbol(bong);
+    data.addFunctionSymbol(bing);
+    data.addVariable(bang);
+    Alphabet alf = data.queryCurrentAlphabet();
+    assertTrue(alf.lookup("bing").equals(bing));
+    assertTrue(alf.lookup("bong").equals(bong));
+    assertTrue(alf.lookup("bang") == null);
+    UserDefinedSymbol bangf = new UserDefinedSymbol("bang", new Sort("a"));
+    data.addFunctionSymbol(bangf);
+    assertTrue(alf.lookup("bang") == null);
+  }
+
+  @Test
+  public void initialiseWithTRS() {
+    ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
+    FunctionSymbol bing = new UserDefinedSymbol("bing", new Sort("a"));
+    FunctionSymbol bong = new UserDefinedSymbol("bong", new Sort("b"));
+    symbols.add(bing);
+    UserDefinedAlphabet alf = new UserDefinedAlphabet(symbols);
+    TRS trs = new TermRewritingSystem(alf, new ArrayList<Rule>());
+    ParseData data = new ParseData(trs);
+
+    assertTrue(data.lookupFunctionSymbol("bing").equals(bing));
+    assertTrue(data.lookupVariable("bing") == null);
+
+    data.addFunctionSymbol(bong);
+
+    assertTrue(data.lookupFunctionSymbol("bing").equals(bing));
+    assertTrue(data.lookupFunctionSymbol("bong").equals(bong));
+  }
+
+  @Test(expected =  java.lang.Error.class)
+  public void testVariableIllegalOverrideInAlphabet() {
+    ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
+    FunctionSymbol bing = new UserDefinedSymbol("bing", new Sort("a"));
+    symbols.add(bing);
+    UserDefinedAlphabet alf = new UserDefinedAlphabet(symbols);
+    TRS trs = new TermRewritingSystem(alf, new ArrayList<Rule>());
+    ParseData data = new ParseData(trs);
+
+    FunctionSymbol bong = new UserDefinedSymbol("bing", new Sort("b"));
+    data.addFunctionSymbol(bong);
   }
 }
 

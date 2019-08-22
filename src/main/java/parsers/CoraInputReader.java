@@ -328,6 +328,34 @@ public class CoraInputReader {
     return readTerm(tree.getChild(0), pd, expectedType);
   }
 
+  /**
+   * Reads the given string into a term, using the given TRS to parse its function symbols.
+   * The type is the expected type of the term, or null if no type is expected.
+   */
+  public static Term readTermFromString(String str, TRS trs, Type expectedType)
+                                                          throws ParserException {
+    ParseData pd = new ParseData(trs);
+    return readTermFromString(str, pd, expectedType);
+  }
+
+  /**
+   * Reads the given string into a term, using the given TRS to parse its function symbols.
+   * This is supposed to only be called with *internal* input (for example from the unit testers),
+   * where it is guaranteed that the string is well-formed and well-typed.
+   * If any exceptions do occur, they are caught and passed on to a ParserError.
+   */
+  public static Term readTermFromString(String str, TRS trs) {
+    ParseData pd = new ParseData(trs);
+    try {
+      return readTermFromString(str, pd, null);
+    }
+    catch (ParserException e) {
+      Token token = e.queryProblematicToken();
+      throw new ParserError(e.queryProblematicToken(), token.toString(),
+        "Parser exception on internally supplied string: " + e.getMessage());
+    }
+  }
+
   /* ========== WHOLE PROGRAM PARSING ========== */
 
   private static Rule readRule(ParseTree tree, ParseData pd) throws ParserException {

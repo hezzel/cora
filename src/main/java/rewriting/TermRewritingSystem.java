@@ -17,9 +17,12 @@ package cora.rewriting;
 
 import java.util.ArrayList;
 import java.util.TreeMap;
+import java.util.Collections;
 import cora.exceptions.IndexingError;
 import cora.exceptions.NullInitialisationError;
 import cora.interfaces.terms.FunctionSymbol;
+import cora.interfaces.terms.Term;
+import cora.interfaces.terms.Position;
 import cora.interfaces.rewriting.Alphabet;
 import cora.interfaces.rewriting.Rule;
 import cora.interfaces.rewriting.TRS;
@@ -73,6 +76,40 @@ public class TermRewritingSystem implements TRS {
   /** Returns the corresponding symbol in the underlying alphabet (if any). */
   public FunctionSymbol lookupSymbol(String name) {
     return _alphabet.lookup(name);
+  }
+
+  /**
+   * Returns the leftmost, innermost position where a rule may be applied, or null if no such
+   * position exists.
+   */
+  public Position leftmostInnermostRedexPosition(Term s) {
+    ArrayList<Position> positions = s.queryAllPositions();
+    for (int i = 0; i < positions.size(); i++) {
+      Position pos = positions.get(i);
+      Term sub = s.querySubterm(pos);
+      for (int j = 0; j < _rules.size(); j++) {
+        if (_rules.get(j).applicable(sub)) return pos;
+      }
+    }
+    return null;
+  }
+
+  /** 
+   * Reduces the given term at the leftmost, innermost redex position, and returns the result;
+   * if no such position exists, null is returned instead.
+   * If multiple rules match, an arbitrary one is chosen.
+   */
+  public Term leftmostInnermostReduce(Term s) {
+    ArrayList<Rule> tmp = new ArrayList<Rule>(_rules);
+    Collections.shuffle(tmp);
+    Position pos = leftmostInnermostRedexPosition(s);
+    if (pos == null) return null;
+    Term subterm = s.querySubterm(pos);
+    for (int j = 0; j < tmp.size(); j++) {
+      Term result = tmp.get(j).apply(subterm);
+      if (result != null) return s.replaceSubterm(pos, result);
+    }
+    return null;
   }
 }
 

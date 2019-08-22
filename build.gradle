@@ -33,6 +33,16 @@ dependencies {
     antlr "org.antlr:antlr4:4.7.1"
 }
 
+jar {
+  manifest {
+    attributes 'Main-Class': 'cora.Main'
+  }
+
+  from {
+    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+  }
+}
+
 // Define the main class for the application
 mainClassName = 'cora.Main'
 

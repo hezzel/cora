@@ -15,17 +15,27 @@
 
 package cora;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import cora.interfaces.terms.Term;
 import cora.interfaces.rewriting.TRS;
 import cora.parsers.CoraInputReader;
 
 public class Main {
   public static void main(String[] args) {
-    TRS trs;
-    try { trs = CoraInputReader.readProgramFromFile("test.trs"); }
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-      return;
+    try {
+      TRS trs = CoraInputReader.readProgramFromFile("test.trs");
+      System.out.print(trs.toString());
+      System.out.print("Input term: ");
+      String input = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+      Term term = CoraInputReader.readTermFromString(input, trs, null);
+      do {
+        term = trs.leftmostInnermostReduce(term);
+        if (term != null) System.out.println("⇒ " + term.toString());
+      } while (term != null);
     }
-    System.out.print(trs.toString());
+    catch (Exception e) {
+      System.out.println("Exception: " + e.getMessage());
+    }
   }
 }

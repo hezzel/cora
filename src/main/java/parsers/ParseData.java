@@ -22,6 +22,7 @@ import cora.interfaces.types.Type;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.rewriting.Alphabet;
+import cora.interfaces.rewriting.TRS;
 import cora.rewriting.UserDefinedAlphabet;
 
 /**
@@ -29,12 +30,40 @@ import cora.rewriting.UserDefinedAlphabet;
  * declared function symbols and the information of infix usage.
  */
 public class ParseData {
+  private TRS _trs;                                   // TRS for parsing pre-defined symbols
   private TreeMap<String,FunctionSymbol> _alphabet;   // function symbols
   private TreeMap<String,Variable> _environment;      // variables
 
   public ParseData() {
+    _trs = null;
     _alphabet = new TreeMap<String,FunctionSymbol>();
     _environment = new TreeMap<String,Variable>();
+  }
+
+  /**
+   * When initialising a ParseData with a TRS, the function symbols in that TRS will be used to
+   * recognise function names.  Additional symbols may be declared, but it is not allowed to call
+   * queryCurrentAlphabet on a ParseData created with this constructor.
+   */
+  public ParseData(TRS trs) {
+    _trs = trs;
+    _alphabet = new TreeMap<String,FunctionSymbol>();
+    _environment = new TreeMap<String,Variable>();
+  }
+
+  /**
+   * Returns the number of function symbols declared in the current parser data.
+   * This ignores any function symbols that are included by including a TRS.
+   */
+  public int queryNumberFunctionSymbols() {
+    return _alphabet.size();
+  }
+
+  /** If the given symbol has been declared, this returns its type, otherwise null. */
+  public FunctionSymbol lookupFunctionSymbol(String symbol) {
+    FunctionSymbol ret = _alphabet.get(symbol);
+    if (ret == null && _trs != null) ret = _trs.lookupSymbol(symbol);
+    return ret;
   }
 
   /**
@@ -47,7 +76,7 @@ public class ParseData {
     if (symbol == null) throw new NullStorageError("ParseData", "function symbol");
     String name = symbol.queryName();
     Type type = symbol.queryType();
-    FunctionSymbol existing = _alphabet.get(name);
+    FunctionSymbol existing = lookupFunctionSymbol(name);
     if (existing != null && !symbol.equals(existing)) {
       throw new Error("Duplicate call to ParseData::addFunctionSymbol: trying to overwrite " +
                       "previously declared symbol " + name);
@@ -82,16 +111,6 @@ public class ParseData {
     return _environment.size();
   }
 
-  /** Returns the number of function symbols declared in the current parser data. */
-  public int queryNumberFunctionSymbols() {
-    return _alphabet.size();
-  }
-
-  /** If the given symbol has been declared, this returns its type, otherwise null. */
-  public FunctionSymbol lookupFunctionSymbol(String symbol) {
-    return _alphabet.get(symbol);
-  }
-
   /** If the given variable has been declared, this returns its type, otherwise null. */
   public Variable lookupVariable(String name) {
     return _environment.get(name);
@@ -99,6 +118,9 @@ public class ParseData {
 
   /** Returns an Alphabet containing all the currently declared function symbols. */
   public Alphabet queryCurrentAlphabet() {
+    if (_trs != null) {
+      throw new Error("Calling queryCurrentAlphabet for ParseData constructed with a given TRS!");
+    }
     return new UserDefinedAlphabet(_alphabet.values());
   }
 }
