@@ -17,7 +17,6 @@ package cora.terms;
 
 import java.util.ArrayList;
 import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.IndexingError;
 import cora.exceptions.NullCallError;
 import cora.exceptions.NullInitialisationError;
 import cora.interfaces.types.Type;
@@ -25,8 +24,6 @@ import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Term;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.Substitution;
-import cora.interfaces.terms.Position;
-import cora.terms.positions.EmptyPosition;
 
 /**
  * Variables are both used as parts of constraints, as binders in an abstraction, as generic
@@ -35,16 +32,14 @@ import cora.terms.positions.EmptyPosition;
  * Variables can be renamed (both for reasons of α-conversion and renaming copies of rules), so
  * they are not defined by their name (although they must have one for printing purposes).
  */
-public class Var implements Variable {
+public class Var extends LeafTermInherit implements Variable {
   private String _name;
-  private Type _type;
 
   /** Create a variable with the given name and type. */
   public Var(String name, Type type) {
+    super(type);
     _name = name;
-    _type = type;
     if (name == null) throw new NullInitialisationError("Var", "name");
-    if (type == null) throw new NullInitialisationError("Var", "type");
   }
 
   /** @return VARTERM */
@@ -55,11 +50,6 @@ public class Var implements Variable {
   /** Returns the name this variable was set up with, or renamed to. */
   public String queryName() {
     return _name;
-  }
-
-  /** @return the type of the variable */
-  public Type queryType() {
-    return _type;
   }
 
   /** @return the name of the variable, along with its index. */
@@ -75,35 +65,6 @@ public class Var implements Variable {
   /** @throws InappropriatePatternDataError, as a variable does not have a function symbol root */
   public FunctionSymbol queryRoot() {
     throw new InappropriatePatternDataError("Var", "queryRoot", "functional terms");
-  }
-
-  /** @return 0, as a variable does not have subterms */
-  public int numberImmediateSubterms() {
-    return 0;
-  }
-
-  /** @throws IndexingError, as a variable does not have subterms */
-  public Term queryImmediateSubterm(int i) {
-    throw new IndexingError("Var", "queryImmediateSubterm", i);
-  }
-
-  /** @return a list containing only the empty Position. */
-  public ArrayList<Position> queryAllPositions() {
-    ArrayList<Position> ret = new ArrayList<Position>();
-    ret.add(new EmptyPosition());
-    return ret;
-  }
-
-  /** @return this if the position is empty; otherwise throws an IndexingError */
-  public Term querySubterm(Position pos) {
-    if (pos.isEmpty()) return this;
-    throw new IndexingError("Var", "querySubterm", toString(), pos.toString());
-  }
-
-  /** @return the replacement if pos is the empty position; otherwise throws an IndexingError */
-  public Term replaceSubterm(Position pos, Term replacement) {
-    if (pos.isEmpty()) return replacement;
-    throw new IndexingError("Var", "replaceSubterm", toString(), pos.toString());
   }
 
   /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */
@@ -134,13 +95,6 @@ public class Var implements Variable {
     else return "Variable " + _name + " mapped both to " + previous.toString() + " and to " +
       other.toString() + ".";
   }
-
-  /** Same as match(other, subst), but it creates a fresh substitution and returns the result. */
-  public Substitution match(Term other) {
-    Substitution gamma = new Subst();
-    if (match(other, gamma) == null) return gamma;
-    return null;
-  } 
 
   /**
    * As we do not have a copy constructor, and do not consider variables equal if they share the
