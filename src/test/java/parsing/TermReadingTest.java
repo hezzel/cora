@@ -94,14 +94,14 @@ public class TermReadingTest {
   public void testReadBaseConstantWithoutType() throws ParserException {
     ParseData sigma = generateSignature();
     Term term = CoraInputReader.readTermFromString("aa", sigma, null);
-    assertTrue(term.equals(new FunctionalTerm(generateSymbol("aa", "a"))));
+    assertTrue(term.equals(generateSymbol("aa", "a")));
   }
 
   @Test
   public void testReadBaseConstantWithGoodType() throws ParserException {
     ParseData sigma = generateSignature();
     Term term = CoraInputReader.readTermFromString("aa", sigma, new Sort("a"));
-    assertTrue(term.equals(new FunctionalTerm(generateSymbol("aa", "a"))));
+    assertTrue(term.equals(generateSymbol("aa", "a")));
   }
 
   @Test(expected = cora.exceptions.TypingException.class)
@@ -114,21 +114,21 @@ public class TermReadingTest {
   public void testReadHigherOrderConstant() throws ParserException {
     ParseData sigma = generateSignature();
     Term term = CoraInputReader.readTermFromString("f", sigma, null);
-    assertTrue(term.equals(new FunctionalTerm(generateSymbol("f", "a -> b -> c -> d"))));
+    assertTrue(term.equals(generateSymbol("f", "a -> b -> c -> d")));
   }
 
   @Test
   public void testReadEmptyApplicationOfConstantWithType() throws ParserException {
     ParseData sigma = generateSignature();
     Term term = CoraInputReader.readTermFromString("bb()", sigma, new Sort("b"));
-    assertTrue(term.equals(new FunctionalTerm(generateSymbol("bb", "b"))));
+    assertTrue(term.equals(generateSymbol("bb", "b")));
   }
 
   @Test
   public void testReadEmptyApplicationOfConstantWithoutType() throws ParserException {
     ParseData sigma = generateSignature();
     Term term = CoraInputReader.readTermFromString("f()", sigma, null);
-    assertTrue(term.equals(new FunctionalTerm(generateSymbol("f", "a -> b -> c -> d"))));
+    assertTrue(term.equals(generateSymbol("f", "a -> b -> c -> d")));
   }
 
   @Test(expected = cora.exceptions.TypingException.class)
@@ -143,9 +143,9 @@ public class TermReadingTest {
     Term term = CoraInputReader.readTermFromString("f(aa,bb, cc)", sigma, null);
     FunctionSymbol f = generateSymbol("f", "a -> b -> c -> d");
     ArrayList<Term> args = new ArrayList<Term>();
-    args.add(new FunctionalTerm(generateSymbol("aa", "a")));
-    args.add(new FunctionalTerm(generateSymbol("bb", "b")));
-    args.add(new FunctionalTerm(generateSymbol("cc", "c")));
+    args.add(generateSymbol("aa", "a"));
+    args.add(generateSymbol("bb", "b"));
+    args.add(generateSymbol("cc", "c"));
     assertTrue(term.equals(new FunctionalTerm(f, args)));
     assertTrue(term.queryType().equals(new Sort("d")));
   }
@@ -159,7 +159,7 @@ public class TermReadingTest {
     assertTrue(term.queryType().queryArrowInputType().equals(new Sort("c")));
     assertTrue(term.queryType().queryArrowOutputType().equals(new Sort("d")));
     assertTrue(term.queryRoot().equals(generateSymbol("f", "a -> b -> c -> d")));
-    assertTrue(term.queryImmediateSubterm(1).equals(new FunctionalTerm(generateSymbol("aa", "a"))));
+    assertTrue(term.queryImmediateSubterm(1).equals(generateSymbol("aa", "a")));
     assertTrue(term.queryImmediateSubterm(2).equals(x));
   }
 

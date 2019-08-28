@@ -29,7 +29,7 @@ import cora.interfaces.terms.Substitution;
  * UserDefinedSymbols are FunctionSymbols which are not predefined within Cora.
  * They can be seen as constant terms.
  */
-public class UserDefinedSymbol extends LeafTermInherit implements FunctionSymbol,Term {
+public class UserDefinedSymbol extends LeafTermInherit implements FunctionSymbol {
   private String _name;
 
   /**

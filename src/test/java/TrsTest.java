@@ -67,7 +67,7 @@ public class TrsTest {
 
     ArrayList<Rule> rules = new ArrayList<Rule>();
     Var x = new Var("x", baseType("o"));
-    Term left1 = new FunctionalTerm(f(), x, new FunctionalTerm(a()));
+    Term left1 = new FunctionalTerm(f(), x, a());
     Term right1 = x;
     rules.add(new SimpleRule(left1, right1));
       // f(x, a) -> x
@@ -75,9 +75,9 @@ public class TrsTest {
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(x);
     args.add(x);
-    args.add(new FunctionalTerm(b()));
+    args.add(b());
     Term left2 = new FunctionalTerm(g(), args);
-    Term right2 = new FunctionalTerm(f(), new FunctionalTerm(b()), x);
+    Term right2 = new FunctionalTerm(f(), b(), x);
     rules.add(new SimpleRule(left2, right2));
       // g(x, x, b) -> f(b, x)
 

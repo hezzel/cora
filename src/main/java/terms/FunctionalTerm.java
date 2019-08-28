@@ -43,17 +43,6 @@ public class FunctionalTerm implements Term {
   private Type _outputType;
 
   /**
-   * This constructor is used to create a constant term (which may, however, still have higher
-   * type). Throws an error if constant is null.
-   */
-  public FunctionalTerm(FunctionSymbol constant) {
-    if (constant == null) throw new NullInitialisationError("FunctionalTerm", "constant");
-    _f = constant;
-    _args = new ArrayList<Term>();
-    _outputType = constant.queryType();
-  }
-
-  /**
    * This helper function handles the functionality of all constructors.
    * The given function symbol and argument list become the property of this functional term, and
    * the output type is derived from the two given arguments.

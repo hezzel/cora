@@ -38,7 +38,7 @@ public class TermTest {
   }
 
   private Term constantTerm(String name, Type type) {
-    return new FunctionalTerm(new UserDefinedSymbol(name, type));
+    return new UserDefinedSymbol(name, type);
   }
 
   private Term unaryTerm(String name, Type output, Term arg) {

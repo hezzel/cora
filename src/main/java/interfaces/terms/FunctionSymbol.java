@@ -24,7 +24,7 @@ import cora.interfaces.types.Type;
  *
  * Note; all instances of FunctionSymbol must (and can be expected to) be immutable.
  */
-public interface FunctionSymbol {
+public interface FunctionSymbol extends Term {
   /**
    * All function symbols have a name that identifies how they are printed.
    * They are not necessarily identified uniquely by their name.
