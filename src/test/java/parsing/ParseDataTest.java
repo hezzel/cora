@@ -133,7 +133,7 @@ public class ParseDataTest {
   }
 
   @Test
-  public void initialiseWithTRS() {
+  public void testInitialiseWithTRS() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     FunctionSymbol bing = new UserDefinedSymbol("bing", new Sort("a"));
     FunctionSymbol bong = new UserDefinedSymbol("bong", new Sort("b"));

@@ -48,6 +48,7 @@ public class TypeReadingTest {
       assertTrue(e.getTotalErrorCount() == 1);
       return;
     }
+    // we should definitely get into the catch!
     assertTrue(false);
   }
 }

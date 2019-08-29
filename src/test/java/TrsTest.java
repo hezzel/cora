@@ -57,7 +57,7 @@ public class TrsTest {
     return new UserDefinedSymbol("g", type);
   }
 
-  public TermRewritingSystem createTermRewritingSystem() {
+  private TermRewritingSystem createTermRewritingSystem() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     symbols.add(a());
     symbols.add(b());

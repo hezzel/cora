@@ -28,7 +28,7 @@ import cora.types.*;
 import cora.terms.*;
 import cora.terms.positions.*;
 
-public class TermTest {
+public class FunctionalTermTest {
   private Type baseType(String name) {
     return new Sort(name);
   }
@@ -69,14 +69,14 @@ public class TermTest {
   }
 
   @Test(expected = NullInitialisationError.class)
-  public void testFunctionalTermWithNullArgs() {
+  public void testNullArgs() {
     FunctionSymbol f = new UserDefinedSymbol("f", arrowType("a", "b"));
     ArrayList<Term> args = null;
     Term t = new FunctionalTerm(f, args);
   }
 
   @Test(expected = ArityError.class)
-  public void testFunctionalTermTooManyArgs() {
+  public void testTooManyArgs() {
     Type type = new ArrowType(baseType("a"), arrowType("b", "a"));
     FunctionSymbol f = new UserDefinedSymbol("f", type);
     ArrayList<Term> args = new ArrayList<Term>();
@@ -114,49 +114,8 @@ public class TermTest {
     Term x = t.queryVariable();
   }
 
-  @Test(expected = NullInitialisationError.class)
-  public void testVariableNullName() {
-    Variable x = new Var(null, baseType("o"));
-  }
-
-  @Test(expected = NullInitialisationError.class)
-  public void testVariableNullType() {
-    Variable x = new Var("x", null);
-  }
-
-  @Test(expected = InappropriatePatternDataError.class)
-  public void testVariableRoot() {
-    Variable x = new Var("x", baseType("o"));
-    x.queryRoot();
-  }
-
-  @Test(expected = IndexingError.class)
-  public void testVariableSubterm() {
-    Variable x = new Var("x", baseType("o"));
-    x.queryImmediateSubterm(1);
-  }
-
   @Test(expected = NullCallError.class)
-  public void testNullSubstitution() {
-    Term t = new Var("x", baseType("Int"));
-    t.substitute(null);
-  }
-
-  @Test(expected = NullCallError.class)
-  public void testNullMatchVar1() {
-    Term t = new Var("x", baseType("Int"));
-    t.match(constantTerm("37", baseType("Int")), null);
-  }
-
-  @Test(expected = NullCallError.class)
-  public void testNullMatchVar2() {
-    Term t = new Var("x", baseType("Int"));
-    Substitution subst = new Subst();
-    t.match(null, subst);
-  }
-
-  @Test(expected = NullCallError.class)
-  public void testNullMatchFunctional() {
+  public void testNullMatch() {
     Term t = twoArgTerm();
     Substitution subst = new Subst();
     t.match(null, subst);
@@ -180,7 +139,7 @@ public class TermTest {
   }
 
   @Test
-  public void testFunctionalTermEquality() {
+  public void testTermEquality() {
     Term s1 = constantTerm("x", baseType("o"));
     Term s2 = unaryTerm("x", baseType("o"), constantTerm("y", baseType("a")));
     Term s3 = unaryTerm("x", baseType("o"), constantTerm("y", baseType("a")));
@@ -195,42 +154,14 @@ public class TermTest {
   }
 
   @Test
-  public void testVarTermBasics() {
-    Variable x = new Var("x", baseType("o"));
-    Term s = x;
-    assertTrue(s.queryTermKind() == Term.TermKind.VARTERM);
-    assertTrue(s.queryVariable().equals(x));
-    assertTrue(s.toString().equals("x"));
-    assertTrue(s.numberImmediateSubterms() == 0);
-  }
-
-  @Test
-  public void testVarTermEquality() {
-    Term s1 = new Var("x", baseType("o"));
-    Term s2 = new Var("x", baseType("o"));
-    assertTrue(s1.equals(s1));
-    assertFalse(s1.equals(s2));
-  }
-
-  @Test
   public void testVarOrFunctionalTerm() {
     Term s1 = new Var("x", baseType("o"));
     Term s2 = constantTerm("x", baseType("o"));
-    assertFalse(s1.equals(s2));
     assertFalse(s2.equals(s1));
-    assertTrue(s1.toString().equals(s2.toString()));
   }
 
   @Test
-  public void testVarPositions() {
-    Term s = new Var("x", baseType("o"));
-    ArrayList<Position> lst = s.queryAllPositions();
-    assertTrue(lst.size() == 1);
-    assertTrue(lst.get(0).toString().equals("ε"));
-  }
-
-  @Test
-  public void testFunctionalTermPositions() {
+  public void testPositions() {
     Type type = new ArrowType(baseType("a"), arrowType("b", "a"));
     FunctionSymbol f = new UserDefinedSymbol("f", type);
     Term arg1 = constantTerm("c", baseType("a"));
@@ -245,37 +176,7 @@ public class TermTest {
   }
 
   @Test
-  public void testVarSubtermGood() {
-    Term s = new Var("x", baseType("o"));
-    Position p = new EmptyPosition();
-    assertTrue(s.querySubterm(p).equals(s));
-  }
-
-  @Test(expected = IndexingError.class)
-  public void testVarSubtermBad() {
-    Term s = new Var("x", baseType("o"));
-    Position p = new ArgumentPosition(1, new EmptyPosition());
-    Term t = s.querySubterm(p);
-  }
-
-  @Test
-  public void testVarSubtermReplacementGood() {
-    Term s = new Var("x", baseType("a"));
-    Term t = twoArgTerm();
-    Position p = new EmptyPosition();
-    assertTrue(s.replaceSubterm(p, t).equals(t));
-    assertTrue(s.toString().equals("x"));
-  }
-
-  @Test(expected = IndexingError.class)
-  public void testVarSubtermReplacementBad() {
-    Term s = new Var("x", baseType("o"));
-    Position p = new ArgumentPosition(1, new EmptyPosition());
-    Term t = s.replaceSubterm(p, twoArgTerm());
-  }
-
-  @Test
-  public void testFunctionalTermSubtermGood() {
+  public void testSubtermGood() {
     Position p;
     Term s = twoArgTerm();
     p = new EmptyPosition();
@@ -287,14 +188,14 @@ public class TermTest {
   }
 
   @Test(expected = IndexingError.class)
-  public void testFunctionalTermSubtermBad() {
+  public void testSubtermBad() {
     Term s = twoArgTerm();
     Position pos = new ArgumentPosition(1, new ArgumentPosition(2, new EmptyPosition()));
     Term t = s.querySubterm(pos);
   }
 
   @Test
-  public void testFunctionalTermSubtermReplacementGood() {
+  public void testSubtermReplacementGood() {
     Term s = unaryTerm("f", baseType("o"), constantTerm("37", baseType("Int")));
     Term t = s.replaceSubterm(new ArgumentPosition(1, new EmptyPosition()), s);
     assertTrue(s.toString().equals("f(37)"));
@@ -303,26 +204,13 @@ public class TermTest {
   }
 
   @Test(expected = IndexingError.class)
-  public void testFunctionalTermSubtermReplacementBad() {
+  public void testSubtermReplacementBad() {
     Term s = unaryTerm("f", baseType("o"), constantTerm("37", baseType("Int")));
     Term t = s.replaceSubterm(new ArgumentPosition(2, new EmptyPosition()), s);
   }
 
   @Test
-  public void testSubstituteVar() {
-    Variable x = new Var("x", baseType("Int"));
-    Variable y = new Var("y", baseType("Int"));
-    Variable z = new Var("z", baseType("Bool"));
-    Term xterm = constantTerm("37", baseType("Int"));
-    Substitution gamma = new Subst(x, xterm);
-    gamma.extend(y, x); 
-    assertTrue(x.substitute(gamma).equals(xterm));
-    assertTrue(y.substitute(gamma).equals(x));
-    assertTrue(z.substitute(gamma).equals(z));
-  }
-
-  @Test
-  public void testSubstituteFunctional() {
+  public void testSubstituting() {
     Variable x = new Var("x", baseType("Int"));
     Variable y = new Var("y", baseType("Int"));
     Type plustype = new ArrowType(baseType("Int"),new ArrowType(baseType("Int"), baseType("Int")));
@@ -345,37 +233,6 @@ public class TermTest {
     assertTrue(comparisonsub.numberImmediateSubterms() == 2);
     assertTrue(comparisonsub.queryImmediateSubterm(1).equals(additionsub));
     assertTrue(comparisonsub.queryImmediateSubterm(2).equals(x));
-  }
-
-  @Test
-  public void testVarMatchingNoMapping() {
-    Variable x = new Var("x", baseType("a"));
-    Term t = twoArgTerm();
-    Subst gamma = new Subst();
-    assertTrue(x.match(t, gamma) == null);
-    assertTrue(gamma.get(x).equals(t));
-    assertTrue(gamma.domain().size() == 1);
-  }
-
-  @Test
-  public void testVarMatchingExistingMapping() {
-    Variable x = new Var("x", baseType("a"));
-    Term t = twoArgTerm();
-    Subst gamma = new Subst(x, t);
-    assertTrue(x.match(t, gamma) == null);
-    assertTrue(gamma.get(x).equals(t));
-    assertTrue(gamma.domain().size() == 1);
-  }
-
-  @Test
-  public void testVarMatchingConflictingMapping() {
-    Variable x = new Var("x", baseType("a"));
-    Term t = twoArgTerm();
-    Term q = new Var("y", baseType("a"));
-    Subst gamma = new Subst(x, q);
-    assertTrue(x.match(t, gamma) != null);
-    assertTrue(gamma.get(x).equals(q));
-    assertTrue(gamma.domain().size() == 1);
   }
 
   @Test

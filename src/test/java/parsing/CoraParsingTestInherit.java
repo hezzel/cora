@@ -26,7 +26,6 @@ import cora.parsers.CoraParser;
 import cora.parsers.ErrorCollector;
 
 /** This class contains shared functionality for all tests of the parser. */
-
 public class CoraParsingTestInherit {
   protected String toStringParseTree(ParseTree t) {
     if (t instanceof TerminalNode) {

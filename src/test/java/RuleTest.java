@@ -45,17 +45,17 @@ public class RuleTest {
   }
 
   @Test(expected = NullInitialisationError.class)
-  public void leftNullCreation() {
+  public void testLeftNullCreation() {
     Rule rule = new SimpleRule(constantTerm("a", baseType("b")), null);
   }
 
   @Test(expected = NullInitialisationError.class)
-  public void rightNullCreation() {
+  public void testRightNullCreation() {
     Rule rule = new SimpleRule(null, constantTerm("a", baseType("b")));
   }
 
   @Test(expected = TypingError.class)
-  public void mistypedRule() {
+  public void testIlltypedRule() {
     Var x = new Var("x", baseType("a"));
     Term left = unaryTerm("id", baseType("b"), x);
     Rule rule = new SimpleRule(left, x);

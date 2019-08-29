@@ -26,7 +26,6 @@ import cora.parsers.CoraParser;
 import cora.parsers.ErrorCollector;
 
 /** This class tests the antlr code for parsing types. */
-
 public class CoraProgramParsingTest extends CoraParsingTestInherit {
   @Test
   public void testShortProgram() {
