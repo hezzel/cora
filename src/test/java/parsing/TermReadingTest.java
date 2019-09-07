@@ -47,7 +47,7 @@ public class TermReadingTest {
   @Test
   public void testReadUndeclaredVariableWithType() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("xx_yy", sigma, new Sort("varsort"));
+    Term term = CoraInputReader.testReadTermFromString("xx_yy", sigma, new Sort("varsort"));
     Variable x = sigma.lookupVariable("xx_yy");
     assertTrue(x != null);
     assertTrue(x.queryType().equals(new Sort("varsort")));
@@ -58,7 +58,7 @@ public class TermReadingTest {
   @Test(expected = cora.exceptions.DeclarationException.class)
   public void testReadUndeclaredVariableWithoutType() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("xx_yy", sigma, null);
+    Term term = CoraInputReader.testReadTermFromString("xx_yy", sigma, null);
     Variable x = sigma.lookupVariable("xx_yy");
   }
 
@@ -67,7 +67,7 @@ public class TermReadingTest {
     ParseData sigma = generateSignature();
     Variable x = new Var("x", new Sort("a"));
     sigma.addVariable(x);
-    Term term = CoraInputReader.readTermFromString("x", sigma, new Sort("a"));
+    Term term = CoraInputReader.testReadTermFromString("x", sigma, new Sort("a"));
     assertTrue(term.equals(x));
     assertTrue(sigma.lookupVariable("x").equals(x));
   }
@@ -77,7 +77,7 @@ public class TermReadingTest {
     ParseData sigma = generateSignature();
     Variable x = new Var("x", new Sort("a"));
     sigma.addVariable(x);
-    Term term = CoraInputReader.readTermFromString("x", sigma, null);
+    Term term = CoraInputReader.testReadTermFromString("x", sigma, null);
     assertTrue(term.equals(x));
     assertTrue(sigma.lookupVariable("x").equals(x));
   }
@@ -87,60 +87,60 @@ public class TermReadingTest {
     ParseData sigma = generateSignature();
     Variable x = new Var("x", new Sort("b"));
     sigma.addVariable(x);
-    Term term = CoraInputReader.readTermFromString("x", sigma, new Sort("a"));
+    Term term = CoraInputReader.testReadTermFromString("x", sigma, new Sort("a"));
   }
 
   @Test
   public void testReadBaseConstantWithoutType() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("aa", sigma, null);
+    Term term = CoraInputReader.testReadTermFromString("aa", sigma, null);
     assertTrue(term.equals(generateSymbol("aa", "a")));
   }
 
   @Test
   public void testReadBaseConstantWithGoodType() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("aa", sigma, new Sort("a"));
+    Term term = CoraInputReader.testReadTermFromString("aa", sigma, new Sort("a"));
     assertTrue(term.equals(generateSymbol("aa", "a")));
   }
 
   @Test(expected = cora.exceptions.TypingException.class)
   public void testReadBaseConstantWithBadType() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("aa", sigma, new Sort("b"));
+    Term term = CoraInputReader.testReadTermFromString("aa", sigma, new Sort("b"));
   }
 
   @Test
   public void testReadHigherOrderConstant() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("f", sigma, null);
+    Term term = CoraInputReader.testReadTermFromString("f", sigma, null);
     assertTrue(term.equals(generateSymbol("f", "a -> b -> c -> d")));
   }
 
   @Test
   public void testReadEmptyApplicationOfConstantWithType() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("bb()", sigma, new Sort("b"));
+    Term term = CoraInputReader.testReadTermFromString("bb()", sigma, new Sort("b"));
     assertTrue(term.equals(generateSymbol("bb", "b")));
   }
 
   @Test
   public void testReadEmptyApplicationOfConstantWithoutType() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("f()", sigma, null);
+    Term term = CoraInputReader.testReadTermFromString("f()", sigma, null);
     assertTrue(term.equals(generateSymbol("f", "a -> b -> c -> d")));
   }
 
   @Test(expected = cora.exceptions.TypingException.class)
   public void testEmptyApplicationWithIncorrectType() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("f()", sigma, new Sort("d"));
+    Term term = CoraInputReader.testReadTermFromString("f()", sigma, new Sort("d"));
   }
 
   @Test
   public void testReadFullApplication() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("f(aa,bb, cc)", sigma, null);
+    Term term = CoraInputReader.testReadTermFromString("f(aa,bb, cc)", sigma, null);
     FunctionSymbol f = generateSymbol("f", "a -> b -> c -> d");
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(generateSymbol("aa", "a"));
@@ -153,7 +153,7 @@ public class TermReadingTest {
   @Test
   public void testReadIncompleteApplication() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("f(aa, x)", sigma, null);
+    Term term = CoraInputReader.testReadTermFromString("f(aa, x)", sigma, null);
     Variable x = sigma.lookupVariable("x");
     assertTrue(x.queryType().equals(new Sort("b")));
     assertTrue(term.queryType().queryArrowInputType().equals(new Sort("c")));
@@ -166,32 +166,32 @@ public class TermReadingTest {
   @Test(expected = cora.exceptions.TypingException.class)
   public void testReadApplicationWithIncorrectTypes() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("f(aa, bb, bb)", sigma, null);
+    Term term = CoraInputReader.testReadTermFromString("f(aa, bb, bb)", sigma, null);
   }
 
   @Test(expected = cora.exceptions.TypingException.class)
   public void testReadApplicationWithInconsistentVariables() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("f(x, bb, x)", sigma, null);
+    Term term = CoraInputReader.testReadTermFromString("f(x, bb, x)", sigma, null);
   }
 
   @Test
   public void testPartiallyAppliedSubterm() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("f(x,h(f(x, bb)),cc)", sigma, null);
+    Term term = CoraInputReader.testReadTermFromString("f(x,h(f(x, bb)),cc)", sigma, null);
     assertTrue(term.toString().equals("f(x, h(f(x, bb)), cc)"));
   }
 
   @Test(expected = cora.exceptions.AntlrParserException.class)
   public void testMissingBracket() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("f(x,h(f(x, bb),cc)", sigma, null);
+    Term term = CoraInputReader.testReadTermFromString("f(x,h(f(x, bb),cc)", sigma, null);
   }
 
   @Test(expected = cora.exceptions.AntlrParserException.class)
   public void testMissingComma() throws ParserException {
     ParseData sigma = generateSignature();
-    Term term = CoraInputReader.readTermFromString("f(x,h(f(x, bb)) cc)", sigma, null);
+    Term term = CoraInputReader.testReadTermFromString("f(x,h(f(x, bb)) cc)", sigma, null);
   }
 }
 

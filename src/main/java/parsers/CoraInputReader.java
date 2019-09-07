@@ -22,9 +22,7 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.ParserRuleContext;
 
 import cora.exceptions.ParserError;
 import cora.exceptions.ParserException;
@@ -45,73 +43,12 @@ import cora.rewriting.*;
  * This is primarily intended to read input by the users, but may also be used internally to, for
  * instance, quickly construct a term (especially as part of unit testing).
  */
-public class CoraInputReader {
-  /** If the current tree is a terminal, returns its display name; otherwise returns null. */
-  private static String getTerminalNodeName(ParseTree tree) {
-    if (!(tree instanceof TerminalNode)) return null;
-    Token token = ((TerminalNode)tree).getSymbol();
-    return CoraParser.VOCABULARY.getSymbolicName(token.getType());
+public class CoraInputReader extends InputReader {
+  public CoraInputReader() {
+    super(CoraParser.VOCABULARY, CoraParser.ruleNames);
   }
 
-  /** If the current tree is a rule context, returns the corresponding rulename; otherwise null. */
-  private static String getRuleName(ParseTree tree) {
-    if (!(tree instanceof ParserRuleContext)) return null;
-    ParserRuleContext cxt = (ParserRuleContext)tree;
-    return CoraParser.ruleNames[cxt.getRuleIndex()];
-  }
-
-  /** Gets the first Token of the given parse tree, for use in ParseExceptions and ParseErrors. */
-  private static Token firstToken(ParseTree tree) {
-    if (tree instanceof TerminalNode) return ((TerminalNode)tree).getSymbol();
-    if (tree instanceof ParserRuleContext) return ((ParserRuleContext)tree).getStart();
-    return null;
-  }
-
-  /** Builds an Error to indicate that there is a problem with the given parse tree. */
-  private static ParserError buildError(ParseTree tree, String message) {
-    Token start = firstToken(tree);
-    String text = tree.getText();
-    if (start != null) return new ParserError(start, text, message);
-    return new ParserError(0, 0, text,
-                           message + " [Also: parse tree does not include any tokens.]");
-  }
-
-  /** This returns a description (including "token" or "rule" of the given child of tree. */
-  private static String checkChild(ParseTree tree, int childindex) {
-    int childcount = tree.getChildCount();
-    if (childcount <= childindex) return "<empty>";
-    ParseTree child = tree.getChild(childindex);
-    if (child == null) return "<null>";
-    String ret = getTerminalNodeName(child);
-    if (ret != null) return "token " + ret;
-    ret = getRuleName(child);
-    if (ret != null) return "rule " + ret;
-    return "unexpected tree [" + child.getText() + "]";
-  }
-
-  /**
-   * This function checks that the given child of tree is a rule with the given name.
-   * If that is not the case, then a ParserError is thrown.
-   */
-  private static void verifyChildIsRule(ParseTree tree, int childindex, String rulename,
-                                        String description) {
-    String actual = checkChild(tree, childindex);
-    if (!actual.equals("rule " + rulename)) {
-      throw buildError(tree, "encountered " + actual + "; expected " + description + ".");
-    }
-  }
-
-  /**
-   * This function checks that the given child of tree is a token with the given name.
-   * If that is not the case, then a ParserError is thrown.
-   */
-  private static void verifyChildIsToken(ParseTree tree, int childindex, String tokenname,
-                                         String description) {
-    String actual = checkChild(tree, childindex);
-    if (!actual.equals("token " + tokenname)) {
-      throw buildError(tree, "encountered " + actual + "; expected " + description + ".");
-    }
-  }
+  /* ========== BASICS (beyond those supplied by the inherit) ========== */
 
   /**
    * This function returns the relevant token text string if the given tree is
@@ -119,34 +56,30 @@ public class CoraInputReader {
    * If not, null is returned. However, if the tree has a form constant(<something else>) a
    * ParserError is thrown since this should not happen.
    */
-  private static String readConstant(ParseTree tree) {
-    if (!(tree instanceof ParserRuleContext)) return null;
-    String rulename = CoraParser.ruleNames[((ParserRuleContext)tree).getRuleIndex()];
-    if (!rulename.equals("constant")) return null;
+  private String readConstant(ParseTree tree) {
+    String rulename = getRuleName(tree);
+    if (rulename == null || !rulename.equals("constant")) return null;
     if (tree.getChildCount() != 1) {
       throw buildError(tree, "constant tree has " + tree.getChildCount() + " children.");
     }
-    ParseTree child = tree.getChild(0);
-    String kind = getTerminalNodeName(child);
-    if (kind != null && (kind.equals("IDENTIFIER") || kind.equals("STRING"))) {
-      return ((TerminalNode)child).getSymbol().getText();
+    String kind = checkChild(tree, 0);
+    if ((kind.equals("token IDENTIFIER") || kind.equals("token STRING"))) {
+      return tree.getText();
     }
-    kind = getRuleName(child);
-    if (kind == null) kind = "an unknown tree";
     throw buildError(tree, "Child of constant is " + kind + "!");
   }
 
   /* ========== TYPE PARSING ========== */
 
   /** Turns the given tree, whose root rule must be "constant", into a Sort. */
-  private static Type readTypeConstant(ParseTree tree) {
+  private Type readTypeConstant(ParseTree tree) {
     String constant = readConstant(tree);
     if (constant != null) return new Sort(constant);
     throw buildError(tree, "readTypeConstant called with a parsetree that is not constant.");
   }
 
   /** Turns the given tree, whose root rule must be "lowarrowtype", into a Type. */
-  private static Type readLowArrowType(ParseTree tree) {
+  private Type readLowArrowType(ParseTree tree) {
     verifyChildIsRule(tree, 0, "constant", "a (string or identifier) constant");
     verifyChildIsToken(tree, 1, "ARROW", "type arrow (->)");
     verifyChildIsRule(tree, 2, "type", "a type");
@@ -156,7 +89,7 @@ public class CoraInputReader {
   }
 
   /** Turns the given tree, whose root rule must be "higherarrowtype", into a Type. */
-  private static Type readHigherArrowType(ParseTree tree) {
+  private Type readHigherArrowType(ParseTree tree) {
     verifyChildIsToken(tree, 0, "BRACKETOPEN", "opening bracket '('");
     verifyChildIsRule(tree, 1, "type", "input type");
     verifyChildIsToken(tree, 2, "BRACKETCLOSE", "closing bracket ')'");
@@ -168,7 +101,7 @@ public class CoraInputReader {
   }
   
   /** Reads a Type from an Antlr ParseTree. */
-  private static Type readType(ParseTree tree) {
+  private Type readType(ParseTree tree) {
     String kind = checkChild(tree, 0);
     if (kind == null) throw buildError(tree, "Type has " + tree.getChildCount() + " children.");
     if (kind.equals("rule constant")) return readTypeConstant(tree.getChild(0));
@@ -177,23 +110,8 @@ public class CoraInputReader {
     throw buildError(tree, "Child of type has an unexpected shape (" + kind + ").");
   }
 
-  /** Sets up a (lexer and) parser with the given error collector as listeners. */
-  private static CoraParser createCoraParser(String str, ErrorCollector collector) {
-    CoraLexer lexer = new CoraLexer(CharStreams.fromString(str));
-    lexer.removeErrorListeners();
-    lexer.addErrorListener(collector);
-    CoraParser parser = new CoraParser(new CommonTokenStream(lexer));
-    parser.removeErrorListeners();
-    parser.addErrorListener(collector);
-    return parser;
-  }
-
-  /** Returns the Type represented by the given string. */
-  public static Type readTypeFromString(String str) throws ParserException {
-    ErrorCollector collector = new ErrorCollector();
-    CoraParser parser = createCoraParser(str, collector);
-    ParseTree tree = parser.onlytype();
-    collector.throwCollectedExceptions();
+  /** Reads a "full type" (type followed by EOF) from the given parsetree. */
+  private Type readFullType(ParseTree tree) {
     verifyChildIsRule(tree, 0, "type", "a type");
     verifyChildIsToken(tree, 1, "EOF", "end of input");
     return readType(tree.getChild(0));
@@ -206,7 +124,7 @@ public class CoraInputReader {
    * Variables may consist only of letters, digits and the underscore, and must start with a letter
    * or underscore.
    */
-  private static boolean isValidVariable(String txt) {
+  private boolean isValidVariable(String txt) {
     if (txt == null || txt.equals("")) return false;
     for (int i = 0; i < txt.length(); i++) {
       Character a = txt.charAt(i);
@@ -220,7 +138,7 @@ public class CoraInputReader {
    * a function symbol, this function tries to parse it into a Variable, updating expectedType if
    * appropriate.
    */
-  private static Variable readVariable(ParseTree tree, String constant, ParseData pd,
+  private Variable readVariable(ParseTree tree, String constant, ParseData pd,
                                        Type expectedType) throws ParserException {
     if (!isValidVariable(constant)) {
       throw new DeclarationException(firstToken(tree), constant, "not a valid variable");
@@ -249,7 +167,7 @@ public class CoraInputReader {
    * <commatermlist>, this function reads the entire argument list into an arraylist. No term
    * parsing is yet done.
    */
-  private static ArrayList<ParseTree> readCommaSeparatedList(ParseTree tree) {
+  private ArrayList<ParseTree> readCommaSeparatedList(ParseTree tree) {
     ArrayList<ParseTree> ret = new ArrayList<ParseTree>();
     verifyChildIsToken(tree, 1, "BRACKETOPEN", "an opening bracket '('");
     verifyChildIsRule(tree, 2, "term", "a term");
@@ -271,7 +189,7 @@ public class CoraInputReader {
    * Reads the given parsetree (which is assumed to map to a "term" rule occurrence) into a term.
    * @see readTermFromString.
    */
-  private static Term readTerm(ParseTree tree, ParseData pd,
+  private Term readTerm(ParseTree tree, ParseData pd,
                                Type expectedType) throws ParserException {
     verifyChildIsRule(tree, 0, "constant", "a declared function symbol or variable");
     String constant = readConstant(tree.getChild(0));
@@ -309,56 +227,24 @@ public class CoraInputReader {
   }
 
   /**
-   * Reads the given string into a term, using ParseData for the declarations of function symbols
-   * and variables.
+   * Reads a term from the given parse tree, using ParseData for the declarations of function
+   * symbols and variables.
    * Function symbols must be predeclared; variables do not need to be, as long as their type can
-   * be derived from the input. These variable type mappings are added into the parse data.
+   * be derived from the input. These variable-type mappings are added into the parse data.
    * A parser exception is thrown if the given string cannot be (unambiguously) translated into a
    * term of the expected type. If expected = null, this final typecheck is omitted, but parsing
-   * (and internal typechecking) may of course still fail for other reasons.
+   * (and internal typechecking) may still fail for other reasons.
    */
-  public static Term readTermFromString(String str, ParseData pd,
-                                        Type expectedType) throws ParserException {
-    ErrorCollector collector = new ErrorCollector();
-    CoraParser parser = createCoraParser(str, collector);
-    ParseTree tree = parser.onlyterm();
-    collector.throwCollectedExceptions();
+  public Term readFullTerm(ParseTree tree, ParseData pd, Type expectedType) throws ParserException {
     verifyChildIsRule(tree, 0, "term", "a term");
     verifyChildIsToken(tree, 1, "EOF", "end of input");
     return readTerm(tree.getChild(0), pd, expectedType);
   }
 
-  /**
-   * Reads the given string into a term, using the given TRS to parse its function symbols.
-   * The type is the expected type of the term, or null if no type is expected.
-   */
-  public static Term readTermFromString(String str, TRS trs, Type expectedType)
-                                                          throws ParserException {
-    ParseData pd = new ParseData(trs);
-    return readTermFromString(str, pd, expectedType);
-  }
-
-  /**
-   * Reads the given string into a term, using the given TRS to parse its function symbols.
-   * This is supposed to only be called with *internal* input (for example from the unit testers),
-   * where it is guaranteed that the string is well-formed and well-typed.
-   * If any exceptions do occur, they are caught and passed on to a ParserError.
-   */
-  public static Term readTermFromString(String str, TRS trs) {
-    ParseData pd = new ParseData(trs);
-    try {
-      return readTermFromString(str, pd, null);
-    }
-    catch (ParserException e) {
-      Token token = e.queryProblematicToken();
-      throw new ParserError(e.queryProblematicToken(), token.toString(),
-        "Parser exception on internally supplied string: " + e.getMessage());
-    }
-  }
 
   /* ========== WHOLE PROGRAM PARSING ========== */
 
-  private static Rule readRule(ParseTree tree, ParseData pd) throws ParserException {
+  private Rule readRule(ParseTree tree, ParseData pd) throws ParserException {
     verifyChildIsRule(tree, 0, "term", "the left-hand side (a term)");
     verifyChildIsToken(tree, 1, "ARROW", "the rule arrow");
     verifyChildIsRule(tree, 2, "term", "the right-hand side (a term)");
@@ -374,7 +260,7 @@ public class CoraInputReader {
    * to the parsing data.
    * If the declaration changes an existing declaration in pd, a parserexception is thrown.
    */
-  private static void updateDataForDeclaration(ParseTree tree,
+  private void updateDataForDeclaration(ParseTree tree,
                                                ParseData pd) throws ParserException {
     verifyChildIsRule(tree, 0, "constant", "a function symbol name (an identifier or string)");
     verifyChildIsToken(tree, 1, "DECLARE", "the declaration token ::");
@@ -394,7 +280,7 @@ public class CoraInputReader {
    * Reads a program into the TRS it defines.  Here, it is assumed that the tree is a "program"
    * context.
    */
-  private static TRS readProgram(ParseTree tree) throws ParserException {
+  private TRS readProgram(ParseTree tree) throws ParserException {
     ParseData pd = new ParseData();
     ArrayList<Rule> ret = new ArrayList<Rule>();
 
@@ -412,37 +298,124 @@ public class CoraInputReader {
     return new TermRewritingSystem(pd.queryCurrentAlphabet(), ret);
   }
 
-  /**
-   * Parses the given program, and returns all the rules that were read.
-   * The parsedata is updated with all the declarations in the program.  The parsedata should only
-   * contain function symbol declarations (or nothing at all); variable declarations are not
-   * allowed, and will not be added.
-   */
-  public static TRS readProgramFromString(String str) throws ParserException {
-    ErrorCollector collector = new ErrorCollector();
-    CoraParser parser = createCoraParser(str, collector);
-    ParseTree tree = parser.input();
-    collector.throwCollectedExceptions();
+  private TRS readFullProgram(ParseTree tree) throws ParserException {
     verifyChildIsRule(tree, 0, "program", "a program");
     verifyChildIsToken(tree, 1, "EOF", "end of input");
     return readProgram(tree.getChild(0));
   }
 
-  public static TRS readProgramFromFile(String filename) throws ParserException, IOException {
-    ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(filename));
-    CoraLexer lexer = new CoraLexer(input);
-    ErrorCollector collector = new ErrorCollector();
+  /* ========== STATIC ACCESS METHODS ========== */
+
+  /** Sets up a (lexer and) parser with the given error collector as listeners. */
+  private static CoraParser createCoraParserFromString(String str, ErrorCollector collector) {
+    CoraLexer lexer = new CoraLexer(CharStreams.fromString(str));
     lexer.removeErrorListeners();
     lexer.addErrorListener(collector);
     CoraParser parser = new CoraParser(new CommonTokenStream(lexer));
     parser.removeErrorListeners();
     parser.addErrorListener(collector);
-    
+    return parser;
+  }
+
+  /** Sets up a (lexer and) parser from the given file, using the given error collector. */
+  private static CoraParser createCoraParserFromFile(String filename, ErrorCollector collector)
+                                                                               throws IOException {
+    ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(filename));
+    CoraLexer lexer = new CoraLexer(input);
+    lexer.removeErrorListeners();
+    lexer.addErrorListener(collector);
+    CoraParser parser = new CoraParser(new CommonTokenStream(lexer));
+    parser.removeErrorListeners();
+    parser.addErrorListener(collector);
+    return parser;
+  }
+
+
+  /** Returns the Type represented by the given string. */
+  public static Type readTypeFromString(String str) throws ParserException {
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createCoraParserFromString(str, collector);
+    CoraInputReader reader = new CoraInputReader();
+    ParseTree tree = parser.onlytype();
+    collector.throwCollectedExceptions();
+
+    return reader.readFullType(tree);
+  }
+
+  /**
+   * Reads the given string into a term, using the given TRS to parse its function symbols.
+   * The type is the expected type of the term, or null if no type is expected.
+   */
+  public static Term readTermFromString(String str, TRS trs, Type expectedType)
+                                                          throws ParserException {
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createCoraParserFromString(str, collector);
+    CoraInputReader reader = new CoraInputReader();
+    ParseTree tree = parser.onlyterm();
+    collector.throwCollectedExceptions();
+
+    ParseData pd = new ParseData(trs);
+    return reader.readFullTerm(tree, pd, expectedType);
+  }
+
+  /**
+   * Reads the given string into a term, updating the given ParseData as it goes along.
+   * This function is ONLY meant to be used for testing!
+   */
+  public static Term testReadTermFromString(String str, ParseData pd, Type expectedType)
+                                                              throws ParserException {
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createCoraParserFromString(str, collector);
+    CoraInputReader reader = new CoraInputReader();
+    ParseTree tree = parser.onlyterm();
+    collector.throwCollectedExceptions();
+    return reader.readFullTerm(tree, pd, expectedType);
+  }
+
+  /**
+   * Reads the given string into a term, using the given TRS to parse its function symbols.
+   * This is supposed to only be called with *internal* input (for example from the unit testers),
+   * where it is guaranteed that the string is well-formed and well-typed.
+   * If any exceptions do occur, they are caught and passed on to a ParserError.
+   */
+  public static Term readTermFromString(String str, TRS trs) {
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createCoraParserFromString(str, collector);
+    CoraInputReader reader = new CoraInputReader();
+    ParseTree tree = parser.onlyterm();
+
+    ParseData pd = new ParseData(trs);
+    try {
+      collector.throwCollectedExceptions();
+      return reader.readFullTerm(tree, pd, null);
+    }
+    catch (ParserException e) {
+      Token token = e.queryProblematicToken();
+      throw new ParserError(token, token.toString(),
+        "Parser exception on internally supplied string: " + e.getMessage());
+    }
+  }
+
+  /** Parses the given program, and returns the TRS that it defines. */
+  public static TRS readProgramFromString(String str) throws ParserException {
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createCoraParserFromString(str, collector);
+    CoraInputReader reader = new CoraInputReader();
     ParseTree tree = parser.input();
     collector.throwCollectedExceptions();
-    verifyChildIsRule(tree, 0, "program", "a program");
-    verifyChildIsToken(tree, 1, "EOF", "end of input");
-    return readProgram(tree.getChild(0));
+
+    return reader.readFullProgram(tree);
+  }
+
+  /** Reads the given file, parses the program in it, and returns the TRS that it defines. */
+  public static TRS readProgramFromFile(String filename) throws ParserException, IOException {
+    ErrorCollector collector = new ErrorCollector();
+    CoraParser parser = createCoraParserFromFile(filename, collector);
+    CoraInputReader reader = new CoraInputReader();
+    ParseTree tree = parser.input();
+    collector.throwCollectedExceptions();
+
+    return reader.readFullProgram(tree);
   }
 }
 
