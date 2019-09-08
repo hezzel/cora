@@ -32,16 +32,14 @@ import cora.terms.positions.EmptyPosition;
  * This inherit provides default functionality for such terms.
  */
 
-abstract class LeafTermInherit implements Term {
+abstract class LeafTermInherit extends TermInherit implements Term {
   private Type _type;
 
   public abstract TermKind queryTermKind();
   public abstract FunctionSymbol queryRoot();
   public abstract Variable queryVariable();
   public abstract Term substitute(Substitution gamma);
-  public abstract String match(Term other, Substitution gamma);
   public abstract String toString();
-  public abstract boolean equals(Term other);
 
   /** Helper function to return the current classname for use in Errors. */
   private String queryMyClassName() {
@@ -84,13 +82,6 @@ abstract class LeafTermInherit implements Term {
   public Term replaceSubterm(Position pos, Term replacement) {
     if (pos.isEmpty()) return replacement;
     throw new IndexingError("Var", "replaceSubterm", toString(), pos.toString());
-  }
-
-  /** Same as match(other, subst), but it creates a fresh substitution and returns the result. */
-  public Substitution match(Term other) {
-    Substitution gamma = new Subst();
-    if (match(other, gamma) == null) return gamma;
-    return null;
   }
 }
 

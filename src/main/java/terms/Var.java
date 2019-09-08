@@ -20,25 +20,27 @@ import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullCallError;
 import cora.exceptions.NullInitialisationError;
 import cora.interfaces.types.Type;
-import cora.interfaces.terms.FunctionSymbol;
-import cora.interfaces.terms.Term;
-import cora.interfaces.terms.Variable;
-import cora.interfaces.terms.Substitution;
+import cora.interfaces.terms.*;
 
 /**
  * Variables are both used as parts of constraints, as binders in an abstraction, as generic
- * expression in terms and as open spots for matching in rules; this class represents all those
+ * expressions in terms and as open spots for matching in rules; this class represents all those
  * kinds of variables.
- * Variables can be renamed (both for reasons of α-conversion and renaming copies of rules), so
- * they are not defined by their name (although they must have one for printing purposes).
+ * Variables have a name for printing purposes, but are not uniquely defined by it (distinct
+ * variables may have the same name and type, although this will typically be avoided within a
+ * single term).  Rather, variables are uniquely identified by an internally kept index.
  */
 public class Var extends LeafTermInherit implements Variable {
+  private static int COUNTER = 0;
   private String _name;
+  private int _index;
 
   /** Create a variable with the given name and type. */
   public Var(String name, Type type) {
     super(type);
     _name = name;
+    _index = COUNTER;
+    COUNTER++;
     if (name == null) throw new NullInitialisationError("Var", "name");
   }
 
@@ -50,6 +52,11 @@ public class Var extends LeafTermInherit implements Variable {
   /** Returns the name this variable was set up with, or renamed to. */
   public String queryName() {
     return _name;
+  }
+
+  /** @return an integer uniquely identifying this variable */
+  public int queryVariableIndex() {
+    return _index;
   }
 
   /** @return the name of the variable, along with its index. */
@@ -65,6 +72,14 @@ public class Var extends LeafTermInherit implements Variable {
   /** @throws InappropriatePatternDataError, as a variable does not have a function symbol root */
   public FunctionSymbol queryRoot() {
     throw new InappropriatePatternDataError("Var", "queryRoot", "functional terms");
+  }
+
+  /**
+   * Adds the current variable into env.
+   * This may cause an Error if a different variable by the same name already occurs in it.
+   */
+  public void updateFreeVars(Environment env) {
+    env.add(this);
   }
 
   /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */
@@ -97,12 +112,11 @@ public class Var extends LeafTermInherit implements Variable {
   }
 
   /**
-   * As we do not have a copy constructor, and do not consider variables equal if they share the
-   * same name, two variables are considered equal only if they are the exact same object.
-   * This also guarantees that renamings carry over to all instances of the renamed variable.
+   * Two variables are equal if and only if they share an index and have the same type.
+   * Currently, this can only occur if they are the same object, but this may change in the future.
    */
   public boolean equals(Variable other) {
-    return this == other;
+    return other.queryVariableIndex() == _index && queryType().equals(other.queryType());
   }
 
   /** A Variable can only be equal to another term if that term is this same Variable */

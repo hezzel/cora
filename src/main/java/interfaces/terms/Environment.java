@@ -13,26 +13,34 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.interfaces.rewriting;
+package cora.interfaces.terms;
 
-import cora.interfaces.terms.FunctionSymbol;
+import java.lang.Iterable;
 
 /**
- * An Alphabet is a (possibly infinite) set of function symbols, which does not have any duplicate
- * name uses.
- * It is used for recognising (and typing) function symbols in various kinds of input.
+ * An Environment is a finite set of variables, each with a distinct name.
+ * It is used for instance to list the variables used in an individual term.
  */
-public interface Alphabet {
+public interface Environment extends Iterable<Variable> {
   /**
-   * Returns the FunctionSymbol with the given name (there should be at most one) if it exists,
+   * Returns the Variable with the given name (there should be at most one) if it exists,
    * otherwise returns null.
    */
-  FunctionSymbol lookup(String name);
+  Variable lookupName(String name);
+
+  /** Returns whether the given variable is an element of the environment. */
+  boolean contains(Variable x);
 
   /**
-   * Returns a copy of the same alphabet (since implementations of Alphabet are not necessarily
+   * Adds the given variable to the environment, or throws an error if a variable by that name
+   * (except for x itself) is already in the environment.
+   */
+  void add(Variable x);
+
+  /**
+   * Returns a copy of the same Environment (since implementations of Environment are not
    * immutable).
    */
-  Alphabet copy();
+  Environment copy();
 }
 

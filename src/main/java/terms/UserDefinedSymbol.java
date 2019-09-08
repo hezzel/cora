@@ -20,10 +20,7 @@ import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.NullCallError;
 import cora.interfaces.types.Type;
-import cora.interfaces.terms.FunctionSymbol;
-import cora.interfaces.terms.Term;
-import cora.interfaces.terms.Variable;
-import cora.interfaces.terms.Substitution;
+import cora.interfaces.terms.*;
 
 /**
  * UserDefinedSymbols are FunctionSymbols which are not predefined within Cora.
@@ -82,6 +79,9 @@ public class UserDefinedSymbol extends LeafTermInherit implements FunctionSymbol
     throw new InappropriatePatternDataError("UserDefinedSymbol", "queryVariable",
                                             "variables or lambda-expressions");
   }
+
+  /** Does nothing, since a function symbol does not use any variables. */
+  public void updateFreeVars(Environment env) {}
 
   /** Returns the current constant unmodified (there is nothing to substitute in a constant). */
   public Term substitute(Substitution gamma) {

@@ -23,11 +23,7 @@ import cora.exceptions.NullInitialisationError;
 import cora.exceptions.NullCallError;
 import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
-import cora.interfaces.terms.FunctionSymbol;
-import cora.interfaces.terms.Variable;
-import cora.interfaces.terms.Term;
-import cora.interfaces.terms.Substitution;
-import cora.interfaces.terms.Position;
+import cora.interfaces.terms.*;
 import cora.terms.positions.EmptyPosition;
 import cora.terms.positions.ArgumentPosition;
 
@@ -37,7 +33,7 @@ import cora.terms.positions.ArgumentPosition;
  * Here, n may be 0, but both n and the types of s1,...,sn are restricted by the type of f. 
  * Application of functions must take typing into account.
  */
-public class FunctionalTerm implements Term {
+public class FunctionalTerm extends TermInherit implements Term {
   private FunctionSymbol _f;
   private ArrayList<Term> _args;
   private Type _outputType;
@@ -166,6 +162,13 @@ public class FunctionalTerm implements Term {
     return ret;
   }
 
+  /** This adds the variables that occur freely in the current term into env. */
+  public void updateFreeVars(Environment env) {
+    for (int i = 0; i < _args.size(); i++) {
+      _args.get(i).updateFreeVars(env);
+    }
+  }
+
   /** @return this if the position is empty; otherwise throws an IndexingError */
   public Term querySubterm(Position pos) {
     if (pos.isEmpty()) return this;
@@ -222,13 +225,6 @@ public class FunctionalTerm implements Term {
       String warning = _args.get(i).match(other.queryImmediateSubterm(i+1), gamma);
       if (warning != null) return warning;
     }
-    return null;
-  }
-
-  /** Same as match(other, subst), but it creates a fresh substitution and returns the result. */
-  public Substitution match(Term other) {
-    Substitution gamma = new Subst();
-    if (match(other, gamma) == null) return gamma;
     return null;
   }
 

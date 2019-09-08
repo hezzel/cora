@@ -104,6 +104,8 @@ public class VarTest {
     assertTrue(s.queryVariable().equals(x));
     assertTrue(s.toString().equals("x"));
     assertTrue(s.numberImmediateSubterms() == 0);
+    Variable y = new Var("x", baseType("o"));
+    assertTrue(x.queryVariableIndex() != y.queryVariableIndex());
   }
 
   @Test

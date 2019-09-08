@@ -38,5 +38,8 @@ public interface Variable extends Term {
 
   /** @return equality to another Variable */
   boolean equals(Variable x);
+
+  /** A variable is uniquely defined by its ID (two Variables are equal iff they share indexes). */
+  int queryVariableIndex();
 }
 
