@@ -40,44 +40,37 @@ public class EnvTest {
   }
 
   @Test
-  public void testNameLookup() {
-    Variable x = new Var("x", new Sort("a"));
-    Var y = new Var("y", new Sort("b"));
-    ArrayList<Variable> vars = new ArrayList<Variable>();
-    vars.add(x);
-    vars.add(y);
-    Env env = new Env(vars);
-    assertTrue(env.lookupName("x").equals(x));
-    assertTrue(env.lookupName("y").equals(y));
-    assertTrue(env.lookupName("z") == null);
-  }
-
-  @Test
   public void testAddVariableTwice() {
     Variable x = new Var("x", new Sort("a"));
     Environment env = new Env();
     env.add(x);
     env.add(x);
     assertTrue(env.contains(x));
+    assertTrue(env.size() == 1);
   }
 
-  @Test(expected = java.lang.Error.class)
   public void testAddingTwoVariablesWithTheSameName() {
     Variable x = new Var("x", new Sort("a"));
     Var y = new Var("x", new Sort("b"));
     Environment env = new Env();
     env.add(x);
     env.add(y);
+    assertTrue(env.contains(x));
+    assertTrue(env.contains(y));
+    assertTrue(env.size() == 2);
   }
 
-  @Test(expected = java.lang.Error.class)
-  public void testCreationWithTwoVariablesWithTheSameName() {
+  public void testCreationWithThreeSimilarVariables() {
     Variable x = new Var("x", new Sort("a"));
     Var y = new Var("x", new Sort("b"));
     ArrayList<Variable> vars = new ArrayList<Variable>();
     vars.add(x);
     vars.add(y);
+    vars.add(x);
     Env env = new Env(vars);
+    assertTrue(env.contains(x));
+    assertTrue(env.contains(y));
+    assertTrue(env.size() == 2);
   }
 
   @Test

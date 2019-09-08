@@ -34,12 +34,12 @@ import cora.terms.positions.EmptyPosition;
 abstract class TermInherit {
   abstract String match(Term other, Substitution gamma);
   abstract boolean equals(Term other);
-  abstract void updateFreeVars(Environment env);
+  abstract void updateVars(Environment env);
 
-  /** Returns the set of all variables occurring freely in the current term. */
-  public Environment freeVars() {
+  /** Returns the set of all variables occurring in the current term. */
+  public Environment vars() {
     Environment env = new Env();
-    updateFreeVars(env);
+    updateVars(env);
     return env;
   }
 

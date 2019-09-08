@@ -17,21 +17,20 @@ package cora.terms;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.TreeMap;
+import java.util.TreeSet;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.Environment;
-import cora.exceptions.NullCallError;
 
 /** Env is the default implementation of Environment: a set of variables with unique names. */
 public class Env implements Environment {
-  private TreeMap<String,Variable> _variables;
+  private TreeSet<Variable> _variables;
 
   public Env() {
-    _variables = new TreeMap<String,Variable>();
+    _variables = new TreeSet<Variable>();
   }
 
   public Env(Collection<Variable> vars) {
-    _variables = new TreeMap<String,Variable>();
+    _variables = new TreeSet<Variable>();
     for (Variable x : vars) add(x);
   }
 
@@ -40,38 +39,27 @@ public class Env implements Environment {
    * Throws an Error if a variable of the same name is already in the environment.
    */
   public void add(Variable x) {
-    Variable var = _variables.get(x.queryName());
-    if (var != null && !var.equals(x)) {
-      throw new Error("Trying to add variable with name " + x.queryName() + " to an environment " +
-        "that already contains a different variable of the same name.");
-    }
-    _variables.put(x.queryName(), x);
+    _variables.add(x);
   }
 
   /** Returns whether the given variable is an element of the environment. */
   public boolean contains(Variable x) {
-    if (x == null) throw new NullCallError("Env", "contains", "variable x");
-    Variable y = _variables.get(x.queryName());
-    if (y == null) return false;
-    return x.equals(y);
+    return _variables.contains(x);
   }
 
-  /**
-   * Returns the variable with the give name in the environment, if any; if there is no such
-   * variable, null is returned instead.
-   */
-  public Variable lookupName(String name) {
-    return _variables.get(name);
+  /** Returns the number of variables in this environment. */
+  public int size() {
+    return _variables.size();
   }
 
   /** Returns an iterator over all variables in the environment. */
   public Iterator<Variable> iterator() {
-    return _variables.values().iterator();
+    return _variables.iterator();
   }
 
   /** Returns a copy of the current environment. */
   public Environment copy() {
-    return new Env(_variables.values());
+    return new Env(_variables);
   }
 }
 

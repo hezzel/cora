@@ -78,7 +78,7 @@ public class Var extends LeafTermInherit implements Variable {
    * Adds the current variable into env.
    * This may cause an Error if a different variable by the same name already occurs in it.
    */
-  public void updateFreeVars(Environment env) {
+  public void updateVars(Environment env) {
     env.add(this);
   }
 
@@ -123,6 +123,13 @@ public class Var extends LeafTermInherit implements Variable {
   public boolean equals(Term other) {
     if (other.queryTermKind() != Term.TermKind.VARTERM) return false;
     return equals(other.queryVariable());
+  }
+
+  /** Implements a total ordering on variables using the index. */
+  public int compareTo(Variable other) {
+    if (_index < other.queryVariableIndex()) return -1;
+    if (_index > other.queryVariableIndex()) return 1;
+    return 0;
   }
 }
 

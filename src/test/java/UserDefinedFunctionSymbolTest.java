@@ -124,6 +124,7 @@ public class UserDefinedFunctionSymbolTest {
     assertTrue(f.replaceSubterm(new EmptyPosition(), x).equals(x));
     Subst gamma = new Subst(x, new UserDefinedSymbol("gg", combi));
     assertTrue(f.substitute(gamma).equals(f));
+    assertTrue(f.vars().size() == 0);
   }
 
   @Test

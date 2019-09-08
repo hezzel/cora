@@ -81,7 +81,7 @@ public class UserDefinedSymbol extends LeafTermInherit implements FunctionSymbol
   }
 
   /** Does nothing, since a function symbol does not use any variables. */
-  public void updateFreeVars(Environment env) {}
+  public void updateVars(Environment env) {}
 
   /** Returns the current constant unmodified (there is nothing to substitute in a constant). */
   public Term substitute(Substitution gamma) {

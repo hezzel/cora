@@ -154,6 +154,21 @@ public class FunctionalTermTest {
   }
 
   @Test
+  public void testVars() {
+    // let's create: f(f(x,c),g(y,x))
+    FunctionSymbol f = new UserDefinedSymbol("f", new ArrowType(baseType("a"),arrowType("b","a")));
+    FunctionSymbol g = new UserDefinedSymbol("g", new ArrowType(baseType("b"),arrowType("a","b")));
+    FunctionSymbol c = new UserDefinedSymbol("c", baseType("b"));
+    Variable x = new Var("x", baseType("a"));
+    Variable y = new Var("y", baseType("b"));
+    Term s = new FunctionalTerm(f, new FunctionalTerm(f, x, c), new FunctionalTerm(g, y, x));
+    Environment env = s.vars();
+    assertTrue(env.contains(x));
+    assertTrue(env.contains(y));
+    assertTrue(env.size() == 2);
+  }
+
+  @Test
   public void testVarOrFunctionalTerm() {
     Term s1 = new Var("x", baseType("o"));
     Term s2 = constantTerm("x", baseType("o"));

@@ -18,24 +18,19 @@ package cora.interfaces.terms;
 import java.lang.Iterable;
 
 /**
- * An Environment is a finite set of variables, each with a distinct name.
+ * An Environment is a finite set of variables, which may later be equipped with additional data
+ * such as which are free and which are bound.
  * It is used for instance to list the variables used in an individual term.
  */
 public interface Environment extends Iterable<Variable> {
-  /**
-   * Returns the Variable with the given name (there should be at most one) if it exists,
-   * otherwise returns null.
-   */
-  Variable lookupName(String name);
-
   /** Returns whether the given variable is an element of the environment. */
   boolean contains(Variable x);
 
-  /**
-   * Adds the given variable to the environment, or throws an error if a variable by that name
-   * (except for x itself) is already in the environment.
-   */
+  /** Adds the given variable to the environment, if it is not in there yet. */
   void add(Variable x);
+
+  /** Returns the number of variables currently in the environment. */
+  int size();
 
   /**
    * Returns a copy of the same Environment (since implementations of Environment are not

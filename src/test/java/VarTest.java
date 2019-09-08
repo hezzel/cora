@@ -109,6 +109,21 @@ public class VarTest {
   }
 
   @Test
+  public void testVarTermVars() {
+    Variable x = new Var("x", baseType("oo"));
+    Environment env = x.vars();
+    assertTrue(env.size() == 1);
+    assertTrue(env.contains(x));
+    Environment other = new Env();
+    other.add(new Var("y", baseType("aa")));
+    x.updateVars(other);
+    assertTrue(other.size() == 2);
+    assertTrue(other.contains(x));
+    x.updateVars(other);
+    assertTrue(other.size() == 2);
+  }
+
+  @Test
   public void testVarTermEquality() {
     Term s1 = new Var("x", baseType("o"));
     Term s2 = new Var("x", baseType("o"));

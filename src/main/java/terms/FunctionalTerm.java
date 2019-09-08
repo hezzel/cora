@@ -163,9 +163,9 @@ public class FunctionalTerm extends TermInherit implements Term {
   }
 
   /** This adds the variables that occur freely in the current term into env. */
-  public void updateFreeVars(Environment env) {
+  public void updateVars(Environment env) {
     for (int i = 0; i < _args.size(); i++) {
-      _args.get(i).updateFreeVars(env);
+      _args.get(i).updateVars(env);
     }
   }
 

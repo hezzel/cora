@@ -15,6 +15,7 @@
 
 package cora.interfaces.terms;
 
+import java.lang.Comparable;
 import cora.interfaces.types.Type;
 
 /**
@@ -26,7 +27,7 @@ import cora.interfaces.types.Type;
  *
  * Note: all instances of Variable must (and can be expected to) be immutable.
  */
-public interface Variable extends Term {
+public interface Variable extends Term, Comparable<Variable> {
   /**
    * @return a string representation of the variable.
    * Variable names are not unique, and variables are not identified by their name.

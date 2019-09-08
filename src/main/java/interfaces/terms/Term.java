@@ -64,18 +64,15 @@ public interface Term {
    */
   ArrayList<Position> queryAllPositions();
 
-  /**
-   * Returns the set of all variables that occur in the current term, with the exception of those
-   * that occur bound.
-   */
-  Environment freeVars();
+  /** Returns the set of all variables that occur in the current term. */
+  Environment vars();
 
   /**
-   * This adds the variables that occur freely in the current term into env.
+   * This adds the variables that occur in the current term into env.
    * Note that this will throw an error if any variable in env has the same name as a variable in
    * the current term (but is a different variable).
    */
-  void updateFreeVars(Environment env);
+  void updateVars(Environment env);
 
   /**
    * Returns the subterm at the given position, assuming that this is indeed a position of the
