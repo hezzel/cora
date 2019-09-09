@@ -149,6 +149,15 @@ public class FunctionalTerm extends TermInherit implements Term {
     return _outputType;
   }
 
+  /** Returns whether (a) this term has base type, and (b) all its arguments are first-order. */
+  public boolean queryFirstOrder() {
+    if (_outputType.queryTypeKind() != Type.TypeKind.BASETYPE) return false;
+    for (int i = 0; i < _args.size(); i++) {
+      if (!_args.get(i).queryFirstOrder()) return false;
+    }
+    return true;
+  }
+
   /** Returns the positions in all subterms, from left to right, followed by the empty position. */
   public ArrayList<Position> queryAllPositions() {
     ArrayList<Position> ret = new ArrayList<Position>();

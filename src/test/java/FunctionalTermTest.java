@@ -176,6 +176,18 @@ public class FunctionalTermTest {
   }
 
   @Test
+  public void testFirstOrder() {
+    Type aa = arrowType("a", "a");
+    Term s = twoArgTerm();
+    Term t = unaryTerm("h", aa, new Var("x", baseType("b")));
+    Type utype = new ArrowType(baseType("a"), new ArrowType(aa, baseType("b")));
+    Term q = new FunctionalTerm(new UserDefinedSymbol("u", utype), s, t);
+    assertTrue(s.queryFirstOrder());
+    assertFalse(t.queryFirstOrder());
+    assertFalse(q.queryFirstOrder());
+  }
+
+  @Test
   public void testPositions() {
     Type type = new ArrowType(baseType("a"), arrowType("b", "a"));
     FunctionSymbol f = new UserDefinedSymbol("f", type);

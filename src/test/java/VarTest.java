@@ -104,8 +104,11 @@ public class VarTest {
     assertTrue(s.queryVariable().equals(x));
     assertTrue(s.toString().equals("x"));
     assertTrue(s.numberImmediateSubterms() == 0);
+    assertTrue(s.queryFirstOrder());
     Variable y = new Var("x", baseType("o"));
     assertTrue(x.queryVariableIndex() != y.queryVariableIndex());
+    Variable z = new Var("z", arrowType("o", "o"));
+    assertFalse(z.queryFirstOrder());
   }
 
   @Test

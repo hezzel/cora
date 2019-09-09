@@ -125,6 +125,9 @@ public class UserDefinedFunctionSymbolTest {
     Subst gamma = new Subst(x, new UserDefinedSymbol("gg", combi));
     assertTrue(f.substitute(gamma).equals(f));
     assertTrue(f.vars().size() == 0);
+    assertFalse(f.queryFirstOrder());
+    Term aa = new UserDefinedSymbol("g", a);
+    assertTrue(aa.queryFirstOrder());
   }
 
   @Test
