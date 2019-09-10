@@ -17,14 +17,35 @@ package cora;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import cora.exceptions.ParserException;
 import cora.interfaces.terms.Term;
 import cora.interfaces.rewriting.TRS;
 import cora.parsers.CoraInputReader;
+import cora.parsers.TrsInputReader;
 
 public class Main {
+  private static String getExtension(String filename) {
+    int i = filename.lastIndexOf('.');
+    if (i >= 0) return filename.substring(i+1);
+    return "";
+  }
+
+  private static TRS readInput(String file) throws Exception {
+    String extension = getExtension(file);
+    if (extension.equals("trs") || extension.equals("mstrs")) {
+      return TrsInputReader.readTrsFromFile(file);
+    }
+    if (extension.equals("cora")) {
+      return CoraInputReader.readProgramFromFile(file);
+    }
+    throw new Exception("Unknown file extension: " + extension + ".");
+  }
+
   public static void main(String[] args) {
     try {
-      TRS trs = CoraInputReader.readProgramFromFile("test.trs");
+      TRS trs = args.length > 0 ? readInput(args[0]) : readInput("test.cora");
+      if (trs == null) return;
+
       System.out.print(trs.toString());
       System.out.print("Input term: ");
       String input = (new BufferedReader(new InputStreamReader(System.in))).readLine();

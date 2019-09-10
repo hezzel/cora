@@ -1,7 +1,8 @@
-0 :: nat
-s :: nat -> nat
-
-add :: nat -> nat -> nat
-add(0, y) -> y
-add(s(x), y) -> add(x, s(y))
-
+(VAR x y)
+(RULES
+  +(x,0) -> x
+  +(x,s(y)) -> s(+(x,y))
+  fib(0) -> 0
+  fib(s(0)) -> s(0)
+  fib(s(s(x))) -> +( fib(s(x)) , fib(x) )
+)

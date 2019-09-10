@@ -427,5 +427,16 @@ public class TrsInputReader extends InputReader {
 
     return reader.readTRS(tree);
   }
+
+  /** Reads the given file, parses the program in it, and returns the TRS that it defines. */
+  public static TRS readTrsFromFile(String filename) throws ParserException, IOException {
+    ErrorCollector collector = new ErrorCollector();
+    TrsParser parser = createTrsParserFromFile(filename, collector);
+    TrsInputReader reader = new TrsInputReader();
+    ParseTree tree = parser.trs();
+    collector.throwCollectedExceptions();
+
+    return reader.readTRS(tree);
+  }
 }
 
