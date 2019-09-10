@@ -27,6 +27,7 @@ import org.antlr.v4.runtime.Token;
 import cora.exceptions.ParserException;
 import cora.exceptions.DeclarationException;
 import cora.exceptions.TypingException;
+import cora.exceptions.IllegalRuleError;
 import cora.interfaces.types.Type;
 import cora.interfaces.types.BaseType;
 import cora.interfaces.terms.Term;
@@ -39,7 +40,7 @@ import cora.types.ArrowType;
 import cora.terms.UserDefinedSymbol;
 import cora.terms.Var;
 import cora.terms.FunctionalTerm;
-import cora.rewriting.SimpleRule;
+import cora.rewriting.FirstOrderRule;
 import cora.rewriting.TermRewritingSystem;
 
 /**
@@ -309,7 +310,10 @@ public class TrsInputReader extends InputReader {
     verifyChildIsRule(tree, 2, "term", "a term");
     Term left = readTerm(tree.getChild(0), data, null, mstrs);
     Term right = readTerm(tree.getChild(2), data, left.queryType(), mstrs);
-    return new SimpleRule(left, right);
+    try { return new FirstOrderRule(left, right); }
+    catch (IllegalRuleError e) {
+      throw new ParserException(firstToken(tree), e.queryProblem());
+    }
   }
 
   /** This function reads a rule list (RULES...) into a list of rules. */

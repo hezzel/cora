@@ -25,7 +25,7 @@ import cora.types.*;
 import cora.terms.*;
 import cora.rewriting.SimpleRule;
 
-public class RuleTest {
+public class SimpleRuleTest {
   private Type baseType(String name) {
     return new Sort(name);
   }
