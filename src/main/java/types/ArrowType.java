@@ -32,10 +32,11 @@ public class ArrowType implements Type {
     _right = right;
   }
 
-  /** @return ARROWTYPE */
-  public TypeKind queryTypeKind() {
-    return TypeKind.ARROWTYPE;
-  }
+  /** @return false */
+  public boolean isBaseType() { return false; }
+
+  /** @return true */
+  public boolean isArrowType() { return true; }
 
   /** Returns a string representation which takes right-associativity into account. */
   public String toString() {
@@ -43,21 +44,14 @@ public class ArrowType implements Type {
     String rightstring = _right.toString();
     
     String left;
-    switch (_left.queryTypeKind()) {
-      case ARROWTYPE:
-        left = "(" + leftstring + ")";
-        break;
-      case BASETYPE:
-        left = leftstring;
-        break;
-      default:
-        throw new Error("Missed a case in a switch for type kinds.");
-    }
+    if (_left.isArrowType()) left = "(" + leftstring + ")";
+    else if (_left.isBaseType()) left = leftstring;
+    else throw new Error("Missed a case in a switch for type kinds.");
     return left + " → " + rightstring;
   }
 
   public boolean equals(Type type) {
-    if (type == null || type.queryTypeKind() != TypeKind.ARROWTYPE) return false;
+    if (type == null || !type.isArrowType()) return false;
     return _left.equals(type.queryArrowInputType()) &&
            _right.equals(type.queryArrowOutputType());
   }

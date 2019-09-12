@@ -75,7 +75,8 @@ public class TypeTest {
 
   @Test
   public void testSortTypeKindIsBase() {
-    assertEquals(intType().queryTypeKind(), Type.TypeKind.BASETYPE);
+    assertTrue(intType().isBaseType());
+    assertFalse(intType().isArrowType());
   }
 
   @Test
@@ -146,6 +147,8 @@ public class TypeTest {
 
     assertEquals(2, intintbooltype.queryArity());
     assertEquals(1, intboolinttype.queryArity());
+    assertTrue(intbooltype.isArrowType());
+    assertFalse(intbooltype.isBaseType());
     assertTrue(intboolinttype.queryArrowInputType().equals(intbooltype));
     assertTrue(intboolinttype.queryArrowOutputType().equals(inttype));
     assertTrue(intintbooltype.queryArrowInputType().equals(inttype));

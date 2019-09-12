@@ -25,27 +25,27 @@ import java.util.ArrayList;
  * Note: all instances of Type must (and can be expected to) be immutable.
  */
 public interface Type {
-  public enum TypeKind { ARROWTYPE, BASETYPE };
-  
-  /** Returns ARROWTYPE or BASETYPE */
-  public TypeKind queryTypeKind();
+  /** Returns true for base types, false for arrow types. */
+  boolean isBaseType();
+  /** Return false for base types, true for arrow types. */
+  boolean isArrowType();
   
   /** Returns a string representation of the current type. */
-  public String toString();
+  String toString();
 
   /** Returns whether the given Type is equal to us. */
-  public boolean equals(Type type);
+  boolean equals(Type type);
 
   /** For σ1 → ,,, → σk → τ, returns k */
-  public int queryArity();
+  int queryArity();
   /** For σ1 → ,,, → σk → τ, adds {σ1,,,σk} to the end of answer. */
-  public void appendInputTypes(ArrayList<Type> answer);
+  void appendInputTypes(ArrayList<Type> answer);
   /** For σ1 → ,,, → σk → τ, returns τ */
-  public BaseType queryOutputSort();
+  BaseType queryOutputSort();
 
   /** Throws an InappropriatePatternDataError if called on anything but ARROWTYPE */
-  public Type queryArrowInputType();
+  Type queryArrowInputType();
   /** Throws an InappropriatePatternDataError if called on anything but ARROWTYPE */
-  public Type queryArrowOutputType();
+  Type queryArrowOutputType();
 }
 

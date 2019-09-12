@@ -266,7 +266,7 @@ public class TrsInputReader extends InputReader {
   private Term readTerm(ParseTree tree, ParseData data, Type expectedType, boolean mstrs)
                                                                           throws ParserException {
     // sanity check: this input reader only reads terms of base type!
-    if (expectedType != null && expectedType.queryTypeKind() != Type.TypeKind.BASETYPE) {
+    if (expectedType != null && !expectedType.isBaseType()) {
       throw buildError(tree, "Trying to read a term of non-basic type!");
     }
     verifyChildIsToken(tree, 0, "IDENTIFIER", "a function name or variable (an identifier)");

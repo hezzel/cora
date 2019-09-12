@@ -54,7 +54,7 @@ public class FunctionalTerm extends TermInherit implements Term {
         throw new NullInitialisationError("FunctionalTerm", "passing a null argument to " +
           f.toString() + ".");
       }
-      if (type.queryTypeKind() != Type.TypeKind.ARROWTYPE) {
+      if (!type.isArrowType()) {
         throw new ArityError("FunctionalTerm", "constructor", "symbol " + f.toString() +
           " has maximum arity " + i + " and is given " + args.size() + " arguments.");
       }
@@ -166,7 +166,7 @@ public class FunctionalTerm extends TermInherit implements Term {
 
   /** Returns whether (a) this term has base type, and (b) all its arguments are first-order. */
   public boolean queryFirstOrder() {
-    if (_outputType.queryTypeKind() != Type.TypeKind.BASETYPE) return false;
+    if (!_outputType.isBaseType()) return false;
     for (int i = 0; i < _args.size(); i++) {
       if (!_args.get(i).queryFirstOrder()) return false;
     }

@@ -210,7 +210,7 @@ public class CoraInputReader extends InputReader {
     ArrayList<Term> args = new ArrayList<Term>();
     Type type = f.queryType();
     for (int i = 0; i < arguments.size(); i++) {
-      if (type.queryTypeKind() != Type.TypeKind.ARROWTYPE) {
+      if (!type.isArrowType()) {
         throw new TypingException(firstToken(tree), constant, type.toString(),
                                   "type of arity at least " + arguments.size());
       }

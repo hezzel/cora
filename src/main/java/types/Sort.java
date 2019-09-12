@@ -29,10 +29,11 @@ public class Sort implements BaseType {
     _name = name;
   }
 
-  /** @return BASETYPE */
-  public Type.TypeKind queryTypeKind() {
-    return Type.TypeKind.BASETYPE;
-  }
+  /** @return true */
+  public boolean isBaseType() { return true; }
+
+  /** @return false */
+  public boolean isArrowType() { return false; }
 
   /** Returns a string representation of this sort. */
   public String toString() {
@@ -44,8 +45,7 @@ public class Sort implements BaseType {
    * equal).
    */
   public boolean equals(Type type) {
-    return type.queryTypeKind() == Type.TypeKind.BASETYPE &&
-           _name.equals(type.toString());
+    return type != null && type.isBaseType() && _name.equals(type.toString());
   }
 
   /** Checks equality with the given base type (exactly if their toStrings are equal). */

@@ -25,17 +25,17 @@ public class TypeReadingTest {
   public void testReadTypeValidType() throws ParserException {
     String str = "a -> (b -> cd) -> e";
     Type type = CoraInputReader.readTypeFromString(str);
-    assertTrue(type.queryTypeKind() == Type.TypeKind.ARROWTYPE);
+    assertTrue(type.isArrowType());
     Type a = type.queryArrowInputType();
     Type bcde = type.queryArrowOutputType();
-    assertTrue(a.queryTypeKind() == Type.TypeKind.BASETYPE);
-    assertTrue(bcde.queryTypeKind() == Type.TypeKind.ARROWTYPE);
+    assertTrue(a.isBaseType());
+    assertTrue(bcde.isArrowType());
     Type bcd = bcde.queryArrowInputType();
-    assertTrue(bcd.queryTypeKind() == Type.TypeKind.ARROWTYPE);
+    assertTrue(bcd.isArrowType());
     assertTrue(bcd.queryArrowInputType().toString().equals("b"));
     assertTrue(bcd.queryArrowOutputType().toString().equals("cd"));
     Type e = bcde.queryArrowOutputType();
-    assertTrue(e.queryTypeKind() == Type.TypeKind.BASETYPE);
+    assertTrue(e.isBaseType());
   }
 
   @Test
