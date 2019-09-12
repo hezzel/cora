@@ -35,7 +35,6 @@ import cora.terms.positions.EmptyPosition;
 abstract class LeafTermInherit extends TermInherit implements Term {
   private Type _type;
 
-  public abstract TermKind queryTermKind();
   public abstract FunctionSymbol queryRoot();
   public abstract Variable queryVariable();
   public abstract Term substitute(Substitution gamma);

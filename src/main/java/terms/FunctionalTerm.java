@@ -115,9 +115,24 @@ public class FunctionalTerm extends TermInherit implements Term {
     _outputType = outputType;
   }
 
-  /** @return FUNCTIONALTERM */
-  public TermKind queryTermKind() {
-    return TermKind.FUNCTIONALTERM;
+  /** @return fakse */
+  public boolean isVariable() {
+    return false;
+  }
+
+  /** @return true iff the number of arguments is 0 */
+  public boolean isConstant() {
+    return _args.size() == 0;
+  }
+
+  /** @return false */
+  public boolean isVarTerm() {
+    return false;
+  }
+
+  /** @return true */
+  public boolean isFunctionalTerm() {
+    return true;
   }
 
   /** For a term f(s1,...,sn), this returns n. */
@@ -226,8 +241,8 @@ public class FunctionalTerm extends TermInherit implements Term {
    */
   public String match(Term other, Substitution gamma) {
     if (other == null) throw new NullCallError("FunctionalTerm", "match", "argument term (other)");
-    if (other.queryTermKind() != TermKind.FUNCTIONALTERM ||
-        !_f.equals(other.queryRoot()) || _args.size() != other.numberImmediateSubterms()) {
+    if (!other.isFunctionalTerm() || !_f.equals(other.queryRoot()) ||
+        _args.size() != other.numberImmediateSubterms()) {
       return "functional term " + toString() + " is not instantiated by " + other.toString() + ".";
     }   
     for (int i = 0; i < _args.size(); i++) {
@@ -251,7 +266,7 @@ public class FunctionalTerm extends TermInherit implements Term {
   /** This method verifies equality to another Term. */
   public boolean equals(Term term) {
     if (term == null) return false;
-    if (term.queryTermKind() != TermKind.FUNCTIONALTERM) return false;
+    if (!term.isFunctionalTerm()) return false;
     if (!_f.equals(term.queryRoot())) return false;
     if (_args.size() != term.numberImmediateSubterms()) return false;
     for (int i = 0; i < _args.size(); i++) {

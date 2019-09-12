@@ -64,10 +64,17 @@ public class UserDefinedSymbol extends LeafTermInherit implements FunctionSymbol
     return queryType().equals(symbol.queryType());
   }
 
-  /** @return FUNCTIONALTERM */
-  public TermKind queryTermKind() {
-    return TermKind.FUNCTIONALTERM;
-  }
+  /** @return false */
+  public boolean isVariable() { return false; }
+
+  /** @return false */
+  public boolean isVarTerm() { return false; }
+
+  /** @return true */
+  public boolean isConstant() { return true; }
+
+  /** @return true */
+  public boolean isFunctionalTerm() { return true; }
 
   /** Returns the current symbol f, which is the root of the corresponding term f(). */
   public FunctionSymbol queryRoot() {
@@ -100,8 +107,7 @@ public class UserDefinedSymbol extends LeafTermInherit implements FunctionSymbol
 
   public boolean equals(Term term) {
     if (term == null) return false;
-    if (term.queryTermKind() != TermKind.FUNCTIONALTERM) return false;
-    if (term.numberImmediateSubterms() != 0) return false;
+    if (!term.isConstant()) return false;
     return equals(term.queryRoot());
   }
 }

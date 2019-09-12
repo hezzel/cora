@@ -32,8 +32,17 @@ public interface Term {
   /** Returns the type of the term. */
   Type queryType();
 
-  /** Returns what kind of Term this is. */
-  TermKind queryTermKind();
+  /** Returns whether or not the current term is a variable. */
+  boolean isVariable();
+
+  /** Returns whether or not the current term is an unapplied function symbol. */
+  boolean isConstant();
+
+  /** Returns whether or not the current term has the form f(s1,...,sn) with n ≥ 0. */
+  boolean isFunctionalTerm();
+
+  /** Returns whether or not the current term has the form x(s1,...,sn) with n ≥ 0. */
+  boolean isVarTerm();
 
   /** Returns the number of immediate subterms (that is, n for a term f(s1,...,sn)). */
   int numberImmediateSubterms();

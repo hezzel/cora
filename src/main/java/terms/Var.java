@@ -44,10 +44,17 @@ public class Var extends LeafTermInherit implements Variable {
     if (name == null) throw new NullInitialisationError("Var", "name");
   }
 
-  /** @return VARTERM */
-  public TermKind queryTermKind() {
-    return Term.TermKind.VARTERM;
-  }
+  /** @return true */
+  public boolean isVariable() { return true; }
+
+  /** @return true */
+  public boolean isVarTerm() { return true; }
+
+  /** @return false */
+  public boolean isConstant() { return false; }
+
+  /** @return false */
+  public boolean isFunctionalTerm() { return false; }
 
   /** Returns the name this variable was set up with, or renamed to. */
   public String queryName() {
@@ -121,7 +128,7 @@ public class Var extends LeafTermInherit implements Variable {
 
   /** A Variable can only be equal to another term if that term is this same Variable */
   public boolean equals(Term other) {
-    if (other.queryTermKind() != Term.TermKind.VARTERM) return false;
+    if (!other.isVariable()) return false;
     return equals(other.queryVariable());
   }
 

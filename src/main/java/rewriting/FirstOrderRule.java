@@ -61,7 +61,7 @@ public class FirstOrderRule implements Rule {
       }
     }
     // the right-hand side should have the form f(...)
-    if (left.queryTermKind() != Term.TermKind.FUNCTIONALTERM) {
+    if (!left.isFunctionalTerm()) {
         throw new IllegalRuleError("FirstOrderRule", "illegal rule [" + left.toString() + " → " +
           right.toString() + "] with a variable as the left-hand side.");
     }

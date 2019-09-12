@@ -133,9 +133,20 @@ public class FunctionalTermTest {
   public void testFunctionalTermBasics() {
     Term t = twoArgTerm();
     Type type = new ArrowType(baseType("a"), arrowType("b", "a"));
-    assertTrue(t.queryTermKind() == Term.TermKind.FUNCTIONALTERM);
+    assertTrue(t.isFunctionalTerm());
+    assertFalse(t.isConstant());
+    assertFalse(t.isVariable());
+    assertFalse(t.isVarTerm());
     assertTrue(t.queryRoot().equals(new UserDefinedSymbol("f", type)));
     assertTrue(t.toString().equals("f(c, g(d))"));
+  }
+
+  @Test
+  public void testConstantFunctionalTerm() {
+    FunctionSymbol f = new UserDefinedSymbol("f", arrowType("b", "a"));
+    ArrayList<Term> args = new ArrayList<Term>();
+    Term fterm = new FunctionalTerm(f, args);
+    assertTrue(fterm.isConstant());
   }
 
   @Test
@@ -256,7 +267,7 @@ public class FunctionalTermTest {
     Term additionsub = addition.substitute(gamma);
     assertTrue(additionsub.toString().equals("plus(37, 42)"));
     Term comparisonsub = comparison.substitute(gamma);
-    assertTrue(comparisonsub.queryTermKind() == Term.TermKind.FUNCTIONALTERM);
+    assertTrue(comparisonsub.isFunctionalTerm());
     assertTrue(comparisonsub.numberImmediateSubterms() == 2);
     assertTrue(comparisonsub.queryImmediateSubterm(1).equals(additionsub));
     assertTrue(comparisonsub.queryImmediateSubterm(2).equals(x));

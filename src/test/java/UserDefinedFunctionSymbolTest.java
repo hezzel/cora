@@ -115,7 +115,10 @@ public class UserDefinedFunctionSymbolTest {
     Var x = new Var("ff", combi);
 
     assertTrue(f.queryType().equals(combi));
-    assertTrue(f.queryTermKind() == Term.TermKind.FUNCTIONALTERM);
+    assertTrue(f.isConstant());
+    assertTrue(f.isFunctionalTerm());
+    assertFalse(f.isVariable());
+    assertFalse(f.isVarTerm());
     assertTrue(f.numberImmediateSubterms() == 0);
     assertTrue(f.queryRoot().equals(f));
     assertTrue(f.queryAllPositions().size() == 1);

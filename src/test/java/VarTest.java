@@ -100,7 +100,10 @@ public class VarTest {
   public void testVarTermBasics() {
     Variable x = new Var("x", baseType("o"));
     Term s = x;
-    assertTrue(s.queryTermKind() == Term.TermKind.VARTERM);
+    assertTrue(s.isVariable());
+    assertTrue(s.isVarTerm());
+    assertFalse(s.isConstant());
+    assertFalse(s.isFunctionalTerm());
     assertTrue(s.queryVariable().equals(x));
     assertTrue(s.toString().equals("x"));
     assertTrue(s.numberImmediateSubterms() == 0);
