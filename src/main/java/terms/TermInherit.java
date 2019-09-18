@@ -35,12 +35,20 @@ abstract class TermInherit {
   abstract String match(Term other, Substitution gamma);
   abstract boolean equals(Term other);
   abstract void updateVars(Environment env);
+  abstract Term apply(ArrayList<Term> args);
 
   /** Returns the set of all variables occurring in the current term. */
   public Environment vars() {
     Environment env = new Env();
     updateVars(env);
     return env;
+  }
+
+  /** Applies the current term (with functional type) to other. */
+  public Term apply(Term other) {
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(other);
+    return apply(args);
   }
 
   /** Same as match(other, subst), but it creates a fresh substitution and returns the result. */

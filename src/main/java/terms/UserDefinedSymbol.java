@@ -90,6 +90,11 @@ public class UserDefinedSymbol extends LeafTermInherit implements FunctionSymbol
   /** Does nothing, since a function symbol does not use any variables. */
   public void updateVars(Environment env) {}
 
+  /** Returns the FunctionalTerm f(args). */
+  public Term apply(ArrayList<Term> args) {
+    return new FunctionalTerm(this, args);
+  }
+
   /** Returns the current constant unmodified (there is nothing to substitute in a constant). */
   public Term substitute(Substitution gamma) {
     return this;

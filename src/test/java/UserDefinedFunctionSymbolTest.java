@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.IndexingError;
 import cora.exceptions.NullInitialisationError;
+import cora.exceptions.ArityError;
+import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Term;
@@ -51,6 +53,25 @@ public class UserDefinedFunctionSymbolTest {
     FunctionSymbol f = new UserDefinedSymbol("bing", null);
   }
 
+  @Test(expected = ArityError.class)
+  public void testBaseConstantApply() {
+    FunctionSymbol c = new UserDefinedSymbol("c", baseType("o"));
+    c.apply(new UserDefinedSymbol("a", baseType("o")));
+  }
+
+  @Test(expected = TypingError.class)
+  public void testIllTypedApply() {
+    Type a = baseType("a");
+    Type b = baseType("b");
+    Type c = baseType("c3");
+    Type combi = new ArrowType(a, new ArrowType(b, c));
+    FunctionSymbol f = new UserDefinedSymbol("ff", combi);
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(new UserDefinedSymbol("aa", a));
+    args.add(new UserDefinedSymbol("bb", a));
+    f.apply(args);
+  }
+
   @Test
   public void testFunctionSymbolBasics() {
     Type a = baseType("a");
@@ -61,6 +82,10 @@ public class UserDefinedFunctionSymbolTest {
     assertTrue(f.queryName().equals("ff"));
     assertTrue(f.toString().equals("ff"));
     assertTrue(f.queryType().equals(combi));
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(new UserDefinedSymbol("aa", a));
+    args.add(new UserDefinedSymbol("bb", b));
+    assertTrue(f.apply(args).toString().equals("ff(aa, bb)"));
   }
 
   @Test

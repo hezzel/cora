@@ -42,7 +42,7 @@ abstract class LeafTermInherit extends TermInherit implements Term {
 
   /** Helper function to return the current classname for use in Errors. */
   private String queryMyClassName() {
-    return "TermInherit (" + this.getClass().getSimpleName() + ")";
+    return "LeafTermInherit (" + this.getClass().getSimpleName() + ")";
   }
 
   protected LeafTermInherit(Type type) {
@@ -66,6 +66,12 @@ abstract class LeafTermInherit extends TermInherit implements Term {
   /** @throws IndexingError, as a leaf term does not have immediate subterms */
   public Term queryImmediateSubterm(int i) {
     throw new IndexingError(queryMyClassName(), "queryImmediateSubterm", i); 
+  }
+
+  /** Either returns this (if i == 0) or throws an IndexingError. */
+  public Term queryHeadSubterm(int i) {
+    if (i == 0) return this;
+    throw new IndexingError(queryMyClassName(), "queryHeadSubterm", i);
   }
 
   /** @return a list containing only the empty Position. */

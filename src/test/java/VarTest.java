@@ -96,6 +96,19 @@ public class VarTest {
     t.match(null, subst);
   }
 
+  @Test(expected = ArityError.class)
+  public void testBaseVariableApplication() {
+    Term t = new Var("x", baseType("Int"));
+    t.apply(t);
+  }
+
+  @Test(expected = TypingError.class)
+  public void testIllegalTypeApplication() {
+    Term t = new Var("x", arrowType("a", "b"));
+    Term q = constantTerm("c", baseType("b"));
+    t.apply(q);
+  }
+
   @Test
   public void testVarTermBasics() {
     Variable x = new Var("x", baseType("o"));
@@ -112,6 +125,7 @@ public class VarTest {
     assertTrue(x.queryVariableIndex() != y.queryVariableIndex());
     Variable z = new Var("z", arrowType("o", "o"));
     assertFalse(z.queryFirstOrder());
+    assertTrue(z.apply(y).equals(new VarTerm(z, y)));
   }
 
   @Test

@@ -234,7 +234,7 @@ public class FunctionalTermTest {
 
   @Test
   public void testSubtermReplacementGood() {
-    Term s = unaryTerm("f", baseType("o"), constantTerm("37", baseType("Int")));
+    Term s = unaryTerm("f", baseType("Int"), constantTerm("37", baseType("Int")));
     Term t = s.replaceSubterm(new ArgumentPosition(1, new EmptyPosition()), s);
     assertTrue(s.toString().equals("f(37)"));
     assertTrue(t.queryImmediateSubterm(1).equals(s));
@@ -245,6 +245,39 @@ public class FunctionalTermTest {
   public void testSubtermReplacementBad() {
     Term s = unaryTerm("f", baseType("o"), constantTerm("37", baseType("Int")));
     Term t = s.replaceSubterm(new ArgumentPosition(2, new EmptyPosition()), s);
+  }
+
+  @Test(expected = ArityError.class)
+  public void testApplyingBaseTerm() {
+    Term s = twoArgTerm();
+    Term t = constantTerm("37", baseType("Int"));
+    s.apply(t);
+  }
+
+  @Test(expected = TypingError.class)
+  public void testApplyingBadType() {
+    Type o = baseType("o");
+    Type a = baseType("a");
+    Type type = new ArrowType(a, new ArrowType(o, a));
+    Term c = constantTerm("c", a); 
+    FunctionSymbol f = new UserDefinedSymbol("f", type);
+    Term fc = new FunctionalTerm(f, c); 
+    fc.apply(c);
+  }
+
+  @Test
+  public void testCorrectApplication() {
+    Type o = baseType("o");
+    Type a = baseType("a");
+    Type type = new ArrowType(a, new ArrowType(o, new ArrowType(a, o)));
+    Term c = constantTerm("c", a); 
+    FunctionSymbol f = new UserDefinedSymbol("f", type);
+    Term fc = new FunctionalTerm(f, c); 
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(constantTerm("b", o));
+    args.add(c);
+    Term fcbc = fc.apply(args);
+    assertTrue(fcbc.toString().equals("f(c, b, c)"));
   }
 
   @Test

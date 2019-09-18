@@ -54,13 +54,22 @@ public interface Term {
   Term queryImmediateSubterm(int i);
 
   /**
-   * If this is a functional term f(s1,...,sn), this returns the root symbol f.
+   * For an applicative term a(s1,...,sn) (where a itself is not an application), the immediate
+   * subterms are s1,...,sn.  There are also n+1 head subterms: a, a(s1), a(s1,s2), ...,
+   * a(s1,...,sn).  Here, queryHeadSubterm(i) returns a(s1,...,si).
+   * (Note that this should not be used in applications considering first-order rewriting, since
+   * all non-trivial head subterms have a higher type).
+   */
+  Term queryHeadSubterm(int i);
+
+  /**
+   * If this is a functional term f(s1,...,sn), this returns the root symbol f (also if n = 0).
    * Otherwise, an InappropriatePatternDataError is thrown.
    */
   FunctionSymbol queryRoot();
 
   /**
-   * If this is a variable x or abstraction λx.s, this returns x.
+   * If this is a variable x, varterm x(s1,...,sn) or abstraction λx.s, this returns x.
    * Otherwise, an InappropriatePatternDataError is thrown.
    */
   Variable queryVariable();
@@ -98,6 +107,17 @@ public interface Term {
 
   /** Returns the term obtained by replacing the subterm at the given position by replacement. */
   Term replaceSubterm(Position pos, Term replacement);
+
+  /**
+   * If the current term has a type σ1 →...→ σn → τ and args = [s1,...,sn] with each si : σi, then
+   * this function returns the implicit application of the current term to [s1,...,sn].
+   * For example, if the current term is f(3), then the result is f(3,s1,...,sn).
+   * If the resulting term cannot be constructed for type reasons, this will throw a TypingError.
+   */
+  Term apply(ArrayList<Term> args);
+
+  /** The same as apply([other]) */
+  Term apply(Term other);
 
   /**
    * This method replaces each variable x in the term by gamma(x) (or leaves x alone if x is not
