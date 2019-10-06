@@ -16,6 +16,7 @@
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.ArrayList;
+import cora.exceptions.DeclarationException;
 import cora.exceptions.ParserException;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.rewriting.Rule;
@@ -44,6 +45,21 @@ public class ProgramReadingTest {
     assertTrue(trs.queryRuleCount() == 2);
     assertTrue(trs.queryRule(0).toString().equals("add(0, y) → y"));
     assertTrue(trs.queryRule(1).toString().equals("add(s(x), y) → s(add(x, y))"));
+  }
+
+  @Test
+  public void testApplicativeNonPatternTRS() throws ParserException {
+    String str = "3 :: Int 7 :: Int f :: Bool -> Int -> Bool\n" +
+                 "f(X(3,y,7), y) -> X(7,3,y) {X :: Int -> Int -> Int -> Bool}";
+    TRS trs = CoraInputReader.readProgramFromString(str);
+    assertTrue(trs.queryRuleCount() == 1);
+    assertTrue(trs.queryRule(0).queryLeftSide().queryImmediateSubterm(1).isVarTerm());
+  }
+
+  @Test(expected = DeclarationException.class)
+  public void testAtrsWithUndeclaredVariable() throws ParserException {
+    String str = "3 :: Int 7 :: Int f :: Bool -> Int -> Int f(X(3,y,7), y) -> X(7,3,y)";
+    TRS trs = CoraInputReader.readProgramFromString(str);
   }
 
   @Test

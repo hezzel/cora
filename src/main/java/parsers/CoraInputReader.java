@@ -246,36 +246,60 @@ public class CoraInputReader extends InputReader {
 
   /* ========== WHOLE PROGRAM PARSING ========== */
 
-  private Rule readRule(ParseTree tree, ParseData pd) throws ParserException {
-    verifyChildIsRule(tree, 0, "term", "the left-hand side (a term)");
-    verifyChildIsToken(tree, 1, "ARROW", "the rule arrow");
-    verifyChildIsRule(tree, 2, "term", "the right-hand side (a term)");
-    Term left = readTerm(tree.getChild(0), pd, null);
-    Type type = left.queryType();
-    Term right = readTerm(tree.getChild(2), pd, type);
-    pd.clearVariables();
-    return new AtrsRule(left, right);
-  }
-
   /**
    * Given that the top of tree is a declaration, this function parses the declaration and adds it
-   * to the parsing data.
+   * to the parsing data. If the declaration is for a function symbol, then isVariable is set to
+   * false, otherwise it is set to true.
    * If the declaration changes an existing declaration in pd, a parserexception is thrown.
    */
-  private void updateDataForDeclaration(ParseTree tree,
-                                               ParseData pd) throws ParserException {
+  private void updateDataForDeclaration(ParseTree tree, ParseData pd,
+                                        boolean isVariable) throws ParserException {
     verifyChildIsRule(tree, 0, "constant", "a function symbol name (an identifier or string)");
     verifyChildIsToken(tree, 1, "DECLARE", "the declaration token ::");
     verifyChildIsRule(tree, 2, "type", "a type");
     String constant = readConstant(tree.getChild(0));
     Type type = readType(tree.getChild(2));
-    FunctionSymbol declaring = new UserDefinedSymbol(constant, type);
-    FunctionSymbol existing = pd.lookupFunctionSymbol(constant);
-    if (existing == null) pd.addFunctionSymbol(declaring);
-    else if (!declaring.equals(existing)) {
-      throw new ParserException(firstToken(tree), "Redeclaration of " + constant +
-        "; previously declared with type " + existing.queryType().toString());
+
+    Type priorDeclaration = null;
+
+    if (isVariable) {
+      if (pd.lookupFunctionSymbol(constant) != null) {
+        throw new ParserException(firstToken(tree), "Declaring " + constant + " as a variable " +
+          "while it was previously declared as a function symbol.");
+      }
+      Variable existing = pd.lookupVariable(constant);
+      if (existing == null) pd.addVariable(new Var(constant, type));
+      else priorDeclaration = existing.queryType();
     }
+    else {
+      FunctionSymbol existing = pd.lookupFunctionSymbol(constant);
+      if (existing == null) pd.addFunctionSymbol(new UserDefinedSymbol(constant, type));
+      else priorDeclaration = existing.queryType();
+    }
+
+    if (priorDeclaration != null && !priorDeclaration.equals(type)) {
+      throw new ParserException(firstToken(tree), "Redeclaration of " + constant +
+        "; previously declared with type " + priorDeclaration.toString());
+    }
+  }
+
+  private Rule readRule(ParseTree tree, ParseData pd) throws ParserException {
+    verifyChildIsRule(tree, 0, "term", "the left-hand side (a term)");
+    verifyChildIsToken(tree, 1, "ARROW", "the rule arrow");
+    verifyChildIsRule(tree, 2, "term", "the right-hand side (a term)");
+    if (tree.getChildCount() > 3) {
+      verifyChildIsToken(tree, 3, "BRACEOPEN", "an opening brace '{'");
+      verifyChildIsToken(tree, tree.getChildCount()-1, "BRACECLOSE", "a closing brace '}'");
+      for (int i = 4; i < tree.getChildCount()-1; i++) {
+        verifyChildIsRule(tree, i, "declaration", "a variable declaration");
+        updateDataForDeclaration(tree.getChild(i), pd, true);
+      }
+    }
+    Term left = readTerm(tree.getChild(0), pd, null);
+    Type type = left.queryType();
+    Term right = readTerm(tree.getChild(2), pd, type);
+    pd.clearVariables();
+    return new AtrsRule(left, right);
   }
 
   /**
@@ -290,7 +314,9 @@ public class CoraInputReader extends InputReader {
       verifyChildIsRule(tree, 1, "program", "a program");
       String kind = checkChild(tree, 0);
       if (kind.equals("rule simplerule")) ret.add(readRule(tree.getChild(0), pd));
-      else if (kind.equals("rule declaration")) updateDataForDeclaration(tree.getChild(0), pd);
+      else if (kind.equals("rule declaration")) {
+        updateDataForDeclaration(tree.getChild(0), pd, false);
+      }
       else {
         throw buildError(tree, "Child of program is " + kind + "!");
       }

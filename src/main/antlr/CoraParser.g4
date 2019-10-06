@@ -58,7 +58,9 @@ onlyterm            : term EOF ;
 
 /*** Parsing rules ***/
 
-simplerule          : term ARROW term ;
+simplerule          : term ARROW term
+                    | term ARROW term BRACEOPEN declaration* BRACECLOSE
+                    ;
 
 /*** The whole program ***/
 
