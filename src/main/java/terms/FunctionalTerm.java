@@ -120,10 +120,18 @@ public class FunctionalTerm extends ApplicativeTermInherit implements Term {
   }
 
   /** Returns whether (a) this term has base type, and (b) all its arguments are first-order. */
-  public boolean queryFirstOrder() {
+  public boolean isFirstOrder() {
     if (!_outputType.isBaseType()) return false;
     for (int i = 0; i < _args.size(); i++) {
-      if (!_args.get(i).queryFirstOrder()) return false;
+      if (!_args.get(i).isFirstOrder()) return false;
+    }
+    return true;
+  }
+
+  /** Returns whether all immediate arguments are patterns. */
+  public boolean isPattern() {
+    for (int i = 0; i < _args.size(); i++) {
+      if (!_args.get(i).isPattern()) return false;
     }
     return true;
   }

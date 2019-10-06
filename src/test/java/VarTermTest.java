@@ -137,6 +137,7 @@ public class VarTermTest {
     assertFalse(t.isConstant());
     assertFalse(t.isVariable());
     assertFalse(t.isFunctionalTerm());
+    assertFalse(t.isPattern());
     assertTrue(t.queryVariable().toString().equals("x"));
     assertTrue(t.queryVariable().queryType().toString().equals("a → b → a"));
     assertTrue(t.toString().equals("x(c, g(y))"));
@@ -148,6 +149,7 @@ public class VarTermTest {
     ArrayList<Term> args = new ArrayList<Term>();
     Term xterm = new VarTerm(x, args);
     assertTrue(xterm.isVariable());
+    assertTrue(xterm.isPattern());
   }
 
   @Test
@@ -199,10 +201,10 @@ public class VarTermTest {
     Term x2 = new VarTerm(x, args);
     Term x3 = y;
     Term x4 = new VarTerm(y, constantTerm("c", baseType("o")));
-    assertTrue(x1.queryFirstOrder());
-    assertTrue(x2.queryFirstOrder());
-    assertFalse(x3.queryFirstOrder());
-    assertFalse(x4.queryFirstOrder());
+    assertTrue(x1.isFirstOrder());
+    assertTrue(x2.isFirstOrder());
+    assertFalse(x3.isFirstOrder());
+    assertFalse(x4.isFirstOrder());
   }
 
   @Test(expected = ArityError.class)
@@ -331,6 +333,8 @@ public class VarTermTest {
     Term s = new FunctionalTerm(h, args);
     Term t = new FunctionalTerm(g, four, three);
 
+    // Z(3, x) is asked to match with h(f(x), 3, f(x))
+    // This should map Z to h(f(x)) and x to f(x)
     Substitution gamma = pattern.match(s);
     Substitution delta = pattern.match(t);
 

@@ -25,7 +25,7 @@ import cora.interfaces.rewriting.TRS;
 import cora.types.*;
 import cora.terms.*;
 import cora.rewriting.UserDefinedAlphabet;
-import cora.rewriting.SimpleRule;
+import cora.rewriting.AtrsRule;
 import cora.rewriting.TermRewritingSystem;
 import cora.parsers.CoraInputReader;
 
@@ -69,7 +69,7 @@ public class TrsTest {
     Var x = new Var("x", baseType("o"));
     Term left1 = new FunctionalTerm(f(), x, a());
     Term right1 = x;
-    rules.add(new SimpleRule(left1, right1));
+    rules.add(new AtrsRule(left1, right1));
       // f(x, a) -> x
 
     ArrayList<Term> args = new ArrayList<Term>();
@@ -78,7 +78,7 @@ public class TrsTest {
     args.add(b());
     Term left2 = new FunctionalTerm(g(), args);
     Term right2 = new FunctionalTerm(f(), b(), x);
-    rules.add(new SimpleRule(left2, right2));
+    rules.add(new AtrsRule(left2, right2));
       // g(x, x, b) -> f(b, x)
 
     return new TermRewritingSystem(alf, rules);

@@ -150,12 +150,14 @@ public class UserDefinedFunctionSymbolTest {
     assertTrue(f.queryAllPositions().get(0).isEmpty());
     assertTrue(f.querySubterm(new EmptyPosition()).equals(f));
     assertTrue(f.replaceSubterm(new EmptyPosition(), x).equals(x));
+    assertFalse(f.isFirstOrder());
+    assertTrue(f.isPattern());
     Subst gamma = new Subst(x, new UserDefinedSymbol("gg", combi));
     assertTrue(f.substitute(gamma).equals(f));
     assertTrue(f.vars().size() == 0);
-    assertFalse(f.queryFirstOrder());
     Term aa = new UserDefinedSymbol("g", a);
-    assertTrue(aa.queryFirstOrder());
+    assertTrue(aa.isFirstOrder());
+    assertTrue(aa.isPattern());
   }
 
   @Test

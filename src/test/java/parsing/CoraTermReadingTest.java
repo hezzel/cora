@@ -29,7 +29,7 @@ import cora.terms.Var;
 import cora.parsers.ParseData;
 import cora.parsers.CoraInputReader;
 
-public class TermReadingTest {
+public class CoraTermReadingTest {
   private FunctionSymbol generateSymbol(String name, String type) throws ParserException {
     return new UserDefinedSymbol(name, CoraInputReader.readTypeFromString(type));
   }
@@ -180,6 +180,22 @@ public class TermReadingTest {
     ParseData sigma = generateSignature();
     Term term = CoraInputReader.testReadTermFromString("f(x,h(f(x, bb)),cc)", sigma, null);
     assertTrue(term.toString().equals("f(x, h(f(x, bb)), cc)"));
+  }
+
+  @Test
+  public void testReadDeclaredVariableApplication() throws ParserException {
+    ParseData sigma = generateSignature();
+    sigma.addVariable(new Var("Z", CoraInputReader.readTypeFromString("a -> b -> c")));
+    Term term = CoraInputReader.testReadTermFromString("Z( aa,x )", sigma, null);
+    assertTrue(term.queryType().equals(new Sort("c")));
+    assertTrue(term.toString().equals("Z(aa, x)"));
+  }
+
+  @Test(expected = cora.exceptions.DeclarationException.class)
+  public void testReadUndeclaredVariableApplication() throws ParserException {
+    ParseData sigma = generateSignature();
+    // it's not allowed, even if the type can be found from context
+    Term term = CoraInputReader.testReadTermFromString("Z(aa)", sigma, new Sort("b"));
   }
 
   @Test(expected = cora.exceptions.AntlrParserException.class)

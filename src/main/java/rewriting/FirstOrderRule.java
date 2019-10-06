@@ -29,24 +29,15 @@ import cora.interfaces.rewriting.Rule;
  * A FirstOrderRule is a rule l -> r where l and r are first-order terms of the same sort, l is not a
  * variable, and vars(r) ⊆ vars(l).
  */
-public class FirstOrderRule implements Rule {
-  private Term _left;
-  private Term _right;
-
+public class FirstOrderRule extends RuleInherit implements Rule {
   /**
    * Creates a rule with the given left- and right-hand side.
    * If the types don't match, a TypingError is thrown.
    */
   public FirstOrderRule(Term left, Term right) {
-    if (left == null) throw new NullInitialisationError("FirstOrderRule", "left-hand side");
-    if (right == null) throw new NullInitialisationError("FirstOrderRule", "right-hand side");
-    // both sides should have the same sort
-    if (!left.queryType().equals(right.queryType())) {
-      throw new TypingError("FirstOrderRule", "constructor", "right-hand side",
-                            right.queryType().toString(), left.queryType().toString());
-    }
+    super(left, right);
     // both sides need to be first-order
-    if (!left.queryFirstOrder() || !right.queryFirstOrder()) {
+    if (!left.isFirstOrder() || !right.isFirstOrder()) {
       throw new IllegalRuleError("FirstOrderRule", "terms in rule [" + left.toString() + " → " +
         right.toString() + "] are not first-order.");
     }
@@ -60,26 +51,11 @@ public class FirstOrderRule implements Rule {
           "occur on the left.");
       }
     }
-    // the right-hand side should have the form f(...)
+    // the left-hand side should have the form f(...)
     if (!left.isFunctionalTerm()) {
         throw new IllegalRuleError("FirstOrderRule", "illegal rule [" + left.toString() + " → " +
           right.toString() + "] with a variable as the left-hand side.");
     }
-
-    _left = left;
-    _right = right;
-  }
-
-  public Term queryLeftSide() {
-    return _left;
-  }
-
-  public Term queryRightSide() {
-    return _right;
-  }
-
-  public Type queryType() {
-    return _left.queryType();
   }
 
   public boolean applicable(Term t) {
@@ -90,10 +66,6 @@ public class FirstOrderRule implements Rule {
     Substitution subst = _left.match(t);
     if (subst == null) return null;
     return _right.substitute(subst);
-  }
-
-  public String toString() {
-    return _left.toString() + " → " + _right.toString();
   }
 }
 

@@ -122,8 +122,13 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
    * Returns true only if this is a first-order variable.
    * (A true application is by definition not a first-order term.)
    */
-  public boolean queryFirstOrder() {
-    return _args.size() == 0 && _x.queryFirstOrder();
+  public boolean isFirstOrder() {
+    return _args.size() == 0 && _x.isFirstOrder();
+  }
+
+  /** Returns true only if this is a single, unapplied variable. */
+  public boolean isPattern() {
+    return _args.size() == 0;
   }
 
   /** This adds the variables that occur freely in the current term into env. */

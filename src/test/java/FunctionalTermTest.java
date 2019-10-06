@@ -137,6 +137,7 @@ public class FunctionalTermTest {
     assertFalse(t.isConstant());
     assertFalse(t.isVariable());
     assertFalse(t.isVarTerm());
+    assertTrue(t.isPattern());
     assertTrue(t.queryRoot().equals(new UserDefinedSymbol("f", type)));
     assertTrue(t.toString().equals("f(c, g(d))"));
   }
@@ -193,9 +194,18 @@ public class FunctionalTermTest {
     Term t = unaryTerm("h", aa, new Var("x", baseType("b")));
     Type utype = new ArrowType(baseType("a"), new ArrowType(aa, baseType("b")));
     Term q = new FunctionalTerm(new UserDefinedSymbol("u", utype), s, t);
-    assertTrue(s.queryFirstOrder());
-    assertFalse(t.queryFirstOrder());
-    assertFalse(q.queryFirstOrder());
+    assertTrue(s.isFirstOrder());
+    assertFalse(t.isFirstOrder());
+    assertFalse(q.isFirstOrder());
+  }
+
+  @Test
+  public void testNonPattern() {
+    Var x = new Var("x", arrowType("A", "B"));
+    Term xa = new VarTerm(x, constantTerm("a", baseType("A")));
+    FunctionSymbol f = new UserDefinedSymbol("f", arrowType("B", "B"));
+    Term fxa = new FunctionalTerm(f, xa);
+    assertFalse(fxa.isPattern());
   }
 
   @Test

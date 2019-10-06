@@ -78,7 +78,13 @@ public interface Term {
    * Returns true if this term is first-order (so: the subterms at all standard positions have
    * base type, and no abstractions or variable applications are used), false otherwise.
    */
-  boolean queryFirstOrder();
+  boolean isFirstOrder();
+
+  /**
+   * Returns true if this term is a pattern (so: variables are not applied at all, or only to
+   * distinct binder-variables).
+   */
+  boolean isPattern();
 
   /**
    * Returns the set of all positions of subterms in the current Term, in leftmost innermost

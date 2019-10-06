@@ -21,8 +21,6 @@ lexer grammar TrsLexer;
 
 @header {
 package cora.parsers;
-
-import java.util.ArrayList;
 }
 
 /* Lexer */

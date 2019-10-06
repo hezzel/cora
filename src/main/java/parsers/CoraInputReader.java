@@ -134,7 +134,7 @@ public class CoraInputReader extends InputReader {
   }
 
   /**
-   * Given that tree wraps the given constant, and given that the given constant is not declard as
+   * Given that tree wraps the given constant, and given that the given constant is not declared as
    * a function symbol, this function tries to parse it into a Variable, updating expectedType if
    * appropriate.
    */
@@ -194,7 +194,8 @@ public class CoraInputReader extends InputReader {
     verifyChildIsRule(tree, 0, "constant", "a declared function symbol or variable");
     String constant = readConstant(tree.getChild(0));
     FunctionSymbol f = pd.lookupFunctionSymbol(constant);
-    if (f == null) {
+    Variable x = pd.lookupVariable(constant);
+    if (f == null && x == null) {
       if (tree.getChildCount() == 1) return readVariable(tree, constant, pd, expectedType);
       throw new DeclarationException(firstToken(tree), constant);
     }
@@ -208,7 +209,7 @@ public class CoraInputReader extends InputReader {
 
     // parse the arguments and typecheck them against the input types of f
     ArrayList<Term> args = new ArrayList<Term>();
-    Type type = f.queryType();
+    Type type = x == null ? f.queryType() : x.queryType();
     for (int i = 0; i < arguments.size(); i++) {
       if (!type.isArrowType()) {
         throw new TypingException(firstToken(tree), constant, type.toString(),
@@ -223,7 +224,8 @@ public class CoraInputReader extends InputReader {
       throw new TypingException(firstToken(tree), tree.getText(), type.toString(),
                                 expectedType.toString());
     }
-    return new FunctionalTerm(f, args);
+    if (x == null) return new FunctionalTerm(f, args);
+    else return new VarTerm(x, args);
   }
 
   /**
@@ -252,7 +254,7 @@ public class CoraInputReader extends InputReader {
     Type type = left.queryType();
     Term right = readTerm(tree.getChild(2), pd, type);
     pd.clearVariables();
-    return new SimpleRule(left, right);
+    return new AtrsRule(left, right);
   }
 
   /**

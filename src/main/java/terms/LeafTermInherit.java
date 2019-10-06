@@ -54,8 +54,12 @@ abstract class LeafTermInherit extends TermInherit implements Term {
     return _type;
   }
 
-  public boolean queryFirstOrder() {
+  public boolean isFirstOrder() {
     return _type.isBaseType();
+  }
+
+  public boolean isPattern() {
+    return true;
   }
 
   /** @return 0, since leaf terms do not have immediate subterms */

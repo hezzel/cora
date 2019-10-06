@@ -110,7 +110,7 @@ public class VarTest {
   }
 
   @Test
-  public void testVarTermBasics() {
+  public void testTermVarBasics() {
     Variable x = new Var("x", baseType("o"));
     Term s = x;
     assertTrue(s.isVariable());
@@ -120,16 +120,18 @@ public class VarTest {
     assertTrue(s.queryVariable().equals(x));
     assertTrue(s.toString().equals("x"));
     assertTrue(s.numberImmediateSubterms() == 0);
-    assertTrue(s.queryFirstOrder());
+    assertTrue(s.isPattern());
+    assertTrue(s.isFirstOrder());
     Variable y = new Var("x", baseType("o"));
     assertTrue(x.queryVariableIndex() != y.queryVariableIndex());
     Variable z = new Var("z", arrowType("o", "o"));
-    assertFalse(z.queryFirstOrder());
+    assertFalse(z.isFirstOrder());
+    assertTrue(z.isPattern());
     assertTrue(z.apply(y).equals(new VarTerm(z, y)));
   }
 
   @Test
-  public void testVarTermVars() {
+  public void testTermVarVars() {
     Variable x = new Var("x", baseType("oo"));
     Environment env = x.vars();
     assertTrue(env.size() == 1);
@@ -144,7 +146,7 @@ public class VarTest {
   }
 
   @Test
-  public void testVarTermEquality() {
+  public void testTermVarEquality() {
     Term s1 = new Var("x", baseType("o"));
     Term s2 = new Var("x", baseType("o"));
     assertTrue(s1.equals(s1));
