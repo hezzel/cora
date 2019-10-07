@@ -64,6 +64,12 @@ public class ArrowType implements Type {
     return _right.queryOutputSort();
   }
 
+  public int queryTypeOrder() {
+    int a = _left.queryTypeOrder() + 1;
+    int b = _right.queryTypeOrder();
+    return a > b ? a : b;
+  }
+
   public void appendInputTypes(ArrayList<Type> answer) {
     answer.add(_left);
     _right.appendInputTypes(answer);

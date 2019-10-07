@@ -42,6 +42,8 @@ public interface Type {
   void appendInputTypes(ArrayList<Type> answer);
   /** For σ1 → ,,, → σk → τ, returns τ */
   BaseType queryOutputSort();
+  /** For σ1 → ,,, → σk → τ, returns max(order(σ1),,,order(σk))+1 */
+  int queryTypeOrder();
 
   /** Throws an InappropriatePatternDataError if called on anything but ARROWTYPE */
   Type queryArrowInputType();

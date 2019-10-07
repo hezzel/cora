@@ -61,6 +61,9 @@ public class Sort implements BaseType {
   /** @return this */
   public BaseType queryOutputSort() { return this; }
 
+  /** @return 0 */
+  public int queryTypeOrder() { return 0; }
+
   /** Does nothing, as a base type does not have input types. */
   public void appendInputTypes(ArrayList<Type> answer) { }
 

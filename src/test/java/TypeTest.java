@@ -155,4 +155,17 @@ public class TypeTest {
     assertTrue(intintbooltype.queryArrowOutputType().equals(intbooltype));
     assertTrue(intintbooltype.queryOutputSort().equals(booltype));
   }
+
+  @Test
+  public void testTypeOrder() {
+    Type inttype = intType();
+    BaseType booltype = boolType();
+    Type intbooltype = new ArrowType(inttype, booltype);        // int -> bool
+    Type intintbooltype = new ArrowType(inttype, intbooltype);  // int -> int -> bool
+    Type intboolinttype = new ArrowType(intbooltype, inttype);  // (int -> bool) -> int
+
+    assertEquals(0, inttype.queryTypeOrder());
+    assertEquals(1, intintbooltype.queryTypeOrder());
+    assertEquals(2, intboolinttype.queryTypeOrder());
+  }
 }
