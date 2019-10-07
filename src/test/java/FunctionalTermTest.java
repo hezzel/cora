@@ -130,6 +130,14 @@ public class FunctionalTermTest {
   }
 
   @Test
+  public void testImmediateHeadSubterms() {
+    Term t = twoArgTerm();
+    assertTrue(t.queryImmediateHeadSubterm(0).toString().equals("f"));
+    assertTrue(t.queryImmediateHeadSubterm(1).toString().equals("f(c)"));
+    assertTrue(t.queryImmediateHeadSubterm(2).toString().equals("f(c, g(d))"));
+  }
+
+  @Test
   public void testFunctionalTermBasics() {
     Term t = twoArgTerm();
     Type type = new ArrowType(baseType("a"), arrowType("b", "a"));

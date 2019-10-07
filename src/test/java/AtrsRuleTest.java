@@ -135,7 +135,7 @@ public class AtrsRuleTest {
     Term instance = new FunctionalTerm(f, args);
     // instance: f(3,3,true,7)
 
-    ArrayList targs = new ArrayList<Term>();
+    ArrayList<Term> targs = new ArrayList<Term>();
     targs.add(constantTerm("3", baseType("Int")));
     targs.add(constantTerm("true", baseType("Bool")));
     targs.add(constantTerm("7", baseType("Int")));

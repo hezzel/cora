@@ -60,7 +60,7 @@ public class AtrsRule extends RuleInherit implements Rule {
     int n = t.numberImmediateSubterms();
     int k = findHeadAdditions(t);
     if (k == -1) return false;
-    Term head = t.queryHeadSubterm(n-k);
+    Term head = t.queryImmediateHeadSubterm(n-k);
     return _left.match(head) != null;
   }
 
@@ -68,7 +68,7 @@ public class AtrsRule extends RuleInherit implements Rule {
     int n = t.numberImmediateSubterms();
     int k = findHeadAdditions(t);
     if (k == -1) return null;
-    Term head = t.queryHeadSubterm(n-k);
+    Term head = t.queryImmediateHeadSubterm(n-k);
     Substitution subst = _left.match(head);
     if (subst == null) return null;
     ArrayList<Term> args = new ArrayList<Term>();

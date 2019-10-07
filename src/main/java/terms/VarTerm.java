@@ -108,9 +108,9 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
   }
 
   /** For a term x(s1,...,sn), this returns x(s1,...,si). */
-  public Term queryHeadSubterm(int i) {
+  public Term queryImmediateHeadSubterm(int i) {
     if (i < 0 || i > _args.size()) {
-      throw new IndexingError("VarTerm", "queryHeadSubterm", i, 0, _args.size());
+      throw new IndexingError("VarTerm", "queryImmediateHeadSubterm", i, 0, _args.size());
     }
     if (i == 0) return _x;
     ArrayList<Term> newargs = new ArrayList<Term>();
@@ -179,7 +179,7 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
       String warning = mysub.match(hissub, gamma);
       if (warning != null) return warning;
     }
-    return _x.match(other.queryHeadSubterm(i), gamma);
+    return _x.match(other.queryImmediateHeadSubterm(i), gamma);
   }
 
   /** This method gives a string representation of the term. */

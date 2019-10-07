@@ -73,9 +73,9 @@ abstract class LeafTermInherit extends TermInherit implements Term {
   }
 
   /** Either returns this (if i == 0) or throws an IndexingError. */
-  public Term queryHeadSubterm(int i) {
+  public Term queryImmediateHeadSubterm(int i) {
     if (i == 0) return this;
-    throw new IndexingError(queryMyClassName(), "queryHeadSubterm", i);
+    throw new IndexingError(queryMyClassName(), "queryImmediateHeadSubterm", i);
   }
 
   /** @return a list containing only the empty Position. */

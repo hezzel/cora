@@ -130,6 +130,14 @@ public class VarTermTest {
   }
 
   @Test
+  public void testImmediateHeadSubterms() {
+    Term t = twoArgTerm();
+    assertTrue(t.queryImmediateHeadSubterm(0).toString().equals("x"));
+    assertTrue(t.queryImmediateHeadSubterm(1).toString().equals("x(c)"));
+    assertTrue(t.queryImmediateHeadSubterm(2).toString().equals("x(c, g(y))"));
+  }
+
+  @Test
   public void testVarTermBasics() {
     Term t = twoArgTerm();
     Type type = new ArrowType(baseType("a"), arrowType("b", "a"));

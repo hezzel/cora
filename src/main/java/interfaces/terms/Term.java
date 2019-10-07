@@ -56,11 +56,11 @@ public interface Term {
   /**
    * For an applicative term a(s1,...,sn) (where a itself is not an application), the immediate
    * subterms are s1,...,sn.  There are also n+1 head subterms: a, a(s1), a(s1,s2), ...,
-   * a(s1,...,sn).  Here, queryHeadSubterm(i) returns a(s1,...,si).
+   * a(s1,...,sn).  Here, queryImmediateHeadSubterm(i) returns a(s1,...,si).
    * (Note that this should not be used in applications considering first-order rewriting, since
    * all non-trivial head subterms have a higher type).
    */
-  Term queryHeadSubterm(int i);
+  Term queryImmediateHeadSubterm(int i);
 
   /**
    * If this is a functional term f(s1,...,sn), this returns the root symbol f (also if n = 0).

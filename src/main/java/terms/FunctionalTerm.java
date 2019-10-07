@@ -109,9 +109,9 @@ public class FunctionalTerm extends ApplicativeTermInherit implements Term {
   }
 
   /** For a term f(s1,...,sn), this returns f(s1,...,si). */
-  public Term queryHeadSubterm(int i) {
+  public Term queryImmediateHeadSubterm(int i) {
     if (i < 0 || i > _args.size()) {
-      throw new IndexingError("FunctionalTerm", "queryHeadSubterm", i, 0, _args.size());
+      throw new IndexingError("FunctionalTerm", "queryImmediateHeadSubterm", i, 0, _args.size());
     }   
     if (i == 0) return _f;
     ArrayList<Term> newargs = new ArrayList<Term>();
