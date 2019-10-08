@@ -1,0 +1,270 @@
+\documentclass{lmcs}
+\pdfoutput=1
+
+\usepackage{enumerate}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{tikz}
+\usepackage{amssymb}
+\usepackage{xcolor,latexsym,amsmath,extarrows,alltt}
+\usepackage{xspace}
+\usepackage{booktabs}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{stmaryrd}
+\usepackage{microtype}
+
+\theoremstyle{theorem}\newtheorem{theorem}{Theorem}
+\theoremstyle{theorem}\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{theorem}\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{definition}\newtheorem{example}[theorem]{Example}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\Sorts}{\mathcal{S}}
+\newcommand{\Types}{\mathcal{Y}}
+\newcommand{\Terms}{\mathcal{T}}
+\newcommand{\ATerms}{\mathcal{T}_{\mathcal{A}}}
+\newcommand{\FOTerms}{\mathcal{T}_{\mathcal{FO}}}
+\newcommand{\Rules}{\mathcal{R}}
+\newcommand{\FV}{\mathit{Var}}
+
+\newcommand{\domain}{\mathtt{dom}}
+\newcommand{\order}{\mathit{order}}
+
+\newcommand{\asort}{\iota}
+\newcommand{\bsort}{\kappa}
+\newcommand{\atype}{\sigma}
+\newcommand{\btype}{\tau}
+\newcommand{\ctype}{\pi}
+\newcommand{\dtype}{\alpha}
+\newcommand{\identifier}[1]{\mathtt{#1}}
+\newcommand{\afun}{\identifier{f}}
+\newcommand{\bfun}{\identifier{g}}
+\newcommand{\cfun}{\identifier{h}}
+\newcommand{\avar}{x}
+\newcommand{\bvar}{y}
+\newcommand{\cvar}{z}
+
+\newcommand{\abs}[2]{\lambda #1.#2}
+
+\newcommand{\arity}{\mathit{arity}}
+\newcommand{\head}{\mathsf{head}}
+\newcommand{\arrtype}{\rightarrow}
+\newcommand{\arrz}{\Rightarrow}
+\newcommand{\arr}[1]{\arrz_{#1}}
+\newcommand{\arrr}[1]{\arr{#1}^*}
+\newcommand{\subtermeq}{\unlhd}
+\newcommand{\headsubtermeq}{\unlhd_{\bullet}}
+\newcommand{\supterm}{\rhd}
+\newcommand{\suptermeq}{\unrhd}
+
+\newcommand{\symb}[1]{\mathtt{#1}}
+
+\newcommand{\nul}{\symb{0}}
+\newcommand{\one}{\symb{1}}
+\newcommand{\nil}{\symb{nil}}
+\newcommand{\cons}{\symb{cons}}
+\newcommand{\strue}{\symb{true}}
+\newcommand{\sfalse}{\symb{false}}
+\newcommand{\suc}{\symb{s}}
+\newcommand{\map}{\symb{map}}
+\newcommand{\bool}{\symb{bool}}
+\newcommand{\nat}{\symb{nat}}
+\newcommand{\lijst}{\symb{list}}
+
+\newcommand{\cora}{\textsf{CORA}\xspace}
+
+\newcommand{\secshort}{\S}
+\newcommand{\myparagraph}[1]{\paragraph{\textbf{#1}}}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{\bigskipamount}
+\setlist[itemize]{topsep=-\bigskipamount}
+
+\begin{document}
+
+\title{COnstrained Rewriting Analyser: formalism}
+\author{Cynthia Kop}
+\address{Department of Software Science, Radboud University Nijmegen}
+\email{C.Kop@cs.ru.nl}
+
+\maketitle
+
+\begin{abstract}
+\cora\ is a tool meant to analyse constrained term rewriting systems, both
+first-order and higher-order.  This document explains the underlying formalism.
+\end{abstract}
+
+\section{Types}
+
+We fix a set $\Sorts$ of \emph{sorts} and define the set $\Types$ of \emph{types} inductively:
+\begin{itemize}
+\item all elements of $\Sorts$ are types (also called \emph{base types});
+\item if $\atype,\btype \in \Types$ then $\atype \arrtype \btype$ is also a type (called an arrow
+  type).
+\end{itemize}
+The arrow operator $\arrtype$ is right-associative, so all types can be denoted in a form
+$\atype_1 \arrtype \dots \arrtype \atype_m \arrtype \asort$ with $\asort \in \Sorts$; we say the
+\emph{arity} of this type is $m$, and the \emph{output sort} is $\asort$.
+
+The \emph{order} of a type is recursively defined as follows:
+\begin{itemize}
+\item for $\asort \in \Sorts$: $\order(\asort) = 0$;
+\item for arrow types: $\order(\atype \arrtype \btype) = \max(\order(\atype) + 1,\order(\btype))$.
+\end{itemize}
+
+\section{Terms}
+
+We fix a set $\F$ of \emph{function symbols} and a set $\V$ of \emph{variables}.  Each function
+symbol and variable is a typed constant.  Notation: $\afun \in \F$ or $(\afun : \atype) \in \F$
+if we wish to explicitly refer to the type (but the type should be considered implicit in the
+function symbol and variable).
+
+Terms are those expressions $s$ such that $s : \atype$ can be derived for some $\atype \in \Types$
+using the following clauses:
+\begin{itemize}
+\item if $(\afun : \atype_1 \arrtype \dots \arrtype \atype_n \arrtype \btype) \in \F$ and
+  $s_1 : \atype_1,\dots,s_n : \atype_n$ then $\afun(s_1,\dots,s_n) : \btype$;
+\item if $(\avar : \atype_1 \arrtype \dots \arrtype \atype_n \arrtype \btype) \in \V$ and
+  $s_1 : \atype_1,\dots,s_n : \atype_n$ then $\avar(s_1,\dots,s_n) : \btype$.
+%\item if $(\avar : \atype) \in \V$ and $s : \btype$ then $\abs{\avar}{s} : \atype \arrtype \btype$.
+\end{itemize}
+A term of the form $\afun(s_1,\dots,s_n)$ is called a \emph{functional term} and $\afun$ is its
+root.
+A term of the form $\avar(s_1,\dots,s_n)$ is called a \emph{var term}, and $\avar$ is its variable.
+If $s : \atype$ then we say that $\atype$ is the type of $s$; it is clear from the definitions
+above that each term has a unique type.
+We denote $\ATerms(\F,\V)$ for the set of all terms $s$.
+
+Note that $n$ above is not required to be maximal; for example, if $\symb{greater} : \mathtt{int}
+\arrtype \mathtt{int} \arrtype \mathtt{bool}$, then each of $\symb{greater}(),
+\symb{greater}(\avar)$ and $\symb{greater}(\avar,\bvar)$ are terms (with distinct types).
+When no arguments are given (i.e., a term $\afun()$ or $\avar()$), we may omit the brackets and
+just denote $\afun$ or $\avar$ for the term.  In this sense, $\F,\V \subseteq \Terms(\F,\V)$.  A
+term $\avar$ can simply be called a variable (but is also still a var term); a term $\afun$ may be
+called a constant.
+
+The \emph{subterm} relation $\subtermeq$ is defined as follows:
+\begin{itemize}
+\item $s \subtermeq s$ for all $s$;
+\item $s \subtermeq \afun(s_1,\dots,s_n)$ if $s \subtermeq s_i$ for some $i$;
+\item $s \subtermeq \avar(s_1,\dots,s_n)$ if $s \subtermeq s_i$ for some $i$.
+\end{itemize}
+If $s \subtermeq t$ we say that $s$ \emph{is a subterm of} $t$.  If $\afun(s_1,\dots,s_n) \subtermeq
+t$ then we say that for $0 \leq i \leq n$: $\afun(s_1,\dots,s_i)$ \emph{is a head-subterm of} $t$,
+notation $\afun(s_1,\dots,s_i) \headsubtermeq t$.
+
+A term $s$ is a \emph{pattern} if for every subterm $t \subtermeq s$ we have: if $t$ is a var term,
+then $t$ is a variable.  That is: for every occurrence of $\avar(s_1,\dots,s_n)$ in $s$ we have $n
+= 0$.
+A term $s$ is \emph{first-order} if (1) it is a pattern, and (2) for every subterm $t \subtermeq s$:
+the type of $t$ is a base type.
+The set of all first-order terms over $\F$ and $\V$ is denoted $\FOTerms(\F,\V)$.
+
+\section{Application}
+
+A term $s : \atype_1 \arrtype \dots \arrtype \atype_m \arrtype \btype$ can be applied to a sequence
+$[t_1,\dots,t_m]$ of terms, provided $t_1 : \atype_1,\dots,t_m : \atype_m$, as follows:
+\begin{itemize}
+\item if $s = \afun(s_1,\dots,s_n)$ then $s \cdot [t_1,\dots,t_m] = \afun(s_1,\dots,s_n,t_1,\dots,
+  t_m)$;
+\item if $s = \avar(s_1,\dots,s_n)$ then $s \cdot [t_1,\dots,t_m] = \avar(s_1,\dots,s_n,t_1,\dots,
+  t_m)$.
+\end{itemize}
+When $m = 1$, we can also write $s \cdot t$ instead of $s \cdot [t]$.
+
+\begin{lemma}\label{lem:applicative_notation}
+The set $\ATerms(\F,\V)$ is the smallest set such that:
+\begin{itemize}
+\item $\F \cup \V \subseteq \ATerms(\F,\V)$;
+\item if $s,t \in \ATerms(\F,\V)$ and $s : \atype \arrtype \btype$ and $t : \atype$ then
+  $s \cdot t \in \btype$.
+\end{itemize}
+\end{lemma}
+
+\begin{proof}
+Trivial.
+\end{proof}
+
+Lemma~\ref{lem:applicative_notation} shows that are terms are simply applicative terms
+constructed in the traditional way; however, for convenience we denote them in a functional
+notation.
+
+\section{Substitution}
+
+A substitution is a function $\gamma$ that maps each variable $\avar \in \V$ to a term
+$\gamma(\avar)$ of the same type.  A substitution is applied to an arbitrary term as follows:
+\begin{itemize}
+\item $\afun(s_1,\dots,s_n)\gamma = \afun(s_1\gamma,\dots,s_n\gamma)$;
+\item $\avar(s_1,\dots,s_n)\gamma = \gamma(\avar) \cdot [s_1\gamma,\dots,s_n\gamma]$.
+\end{itemize}
+
+The \emph{domain} $\domain(\gamma)$ of a substitution $\gamma$ is the set of all variables $x$
+such that $\gamma(x) \neq x$.
+We denote $[x_1:=s_1,\dots,x_n:=s_n]$ for the substitution $\gamma$ with $\gamma(x_i) = s_i$ for
+$1 \leq i \leq n$ and $\gamma(y) = y$ for $y \notin \{x_1,\dots,x_n\}$.
+For two substitutions $\gamma$ and $\delta$, we let $\gamma\delta$ denote the substitution that
+maps each variable $x$ to $\gamma(x)\delta$.
+
+\section{Positions}
+
+The \emph{positions} of a given term are the paths to specific subterms, defined as follows:
+
+\begin{itemize}
+\item $\mathit{Positions}(\afun(s_1,\dots,s_n)) = \{ \epsilon \} \cup \{ i \cdot p \mid 1 \leq i
+  \leq n \wedge p \in \mathit{Positions}(s_i) \}$;
+\item $\mathit{Positions}(\avar(s_1,\dots,s_n)) = \{ \epsilon \} \cup \{ i \cdot p \mid 1 \leq i
+  \leq n \wedge p \in \mathit{Positions}(s_i) \}$.
+\end{itemize}
+Note that positions are associated to a term; thus, not every integer sequence is a position.
+
+For a term $s$ and a position $p \in \mathit{Positions}(s)$, the \emph{subterm of $s$ at position
+$p$}, denoted $s|_p$, is defined as follows:
+\begin{itemize}
+\item $s|_\epsilon = s$;
+\item $\afun(s_1,\dots,s_n)|_{i \cdot p} = s_i|_p$;
+\item $\avar(s_1,\dots,s_n)|_{i \cdot p} = s_i|_p$.
+\end{itemize}
+
+Note that $t \subtermeq s$ if and only if there is some position $p \in \mathit{Positions}(s)$ with
+$t = s|_p$.
+
+If $s|_p$ has the same type as some term $t$, then $s[t]_p$ denotes $s$ with the subterm at position
+$p$ replaced by $t$.  Formally, $s[t]_p$ is obtained as follows:
+\begin{itemize}
+\item $s[t]_p = t$;
+\item $\afun(s_1,\dots,s_n)[t]_{i \cdot p} = \afun(s_1,\dots,s_{i-1},s_i[t]_p,s_{i+1},\dots,s_n)$;
+\item $\avar(s_1,\dots,s_n)[t]_{i \cdot p} = \avar(s_1,\dots,s_{i-1},s_i[t]_p,s_{i+1},\dots,s_n)$.
+\end{itemize}
+
+\section{Rules and reduction}
+
+A rule $\rho$ is a pair $\ell \arrz r$ of two terms with the same type.
+A rule generates the set $\mathit{Pairs}_\rho := \{ (u,v) \mid$ there exist a substitution $\gamma$
+and terms $w_1,\dots,w_n$ ($n \geq 0$) such that $u = (\ell\gamma) \cdot [w_1,\dots,w_n]$ and $v =
+(r\gamma) \cdot [w_1,\dots,w_n] \}$.
+
+For a given set of rules $\Rules$, the reduction relation $\arr{\Rules}$ is given by:
+\begin{itemize}
+\item if there is some $\rho \in \Rules$ and a pair $(u,v) \in \mathit{Pairs}_\rho$ such that
+  $s|_p = u$, then $s \arr{\Rules} s[v]_p$.
+\end{itemize}
+
+\medskip
+Note that this explicitly includes applications of rules at the head of a subterm.
+
+\section{ATRSs and TRSs}
+
+An \emph{applicative term rewriting system} is a pair $(\ATerms(\F,\V),\arr{\Rules})$.
+
+A \emph{first-order term rewriting system} is a pair $(\FOTerms(\F,\V),\arr{\Rules})$ where:
+\begin{itemize}
+\item for all $(\afun : \atype) \in \F$: $\order(\atype) \leq 1$;
+\item for all $\ell \arrz r \in \Rules$: $\ell,r \in \FOTerms(\F,\V)$;
+\item for all $\ell \arrz r \in \Rules$: $\ell$ is not a variable, and $\FV(r) \subseteq \FV(\ell)$.
+\end{itemize}
+
+\end{document}
+
