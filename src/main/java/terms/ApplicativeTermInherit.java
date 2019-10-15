@@ -164,15 +164,17 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
    * such a position exists; otherwise throws an IndexingError
    */
   public Term replaceSubterm(Position pos, Term replacement) {
-    if (pos.isEmpty()) return replacement;
+    if (pos.isEmpty()) {
+      if (!queryType().equals(replacement.queryType())) {
+        throw new TypingError(queryMyClassName(), "replaceSubterm", "replacement term " +
+                    replacement.toString(), replacement.queryType().toString(),
+                    queryType().toString());
+      }
+      return replacement;
+    }
     int index = pos.queryArgumentPosition();
     if (index < 1 || index > _args.size()) {
       throw new IndexingError(queryMyClassName(), "replaceSubterm", toString(), pos.toString());
-    }
-    if (!replacement.queryType().equals(_args.get(index-1).queryType())) {
-      throw new TypingError(queryMyClassName(), "replaceSubterm", "replacement term " +
-                  replacement.toString(), replacement.queryType().toString(),
-                  _args.get(index-1).queryType().toString());
     }
     ArrayList<Term> args = new ArrayList<Term>(_args);
     args.set(index-1, args.get(index-1).replaceSubterm(pos.queryTail(), replacement));
