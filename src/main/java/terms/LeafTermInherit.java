@@ -25,6 +25,7 @@ import cora.interfaces.terms.Substitution;
 import cora.exceptions.IndexingError;
 import cora.exceptions.NullCallError;
 import cora.exceptions.NullInitialisationError;
+import cora.exceptions.TypingError;
 import cora.terms.positions.EmptyPosition;
 
 /**
@@ -93,8 +94,14 @@ abstract class LeafTermInherit extends TermInherit implements Term {
 
   /** @return the replacement if pos is the empty position; otherwise throws an IndexingError */
   public Term replaceSubterm(Position pos, Term replacement) {
-    if (pos.isEmpty()) return replacement;
-    throw new IndexingError("Var", "replaceSubterm", toString(), pos.toString());
+    if (pos.isEmpty()) {
+      if (!queryType().equals(replacement.queryType())) {
+        throw new TypingError(queryMyClassName(), "replaceSubterm", "replacement term " +
+          replacement.toString(), replacement.queryType().toString(), queryType().toString());
+      }
+      return replacement;
+    }
+    throw new IndexingError(queryMyClassName(), "replaceSubterm", toString(), pos.toString());
   }
 }
 

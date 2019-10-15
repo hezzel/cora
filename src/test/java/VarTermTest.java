@@ -297,10 +297,17 @@ public class VarTermTest {
   }
 
   @Test(expected = TypingError.class)
-  public void testSubtermReplacementBadType() {
+  public void testSubtermReplacementBadTypeSub() {
     Variable z = new Var("Z", arrowType("Int", "Bool"));
     Term s = new VarTerm(z, constantTerm("37", baseType("Int")));
     Term t = s.replaceSubterm(new ArgumentPosition(1, new EmptyPosition()), s);
+  }
+
+  @Test(expected = TypingError.class)
+  public void testSubtermReplacementBadTypeTop() {
+    Variable z = new Var("Z", arrowType("Int", "Bool"));
+    Term s = new VarTerm(z, constantTerm("37", baseType("Int")));
+    Term t = s.replaceSubterm(new EmptyPosition(), constantTerm("42", baseType("Int")));
   }
 
   @Test
