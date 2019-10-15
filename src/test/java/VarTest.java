@@ -15,7 +15,7 @@
 
 import org.junit.Test;
 import static org.junit.Assert.*;
-import java.util.ArrayList;
+import java.util.List;
 import cora.exceptions.ArityError;
 import cora.exceptions.IndexingError;
 import cora.exceptions.InappropriatePatternDataError;
@@ -164,7 +164,7 @@ public class VarTest {
   @Test
   public void testPositions() {
     Term s = new Var("x", baseType("o"));
-    ArrayList<Position> lst = s.queryAllPositions();
+    List<Position> lst = s.queryAllPositions();
     assertTrue(lst.size() == 1);
     assertTrue(lst.get(0).toString().equals("ε"));
   }

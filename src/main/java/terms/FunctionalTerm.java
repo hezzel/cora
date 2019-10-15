@@ -15,6 +15,7 @@
 
 package cora.terms;
 
+import java.util.List;
 import java.util.ArrayList;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.IndexingError;
@@ -54,7 +55,7 @@ public class FunctionalTerm extends ApplicativeTermInherit implements Term {
    * Throws an error if n does not match the arity of f, or if the types of the arguments are not
    * the expected input types of f.
    */
-  public FunctionalTerm(FunctionSymbol f, ArrayList<Term> args) {
+  public FunctionalTerm(FunctionSymbol f, List<Term> args) {
     super(f, args);
     _f = f;
   }
@@ -66,14 +67,14 @@ public class FunctionalTerm extends ApplicativeTermInherit implements Term {
    * afterwards.
    * Only for features like substitution or simplifications. Be very careful using this!
    */
-  private FunctionalTerm(ArrayList<Term> args, FunctionSymbol f, Type outputType) {
+  private FunctionalTerm(List<Term> args, FunctionSymbol f, Type outputType) {
     _f = f;
     _args = args;
     _outputType = outputType;
   }
 
   /** This method is called by inherited functions, and calls the private constructor. */
-  protected FunctionalTerm reconstruct(ArrayList<Term> args) {
+  protected FunctionalTerm reconstruct(List<Term> args) {
     return new FunctionalTerm(args, _f, _outputType);
   }
 
@@ -114,7 +115,7 @@ public class FunctionalTerm extends ApplicativeTermInherit implements Term {
       throw new IndexingError("FunctionalTerm", "queryImmediateHeadSubterm", i, 0, _args.size());
     }   
     if (i == 0) return _f;
-    ArrayList<Term> newargs = new ArrayList<Term>();
+    List<Term> newargs = new ArrayList<Term>();
     for (int j = 0; j < i; j++) newargs.add(_args.get(j));
     return new FunctionalTerm(_f, newargs);
   }
@@ -144,15 +145,15 @@ public class FunctionalTerm extends ApplicativeTermInherit implements Term {
   }
 
   /** If this term is f(s1,...,sn) and extra = [t1,...,tm], this returns f(s1,...,sn,t1,...,tm). */
-  public Term apply(ArrayList<Term> extra) {
-    ArrayList<Term> newargs = new ArrayList<Term>(_args);
+  public Term apply(List<Term> extra) {
+    List<Term> newargs = new ArrayList<Term>(_args);
     newargs.addAll(extra);
     return new FunctionalTerm(_f, newargs);
   }
 
   /** This function applies gamma recursively on the arguments and returns the result. */
   public Term substitute(Substitution gamma) {
-    ArrayList<Term> newargs = substituteArgs(gamma);
+    List<Term> newargs = substituteArgs(gamma);
     return reconstruct(newargs);
   }
 

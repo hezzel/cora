@@ -15,6 +15,7 @@
 
 package cora.rewriting;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.Collections;
@@ -35,10 +36,10 @@ import cora.interfaces.rewriting.TRS;
  */
 public class TermRewritingSystem implements TRS {
   private Alphabet _alphabet;
-  private ArrayList<Rule> _rules;
+  private List<Rule> _rules;
 
   /** Create an TermRewritingSystem with the given alphabet and rules. */
-  public TermRewritingSystem(Alphabet alphabet, ArrayList<Rule> rules) {
+  public TermRewritingSystem(Alphabet alphabet, List<Rule> rules) {
     if (alphabet == null) throw new NullInitialisationError("TermRewritingSystem", "alphabet");
     if (rules == null) throw new NullInitialisationError("TermRewritingSystem", "rules set");
     for (int i = 0; i < rules.size(); i++) {
@@ -83,7 +84,7 @@ public class TermRewritingSystem implements TRS {
    * position exists.
    */
   public Position leftmostInnermostRedexPosition(Term s) {
-    ArrayList<Position> positions = s.queryAllPositions();
+    List<Position> positions = s.queryAllPositions();
     for (int i = 0; i < positions.size(); i++) {
       Position pos = positions.get(i);
       Term sub = s.querySubterm(pos);
@@ -100,7 +101,7 @@ public class TermRewritingSystem implements TRS {
    * If multiple rules match, an arbitrary one is chosen.
    */
   public Term leftmostInnermostReduce(Term s) {
-    ArrayList<Rule> tmp = new ArrayList<Rule>(_rules);
+    List<Rule> tmp = new ArrayList<Rule>(_rules);
     Collections.shuffle(tmp);
     Position pos = leftmostInnermostRedexPosition(s);
     if (pos == null) return null;

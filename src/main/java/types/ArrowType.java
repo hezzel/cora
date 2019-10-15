@@ -15,7 +15,7 @@
 
 package cora.types;
 
-import java.util.ArrayList;
+import java.util.List;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullInitialisationError;
 import cora.interfaces.types.*;
@@ -70,7 +70,7 @@ public class ArrowType implements Type {
     return a > b ? a : b;
   }
 
-  public void appendInputTypes(ArrayList<Type> answer) {
+  public void appendInputTypes(List<Type> answer) {
     answer.add(_left);
     _right.appendInputTypes(answer);
   }

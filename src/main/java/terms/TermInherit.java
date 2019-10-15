@@ -15,16 +15,11 @@
 
 package cora.terms;
 
+import java.util.List;
 import java.util.ArrayList;
-import cora.exceptions.ArityError;
-import cora.exceptions.IndexingError;
-import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.NullInitialisationError;
-import cora.exceptions.NullCallError;
-import cora.exceptions.TypingError;
-import cora.interfaces.types.Type;
-import cora.interfaces.terms.*;
-import cora.terms.positions.EmptyPosition;
+import cora.interfaces.terms.Term;
+import cora.interfaces.terms.Environment;
+import cora.interfaces.terms.Substitution;
 
 /**
  * A TermInherit supplies default functionality for all instances of Term.
@@ -35,7 +30,7 @@ abstract class TermInherit {
   abstract String match(Term other, Substitution gamma);
   abstract boolean equals(Term other);
   abstract void updateVars(Environment env);
-  abstract Term apply(ArrayList<Term> args);
+  abstract Term apply(List<Term> args);
 
   /** Returns the set of all variables occurring in the current term. */
   public Environment vars() {
@@ -46,7 +41,7 @@ abstract class TermInherit {
 
   /** Applies the current term (with functional type) to other. */
   public Term apply(Term other) {
-    ArrayList<Term> args = new ArrayList<Term>();
+    List<Term> args = new ArrayList<Term>();
     args.add(other);
     return apply(args);
   }

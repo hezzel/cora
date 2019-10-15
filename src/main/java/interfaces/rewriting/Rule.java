@@ -15,7 +15,6 @@
 
 package cora.interfaces.rewriting;
 
-import java.util.ArrayList;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.Term;
 

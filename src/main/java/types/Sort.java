@@ -15,7 +15,7 @@
 
 package cora.types;
 
-import java.util.ArrayList;
+import java.util.List;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.interfaces.types.*;
@@ -65,7 +65,7 @@ public class Sort implements BaseType {
   public int queryTypeOrder() { return 0; }
 
   /** Does nothing, as a base type does not have input types. */
-  public void appendInputTypes(ArrayList<Type> answer) { }
+  public void appendInputTypes(List<Type> answer) { }
 
   /** Do not call on BaseType -- results in an InappropriatePatternDataError. */
   public Type queryArrowInputType() {

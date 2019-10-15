@@ -15,6 +15,7 @@
 
 package cora.terms;
 
+import java.util.List;
 import java.util.ArrayList;
 import cora.exceptions.ArityError;
 import cora.exceptions.IndexingError;
@@ -31,7 +32,7 @@ import cora.terms.positions.ArgumentPosition;
  * f(s1,...,sn) or x(s1,...,sn).
  */
 abstract class ApplicativeTermInherit extends TermInherit implements Term {
-  protected ArrayList<Term> _args;
+  protected List<Term> _args;
   protected Type _outputType;
 
   /**
@@ -39,7 +40,7 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
    * All checks may be bypassed, since newargs will be obtained from args and thus be well-typed
    * and not null; moreover, it should be safe to store newargs in the (immutable!) new term.
    */
-  protected abstract Term reconstruct(ArrayList<Term> newargs);
+  protected abstract Term reconstruct(List<Term> newargs);
 
   /** Helper function to return the current classname for use in Errors. */
   private String queryMyClassName() {
@@ -55,7 +56,7 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
    * checking out -- an appropriate Error is thrown. However, it *is* assumed that args is not
    * null.
    */
-  private void construct(Term head, ArrayList<Term> args) {
+  private void construct(Term head, List<Term> args) {
     if (head == null) throw new NullInitialisationError(queryMyClassName(), "head");
     Type type = head.queryType();
     for (int i = 0; i < args.size(); i++) {
@@ -91,7 +92,7 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
    * Throws an error if the head is null or does not have arity 1, or the argument is null.
    */
   protected ApplicativeTermInherit(Term head, Term arg) {
-    ArrayList<Term> args = new ArrayList<Term>();
+    List<Term> args = new ArrayList<Term>();
     args.add(arg);
     construct(head, args);
   }
@@ -101,7 +102,7 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
    * Throws an error if the head does not have arity 2, or one of the arguments is null.
    */
   protected ApplicativeTermInherit(Term head, Term arg1, Term arg2) {
-    ArrayList<Term> args = new ArrayList<Term>();
+    List<Term> args = new ArrayList<Term>();
     args.add(arg1);
     args.add(arg2);
     construct(head, args);
@@ -112,7 +113,7 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
    * Throws an error if n does not match the arity of the head, or if the types of the arguments
    * are not the expected input types of the head.
    */
-  protected ApplicativeTermInherit(Term head, ArrayList<Term> args) {
+  protected ApplicativeTermInherit(Term head, List<Term> args) {
     if (args == null) throw new NullInitialisationError(queryMyClassName(), "argument list");
     construct(head, new ArrayList<Term>(args));
   }
@@ -137,10 +138,10 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
   }
 
   /** Returns the positions in all subterms, from left to right, followed by the empty position. */
-  public ArrayList<Position> queryAllPositions() {
-    ArrayList<Position> ret = new ArrayList<Position>();
+  public List<Position> queryAllPositions() {
+    List<Position> ret = new ArrayList<Position>();
     for (int i = 0; i < _args.size(); i++) {
-      ArrayList<Position> subposses = _args.get(i).queryAllPositions();
+      List<Position> subposses = _args.get(i).queryAllPositions();
       for (int j = 0; j < subposses.size(); j++) {
         ret.add(new ArgumentPosition(i+1, subposses.get(j)));
       }
@@ -176,7 +177,7 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
     if (index < 1 || index > _args.size()) {
       throw new IndexingError(queryMyClassName(), "replaceSubterm", toString(), pos.toString());
     }
-    ArrayList<Term> args = new ArrayList<Term>(_args);
+    List<Term> args = new ArrayList<Term>(_args);
     args.set(index-1, args.get(index-1).replaceSubterm(pos.queryTail(), replacement));
     return reconstruct(args);
   }
@@ -185,8 +186,8 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
    * This method applies the substitution recursively to the arguments and returns the resulting
    * substituted-arguments list.
    */
-  protected ArrayList<Term> substituteArgs(Substitution gamma) {
-    ArrayList<Term> args = new ArrayList<Term>(_args);
+  protected List<Term> substituteArgs(Substitution gamma) {
+    List<Term> args = new ArrayList<Term>(_args);
     for (int i = 0; i < args.size(); i++) {
       Term t = args.get(i).substitute(gamma);
       if (t == null) {

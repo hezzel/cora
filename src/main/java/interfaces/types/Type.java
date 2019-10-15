@@ -15,7 +15,7 @@
 
 package cora.interfaces.types;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Types have the form σ1 → ,,, → σk → τ, with all σi Types and τ a BASE type.
@@ -39,7 +39,7 @@ public interface Type {
   /** For σ1 → ,,, → σk → τ, returns k */
   int queryArity();
   /** For σ1 → ,,, → σk → τ, adds {σ1,,,σk} to the end of answer. */
-  void appendInputTypes(ArrayList<Type> answer);
+  void appendInputTypes(List<Type> answer);
   /** For σ1 → ,,, → σk → τ, returns τ */
   BaseType queryOutputSort();
   /** For σ1 → ,,, → σk → τ, returns max(order(σ1),,,order(σk))+1 */

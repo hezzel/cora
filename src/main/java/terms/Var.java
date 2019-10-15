@@ -15,7 +15,7 @@
 
 package cora.terms;
 
-import java.util.ArrayList;
+import java.util.List;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullCallError;
 import cora.exceptions.NullInitialisationError;
@@ -90,7 +90,7 @@ public class Var extends LeafTermInherit implements Variable {
   }
 
   /** Returns the VarTerm x(args). */
-  public Term apply(ArrayList<Term> args) {
+  public Term apply(List<Term> args) {
     return new VarTerm(this, args);
   }
 

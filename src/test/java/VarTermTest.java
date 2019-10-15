@@ -15,6 +15,7 @@
 
 import org.junit.Test;
 import static org.junit.Assert.*;
+import java.util.List;
 import java.util.ArrayList;
 import cora.exceptions.ArityError;
 import cora.exceptions.IndexingError;
@@ -71,7 +72,7 @@ public class VarTermTest {
   @Test(expected = NullInitialisationError.class)
   public void testNullArgs() {
     Variable x = new Var("x", arrowType("a", "b"));
-    ArrayList<Term> args = null;
+    List<Term> args = null;
     Term t = new VarTerm(x, args);
   }
 
@@ -79,7 +80,7 @@ public class VarTermTest {
   public void testTooManyArgs() {
     Type type = new ArrowType(baseType("a"), arrowType("b", "a"));
     Variable x = new Var("x", type);
-    ArrayList<Term> args = new ArrayList<Term>();
+    List<Term> args = new ArrayList<Term>();
     args.add(constantTerm("c", baseType("a")));
     args.add(constantTerm("d", baseType("b")));
     args.add(constantTerm("e", baseType("a")));
@@ -90,7 +91,7 @@ public class VarTermTest {
   public void testConstructorBadArgType() {
     Type type = new ArrowType(baseType("a"), arrowType("b", "a"));
     Variable x = new Var("x", type);
-    ArrayList<Term> args = new ArrayList<Term>();
+    List<Term> args = new ArrayList<Term>();
     args.add(constantTerm("c", baseType("a")));
     args.add(constantTerm("d", baseType("a")));
     Term t = new VarTerm(x, args);
@@ -154,7 +155,7 @@ public class VarTermTest {
   @Test
   public void testConstantVarTerm() {
     Variable x = new Var("x", arrowType("b", "a"));
-    ArrayList<Term> args = new ArrayList<Term>();
+    List<Term> args = new ArrayList<Term>();
     Term xterm = new VarTerm(x, args);
     assertTrue(xterm.isVariable());
     assertTrue(xterm.isPattern());
@@ -164,7 +165,7 @@ public class VarTermTest {
   public void testTermEquality() {
     Variable x = new Var("x", baseType("o"));
     Variable y = new Var("y", new ArrowType(baseType("o"), arrowType("o", "o")));
-    ArrayList<Term> empty = new ArrayList<Term>();
+    List<Term> empty = new ArrayList<Term>();
     Term s1 = x;
     Term s2 = new VarTerm(x, empty);
     Term s3 = y;
@@ -204,7 +205,7 @@ public class VarTermTest {
   public void testFirstOrder() {
     Variable x = new Var("x", baseType("o"));
     Variable y = new Var("y", arrowType("o", "o"));
-    ArrayList<Term> args = new ArrayList<Term>();
+    List<Term> args = new ArrayList<Term>();
     Term x1 = x;
     Term x2 = new VarTerm(x, args);
     Term x3 = y;
@@ -252,7 +253,7 @@ public class VarTermTest {
     Term arg1 = unaryTerm("g", baseType("a"), new Var("x", baseType("b")));
     Term arg2 = constantTerm("c", baseType("b"));
     Term term = new VarTerm(z, arg1, arg2);    // Z(g(x),c)
-    ArrayList<Position> lst = term.queryAllPositions();
+    List<Position> lst = term.queryAllPositions();
     assertTrue(lst.size() == 4);
     assertTrue(lst.get(0).toString().equals("1.1.ε"));
     assertTrue(lst.get(1).toString().equals("1.ε"));
@@ -341,7 +342,7 @@ public class VarTermTest {
     FunctionSymbol h = new UserDefinedSymbol("h", new ArrowType(baseType("Int"), intintint));
     Term pattern = new VarTerm(z, three, x);
     Term fx = unaryTerm("f", baseType("Int"), x);
-    ArrayList<Term> args = new ArrayList<Term>();
+    List<Term> args = new ArrayList<Term>();
     args.add(fx);
     args.add(three);
     args.add(fx);

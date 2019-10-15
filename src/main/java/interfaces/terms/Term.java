@@ -15,7 +15,7 @@
 
 package cora.interfaces.terms;
 
-import java.util.ArrayList;
+import java.util.List;
 import cora.interfaces.types.Type;
 
 /**
@@ -92,7 +92,7 @@ public interface Term {
    * Note that this set is non-epmty as it always contains the empty position (representing the
    * current term).
    */
-  ArrayList<Position> queryAllPositions();
+  List<Position> queryAllPositions();
 
   /** Returns the set of all variables that occur in the current term. */
   Environment vars();
@@ -120,7 +120,7 @@ public interface Term {
    * For example, if the current term is f(3), then the result is f(3,s1,...,sn).
    * If the resulting term cannot be constructed for type reasons, this will throw a TypingError.
    */
-  Term apply(ArrayList<Term> args);
+  Term apply(List<Term> args);
 
   /** The same as apply([other]) */
   Term apply(Term other);

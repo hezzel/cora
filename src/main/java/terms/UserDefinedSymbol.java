@@ -15,7 +15,7 @@
 
 package cora.terms;
 
-import java.util.ArrayList;
+import java.util.List;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.NullCallError;
@@ -91,7 +91,7 @@ public class UserDefinedSymbol extends LeafTermInherit implements FunctionSymbol
   public void updateVars(Environment env) {}
 
   /** Returns the FunctionalTerm f(args). */
-  public Term apply(ArrayList<Term> args) {
+  public Term apply(List<Term> args) {
     return new FunctionalTerm(this, args);
   }
 

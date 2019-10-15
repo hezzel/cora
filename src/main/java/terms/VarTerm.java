@@ -15,6 +15,7 @@
 
 package cora.terms;
 
+import java.util.List;
 import java.util.ArrayList;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.IndexingError;
@@ -53,7 +54,7 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
    * Throws an error if n does not match the arity of x, or if the types of the arguments are not
    * the expected input types of f.
    */
-  public VarTerm(Variable x, ArrayList<Term> args) {
+  public VarTerm(Variable x, List<Term> args) {
     super(x, args);
     _x = x;
   }
@@ -65,14 +66,14 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
    * afterwards.
    * Only for features like substitution or simplifications. Be very careful using this!
    */
-  private VarTerm(ArrayList<Term> args, Variable x, Type outputType) {
+  private VarTerm(List<Term> args, Variable x, Type outputType) {
     _x = x;
     _args = args;
     _outputType = outputType;
   }
 
   /** This method is called by inherited functions, and calls the private constructor. */
-  protected VarTerm reconstruct(ArrayList<Term> args) {
+  protected VarTerm reconstruct(List<Term> args) {
     return new VarTerm(args, _x, _outputType);
   }
 
@@ -113,7 +114,7 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
       throw new IndexingError("VarTerm", "queryImmediateHeadSubterm", i, 0, _args.size());
     }
     if (i == 0) return _x;
-    ArrayList<Term> newargs = new ArrayList<Term>();
+    List<Term> newargs = new ArrayList<Term>();
     for (int j = 0; j < i; j++) newargs.add(_args.get(j));
     return new VarTerm(_x, newargs);
   }
@@ -140,8 +141,8 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
   }
 
   /** If this term is x(s1,...,sn) and extra = [t1,...,tm], this returns x(s1,...,sn,t1,...,tm). */
-  public Term apply(ArrayList<Term> extra) {
-    ArrayList<Term> newargs = new ArrayList<Term>(_args);
+  public Term apply(List<Term> extra) {
+    List<Term> newargs = new ArrayList<Term>(_args);
     newargs.addAll(extra);
     return new VarTerm(_x, newargs);
   }
@@ -151,7 +152,7 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
    * application of the substituted head to the substituted arguments.
    */
   public Term substitute(Substitution gamma) {
-    ArrayList<Term> newargs = substituteArgs(gamma);
+    List<Term> newargs = substituteArgs(gamma);
     if (gamma.get(_x) == null) return reconstruct(newargs);
     else return gamma.get(_x).apply(newargs);
   }

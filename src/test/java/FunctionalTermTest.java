@@ -16,6 +16,7 @@
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.ArrayList;
+import java.util.List;
 import cora.exceptions.ArityError;
 import cora.exceptions.IndexingError;
 import cora.exceptions.InappropriatePatternDataError;
@@ -71,7 +72,7 @@ public class FunctionalTermTest {
   @Test(expected = NullInitialisationError.class)
   public void testNullArgs() {
     FunctionSymbol f = new UserDefinedSymbol("f", arrowType("a", "b"));
-    ArrayList<Term> args = null;
+    List<Term> args = null;
     Term t = new FunctionalTerm(f, args);
   }
 
@@ -79,7 +80,7 @@ public class FunctionalTermTest {
   public void testTooManyArgs() {
     Type type = new ArrowType(baseType("a"), arrowType("b", "a"));
     FunctionSymbol f = new UserDefinedSymbol("f", type);
-    ArrayList<Term> args = new ArrayList<Term>();
+    List<Term> args = new ArrayList<Term>();
     args.add(constantTerm("c", baseType("a")));
     args.add(constantTerm("d", baseType("b")));
     args.add(constantTerm("e", baseType("a")));
@@ -90,7 +91,7 @@ public class FunctionalTermTest {
   public void testConstructorBadArgType() {
     Type type = new ArrowType(baseType("a"), arrowType("b", "a"));
     FunctionSymbol f = new UserDefinedSymbol("f", type);
-    ArrayList<Term> args = new ArrayList<Term>();
+    List<Term> args = new ArrayList<Term>();
     args.add(constantTerm("c", baseType("a")));
     args.add(constantTerm("d", baseType("a")));
     Term t = new FunctionalTerm(f, args);
@@ -153,7 +154,7 @@ public class FunctionalTermTest {
   @Test
   public void testConstantFunctionalTerm() {
     FunctionSymbol f = new UserDefinedSymbol("f", arrowType("b", "a"));
-    ArrayList<Term> args = new ArrayList<Term>();
+    List<Term> args = new ArrayList<Term>();
     Term fterm = new FunctionalTerm(f, args);
     assertTrue(fterm.isConstant());
   }
@@ -223,7 +224,7 @@ public class FunctionalTermTest {
     Term arg1 = constantTerm("c", baseType("a"));
     Term arg2 = unaryTerm("g", baseType("b"), new Var("x", baseType("b")));
     Term term = new FunctionalTerm(f, arg1, arg2);    // f(c,g(x))
-    ArrayList<Position> lst = term.queryAllPositions();
+    List<Position> lst = term.queryAllPositions();
     assertTrue(lst.size() == 4);
     assertTrue(lst.get(0).toString().equals("1.ε"));
     assertTrue(lst.get(1).toString().equals("2.1.ε"));
@@ -291,7 +292,7 @@ public class FunctionalTermTest {
     Term c = constantTerm("c", a); 
     FunctionSymbol f = new UserDefinedSymbol("f", type);
     Term fc = new FunctionalTerm(f, c); 
-    ArrayList<Term> args = new ArrayList<Term>();
+    List<Term> args = new ArrayList<Term>();
     args.add(constantTerm("b", o));
     args.add(c);
     Term fcbc = fc.apply(args);
