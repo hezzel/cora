@@ -273,7 +273,7 @@ public class CoraInputReader extends InputReader {
     }
     else {
       FunctionSymbol existing = pd.lookupFunctionSymbol(constant);
-      if (existing == null) pd.addFunctionSymbol(new UserDefinedSymbol(constant, type));
+      if (existing == null) pd.addFunctionSymbol(new Constant(constant, type));
       else priorDeclaration = existing.queryType();
     }
 

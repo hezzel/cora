@@ -21,7 +21,10 @@ import java.util.TreeSet;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.Environment;
 
-/** Env is the default implementation of Environment: a set of variables with unique names. */
+/**
+ * Env is the default implementation of Environment: a set of variables with not-necessarily-unique
+ * names.
+ */
 public class Env implements Environment {
   private TreeSet<Variable> _variables;
 

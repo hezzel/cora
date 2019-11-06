@@ -18,8 +18,7 @@ package cora.interfaces.terms;
 import java.lang.Iterable;
 
 /**
- * An Environment is a finite set of variables, which may later be equipped with additional data
- * such as which are free and which are bound.
+ * An Environment is a finite set of variables.
  * It is used for instance to list the variables used in an individual term.
  */
 public interface Environment extends Iterable<Variable> {

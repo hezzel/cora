@@ -107,10 +107,7 @@ public class Var extends LeafTermInherit implements Variable {
     throw new InappropriatePatternDataError("Var", "queryRoot", "functional terms");
   }
 
-  /**
-   * Adds the current variable into env.
-   * This may cause an Error if a different variable by the same name already occurs in it.
-   */
+  /** Adds the current variable into env. */
   public void updateVars(Environment env) {
     env.add(this);
   }

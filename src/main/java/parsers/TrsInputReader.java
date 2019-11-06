@@ -37,7 +37,7 @@ import cora.interfaces.rewriting.Rule;
 import cora.interfaces.rewriting.TRS;
 import cora.types.Sort;
 import cora.types.ArrowType;
-import cora.terms.UserDefinedSymbol;
+import cora.terms.Constant;
 import cora.terms.Var;
 import cora.terms.FunctionalTerm;
 import cora.rewriting.FirstOrderRule;
@@ -138,7 +138,7 @@ public class TrsInputReader extends InputReader {
       throw new ParserException(firstToken(tree), "Function symbol " + funname +
                                                   " was previously declared as a variable.");
     }
-    data.addFunctionSymbol(new UserDefinedSymbol(funname, type));
+    data.addFunctionSymbol(new Constant(funname, type));
   }
 
   /**
@@ -195,7 +195,7 @@ public class TrsInputReader extends InputReader {
         throw new TypingException(firstToken(tree), name, unitSort.toString(),
                                   expectedType.toString());
       }
-      UserDefinedSymbol f = new UserDefinedSymbol(name, unitSort);
+      Constant f = new Constant(name, unitSort);
       data.addFunctionSymbol(f);
       return f;
     }
@@ -252,7 +252,7 @@ public class TrsInputReader extends InputReader {
     // Otherwise, create the type for the given arity and use it to construct a function symbol
     Type type = unitSort;
     for (int i = 0; i < numberOfArguments; i++) type = new ArrowType(unitSort, type);
-    FunctionSymbol ret = new UserDefinedSymbol(name, type);
+    FunctionSymbol ret = new Constant(name, type);
     data.addFunctionSymbol(ret);
     return ret;
   }

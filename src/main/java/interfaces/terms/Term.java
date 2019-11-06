@@ -20,19 +20,18 @@ import cora.interfaces.types.Type;
 
 /**
  * Terms are the main object to be rewritten.  There are various kinds of terms,
- * currently including only functional terms f(s1,...,sk) and variables, but in the future it is
- * likely that additional constructions will be allowed.
+ * currently including functional terms f(s1,...,sk) and var terms x(s1,...,xk).
+ * In the future it is likely that additional constructions will be allowed, but this will depend
+ * on the style of term rewriting system under analysis.
  *
  * Note; all instances of Term must (and can be expected to) be immutable.
  */
 
 public interface Term {
-  public enum TermKind { VARTERM, FUNCTIONALTERM };
-
   /** Returns the type of the term. */
   Type queryType();
 
-  /** Returns whether or not the current term is a variable. */
+  /** Returns whether or not the current term is an unapplied variable. */
   boolean isVariable();
 
   /** Returns whether or not the current term is an unapplied function symbol. */
@@ -57,13 +56,13 @@ public interface Term {
    * For an applicative term a(s1,...,sn) (where a itself is not an application), the immediate
    * subterms are s1,...,sn.  There are also n+1 head subterms: a, a(s1), a(s1,s2), ...,
    * a(s1,...,sn).  Here, queryImmediateHeadSubterm(i) returns a(s1,...,si).
-   * (Note that this should not be used in applications considering first-order rewriting, since
-   * all non-trivial head subterms have a higher type).
+   * (Note that this should not be used in analysis of first-order term rewriting, since all
+   * non-trivial head subterms have a higher type).
    */
   Term queryImmediateHeadSubterm(int i);
 
   /**
-   * If this is a functional term f(s1,...,sn), this returns the root symbol f (also if n = 0).
+   * If this is a functional term f(s1,...,sn) or constant f, this returns the root symbol f.
    * Otherwise, an InappropriatePatternDataError is thrown.
    */
   FunctionSymbol queryRoot();
@@ -75,8 +74,8 @@ public interface Term {
   Variable queryVariable();
 
   /**
-   * Returns true if this term is first-order (so: the subterms at all standard positions have
-   * base type, and no abstractions or variable applications are used), false otherwise.
+   * Returns true if this term is first-order (so: the subterms at all positions have base type,
+   * and no abstractions or variable applications are used), false otherwise.
    */
   boolean isFirstOrder();
 
