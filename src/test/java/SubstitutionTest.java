@@ -33,7 +33,7 @@ public class SubstitutionTest {
   }
 
   private Term constantTerm(String name, Type type) {
-    return new UserDefinedSymbol(name, type);
+    return new Constant(name, type);
   }
 
   @Test(expected = NullStorageError.class)

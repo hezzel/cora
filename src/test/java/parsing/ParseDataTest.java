@@ -23,7 +23,7 @@ import cora.interfaces.rewriting.Alphabet;
 import cora.interfaces.rewriting.Rule;
 import cora.interfaces.rewriting.TRS;
 import cora.types.Sort;
-import cora.terms.UserDefinedSymbol;
+import cora.terms.Constant;
 import cora.terms.Var;
 import cora.rewriting.UserDefinedAlphabet;
 import cora.rewriting.TermRewritingSystem;
@@ -34,7 +34,7 @@ public class ParseDataTest {
   @Test
   public void testBasics() {
     ParseData data = new ParseData();
-    UserDefinedSymbol bing = new UserDefinedSymbol("bing", new Sort("a"));
+    Constant bing = new Constant("bing", new Sort("a"));
     Var bong = new Var("bong", new Sort("b"));
     data.addFunctionSymbol(bing);
     assertTrue(data.lookupFunctionSymbol("bing").equals(bing));
@@ -49,9 +49,9 @@ public class ParseDataTest {
   @Test
   public void testCounts() {
     ParseData data = new ParseData();
-    UserDefinedSymbol bing = new UserDefinedSymbol("bing", new Sort("a"));
+    Constant bing = new Constant("bing", new Sort("a"));
     Var bongv = new Var("bong", new Sort("b"));
-    UserDefinedSymbol bongf = new UserDefinedSymbol("bong", new Sort("a"));
+    Constant bongf = new Constant("bong", new Sort("a"));
     data.addFunctionSymbol(bing);
     data.addFunctionSymbol(bongf);
     data.addFunctionSymbol(bing);
@@ -65,7 +65,7 @@ public class ParseDataTest {
   @Test
   public void testEqualVariableAndFunction() {
     ParseData data = new ParseData();
-    UserDefinedSymbol bing1 = new UserDefinedSymbol("bing", new Sort("a"));
+    Constant bing1 = new Constant("bing", new Sort("a"));
     Var bing2 = new Var("bing", new Sort("b"));
     data.addFunctionSymbol(bing1);
     data.addVariable(bing2);
@@ -76,7 +76,7 @@ public class ParseDataTest {
   @Test
   public void testLookupNonExisting() {
     ParseData data = new ParseData();
-    data.addFunctionSymbol(new UserDefinedSymbol("bing", new Sort("a")));
+    data.addFunctionSymbol(new Constant("bing", new Sort("a")));
     assertTrue(data.lookupFunctionSymbol("bong") == null);
     assertTrue(data.lookupVariable("bing") == null);
   }
@@ -84,8 +84,8 @@ public class ParseDataTest {
   @Test
   public void testFunctionSymbolLegalOverride() {
     ParseData data = new ParseData();
-    data.addFunctionSymbol(new UserDefinedSymbol("bing", new Sort("a")));
-    data.addFunctionSymbol(new UserDefinedSymbol("bing", new Sort("a")));
+    data.addFunctionSymbol(new Constant("bing", new Sort("a")));
+    data.addFunctionSymbol(new Constant("bing", new Sort("a")));
     assertTrue(data.lookupFunctionSymbol("bing").queryType().equals(new Sort("a")));
   }
 
@@ -101,8 +101,8 @@ public class ParseDataTest {
   @Test(expected = java.lang.Error.class)
   public void testFunctionSymbolIllegalOverride() {
     ParseData data = new ParseData();
-    data.addFunctionSymbol(new UserDefinedSymbol("bing", new Sort("a")));
-    data.addFunctionSymbol(new UserDefinedSymbol("bing", new Sort("b")));
+    data.addFunctionSymbol(new Constant("bing", new Sort("a")));
+    data.addFunctionSymbol(new Constant("bing", new Sort("b")));
   }
 
   @Test(expected = java.lang.Error.class)
@@ -116,8 +116,8 @@ public class ParseDataTest {
   @Test
   public void testGenerateAlphabet() {
     ParseData data = new ParseData();
-    UserDefinedSymbol bing = new UserDefinedSymbol("bing", new Sort("a"));
-    UserDefinedSymbol bong = new UserDefinedSymbol("bong", new Sort("a"));
+    Constant bing = new Constant("bing", new Sort("a"));
+    Constant bong = new Constant("bong", new Sort("a"));
     Var bang = new Var("bang", new Sort("b"));
     data.addFunctionSymbol(bing);
     data.addFunctionSymbol(bong);
@@ -127,7 +127,7 @@ public class ParseDataTest {
     assertTrue(alf.lookup("bing").equals(bing));
     assertTrue(alf.lookup("bong").equals(bong));
     assertTrue(alf.lookup("bang") == null);
-    UserDefinedSymbol bangf = new UserDefinedSymbol("bang", new Sort("a"));
+    Constant bangf = new Constant("bang", new Sort("a"));
     data.addFunctionSymbol(bangf);
     assertTrue(alf.lookup("bang") == null);
   }
@@ -135,8 +135,8 @@ public class ParseDataTest {
   @Test
   public void testInitialiseWithTRS() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
-    FunctionSymbol bing = new UserDefinedSymbol("bing", new Sort("a"));
-    FunctionSymbol bong = new UserDefinedSymbol("bong", new Sort("b"));
+    FunctionSymbol bing = new Constant("bing", new Sort("a"));
+    FunctionSymbol bong = new Constant("bong", new Sort("b"));
     symbols.add(bing);
     UserDefinedAlphabet alf = new UserDefinedAlphabet(symbols);
     TRS trs = new TermRewritingSystem(alf, new ArrayList<Rule>());
@@ -154,13 +154,13 @@ public class ParseDataTest {
   @Test(expected =  java.lang.Error.class)
   public void testVariableIllegalOverrideInAlphabet() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
-    FunctionSymbol bing = new UserDefinedSymbol("bing", new Sort("a"));
+    FunctionSymbol bing = new Constant("bing", new Sort("a"));
     symbols.add(bing);
     UserDefinedAlphabet alf = new UserDefinedAlphabet(symbols);
     TRS trs = new TermRewritingSystem(alf, new ArrayList<Rule>());
     ParseData data = new ParseData(trs);
 
-    FunctionSymbol bong = new UserDefinedSymbol("bing", new Sort("b"));
+    FunctionSymbol bong = new Constant("bing", new Sort("b"));
     data.addFunctionSymbol(bong);
   }
 }

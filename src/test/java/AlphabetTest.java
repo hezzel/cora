@@ -23,7 +23,7 @@ import cora.interfaces.types.Type;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.rewriting.Alphabet;
 import cora.types.*;
-import cora.terms.UserDefinedSymbol;
+import cora.terms.Constant;
 import cora.rewriting.UserDefinedAlphabet;
 
 public class AlphabetTest {
@@ -32,11 +32,11 @@ public class AlphabetTest {
   }
 
   private FunctionSymbol makeConstant(String name, String sort) {
-    return new UserDefinedSymbol(name, baseType(sort));
+    return new Constant(name, baseType(sort));
   }
 
   private FunctionSymbol makeSymbol(String name, Type type) {
-    return new UserDefinedSymbol(name, type);
+    return new Constant(name, type);
   }
 
   @Test

@@ -39,12 +39,12 @@ public class VarTermTest {
   }
 
   private Term constantTerm(String name, Type type) {
-    return new UserDefinedSymbol(name, type);
+    return new Constant(name, type);
   }
 
   private Term unaryTerm(String name, Type output, Term arg) {
     Type arrtype = new ArrowType(arg.queryType(), output);
-    FunctionSymbol f = new UserDefinedSymbol(name, arrtype);
+    FunctionSymbol f = new Constant(name, arrtype);
     return new FunctionalTerm(f, arg);
   }
 
@@ -189,8 +189,8 @@ public class VarTermTest {
   public void testVars() {
     // let's create: Z(Z(x,c),g(y,x)), where Z, x and y are variables
     Variable z = new Var("Z", new ArrowType(baseType("a"),arrowType("b","a")));
-    FunctionSymbol g = new UserDefinedSymbol("g", new ArrowType(baseType("b"),arrowType("a","b")));
-    FunctionSymbol c = new UserDefinedSymbol("c", baseType("b"));
+    FunctionSymbol g = new Constant("g", new ArrowType(baseType("b"),arrowType("a","b")));
+    FunctionSymbol c = new Constant("c", baseType("b"));
     Variable x = new Var("x", baseType("a"));
     Variable y = new Var("y", baseType("b"));
     Term s = new VarTerm(z, new VarTerm(z, x, c), new FunctionalTerm(g, y, x));
@@ -319,7 +319,7 @@ public class VarTermTest {
     Term s = new VarTerm(z, x, unaryTerm("f", baseType("Bool"), y));
 
     Term thirtyseven = constantTerm("37", baseType("Int"));
-    FunctionSymbol g = new UserDefinedSymbol("g", new ArrowType(baseType("o"),
+    FunctionSymbol g = new Constant("g", new ArrowType(baseType("o"),
                                 new ArrowType(baseType("Int"), arrowType("Bool", "Int"))));
     Term t = new FunctionalTerm(g, constantTerm("c", baseType("o")));
 
@@ -338,8 +338,8 @@ public class VarTermTest {
     Term three = constantTerm("3", baseType("Int"));
     Term four = constantTerm("4", baseType("Int"));
     Type intintint = new ArrowType(baseType("Int"), arrowType("Int", "Int"));
-    FunctionSymbol g = new UserDefinedSymbol("g", intintint);
-    FunctionSymbol h = new UserDefinedSymbol("h", new ArrowType(baseType("Int"), intintint));
+    FunctionSymbol g = new Constant("g", intintint);
+    FunctionSymbol h = new Constant("h", new ArrowType(baseType("Int"), intintint));
     Term pattern = new VarTerm(z, three, x);
     Term fx = unaryTerm("f", baseType("Int"), x);
     List<Term> args = new ArrayList<Term>();
@@ -368,9 +368,9 @@ public class VarTermTest {
     Term a = constantTerm("a", baseType("o"));
     Term b = constantTerm("b", baseType("o"));
     Type ooo = new ArrowType(baseType("o"), arrowType("o", "o"));
-    FunctionSymbol f = new UserDefinedSymbol("f", ooo);
-    FunctionSymbol g = new UserDefinedSymbol("g", arrowType("o", "o"));
-    FunctionSymbol h = new UserDefinedSymbol("h", ooo);
+    FunctionSymbol f = new Constant("f", ooo);
+    FunctionSymbol g = new Constant("g", arrowType("o", "o"));
+    FunctionSymbol h = new Constant("h", ooo);
     Term pattern = new FunctionalTerm(f, new VarTerm(x, a), new VarTerm(x, b));
 
     Term s = new FunctionalTerm(f, new FunctionalTerm(g, a), new FunctionalTerm(g, b));

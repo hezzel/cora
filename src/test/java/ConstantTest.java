@@ -28,35 +28,35 @@ import cora.interfaces.terms.Term;
 import cora.types.*;
 import cora.terms.positions.EmptyPosition;
 import cora.terms.positions.ArgumentPosition;
-import cora.terms.UserDefinedSymbol;
+import cora.terms.Constant;
 import cora.terms.Var;
 import cora.terms.FunctionalTerm;
 import cora.terms.Subst;
 
-public class UserDefinedFunctionSymbolTest {
+public class ConstantTest {
   private Type baseType(String name) {
     return new Sort(name);
   }
 
   @Test(expected = NullInitialisationError.class)
-  public void testUserDefinedSymbolNullName() {
-    FunctionSymbol f = new UserDefinedSymbol(null, baseType("o"));
+  public void testConstantNullName() {
+    FunctionSymbol f = new Constant(null, baseType("o"));
   }
 
   @Test(expected = java.lang.Error.class)
-  public void testUserDefinedSymbolEmptyName() {
-    FunctionSymbol f = new UserDefinedSymbol("", baseType("o"));
+  public void testConstantEmptyName() {
+    FunctionSymbol f = new Constant("", baseType("o"));
   }
 
   @Test(expected = NullInitialisationError.class)
-  public void testUserDefinedSymbolNullType() {
-    FunctionSymbol f = new UserDefinedSymbol("bing", null);
+  public void testConstantNullType() {
+    FunctionSymbol f = new Constant("bing", null);
   }
 
   @Test(expected = ArityError.class)
   public void testBaseConstantApply() {
-    FunctionSymbol c = new UserDefinedSymbol("c", baseType("o"));
-    c.apply(new UserDefinedSymbol("a", baseType("o")));
+    FunctionSymbol c = new Constant("c", baseType("o"));
+    c.apply(new Constant("a", baseType("o")));
   }
 
   @Test(expected = TypingError.class)
@@ -65,10 +65,10 @@ public class UserDefinedFunctionSymbolTest {
     Type b = baseType("b");
     Type c = baseType("c3");
     Type combi = new ArrowType(a, new ArrowType(b, c));
-    FunctionSymbol f = new UserDefinedSymbol("ff", combi);
+    FunctionSymbol f = new Constant("ff", combi);
     ArrayList<Term> args = new ArrayList<Term>();
-    args.add(new UserDefinedSymbol("aa", a));
-    args.add(new UserDefinedSymbol("bb", a));
+    args.add(new Constant("aa", a));
+    args.add(new Constant("bb", a));
     f.apply(args);
   }
 
@@ -78,13 +78,13 @@ public class UserDefinedFunctionSymbolTest {
     Type b = baseType("b");
     Type c = baseType("c3");
     Type combi = new ArrowType(a, new ArrowType(b, c));
-    FunctionSymbol f = new UserDefinedSymbol("ff", combi);
+    FunctionSymbol f = new Constant("ff", combi);
     assertTrue(f.queryName().equals("ff"));
     assertTrue(f.toString().equals("ff"));
     assertTrue(f.queryType().equals(combi));
     ArrayList<Term> args = new ArrayList<Term>();
-    args.add(new UserDefinedSymbol("aa", a));
-    args.add(new UserDefinedSymbol("bb", b));
+    args.add(new Constant("aa", a));
+    args.add(new Constant("bb", b));
     assertTrue(f.apply(args).toString().equals("ff(aa, bb)"));
   }
 
@@ -94,10 +94,10 @@ public class UserDefinedFunctionSymbolTest {
     Type b = baseType("b");
     Type c = baseType("c3");
     Type combi = new ArrowType(a, new ArrowType(b, c));
-    FunctionSymbol f = new UserDefinedSymbol("ff", combi);
-    FunctionSymbol g = new UserDefinedSymbol("ff", combi);
-    FunctionSymbol h = new UserDefinedSymbol("f", combi);
-    FunctionSymbol i = new UserDefinedSymbol("f", new ArrowType(a,c));
+    FunctionSymbol f = new Constant("ff", combi);
+    FunctionSymbol g = new Constant("ff", combi);
+    FunctionSymbol h = new Constant("f", combi);
+    FunctionSymbol i = new Constant("f", new ArrowType(a,c));
 
     assertTrue(f.equals(g));
     assertFalse(f.equals(h));
@@ -107,7 +107,7 @@ public class UserDefinedFunctionSymbolTest {
 
   @Test(expected = InappropriatePatternDataError.class)
   public void testVariableRequest() {
-    Term f = new UserDefinedSymbol("f", baseType("a"));
+    Term f = new Constant("f", baseType("a"));
     Term x = f.queryVariable();
   }
 
@@ -116,7 +116,7 @@ public class UserDefinedFunctionSymbolTest {
     Type a = baseType("a");
     Type b = baseType("b");
     Type combi = new ArrowType(a, b);
-    UserDefinedSymbol f = new UserDefinedSymbol("f", combi);
+    Constant f = new Constant("f", combi);
     Term tmp = f.querySubterm(new ArgumentPosition(1, new EmptyPosition()));
   }
 
@@ -125,9 +125,9 @@ public class UserDefinedFunctionSymbolTest {
     Type a = baseType("a");
     Type b = baseType("b");
     Type combi = new ArrowType(a, b);
-    UserDefinedSymbol f = new UserDefinedSymbol("f", combi);
+    Constant f = new Constant("f", combi);
     Term tmp = f.replaceSubterm(new ArgumentPosition(1, new EmptyPosition()),
-                                new UserDefinedSymbol("a", a));
+                                new Constant("a", a));
   }
 
   @Test
@@ -136,7 +136,7 @@ public class UserDefinedFunctionSymbolTest {
     Type b = baseType("b");
     Type c = baseType("c3");
     Type combi = new ArrowType(a, new ArrowType(b, c));
-    Term f = new UserDefinedSymbol("ff", combi);
+    Term f = new Constant("ff", combi);
     Var x = new Var("ff", combi);
 
     assertTrue(f.queryType().equals(combi));
@@ -152,10 +152,10 @@ public class UserDefinedFunctionSymbolTest {
     assertTrue(f.replaceSubterm(new EmptyPosition(), x).equals(x));
     assertFalse(f.isFirstOrder());
     assertTrue(f.isPattern());
-    Subst gamma = new Subst(x, new UserDefinedSymbol("gg", combi));
+    Subst gamma = new Subst(x, new Constant("gg", combi));
     assertTrue(f.substitute(gamma).equals(f));
     assertTrue(f.vars().size() == 0);
-    Term aa = new UserDefinedSymbol("g", a);
+    Term aa = new Constant("g", a);
     assertTrue(aa.isFirstOrder());
     assertTrue(aa.isPattern());
   }
@@ -165,9 +165,9 @@ public class UserDefinedFunctionSymbolTest {
     Type a = baseType("a");
     Type b = baseType("b");
     Type combi = new ArrowType(a, b);
-    UserDefinedSymbol f = new UserDefinedSymbol("f", combi);
-    UserDefinedSymbol g = new UserDefinedSymbol("f", combi);
-    UserDefinedSymbol h = new UserDefinedSymbol("h", combi);
+    Constant f = new Constant("f", combi);
+    Constant g = new Constant("f", combi);
+    Constant h = new Constant("h", combi);
 
     assertTrue(f.equals((Term)f));
     assertTrue(f.equals((Term)g));
@@ -176,7 +176,7 @@ public class UserDefinedFunctionSymbolTest {
     ArrayList<Term> args = new ArrayList<Term>();
     Term ff = new FunctionalTerm(f, args);
     Term gg = new FunctionalTerm(g, args);
-    args.add(new UserDefinedSymbol("aa", a));
+    args.add(new Constant("aa", a));
     Term fa = new FunctionalTerm(f, args);
 
     assertTrue(f.equals(ff));

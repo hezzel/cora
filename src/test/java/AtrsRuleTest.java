@@ -35,12 +35,12 @@ public class AtrsRuleTest {
   }
 
   private Term constantTerm(String name, Type type) {
-    return new UserDefinedSymbol(name, type);
+    return new Constant(name, type);
   }
 
   private Term unaryTerm(String name, Type output, Term arg) {
     Type arrtype = new ArrowType(arg.queryType(), output);
-    UserDefinedSymbol f = new UserDefinedSymbol(name, arrtype);
+    Constant f = new Constant(name, arrtype);
     return new FunctionalTerm(f, arg);
   }
 
@@ -77,11 +77,11 @@ public class AtrsRuleTest {
     Var x = new Var("x", baseType("Int"));
     Var y = new Var("y", baseType("Bool"));
     Var z = new Var("z", baseType("Int"));
-    UserDefinedSymbol g = new UserDefinedSymbol("g", arrowType("Int", "Bool"));
-    UserDefinedSymbol f =
-      new UserDefinedSymbol("f", new ArrowType(baseType("Bool"), arrowType("Bool", "Int")));
-    UserDefinedSymbol h =
-      new UserDefinedSymbol("h", new ArrowType(baseType("Int"), arrowType("Int", "Int")));
+    Constant g = new Constant("g", arrowType("Int", "Bool"));
+    Constant f =
+      new Constant("f", new ArrowType(baseType("Bool"), arrowType("Bool", "Int")));
+    Constant h =
+      new Constant("h", new ArrowType(baseType("Int"), arrowType("Int", "Int")));
     Term left = new FunctionalTerm(f, new FunctionalTerm(g, x), y);
     Term right = new FunctionalTerm(h, x, constantTerm("3", baseType("Int")));
     Rule rule = new AtrsRule(left, right);
@@ -102,8 +102,8 @@ public class AtrsRuleTest {
   @Test
   public void testFailedRootApplication() {
     Var x = new Var("x", baseType("Int"));
-    UserDefinedSymbol f =
-      new UserDefinedSymbol("f", new ArrowType(baseType("Int"), arrowType("Int", "Int")));
+    Constant f =
+      new Constant("f", new ArrowType(baseType("Int"), arrowType("Int", "Int")));
     Rule rule = new AtrsRule(new FunctionalTerm(f, x, x), x);
     // rule: f(x, x) -> x
     Term noninstance = new FunctionalTerm(f, constantTerm("1", baseType("Int")),
@@ -119,8 +119,8 @@ public class AtrsRuleTest {
     Var x = new Var("x", baseType("Int"));
     Type output = new ArrowType(baseType("Bool"), new ArrowType(baseType("Int"), baseType("a")));
     Type longtype = new ArrowType(baseType("Int"), new ArrowType(baseType("Int"), output));
-    UserDefinedSymbol f = new UserDefinedSymbol("f", longtype);
-    UserDefinedSymbol g = new UserDefinedSymbol("g", new ArrowType(baseType("Int"), output));
+    Constant f = new Constant("f", longtype);
+    Constant g = new Constant("g", new ArrowType(baseType("Int"), output));
 
     Term left = new FunctionalTerm(f, x, x);
     Term right = new FunctionalTerm(g, x);
@@ -150,8 +150,8 @@ public class AtrsRuleTest {
   public void testFailedHeadApplication() {
     Type xtype = arrowType("Int", "Int");
     Var x = new Var("x", xtype);
-    UserDefinedSymbol f = new UserDefinedSymbol("f", new ArrowType(xtype, xtype));
-    UserDefinedSymbol g = new UserDefinedSymbol("g", xtype);
+    Constant f = new Constant("f", new ArrowType(xtype, xtype));
+    Constant g = new Constant("g", xtype);
   
     Rule rule = new AtrsRule(new FunctionalTerm(f, x), x);
     // rule: f(x) -> x : Int -> Int
@@ -167,8 +167,8 @@ public class AtrsRuleTest {
   public void testWrongTypeApplication() {
     Type xtype = arrowType("Bool", "Int");
     Var x = new Var("x", xtype);
-    UserDefinedSymbol f = new UserDefinedSymbol("f", new ArrowType(xtype, xtype));
-    UserDefinedSymbol g = new UserDefinedSymbol("g", arrowType("Int", "Int"));
+    Constant f = new Constant("f", new ArrowType(xtype, xtype));
+    Constant g = new Constant("g", arrowType("Int", "Int"));
   
     Rule rule = new AtrsRule(new FunctionalTerm(f, x), x);
     // rule: f(x) -> x : Bool -> Int

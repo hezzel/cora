@@ -23,20 +23,20 @@ import cora.interfaces.types.Type;
 import cora.interfaces.terms.*;
 
 /**
- * UserDefinedSymbols are FunctionSymbols which are not predefined within Cora.
- * They can be seen as constant terms.
+ * Constants are the default kind of FunctionSymbol.
+ * They are called Constants because they can also be seen as constant terms.
  */
-public class UserDefinedSymbol extends LeafTermInherit implements FunctionSymbol {
+public class Constant extends LeafTermInherit implements FunctionSymbol {
   private String _name;
 
   /**
-   * A user-defined symbol is always identified by the combination of its name and its type.
+   * A constant is always identified by the combination of its name and its type.
    * Throws an error if the name or type is null, or if name is the empty string.
    */
-  public UserDefinedSymbol(String name, Type type) {
+  public Constant(String name, Type type) {
     super(type);
     _name = name;
-    if (name == null) throw new NullInitialisationError("UserDefinedSymbol", "name");
+    if (name == null) throw new NullInitialisationError("Constant", "name");
     if (name.equals("")) throw new Error("Function Symbol created with empty name.");
   }
 
@@ -48,6 +48,11 @@ public class UserDefinedSymbol extends LeafTermInherit implements FunctionSymbol
   /** Returns a string that describes the function symbol; the type is not indicated. */
   public String toString() {
     return _name;
+  }
+
+  /** Returns the number of terms this constant may (at most) be applied to. */
+  public int queryArity() {
+    return queryType().queryArity();
   }
 
   /**
@@ -83,7 +88,7 @@ public class UserDefinedSymbol extends LeafTermInherit implements FunctionSymbol
 
   /** Throws an error, because a constant is not a variale (or associated with one). */
   public Variable queryVariable() {
-    throw new InappropriatePatternDataError("UserDefinedSymbol", "queryVariable",
+    throw new InappropriatePatternDataError("Constant", "queryVariable",
                                             "variables or lambda-expressions");
   }
 
@@ -105,7 +110,7 @@ public class UserDefinedSymbol extends LeafTermInherit implements FunctionSymbol
    * description of the instantiation failure.
    */
   public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullCallError("UserDefinedSymbol", "match", "other term");
+    if (other == null) throw new NullCallError("Constant", "match", "other term");
     if (equals(other)) return null;
     return "constant " + _name + " is not instantiated by " + other.toString() + ".";
   }

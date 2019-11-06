@@ -23,7 +23,7 @@ import cora.interfaces.terms.Term;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.types.Sort;
-import cora.terms.UserDefinedSymbol;
+import cora.terms.Constant;
 import cora.terms.FunctionalTerm;
 import cora.terms.Var;
 import cora.parsers.ParseData;
@@ -31,7 +31,7 @@ import cora.parsers.CoraInputReader;
 
 public class CoraTermReadingTest {
   private FunctionSymbol generateSymbol(String name, String type) throws ParserException {
-    return new UserDefinedSymbol(name, CoraInputReader.readTypeFromString(type));
+    return new Constant(name, CoraInputReader.readTypeFromString(type));
   }
 
   private ParseData generateSignature() throws ParserException {

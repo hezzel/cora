@@ -32,7 +32,7 @@ import cora.interfaces.rewriting.TRS;
 import cora.types.Sort;
 import cora.types.ArrowType;
 import cora.terms.Var;
-import cora.terms.UserDefinedSymbol;
+import cora.terms.Constant;
 import cora.terms.FunctionalTerm;
 import cora.parsers.ErrorCollector;
 import cora.parsers.ParseData;
@@ -214,9 +214,9 @@ public class TrsReadingTest {
     Type ftype = new ArrowType(new Sort("a"), new ArrowType(new Sort("a"), new Sort("b")));
     Type gtype = new ArrowType(new Sort("c"), new ArrowType(new Sort("d"), new Sort("a")));
     Type atype = new Sort("d");
-    trs._symbols.put("f", new UserDefinedSymbol("f", ftype));
-    trs._symbols.put("g", new UserDefinedSymbol("g", gtype));
-    trs._symbols.put("a", new UserDefinedSymbol("a", atype));
+    trs._symbols.put("f", new Constant("f", ftype));
+    trs._symbols.put("g", new Constant("g", gtype));
+    trs._symbols.put("a", new Constant("a", atype));
     Term t = TrsInputReader.readTermFromString("f(g(x,y),g(x,a))", trs);
     FunctionSymbol f = t.queryRoot();
     FunctionSymbol g = t.queryImmediateSubterm(1).queryRoot();
@@ -235,9 +235,9 @@ public class TrsReadingTest {
     Type ftype = new ArrowType(new Sort("a"), new ArrowType(new Sort("a"), new Sort("b")));
     Type gtype = new ArrowType(new Sort("c"), new ArrowType(new Sort("d"), new Sort("a")));
     Type atype = new Sort("c");
-    trs._symbols.put("f", new UserDefinedSymbol("f", ftype));
-    trs._symbols.put("g", new UserDefinedSymbol("g", ftype));
-    trs._symbols.put("a", new UserDefinedSymbol("a", ftype));
+    trs._symbols.put("f", new Constant("f", ftype));
+    trs._symbols.put("g", new Constant("g", ftype));
+    trs._symbols.put("a", new Constant("a", ftype));
     Term t = TrsInputReader.readTermFromString("f(g(x,y),g(a,x))", trs);
   }
 

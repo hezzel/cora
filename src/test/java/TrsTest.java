@@ -39,22 +39,22 @@ public class TrsTest {
   }
 
   private FunctionSymbol a() {
-    return new UserDefinedSymbol("a", baseType("o"));
+    return new Constant("a", baseType("o"));
   }
 
   private FunctionSymbol b() {
-    return new UserDefinedSymbol("b", baseType("o"));
+    return new Constant("b", baseType("o"));
   }
 
   private FunctionSymbol f() {
     Type type =  new ArrowType(baseType("o"), new ArrowType(baseType("o"), baseType("o")));
-    return new UserDefinedSymbol("f", type);
+    return new Constant("f", type);
   }
 
   private FunctionSymbol g() {
     Type oo = baseType("o");
     Type type = new ArrowType(oo, new ArrowType(oo, new ArrowType(oo, oo)));
-    return new UserDefinedSymbol("g", type);
+    return new Constant("g", type);
   }
 
   private TermRewritingSystem createTermRewritingSystem() {

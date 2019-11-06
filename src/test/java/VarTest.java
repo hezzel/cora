@@ -38,18 +38,18 @@ public class VarTest {
   }
 
   private Term constantTerm(String name, Type type) {
-    return new UserDefinedSymbol(name, type);
+    return new Constant(name, type);
   }
 
   private Term unaryTerm(String name, Type output, Term arg) {
     Type arrtype = new ArrowType(arg.queryType(), output);
-    FunctionSymbol f = new UserDefinedSymbol(name, arrtype);
+    FunctionSymbol f = new Constant(name, arrtype);
     return new FunctionalTerm(f, arg);
   }
 
   private Term twoArgTerm() {
     Type type = new ArrowType(baseType("a"), arrowType("b", "a"));
-    FunctionSymbol f = new UserDefinedSymbol("f", type);
+    FunctionSymbol f = new Constant("f", type);
     Term arg1 = constantTerm("c", baseType("a"));
     Term arg2 = unaryTerm("g", baseType("b"), constantTerm("d", baseType("b")));
     return new FunctionalTerm(f, arg1, arg2);
