@@ -21,6 +21,7 @@ import cora.exceptions.NullCallError;
 import cora.exceptions.NullInitialisationError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.*;
+import cora.types.Sort;
 
 /**
  * Variables are both used as parts of constraints, as binders in an abstraction, as generic
@@ -42,6 +43,31 @@ public class Var extends LeafTermInherit implements Variable {
     _index = COUNTER;
     COUNTER++;
     if (name == null) throw new NullInitialisationError("Var", "name");
+  }
+
+  /** Create a variable with the given name and the unit sort, for use in unsorted rewriting. */
+  public Var(String name) {
+    super(Sort.unitSort);
+    _name = name;
+    _index = COUNTER;
+    COUNTER++;
+    if (name == null) throw new NullInitialisationError("Var", "name");
+  }
+
+  /** Create a variable without a name; a name will be automatically generated. */
+  public Var(Type type) {
+    super(type);
+    _name = "x[" + COUNTER + "]";
+    _index = COUNTER;
+    COUNTER++;
+  }
+
+  /** Create a variable with auto-generated name and the unit sort, for unsorted rewriting. */
+  public Var() {
+    super(Sort.unitSort);
+    _name = "x[" + COUNTER + "]";
+    _index = COUNTER;
+    COUNTER++;
   }
 
   /** @return true */
