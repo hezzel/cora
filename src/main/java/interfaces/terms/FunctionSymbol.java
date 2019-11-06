@@ -31,10 +31,11 @@ public interface FunctionSymbol extends Term {
    */
   public String queryName();
 
-  /**
-   * All function symbols have a type, which restricts how the symbol can be applied.
-   */
+  /** All function symbols have a type, which restricts how the symbol can be applied. */
   public Type queryType();
+
+  /** Returns the number of arguments that this function symbol can (at most) be applied to. */
+  public int queryArity();
 
   /**
    * Returns whether the current symbol is equal to another.
