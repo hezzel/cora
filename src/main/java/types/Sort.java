@@ -24,6 +24,9 @@ import cora.interfaces.types.*;
 public class Sort implements BaseType {
   private String _name;
 
+  /** The unit sort is the unique sort that is used for "unsorted" term rewriting. */
+  public static Sort unitSort = new Sort("o");
+
   public Sort(String name) {
     if (name == null) throw new NullInitialisationError("Sort", "name");
     _name = name;

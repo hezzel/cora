@@ -48,7 +48,7 @@ import cora.rewriting.TermRewritingSystem;
  * international confluence competition.
  */
 public class TrsInputReader extends InputReader {
-  private static Type unitSort = new Sort("o");
+  private static Type unitSort = Sort.unitSort;
   
   public TrsInputReader() {
     super(TrsParser.VOCABULARY, TrsParser.ruleNames);
