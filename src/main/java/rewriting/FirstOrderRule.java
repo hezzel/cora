@@ -21,7 +21,6 @@ import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.Term;
 import cora.interfaces.terms.Substitution;
-import cora.interfaces.terms.Environment;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.rewriting.Rule;
 
@@ -40,16 +39,6 @@ public class FirstOrderRule extends RuleInherit implements Rule {
     if (!left.isFirstOrder() || !right.isFirstOrder()) {
       throw new IllegalRuleError("FirstOrderRule", "terms in rule [" + left.toString() + " → " +
         right.toString() + "] are not first-order.");
-    }
-    // the right-hand side is not allowed to create new variables
-    Environment lvars = left.vars();
-    Environment rvars = right.vars();
-    for (Variable x : rvars) {
-      if (!lvars.contains(x)) {
-        throw new IllegalRuleError("FirstOrderRule", "right-hand side of rule [" + left.toString() +
-          " → " + right.toString() + "] contains variable " + x.toString() + " which does not " +
-          "occur on the left.");
-      }
     }
     // the left-hand side should have the form f(...)
     if (!left.isFunctionalTerm()) {

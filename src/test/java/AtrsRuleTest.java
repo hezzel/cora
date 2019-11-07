@@ -16,6 +16,7 @@
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.ArrayList;
+import cora.exceptions.IllegalRuleError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
@@ -59,6 +60,14 @@ public class AtrsRuleTest {
     Var x = new Var("x", baseType("a"));
     Term left = unaryTerm("id", baseType("b"), x);
     Rule rule = new AtrsRule(left, x);
+  }
+
+  @Test(expected = IllegalRuleError.class)
+  public void testRuleWithIllegalBinderVariableOnTheLeft() {
+    Term x = new BinderVariable("x", baseType("o"));
+    Term left = unaryTerm("id", baseType("o"), x);
+    Term right = constantTerm("bing", baseType("o"));
+    Rule rule = new AtrsRule(left, right);
   }
 
   @Test

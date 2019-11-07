@@ -15,11 +15,14 @@
 
 package cora.rewriting;
 
+import cora.exceptions.IllegalRuleError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.Term;
+import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.Substitution;
+import cora.interfaces.terms.Environment;
 import cora.interfaces.rewriting.Rule;
 
 /** This class defines shared functionality for all kinds of rules. */
@@ -43,6 +46,23 @@ abstract class RuleInherit {
     if (!left.queryType().equals(right.queryType())) {
       throw new TypingError(queryMyClassName(), "constructor", "right-hand side",
                             right.queryType().toString(), left.queryType().toString());
+    }
+    // the free variables in the left-hand side may not be binder variables
+    Environment lvars = left.vars();
+    for (Variable x : lvars) {
+      if (x.isBinderVariable()) {
+        throw new IllegalRuleError("RuleInherit", "left-hand side of applicative rule [" +
+          left.toString() + " → " + right.toString() + "] freely uses a binder variable!");
+      }   
+    } 
+    // the free variables in the right-hand side must all occur on the left
+    Environment rvars = right.vars();
+    for (Variable x : rvars) {
+      if (!lvars.contains(x)) {
+        throw new IllegalRuleError("RuleInherit", "right-hand side of rule [" + left.toString() +
+          " → " + right.toString() + "] contains variable " + x.toString() + " which does not " +
+          "occur on the left.");
+      }
     }
     _left = left;
     _right = right;
