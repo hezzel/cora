@@ -127,9 +127,28 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
     return _args.size() == 0 && _x.isFirstOrder();
   }
 
-  /** Returns true only if this is a single, unapplied variable. */
+  /**
+   * Returns true if this is either a bound variable applied to patterns, or a free variable
+   * applied to distinct bound variables.
+   */
   public boolean isPattern() {
-    return _args.size() == 0;
+    if (_x.isBinderVariable()) {
+      for (int i = 0; i < _args.size(); i++) {
+        if (!_args.get(i).isPattern()) return false;
+      }
+      return true;
+    }
+    else {
+      for (int i = 0; i < _args.size(); i++) {
+        if (!_args.get(i).isVariable()) return false;
+        Variable x = (Variable)_args.get(i);
+        if (!x.isBinderVariable()) return false;
+        for (int j = i+1; j < _args.size(); j++) {
+          if (!_args.get(i).equals(_args.get(j))) return false;
+        }
+      }
+      return true;
+    }
   }
 
   /** This adds the variables that occur freely in the current term into env. */

@@ -162,6 +162,28 @@ public class VarTermTest {
   }
 
   @Test
+  public void testPattern() {
+    Variable x = new BinderVariable("x", arrowType("b", "a"));
+    Variable y = new Var("y", arrowType("b", "a"));
+    Variable z = new BinderVariable(baseType("b"));
+    Variable bb = new Var(baseType("b"));
+
+    Term xz = new VarTerm(x, z);
+    Term xb = new VarTerm(x, bb);
+    Term xa = new VarTerm(x, constantTerm("a", baseType("b")));
+    Term yz = new VarTerm(y, z);
+    Term yb = new VarTerm(y, bb);
+    Term ya = new VarTerm(y, constantTerm("a", baseType("b")));
+
+    assertTrue(xz.isPattern());
+    assertTrue(xb.isPattern());
+    assertTrue(xa.isPattern());
+    assertTrue(yz.isPattern());
+    assertFalse(yb.isPattern());
+    assertFalse(ya.isPattern());
+  }
+
+  @Test
   public void testTermEquality() {
     Variable x = new Var("x", baseType("o"));
     Variable y = new Var("y", new ArrowType(baseType("o"), arrowType("o", "o")));
