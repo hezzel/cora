@@ -38,6 +38,15 @@ public interface Variable extends Term, Comparable<Variable> {
   /** @return the type of the variable */
   Type queryType();
 
+  /**
+   * Variables are implicitly marked whether they are fundamentally free (and may therefore be used
+   * for matching) or bound (and may therefore be used as part of lambda-binders).  Bound variables
+   * may become free in some cases (for example when taking subterms), but can never be used for
+   * matching.
+   * @return true if this variable is marked as a potentially bound variable, false if not.
+   */
+  boolean isBinderVariable();
+
   /** @return equality to another Variable */
   boolean equals(Variable x);
 

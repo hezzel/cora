@@ -28,7 +28,7 @@ import cora.types.*;
 import cora.terms.*;
 import cora.terms.positions.*;
 
-public class VarTest {
+public class VariableTest {
   private Type baseType(String name) {
     return new Sort(name);
   }
@@ -56,13 +56,38 @@ public class VarTest {
   }
 
   @Test(expected = NullInitialisationError.class)
-  public void testNullName() {
+  public void testVarNullName() {
     Variable x = new Var(null, baseType("o"));
   }
 
   @Test(expected = NullInitialisationError.class)
-  public void testNullType() {
+  public void testVarNullType() {
     Variable x = new Var("x", null);
+  }
+
+  @Test(expected = NullInitialisationError.class)
+  public void testVarNullTypeWithoutName() {
+    Variable x = new Var(null);
+  }
+
+  @Test(expected = NullInitialisationError.class)
+  public void testBinderVariableNullName() {
+    Variable x = new BinderVariable(null, baseType("o"));
+  }
+
+  @Test(expected = NullInitialisationError.class)
+  public void testBinderVariableNullType() {
+    Variable x = new BinderVariable("x", null);
+  }
+
+  @Test(expected = NullInitialisationError.class)
+  public void testBinderVariableNullTypeWithoutName() {
+    Variable x = new BinderVariable(null);
+  }
+
+  @Test(expected = NullInitialisationError.class)
+  public void testUnitVariableNullName() {
+    Variable x = new UnitVariable(null);
   }
 
   @Test(expected = InappropriatePatternDataError.class)
@@ -73,13 +98,13 @@ public class VarTest {
 
   @Test(expected = IndexingError.class)
   public void testSubtermRequest() {
-    Variable x = new Var("x", baseType("o"));
+    Variable x = new UnitVariable("x");
     x.queryImmediateSubterm(1);
   }
 
   @Test(expected = NullCallError.class)
   public void testNullSubstitution() {
-    Term t = new Var("x", baseType("Int"));
+    Term t = new BinderVariable("x", baseType("Int"));
     t.substitute(null);
   }
 
@@ -109,6 +134,13 @@ public class VarTest {
     t.apply(q);
   }
 
+  @Test(expected = TypingError.class)
+  public void testMatchWithBadType() {
+    Term t = new UnitVariable();
+    Term q = twoArgTerm();
+    t.match(q);
+  }
+
   @Test
   public void testTermVarBasics() {
     Variable x = new Var("x", baseType("o"));
@@ -117,6 +149,7 @@ public class VarTest {
     assertTrue(s.isVarTerm());
     assertFalse(s.isConstant());
     assertFalse(s.isFunctionalTerm());
+    assertFalse(x.isBinderVariable());
     assertTrue(s.queryVariable().equals(x));
     assertTrue(s.toString().equals("x"));
     assertTrue(s.numberImmediateSubterms() == 0);
@@ -131,13 +164,36 @@ public class VarTest {
   }
 
   @Test
+  public void testBinderVarBasics() {
+    Variable x = new BinderVariable(arrowType("a", "b"));
+    Variable y = new BinderVariable(arrowType("a", "b"));
+    Variable z = new BinderVariable(Sort.unitSort);
+    assertTrue(x.isVariable());
+    assertTrue(x.isBinderVariable());
+    assertFalse(x.equals(y));
+    assertFalse(x.toString().equals(y.toString()));
+    assertFalse(x.isFirstOrder());
+    assertFalse(z.isFirstOrder());    // binders are never first order
+  }
+
+  @Test
+  public void testUnitVarBasics() {
+    Variable x = new UnitVariable("x");
+    Variable y = new UnitVariable();
+    assertFalse(x.equals(y));
+    assertTrue(x.queryType().equals(Sort.unitSort));
+    assertTrue(y.isFirstOrder());
+    assertTrue(x.queryVariableIndex() != y.queryVariableIndex());
+  }
+
+  @Test
   public void testTermVarVars() {
     Variable x = new Var("x", baseType("oo"));
     Environment env = x.vars();
     assertTrue(env.size() == 1);
     assertTrue(env.contains(x));
     Environment other = new Env();
-    other.add(new Var("y", baseType("aa")));
+    other.add(new BinderVariable("y", baseType("aa")));
     x.updateVars(other);
     assertTrue(other.size() == 2);
     assertTrue(other.contains(x));
@@ -147,10 +203,21 @@ public class VarTest {
 
   @Test
   public void testTermVarEquality() {
-    Term s1 = new Var("x", baseType("o"));
-    Term s2 = new Var("x", baseType("o"));
+    Term s1 = new Var("x", Sort.unitSort);
+    Term s2 = new Var("x", Sort.unitSort);
+    Term s3 = new UnitVariable("x");
+    Term s4 = new UnitVariable("x");
+    Term s5 = new BinderVariable("x", Sort.unitSort);
+    Term s6 = new BinderVariable("x", Sort.unitSort);
     assertTrue(s1.equals(s1));
+    assertTrue(s3.equals(s3));
+    assertTrue(s5.equals(s5));
     assertFalse(s1.equals(s2));
+    assertFalse(s3.equals(s4));
+    assertFalse(s5.equals(s6));
+    assertFalse(s1.equals(s3));
+    assertFalse(s3.equals(s5));
+    assertFalse(s6.equals(s2));
   }
 
   @Test
@@ -163,7 +230,7 @@ public class VarTest {
 
   @Test
   public void testPositions() {
-    Term s = new Var("x", baseType("o"));
+    Term s = new UnitVariable("x");
     List<Position> lst = s.queryAllPositions();
     assertTrue(lst.size() == 1);
     assertTrue(lst.get(0).toString().equals("ε"));
@@ -171,7 +238,7 @@ public class VarTest {
 
   @Test
   public void testSubtermGood() {
-    Term s = new Var("x", baseType("o"));
+    Term s = new BinderVariable("x", baseType("o"));
     Position p = new EmptyPosition();
     assertTrue(s.querySubterm(p).equals(s));
   }
@@ -193,8 +260,22 @@ public class VarTest {
   }
 
   @Test(expected = IndexingError.class)
-  public void testSubtermReplacementBad() {
+  public void testVarSubtermReplacementBad() {
     Term s = new Var("x", baseType("o"));
+    Position p = new ArgumentPosition(1, new EmptyPosition());
+    Term t = s.replaceSubterm(p, twoArgTerm());
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testBinderVariableSubtermReplacementBad() {
+    Term s = new BinderVariable("x", baseType("o"));
+    Position p = new ArgumentPosition(1, new EmptyPosition());
+    Term t = s.replaceSubterm(p, twoArgTerm());
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testUnitVariableSubtermReplacementBad() {
+    Term s = new UnitVariable();
     Position p = new ArgumentPosition(1, new EmptyPosition());
     Term t = s.replaceSubterm(p, twoArgTerm());
   }
@@ -202,19 +283,23 @@ public class VarTest {
   @Test
   public void testSubstituting() {
     Variable x = new Var("x", baseType("Int"));
-    Variable y = new Var("y", baseType("Int"));
-    Variable z = new Var("z", baseType("Bool"));
+    Variable y = new BinderVariable("y", baseType("Int"));
+    Variable z = new UnitVariable("z");
     Term xterm = constantTerm("37", baseType("Int"));
     Substitution gamma = new Subst(x, xterm);
     gamma.extend(y, x); 
     assertTrue(x.substitute(gamma).equals(xterm));
     assertTrue(y.substitute(gamma).equals(x));
     assertTrue(z.substitute(gamma).equals(z));
+    gamma.replace(y, xterm);
+    gamma.extend(z, constantTerm("bing", Sort.unitSort));
+    assertTrue(y.substitute(gamma).equals(xterm));
+    assertTrue(z.substitute(gamma).equals(constantTerm("bing", Sort.unitSort)));
   }
 
   @Test
-  public void testMatchingNoMapping() {
-    Variable x = new Var("x", baseType("a"));
+  public void testVarMatchingNoMapping() {
+    Variable x = new Var(baseType("a"));
     Term t = twoArgTerm();
     Subst gamma = new Subst();
     assertTrue(x.match(t, gamma) == null);
@@ -223,7 +308,7 @@ public class VarTest {
   }
 
   @Test
-  public void testMatchingExistingMapping() {
+  public void testVarMatchingExistingMapping() {
     Variable x = new Var("x", baseType("a"));
     Term t = twoArgTerm();
     Subst gamma = new Subst(x, t);
@@ -233,13 +318,92 @@ public class VarTest {
   }
 
   @Test
-  public void testMatchingConflictingMapping() {
+  public void testVarMatchingConflictingMapping() {
     Variable x = new Var("x", baseType("a"));
     Term t = twoArgTerm();
     Term q = new Var("y", baseType("a"));
     Subst gamma = new Subst(x, q);
     assertTrue(x.match(t, gamma) != null);
     assertTrue(gamma.get(x).equals(q));
+    assertTrue(gamma.domain().size() == 1);
+  }
+
+  @Test
+  public void testUnitVarMatchingNoMapping() {
+    Variable x = new UnitVariable("x");
+    Term t = constantTerm("bing", Sort.unitSort);
+    Subst gamma = new Subst();
+    assertTrue(x.match(t, gamma) == null);
+    assertTrue(gamma.get(x).equals(t));
+    assertTrue(gamma.domain().size() == 1);
+  }
+
+  @Test
+  public void testUnitVarMatchingExistingMapping() {
+    Variable x = new UnitVariable();
+    Term t = constantTerm("bing", Sort.unitSort);
+    Subst gamma = new Subst(x, t);
+    assertTrue(x.match(t, gamma) == null);
+    assertTrue(gamma.get(x).equals(t));
+    assertTrue(gamma.domain().size() == 1);
+  }
+
+  @Test
+  public void testUnitVarMatchingConflictingMapping() {
+    Variable x = new UnitVariable("x");
+    Term t = constantTerm("bing", Sort.unitSort);
+    Term q = new Var("y", Sort.unitSort);
+    Subst gamma = new Subst(x, q);
+    assertTrue(x.match(t, gamma) != null);
+    assertTrue(gamma.get(x).equals(q));
+    assertTrue(gamma.domain().size() == 1);
+  }
+
+  @Test
+  public void testBinderVarMatchingFailure() {
+    Variable x = new BinderVariable("x", baseType("a"));
+    Term t = twoArgTerm();
+    Subst gamma = new Subst();
+    assertFalse(x.match(t, gamma) == null);
+    assertTrue(gamma.domain().size() == 0);
+  }
+
+  @Test
+  public void testMatchBinderVarToOtherBinder() {
+    Variable x = new BinderVariable("x", baseType("a"));
+    Variable y = new BinderVariable("y", baseType("a"));
+    Subst gamma = new Subst();
+    assertTrue(x.match(y, gamma) == null);
+    assertTrue(gamma.get(x).equals(y));
+    assertTrue(gamma.domain().size() == 1);
+  }
+
+  @Test
+  public void testMatchBinderVarToNonBinderVariable() {
+    Variable x = new BinderVariable("x", baseType("a"));
+    Variable y = new Var("y", baseType("a"));
+    Subst gamma = new Subst();
+    assertFalse(x.match(y, gamma) == null);
+  }
+
+  @Test
+  public void testBinderVarMatchingExistingMapping() {
+    Variable x = new BinderVariable("x", baseType("a"));
+    Variable y = new BinderVariable("y", baseType("a"));
+    Subst gamma = new Subst(x, y);
+    assertTrue(x.match(y, gamma) == null);
+    assertTrue(gamma.get(x).equals(y));
+    assertTrue(gamma.domain().size() == 1);
+  }
+
+  @Test
+  public void testBinderVarMatchingConflictingMapping() {
+    Variable x = new Var("x", baseType("a"));
+    Variable y = new BinderVariable("y", baseType("a"));
+    Variable z = new BinderVariable("y", baseType("a"));
+    Subst gamma = new Subst(x, y);
+    assertTrue(x.match(z, gamma) != null);
+    assertTrue(gamma.get(x).equals(y));
     assertTrue(gamma.domain().size() == 1);
   }
 }

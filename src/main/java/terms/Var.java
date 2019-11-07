@@ -15,112 +15,29 @@
 
 package cora.terms;
 
-import java.util.List;
-import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullCallError;
-import cora.exceptions.NullInitialisationError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.*;
-import cora.types.Sort;
 
 /**
- * Variables are both used as parts of constraints, as binders in an abstraction, as generic
- * expressions in terms and as open spots for matching in rules; this class represents all those
- * kinds of variables.
- * Variables have a name for printing purposes, but are not uniquely defined by it (distinct
- * variables may have the same name and type, although this will typically be avoided within a
- * single term).  Rather, variables are uniquely identified by an internally kept index.
+ * Var is the default kind of Variable: a free variable that may have any type.
+ * Such variables can both be used as parts of constraints and as generic expressions in terms and
+ * open spots for matching in rules; however, they cannot be used as binders in an abstraction.
  */
-public class Var extends LeafTermInherit implements Variable {
-  private static int COUNTER = 0;
-  private String _name;
-  private int _index;
-
+public class Var extends VariableInherit implements Variable {
   /** Create a variable with the given name and type. */
   public Var(String name, Type type) {
-    super(type);
-    _name = name;
-    _index = COUNTER;
-    COUNTER++;
-    if (name == null) throw new NullInitialisationError("Var", "name");
-  }
-
-  /** Create a variable with the given name and the unit sort, for use in unsorted rewriting. */
-  public Var(String name) {
-    super(Sort.unitSort);
-    _name = name;
-    _index = COUNTER;
-    COUNTER++;
-    if (name == null) throw new NullInitialisationError("Var", "name");
+    super(name, type);
   }
 
   /** Create a variable without a name; a name will be automatically generated. */
   public Var(Type type) {
-    super(type);
-    _name = "x[" + COUNTER + "]";
-    _index = COUNTER;
-    COUNTER++;
+    super("x[" + COUNTER + "]", type);
   }
 
-  /** Create a variable with auto-generated name and the unit sort, for unsorted rewriting. */
-  public Var() {
-    super(Sort.unitSort);
-    _name = "x[" + COUNTER + "]";
-    _index = COUNTER;
-    COUNTER++;
-  }
-
-  /** @return true */
-  public boolean isVariable() { return true; }
-
-  /** @return true */
-  public boolean isVarTerm() { return true; }
-
-  /** @return false */
-  public boolean isConstant() { return false; }
-
-  /** @return false */
-  public boolean isFunctionalTerm() { return false; }
-
-  /** Returns the name this variable was set up with, or renamed to. */
-  public String queryName() {
-    return _name;
-  }
-
-  /** @return an integer uniquely identifying this variable */
-  public int queryVariableIndex() {
-    return _index;
-  }
-
-  /** @return the name of the variable, along with its index. */
-  public String toString() {
-    return _name;
-  }
-
-  /** @return this */
-  public Variable queryVariable() {
-    return this;
-  }
-
-  /** @throws InappropriatePatternDataError, as a variable does not have a function symbol root */
-  public FunctionSymbol queryRoot() {
-    throw new InappropriatePatternDataError("Var", "queryRoot", "functional terms");
-  }
-
-  /** Adds the current variable into env. */
-  public void updateVars(Environment env) {
-    env.add(this);
-  }
-
-  /** Returns the VarTerm x(args). */
-  public Term apply(List<Term> args) {
-    return new VarTerm(this, args);
-  }
-
-  /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */
-  public Term substitute(Substitution gamma) {
-    if (gamma == null) throw new NullCallError("Var", "substitute", "substitution gamma");
-    return gamma.getReplacement(this);
+  /** @return false, since a free variable may not be used as a binder */
+  public boolean isBinderVariable() {
+    return false;
   }
 
   /** 
@@ -142,29 +59,8 @@ public class Var extends LeafTermInherit implements Variable {
       return null;
     }   
     else if (previous.equals(other)) return null;
-    else return "Variable " + _name + " mapped both to " + previous.toString() + " and to " +
+    else return "Variable " + queryName() + " mapped both to " + previous.toString() + " and to " +
       other.toString() + ".";
-  }
-
-  /**
-   * Two variables are equal if and only if they share an index and have the same type.
-   * Currently, this can only occur if they are the same object, but this may change in the future.
-   */
-  public boolean equals(Variable other) {
-    return other.queryVariableIndex() == _index && queryType().equals(other.queryType());
-  }
-
-  /** A Variable can only be equal to another term if that term is this same Variable */
-  public boolean equals(Term other) {
-    if (!other.isVariable()) return false;
-    return equals(other.queryVariable());
-  }
-
-  /** Implements a total ordering on variables using the index. */
-  public int compareTo(Variable other) {
-    if (_index < other.queryVariableIndex()) return -1;
-    if (_index > other.queryVariableIndex()) return 1;
-    return 0;
   }
 }
 
