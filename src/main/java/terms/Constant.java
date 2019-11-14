@@ -92,8 +92,10 @@ public class Constant extends LeafTermInherit implements FunctionSymbol {
                                             "variables or lambda-expressions");
   }
 
-  /** Does nothing, since a function symbol does not use any variables. */
-  public void updateVars(Environment env) {}
+  /** Returns the empty environment, since a constant does not use any variables. */
+  public Environment allVars() {
+    return new Env();
+  }
 
   /** Returns the FunctionalTerm f(args). */
   public Term apply(List<Term> args) {

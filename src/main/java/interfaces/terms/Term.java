@@ -26,7 +26,6 @@ import cora.interfaces.types.Type;
  *
  * Note; all instances of Term must (and can be expected to) be immutable.
  */
-
 public interface Term {
   /** Returns the type of the term. */
   Type queryType();
@@ -93,15 +92,8 @@ public interface Term {
    */
   List<Position> queryAllPositions();
 
-  /** Returns the set of all variables that occur in the current term. */
-  Environment vars();
-
-  /**
-   * This adds the variables that occur in the current term into env.
-   * Note that this will throw an error if any variable in env has the same name as a variable in
-   * the current term (but is a different variable).
-   */
-  void updateVars(Environment env);
+  /** Returns the set of all variables that occur freely in the current term. */
+  Environment freeVars();
 
   /**
    * Returns the subterm at the given position, assuming that this is indeed a position of the

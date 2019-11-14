@@ -208,7 +208,7 @@ public class VarTermTest {
   }
 
   @Test
-  public void testVars() {
+  public void testFreeVars() {
     // let's create: Z(Z(x,c),g(y,x)), where Z, x and y are variables
     Variable z = new Var("Z", new ArrowType(baseType("a"),arrowType("b","a")));
     FunctionSymbol g = new Constant("g", new ArrowType(baseType("b"),arrowType("a","b")));
@@ -216,7 +216,7 @@ public class VarTermTest {
     Variable x = new Var("x", baseType("a"));
     Variable y = new Var("y", baseType("b"));
     Term s = new VarTerm(z, new VarTerm(z, x, c), new FunctionalTerm(g, y, x));
-    Environment env = s.vars();
+    Environment env = s.freeVars();
     assertTrue(env.contains(x));
     assertTrue(env.contains(y));
     assertTrue(env.contains(z));

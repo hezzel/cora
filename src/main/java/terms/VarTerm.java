@@ -68,8 +68,10 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
    */
   private VarTerm(List<Term> args, Variable x, Type outputType) {
     _x = x;
+    _head = x;
     _args = args;
     _outputType = outputType;
+    initiateVars();
   }
 
   /** This method is called by inherited functions, and calls the private constructor. */
@@ -149,14 +151,6 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
       }
       return true;
     }
-  }
-
-  /** This adds the variables that occur freely in the current term into env. */
-  public void updateVars(Environment env) {
-    for (int i = 0; i < _args.size(); i++) {
-      _args.get(i).updateVars(env);
-    }
-    env.add(_x);
   }
 
   /** If this term is x(s1,...,sn) and extra = [t1,...,tm], this returns x(s1,...,sn,t1,...,tm). */

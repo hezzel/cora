@@ -34,6 +34,7 @@ import cora.terms.positions.ArgumentPosition;
 abstract class ApplicativeTermInherit extends TermInherit implements Term {
   protected List<Term> _args;
   protected Type _outputType;
+  protected Term _head;
 
   /**
    * This function should create head(newargs), with the same output type.
@@ -77,8 +78,10 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
       }
       type = type.queryArrowOutputType();
     }
+    _head = head;
     _args = args;
     _outputType = type;
+    initiateVars();
   }
 
   /**
@@ -150,7 +153,18 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
     return ret;
   }
 
-  /** @return this if the position is empty; otherwise throws an IndexingError */
+  /** This returns an environment containing all variables occurring in the arguments and head. */
+  public Environment allVars() {
+    ArrayList<Environment> lst = new ArrayList<Environment>();
+    for (int i = 0; i < _args.size(); i++) {
+      Term arg = _args.get(i);
+      lst.add(arg.freeVars());
+    }
+    lst.add(_head.freeVars());
+    return new Env(lst);
+  }
+
+  /** @return the subterm at the given position */
   public Term querySubterm(Position pos) {
     if (pos.isEmpty()) return this;
     int index = pos.queryArgumentPosition();

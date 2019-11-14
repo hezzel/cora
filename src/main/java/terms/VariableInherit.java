@@ -97,9 +97,9 @@ abstract class VariableInherit extends LeafTermInherit implements Variable {
     throw new InappropriatePatternDataError(queryMyClassName(), "queryRoot", "functional terms");
   }
 
-  /** Adds the current variable into env. */
-  public void updateVars(Environment env) {
-    env.add(this);
+  /** Returns the environment consisting of the current variable. */
+  public Environment allVars() {
+    return new Env(this);
   }
 
   /** Returns the VarTerm x(args). */

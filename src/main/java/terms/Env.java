@@ -17,12 +17,13 @@ package cora.terms;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.TreeSet;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.Environment;
 
 /**
- * Env is the default implementation of Environment: a set of variables with not-necessarily-unique
+ * Env is the default implementation of Environment: a set of variables with not necessarily unique
  * names.
  */
 public class Env implements Environment {
@@ -32,22 +33,36 @@ public class Env implements Environment {
     _variables = new TreeSet<Variable>();
   }
 
-  public Env(Collection<Variable> vars) {
+  public Env(Variable x) {
     _variables = new TreeSet<Variable>();
-    for (Variable x : vars) add(x);
+    _variables.add(x);
   }
 
-  /**
-   * Adds the given variable to the environment.
-   * Throws an Error if a variable of the same name is already in the environment.
-   */
-  public void add(Variable x) {
-    _variables.add(x);
+  public Env(List<Environment> others) {
+    _variables = new TreeSet<Variable>();
+    for (Environment e : others) {
+      for (Variable x : e) {
+        _variables.add(x);
+      }
+    }
+  }
+
+  public Env(Collection<Variable> vars) {
+    _variables = new TreeSet<Variable>();
+    for (Variable x : vars) _variables.add(x);
   }
 
   /** Returns whether the given variable is an element of the environment. */
   public boolean contains(Variable x) {
     return _variables.contains(x);
+  }
+
+  /** Returns whether the current environment contains all variables in the given other. */
+  public boolean containsAll(Environment other) {
+    for (Variable x : other) {
+      if (!_variables.contains(x)) return false;
+    }
+    return true;
   }
 
   /** Returns the number of variables in this environment. */
@@ -63,6 +78,20 @@ public class Env implements Environment {
   /** Returns a copy of the current environment. */
   public Environment copy() {
     return new Env(_variables);
+  }
+
+  /** Adds the given variable to the environment and returns the result. */
+  public Environment extend(Variable x) {
+    Env other = new Env(_variables);
+    other._variables.add(x);
+    return other;
+  }
+
+  /** Removes the given variable from the environment and returns the result. */
+  public Environment remove(Variable x) {
+    Env other = new Env(_variables);
+    other._variables.remove(x);
+    return other;
   }
 }
 

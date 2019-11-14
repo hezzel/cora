@@ -23,7 +23,7 @@ import cora.interfaces.types.Type;
  * expression in terms and as open spots for matching in rules.
  * Multiple distinct variables are allowed to share the same name.  In practice, this name is
  * intended to be used to define the basis of the actual variable name in pretty printing (although
- * it is also used directly in printing).  Thus, variables are not defined by their name, but
+ * it is also used directly in debug printing).  Thus, variables are not defined by their name, but
  * rather by an internally kept index.
  *
  * Note: all instances of Variable must (and can be expected to) be immutable.

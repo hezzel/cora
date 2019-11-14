@@ -69,8 +69,10 @@ public class FunctionalTerm extends ApplicativeTermInherit implements Term {
    */
   private FunctionalTerm(List<Term> args, FunctionSymbol f, Type outputType) {
     _f = f;
+    _head = f;
     _args = args;
     _outputType = outputType;
+    initiateVars();
   }
 
   /** This method is called by inherited functions, and calls the private constructor. */
@@ -106,7 +108,7 @@ public class FunctionalTerm extends ApplicativeTermInherit implements Term {
   /** Throws an error, because a functional term is not associated with a variable. */
   public Variable queryVariable() {
     throw new InappropriatePatternDataError("FunctionalTerm", "queryVariable",
-                                            "variables or lambda-expressions");
+                                            "var terms or lambda-expressions");
   }
 
   /** For a term f(s1,...,sn), this returns f(s1,...,si). */
@@ -135,13 +137,6 @@ public class FunctionalTerm extends ApplicativeTermInherit implements Term {
       if (!_args.get(i).isPattern()) return false;
     }
     return true;
-  }
-
-  /** This adds the variables that occur freely in the current term into env. */
-  public void updateVars(Environment env) {
-    for (int i = 0; i < _args.size(); i++) {
-      _args.get(i).updateVars(env);
-    }
   }
 
   /** If this term is f(s1,...,sn) and extra = [t1,...,tm], this returns f(s1,...,sn,t1,...,tm). */

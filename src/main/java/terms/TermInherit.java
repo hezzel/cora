@@ -27,16 +27,25 @@ import cora.interfaces.terms.Substitution;
  * substitution or environment.
  */
 abstract class TermInherit {
+  private Environment _varsCache = null;
+
+  abstract Environment allVars();
   abstract String match(Term other, Substitution gamma);
   abstract boolean equals(Term other);
-  abstract void updateVars(Environment env);
   abstract Term apply(List<Term> args);
 
-  /** Returns the set of all variables occurring in the current term. */
-  public Environment vars() {
-    Environment env = new Env();
-    updateVars(env);
-    return env;
+  /**
+   * Calling this sets up the free variable cache.  It may be done at the end of a constructor, but
+   * if not, it will automatically be called when freeVars() is first requested.
+   */
+  protected void initiateVars() {
+    _varsCache = allVars();
+  }
+
+  /** Returns the set of all variables occurring freely in the current term. */
+  public Environment freeVars() {
+    if (_varsCache == null) initiateVars();
+    return _varsCache;
   }
 
   /** Applies the current term (with functional type) to other. */

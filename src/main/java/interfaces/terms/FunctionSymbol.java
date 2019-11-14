@@ -22,7 +22,7 @@ import cora.interfaces.types.Type;
  * Although function symbols may be overloaded and polymorphic in definition, we will consider
  * instances with different types as different symbols.
  *
- * Note; all instances of FunctionSymbol must (and can be expected to) be immutable.
+ * Note: all instances of FunctionSymbol must (and can be expected to) be immutable.
  */
 public interface FunctionSymbol extends Term {
   /**
@@ -39,7 +39,7 @@ public interface FunctionSymbol extends Term {
 
   /**
    * Returns whether the current symbol is equal to another.
-   * This is the case if they have the same name, typing and other properties.
+   * This is the case if they have the same name, typing and perhaps other properties.
    */
   public boolean equals(FunctionSymbol other);
 }

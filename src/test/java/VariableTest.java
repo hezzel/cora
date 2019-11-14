@@ -187,18 +187,11 @@ public class VariableTest {
   }
 
   @Test
-  public void testTermVarVars() {
+  public void testTermVarFreeVars() {
     Variable x = new Var("x", baseType("oo"));
-    Environment env = x.vars();
+    Environment env = x.freeVars();
     assertTrue(env.size() == 1);
     assertTrue(env.contains(x));
-    Environment other = new Env();
-    other.add(new BinderVariable("y", baseType("aa")));
-    x.updateVars(other);
-    assertTrue(other.size() == 2);
-    assertTrue(other.contains(x));
-    x.updateVars(other);
-    assertTrue(other.size() == 2);
   }
 
   @Test

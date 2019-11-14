@@ -48,7 +48,7 @@ abstract class RuleInherit {
                             right.queryType().toString(), left.queryType().toString());
     }
     // the free variables in the left-hand side may not be binder variables
-    Environment lvars = left.vars();
+    Environment lvars = left.freeVars();
     for (Variable x : lvars) {
       if (x.isBinderVariable()) {
         throw new IllegalRuleError("RuleInherit", "left-hand side of applicative rule [" +
@@ -56,7 +56,7 @@ abstract class RuleInherit {
       }   
     } 
     // the free variables in the right-hand side must all occur on the left
-    Environment rvars = right.vars();
+    Environment rvars = right.freeVars();
     for (Variable x : rvars) {
       if (!lvars.contains(x)) {
         throw new IllegalRuleError("RuleInherit", "right-hand side of rule [" + left.toString() +
