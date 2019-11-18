@@ -16,6 +16,7 @@
 package cora.terms;
 
 import cora.exceptions.NullCallError;
+import cora.exceptions.NullInitialisationError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.*;
 
@@ -28,11 +29,16 @@ public class Var extends VariableInherit implements Variable {
   /** Create a variable with the given name and type. */
   public Var(String name, Type type) {
     super(name, type);
+    if (name == null) throw new NullInitialisationError("Var", "name");
   }
 
-  /** Create a variable without a name; a name will be automatically generated. */
+  /**
+   * Create a variable without a name.
+   * This will still give a consistent representation when debug printing a term (using toString()),
+   * but gives Cora significant freedom in choosing a suitable name when pretty printing.
+   */
   public Var(Type type) {
-    super("x[" + COUNTER + "]", type);
+    super(null, type);
   }
 
   /** @return false, since a free variable may not be used as a binder */
@@ -59,7 +65,7 @@ public class Var extends VariableInherit implements Variable {
       return null;
     }   
     else if (previous.equals(other)) return null;
-    else return "Variable " + queryName() + " mapped both to " + previous.toString() + " and to " +
+    else return "Variable " + toString() + " mapped both to " + previous.toString() + " and to " +
       other.toString() + ".";
   }
 }

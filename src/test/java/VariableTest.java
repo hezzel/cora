@@ -55,7 +55,6 @@ public class VariableTest {
     return new FunctionalTerm(f, arg1, arg2);
   }
 
-  @Test(expected = NullInitialisationError.class)
   public void testVarNullName() {
     Variable x = new Var(null, baseType("o"));
   }

@@ -27,7 +27,7 @@ public class UnitVariable extends Var {
     super(name, Sort.unitSort);
   }
 
-  /** Create a unit variable without a name; a name will be automatically generated. */
+  /** Create a unit variable without a name. */
   public UnitVariable() {
     super(Sort.unitSort);
   }

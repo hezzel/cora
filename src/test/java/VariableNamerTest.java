@@ -66,6 +66,7 @@ public class VariableNamerTest {
 
   @Test
   public void testEntirelyNewName() {
+    VariableNamer namer = new DefaultVariableNamer();
     Variable x = new UnitVariable();
     String name = namer.assignName(x);
     assertTrue(name != null);

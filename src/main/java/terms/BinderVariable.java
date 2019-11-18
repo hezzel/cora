@@ -16,6 +16,7 @@
 package cora.terms;
 
 import cora.exceptions.NullCallError;
+import cora.exceptions.NullInitialisationError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.*;
 
@@ -27,11 +28,16 @@ public class BinderVariable extends VariableInherit implements Variable {
   /** Create a binder variable with the given name and type. */
   public BinderVariable(String name, Type type) {
     super(name, type);
+    if (name == null) throw new NullInitialisationError("BinderVariable", "name");
   }
 
-  /** Create a binder variable without a name; a name will be automatically generated. */
+  /** 
+   * Create a binder variable without a name.
+   * This will still give a consistent representation when debug printing a term (using toString()),
+   * but gives Cora significant freedom in choosing a suitable name when pretty printing.
+   */
   public BinderVariable(Type type) {
-    super("z[" + COUNTER + "]", type);
+    super(null, type);
   }
 
   /** @return true */
@@ -62,7 +68,7 @@ public class BinderVariable extends VariableInherit implements Variable {
     }
 
     if (!other.isVariable() || (!((Variable)other).isBinderVariable())) {
-      return "Binder variable " + queryName() + " cannot be mapped to " + other.toString() + ".";
+      return "Binder variable " + toString() + " cannot be mapped to " + other.toString() + ".";
     }
 
     Term previous = gamma.get(this);
@@ -72,7 +78,7 @@ public class BinderVariable extends VariableInherit implements Variable {
       return null;
     }   
     else if (previous.equals(other)) return null;
-    else return "Binder Variable " + queryName() + " mapped both to " + previous.toString() +
+    else return "Binder Variable " + toString() + " mapped both to " + previous.toString() +
       " and to " + other.toString() + ".";
   }
 }

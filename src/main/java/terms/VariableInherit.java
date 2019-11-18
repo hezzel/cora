@@ -18,7 +18,6 @@ package cora.terms;
 import java.util.List;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullCallError;
-import cora.exceptions.NullInitialisationError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.*;
 import cora.types.Sort;
@@ -51,13 +50,15 @@ abstract class VariableInherit extends LeafTermInherit implements Variable {
     return "VariableInherit (" + this.getClass().getSimpleName() + ")";
   }
 
-  /** Create a variable with the given name and type. */
+  /**
+   * Create a variable with the given name and type.
+   * The name is allowed to be null, but the type is not.
+   */
   public VariableInherit(String name, Type type) {
     super(type);
     _name = name;
     _index = COUNTER;
     COUNTER++;
-    if (name == null) throw new NullInitialisationError(queryMyClassName(), "name");
   }
 
   /** @return true */
@@ -72,7 +73,7 @@ abstract class VariableInherit extends LeafTermInherit implements Variable {
   /** @return false */
   public boolean isFunctionalTerm() { return false; }
 
-  /** Returns the name this variable was set up with. */
+  /** Returns the name this variable was set up with. This might be null! */
   public String queryName() {
     return _name;
   }
@@ -82,9 +83,14 @@ abstract class VariableInherit extends LeafTermInherit implements Variable {
     return _index;
   }
 
-  /** @return the name of the variable, along with its index. */
+  /**
+   * If the variable was created with a name, this simply returns that name.
+   * Otherwise, it will return a representation of the variable that has a good chance of being
+   * unique.
+   */
   public String toString() {
-    return _name;
+    if (_name != null) return _name;
+    return "_var" + _index;
   }
 
   /** @return this */
