@@ -138,7 +138,7 @@ public interface Term {
    */
   public Substitution match(Term other);
 
-  /**Returns a string representation of the term. */
+  /** Returns a string representation of the term. */
   String toString();
 
   /**
