@@ -237,5 +237,67 @@ public class AbstractionTest {
     Abstraction abs5 = new Abstraction(x, new VarTerm(y, constantTerm("true", baseType("Bool"))));
     assertFalse(abs5.isPattern());
   }
+
+  @Test
+  public void testSingleApplication() {
+    // λx:o.f(x, y)
+    Variable x = createBinder("x", "o");
+    Variable y = createBinder("y", "o");
+    Constant f = 
+      new Constant("f", new ArrowType(baseType("o"), arrowType("o", "o")));
+    Term fxy = new FunctionalTerm(f, x, y); 
+    Term abs = new Abstraction(x, fxy);
+
+    // g(a)
+    Constant g = new Constant("g", arrowType("asort", "o"));
+    Term ga = new FunctionalTerm(g, constantTerm("a", baseType("asort")));
+
+    // f(g(a), y)
+    Term fgay = new FunctionalTerm(f, ga, y); 
+
+    assertTrue(abs.apply(ga).equals(fgay));
+  }
+
+  @Test
+  public void testMultipApplication() {
+    // λx:o -> o -> o.λy:o.x(f(y,y))
+    Variable x = new BinderVariable("x", new ArrowType(baseType("o"), arrowType("o", "o")));
+    Variable y = createBinder("y", "o");
+    Constant f =
+      new Constant("f", new ArrowType(baseType("o"), arrowType("o", "o")));
+    Term fyy = new FunctionalTerm(f, y, y);
+    Term xfyy = new VarTerm(x, fyy);      // note that this has type o -> o
+    Term complete = new Abstraction(x, new Abstraction(y, xfyy));
+
+    // applying it on [a,b,c]
+    ArrayList<Term> args = new ArrayList<Term>();
+    Term a = constantTerm("a", baseType("o"));
+    Term b = constantTerm("b", baseType("o"));
+    args.add(f);
+    args.add(a);
+    args.add(b);
+    Term result = complete.apply(args);
+
+    // result *should* be: f(f(a,a), b)
+    Term faa = new FunctionalTerm(f, a, a);
+    Term expected = new FunctionalTerm(f, faa, b);
+
+    assertTrue(result.equals(expected));
+  }
+
+  @Test(expected = TypingError.class)
+  public void testApplicationTypeFailure() {
+    // λx:o -> o -> o.λy:o.x(f(y,y))
+    Variable x = new BinderVariable("x", new ArrowType(baseType("o"), arrowType("o", "o")));
+    Variable y = createBinder("y", "o");
+    Constant f =
+      new Constant("f", new ArrowType(baseType("o"), arrowType("o", "o")));
+    Term fyy = new FunctionalTerm(f, y, y);
+    Term xfyy = new VarTerm(x, fyy);      // note that this has type o -> o
+    Term complete = new Abstraction(x, new Abstraction(y, xfyy));
+
+    // expected: type o -> o -> o; putting in something of type o -> o is not okay!
+    complete.apply(constantTerm("a", arrowType("o", "o")));
+  }
 }
 

@@ -169,7 +169,20 @@ public class Abstraction extends TermInherit implements Term {
    * λx.t, this returns t[x:=s1].apply([s2;...;sn]).
    */
   public Term apply(List<Term> extra) {
-    return null; /* TODO */
+    if (extra.size() == 0) return this;
+    
+    Term s = this;
+    Substitution gamma = new Subst();
+    int i = 0;
+    
+    for (; i < extra.size() && s.isAbstraction(); i++) {
+      Variable x = s.queryVariable();
+      gamma.replace(x, extra.get(i));
+      s = s.queryImmediateSubterm(0);
+    }
+
+    Term t = s.substitute(gamma);
+    return t.apply(extra.subList(i, extra.size()));
   }
 
   /** Applies the given substitution recursively on the term and returns the result. */
