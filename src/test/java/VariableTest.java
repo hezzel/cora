@@ -148,6 +148,7 @@ public class VariableTest {
     assertTrue(s.isVarTerm());
     assertFalse(s.isConstant());
     assertFalse(s.isFunctionalTerm());
+    assertFalse(s.isAbstraction());
     assertFalse(x.isBinderVariable());
     assertTrue(s.queryVariable().equals(x));
     assertTrue(s.toString().equals("x"));

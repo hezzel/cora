@@ -86,6 +86,9 @@ public class Constant extends LeafTermInherit implements FunctionSymbol {
   /** @return true */
   public boolean isFunctionalTerm() { return true; }
 
+  /** @return false */
+  public boolean isAbstraction() { return false; }
+
   /** Returns the current symbol f, which is the root of the corresponding term f(). */
   public FunctionSymbol queryRoot() {
     return this;

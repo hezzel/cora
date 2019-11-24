@@ -99,6 +99,11 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
     return false;
   }
 
+  /** @return false */
+  public boolean isAbstraction() {
+    return false;
+  }
+
   /** Throws an error, because a varterm does not have a "root" function symbol. */
   public FunctionSymbol queryRoot() {
     throw new InappropriatePatternDataError("VarTerm", "queryRoot",

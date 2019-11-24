@@ -42,6 +42,9 @@ public interface Term {
   /** Returns whether or not the current term has the form x(s1,...,sn) with n ≥ 0. */
   boolean isVarTerm();
 
+  /** Returns whether or not the current term has the form λx.s. */
+  boolean isAbstraction();
+
   /** Returns the number of immediate subterms (that is, n for a term f(s1,...,sn)). */
   int numberImmediateSubterms();
   

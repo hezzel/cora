@@ -146,6 +146,7 @@ public class FunctionalTermTest {
     assertFalse(t.isConstant());
     assertFalse(t.isVariable());
     assertFalse(t.isVarTerm());
+    assertFalse(t.isAbstraction());
     assertTrue(t.isPattern());
     assertTrue(t.queryRoot().equals(new Constant("f", type)));
     assertTrue(t.toString().equals("f(c, g(d))"));

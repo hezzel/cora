@@ -100,6 +100,11 @@ public class FunctionalTerm extends ApplicativeTermInherit implements Term {
     return true;
   }
 
+  /** @return false */
+  public boolean isAbstraction() {
+    return false;
+  }
+
   /** For a term f(s1,...,sn), this returns f. */
   public FunctionSymbol queryRoot() {
     return _f;

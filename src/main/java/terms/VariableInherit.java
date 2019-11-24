@@ -73,6 +73,9 @@ abstract class VariableInherit extends LeafTermInherit implements Variable {
   /** @return false */
   public boolean isFunctionalTerm() { return false; }
 
+  /** @return false */
+  public boolean isAbstraction() { return false; }
+
   /** Returns the name this variable was set up with. This might be null! */
   public String queryName() {
     return _name;

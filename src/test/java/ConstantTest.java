@@ -144,6 +144,7 @@ public class ConstantTest {
     assertTrue(f.isFunctionalTerm());
     assertFalse(f.isVariable());
     assertFalse(f.isVarTerm());
+    assertFalse(f.isAbstraction());
     assertTrue(f.numberImmediateSubterms() == 0);
     assertTrue(f.queryRoot().equals(f));
     assertTrue(f.queryAllPositions().size() == 1);

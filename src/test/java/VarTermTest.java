@@ -146,6 +146,7 @@ public class VarTermTest {
     assertFalse(t.isConstant());
     assertFalse(t.isVariable());
     assertFalse(t.isFunctionalTerm());
+    assertFalse(t.isAbstraction());
     assertFalse(t.isPattern());
     assertTrue(t.queryVariable().toString().equals("x"));
     assertTrue(t.queryVariable().queryType().toString().equals("a → b → a"));
