@@ -23,13 +23,13 @@ import cora.interfaces.rewriting.Alphabet;
 import cora.types.Sort;
 import cora.terms.Constant;
 import cora.terms.UnitVariable;
-import cora.terms.DefaultVariableNamer;
+import cora.terms.CleverVariableNamer;
 import cora.rewriting.UserDefinedAlphabet;
 
 public class VariableNamerTest {
   @Test
   public void testNewVariableIsAssignedItsOwnName() {
-    VariableNamer namer = new DefaultVariableNamer();
+    VariableNamer namer = new CleverVariableNamer();
     Variable y = new UnitVariable("y");
     assertTrue(namer.assignName(y).equals("y"));
     assertTrue(namer.queryAssignedName(y).equals("y"));
@@ -37,7 +37,7 @@ public class VariableNamerTest {
 
   @Test
   public void testSecondVariableWithTheSameNameIsChanged() {
-    VariableNamer namer = new DefaultVariableNamer();
+    VariableNamer namer = new CleverVariableNamer();
     Variable x = new UnitVariable("y");
     Variable y = new UnitVariable("y");
     String name1 = namer.assignName(x);
@@ -56,7 +56,7 @@ public class VariableNamerTest {
     xy.add(y);
     Alphabet sigma = new UserDefinedAlphabet(xy);
     
-    VariableNamer namer = new DefaultVariableNamer(sigma);
+    VariableNamer namer = new CleverVariableNamer(sigma);
 
     Variable z = new UnitVariable("x");
     String renamed = namer.assignName(z);
@@ -66,7 +66,7 @@ public class VariableNamerTest {
 
   @Test
   public void testEntirelyNewName() {
-    VariableNamer namer = new DefaultVariableNamer();
+    VariableNamer namer = new CleverVariableNamer();
     Variable x = new UnitVariable();
     String name = namer.assignName(x);
     assertTrue(name != null);

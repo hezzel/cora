@@ -50,6 +50,11 @@ public class Constant extends LeafTermInherit implements FunctionSymbol {
     return _name;
   }
 
+  /** Returns a string that describes the function symbol; same as toString(). */
+  public String toString(VariableNamer namer) {
+    return _name;
+  }
+
   /** Returns the number of terms this constant may (at most) be applied to. */
   public int queryArity() {
     return queryType().queryArity();

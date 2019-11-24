@@ -32,6 +32,7 @@ public interface Variable extends Term, Comparable<Variable> {
   /**
    * @return a string representation of the variable.
    * Variable names are not unique, and variables are not identified by their name.
+   * Variable names are allowed to be null!
    */
   String queryName();
 

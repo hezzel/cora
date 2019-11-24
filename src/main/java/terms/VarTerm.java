@@ -197,11 +197,11 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
   }
 
   /** This method gives a string representation of the term. */
-  public String toString() {
-    String ret = _x.toString();
+  public String toString(VariableNamer namer) {
+    String ret = _x.toString(namer);
     if (_args.size() > 0) {
-      ret += "(" + _args.get(0).toString();
-      for (int i = 1; i < _args.size(); i++) ret += ", " + _args.get(i).toString();
+      ret += "(" + _args.get(0).toString(namer);
+      for (int i = 1; i < _args.size(); i++) ret += ", " + _args.get(i).toString(namer);
       ret += ")";
     }
     return ret;

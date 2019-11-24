@@ -15,66 +15,31 @@
 
 package cora.terms;
 
-import java.util.TreeMap;
 import java.util.TreeSet;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.VariableNamer;
 import cora.interfaces.rewriting.Alphabet;
 
 /**
- * This class assigns a unique name to each variable, and keeps track of the variables that have
- * already been assigned.
+ * This class assigns to each variable its own string representation, which is not necessarily
+ * unique.
+ * This is used to implement the default toString() behaviour of terms.
  */
-public class DefaultVariableNamer implements VariableNamer {
-  private TreeMap<Variable,String> _variableToName;
-  private TreeSet<String> _chosenNames;
-  private Alphabet _alphabet;
-
-  public DefaultVariableNamer(Alphabet sigma) {
-    _alphabet = sigma;
-    _chosenNames = new TreeSet<String>();
-    _variableToName = new TreeMap<Variable,String>();
-  }
+class DefaultVariableNamer implements VariableNamer {
+  private TreeSet<Variable> _known;
 
   public DefaultVariableNamer() {
-    _alphabet = null;
-    _chosenNames = new TreeSet<String>();
-    _variableToName = new TreeMap<Variable,String>();
+    _known = new TreeSet<Variable>();
   }
 
   public String queryAssignedName(Variable x) {
-    return _variableToName.get(x);
-  }
-
-  public boolean nameIsAvailable(String name) {
-    if (_alphabet != null && _alphabet.lookup(name) != null) return false;
-    return !_chosenNames.contains(name);
-  }
-
-  public String selectEntirelyNewName() {
-    String[] options = { "x", "y", "z", "u", "v", "w", "n", "m", "a", "b" };
-    for (String option : options) {
-      if (nameIsAvailable(option)) return option;
-    }
-    for (int i = 1; ; i++) {
-      String name = "var" + i;
-      if (nameIsAvailable(name)) return name;
-    }
+    if (_known.contains(x)) return x.toString();
+    else return null;
   }
 
   public String assignName(Variable x) {
-    String chosen = _variableToName.get(x);
-    if (chosen != null) return chosen;
-
-    String name = x.queryName();
-    if (name == null) name = selectEntirelyNewName();
-    else {
-      while (!nameIsAvailable(name)) name = name + "'";
-    }
-
-    _variableToName.put(x, name);
-    _chosenNames.add(name);
-    return name;
+    _known.add(x);
+    return x.toString();
   }
 }
 

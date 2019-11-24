@@ -142,6 +142,18 @@ public interface Term {
   String toString();
 
   /**
+   * This function returns a string representation of the term, where variables are renamed using
+   * the given renamer.
+   */
+  String toString(VariableNamer renamer);
+
+  /**
+   * Returns a string representation of the term, where variables are renamed in such a way that
+   * each variable has a unique name.
+   */
+  String toPrettyString();
+
+  /**
    * Performs an equality check with the given other term.
    */
   boolean equals(Term term);

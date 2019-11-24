@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import cora.interfaces.terms.Term;
 import cora.interfaces.terms.Environment;
 import cora.interfaces.terms.Substitution;
+import cora.interfaces.terms.VariableNamer;
 
 /**
  * A TermInherit supplies default functionality for all instances of Term.
@@ -33,6 +34,7 @@ abstract class TermInherit {
   abstract String match(Term other, Substitution gamma);
   abstract boolean equals(Term other);
   abstract Term apply(List<Term> args);
+  abstract String toString(VariableNamer namer);
 
   /**
    * Calling this sets up the free variable cache.  It may be done at the end of a constructor, but
@@ -66,6 +68,14 @@ abstract class TermInherit {
   public boolean equals(Object other) {
     if (other instanceof Term) return equals((Term)other);
     return false;
+  }
+
+  /**
+   * This method returns a string representation of the current term, where variables are renamed
+   * so that each variable has a unique name.
+   */
+  public String toPrettyString() {
+    return toString(new CleverVariableNamer());
   }
 }
 

@@ -93,6 +93,13 @@ abstract class VariableInherit extends LeafTermInherit implements Variable {
     return "_var" + _index;
   }
 
+  /**
+   * This function asks the given variable namer to assign a name for us, and returns the result.
+   */
+  public String toString(VariableNamer namer) {
+    return namer.assignName(this);
+  }
+  
   /** @return this */
   public Variable queryVariable() {
     return this;

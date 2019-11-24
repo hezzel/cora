@@ -121,6 +121,11 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
     construct(head, new ArrayList<Term>(args));
   }
 
+  /** @return a string representation of the current term */
+  public String toString() {
+    return toString(new DefaultVariableNamer());
+  }
+
   /** This method returns the output type of the term. */
   public Type queryType() {
     return _outputType;
