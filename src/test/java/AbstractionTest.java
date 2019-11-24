@@ -120,7 +120,6 @@ public class AbstractionTest {
     assertTrue(abs.queryImmediateSubterm(0).toString().equals("f(x, g(c))"));
     assertTrue(abs.queryImmediateHeadSubterm(0).equals(abs));
     assertTrue(abs.queryVariable().equals(x));
-    System.out.println("abs = " + abs.toString());
     assertTrue(abs.toString().equals("λx.f(x, g(c))"));
   }
 
@@ -137,6 +136,85 @@ public class AbstractionTest {
     assertTrue(abs.queryImmediateSubterm(0).equals(exampleAbstraction(y)));
     assertTrue(abs.queryImmediateHeadSubterm(0).equals(abs));
     assertTrue(abs.queryVariable().equals(x));
+  }
+
+  @Test
+  public void testPositions() {
+    // build: λx:Int.f(x, g(c)) with c : Int, g(c) : Bool and f(x, g(c)) : A 
+    Variable x = createBinder("x", "Int");
+    Abstraction abs = exampleAbstraction(x);
+    List<Position> posses = abs.queryAllPositions();
+    assertTrue(posses.size() == 5); 
+    assertTrue(posses.get(0).toString().equals("0.1.ε"));
+    assertTrue(posses.get(1).toString().equals("0.2.1.ε"));
+    assertTrue(posses.get(2).toString().equals("0.2.ε"));
+    assertTrue(posses.get(3).equals(new AbstractionPosition(new EmptyPosition())));
+    assertTrue(posses.get(4).equals(new EmptyPosition()));
+  }
+
+  @Test
+  public void testSubtermsAtPositions() {
+    // build: λx:Int.f(x, g(c)) with c : Int, g(c) : Bool and f(x, g(c)) : A 
+    Variable x = createBinder("x", "Int");
+    Abstraction abs = exampleAbstraction(x);
+
+    Position pos = new EmptyPosition();   // ε
+    assertTrue(abs.querySubterm(pos).equals(abs));
+    pos = new AbstractionPosition(new EmptyPosition());   // 0.ε 
+    assertTrue(abs.querySubterm(pos).toString().equals("f(x, g(c))"));
+    pos = new AbstractionPosition(new ArgumentPosition(1, new EmptyPosition()));
+    assertTrue(abs.querySubterm(pos).equals(x));
+  }
+
+  @Test
+  public void testReplaceSubterm() {
+    // create relevant function symbols and variables
+    Variable x = createBinder("x", "Int");
+    Constant f =
+      new Constant("f", new ArrowType(baseType("Int"), arrowType("Int", "Int")));
+    Constant g =
+      new Constant("g", arrowType("Int", "Int"));
+    Constant c =
+      new Constant("c", baseType("Int"));
+
+    // build: λx.f(x, g(c))
+    Term gc = new FunctionalTerm(g, c);
+    Term fxgc = new FunctionalTerm(f, x, gc);
+    Term abs1 = new Abstraction(x, fxgc);
+
+    // build: λx:Int.f(x, x)
+    Term abs2 = new Abstraction(x, new FunctionalTerm(f, x, x));
+
+    // build: λx:Int.f(f(x, g(c)), g(x))
+    Term abs3 = new Abstraction(x, new FunctionalTerm(f, fxgc, gc));
+
+    Position pos = new AbstractionPosition(new ArgumentPosition(2, new EmptyPosition()));
+    assertTrue(abs1.replaceSubterm(pos, x).equals(abs2));
+
+    pos = new AbstractionPosition(new ArgumentPosition(1, new EmptyPosition()));
+    Term tmp = abs1.replaceSubterm(pos, fxgc);
+    pos = new AbstractionPosition(new ArgumentPosition(1, new ArgumentPosition(1,
+            new EmptyPosition())));
+    assertTrue(tmp.replaceSubterm(pos, x).equals(abs3));
+
+    Term aterm = constantTerm("a", arrowType("Int", "Int"));
+    assertTrue(abs1.replaceSubterm(new EmptyPosition(), aterm).equals(aterm));
+  }
+
+  @Test(expected = TypingError.class)
+  public void testReplaceSubtermIncorectTypeHead() {
+    Variable x = createBinder("x", "Int");
+    Abstraction abs = exampleAbstraction(x);
+    Term aterm = constantTerm("a", arrowType("Int", "Int"));
+    abs.replaceSubterm(new EmptyPosition(), aterm);
+  }
+
+  @Test(expected = TypingError.class)
+  public void testReplaceSubtermIncorectTypeSubterm() {
+    Variable x = createBinder("x", "Int");
+    Abstraction abs = exampleAbstraction(x);
+    Term aterm = constantTerm("a", baseType("Int"));
+    abs.replaceSubterm(new AbstractionPosition(new EmptyPosition()), aterm);
   }
 
   @Test

@@ -91,7 +91,7 @@ public class Abstraction extends TermInherit implements Term {
   public Term queryImmediateSubterm(int i) {
     if (i != 0) {
       throw new IndexingError("Abstraction", "queryImmediateSubterm", i, 1, 1);
-    }   
+    }
     return _subterm;
   }
 
@@ -99,7 +99,7 @@ public class Abstraction extends TermInherit implements Term {
   public Term queryImmediateHeadSubterm(int i) {
     if (i != 0) {
       throw new IndexingError("Abstraction", "queryImmediateHeadSubterm", i, 0, 0);
-    }   
+    }
     return this;
   }
 
@@ -125,12 +125,18 @@ public class Abstraction extends TermInherit implements Term {
 
   /** @return the set of all positions = {ε} ∪ { 0 p | p ∈ Positions(subterm) } */
   public List<Position> queryAllPositions() {
-    return null; /* TODO */
+    List<Position> ret = _subterm.queryAllPositions();
+    for (int i = 0; i < ret.size(); i++) {
+      ret.set(i, new AbstractionPosition(ret.get(i)));
+    }
+    ret.add(new EmptyPosition());
+    return ret;
   }
 
   /** @return the subterm at the given position */
   public Term querySubterm(Position pos) {
-    return null; /* TODO */
+    if (pos.isEmpty()) return this;
+    return _subterm.querySubterm(pos.queryTail());
   }
 
   /**
@@ -140,7 +146,17 @@ public class Abstraction extends TermInherit implements Term {
    * variables in the replacement might be captured due to this.
    */
   public Term replaceSubterm(Position pos, Term replacement) {
-    return null; /* TODO */
+    if (pos.isEmpty()) {
+      if (!_type.equals(replacement.queryType())) {
+        throw new TypingError("Abstraction", "replaceSubterm", "replacement term " + 
+                    replacement.toString(), replacement.queryType().toString(),
+                    _type.toString());
+      }
+      return replacement;
+    }
+
+    Term newsub = _subterm.replaceSubterm(pos.queryTail(), replacement);
+    return new Abstraction(_binder, newsub);
   }
 
   /** For λx.s, this returns the free variables of s, excluding x (as x is bound in this term). */
