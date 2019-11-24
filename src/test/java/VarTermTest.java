@@ -209,12 +209,12 @@ public class VarTermTest {
   }
 
   @Test
-  public void testFreeVars() {
+  public void testVars() {
     // let's create: Z(Z(x,c),g(y,x)), where Z, x and y are variables
     Variable z = new Var("Z", new ArrowType(baseType("a"),arrowType("b","a")));
     FunctionSymbol g = new Constant("g", new ArrowType(baseType("b"),arrowType("a","b")));
     FunctionSymbol c = new Constant("c", baseType("b"));
-    Variable x = new Var("x", baseType("a"));
+    Variable x = new BinderVariable("x", baseType("a"));
     Variable y = new Var("y", baseType("b"));
     Term s = new VarTerm(z, new VarTerm(z, x, c), new FunctionalTerm(g, y, x));
     Environment env = s.freeVars();
@@ -222,6 +222,7 @@ public class VarTermTest {
     assertTrue(env.contains(y));
     assertTrue(env.contains(z));
     assertTrue(env.size() == 3);
+    assertTrue(s.boundVars().size() == 0);
   }
 
   @Test

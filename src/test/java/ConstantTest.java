@@ -156,6 +156,7 @@ public class ConstantTest {
     Subst gamma = new Subst(x, new Constant("gg", combi));
     assertTrue(f.substitute(gamma).equals(f));
     assertTrue(f.freeVars().size() == 0);
+    assertTrue(f.boundVars().size() == 0);
     Term aa = new Constant("g", a);
     assertTrue(aa.isFirstOrder());
     assertTrue(aa.isPattern());
