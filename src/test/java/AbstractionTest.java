@@ -77,6 +77,36 @@ public class AbstractionTest {
     Abstraction abs = exampleAbstraction(x);
   }
 
+  @Test(expected = IllegalTermError.class)
+  public void testBindervarReuseIllegal() {
+    Variable x = createBinder("x", "o");
+    Constant f =
+      new Constant("f", new ArrowType(arrowType("o", "o"), arrowType("o", "o")));
+    Term fxlambdaxx = new FunctionalTerm(f, new Abstraction(x,x), x);
+  }
+
+  @Test(expected = java.lang.Error.class)
+  public void testDoubleAbstractionWithSameVariable() {
+    Variable x = createBinder("x", "o");
+    Abstraction lambdaxxx = new Abstraction(x, new Abstraction(x, x));
+  }
+
+  @Test
+  public void testVars() {
+    // λx:o.z(λy:o.y, a)
+    Variable x = createBinder("x", "o");
+    Variable y = createBinder("o", "o");
+    Variable z = new Var("z", new ArrowType(arrowType("o", "o"), arrowType("o", "o")));
+    Term a = constantTerm("a", baseType("o"));
+    Abstraction abs = new Abstraction(x, new VarTerm(z, new Abstraction(y,y), a));
+
+    assertTrue(abs.freeVars().contains(z));
+    assertTrue(abs.freeVars().size() == 1);
+    assertTrue(abs.boundVars().contains(x));
+    assertTrue(abs.boundVars().contains(y));
+    assertTrue(abs.boundVars().size() == 2);
+  }
+
   @Test(expected = IndexingError.class)
   public void testImmediateSubtermTooLarge() {
     Abstraction abs = exampleAbstraction(createBinder("x", "Int"));

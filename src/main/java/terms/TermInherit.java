@@ -28,17 +28,19 @@ import cora.interfaces.terms.VariableNamer;
  * substitution or environment.
  */
 abstract class TermInherit {
-  private Environment _varsCache = null;
+  private EnvironmentPair _varsCache = null;
 
-  abstract Environment allVars();
+  abstract EnvironmentPair allVars();
   abstract String match(Term other, Substitution gamma);
   abstract boolean equals(Term other);
   abstract Term apply(List<Term> args);
   abstract String toString(VariableNamer namer);
 
   /**
-   * Calling this sets up the free variable cache.  It may be done at the end of a constructor, but
-   * if not, it will automatically be called when freeVars() is first requested.
+   * Should be called at the end of each constructor, to set up the cache of the free and bound
+   * variables.
+   * This is essential to fail quickly when a term has inconsistent variables (so the same variable
+   * occurring both free and bound).
    */
   protected void initiateVars() {
     _varsCache = allVars();
@@ -46,8 +48,12 @@ abstract class TermInherit {
 
   /** Returns the set of all variables occurring freely in the current term. */
   public Environment freeVars() {
-    if (_varsCache == null) initiateVars();
-    return _varsCache;
+    return _varsCache.freeVars();
+  }
+
+  /** Returns the set of all variables occurring bound in the current term. */
+  public Environment boundVars() {
+    return _varsCache.boundVars();
   }
 
   /** Applies the current term (with functional type) to other. */

@@ -153,15 +153,20 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
     return ret;
   }
 
+  /** Helper function for allVars; essentially returns other.allVars(). */
+  private EnvironmentPair getAllVars(Term other) {
+    if (other instanceof TermInherit) return ((TermInherit)other).allVars();
+    else return new EnvironmentPair(other.freeVars(), other.boundVars());
+  }
+
   /** This returns an environment containing all variables occurring in the arguments and head. */
-  public Environment allVars() {
-    ArrayList<Environment> lst = new ArrayList<Environment>();
+  public EnvironmentPair allVars() {
+    ArrayList<EnvironmentPair> lst = new ArrayList<EnvironmentPair>();
     for (int i = 0; i < _args.size(); i++) {
-      Term arg = _args.get(i);
-      lst.add(arg.freeVars());
+      lst.add(getAllVars(_args.get(i)));
     }
-    lst.add(_head.freeVars());
-    return new Env(lst);
+    lst.add(getAllVars(_head));
+    return EnvironmentPair.mergeAll(lst);
   }
 
   /** @return the subterm at the given position */

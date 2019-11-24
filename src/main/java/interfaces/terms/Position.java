@@ -28,13 +28,14 @@ public interface Position {
 
   /**
    * If the position is in a subterm of some argument, this function returns the index of the
-   * relevant argument (1..number of arguments); otherwise it returns -1.
+   * relevant argument (1..number of arguments); if it is in the subterm of an abstraction it
+   * returns 0; otherwise it returns -1.
    */
   public int queryArgumentPosition();
 
   /**
-   * If the position is in a subterm of some argument t, this function returns the position of
-   * the relevant subterm in t; otherwise it returns null.
+   * If the position is in a subterm of some argument t or the subterm t of an abstraction, this
+   * function returns the position of the relevant subterm in t; otherwise it returns null.
    */
   public Position queryTail();
 

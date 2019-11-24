@@ -19,12 +19,16 @@ import java.util.List;
 import cora.interfaces.types.Type;
 
 /**
- * Terms are the main object to be rewritten.  There are various kinds of terms,
- * currently including functional terms f(s1,...,sk) and var terms x(s1,...,xk).
- * In the future it is likely that additional constructions will be allowed, but this will depend
+ * Terms are the main object to be rewritten.  There are various kinds of terms, currently
+ * including functional terms f(s1,...,sk), var terms x(s1,...,xk) and abstractions λx.s (see also
+ * the document on the formalism).
+ * In the future it is possible that additional constructions will be allowed, but this will depend
  * on the style of term rewriting system under analysis.
  *
- * Note; all instances of Term must (and can be expected to) be immutable.
+ * Note: all instances of Term must (and can be expected to) be immutable.
+ *
+ * Note: Term construction must guarantee that a variable cannot occur both free and bound in it;
+ * if a violating term is constructed, an IllegalTermError should be thrown.
  */
 public interface Term {
   /** Returns the type of the term. */
@@ -58,6 +62,8 @@ public interface Term {
    * For an applicative term a(s1,...,sn) (where a itself is not an application), the immediate
    * subterms are s1,...,sn.  There are also n+1 head subterms: a, a(s1), a(s1,s2), ...,
    * a(s1,...,sn).  Here, queryImmediateHeadSubterm(i) returns a(s1,...,si).
+   * An abstraction has no head subterm other than queryImmediateHeadSubterm(0), which is the term
+   * itself.
    * (Note that this should not be used in analysis of first-order term rewriting, since all
    * non-trivial head subterms have a higher type).
    */
@@ -77,7 +83,7 @@ public interface Term {
 
   /**
    * Returns true if this term is first-order (so: the subterms at all positions have base type,
-   * and no abstractions or variable applications are used), false otherwise.
+   * and no abstractions or variable applications are used), and false otherwise.
    */
   boolean isFirstOrder();
 
@@ -95,8 +101,15 @@ public interface Term {
    */
   List<Position> queryAllPositions();
 
-  /** Returns the set of all variables that occur freely in the current term. */
+  /**
+   * Returns the set of all variables that occur freely in the current term.
+   * Note that it is allowed for these variables to be marked as "binder vars", as long as they are
+   * not bound within the current term.
+   */
   Environment freeVars();
+
+  /** Returns the set of all variables that occur bound in the current term. */
+  Environment boundVars();
 
   /**
    * Returns the subterm at the given position, assuming that this is indeed a position of the
@@ -129,7 +142,8 @@ public interface Term {
 
   /**
    * This method either extends gamma so that <this term> gamma = other and returns null, or
-   * returns a string describing why other is not an instance of gamma.
+   * returns a string describing why other is not an instance of gamma.  This will only do plain
+   * matching: the head variable of a var term will not be instantiated to an abstraction.
    * Whether or not null is returned, gamma is likely to be extended (although without overriding)
    * by this function.
    */
@@ -137,7 +151,8 @@ public interface Term {
 
   /**
    * This method returns the substitution gamma such that <this term> gamma = other, if such a
-   * substitution exists; if it does not, then null is returned instead.
+   * substitution exists; if it does not, then null is returned instead.  This will only do plain
+   * matching: the head variable of a var term will not be instantiated to an abstraction.
    */
   public Substitution match(Term other);
 

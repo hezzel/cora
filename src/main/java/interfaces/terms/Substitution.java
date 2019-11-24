@@ -21,7 +21,7 @@ import java.util.Set;
  * A substitution is a function that maps a finite set of variables to terms of the same type.
  *
  * A substitution is inherently a mutable structure, as entries may be added and removed.
- * Therefore, functions which take a substituion as argument should always indicate whether (and
+ * Therefore, functions which take a substitution as argument should always indicate whether (and
  * how) the substitution is altered in the function.
  */
 public interface Substitution {

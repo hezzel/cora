@@ -18,7 +18,7 @@ package cora.interfaces.terms;
 import java.lang.Iterable;
 
 /**
- * An Environment is a finite set of variables, typically used to list the free (or bound)
+ * An Environment is a finite set of variables, typically used to list the (free or bound)
  * variables used in a specific term or rule.
  *
  * Note: all instances of Environment must (and can be expected to) be immutable.

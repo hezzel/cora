@@ -59,6 +59,7 @@ abstract class VariableInherit extends LeafTermInherit implements Variable {
     _name = name;
     _index = COUNTER;
     COUNTER++;
+    initiateVars();
   }
 
   /** @return true */
@@ -114,8 +115,8 @@ abstract class VariableInherit extends LeafTermInherit implements Variable {
   }
 
   /** Returns the environment consisting of the current variable. */
-  public Environment allVars() {
-    return new Env(this);
+  public EnvironmentPair allVars() {
+    return new EnvironmentPair(this);
   }
 
   /** Returns the VarTerm x(args). */

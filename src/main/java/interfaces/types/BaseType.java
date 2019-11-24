@@ -15,8 +15,6 @@
 
 package cora.interfaces.types;
 
-import java.util.ArrayList;
-
 /**
  * Types have the form σ1 → ,,, → σk → τ, with all σi Types and τ a BASE type; this interface
  * considers the latter.

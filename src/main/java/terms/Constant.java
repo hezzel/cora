@@ -38,6 +38,7 @@ public class Constant extends LeafTermInherit implements FunctionSymbol {
     _name = name;
     if (name == null) throw new NullInitialisationError("Constant", "name");
     if (name.equals("")) throw new Error("Function Symbol created with empty name.");
+    initiateVars();
   }
 
   /** Returns the name of the current user-defined symbol. */
@@ -101,8 +102,8 @@ public class Constant extends LeafTermInherit implements FunctionSymbol {
   }
 
   /** Returns the empty environment, since a constant does not use any variables. */
-  public Environment allVars() {
-    return new Env();
+  public EnvironmentPair allVars() {
+    return EnvironmentPair.emptyPair();
   }
 
   /** Returns the FunctionalTerm f(args). */

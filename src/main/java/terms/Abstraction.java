@@ -159,9 +159,10 @@ public class Abstraction extends TermInherit implements Term {
     return new Abstraction(_binder, newsub);
   }
 
-  /** For λx.s, this returns the free variables of s, excluding x (as x is bound in this term). */
-  public Environment allVars() {
-    return _subterm.freeVars().remove(_binder);
+  /** For λx.s, this returns the pair (free variables of s \ {x}, bound variables of s ∪ {x}. */
+  public EnvironmentPair allVars() {
+    EnvironmentPair child = new EnvironmentPair(_subterm.freeVars(), _subterm.boundVars());
+    return child.markFreeVarAsBound(_binder);
   }
 
   /**
