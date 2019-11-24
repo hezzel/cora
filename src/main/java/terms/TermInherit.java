@@ -70,6 +70,11 @@ abstract class TermInherit {
     return false;
   }
 
+  /** @return a string representation of the current term */
+  public String toString() {
+    return toString(new DefaultVariableNamer());
+  }
+
   /**
    * This method returns a string representation of the current term, where variables are renamed
    * so that each variable has a unique name.
