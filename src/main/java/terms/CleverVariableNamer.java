@@ -19,7 +19,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.VariableNamer;
-import cora.interfaces.rewriting.Alphabet;
+import cora.interfaces.terms.Environment;
+import cora.interfaces.terms.Alphabet;
 
 /**
  * This class assigns a unique name to each variable, and keeps track of the variables that have
@@ -30,32 +31,82 @@ public class CleverVariableNamer implements VariableNamer {
   private TreeSet<String> _chosenNames;
   private Alphabet _alphabet;
 
-  public CleverVariableNamer(Alphabet sigma) {
-    _alphabet = sigma;
-    _chosenNames = new TreeSet<String>();
-    _variableToName = new TreeMap<Variable,String>();
-  }
-
+  /** Creates a variable namer without any pre-assignments. */
   public CleverVariableNamer() {
     _alphabet = null;
     _chosenNames = new TreeSet<String>();
     _variableToName = new TreeMap<Variable,String>();
   }
 
+  /**
+   * Creates a variable namer without any pre-assignments, but that will avoid assigning any names
+   * in the given alphabet.
+   */
+  public CleverVariableNamer(Alphabet sigma) {
+    _alphabet = sigma;
+    _chosenNames = new TreeSet<String>();
+    _variableToName = new TreeMap<Variable,String>();
+  }
+
+  /**
+   * Creates a variable namer that (a) will avoid all names in the given alphabet, and
+   * (b) pre-assigns the variables in the given environment to their given names, insofar as
+   * there are no overlaps. When there are overlaps, the variable with the lower index is the one
+   * that keeps its name.
+   */
+  public CleverVariableNamer(Alphabet sigma, Environment tryToKeepThese) {
+    _alphabet = sigma;
+    _chosenNames = new TreeSet<String>();
+    _variableToName = new TreeMap<Variable,String>();
+    
+    TreeMap<String,Variable> nametovar = new TreeMap<String,Variable>();
+    for (Variable x : tryToKeepThese) {
+      String name = x.queryName();
+      if (name == null) continue;
+      if (_alphabet != null && _alphabet.lookup(name) != null) continue;
+      if (nametovar.get(name) == null || nametovar.get(name).compareTo(x) > 0) {
+        nametovar.put(name, x);
+      }
+    }
+
+    for (Variable var : nametovar.values()) {
+      _variableToName.put(var, var.queryName());
+      _chosenNames.add(var.queryName());
+    }
+  }
+
   public String queryAssignedName(Variable x) {
     return _variableToName.get(x);
   }
 
-  public boolean nameIsAvailable(String name) {
+  private boolean nameIsAvailable(String name) {
     if (_alphabet != null && _alphabet.lookup(name) != null) return false;
     return !_chosenNames.contains(name);
   }
 
-  public String selectEntirelyNewName() {
-    String[] options = { "x", "y", "z", "u", "v", "w", "n", "m", "a", "b" };
+  private String selectEntirelyNewName(Variable var) {
+    String[] options;
+    if (var.queryType().isBaseType()) {
+      if (var.isBinderVariable()) {
+        options = new String[] { "x", "y", "z", "u", "v", "w", "n", "m", "a", "b" };
+      }
+      else {
+        options = new String[] { "X", "Y", "Z", "U", "V", "W", "N", "M", "A", "B" };
+      }
+    }
+    else {
+      if (var.isBinderVariable()) {
+        options = new String[] { "f", "g", "h", "i", "j", "k", "l", "p", "q", "r" };
+      }
+      else {
+        options = new String[] { "F", "G", "H", "I", "J", "K", "L", "P", "Q", "R" };
+      }
+    }
+
     for (String option : options) {
       if (nameIsAvailable(option)) return option;
     }
+    
     for (int i = 1; ; i++) {
       String name = "var" + i;
       if (nameIsAvailable(name)) return name;
@@ -67,7 +118,7 @@ public class CleverVariableNamer implements VariableNamer {
     if (chosen != null) return chosen;
 
     String name = x.queryName();
-    if (name == null) name = selectEntirelyNewName();
+    if (name == null) name = selectEntirelyNewName(x);
     else {
       while (!nameIsAvailable(name)) name = name + "'";
     }

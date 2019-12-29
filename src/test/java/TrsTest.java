@@ -24,7 +24,7 @@ import cora.interfaces.rewriting.Rule;
 import cora.interfaces.rewriting.TRS;
 import cora.types.*;
 import cora.terms.*;
-import cora.rewriting.UserDefinedAlphabet;
+import cora.terms.UserDefinedAlphabet;
 import cora.rewriting.AtrsRule;
 import cora.rewriting.TermRewritingSystem;
 import cora.parsers.CoraInputReader;

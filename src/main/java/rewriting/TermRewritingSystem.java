@@ -24,7 +24,7 @@ import cora.exceptions.NullInitialisationError;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Term;
 import cora.interfaces.terms.Position;
-import cora.interfaces.rewriting.Alphabet;
+import cora.interfaces.terms.Alphabet;
 import cora.interfaces.rewriting.Rule;
 import cora.interfaces.rewriting.TRS;
 

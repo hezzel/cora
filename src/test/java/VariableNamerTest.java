@@ -19,12 +19,16 @@ import java.util.ArrayList;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.VariableNamer;
 import cora.interfaces.terms.FunctionSymbol;
-import cora.interfaces.rewriting.Alphabet;
+import cora.interfaces.terms.Alphabet;
 import cora.types.Sort;
+import cora.types.ArrowType;
 import cora.terms.Constant;
+import cora.terms.Var;
 import cora.terms.UnitVariable;
+import cora.terms.BinderVariable;
 import cora.terms.CleverVariableNamer;
-import cora.rewriting.UserDefinedAlphabet;
+import cora.terms.Env;
+import cora.terms.UserDefinedAlphabet;
 
 public class VariableNamerTest {
   @Test
@@ -64,11 +68,98 @@ public class VariableNamerTest {
     assertFalse(renamed.equals("y"));
   }
 
+
+  @Test
+  public void testPreAssignNames() {
+    ArrayList<Variable> lst = new ArrayList<Variable>();
+    Variable x = new UnitVariable("x");
+    Variable y = new UnitVariable("x");
+    Variable z = new UnitVariable("z");
+    lst.add(x);
+    lst.add(y);
+    lst.add(z);
+    Env env = new Env(lst);
+    Alphabet sigma = new UserDefinedAlphabet(new ArrayList<FunctionSymbol>());
+    VariableNamer namer = new CleverVariableNamer(sigma, env);
+    assertTrue(namer.queryAssignedName(x).equals("x"));
+    assertTrue(namer.queryAssignedName(y) == null);
+    assertTrue(namer.queryAssignedName(z).equals("z"));
+  }
+
+  @Test
+  public void testPreAssignNamesWithReversedDuplicates() {
+    ArrayList<Variable> lst = new ArrayList<Variable>();
+    Variable x = new UnitVariable("x");
+    Variable y = new UnitVariable("x");
+    Variable z = new UnitVariable("z");
+    lst.add(y);
+    lst.add(x);
+    lst.add(z);
+    Env env = new Env(lst);
+    Alphabet sigma = new UserDefinedAlphabet(new ArrayList<FunctionSymbol>());
+    VariableNamer namer = new CleverVariableNamer(sigma, env);
+    assertTrue(namer.queryAssignedName(x).equals("x"));
+    assertTrue(namer.queryAssignedName(y) == null);
+    assertTrue(namer.queryAssignedName(z).equals("z"));
+  }
+
+  @Test
+  public void testPreAssignNameWithAlphabetOverlap() {
+    ArrayList<Variable> lst = new ArrayList<Variable>();
+    Variable x = new UnitVariable("x");
+    Variable y = new UnitVariable("x");
+    Variable z = new UnitVariable("z");
+    lst.add(x);
+    lst.add(y);
+    lst.add(z);
+    Env env = new Env(lst);
+
+    ArrayList<FunctionSymbol> alf = new ArrayList<FunctionSymbol>();
+    alf.add(new Constant("c", Sort.unitSort));
+    alf.add(new Constant("z", Sort.unitSort));
+    Alphabet sigma = new UserDefinedAlphabet(alf);
+
+    VariableNamer namer = new CleverVariableNamer(sigma, env);
+    assertTrue(namer.queryAssignedName(x).equals("x"));
+    assertTrue(namer.queryAssignedName(y) == null);
+    assertTrue(namer.queryAssignedName(z) == null);
+  }
+
   @Test
   public void testEntirelyNewName() {
     VariableNamer namer = new CleverVariableNamer();
     Variable x = new UnitVariable();
     String name = namer.assignName(x);
     assertTrue(name != null);
+  }
+
+  @Test
+  public void testBoundAndFreeVariablesGetDifferentNames() {
+    VariableNamer namer1 = new CleverVariableNamer();
+    VariableNamer namer2 = new CleverVariableNamer();
+    VariableNamer namer3 = new CleverVariableNamer();
+    Variable x = new Var(new Sort("a"));
+    Variable y = new UnitVariable();
+    Variable z = new BinderVariable(new Sort("a"));
+    String xname = namer1.assignName(x);
+    String yname = namer2.assignName(y);
+    String zname = namer3.assignName(z);
+    assertTrue(xname.equals(yname));
+    assertFalse(xname.equals(zname));
+  }
+
+  @Test
+  public void testBaseAndHigherVariablesGetDifferentNames() {
+    VariableNamer namer1 = new CleverVariableNamer();
+    VariableNamer namer2 = new CleverVariableNamer();
+    VariableNamer namer3 = new CleverVariableNamer();
+    Variable x = new Var(new Sort("a"));
+    Variable y = new Var(new ArrowType(new Sort("a"), new Sort("b")));
+    Variable z = new Var(new ArrowType(new Sort("c"), new ArrowType(new Sort("a"), new Sort("b"))));
+    String xname = namer1.assignName(x);
+    String yname = namer2.assignName(y);
+    String zname = namer3.assignName(z);
+    assertFalse(xname.equals(yname));
+    assertTrue(yname.equals(zname));
   }
 }

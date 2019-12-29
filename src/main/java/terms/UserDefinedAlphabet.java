@@ -13,14 +13,14 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rewriting;
+package cora.terms;
 
 import java.util.Collection;
 import java.util.TreeMap;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.interfaces.terms.FunctionSymbol;
-import cora.interfaces.rewriting.Alphabet;
+import cora.interfaces.terms.Alphabet;
 
 /** A finite set of user-defined symbols, with no duplicate names. */
 public class UserDefinedAlphabet implements Alphabet {
@@ -63,7 +63,7 @@ public class UserDefinedAlphabet implements Alphabet {
     return _symbols.get(name);
   }
 
-  /** Returns a pleasan-to-read string representation of the current alphabet. */
+  /** Returns a pleasant-to-read string representation of the current alphabet. */
   public String toString() {
     String ret = "";
     for (FunctionSymbol symbol : _symbols.values()) {

@@ -21,10 +21,10 @@ import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.FunctionSymbol;
-import cora.interfaces.rewriting.Alphabet;
+import cora.interfaces.terms.Alphabet;
 import cora.types.*;
 import cora.terms.Constant;
-import cora.rewriting.UserDefinedAlphabet;
+import cora.terms.UserDefinedAlphabet;
 
 public class AlphabetTest {
   private Type baseType(String name) {

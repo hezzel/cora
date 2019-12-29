@@ -21,9 +21,9 @@ import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Variable;
-import cora.interfaces.rewriting.Alphabet;
+import cora.interfaces.terms.Alphabet;
 import cora.interfaces.rewriting.TRS;
-import cora.rewriting.UserDefinedAlphabet;
+import cora.terms.UserDefinedAlphabet;
 
 /**
  * This class maintains information used for parsing (user) input to Cora, such as the alphabet of

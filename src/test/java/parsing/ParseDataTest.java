@@ -19,13 +19,13 @@ import java.util.ArrayList;
 import cora.parsers.ParseData;
 import cora.exceptions.TypingError;
 import cora.interfaces.terms.FunctionSymbol;
-import cora.interfaces.rewriting.Alphabet;
+import cora.interfaces.terms.Alphabet;
 import cora.interfaces.rewriting.Rule;
 import cora.interfaces.rewriting.TRS;
 import cora.types.Sort;
 import cora.terms.Constant;
 import cora.terms.Var;
-import cora.rewriting.UserDefinedAlphabet;
+import cora.terms.UserDefinedAlphabet;
 import cora.rewriting.TermRewritingSystem;
 
 /** This class tests the antlr code for parsing types. */

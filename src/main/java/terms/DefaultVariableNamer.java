@@ -18,7 +18,6 @@ package cora.terms;
 import java.util.TreeSet;
 import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.VariableNamer;
-import cora.interfaces.rewriting.Alphabet;
 
 /**
  * This class assigns to each variable its own string representation, which is not necessarily

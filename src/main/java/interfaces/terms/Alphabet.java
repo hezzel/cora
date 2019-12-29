@@ -13,9 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.interfaces.rewriting;
-
-import cora.interfaces.terms.FunctionSymbol;
+package cora.interfaces.terms;
 
 /**
  * An Alphabet is a (possibly infinite) set of function symbols, which does not have any duplicate

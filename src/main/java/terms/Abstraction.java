@@ -202,7 +202,8 @@ public class Abstraction extends TermInherit implements Term {
 
   /** Returns a string representation of the current term. */
   public String toString(VariableNamer namer) {
-    return "λ" + _binder.toString(namer) + "." + _subterm.toString(namer);
+    String binder = _binder.toString(namer);
+    return "λ" + binder + "." + _subterm.toString(namer);
   }
 
   /** Returns whether the current term is alpha-equal to the given other term. */

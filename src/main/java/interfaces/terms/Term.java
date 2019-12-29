@@ -168,8 +168,10 @@ public interface Term {
   /**
    * Returns a string representation of the term, where variables are renamed in such a way that
    * each variable has a unique name.
+   * Variables are not renamed to a name that already occurs in the alphabet; sigma is also allowed
+   * to be null (which gives no additional requirements).
    */
-  String toPrettyString();
+  String toPrettyString(Alphabet sigma);
 
   /**
    * Performs an equality check with the given other term.

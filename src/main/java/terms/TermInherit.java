@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.ArrayList;
 import cora.interfaces.terms.Term;
 import cora.interfaces.terms.Environment;
+import cora.interfaces.terms.Alphabet;
 import cora.interfaces.terms.Substitution;
 import cora.interfaces.terms.VariableNamer;
 
@@ -84,9 +85,11 @@ abstract class TermInherit {
   /**
    * This method returns a string representation of the current term, where variables are renamed
    * so that each variable has a unique name.
+   * Variable names are chosen to be disjoint from the alphabet; if this is not desired, then
+   * sigma = null should be chosen.
    */
-  public String toPrettyString() {
-    return toString(new CleverVariableNamer());
+  public String toPrettyString(Alphabet sigma) {
+    return toString(new CleverVariableNamer(sigma, freeVars()));
   }
 }
 
