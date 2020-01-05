@@ -15,6 +15,7 @@
 
 package cora.terms;
 
+import java.util.Map;
 import java.util.List;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullInitialisationError;
@@ -126,7 +127,7 @@ public class Constant extends LeafTermInherit implements FunctionSymbol {
     return "constant " + _name + " is not instantiated by " + other.toString() + ".";
   }
 
-  public boolean equals(Term term) {
+  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> nu, int k) {
     if (term == null) return false;
     if (!term.isConstant()) return false;
     return equals(term.queryRoot());

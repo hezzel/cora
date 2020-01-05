@@ -188,7 +188,19 @@ public class Abstraction extends TermInherit implements Term {
 
   /** Applies the given substitution recursively on the term and returns the result. */
   public Term substitute(Substitution gamma) {
-    return null; /* TODO */
+    Variable freshvar = new BinderVariable(_binder.queryName(), _binder.queryType());
+    Term subtermSubstitute;
+    if (gamma.extend(_binder, freshvar)) {
+      subtermSubstitute = _subterm.substitute(gamma);
+      gamma.delete(_binder);
+    }   
+    else {
+      Term previous = gamma.get(_binder);
+      gamma.replace(_binder, freshvar);
+      subtermSubstitute = _subterm.substitute(gamma);
+      gamma.replace(_binder, previous);
+    }   
+    return new Abstraction(freshvar, subtermSubstitute);
   }
 
   /**
@@ -206,12 +218,24 @@ public class Abstraction extends TermInherit implements Term {
     return "λ" + binder + "." + _subterm.toString(namer);
   }
 
-  /** Returns whether the current term is alpha-equal to the given other term. */
-  public boolean equals(Term other) {
-    if (!other.isAbstraction()) return false;
-    /* TODO */
-    if (!_binder.equals(other.queryVariable())) return false;
-    return _subterm.equals(other.queryImmediateSubterm(0));
+  /** Determines whether the current term is alpha-equal to the given term. */
+  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
+    if (!term.isAbstraction()) return false;
+    Variable x = _binder;
+    Variable y = term.queryVariable();
+    if (!x.queryType().equals(y.queryType())) return false;
+    if (mu.containsKey(x)) {
+      throw new IllegalTermError("Calling alphaEquals when mu already maps " + x.toString() + ".");
+    }
+    if (xi.containsKey(y)) {
+      throw new IllegalTermError("Calling alphaEquals when xi already maps " + y.toString() + ".");
+    }
+    mu.put(x, k);
+    xi.put(y, k);
+    boolean retval = _subterm.alphaEquals(term.queryImmediateSubterm(0), mu, xi, k + 1);
+    mu.remove(x);
+    xi.remove(y);
+    return retval;
   }
 }
 

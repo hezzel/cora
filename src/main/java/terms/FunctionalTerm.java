@@ -15,6 +15,7 @@
 
 package cora.terms;
 
+import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 import cora.exceptions.InappropriatePatternDataError;
@@ -187,13 +188,13 @@ public class FunctionalTerm extends ApplicativeTermInherit implements Term {
   }
 
   /** This method verifies equality to another Term. */
-  public boolean equals(Term term) {
+  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
     if (term == null) return false;
     if (!term.isFunctionalTerm()) return false;
     if (!_f.equals(term.queryRoot())) return false;
     if (_args.size() != term.numberImmediateSubterms()) return false;
     for (int i = 0; i < _args.size(); i++) {
-      if (!_args.get(i).equals(term.queryImmediateSubterm(i+1))) return false;
+      if (!_args.get(i).alphaEquals(term.queryImmediateSubterm(i+1), mu, xi, k) ) return false;
     }
     return true;
   }

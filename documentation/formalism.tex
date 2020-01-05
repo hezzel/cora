@@ -157,7 +157,7 @@ Function symbols will generally be referred to as $\afun,\bfun,\cfun$ or using m
 notation.
 
 We also fix a set $\V$ of \emph{variables}, which are typed constants in the same way.  $\V$ should
-be disjoint from $\F$, and we assume that $V = \Vfree \uplus \Vbound$, where $\Vbound$ contains
+be disjoint from $\F$, and we assume that $\V = \Vfree \uplus \Vbound$, where $\Vbound$ contains
 infinitely many variables of each type; there are no restrictions on $\Vfree$.
 Variables will generally be referred to as $\avar,\bvar,\cvar,\Avar,\Bvar,\Cvar,\AFvar,\BFvar,
 \CFvar$ or using more suggestive notation.
@@ -186,7 +186,7 @@ $\symb{greater} : \mathtt{int} \arrtype \mathtt{int} \arrtype \mathtt{bool}$, th
 $\symb{greater}(),\symb{greater}(\avar)$ and $\symb{greater}(\avar,\bvar)$ are terms (with
 distinct types). When no arguments are given (i.e., a term $\afun()$ or $\avar()$), we may omit
 the brackets and just denote $\afun$ or $\avar$ for the term.  In this sense, the elements of $\F$
-and $\V$ may be considered terms.
+and $\V$ may all be considered terms.
 A term $\avar$ can simply be called a variable (but is also still a var term);
 a term $\afun$ may be called a constant (but is also still a functional term).
 
@@ -194,29 +194,29 @@ a term $\afun$ may be called a constant (but is also still a functional term).
 We let $=_\alpha$ be the usual $\alpha$-renaming equivalence relation as used in the
 $\lambda$-calculus. This relation can be formally defined as follows:
 \begin{itemize}
-\item Let $\mu_0,\nu_0 : \V \rightarrow \N$ be defined as follows:
-  $\mu_0(\avar) = 0$ and $\nu_0(\avar) = 0$ for all $\avar \in \V$.
-\item Let $s =_\alpha t$ iff $s =_\alpha^{\mu_0,\nu_0,1} t$.
-\item For $\mu,\nu : \V \rightarrow \N$ and $k \in \N$, let $=_\alpha^{\mu,\nu,k}$ be defined as
+\item Let $\mu_0,\xi_0 : \V \rightarrow \N$ be defined as follows:
+  $\mu_0(\avar) = 0$ and $\xi_0(\avar) = 0$ for all $\avar \in \V$.
+\item Let $s =_\alpha t$ iff $s =_\alpha^{\mu_0,\xi_0,1} t$.
+\item For $\mu,\xi : \V \rightarrow \N$ and $k \in \N$, let $=_\alpha^{\mu,\xi,k}$ be defined as
   follows:
   \begin{itemize}
-  \item $\afun(s_1,\dots,s_n) =_\alpha^{\mu,\nu,k} t$ iff $t = \afun(t_1,\dots,t_n)$ with $s_1
-    =_\alpha^{\mu,\nu,k} t_1,\dots,s_n =_\alpha^{\mu,\nu,k} t_n$;
-  \item $\avar(s_1,\dots,s_n) =_\alpha^{\mu,\nu,k} t$ iff:
+  \item $\afun(s_1,\dots,s_n) =_\alpha^{\mu,\xi,k} t$ iff $t = \afun(t_1,\dots,t_n)$ with $s_1
+    =_\alpha^{\mu,\xi,k} t_1,\dots,s_n =_\alpha^{\mu,\xi,k} t_n$;
+  \item $\avar(s_1,\dots,s_n) =_\alpha^{\mu,\xi,k} t$ iff:
     \begin{itemize}
     \item $t = \bvar(t_1,\dots,t_n)$ and
-    \item $s_1 =_\alpha^{\mu,\nu,k} t_1,\dots,s_n =_\alpha^{\mu,\nu,k} t_n$, and
-    \item either $\avar = \bvar$ and $\mu(\avar) = \nu(\avar) = 0$,
-      or $\mu(\avar) = \nu(\avar) > 0$.
+    \item $s_1 =_\alpha^{\mu,\xi,k} t_1,\dots,s_n =_\alpha^{\mu,\xi,k} t_n$, and
+    \item either $\avar = \bvar$ and $\mu(\avar) = \xi(\avar) = 0$,
+      or $\mu(\avar) = \xi(\avar) > 0$.
     \end{itemize}
-  \item $\abs{\avar}{s} =_\alpha^{\mu,\nu,k} t$ iff
-    $t = \abs{\bvar}{u}$ and $s =_\alpha^{\mu[\avar:=k],\nu[\bvar:=k],k+1} u$. \\
+  \item $\abs{\avar}{s} =_\alpha^{\mu,\xi,k} t$ iff
+    $t = \abs{\bvar}{u}$ and $s =_\alpha^{\mu[\avar:=k],\xi[\bvar:=k],k+1} u$. \\
     (Here, $\mu[\avar:=k]$ is the function that maps $\avar$ to $k$ and all other $\cvar$ to
-    $\mu(\cvar)$; similar for $\nu[\bvar:=k]$.)
+    $\mu(\cvar)$; similar for $\xi[\bvar:=k]$.)
   \end{itemize}
 \end{itemize}
 That is, we progressively descend into the term and keep track of where variables are bound; the
-structure of the two terms has to be exactly the same, and function symbols and unbound variable
+structure of the two terms has to be exactly the same, and function symbols and unbound variables
 should occur at the same positions in both terms. However, when encountering a bound variable, we
 only require that this variable was bound by the same $\lambda$ in both terms.
 

@@ -15,6 +15,7 @@
 
 package cora.interfaces.terms;
 
+import java.util.Map;
 import java.util.List;
 import cora.interfaces.types.Type;
 
@@ -172,6 +173,13 @@ public interface Term {
    * to be null (which gives no additional requirements).
    */
   String toPrettyString(Alphabet sigma);
+
+  /**
+   * This returns whether thisterm <musub> is alpha-equal to otherterm <xusub>, where musub and
+   * xisub are defined as follows: let z{1},...,z{k-1} be fresh variables, and let musub(x) = z{i}
+   * if mu(x) = i, and xisub(y) = z{i} if nu(y) = i.
+   */
+  boolean alphaEquals(Term otherterm, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k);
 
   /**
    * Performs an equality check with the given other term.

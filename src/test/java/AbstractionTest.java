@@ -269,6 +269,85 @@ public class AbstractionTest {
   }
 
   @Test
+  public void testObviousEquality() {
+    Variable x = createBinder("x", "Int");
+    Abstraction abs1 = exampleAbstraction(x);
+    Abstraction abs2 = exampleAbstraction(x);
+    assertTrue(abs1.equals(abs2));
+  }
+
+  @Test
+  public void testObviousInequality() {
+    Variable x = createBinder("x", "o");
+    Variable y = createBinder("y", "o");
+    Constant f =
+      new Constant("f", new ArrowType(baseType("o"), arrowType("o", "o")));
+    Term fxy = new FunctionalTerm(f, x, y);
+    Term abs1 = new Abstraction(x, fxy);
+    Term abs2 = new Abstraction(y, fxy);
+
+    assertFalse(abs1.equals(abs2));
+  }
+
+  @Test
+  public void testSimpleAlphaEquivalence() {
+    Variable x = createBinder("x", "o");
+    Variable y = createBinder("y", "o");
+    Constant f =
+      new Constant("f", new ArrowType(baseType("o"), arrowType("o", "o")));
+    Term a = constantTerm("a", baseType("o"));
+    Term fxa = new FunctionalTerm(f, x, a);
+    Term fya = new FunctionalTerm(f, y, a);
+    Term abs1 = new Abstraction(x, fxa);
+    Term abs2 = new Abstraction(y, fya);
+
+    assertTrue(abs1.equals(abs2));
+  }
+
+  @Test
+  public void testSwitchingAlphaEquivalence() {
+    Variable x = createBinder("x", "o");
+    Variable y = createBinder("y", "o");
+    Constant f = new Constant("f", new ArrowType(baseType("o"), arrowType("o", "o")));
+
+    // λxy.f(x,f(x,y))
+    Term fxy = new FunctionalTerm(f, x, y);
+    Term abs1 = new Abstraction(x, new Abstraction(y, new FunctionalTerm(f, x, fxy)));
+    // λyx.f(y,f(y,x))
+    Term fyx = new FunctionalTerm(f, y, x);
+    Term abs2 = new Abstraction(y, new Abstraction(x, new FunctionalTerm(f, y, fyx)));
+
+    assertTrue(abs1.equals(abs2));
+
+    Term abs3 = new Abstraction(y, new Abstraction(x, new FunctionalTerm(f, fyx, y)));
+    assertFalse(abs1.equals(abs3));
+  }
+
+  @Test
+  public void testAlphaEquivalenceWithDifferentlyTypedBinders() {
+    Variable x = createBinder("x", "a");
+    Variable y = createBinder("y", "b");
+    Variable z = createBinder("z", "b");
+    Abstraction abs1 = new Abstraction(x, x);
+    Abstraction abs2 = new Abstraction(y, y);
+    Abstraction abs3 = new Abstraction(z, z);
+
+    assertFalse(abs1.equals(abs2));
+    assertTrue(abs2.equals(abs3));
+  }
+
+  @Test
+  public void testNonEquivalenceWhereOnlyOneIsBound() {
+    Variable x = createBinder("x", "a");
+    Variable y = createBinder("y", "b");
+    Abstraction abs1 = new Abstraction(x, x);
+    Abstraction abs2 = new Abstraction(x, y);
+
+    assertFalse(abs1.equals(abs2));
+    assertFalse(abs2.equals(abs1));
+  }
+
+  @Test
   public void testSingleApplication() {
     // λx:o.f(x, y)
     Variable x = createBinder("x", "o");
@@ -328,6 +407,45 @@ public class AbstractionTest {
 
     // expected: type o -> o -> o; putting in something of type o -> o is not okay!
     complete.apply(constantTerm("a", arrowType("o", "o")));
+  }
+
+  @Test
+  public void testSimpleSubstitution() {  // a substitution where renaming is not an issue
+    // build: λx.f(x, g(y)) with g(y) : Bool and f(x, g(c)) : A
+    Variable x = createBinder("x", "Int");
+    Variable y = new Var("y", baseType("Int"));
+    Constant f = new Constant("f", new ArrowType(baseType("Int"), arrowType("Bool", "A")));
+    Constant g = new Constant("g", arrowType("Int", "Bool"));
+    Term fxgy = new FunctionalTerm(f, x, new FunctionalTerm(g, y));
+    Term abs1 = new Abstraction(x, fxgy);
+
+    // build: λx.f(x, g(c))
+    Term abs2 = exampleAbstraction(x);
+
+    // make γ = [y:=c]
+    Term c = constantTerm("c", baseType("Int"));
+    Substitution gamma = new Subst(y, c);
+
+    // and apply it!
+    assertTrue(abs1.substitute(gamma).equals(abs2));
+  }
+
+  @Test
+  public void testRenamingSubstitution() {
+    // substitute λx.s with a substitution that maps x to something else
+    // TODO
+  }
+
+  @Test
+  public void testBinderMappedToFree() {
+    // substitute λx.s with a substitution that has x in its range
+    // TODO
+  }
+
+  @Test
+  public void testBinderMappedToBound() {
+    // substitute λx.s with a substitution that has x occurring bound in some gamma(y)
+    // TODO
   }
 }
 

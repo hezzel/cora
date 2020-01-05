@@ -15,6 +15,7 @@
 
 package cora.terms;
 
+import java.util.Map;
 import java.util.List;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullCallError;
@@ -132,6 +133,13 @@ abstract class VariableInherit extends LeafTermInherit implements Variable {
     return gamma.getReplacement(this);
   }
 
+  /** Implements a total ordering on variables using the index. */
+  public int compareTo(Variable other) {
+    if (_index < other.queryVariableIndex()) return -1;
+    if (_index > other.queryVariableIndex()) return 1;
+    return 0;
+  }
+
   /**
    * Two variables are equal if and only if they share an index and have the same type.
    * Currently, this can only occur if they are the same object, but this may change in the future.
@@ -141,16 +149,13 @@ abstract class VariableInherit extends LeafTermInherit implements Variable {
   }
 
   /** A Variable can only be equal to another term if that term is this same Variable */
-  public boolean equals(Term other) {
-    if (!other.isVariable()) return false;
-    return equals(other.queryVariable());
-  }
-
-  /** Implements a total ordering on variables using the index. */
-  public int compareTo(Variable other) {
-    if (_index < other.queryVariableIndex()) return -1;
-    if (_index > other.queryVariableIndex()) return 1;
-    return 0;
+  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
+    if (!term.isVariable()) return false;
+    if (mu.containsKey(this)) {
+      return mu.get(this).equals(xi.get(term.queryVariable()));
+    }
+    else if (xi.containsKey(term.queryVariable())) return false;
+    else return equals(term.queryVariable());
   }
 }
 

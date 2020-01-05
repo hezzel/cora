@@ -17,7 +17,10 @@ package cora.terms;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.TreeMap;
 import cora.interfaces.terms.Term;
+import cora.interfaces.terms.Variable;
 import cora.interfaces.terms.Environment;
 import cora.interfaces.terms.Alphabet;
 import cora.interfaces.terms.Substitution;
@@ -33,7 +36,8 @@ abstract class TermInherit {
 
   abstract EnvironmentPair allVars();
   abstract String match(Term other, Substitution gamma);
-  abstract boolean equals(Term other);
+  abstract boolean alphaEquals(Term other, Map<Variable,Integer> mu, Map<Variable,Integer> xi,
+                               int k);
   abstract Term apply(List<Term> args);
   abstract String toString(VariableNamer namer);
 
@@ -69,6 +73,11 @@ abstract class TermInherit {
     Substitution gamma = new Subst();
     if (match(other, gamma) == null) return gamma;
     return null;
+  }
+
+  /** This method forwards equality to alpha-equality. */
+  public boolean equals(Term other) {
+    return alphaEquals(other, new TreeMap<Variable,Integer>(), new TreeMap<Variable,Integer>(), 1);
   }
 
   /** This method verifies equality to another Term. */
