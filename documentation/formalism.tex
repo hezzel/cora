@@ -291,7 +291,7 @@ denoted $s|_p$, is defined as follows:
 If $s|_p$ has the same type as some term $t$, then $s[t]_p$ denotes $s$ with the subterm at position
 $p$ replaced by $t$.  Formally, $s[t]_p$ is obtained as follows:
 \begin{itemize}
-\item $s[t]_p = t$;
+\item $s[t]_\epsilon = t$;
 \item $\afun(s_1,\dots,s_n)[t]_{i \cdot p} = \afun(s_1,\dots,s_{i-1},s_i[t]_p,s_{i+1},\dots,s_n)$;
 \item $\avar(s_1,\dots,s_n)[t]_{i \cdot p} = \avar(s_1,\dots,s_{i-1},s_i[t]_p,s_{i+1},\dots,s_n)$.
 \end{itemize}
