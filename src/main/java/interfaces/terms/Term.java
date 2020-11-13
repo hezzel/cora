@@ -50,7 +50,10 @@ public interface Term {
   /** Returns whether or not the current term has the form λx.s. */
   boolean isAbstraction();
 
-  /** Returns the number of immediate subterms (that is, n for a term f(s1,...,sn)). */
+  /**
+   * Returns the number of immediate subterms (that is, n for a term f(s1,...,sn) or x(s1,...,sn)
+   * and 0 for an abstraction).
+   */
   int numberImmediateSubterms();
   
   /**

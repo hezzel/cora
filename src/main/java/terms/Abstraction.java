@@ -82,15 +82,15 @@ public class Abstraction extends TermInherit implements Term {
     return true;
   }
 
-  /** @return 1 */
+  /** @return 0 */
   public int numberImmediateSubterms() {
-    return 1;
+    return 0;
   }
 
   /** @return the immediate subterm if i = 0; otherwise throws an IndexingError. */
   public Term queryImmediateSubterm(int i) {
     if (i != 0) {
-      throw new IndexingError("Abstraction", "queryImmediateSubterm", i, 1, 1);
+      throw new IndexingError("Abstraction", "queryImmediateSubterm", i, 0, 0);
     }
     return _subterm;
   }

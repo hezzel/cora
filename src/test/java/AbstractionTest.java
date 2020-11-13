@@ -146,7 +146,7 @@ public class AbstractionTest {
     assertFalse(abs.isFirstOrder());
 
     assertTrue(abs.queryType().equals(arrowType("Int", "A")));
-    assertEquals(1, abs.numberImmediateSubterms());
+    assertEquals(0, abs.numberImmediateSubterms());
     assertTrue(abs.queryImmediateSubterm(0).toString().equals("f(x, g(c))"));
     assertTrue(abs.queryImmediateHeadSubterm(0).equals(abs));
     assertTrue(abs.queryVariable().equals(x));
@@ -162,7 +162,7 @@ public class AbstractionTest {
 
     assertTrue(abs.isAbstraction());
     assertTrue(abs.queryType().equals(new ArrowType(baseType("Bool"), arrowType("Int", "A"))));
-    assertEquals(1, abs.numberImmediateSubterms());
+    assertEquals(0, abs.numberImmediateSubterms());
     assertTrue(abs.queryImmediateSubterm(0).equals(exampleAbstraction(y)));
     assertTrue(abs.queryImmediateHeadSubterm(0).equals(abs));
     assertTrue(abs.queryVariable().equals(x));

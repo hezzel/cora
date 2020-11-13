@@ -59,7 +59,7 @@ public class ParseData {
     return _alphabet.size();
   }
 
-  /** If the given symbol has been declared, this returns its type, otherwise null. */
+  /** If the given symbol has been declared, this returns the symbol, otherwise null. */
   public FunctionSymbol lookupFunctionSymbol(String symbol) {
     FunctionSymbol ret = _alphabet.get(symbol);
     if (ret == null && _trs != null) ret = _trs.lookupSymbol(symbol);
@@ -111,7 +111,7 @@ public class ParseData {
     return _environment.size();
   }
 
-  /** If the given variable has been declared, this returns its type, otherwise null. */
+  /** If the given variable has been declared, this returns the variable, otherwise null. */
   public Variable lookupVariable(String name) {
     return _environment.get(name);
   }
