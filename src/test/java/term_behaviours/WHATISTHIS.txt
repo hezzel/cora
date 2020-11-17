@@ -1,0 +1,7 @@
+This directory contains tests for specific behaviours of terms, even when they are spread among
+multiple different kinds of terms (e.g., pretty string functionality for ALL terms, not just for
+variables or abstractions).
+
+These tests are mostly written as black-box tests, without considering the implementation, but with
+a focus on the specification of the functionality.
+

@@ -20,11 +20,9 @@ import java.util.List;
 import cora.interfaces.types.Type;
 
 /**
- * Terms are the main object to be rewritten.  There are various kinds of terms, currently
- * including functional terms f(s1,...,sk), var terms x(s1,...,xk) and abstractions λx.s (see also
- * the document on the formalism).
- * In the future it is possible that additional constructions will be allowed, but this will depend
- * on the style of term rewriting system under analysis.
+ * Terms are the main object to be rewritten.  There are various kinds of terms, specifically:
+ * functional terms f(s1,...,sk), var terms x(s1,...,xk) and abstractions λx.s (see also the
+ * document on the formalism).
  *
  * Note: all instances of Term must (and can be expected to) be immutable.
  *
@@ -90,6 +88,12 @@ public interface Term {
    * and no abstractions or variable applications are used), and false otherwise.
    */
   boolean isFirstOrder();
+
+  /**
+   * Returns true if this term is applicative (that is: built without any binder variables).
+   * TODO
+   */
+ // boolean isApplicative();
 
   /**
    * Returns true if this term is a pattern (so: variables are not applied at all, or only to
@@ -186,6 +190,7 @@ public interface Term {
 
   /**
    * Performs an equality check with the given other term.
+   * This tests for equality modulo alpha.
    */
   boolean equals(Term term);
 }

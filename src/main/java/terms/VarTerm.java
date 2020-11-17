@@ -152,7 +152,7 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
         Variable x = (Variable)_args.get(i);
         if (!x.isBinderVariable()) return false;
         for (int j = i+1; j < _args.size(); j++) {
-          if (!_args.get(i).equals(_args.get(j))) return false;
+          if (_args.get(i).equals(_args.get(j))) return false;
         }
       }
       return true;

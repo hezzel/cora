@@ -22,6 +22,10 @@ import cora.interfaces.terms.*;
 import cora.types.*;
 import cora.terms.*;
 
+/**
+ * This class tests the pretty printing functionality where variables are renamed to avoid
+ * multiple variables having the same name.
+ */
 public class RenameTest {
   private Type baseType(String name) {
     return new Sort(name);
@@ -169,7 +173,7 @@ public class RenameTest {
     assertFalse(combi.toPrettyString(alf).equals("f(x, x)"));
     assertFalse(abs1.toPrettyString(alf).equals("λx.f(x, x)"));
     assertFalse(abs2.toPrettyString(alf).equals("λx.λx.f(x, x)"));
-    // this might need changing as the default variable namer changed, but it indicates that at
+    // this might need changing if the clever variable namer changes, but it indicates that at
     // least the distinct variable occurrences should be pretty-printed differently
     assertTrue(combi.toPrettyString(alf).equals("f(x', x)"));
     assertTrue(abs1.toPrettyString(alf).equals("λx'.f(x, x')"));
