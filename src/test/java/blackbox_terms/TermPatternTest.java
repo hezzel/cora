@@ -77,17 +77,17 @@ public class TermPatternTest extends TermTestInherit {
     assertFalse(yabs.isPattern());
   }
 
-  /** TODO for future development, when the definition of a pattern is extended.
   @Test
-  public void testAlmostNonPatternButEta() {
+  public void testNonPatternButEta() {
     Variable x = new BinderVariable("x", baseType("o"));
     Variable z = new BinderVariable("z", arrowType("o", "o"));
     Abstraction abs = new Abstraction(x, new VarTerm(z, x));
-    Variable y = new Var("y", arrowType("o", "o"));
+    Variable y = new Var("y", new ArrowType(arrowType("o", "o"), baseType("o")));
     Term yabs = new VarTerm(y, abs);
-    assertTrue(yabs.isPattern());
+    // yabs = y(λx.z(x)) -- in HRSs this would be considered a pattern because it is eta-equal to
+    // y(z) with z a binder variable; in our formalism it is not
+    assertFalse(yabs.isPattern());
   }
-  */
 
   @Test
   public void testNonPatternAppliedToFreeVar() {
