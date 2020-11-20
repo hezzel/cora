@@ -140,6 +140,18 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
     return _args.get(i-1);
   }
 
+  /**
+   * Returns whether this term is an applicative term.  This is the case exactly if the head is not
+   * a binder variable, and the arguments are all applicative terms.
+   */
+  public boolean isApplicative() {
+    if (!_head.isApplicative()) return false;
+    for (int i = 0; i < _args.size(); i++) {
+      if (!_args.get(i).isApplicative()) return false;
+    }
+    return true;
+  }
+
   /** Returns the positions in all subterms, from left to right, followed by the empty position. */
   public List<Position> queryAllPositions() {
     List<Position> ret = new ArrayList<Position>();

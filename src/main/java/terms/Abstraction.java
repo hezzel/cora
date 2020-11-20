@@ -118,6 +118,11 @@ public class Abstraction extends TermInherit implements Term {
     return false;
   }
 
+  /** @return false, since an abstraction is not an applicative term. */
+  public boolean isApplicative() {
+    return false;
+  }
+
   /** @return whether the immediate argument is a pattern. */
   public boolean isPattern() {
     return _subterm.isPattern();

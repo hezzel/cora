@@ -50,6 +50,11 @@ public class BinderVariable extends VariableInherit implements Variable {
     return false;
   }
 
+  /** @return false, since binder variables may not be used in applicative terms */
+  public boolean isApplicative() {
+    return false;
+  }
+
   /** 
    * For matching, we say that a binder variable ONLY matches another binder variable.  That is, the
    * match function returns the substitution that maps free variables to arbitrary terms and binder

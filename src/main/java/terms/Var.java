@@ -46,6 +46,11 @@ public class Var extends VariableInherit implements Variable {
     return false;
   }
 
+  /** @return true, since a stand-alone free variable is an applicative term */
+  public boolean isApplicative() {
+    return true;
+  }
+
   /** 
    * This method updates gamma by adding the extension from x to the given other term, if x is not
    * yet mapped to anything.

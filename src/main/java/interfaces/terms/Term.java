@@ -89,11 +89,8 @@ public interface Term {
    */
   boolean isFirstOrder();
 
-  /**
-   * Returns true if this term is applicative (that is: built without any binder variables).
-   * TODO
-   */
- // boolean isApplicative();
+  /** Returns true if this term is applicative (that is: built without any binder variables). */
+  boolean isApplicative();
 
   /**
    * Returns true if this term is a pattern (so: variables are not applied at all, or only to
