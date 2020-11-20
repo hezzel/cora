@@ -30,6 +30,7 @@
 \newcommand{\FOTerms}{\mathcal{T}_{\mathcal{FO}}}
 \newcommand{\Rules}{\mathcal{R}}
 \newcommand{\FV}{\mathit{FV}}
+\newcommand{\BV}{\mathit{BV}}
 \newcommand{\Positions}{\mathit{Positions}}
 \newcommand{\Pairs}{\mathit{Pairs}}
 
@@ -260,7 +261,7 @@ The set of first-order terms is denoted $\FOTerms(\F,\V)$.  Note that every firs
 also an applicative term (indeed -- every first-order term is an applicative \emph{pattern}),
 so $\FOTerms(\F,\V) \subseteq \ATerms(\F,\V) \subsetneq \Terms(\F,\V)$.
 
-\subsection{Free variables}
+\subsection{Term variables}
 The set of \emph{free variables} of a term is inductively defined as follows:
 \begin{itemize}
 \item $\FV(\afun(s_1,\dots,s_n)) = \FV(s_1) \cup \dots \cup \FV(s_n)$;
@@ -270,6 +271,15 @@ The set of \emph{free variables} of a term is inductively defined as follows:
 That is, $\FV(s)$ contains all variables in $s$ except for those bound by a $\lambda$.
 For applicative and first-order terms $s$, this is the set of \emph{all} variables occurring in
 $s$.
+
+The set of \emph{bound variables} of a term is inductively defined as follows:
+\begin{itemize}
+\item $\BV(\afun(s_1,\dots,s_n)) = \BV(s_1) \cup \dots \cup \BV(s_n)$;
+\item $\BV(\avar(s_1,\dots,s_n)) = \BV(s_1) \cup \dots \cup \BV(s_n)$;
+\item $\BV(\abs{\avar}{s}) = \BV(s) \cup \{ \avar \}$.
+\end{itemize}
+That is, $\BV(s)$ contains all variables that are bound by a $\lambda$ in $s$.  Note that all
+elements in $\BV(s)$ are in $\Vbound$.
 
 \subsection{Subterms and positions}
 
