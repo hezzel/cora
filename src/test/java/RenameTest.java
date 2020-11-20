@@ -133,51 +133,5 @@ public class RenameTest {
     VariableNamer namer = createNamer();
     assertTrue(full.toString(namer).equals("f(g(x(aa, bb), y), z(y))"));
   }
-
-  @Test
-  public void testDifferentVariablesIrrelevant() {
-    Type o = new Sort("o");
-    Variable x = new BinderVariable("x", o);
-    Variable y = new BinderVariable("x", o);
-    Abstraction abs1 = new Abstraction(x, x);
-    Abstraction abs2 = new Abstraction(y, y);
-    Alphabet alf = new UserDefinedAlphabet(new ArrayList<FunctionSymbol>());
-    assertTrue(abs1.toPrettyString(alf).equals(abs2.toPrettyString(alf)));
-  }
-
-  @Test
-  public void testPrintDuplicateAbstractions() {
-    Type o = new Sort("o");
-    Type oo = new ArrowType(o, o);
-    Type ooooo = new ArrowType(oo, new ArrowType(oo, o));
-    Variable x = new BinderVariable("x", o);
-    FunctionSymbol f = new Constant("f", ooooo);
-    Abstraction abs = new Abstraction(x, x);
-    Term combi = new FunctionalTerm(f, abs, abs);
-    Alphabet alf = new UserDefinedAlphabet(new ArrayList<FunctionSymbol>());
-    assertTrue(combi.toPrettyString(alf).equals("f(λx.x, λx.x)"));
-  }
-
-  @Test
-  public void testRenamingWithBoundVariables() {
-    Type o = new Sort("o");
-    Type oo = new ArrowType(o, o);
-    Type ooo = new ArrowType(o, oo);
-    Variable x = new BinderVariable("x", o);
-    Variable y = new BinderVariable("x", o);
-    FunctionSymbol f = new Constant("f", ooo);
-    Term combi = new FunctionalTerm(f, y, x);
-    Term abs1 = new Abstraction(x, combi);
-    Term abs2 = new Abstraction(y, abs1);
-    Alphabet alf = new UserDefinedAlphabet(new ArrayList<FunctionSymbol>());
-    assertFalse(combi.toPrettyString(alf).equals("f(x, x)"));
-    assertFalse(abs1.toPrettyString(alf).equals("λx.f(x, x)"));
-    assertFalse(abs2.toPrettyString(alf).equals("λx.λx.f(x, x)"));
-    // this might need changing if the clever variable namer changes, but it indicates that at
-    // least the distinct variable occurrences should be pretty-printed differently
-    assertTrue(combi.toPrettyString(alf).equals("f(x', x)"));
-    assertTrue(abs1.toPrettyString(alf).equals("λx'.f(x, x')"));
-    assertTrue(abs2.toPrettyString(alf).equals("λx.λx'.f(x, x')"));
-  }
 }
 
