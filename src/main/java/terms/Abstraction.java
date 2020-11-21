@@ -82,23 +82,23 @@ public class Abstraction extends TermInherit implements Term {
     return true;
   }
 
-  /** @return 0 */
+  /** @return 1 */
   public int numberImmediateSubterms() {
-    return 0;
+    return 1;
   }
 
-  /** @return the immediate subterm if i = 0; otherwise throws an IndexingError. */
+  /** @return the immediate subterm if i = 1; otherwise throws an IndexingError. */
   public Term queryImmediateSubterm(int i) {
-    if (i != 0) {
-      throw new IndexingError("Abstraction", "queryImmediateSubterm", i, 0, 0);
+    if (i != 1) {
+      throw new IndexingError("Abstraction", "queryImmediateSubterm", i, 1, 1);
     }
     return _subterm;
   }
 
-  /** @return the current term if i = 0; otherwise throws an IndexingError. */
+  /** @return the current term if i = 1; otherwise throws an IndexingError. */
   public Term queryImmediateHeadSubterm(int i) {
-    if (i != 0) {
-      throw new IndexingError("Abstraction", "queryImmediateHeadSubterm", i, 0, 0);
+    if (i != 1) {
+      throw new IndexingError("Abstraction", "queryImmediateHeadSubterm", i, 1, 1);
     }
     return this;
   }
@@ -184,7 +184,7 @@ public class Abstraction extends TermInherit implements Term {
     for (; i < extra.size() && s.isAbstraction(); i++) {
       Variable x = s.queryVariable();
       gamma.replace(x, extra.get(i));
-      s = s.queryImmediateSubterm(0);
+      s = s.queryImmediateSubterm(1);
     }
 
     Term t = s.substitute(gamma);
@@ -237,7 +237,7 @@ public class Abstraction extends TermInherit implements Term {
     }
     mu.put(x, k);
     xi.put(y, k);
-    boolean retval = _subterm.alphaEquals(term.queryImmediateSubterm(0), mu, xi, k + 1);
+    boolean retval = _subterm.alphaEquals(term.queryImmediateSubterm(1), mu, xi, k + 1);
     mu.remove(x);
     xi.remove(y);
     return retval;

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2019, 2020 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -110,7 +110,7 @@ public class AbstractionTest {
   @Test(expected = IndexingError.class)
   public void testImmediateSubtermTooLarge() {
     Abstraction abs = exampleAbstraction(createBinder("x", "Int"));
-    abs.queryImmediateSubterm(1);
+    abs.queryImmediateSubterm(0);
   }
 
   @Test(expected = IndexingError.class)
@@ -122,7 +122,7 @@ public class AbstractionTest {
   @Test(expected = IndexingError.class)
   public void testQueryForHeadSubterm() {
     Abstraction abs = exampleAbstraction(createBinder("x", "Int"));
-    abs.queryImmediateHeadSubterm(1);
+    abs.queryImmediateHeadSubterm(0);
   }
 
   @Test(expected = InappropriatePatternDataError.class)
@@ -146,9 +146,9 @@ public class AbstractionTest {
     assertFalse(abs.isFirstOrder());
 
     assertTrue(abs.queryType().equals(arrowType("Int", "A")));
-    assertEquals(0, abs.numberImmediateSubterms());
-    assertTrue(abs.queryImmediateSubterm(0).toString().equals("f(x, g(c))"));
-    assertTrue(abs.queryImmediateHeadSubterm(0).equals(abs));
+    assertEquals(1, abs.numberImmediateSubterms());
+    assertTrue(abs.queryImmediateSubterm(1).toString().equals("f(x, g(c))"));
+    assertTrue(abs.queryImmediateHeadSubterm(1).equals(abs));
     assertTrue(abs.queryVariable().equals(x));
     assertTrue(abs.toString().equals("λx.f(x, g(c))"));
   }
@@ -162,9 +162,9 @@ public class AbstractionTest {
 
     assertTrue(abs.isAbstraction());
     assertTrue(abs.queryType().equals(new ArrowType(baseType("Bool"), arrowType("Int", "A"))));
-    assertEquals(0, abs.numberImmediateSubterms());
-    assertTrue(abs.queryImmediateSubterm(0).equals(exampleAbstraction(y)));
-    assertTrue(abs.queryImmediateHeadSubterm(0).equals(abs));
+    assertEquals(1, abs.numberImmediateSubterms());
+    assertTrue(abs.queryImmediateSubterm(1).equals(exampleAbstraction(y)));
+    assertTrue(abs.queryImmediateHeadSubterm(1).equals(abs));
     assertTrue(abs.queryVariable().equals(x));
   }
 
@@ -175,9 +175,9 @@ public class AbstractionTest {
     Abstraction abs = exampleAbstraction(x);
     List<Position> posses = abs.queryAllPositions();
     assertTrue(posses.size() == 5); 
-    assertTrue(posses.get(0).toString().equals("0.1.ε"));
-    assertTrue(posses.get(1).toString().equals("0.2.1.ε"));
-    assertTrue(posses.get(2).toString().equals("0.2.ε"));
+    assertTrue(posses.get(0).toString().equals("1.1.ε"));
+    assertTrue(posses.get(1).toString().equals("1.2.1.ε"));
+    assertTrue(posses.get(2).toString().equals("1.2.ε"));
     assertTrue(posses.get(3).equals(new AbstractionPosition(new EmptyPosition())));
     assertTrue(posses.get(4).equals(new EmptyPosition()));
   }

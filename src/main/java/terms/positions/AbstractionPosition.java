@@ -19,7 +19,7 @@ import cora.interfaces.terms.Position;
 import cora.exceptions.NullInitialisationError;
 
 /**
- * An AbstractionPosition is a position of the form 0.pos, and is meant to correspond only to
+ * An AbstractionPosition is a position of the form 1.pos, and is meant to correspond only to
  * position pos in the subterm s of λx.s.
  */
 public class AbstractionPosition implements Position {
@@ -35,7 +35,7 @@ public class AbstractionPosition implements Position {
   }
 
   public int queryArgumentPosition() {
-    return 0;
+    return 1;
   }
 
   public Position queryTail() {
@@ -43,12 +43,11 @@ public class AbstractionPosition implements Position {
   }
 
   public boolean equals(Position other) {
-    return other.queryArgumentPosition() == 0 &&  // this checks for abstraction positions
-           _tail.equals(other.queryTail());
+    return other.queryArgumentPosition() == 1 && _tail.equals(other.queryTail());
   }
 
   public String toString() {
-    return "0." + _tail.toString();
+    return "1." + _tail.toString();
   }
 }
 

@@ -50,7 +50,7 @@ public interface Term {
 
   /**
    * Returns the number of immediate subterms (that is, n for a term f(s1,...,sn) or x(s1,...,sn)
-   * and 0 for an abstraction).
+   * and 1 for an abstraction).
    */
   int numberImmediateSubterms();
   
@@ -64,7 +64,7 @@ public interface Term {
    * For an applicative term a(s1,...,sn) (where a itself is not an application), the immediate
    * subterms are s1,...,sn.  There are also n+1 head subterms: a, a(s1), a(s1,s2), ...,
    * a(s1,...,sn).  Here, queryImmediateHeadSubterm(i) returns a(s1,...,si).
-   * An abstraction has no head subterm other than queryImmediateHeadSubterm(0), which is the term
+   * An abstraction has no head subterm other than queryImmediateHeadSubterm(1), which is the term
    * itself.
    * (Note that this should not be used in analysis of first-order term rewriting, since all
    * non-trivial head subterms have a higher type).
@@ -85,7 +85,7 @@ public interface Term {
 
   /**
    * Returns true if this term is first-order (so: the subterms at all positions have base type,
-   * and no abstractions or variable applications are used), and false otherwise.
+   * no abstractions or variable applications and no binder variables are used), and false otherwise.
    */
   boolean isFirstOrder();
 

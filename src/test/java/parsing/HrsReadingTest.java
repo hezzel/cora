@@ -162,7 +162,7 @@ public class HrsReadingTest {
     assertTrue(t.isAbstraction());
     Variable y = t.queryVariable();
     assertTrue(y.isBinderVariable());
-    Term sub = t.queryImmediateSubterm(0);
+    Term sub = t.queryImmediateSubterm(1);
     assertTrue(sub.queryRoot().equals(data.lookupFunctionSymbol("suc")));
     assertTrue(sub.queryImmediateSubterm(1).equals(y));
   }
@@ -174,10 +174,10 @@ public class HrsReadingTest {
     assertTrue(t.isAbstraction());
     Variable x = t.queryVariable();
     assertTrue(x.isBinderVariable());
-    Term s = t.queryImmediateSubterm(0);
+    Term s = t.queryImmediateSubterm(1);
     assertTrue(s.isAbstraction());
     Variable y = s.queryVariable();
-    Term sub = s.queryImmediateSubterm(0);
+    Term sub = s.queryImmediateSubterm(1);
     assertTrue(sub.equals(new FunctionalTerm(data.lookupFunctionSymbol("cons"), x, y)));
   }
 
