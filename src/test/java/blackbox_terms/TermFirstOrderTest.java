@@ -52,7 +52,7 @@ public class TermFirstOrderTest extends TermTestInherit {
   @Test
   public void testFirstOrderBinder() {
     Term arg1 = constantTerm("c", baseType("a"));
-    Term arg2 = unaryTerm("g", baseType("b"), binderVariable("d", baseType("b")));
+    Term arg2 = unaryTerm("g", baseType("b"), binderVariable("x", baseType("b")));
     Term fcgb = binaryTerm("f", baseType("a"), arg1, arg2);
     assertFalse(fcgb.isFirstOrder());
   }
