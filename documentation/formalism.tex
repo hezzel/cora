@@ -290,7 +290,7 @@ The \emph{positions} of a given term are the paths to specific subterms, defined
   \leq n \wedge p \in \mathit{Positions}(s_i) \}$;
 \item $\Positions(\avar(s_1,\dots,s_n)) = \{ \epsilon \} \cup \{ i \cdot p \mid 1 \leq i
   \leq n \wedge p \in \Positions(s_i) \}$;
-\item $\Positions(\abs{\avar}{s}) = \{ 0 \cdot p \mid p \in \Positions(s) \}$.
+\item $\Positions(\abs{\avar}{s}) = \{ 1 \cdot p \mid p \in \Positions(s) \}$.
 \end{itemize}
 Note that positions are associated to a term; thus, not every sequence of natural numbers is a
 position.
@@ -301,7 +301,7 @@ denoted $s|_p$, is defined as follows:
 \item $s|_\epsilon = s$;
 \item $\afun(s_1,\dots,s_n)|_{i \cdot p} = s_i|_p$;
 \item $\avar(s_1,\dots,s_n)|_{i \cdot p} = s_i|_p$;
-\item $(\abs{\avar}{s})|_{0 \cdot p} = s|_p$.
+\item $(\abs{\avar}{s})|_{1 \cdot p} = s|_p$.
 \end{itemize}
 
 If $s|_p$ has the same type as some term $t$, then $s[t]_p$ denotes $s$ with the subterm at position
