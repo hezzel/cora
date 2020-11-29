@@ -244,14 +244,14 @@ public class VariableTest {
   @Test
   public void testSubtermGood() {
     Term s = new BinderVariable("x", baseType("o"));
-    Position p = new EmptyPosition();
+    Position p = new RootPosition();
     assertTrue(s.querySubterm(p).equals(s));
   }
 
   @Test(expected = IndexingError.class)
   public void testSubtermBad() {
     Term s = new Var("x", baseType("o"));
-    Position p = new ArgumentPosition(1, new EmptyPosition());
+    Position p = SubPosition.makeVartermPos(1, new RootPosition());
     Term t = s.querySubterm(p);
   }
 
@@ -259,7 +259,7 @@ public class VariableTest {
   public void testSubtermReplacementGood() {
     Term s = new Var("x", baseType("a"));
     Term t = twoArgTerm();
-    Position p = new EmptyPosition();
+    Position p = new RootPosition();
     assertTrue(s.replaceSubterm(p, t).equals(t));
     assertTrue(s.toString().equals("x"));
   }
@@ -267,21 +267,21 @@ public class VariableTest {
   @Test(expected = IndexingError.class)
   public void testVarSubtermReplacementBad() {
     Term s = new Var("x", baseType("o"));
-    Position p = new ArgumentPosition(1, new EmptyPosition());
+    Position p = SubPosition.makeVartermPos(1, new RootPosition());
     Term t = s.replaceSubterm(p, twoArgTerm());
   }
 
   @Test(expected = IndexingError.class)
   public void testBinderVariableSubtermReplacementBad() {
     Term s = new BinderVariable("x", baseType("o"));
-    Position p = new ArgumentPosition(1, new EmptyPosition());
+    Position p = SubPosition.makeVartermPos(1, new RootPosition());
     Term t = s.replaceSubterm(p, twoArgTerm());
   }
 
   @Test(expected = IndexingError.class)
   public void testUnitVariableSubtermReplacementBad() {
     Term s = new UnitVariable();
-    Position p = new ArgumentPosition(1, new EmptyPosition());
+    Position p = SubPosition.makeVartermPos(1, new RootPosition());
     Term t = s.replaceSubterm(p, twoArgTerm());
   }
 

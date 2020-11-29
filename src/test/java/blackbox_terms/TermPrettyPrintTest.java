@@ -36,9 +36,7 @@ public class TermPrettyPrintTest extends TermTestInherit {
   private TreeMap<String,String> match(String original, String pattern) {
     TreeMap<String,String> ret = new TreeMap<String,String>();
     int i = 0, j = 0;
-    System.out.println("Matching " + original + " against " + pattern);
     while (i < pattern.length()) {
-      System.out.println("i = " + i + "; j = " + j);
       if (j >= original.length()) return null;
       if (pattern.charAt(i) == '%') {
         // read the full code

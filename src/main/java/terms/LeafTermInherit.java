@@ -26,7 +26,6 @@ import cora.exceptions.IndexingError;
 import cora.exceptions.NullCallError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
-import cora.terms.positions.EmptyPosition;
 
 /**
  * A "leaf term" is any term that does not have strict subterms, such as variables or constants.
@@ -77,19 +76,6 @@ abstract class LeafTermInherit extends TermInherit implements Term {
   public Term queryImmediateHeadSubterm(int i) {
     if (i == 0) return this;
     throw new IndexingError(queryMyClassName(), "queryImmediateHeadSubterm", i);
-  }
-
-  /** @return a list containing only the empty Position. */
-  public ArrayList<Position> queryAllPositions() {
-    ArrayList<Position> ret = new ArrayList<Position>();
-    ret.add(new EmptyPosition());
-    return ret;
-  }
-
-  /** @return this if the position is empty; otherwise throws an IndexingError */
-  public Term querySubterm(Position pos) {
-    if (pos.isEmpty()) return this;
-    throw new IndexingError(queryMyClassName(), "querySubterm", toString(), pos.toString());
   }
 
   /** @return the replacement if pos is the empty position; otherwise throws an IndexingError */

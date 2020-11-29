@@ -24,8 +24,6 @@ import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.*;
-import cora.terms.positions.EmptyPosition;
-import cora.terms.positions.ArgumentPosition;
 
 /**
  * An ApplicativeTermInherit provides the shared functionality for terms of the form
@@ -152,19 +150,6 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
     return true;
   }
 
-  /** Returns the positions in all subterms, from left to right, followed by the empty position. */
-  public List<Position> queryAllPositions() {
-    List<Position> ret = new ArrayList<Position>();
-    for (int i = 0; i < _args.size(); i++) {
-      List<Position> subposses = _args.get(i).queryAllPositions();
-      for (int j = 0; j < subposses.size(); j++) {
-        ret.add(new ArgumentPosition(i+1, subposses.get(j)));
-      }
-    }
-    ret.add(new EmptyPosition());
-    return ret;
-  }
-
   /** Helper function for allVars; essentially returns other.allVars(). */
   private EnvironmentPair getAllVars(Term other) {
     if (other instanceof TermInherit) return ((TermInherit)other).allVars();
@@ -179,16 +164,6 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
     }
     lst.add(getAllVars(_head));
     return EnvironmentPair.mergeAll(lst);
-  }
-
-  /** @return the subterm at the given position */
-  public Term querySubterm(Position pos) {
-    if (pos.isEmpty()) return this;
-    int index = pos.queryArgumentPosition();
-    if (index < 1 || index > _args.size()) {
-      throw new IndexingError(queryMyClassName(), "querySubterm", toString(), pos.toString());
-    }
-    return _args.get(index-1).querySubterm(pos.queryTail());
   }
 
   /**

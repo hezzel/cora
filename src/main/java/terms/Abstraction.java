@@ -26,8 +26,6 @@ import cora.exceptions.TypingError;
 import cora.interfaces.types.Type;
 import cora.interfaces.terms.*;
 import cora.types.ArrowType;
-import cora.terms.positions.AbstractionPosition;
-import cora.terms.positions.EmptyPosition;
 
 /** Abstractions are terms of the form λx.s where x is a variable and s a term. */
 public class Abstraction extends TermInherit implements Term {
@@ -126,22 +124,6 @@ public class Abstraction extends TermInherit implements Term {
   /** @return whether the immediate argument is a pattern. */
   public boolean isPattern() {
     return _subterm.isPattern();
-  }
-
-  /** @return the set of all positions = {ε} ∪ { 0 p | p ∈ Positions(subterm) } */
-  public List<Position> queryAllPositions() {
-    List<Position> ret = _subterm.queryAllPositions();
-    for (int i = 0; i < ret.size(); i++) {
-      ret.set(i, new AbstractionPosition(ret.get(i)));
-    }
-    ret.add(new EmptyPosition());
-    return ret;
-  }
-
-  /** @return the subterm at the given position */
-  public Term querySubterm(Position pos) {
-    if (pos.isEmpty()) return this;
-    return _subterm.querySubterm(pos.queryTail());
   }
 
   /**

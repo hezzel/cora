@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2019, 2020 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -17,26 +17,15 @@ package cora.terms.positions;
 
 import cora.interfaces.terms.Position;
 
-/** The empty position is used to indicate the current location in a term. */
-public class EmptyPosition implements Position {
-  public boolean isEmpty() {
-    return true;
-  }
-
-  public int queryArgumentPosition() {
-    return -1;
-  }
-
-  public Position queryTail() {
-    return null;
-  }
-
-  public boolean equals(Position other) {
-    return other.isEmpty();
-  }
-
-  public String toString() {
-    return "ε";
-  }
+/** The root position is used to indicate the current location in a term. */
+public class RootPosition implements Position {
+  public boolean isEmpty() { return true; }
+  public boolean isAbstractionPosition() { return false; }
+  public boolean isFunctionalPosition() { return false; }
+  public boolean isVartermPosition() { return false; }
+  public int queryArgumentPosition() { return -1; }
+  public Position queryTail() { return null; }
+  public boolean equals(Position other) { return other.isEmpty(); }
+  public String toString() { return "ε"; }
 }
 

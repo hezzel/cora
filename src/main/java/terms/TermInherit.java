@@ -19,27 +19,25 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
+import cora.exceptions.IndexingError;
 import cora.interfaces.terms.Term;
 import cora.interfaces.terms.Variable;
+import cora.interfaces.terms.Position;
 import cora.interfaces.terms.Environment;
 import cora.interfaces.terms.Alphabet;
 import cora.interfaces.terms.Substitution;
 import cora.interfaces.terms.VariableNamer;
+import cora.terms.positions.*;
 
 /**
  * A TermInherit supplies default functionality for all instances of Term.
  * This is the functionality that calls other functions in Term to for instance build up a
  * substitution or environment.
  */
-abstract class TermInherit {
+abstract class TermInherit implements Term {
   private EnvironmentPair _varsCache = null;
 
   abstract EnvironmentPair allVars();
-  abstract String match(Term other, Substitution gamma);
-  abstract boolean alphaEquals(Term other, Map<Variable,Integer> mu, Map<Variable,Integer> xi,
-                               int k);
-  abstract Term apply(List<Term> args);
-  abstract String toString(VariableNamer namer);
 
   /**
    * Should be called at the end of each constructor, to set up the cache of the free and bound
@@ -59,6 +57,37 @@ abstract class TermInherit {
   /** Returns the set of all variables occurring bound in the current term. */
   public Environment boundVars() {
     return _varsCache.boundVars();
+  }
+
+  /** Returns all the positions in the present term. */
+  public List<Position> queryAllPositions() {
+    List<Position> ret = new ArrayList<Position>();
+    for (int i = 1; i <= numberImmediateSubterms(); i++) {
+      List<Position> subposses = queryImmediateSubterm(i).queryAllPositions();
+      for (int j = 0; j < subposses.size(); j++) {
+        ret.add(new SubPosition(i, subposses.get(j), this));
+      }   
+    }
+    ret.add(new RootPosition());
+    return ret;
+  }
+
+  /** Returns the given subterm in the term. */
+  public Term querySubterm(Position pos) {
+    if (pos.isEmpty()) return this;
+
+    int i = pos.queryArgumentPosition();
+    if (i <= 0 || i > numberImmediateSubterms()) {
+      throw new IndexingError(this.getClass().getSimpleName(), "querySubterm", toString(),
+                              pos.toString());
+    }
+    if ((pos.isFunctionalPosition() && !isFunctionalTerm()) ||
+        (pos.isVartermPosition() && !isVarTerm()) ||
+        (pos.isAbstractionPosition() && !isAbstraction())) {
+      throw new IndexingError(this.getClass().getSimpleName(), "querySubterm", toString(),
+                              pos.toString() + "[position kind mismatch]");
+    }
+    return queryImmediateSubterm(i).querySubterm(pos.queryTail());
   }
 
   /** Applies the current term (with functional type) to other. */

@@ -237,25 +237,25 @@ public class FunctionalTermTest {
   public void testSubtermGood() {
     Position p;
     Term s = twoArgTerm();
-    p = new EmptyPosition();
+    p = new RootPosition();
     assertTrue(s.querySubterm(p).equals(s));
-    p = new ArgumentPosition(1, new EmptyPosition());
+    p = SubPosition.makeFunctionalPos(1, new RootPosition());
     assertTrue(s.querySubterm(p).equals(constantTerm("c", baseType("a"))));
-    p = new ArgumentPosition(2, new ArgumentPosition(1, new EmptyPosition()));
+    p = SubPosition.makeFunctionalPos(2, SubPosition.makeFunctionalPos(1, new RootPosition()));
     assertTrue(s.querySubterm(p).equals(constantTerm("d", baseType("b"))));
   }
 
   @Test(expected = IndexingError.class)
   public void testSubtermBad() {
     Term s = twoArgTerm();
-    Position pos = new ArgumentPosition(1, new ArgumentPosition(2, new EmptyPosition()));
+    Position pos = SubPosition.makeFunctionalPos(1, SubPosition.makeFunctionalPos(2, new RootPosition()));
     Term t = s.querySubterm(pos);
   }
 
   @Test
   public void testSubtermReplacementGood() {
     Term s = unaryTerm("f", baseType("Int"), constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new ArgumentPosition(1, new EmptyPosition()), s);
+    Term t = s.replaceSubterm(SubPosition.makeFunctionalPos(1, new RootPosition()), s);
     assertTrue(s.toString().equals("f(37)"));
     assertTrue(t.queryImmediateSubterm(1).equals(s));
     assertTrue(t.toString().equals("f(f(37))"));
@@ -264,7 +264,7 @@ public class FunctionalTermTest {
   @Test(expected = IndexingError.class)
   public void testSubtermReplacementBad() {
     Term s = unaryTerm("f", baseType("o"), constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new ArgumentPosition(2, new EmptyPosition()), s);
+    Term t = s.replaceSubterm(SubPosition.makeFunctionalPos(2, new RootPosition()), s);
   }
 
   @Test(expected = ArityError.class)

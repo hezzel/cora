@@ -178,8 +178,8 @@ public class AbstractionTest {
     assertTrue(posses.get(0).toString().equals("1.1.ε"));
     assertTrue(posses.get(1).toString().equals("1.2.1.ε"));
     assertTrue(posses.get(2).toString().equals("1.2.ε"));
-    assertTrue(posses.get(3).equals(new AbstractionPosition(new EmptyPosition())));
-    assertTrue(posses.get(4).equals(new EmptyPosition()));
+    assertTrue(posses.get(3).equals(SubPosition.makeAbstractionPos(new RootPosition())));
+    assertTrue(posses.get(4).equals(new RootPosition()));
   }
 
   @Test
@@ -188,11 +188,11 @@ public class AbstractionTest {
     Variable x = createBinder("x", "Int");
     Abstraction abs = exampleAbstraction(x);
 
-    Position pos = new EmptyPosition();   // ε
+    Position pos = new RootPosition();   // ε
     assertTrue(abs.querySubterm(pos).equals(abs));
-    pos = new AbstractionPosition(new EmptyPosition());   // 0.ε 
+    pos = SubPosition.makeAbstractionPos(new RootPosition());   // 1.ε 
     assertTrue(abs.querySubterm(pos).toString().equals("f(x, g(c))"));
-    pos = new AbstractionPosition(new ArgumentPosition(1, new EmptyPosition()));
+    pos = SubPosition.makeAbstractionPos(SubPosition.makeFunctionalPos(1, new RootPosition()));
     assertTrue(abs.querySubterm(pos).equals(x));
   }
 
@@ -218,17 +218,17 @@ public class AbstractionTest {
     // build: λx:Int.f(f(x, g(c)), g(x))
     Term abs3 = new Abstraction(x, new FunctionalTerm(f, fxgc, gc));
 
-    Position pos = new AbstractionPosition(new ArgumentPosition(2, new EmptyPosition()));
+    Position pos = SubPosition.makeAbstractionPos(SubPosition.makeFunctionalPos(2, new RootPosition()));
     assertTrue(abs1.replaceSubterm(pos, x).equals(abs2));
 
-    pos = new AbstractionPosition(new ArgumentPosition(1, new EmptyPosition()));
+    pos = SubPosition.makeAbstractionPos(SubPosition.makeFunctionalPos(1, new RootPosition()));
     Term tmp = abs1.replaceSubterm(pos, fxgc);
-    pos = new AbstractionPosition(new ArgumentPosition(1, new ArgumentPosition(1,
-            new EmptyPosition())));
+    pos = SubPosition.makeAbstractionPos(SubPosition.makeFunctionalPos(1,
+             SubPosition.makeFunctionalPos(1, new RootPosition())));
     assertTrue(tmp.replaceSubterm(pos, x).equals(abs3));
 
     Term aterm = constantTerm("a", arrowType("Int", "Int"));
-    assertTrue(abs1.replaceSubterm(new EmptyPosition(), aterm).equals(aterm));
+    assertTrue(abs1.replaceSubterm(new RootPosition(), aterm).equals(aterm));
   }
 
   @Test(expected = TypingError.class)
@@ -236,7 +236,7 @@ public class AbstractionTest {
     Variable x = createBinder("x", "Int");
     Abstraction abs = exampleAbstraction(x);
     Term aterm = constantTerm("a", arrowType("Int", "Int"));
-    abs.replaceSubterm(new EmptyPosition(), aterm);
+    abs.replaceSubterm(new RootPosition(), aterm);
   }
 
   @Test(expected = TypingError.class)
@@ -244,7 +244,7 @@ public class AbstractionTest {
     Variable x = createBinder("x", "Int");
     Abstraction abs = exampleAbstraction(x);
     Term aterm = constantTerm("a", baseType("Int"));
-    abs.replaceSubterm(new AbstractionPosition(new EmptyPosition()), aterm);
+    abs.replaceSubterm(SubPosition.makeAbstractionPos(new RootPosition()), aterm);
   }
 
   @Test

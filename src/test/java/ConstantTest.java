@@ -26,8 +26,7 @@ import cora.interfaces.types.Type;
 import cora.interfaces.terms.FunctionSymbol;
 import cora.interfaces.terms.Term;
 import cora.types.*;
-import cora.terms.positions.EmptyPosition;
-import cora.terms.positions.ArgumentPosition;
+import cora.terms.positions.*;
 import cora.terms.Constant;
 import cora.terms.Var;
 import cora.terms.FunctionalTerm;
@@ -117,7 +116,7 @@ public class ConstantTest {
     Type b = baseType("b");
     Type combi = new ArrowType(a, b);
     Constant f = new Constant("f", combi);
-    Term tmp = f.querySubterm(new ArgumentPosition(1, new EmptyPosition()));
+    Term tmp = f.querySubterm(SubPosition.makeFunctionalPos(1, new RootPosition()));
   }
 
   @Test(expected = IndexingError.class)
@@ -126,7 +125,7 @@ public class ConstantTest {
     Type b = baseType("b");
     Type combi = new ArrowType(a, b);
     Constant f = new Constant("f", combi);
-    Term tmp = f.replaceSubterm(new ArgumentPosition(1, new EmptyPosition()),
+    Term tmp = f.replaceSubterm(SubPosition.makeFunctionalPos(1, new RootPosition()),
                                 new Constant("a", a));
   }
 
@@ -149,8 +148,8 @@ public class ConstantTest {
     assertTrue(f.queryRoot().equals(f));
     assertTrue(f.queryAllPositions().size() == 1);
     assertTrue(f.queryAllPositions().get(0).isEmpty());
-    assertTrue(f.querySubterm(new EmptyPosition()).equals(f));
-    assertTrue(f.replaceSubterm(new EmptyPosition(), x).equals(x));
+    assertTrue(f.querySubterm(new RootPosition()).equals(f));
+    assertTrue(f.replaceSubterm(new RootPosition(), x).equals(x));
     assertFalse(f.isFirstOrder());
     assertTrue(f.isPattern());
     Subst gamma = new Subst(x, new Constant("gg", combi));

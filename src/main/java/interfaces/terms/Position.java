@@ -26,10 +26,19 @@ public interface Position {
   /** Returns whether or not this is the empty position. */
   public boolean isEmpty();
 
+  /** Returns whether or not this is a position in an abstraction. */
+  public boolean isAbstractionPosition();
+
+  /** Returns whether or not this is a position in a functional term. */
+  public boolean isFunctionalPosition();
+
+  /** Returns whether or not this is a position in a varterm. */
+  public boolean isVartermPosition();
+
   /**
    * If the position is in a subterm of some argument, this function returns the index of the
    * relevant argument (1..number of arguments); if it is in the subterm of an abstraction it
-   * returns 0; otherwise it returns -1.
+   * returns 1; otherwise it returns -1.
    */
   public int queryArgumentPosition();
 

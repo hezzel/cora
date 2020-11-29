@@ -289,18 +289,18 @@ public class VarTermTest {
   public void testSubtermGood() {
     Position p;
     Term s = twoArgTerm();
-    p = new EmptyPosition();
+    p = new RootPosition();
     assertTrue(s.querySubterm(p).equals(s));
-    p = new ArgumentPosition(1, new EmptyPosition());
+    p = SubPosition.makeVartermPos(1, new RootPosition());
     assertTrue(s.querySubterm(p).equals(constantTerm("c", baseType("a"))));
-    p = new ArgumentPosition(2, new ArgumentPosition(1, new EmptyPosition()));
+    p = SubPosition.makeVartermPos(2, SubPosition.makeFunctionalPos(1, new RootPosition()));
     assertTrue(s.querySubterm(p).isVariable());
   }
 
   @Test(expected = IndexingError.class)
   public void testSubtermBad() {
     Term s = twoArgTerm();
-    Position pos = new ArgumentPosition(1, new ArgumentPosition(2, new EmptyPosition()));
+    Position pos = SubPosition.makeVartermPos(1, SubPosition.makeFunctionalPos(2, new RootPosition()));
     Term t = s.querySubterm(pos);
   }
 
@@ -308,7 +308,7 @@ public class VarTermTest {
   public void testSubtermReplacementGood() {
     Variable z = new Var("Z", arrowType("Int", "Int"));
     Term s = new VarTerm(z, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new ArgumentPosition(1, new EmptyPosition()), s);
+    Term t = s.replaceSubterm(SubPosition.makeVartermPos(1, new RootPosition()), s);
     assertTrue(s.toString().equals("Z(37)"));
     assertTrue(t.queryImmediateSubterm(1).equals(s));
     assertTrue(t.toString().equals("Z(Z(37))"));
@@ -318,21 +318,21 @@ public class VarTermTest {
   public void testSubtermReplacementBadPosition() {
     Variable z = new Var("Z", arrowType("Int", "Int"));
     Term s = new VarTerm(z, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new ArgumentPosition(2, new EmptyPosition()), s);
+    Term t = s.replaceSubterm(SubPosition.makeVartermPos(2, new RootPosition()), s);
   }
 
   @Test(expected = TypingError.class)
   public void testSubtermReplacementBadTypeSub() {
     Variable z = new Var("Z", arrowType("Int", "Bool"));
     Term s = new VarTerm(z, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new ArgumentPosition(1, new EmptyPosition()), s);
+    Term t = s.replaceSubterm(SubPosition.makeVartermPos(1, new RootPosition()), s);
   }
 
   @Test(expected = TypingError.class)
   public void testSubtermReplacementBadTypeTop() {
     Variable z = new Var("Z", arrowType("Int", "Bool"));
     Term s = new VarTerm(z, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new EmptyPosition(), constantTerm("42", baseType("Int")));
+    Term t = s.replaceSubterm(new RootPosition(), constantTerm("42", baseType("Int")));
   }
 
   @Test
