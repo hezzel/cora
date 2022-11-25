@@ -181,11 +181,11 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
    * ti instantiates si for k ≤ i ≤ n (with x mapped to f(t1,...,t{k-1}).
    * It does NOT match modulo beta.
    */
-  public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullCallError("VarTerm", "match", "argument term (other)");
-    if (_args.size() == 0) return _x.match(other, gamma);
+  public String plainMatch(Term other, Substitution gamma) {
+    if (other == null) throw new NullCallError("VarTerm", "plainMatch", "argument term (other)");
+    if (_args.size() == 0) return _x.plainMatch(other, gamma);
     if (!other.isFunctionalTerm() && !other.isVarTerm()) {
-      throw new UnexpectedPatternError("VarTerm", "match", other.toString(),
+      throw new UnexpectedPatternError("VarTerm", "plainMatch", other.toString(),
                                        "a term x(s1,...,sn) or f(s1,...,sn)");
     }
     if (other.numberImmediateSubterms() < _args.size()) {
@@ -196,10 +196,10 @@ public class VarTerm extends ApplicativeTermInherit implements Term {
     for (; j > 0; i--, j--) {
       Term mysub = queryImmediateSubterm(j);
       Term hissub = other.queryImmediateSubterm(i);
-      String warning = mysub.match(hissub, gamma);
+      String warning = mysub.plainMatch(hissub, gamma);
       if (warning != null) return warning;
     }
-    return _x.match(other.queryImmediateHeadSubterm(i), gamma);
+    return _x.plainMatch(other.queryImmediateHeadSubterm(i), gamma);
   }
 
   /** This method gives a string representation of the term. */

@@ -191,11 +191,11 @@ public class Abstraction extends TermInherit implements Term {
   }
 
   /**
-   * This function implements PLAIN matching: gamma is updated so that <this> gamma = other, where
+   * This function implements plain matching: gamma is updated so that <this> gamma = other, where
    * variables at the head of a non-trivial var term may not be instantiated by abstractions.
    * If there is no suitable update for gamma, a string is returned explaining why not.
    */
-  public String match(Term other, Substitution gamma) {
+  public String plainMatch(Term other, Substitution gamma) {
     return null; /* TODO */
   }
 

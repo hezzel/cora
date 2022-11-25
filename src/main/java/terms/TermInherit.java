@@ -97,10 +97,12 @@ abstract class TermInherit implements Term {
     return apply(args);
   }
 
-  /** Same as match(other, subst), but it creates a fresh substitution and returns the result. */
-  public Substitution match(Term other) {
+  /**
+   * Same as plainMatch(other, subst), but it creates a fresh substitution and returns the result.
+   */
+  public Substitution plainMatch(Term other) {
     Substitution gamma = new Subst();
-    if (match(other, gamma) == null) return gamma;
+    if (plainMatch(other, gamma) == null) return gamma;
     return null;
   }
 

@@ -152,14 +152,14 @@ public interface Term {
    * Whether or not null is returned, gamma is likely to be extended (although without overriding)
    * by this function.
    */
-  public String match(Term other, Substitution gamma);
+  public String plainMatch(Term other, Substitution gamma);
 
   /**
    * This method returns the substitution gamma such that <this term> gamma = other, if such a
    * substitution exists; if it does not, then null is returned instead.  This will only do plain
    * matching: the head variable of a var term will not be instantiated to an abstraction.
    */
-  public Substitution match(Term other);
+  public Substitution plainMatch(Term other);
 
   /** Returns a string representation of the term. */
   String toString();
