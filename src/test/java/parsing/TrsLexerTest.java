@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2019, 2022 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,12 +13,13 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
+package cora.parsers;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Token;
 import java.util.ArrayList;
-import cora.parsers.TrsLexer;
 
 public class TrsLexerTest {
   private TrsLexer createLexer(String str) {
@@ -30,10 +31,9 @@ public class TrsLexerTest {
     ArrayList<Token> ret = new ArrayList<Token>();
     while (true) {
       Token tk = lexer.nextToken();
-      if (tk.getType() == Token.EOF) break;
+      if (tk.getType() == Token.EOF) return ret;
       ret.add(tk);
     }
-    return ret;
   }
 
   private void verifyToken(Token tk, int kind, String text) {

@@ -13,6 +13,8 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
+package cora.parsers;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.antlr.v4.runtime.CharStreams;
@@ -22,8 +24,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.ArrayList;
 import cora.exceptions.ParserException;
 import cora.exceptions.AntlrParserException;
-import cora.parsers.CoraParser;
-import cora.parsers.ErrorCollector;
 
 /** This class tests the antlr code for parsing types. */
 public class CoraProgramParsingTest extends CoraParsingTestInherit {

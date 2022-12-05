@@ -13,12 +13,13 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
+package cora.parsers;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 import cora.exceptions.ParserException;
 import cora.exceptions.AntlrParserException;
-import cora.interfaces.types.Type;
-import cora.parsers.CoraInputReader;
+import cora.types.Type;
 
 public class TypeReadingTest {
   @Test

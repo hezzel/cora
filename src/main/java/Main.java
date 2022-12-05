@@ -18,11 +18,12 @@ package cora;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import cora.exceptions.ParserException;
-import cora.interfaces.terms.Term;
-import cora.interfaces.rewriting.TRS;
+import cora.terms.Term;
+import cora.rewriting.TRS;
 import cora.parsers.CoraInputReader;
 import cora.parsers.TrsInputReader;
 
+/** Basic entry class: this reads a TRS and asks the user for a term, then reduces this term. */
 public class Main {
   private static String getExtension(String filename) {
     int i = filename.lastIndexOf('.');

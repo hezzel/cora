@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2019, 2022 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,6 +13,8 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
+package cora.parsers;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -22,22 +24,11 @@ import java.util.TreeMap;
 import cora.exceptions.ParserException;
 import cora.exceptions.DeclarationException;
 import cora.exceptions.TypingException;
-import cora.interfaces.types.Type;
-import cora.interfaces.terms.Variable;
-import cora.interfaces.terms.FunctionSymbol;
-import cora.interfaces.terms.Term;
-import cora.interfaces.terms.Position;
-import cora.interfaces.rewriting.Rule;
-import cora.interfaces.rewriting.TRS;
-import cora.types.Sort;
-import cora.types.ArrowType;
-import cora.terms.Var;
-import cora.terms.Constant;
-import cora.terms.FunctionalTerm;
-import cora.parsers.ErrorCollector;
-import cora.parsers.ParseData;
-import cora.parsers.TrsParser;
-import cora.parsers.TrsInputReader;
+import cora.types.*;
+import cora.terms.*;
+import cora.rewriting.Alphabet;
+import cora.rewriting.Rule;
+import cora.rewriting.MSTRS;
 
 public class TrsReadingTest {
   @Test
@@ -178,7 +169,7 @@ public class TrsReadingTest {
     FunctionSymbol a = t.queryImmediateSubterm(2).queryRoot();
     Variable x = t.queryImmediateSubterm(1).queryImmediateSubterm(1).queryVariable();
     Variable y = t.queryImmediateSubterm(1).queryImmediateSubterm(2).queryVariable();
-    Term combi = new FunctionalTerm(f, new FunctionalTerm(g, x, y), a);
+    Term combi = TermFactory.createApp(f, TermFactory.createApp(g, x, y), a);
     assertTrue(t.equals(combi));
   }
 
@@ -195,60 +186,72 @@ public class TrsReadingTest {
     Term t = TrsInputReader.readUnsortedTermFromString("f(a,f(b))", declaredVars);
   }
 
-  /** A helper class to create sorted terms. */
-  private class EmptyTrs implements TRS {
-    TreeMap<String,FunctionSymbol> _symbols;
-
-    EmptyTrs() { _symbols = new TreeMap<String,FunctionSymbol>(); }
-
-    public int queryRuleCount() { return 0; }
-    public Rule queryRule(int index) { return null; }
-    public Position leftmostInnermostRedexPosition(Term s) { return null; }
-    public Term leftmostInnermostReduce(Term s) { return null; }
-    public FunctionSymbol lookupSymbol(String name) { return _symbols.get(name); }
-  }
-
   @Test
   public void readSortedTerm() throws ParserException {
-    EmptyTrs trs = new EmptyTrs();
-    Type ftype = new ArrowType(new Sort("a"), new ArrowType(new Sort("a"), new Sort("b")));
-    Type gtype = new ArrowType(new Sort("c"), new ArrowType(new Sort("d"), new Sort("a")));
-    Type atype = new Sort("d");
-    trs._symbols.put("f", new Constant("f", ftype));
-    trs._symbols.put("g", new Constant("g", gtype));
-    trs._symbols.put("a", new Constant("a", atype));
+    Type a = TypeFactory.createSort("a");
+    Type b = TypeFactory.createSort("b");
+    Type c = TypeFactory.createSort("c");
+    Type d = TypeFactory.createSort("d");
+    Type ftype = TypeFactory.createArrow(a, TypeFactory.createArrow(a, b));
+    Type gtype = TypeFactory.createArrow(c, TypeFactory.createArrow(d, a));
+    ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
+    symbols.add(TermFactory.createConstant("f", ftype));
+    symbols.add(TermFactory.createConstant("g", gtype));
+    symbols.add(TermFactory.createConstant("a", d));
+    MSTRS trs = new MSTRS(new Alphabet(symbols), new ArrayList<Rule>());
     Term t = TrsInputReader.readTermFromString("f(g(x,y),g(x,a))", trs);
     FunctionSymbol f = t.queryRoot();
     FunctionSymbol g = t.queryImmediateSubterm(1).queryRoot();
-    FunctionSymbol a = t.queryImmediateSubterm(2).queryImmediateSubterm(2).queryRoot();
+    FunctionSymbol aa = t.queryImmediateSubterm(2).queryImmediateSubterm(2).queryRoot();
     Variable x = t.queryImmediateSubterm(1).queryImmediateSubterm(1).queryVariable();
     Variable y = t.queryImmediateSubterm(1).queryImmediateSubterm(2).queryVariable();
-    Term combi = new FunctionalTerm(f, new FunctionalTerm(g, x, y), new FunctionalTerm(g, x, a));
+    Term combi = TermFactory.createApp(f, TermFactory.createApp(g, x, y),
+                                          TermFactory.createApp(g, x, aa));
     assertTrue(t.equals(combi));
-    assertTrue(combi.queryType().equals(new Sort("b")));
-    assertTrue(combi.queryImmediateSubterm(1).queryType().equals(new Sort("a")));
+    assertTrue(combi.queryType().equals(b));
+    assertTrue(combi.queryImmediateSubterm(1).queryType().equals(a));
   }
 
   @Test(expected = TypingException.class)
   public void readIllSortedTerm() throws ParserException {
-    EmptyTrs trs = new EmptyTrs();
-    Type ftype = new ArrowType(new Sort("a"), new ArrowType(new Sort("a"), new Sort("b")));
-    Type gtype = new ArrowType(new Sort("c"), new ArrowType(new Sort("d"), new Sort("a")));
-    Type atype = new Sort("c");
-    trs._symbols.put("f", new Constant("f", ftype));
-    trs._symbols.put("g", new Constant("g", ftype));
-    trs._symbols.put("a", new Constant("a", ftype));
-    Term t = TrsInputReader.readTermFromString("f(g(x,y),g(a,x))", trs);
+    Type a = TypeFactory.createSort("a");
+    Type b = TypeFactory.createSort("b");
+    Type c = TypeFactory.createSort("c");
+    Type d = TypeFactory.createSort("d");
+    Type ftype = TypeFactory.createArrow(a, TypeFactory.createArrow(a, b));
+    Type gtype = TypeFactory.createArrow(c, TypeFactory.createArrow(d, a));
+    ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
+    symbols.add(TermFactory.createConstant("f", ftype));
+    symbols.add(TermFactory.createConstant("g", gtype));
+    symbols.add(TermFactory.createConstant("a", c));
+    MSTRS trs = new MSTRS(new Alphabet(symbols), new ArrayList<Rule>());
+    Term t = TrsInputReader.readTermFromString("f(g(x,y),g(x,a))", trs);
+  }
+
+  @Test(expected = TypingException.class)
+  public void readInconsistentlySortedTerm() throws ParserException {
+    Type a = TypeFactory.createSort("a");
+    Type b = TypeFactory.createSort("b");
+    Type c = TypeFactory.createSort("c");
+    Type d = TypeFactory.createSort("d");
+    Type ftype = TypeFactory.createArrow(a, TypeFactory.createArrow(d, b));
+    Type gtype = TypeFactory.createArrow(c, TypeFactory.createArrow(d, a));
+    ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
+    symbols.add(TermFactory.createConstant("f", ftype));
+    symbols.add(TermFactory.createConstant("g", gtype));
+    symbols.add(TermFactory.createConstant("a", d));
+    MSTRS trs = new MSTRS(new Alphabet(symbols), new ArrayList<Rule>());
+    Term t = TrsInputReader.readTermFromString("f(g(x,y),g(x,a))", trs);
   }
 
   @Test
   public void readSimpleUnsortedTrs() throws ParserException {
-    TRS trs = TrsInputReader.readTrsFromString("(VAR x y)\n" +
-                                               "(RULES\n" +
-                                               "  +(x, 0) -> x\n" +
-                                               "  +(x, s(y)) -> s(+(x,y))\n" +
-                                               ")");
-    assertTrue(trs.lookupSymbol("0").queryType().equals(new Sort("o")));
+    MSTRS trs = TrsInputReader.readTrsFromString("(VAR x y)\n" +
+                                                 "(RULES\n" +
+                                                 "  +(x, 0) -> x\n" +
+                                                 "  +(x, s(y)) -> s(+(x,y))\n" +
+                                                 ")");
+    assertTrue(trs.lookupSymbol("0").queryType().equals(TypeFactory.createSort("o")));
     assertTrue(trs.lookupSymbol("s").queryType().toString().equals("o → o"));
     assertTrue(trs.lookupSymbol("+").queryType().toString().equals("o → o → o"));
     assertTrue(trs.lookupSymbol("x") == null);
@@ -263,15 +266,15 @@ public class TrsReadingTest {
                  "  append(nil, ys) -> ys\n" +
                  "  append(cons(x, xs), ys) -> cons(x, append(xs, ys))\n" +
                  ")";
-    TRS trs = TrsInputReader.readTrsFromString(str);
+    MSTRS trs = TrsInputReader.readTrsFromString(str);
     FunctionSymbol append = trs.lookupSymbol("append");
     FunctionSymbol cons = trs.lookupSymbol("cons");
     FunctionSymbol nil = trs.lookupSymbol("nil");
     FunctionSymbol zero = trs.lookupSymbol("0");
     FunctionSymbol suc = trs.lookupSymbol("s");
-    Term s = new FunctionalTerm(cons, new FunctionalTerm(suc, zero), nil);
-    Term t = new FunctionalTerm(cons, zero, new FunctionalTerm(cons, zero, nil));
-    Term q = new FunctionalTerm(append, s, t);
+    Term s = TermFactory.createApp(cons, suc.apply(zero), nil);
+    Term t = TermFactory.createApp(cons, zero, TermFactory.createApp(cons, zero, nil));
+    Term q = TermFactory.createApp(append, s, t);
     assertTrue(q.toString().equals("append(cons(s(0), nil), cons(0, cons(0, nil)))"));
     q = trs.leftmostInnermostReduce(q);
     q = trs.leftmostInnermostReduce(q);
@@ -287,9 +290,10 @@ public class TrsReadingTest {
                  "  append(nil, ys) -> ys\n" +
                  "  append(cons(x, xs), ys) -> cons(x, append(xs, ys))\n" +
                  ")";
-    TRS trs = TrsInputReader.readTrsFromString(str);
+    MSTRS trs = TrsInputReader.readTrsFromString(str);
   }
 
+  @Test
   public void readTermInTrs() throws ParserException {
     String str = "(VAR x ys xs)\n" +
                  "(SIG (nil 0) (cons 2) (append 2) (0 0) (s 1))\n" +
@@ -297,7 +301,7 @@ public class TrsReadingTest {
                  "  append(nil, ys) -> ys\n" +
                  "  append(cons(x, xs), ys) -> cons(x, append(xs, ys))\n" +
                  ")";
-    TRS trs = TrsInputReader.readTrsFromString(str);
+    MSTRS trs = TrsInputReader.readTrsFromString(str);
     Term t = TrsInputReader.readTermFromString("append ( cons ( 0 , nil ) , lst )", trs);
     assertTrue(t.toString().equals("append(cons(0, nil), lst)"));
   }
@@ -309,7 +313,7 @@ public class TrsReadingTest {
                  "  append(nil, ys) -> ys\n" +
                  "  append(cons(x, xs), ys) -> cons(x, append(xs, ys))\n" +
                  ")";
-    TRS trs = TrsInputReader.readTrsFromString(str);
+    MSTRS trs = TrsInputReader.readTrsFromString(str);
     Term t = TrsInputReader.readTermFromString("append(cons(s(0), nil), lst)", trs);
   }
 
@@ -328,22 +332,22 @@ public class TrsReadingTest {
                  "  len(nil) -> 0" +
                  "  len(cons(x, xs)) -> s(len(xs))" +
                  ")";
-    TRS trs = TrsInputReader.readTrsFromString(str);
+    MSTRS trs = TrsInputReader.readTrsFromString(str);
     FunctionSymbol app = trs.lookupSymbol("app");
     assertTrue(app.queryType().toString().equals("List → List → List"));
     Rule appbase = trs.queryRule(0);
     Rule lenadvanced = trs.queryRule(3);
-    assertTrue(appbase.toString().equals("app(nil, ys) → ys"));
-    assertTrue(lenadvanced.toString().equals("len(cons(x, xs)) → s(len(xs))"));
+    assertTrue(appbase.toString().equals("app(nil, ys) ⇒ ys"));
+    assertTrue(lenadvanced.toString().equals("len(cons(x, xs)) ⇒ s(len(xs))"));
     Term left = lenadvanced.queryLeftSide();
-    assertTrue(left.queryType().equals(new Sort("Nat")));
-    assertTrue(left.queryImmediateSubterm(1).queryType().equals(new Sort("List")));
+    assertTrue(left.queryType().equals(TypeFactory.createSort("Nat")));
+    assertTrue(left.queryImmediateSubterm(1).queryType().equals(TypeFactory.createSort("List")));
   }
 
   @Test
   public void readSortedTrsWithVariableTypeChange() throws ParserException {
     String str = "(SIG (f a -> a) (g b -> b)) (RULES f(x) -> x g(x) -> x)";
-    TRS trs = TrsInputReader.readTrsFromString(str);
+    MSTRS trs = TrsInputReader.readTrsFromString(str);
     Rule a = trs.queryRule(0);
     Rule b = trs.queryRule(1);
     assertFalse(a.queryRightSide().queryType().equals(b.queryRightSide().queryType()));

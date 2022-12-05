@@ -13,6 +13,8 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
+package cora.parsers;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.antlr.v4.runtime.CharStreams;
@@ -21,9 +23,6 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import cora.parsers.CoraLexer;
-import cora.parsers.CoraParser;
-import cora.parsers.ErrorCollector;
 
 /** This class contains shared functionality for all tests of the parser. */
 public class CoraParsingTestInherit {

@@ -19,7 +19,7 @@ package cora.exceptions;
  * A NullInitialisationError is thrown when we try to construct an object but one of its arguments
  * is null (that should not be).
  * For calls other than constructors, use a NullStorageError instead if (parts of) the value would
- * end up being stored in the object., or NullCallError if the null value simply ends up being used
+ * end up being stored in the object, or NullCallError if the null value simply ends up being used
  * and you want to throw a different Error (with clearer message) than a NullPointerException.
  */
 public class NullInitialisationError extends Error {

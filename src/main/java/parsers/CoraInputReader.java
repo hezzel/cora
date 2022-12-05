@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2019, 2022 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -24,16 +24,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.Token;
 
-import cora.exceptions.ParserError;
-import cora.exceptions.ParserException;
-import cora.exceptions.DeclarationException;
-import cora.exceptions.TypingException;
-import cora.interfaces.types.Type;
-import cora.interfaces.terms.Term;
-import cora.interfaces.terms.FunctionSymbol;
-import cora.interfaces.terms.Variable;
-import cora.interfaces.rewriting.Rule;
-import cora.interfaces.rewriting.TRS;
+import cora.exceptions.*;
 import cora.types.*;
 import cora.terms.*;
 import cora.rewriting.*;
@@ -74,7 +65,7 @@ public class CoraInputReader extends InputReader {
   /** Turns the given tree, whose root rule must be "constant", into a Sort. */
   private Type readTypeConstant(ParseTree tree) {
     String constant = readConstant(tree);
-    if (constant != null) return new Sort(constant);
+    if (constant != null) return TypeFactory.createSort(constant);
     throw buildError(tree, "readTypeConstant called with a parsetree that is not constant.");
   }
 
@@ -85,7 +76,7 @@ public class CoraInputReader extends InputReader {
     verifyChildIsRule(tree, 2, "type", "a type");
     Type input = readTypeConstant(tree.getChild(0));
     Type output = readType(tree.getChild(2));
-    return new ArrowType(input, output);
+    return TypeFactory.createArrow(input, output);
   }
 
   /** Turns the given tree, whose root rule must be "higherarrowtype", into a Type. */
@@ -97,7 +88,7 @@ public class CoraInputReader extends InputReader {
     verifyChildIsRule(tree, 4, "type", "output type");
     Type input = readType(tree.getChild(1));
     Type output = readType(tree.getChild(4));
-    return new ArrowType(input, output);
+    return TypeFactory.createArrow(input, output);
   }
   
   /** Reads a Type from an Antlr ParseTree. */
@@ -135,8 +126,8 @@ public class CoraInputReader extends InputReader {
 
   /**
    * Given that tree wraps the given constant, and given that the given constant is not declared as
-   * a function symbol, this function tries to parse it into a Variable, updating expectedType if
-   * appropriate.
+   * a function symbol, this function tries to parse it into a Variable, updating its expected type
+   * if appropriate.
    */
   private Variable readVariable(ParseTree tree, String constant, ParseData pd,
                                        Type expectedType) throws ParserException {
@@ -144,7 +135,7 @@ public class CoraInputReader extends InputReader {
       throw new DeclarationException(firstToken(tree), constant, "not a valid variable");
     }
     // Variables do not need to be declared, but they must be used consistently; the same name
-    // should always return tothe same variable. To this end, we save them in the parser data once
+    // should always return the same variable. To this end, we save them in the parser data once
     // we're done
     Variable x = pd.lookupVariable(constant);
     if (x == null) {
@@ -152,7 +143,7 @@ public class CoraInputReader extends InputReader {
         throw new DeclarationException(firstToken(tree), constant, "If this is a variable, " +
             "its type cannot be derived from context.");
       }
-      x = new Var(constant, expectedType);
+      x = TermFactory.createVar(constant, expectedType);
       pd.addVariable(x);
     }
     else if (expectedType != null && !x.queryType().equals(expectedType)) {
@@ -189,8 +180,7 @@ public class CoraInputReader extends InputReader {
    * Reads the given parsetree (which is assumed to map to a "term" rule occurrence) into a term.
    * @see readTermFromString.
    */
-  private Term readTerm(ParseTree tree, ParseData pd,
-                               Type expectedType) throws ParserException {
+  private Term readTerm(ParseTree tree, ParseData pd, Type expectedType) throws ParserException {
     verifyChildIsRule(tree, 0, "constant", "a declared function symbol or variable");
     String constant = readConstant(tree.getChild(0));
     FunctionSymbol f = pd.lookupFunctionSymbol(constant);
@@ -224,8 +214,8 @@ public class CoraInputReader extends InputReader {
       throw new TypingException(firstToken(tree), tree.getText(), type.toString(),
                                 expectedType.toString());
     }
-    if (x == null) return new FunctionalTerm(f, args);
-    else return new VarTerm(x, args);
+    if (x == null) return TermFactory.createApp(f, args);
+    else return TermFactory.createApp(x, args);
   }
 
   /**
@@ -268,12 +258,12 @@ public class CoraInputReader extends InputReader {
           "while it was previously declared as a function symbol.");
       }
       Variable existing = pd.lookupVariable(constant);
-      if (existing == null) pd.addVariable(new Var(constant, type));
+      if (existing == null) pd.addVariable(TermFactory.createVar(constant, type));
       else priorDeclaration = existing.queryType();
     }
     else {
       FunctionSymbol existing = pd.lookupFunctionSymbol(constant);
-      if (existing == null) pd.addFunctionSymbol(new Constant(constant, type));
+      if (existing == null) pd.addFunctionSymbol(TermFactory.createConstant(constant, type));
       else priorDeclaration = existing.queryType();
     }
 
@@ -299,7 +289,7 @@ public class CoraInputReader extends InputReader {
     Type type = left.queryType();
     Term right = readTerm(tree.getChild(2), pd, type);
     pd.clearVariables();
-    return new AtrsRule(left, right);
+    return RuleFactory.createAtrsRule(left, right);
   }
 
   /**
@@ -323,7 +313,7 @@ public class CoraInputReader extends InputReader {
       tree = tree.getChild(1);
     }
 
-    return new TermRewritingSystem(pd.queryCurrentAlphabet(), ret);
+    return new ATRS(pd.queryCurrentAlphabet(), ret);
   }
 
   private TRS readFullProgram(ParseTree tree) throws ParserException {
@@ -390,7 +380,7 @@ public class CoraInputReader extends InputReader {
    * Reads the given string into a term, updating the given ParseData as it goes along.
    * This function is ONLY meant to be used for testing!
    */
-  public static Term testReadTermFromString(String str, ParseData pd, Type expectedType)
+  static Term testReadTermFromString(String str, ParseData pd, Type expectedType)
                                                               throws ParserException {
     ErrorCollector collector = new ErrorCollector();
     CoraParser parser = createCoraParserFromString(str, collector);
@@ -402,7 +392,7 @@ public class CoraInputReader extends InputReader {
 
   /**
    * Reads the given string into a term, using the given TRS to parse its function symbols.
-   * This is supposed to only be called with *internal* input (for example from the unit testers),
+   * This is supposed to only be called with *internal* input (for example from the unit tests),
    * where it is guaranteed that the string is well-formed and well-typed.
    * If any exceptions do occur, they are caught and passed on to a ParserError.
    */

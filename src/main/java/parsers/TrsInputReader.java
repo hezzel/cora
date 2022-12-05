@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2019, 2022 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -28,27 +28,16 @@ import cora.exceptions.ParserException;
 import cora.exceptions.DeclarationException;
 import cora.exceptions.TypingException;
 import cora.exceptions.IllegalRuleError;
-import cora.interfaces.types.Type;
-import cora.interfaces.types.BaseType;
-import cora.interfaces.terms.Term;
-import cora.interfaces.terms.FunctionSymbol;
-import cora.interfaces.terms.Variable;
-import cora.interfaces.rewriting.Rule;
-import cora.interfaces.rewriting.TRS;
-import cora.types.Sort;
-import cora.types.ArrowType;
-import cora.terms.Constant;
-import cora.terms.Var;
-import cora.terms.FunctionalTerm;
-import cora.rewriting.FirstOrderRule;
-import cora.rewriting.TermRewritingSystem;
+import cora.types.*;
+import cora.terms.*;
+import cora.rewriting.*;
 
 /**
  * This class reads text from string or file written in the .trs or .mstrs formats from the
  * international confluence competition.
  */
 public class TrsInputReader extends InputReader {
-  private static Type unitSort = Sort.unitSort;
+  private static Type unitSort = TypeFactory.unitSort;
   
   public TrsInputReader() {
     super(TrsParser.VOCABULARY, TrsParser.ruleNames);
@@ -61,9 +50,9 @@ public class TrsInputReader extends InputReader {
    * variable declarations.
    * Since varlists can only occur in UNSORTED TRSs, the variables are all stored to have the unit
    * sort ("o") as their type.
-   * (Note: only public for unit testing.)
+   * (Note: only default for unit testing; should be considered private.)
    */
-  public void handleVarList(ParseTree tree, ParseData data) throws ParserException {
+  void handleVarList(ParseTree tree, ParseData data) throws ParserException {
     int k = tree.getChildCount()-1;
     verifyChildIsToken(tree, 0, "VARSDECSTART", "the start of a variable list: (VAR");
     verifyChildIsToken(tree, k, "BRACKETCLOSE", "a closing bracket ')'");
@@ -73,14 +62,14 @@ public class TrsInputReader extends InputReader {
       if (data.lookupVariable(name) != null) {
         throw new ParserException(firstToken(tree), "Double declaration of variable " + name);
       }
-      data.addVariable(new Var(name, unitSort));
+      data.addVariable(TermFactory.createVar(name, unitSort));
     }
   }
 
   /**
    * This function takes an IDENTIFIER, which must be a integer; if the integer is k, then the type
-   * o->...->o->o is returned, with in total k+1 "o"s (so k input arguments), where "o" is the unit
-   * sort.
+   * o →...→ o → o is returned, with in total k+1 "o"s (so k input arguments), where "o" is the
+   * unit sort.
    * If the identifier is not an integer, a ParserException is thrown.
    */
   private Type readIntegerType(ParseTree tree) throws ParserException {
@@ -91,16 +80,16 @@ public class TrsInputReader extends InputReader {
                                                   "; expected an integer!");
     }
     Type ret = unitSort;
-    for (int i = 0; i < k; i++) ret = new ArrowType(unitSort, ret);
+    for (int i = 0; i < k; i++) ret = TypeFactory.createArrow(unitSort, ret);
     return ret;
   }
 
   /**
-   * Reads a type of the form sort1...sortN -> outputsort, or an integer k; the integer is turned
-   * into the type o1...ok -> o, where "o" is a sort.
-   * (Note: only public for unit testing.)
+   * Reads a type of the form sort1...sortN → outputsort, or an integer k; the integer is turned
+   * into the type o1...ok → o, where "o" is a sort.
+   * (Note: only default for unit testing; should be considered private.)
    */
-  public Type readTypeOrArity(ParseTree tree) throws ParserException {
+  Type readTypeOrArity(ParseTree tree) throws ParserException {
     if (tree.getChildCount() == 1) {
       verifyChildIsToken(tree, 0, "IDENTIFIER", "an integer identifier");
       return readIntegerType(tree.getChild(0));
@@ -109,11 +98,11 @@ public class TrsInputReader extends InputReader {
     verifyChildIsToken(tree, k, "ARROW", "a type arrow");
     verifyChildIsToken(tree, k+1, "IDENTIFIER", "an identifier (the output sort)");
     String output = tree.getChild(k+1).getText();
-    Type result = new Sort(output);
+    Type result = TypeFactory.createSort(output);
     for (int i = k-1; i >= 0; i--) {
       verifyChildIsToken(tree, i, "IDENTIFIER", "an identifier (an argument sort)");
       String arg = tree.getChild(i).getText();
-      result = new ArrowType(new Sort(arg), result);
+      result = TypeFactory.createArrow(TypeFactory.createSort(arg), result);
     }
     return result;
   }
@@ -138,14 +127,14 @@ public class TrsInputReader extends InputReader {
       throw new ParserException(firstToken(tree), "Function symbol " + funname +
                                                   " was previously declared as a variable.");
     }
-    data.addFunctionSymbol(new Constant(funname, type));
+    data.addFunctionSymbol(TermFactory.createConstant(funname, type));
   }
 
   /**
    * Given that the tree represents a siglist, this function updates data with all the provided
-   * declarations.
+   * declarations.  Default for the sake of unit testing only.
    */
-  public void handleSignature(ParseTree tree, ParseData data) throws ParserException {
+  void handleSignature(ParseTree tree, ParseData data) throws ParserException {
     int k = tree.getChildCount()-1;
     verifyChildIsToken(tree, 0, "SIGSTART", "the start of a signature: (SIG");
     verifyChildIsToken(tree, k, "BRACKETCLOSE", "a closing bracket ')'");
@@ -186,7 +175,7 @@ public class TrsInputReader extends InputReader {
     // otherwise, it all depends on whether we are examining a trs or mstrs
     if (mstrs) {
       if (expectedType == null) throw new DeclarationException(firstToken(tree), name);
-      Var x = new Var(name, expectedType);
+      Variable x = TermFactory.createVar(name, expectedType);
       data.addVariable(x);
       return x;
     }
@@ -195,7 +184,7 @@ public class TrsInputReader extends InputReader {
         throw new TypingException(firstToken(tree), name, unitSort.toString(),
                                   expectedType.toString());
       }
-      Constant f = new Constant(name, unitSort);
+      FunctionSymbol f = TermFactory.createConstant(name, unitSort);
       data.addFunctionSymbol(f);
       return f;
     }
@@ -249,10 +238,8 @@ public class TrsInputReader extends InputReader {
       throw new DeclarationException(firstToken(tree), name);
     }
 
-    // Otherwise, create the type for the given arity and use it to construct a function symbol
-    Type type = unitSort;
-    for (int i = 0; i < numberOfArguments; i++) type = new ArrowType(unitSort, type);
-    FunctionSymbol ret = new Constant(name, type);
+    // Otherwise, create a function symbol of the given arity
+    FunctionSymbol ret = TermFactory.createConstant(name, numberOfArguments);
     data.addFunctionSymbol(ret);
     return ret;
   }
@@ -264,7 +251,7 @@ public class TrsInputReader extends InputReader {
    * unsorted trs, then all unknown symbols are expected to be function symbols.
    */
   private Term readTerm(ParseTree tree, ParseData data, Type expectedType, boolean mstrs)
-                                                                          throws ParserException {
+                                                                           throws ParserException {
     // sanity check: this input reader only reads terms of base type!
     if (expectedType != null && !expectedType.isBaseType()) {
       throw buildError(tree, "Trying to read a term of non-basic type!");
@@ -295,7 +282,7 @@ public class TrsInputReader extends InputReader {
     }
 
     // create the resulting term, verify its type, and return
-    Term ret = new FunctionalTerm(f, termargs);
+    Term ret = f.apply(termargs);
     if (expectedType != null && !ret.queryType().equals(expectedType)) {
       throw new TypingException(firstToken(tree), ret.toString(), ret.queryType().toString(),
                                 expectedType.toString());
@@ -310,7 +297,7 @@ public class TrsInputReader extends InputReader {
     verifyChildIsRule(tree, 2, "term", "a term");
     Term left = readTerm(tree.getChild(0), data, null, mstrs);
     Term right = readTerm(tree.getChild(2), data, left.queryType(), mstrs);
-    try { return new FirstOrderRule(left, right); }
+    try { return RuleFactory.createFORule(left, right); }
     catch (IllegalRuleError e) {
       throw new ParserException(firstToken(tree), e.queryProblem());
     }
@@ -334,7 +321,7 @@ public class TrsInputReader extends InputReader {
 
   /* ========== READ A WHOLE TRS ========== */
 
-  private TRS readTRS(ParseTree tree) throws ParserException {
+  private MSTRS readTRS(ParseTree tree) throws ParserException {
     ParseData data = new ParseData();
     boolean mstrs = false;
     int k = 0;
@@ -356,13 +343,13 @@ public class TrsInputReader extends InputReader {
     }
     verifyChildIsRule(tree, k, "ruleslist", "a list of rules");
     ArrayList<Rule> rules = readRuleList(tree.getChild(k), data, mstrs);
-    return new TermRewritingSystem(data.queryCurrentAlphabet(), rules);
+    return new MSTRS(data.queryCurrentAlphabet(), rules);
   }
 
   /* ========== STATIC ACCESS METHODS ========== */
 
-  /** Note: public ONLY for use in unit testing; please use the static access methods otherwise. */
-  public static TrsParser createTrsParserFromString(String str, ErrorCollector collector) {
+  /** Note: default ONLY for use in unit testing; please use the static access methods. */
+  static TrsParser createTrsParserFromString(String str, ErrorCollector collector) {
     TrsLexer lexer = new TrsLexer(CharStreams.fromString(str));
     lexer.removeErrorListeners();
     lexer.addErrorListener(collector);
@@ -399,7 +386,7 @@ public class TrsInputReader extends InputReader {
 
     ParseData data = new ParseData();
     for (int i = 0; i < varnames.size(); i++) {
-      data.addVariable(new Var(varnames.get(i), unitSort));
+      data.addVariable(TermFactory.createVar(varnames.get(i), unitSort));
     }
     return reader.readTerm(tree, data, unitSort, false);
   }
@@ -410,7 +397,7 @@ public class TrsInputReader extends InputReader {
    * Note that this can safely be used for a TRS that was read as an unsorted TRS, since the
    * resulting TRS is always many-sorted (just with a single sort).
    */
-  public static Term readTermFromString(String str, TRS trs) throws ParserException {
+  public static Term readTermFromString(String str, MSTRS trs) throws ParserException {
     ErrorCollector collector = new ErrorCollector();
     TrsParser parser = createTrsParserFromString(str, collector);
     TrsInputReader reader = new TrsInputReader();
@@ -422,7 +409,7 @@ public class TrsInputReader extends InputReader {
   }
 
   /** Parses the given program, and returns the TRS that it defines. */
-  public static TRS readTrsFromString(String str) throws ParserException {
+  public static MSTRS readTrsFromString(String str) throws ParserException {
     ErrorCollector collector = new ErrorCollector();
     TrsParser parser = createTrsParserFromString(str, collector);
     TrsInputReader reader = new TrsInputReader();
@@ -433,7 +420,7 @@ public class TrsInputReader extends InputReader {
   }
 
   /** Reads the given file, parses the program in it, and returns the TRS that it defines. */
-  public static TRS readTrsFromFile(String filename) throws ParserException, IOException {
+  public static MSTRS readTrsFromFile(String filename) throws ParserException, IOException {
     ErrorCollector collector = new ErrorCollector();
     TrsParser parser = createTrsParserFromFile(filename, collector);
     TrsInputReader reader = new TrsInputReader();

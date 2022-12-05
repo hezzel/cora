@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2019, 2022 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,20 +13,14 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
+package cora.parsers;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.ArrayList;
 import cora.exceptions.DeclarationException;
 import cora.exceptions.ParserException;
-import cora.interfaces.terms.FunctionSymbol;
-import cora.interfaces.rewriting.Rule;
-import cora.interfaces.rewriting.TRS;
-import cora.types.Sort;
-import cora.types.ArrowType;
-import cora.terms.Constant;
-import cora.terms.Var;
-import cora.parsers.ParseData;
-import cora.parsers.CoraInputReader;
+import cora.rewriting.TRS;
 
 public class ProgramReadingTest {
   @Test
@@ -43,8 +37,8 @@ public class ProgramReadingTest {
     String str = "0 :: N s :: N -> N add :: N -> N -> N add(0,y) -> y add(s(x),y) -> s(add(x,y))";
     TRS trs = CoraInputReader.readProgramFromString(str);
     assertTrue(trs.queryRuleCount() == 2);
-    assertTrue(trs.queryRule(0).toString().equals("add(0, y) → y"));
-    assertTrue(trs.queryRule(1).toString().equals("add(s(x), y) → s(add(x, y))"));
+    assertTrue(trs.queryRule(0).toString().equals("add(0, y) ⇒ y"));
+    assertTrue(trs.queryRule(1).toString().equals("add(s(x), y) ⇒ s(add(x, y))"));
   }
 
   @Test

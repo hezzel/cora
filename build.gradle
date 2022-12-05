@@ -43,6 +43,10 @@ jar {
   }
 }
 
+run {
+    standardInput = System.in
+}
+
 // Define the main class for the application
 mainClassName = 'cora.Main'
 
