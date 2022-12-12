@@ -28,8 +28,8 @@ public class ProgramReadingTest {
     String str = "0 :: N s :: N -> N add :: N -> N -> N add(0,y) -> y add(s(x),y) -> s(add(x,y))";
     TRS trs = CoraInputReader.readProgramFromString(str);
     assertTrue(trs.lookupSymbol("0").queryType().toString().equals("N"));
-    assertTrue(trs.lookupSymbol("s").queryType().toString().equals("N → N"));
-    assertTrue(trs.lookupSymbol("add").queryType().toString().equals("N → N → N"));
+    assertTrue(trs.lookupSymbol("s").queryType().toString().equals("N ⇒ N"));
+    assertTrue(trs.lookupSymbol("add").queryType().toString().equals("N ⇒ N ⇒ N"));
   }
 
   @Test
@@ -37,8 +37,8 @@ public class ProgramReadingTest {
     String str = "0 :: N s :: N -> N add :: N -> N -> N add(0,y) -> y add(s(x),y) -> s(add(x,y))";
     TRS trs = CoraInputReader.readProgramFromString(str);
     assertTrue(trs.queryRuleCount() == 2);
-    assertTrue(trs.queryRule(0).toString().equals("add(0, y) ⇒ y"));
-    assertTrue(trs.queryRule(1).toString().equals("add(s(x), y) ⇒ s(add(x, y))"));
+    assertTrue(trs.queryRule(0).toString().equals("add(0, y) → y"));
+    assertTrue(trs.queryRule(1).toString().equals("add(s(x), y) → s(add(x, y))"));
   }
 
   @Test

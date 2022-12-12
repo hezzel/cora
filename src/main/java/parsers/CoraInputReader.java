@@ -72,7 +72,7 @@ public class CoraInputReader extends InputReader {
   /** Turns the given tree, whose root rule must be "lowarrowtype", into a Type. */
   private Type readLowArrowType(ParseTree tree) {
     verifyChildIsRule(tree, 0, "constant", "a (string or identifier) constant");
-    verifyChildIsToken(tree, 1, "ARROW", "type arrow (->)");
+    verifyChildIsRule(tree, 1, "typearrow", "type arrow (=>) or arrow (->)");
     verifyChildIsRule(tree, 2, "type", "a type");
     Type input = readTypeConstant(tree.getChild(0));
     Type output = readType(tree.getChild(2));
@@ -84,7 +84,7 @@ public class CoraInputReader extends InputReader {
     verifyChildIsToken(tree, 0, "BRACKETOPEN", "opening bracket '('");
     verifyChildIsRule(tree, 1, "type", "input type");
     verifyChildIsToken(tree, 2, "BRACKETCLOSE", "closing bracket ')'");
-    verifyChildIsToken(tree, 3, "ARROW", "type arrow (->)");
+    verifyChildIsRule(tree, 3, "typearrow", "type arrow (=>) or arrow (->)");
     verifyChildIsRule(tree, 4, "type", "output type");
     Type input = readType(tree.getChild(1));
     Type output = readType(tree.getChild(4));

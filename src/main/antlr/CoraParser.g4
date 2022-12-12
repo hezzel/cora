@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2019, 2022 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -37,8 +37,12 @@ type                : constant
                     | lowarrowtype
                     | higherarrowtype
                     ;
-lowarrowtype        : constant ARROW type ;
-higherarrowtype     : BRACKETOPEN type BRACKETCLOSE ARROW type ;
+lowarrowtype        : constant typearrow type ;
+higherarrowtype     : BRACKETOPEN type BRACKETCLOSE typearrow type ;
+
+typearrow           : ARROW
+                    | TYPEARROW
+                    ;
 
 onlytype            : type EOF ;
 

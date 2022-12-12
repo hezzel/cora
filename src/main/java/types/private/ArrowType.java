@@ -20,7 +20,7 @@ import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullInitialisationError;
 
 /**
- * A type of the form σ → τ.
+ * A type of the form σ ⇒ τ.
  *
  * Note that ArrowType should not be used directly in the program.  Instead, use the Type
  * interface, or the TypeFactory to create arrow types.
@@ -28,7 +28,7 @@ import cora.exceptions.NullInitialisationError;
 class ArrowType implements Type {
   private Type _left, _right;
 
-  /** Creates the type left → right. */
+  /** Creates the type left ⇒ right. */
   ArrowType(Type left, Type right) {
     if (left == null) throw new NullInitialisationError("ArrowType", "input type");
     if (right == null) throw new NullInitialisationError("ArrowType", "output type");
@@ -51,7 +51,7 @@ class ArrowType implements Type {
     if (_left.isArrowType()) left = "(" + leftstring + ")";
     else if (_left.isBaseType()) left = leftstring;
     else throw new Error("Missed a case in a switch for type kinds.");
-    return left + " → " + rightstring;
+    return left + " ⇒ " + rightstring;
   }
 
   public boolean equals(Type type) {
@@ -79,12 +79,12 @@ class ArrowType implements Type {
     _right.appendInputTypes(answer);
   }
 
-  /** For a type σ → τ, returns σ. */
+  /** For a type σ ⇒ τ, returns σ. */
   public Type queryArrowInputType() {
     return _left;
   }
 
-  /** For a type σ → τ, returns τ. */
+  /** For a type σ ⇒ τ, returns τ. */
   public Type queryArrowOutputType() {
     return _right;
   }

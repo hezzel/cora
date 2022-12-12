@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2019, 2022 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -96,7 +96,7 @@ public class CoraLexerTest {
 
   @Test
   public void testAllBasicTokens() {
-    ArrayList<Token> parts = tokenise("xx(y){,+#a∀ ∃7*}():::a[bb]c");
+    ArrayList<Token> parts = tokenise("xx(y){,+#a∀ ∃7*}():::a[b→b]c");
     assertTrue(parts.size() == 18);
     assertTrue(parts.get(0).getType() == CoraLexer.IDENTIFIER);
     assertTrue(parts.get(1).getType() == CoraLexer.BRACKETOPEN);

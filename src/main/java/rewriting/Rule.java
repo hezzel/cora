@@ -20,18 +20,18 @@ import cora.terms.Term;
 
 /**
  * Rules are the core objects that define the reduction relation in a term rewriting system.
- * They have the form l ⇒ r, where l and r have the same type.
+ * They have the form l → r, where l and r have the same type.
  *
  * Note: all instances of Rule must (and can be expected to) be immutable.
  */
 public interface Rule {
-  /** For a rule l ⇒ r, this function returns l. */
+  /** For a rule l → r, this function returns l. */
   Term queryLeftSide();
 
-  /** For a rule l ⇒ r, this function returns r. */
+  /** For a rule l → r, this function returns r. */
   Term queryRightSide();
 
-  /** For a rule l ⇒ r, returns the type of l (which should also be the type of r). */
+  /** For a rule l → r, returns the type of l (which should also be the type of r). */
   Type queryType();
 
   /** This returns whether the current rule can be applied to t at the top. */

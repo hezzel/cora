@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2019, 2022 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -94,7 +94,9 @@ COLON               : ':' ;
 
 DECLARE             : '::' ;
 
-ARROW               : '-' '>' ;
+ARROW               : '-' '>' | '→' ;
+
+TYPEARROW           : '=' '>' | '⇒' ;
 
 INCLUDE             : I N C L U D E ;
 

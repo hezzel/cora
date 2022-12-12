@@ -40,7 +40,7 @@ public class TrsReadingTest {
     collector.throwCollectedExceptions();
     
     Type type = reader.readTypeOrArity(tree);
-    assertTrue(type.toString().equals("o → o → o → o"));
+    assertTrue(type.toString().equals("o ⇒ o ⇒ o ⇒ o"));
   }
 
   @Test
@@ -64,7 +64,7 @@ public class TrsReadingTest {
     collector.throwCollectedExceptions();
     
     Type type = reader.readTypeOrArity(tree);
-    assertTrue(type.toString().equals("a → b → d"));
+    assertTrue(type.toString().equals("a ⇒ b ⇒ d"));
   }
 
   @Test(expected = ParserException.class)
@@ -89,9 +89,9 @@ public class TrsReadingTest {
     ParseData data = new ParseData();
     reader.handleSignature(tree, data);
     
-    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("o → o → o"));
+    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("o ⇒ o ⇒ o"));
     assertTrue(data.lookupFunctionSymbol("a").queryType().toString().equals("o"));
-    assertTrue(data.lookupFunctionSymbol("e").queryType().toString().equals("o → o"));
+    assertTrue(data.lookupFunctionSymbol("e").queryType().toString().equals("o ⇒ o"));
   }
 
   @Test
@@ -107,7 +107,7 @@ public class TrsReadingTest {
     reader.handleSignature(tree, data);
     
     assertTrue(data.lookupFunctionSymbol("b").queryType().toString().equals("0"));
-    assertTrue(data.lookupFunctionSymbol("dd").queryType().toString().equals("aa → b → cc"));
+    assertTrue(data.lookupFunctionSymbol("dd").queryType().toString().equals("aa ⇒ b ⇒ cc"));
   }
 
   @Test(expected = ParserException.class)
@@ -252,8 +252,8 @@ public class TrsReadingTest {
                                                  "  +(x, s(y)) -> s(+(x,y))\n" +
                                                  ")");
     assertTrue(trs.lookupSymbol("0").queryType().equals(TypeFactory.createSort("o")));
-    assertTrue(trs.lookupSymbol("s").queryType().toString().equals("o → o"));
-    assertTrue(trs.lookupSymbol("+").queryType().toString().equals("o → o → o"));
+    assertTrue(trs.lookupSymbol("s").queryType().toString().equals("o ⇒ o"));
+    assertTrue(trs.lookupSymbol("+").queryType().toString().equals("o ⇒ o ⇒ o"));
     assertTrue(trs.lookupSymbol("x") == null);
     assertTrue(trs.lookupSymbol("y") == null);
   }
@@ -334,11 +334,11 @@ public class TrsReadingTest {
                  ")";
     MSTRS trs = TrsInputReader.readTrsFromString(str);
     FunctionSymbol app = trs.lookupSymbol("app");
-    assertTrue(app.queryType().toString().equals("List → List → List"));
+    assertTrue(app.queryType().toString().equals("List ⇒ List ⇒ List"));
     Rule appbase = trs.queryRule(0);
     Rule lenadvanced = trs.queryRule(3);
-    assertTrue(appbase.toString().equals("app(nil, ys) ⇒ ys"));
-    assertTrue(lenadvanced.toString().equals("len(cons(x, xs)) ⇒ s(len(xs))"));
+    assertTrue(appbase.toString().equals("app(nil, ys) → ys"));
+    assertTrue(lenadvanced.toString().equals("len(cons(x, xs)) → s(len(xs))"));
     Term left = lenadvanced.queryLeftSide();
     assertTrue(left.queryType().equals(TypeFactory.createSort("Nat")));
     assertTrue(left.queryImmediateSubterm(1).queryType().equals(TypeFactory.createSort("List")));

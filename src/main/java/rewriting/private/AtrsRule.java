@@ -23,7 +23,7 @@ import cora.terms.Term;
 import cora.terms.Substitution;
 
 /**
- * AtrsRules are rules of the form l ⇒ r, without restrictions on term formation, whose right-hand
+ * AtrsRules are rules of the form l → r, without restrictions on term formation, whose right-hand
  * side contains no variables that do not also occur on the left.
  */
 class AtrsRule extends RuleInherit {
@@ -78,7 +78,7 @@ class AtrsRule extends RuleInherit {
   }
 
   public String toString() {
-    return _left.toString() + " ⇒ " + _right.toString();
+    return _left.toString() + " → " + _right.toString();
   }
 }
 

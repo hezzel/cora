@@ -23,7 +23,7 @@ import cora.terms.Term;
 import cora.terms.Substitution;
 
 /**
- * A FirstOrderRule is a rule l ⇒ r where l and r are first-order terms of the same sort, l is not
+ * A FirstOrderRule is a rule l → r where l and r are first-order terms of the same sort, l is not
  * a variable, and vars(r) ⊆ vars(l).
  */
 class FirstOrderRule extends RuleInherit {

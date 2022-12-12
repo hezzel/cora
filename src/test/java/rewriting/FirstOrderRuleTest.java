@@ -96,7 +96,7 @@ public class FirstOrderRuleTest {
     assertTrue(rule.queryLeftSide().equals(left));
     assertTrue(rule.queryRightSide().equals(x));
     assertTrue(rule.queryType().equals(baseType("a")));
-    assertTrue(rule.toString().equals("id(x) ⇒ x"));
+    assertTrue(rule.toString().equals("id(x) → x"));
   }
 
   @Test

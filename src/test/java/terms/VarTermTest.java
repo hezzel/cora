@@ -115,7 +115,7 @@ public class VarTermTest extends TermTestFoundation {
     assertFalse(t.isFunctionalTerm());
     assertFalse(t.isPattern());
     assertTrue(t.queryVariable().toString().equals("x"));
-    assertTrue(t.queryVariable().queryType().toString().equals("a → b → a"));
+    assertTrue(t.queryVariable().queryType().toString().equals("a ⇒ b ⇒ a"));
     assertTrue(t.toString().equals("x(c, g(y))"));
   }
 

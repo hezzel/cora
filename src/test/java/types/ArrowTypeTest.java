@@ -63,9 +63,9 @@ public class ArrowTypeTest {
     ArrowType at1 = new ArrowType(boolType(), intType());
     ArrowType at2 = new ArrowType(at1, new Sort("Array"));
     ArrowType at3 = new ArrowType(at1, at1);
-    assertTrue(at1.toString().equals("Bool → Int"));
-    assertTrue(at2.toString().equals("(Bool → Int) → Array"));
-    assertTrue(at3.toString().equals("(Bool → Int) → Bool → Int"));
+    assertTrue(at1.toString().equals("Bool ⇒ Int"));
+    assertTrue(at2.toString().equals("(Bool ⇒ Int) ⇒ Array"));
+    assertTrue(at3.toString().equals("(Bool ⇒ Int) ⇒ Bool ⇒ Int"));
   }
 
   @Test

@@ -39,9 +39,9 @@ public class CoraTypeParsingTest extends CoraParsingTestInherit {
 
   @Test
   public void testArrowType() {
-    String str = "xx -> yy";
+    String str = "xx => yy";
     String expected = "onlytype(type(lowarrowtype(constant(IDENTIFIER(xx))," +
-                        "ARROW,type(constant(IDENTIFIER(yy))))),EOF)";
+                        "typearrow(TYPEARROW),type(constant(IDENTIFIER(yy))))),EOF)";
     ErrorCollector collector = new ErrorCollector();
     CoraParser parser = createParser(str, collector);
     ParseTree tree = parser.onlytype();
@@ -51,10 +51,10 @@ public class CoraTypeParsingTest extends CoraParsingTestInherit {
 
   @Test
   public void testRightAssociativeType() {
-    String str = "xx -> yy -> zz";
+    String str = "xx -> yy → zz";
     String expected = "onlytype(type(lowarrowtype(constant(IDENTIFIER(xx))," +
-                        "ARROW,type(lowarrowtype(constant(IDENTIFIER(yy))," +
-                        "ARROW,type(constant(IDENTIFIER(zz))))))),EOF)";
+                        "typearrow(ARROW),type(lowarrowtype(constant(IDENTIFIER(yy))," +
+                        "typearrow(ARROW),type(constant(IDENTIFIER(zz))))))),EOF)";
     ErrorCollector collector = new ErrorCollector();
     CoraParser parser = createParser(str, collector);
     ParseTree tree = parser.onlytype();
@@ -64,10 +64,10 @@ public class CoraTypeParsingTest extends CoraParsingTestInherit {
 
   @Test
   public void testHigherArrowType() {
-    String str = "(xx -> yy) -> zz";
+    String str = "(xx => yy) ⇒ zz";
     String expected = "onlytype(type(higherarrowtype(BRACKETOPEN,type(" +
-                        "lowarrowtype(constant(IDENTIFIER(xx)),ARROW,type(" +
-                        "constant(IDENTIFIER(yy))))),BRACKETCLOSE,ARROW,type(" +
+                        "lowarrowtype(constant(IDENTIFIER(xx)),typearrow(TYPEARROW),type(" +
+                        "constant(IDENTIFIER(yy))))),BRACKETCLOSE,typearrow(TYPEARROW),type(" +
                         "constant(IDENTIFIER(zz))))),EOF)";
     ErrorCollector collector = new ErrorCollector();
     CoraParser parser = createParser(str, collector);
@@ -80,7 +80,7 @@ public class CoraTypeParsingTest extends CoraParsingTestInherit {
   public void testUnnecessaryHigherType() {
     String str = "(a) -> b";
     String expected = "onlytype(type(higherarrowtype(BRACKETOPEN,type(" +
-                        "constant(IDENTIFIER(a))),BRACKETCLOSE,ARROW,type(" +
+                        "constant(IDENTIFIER(a))),BRACKETCLOSE,typearrow(ARROW),type(" +
                         "constant(IDENTIFIER(b))))),EOF)";
     ErrorCollector collector = new ErrorCollector();
     CoraParser parser = createParser(str, collector);
@@ -91,13 +91,13 @@ public class CoraTypeParsingTest extends CoraParsingTestInherit {
 
   @Test
   public void testCombinedType() {
-    String str = "a -> (b -> cd) -> e";
+    String str = "a => (b → cd) -> e";
     String expected = "onlytype(" +
-                        "type(lowarrowtype(constant(IDENTIFIER(a)),ARROW," +
+                        "type(lowarrowtype(constant(IDENTIFIER(a)),typearrow(TYPEARROW)," +
                           "type(higherarrowtype(BRACKETOPEN," +
-                            "type(lowarrowtype(constant(IDENTIFIER(b)),ARROW," +
+                            "type(lowarrowtype(constant(IDENTIFIER(b)),typearrow(ARROW)," +
                             "type(constant(IDENTIFIER(cd)))))," +
-                          "BRACKETCLOSE,ARROW,type(constant(IDENTIFIER(e)))))))," +
+                          "BRACKETCLOSE,typearrow(ARROW),type(constant(IDENTIFIER(e)))))))," +
                         "EOF)";
     ErrorCollector collector = new ErrorCollector();
     CoraParser parser = createParser(str, collector);
