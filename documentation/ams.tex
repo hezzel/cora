@@ -1,0 +1,1754 @@
+\documentclass{lmcs}
+\pdfoutput=1
+
+\usepackage{enumerate}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{amssymb}
+\usepackage{xcolor,latexsym,amsmath,extarrows,alltt}
+\usepackage{xspace}
+\usepackage{booktabs}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{stmaryrd}
+\usepackage{microtype}
+
+\theoremstyle{theorem}\newtheorem{theorem}{Theorem}
+\theoremstyle{theorem}\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{theorem}\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{definition}\newtheorem{example}[theorem]{Example}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\Vmeta}{\mathcal{V}_{\mathit{meta}}}
+\newcommand{\Vfree}{\mathcal{V}_{\mathit{nonb}}}
+\newcommand{\Vbound}{\mathcal{V}_{\mathit{binder}}}
+\newcommand{\Sorts}{\mathcal{S}}
+\newcommand{\Types}{\mathcal{Y}}
+\newcommand{\Terms}{\mathcal{T}}
+\newcommand{\ATerms}{\mathcal{T}_{\mathcal{A}}}
+\newcommand{\FOTerms}{\mathcal{T}_{\mathcal{FO}}}
+\newcommand{\Rules}{\mathcal{R}}
+\newcommand{\FV}{\mathit{FV}}
+\newcommand{\Positions}{\mathit{Positions}}
+\newcommand{\SubPositions}{\mathit{SubPositions}}
+\newcommand{\HeadPositions}{\mathit{HeadPositions}}
+\newcommand{\Pairs}{\mathit{Pairs}}
+
+\newcommand{\domain}{\mathtt{dom}}
+\newcommand{\order}{\mathit{order}}
+
+\newcommand{\asort}{\iota}
+\newcommand{\bsort}{\kappa}
+\newcommand{\atype}{\sigma}
+\newcommand{\btype}{\tau}
+\newcommand{\ctype}{\pi}
+\newcommand{\dtype}{\alpha}
+\newcommand{\identifier}[1]{\mathtt{#1}}
+\newcommand{\afun}{\identifier{f}}
+\newcommand{\bfun}{\identifier{g}}
+\newcommand{\cfun}{\identifier{h}}
+\newcommand{\avar}{x}
+\newcommand{\bvar}{y}
+\newcommand{\cvar}{z}
+\newcommand{\Avar}{X}
+\newcommand{\Bvar}{Y}
+\newcommand{\Cvar}{Z}
+\newcommand{\AFvar}{F}
+\newcommand{\BFvar}{G}
+\newcommand{\CFvar}{H}
+
+\newcommand{\clause}[1]{\textbf{#1}}
+
+\newcommand{\abs}[2]{\lambda #1.#2}
+\newcommand{\meta}[2]{#1\langle#2\rangle}
+
+\newcommand{\arity}{\mathit{ar}}
+\newcommand{\head}{\mathsf{head}}
+\newcommand{\arrtype}{\Rightarrow}
+\newcommand{\arrz}{\Rightarrow}
+\newcommand{\arr}[1]{\arrz_{#1}}
+\newcommand{\arrr}[1]{\arr{#1}^*}
+\newcommand{\subtermeq}{\unlhd}
+\newcommand{\headsubtermeq}{\unlhd_{\bullet}}
+\newcommand{\supterm}{\rhd}
+\newcommand{\suptermeq}{\unrhd}
+
+\newcommand{\symb}[1]{\mathtt{#1}}
+
+\newcommand{\nul}{\symb{0}}
+\newcommand{\one}{\symb{1}}
+\newcommand{\nil}{\symb{nil}}
+\newcommand{\cons}{\symb{cons}}
+\newcommand{\strue}{\symb{true}}
+\newcommand{\sfalse}{\symb{false}}
+\newcommand{\suc}{\symb{s}}
+\newcommand{\map}{\symb{map}}
+\newcommand{\bool}{\symb{bool}}
+\newcommand{\nat}{\symb{nat}}
+\newcommand{\lijst}{\symb{list}}
+\newcommand{\unitsort}{\mathtt{o}}
+
+\newcommand{\cora}{\textsf{CORA}\xspace}
+
+\newcommand{\secshort}{\S}
+\newcommand{\myparagraph}[1]{\paragraph{\textbf{#1}}}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{\bigskipamount}
+\setlist[itemize]{topsep=-\bigskipamount}
+
+\newcommand{\mysubsection}[1]{\vspace{-12pt}\subsubsection{#1}}
+
+\begin{document}
+
+\title{COnstrained Rewriting Analyser: formalism}
+\author{Cynthia Kop}
+\address{Department of Software Science, Radboud University Nijmegen}
+\email{C.Kop@cs.ru.nl}
+
+\maketitle
+
+\begin{abstract}
+\cora\ is a tool meant to analyse constrained term rewriting systems, both
+first-order and higher-order.  This document explains the underlying formalism.
+\end{abstract}
+
+\section{Types}
+
+We fix a set $\Sorts$ of \emph{sorts} and define the set $\Types$ of \emph{types} inductively:
+\begin{itemize}
+\item all elements of $\Sorts$ are types (also called \emph{base types});
+\item if $\atype,\btype \in \Types$ then $\atype \arrtype \btype$ is also a type (called an arrow
+  type).
+\end{itemize}
+The arrow operator $\arrtype$ is right-associative, so all types can be denoted in a form
+$\atype_1 \arrtype \dots \arrtype \atype_m \arrtype \asort$ with $\asort \in \Sorts$; we say the
+\emph{arity} of this type is $m$, and the \emph{output sort} is $\asort$.
+
+The \emph{order} of a type is recursively defined as follows:
+\begin{itemize}
+\item for $\asort \in \Sorts$: $\order(\asort) = 0$;
+\item for arrow types: $\order(\atype \arrtype \btype) = \max(\order(\atype) + 1,\order(\btype))$.
+\end{itemize}
+
+\bigskip
+Type equality is literal equality (i.e., $\atype_1 \arrtype \btype_1$ is equal to $\atype_2 \arrtype
+\btype_2$ iff $\atype_1 = \atype_2$ and $\btype_1 = \btype_2$).
+
+\subsection*{Remarks}
+
+We do not impose limitations on the set of sorts.  In traditional, unsorted term rewriting, there
+is only one sort (e.g., $\Sorts = \{ \unitsort \}$). However, we may also have a larger finite or
+even infinite sort set.
+In the future, we may consider a shallow form of polymorphic types, but for the moment we will limit
+interest to these simple types.
+
+\section{Unconstrained Applicative Meta-variable Systems (AMSs)}
+
+Let us start by explaining systems without constraints. Most of the notions will be directly
+relevant to constrained systems as well.
+
+\subsection{Terms}
+Terms are \emph{well-typed} expressions built over given sets of \emph{function symbols} and
+\emph{variables}. The full definition is presented below.
+
+\mysubsection{Symbols and variables}
+
+We fix a set $\F$ of \emph{function symbols}, also called the \emph{alphabet}; each function symbol
+is a \emph{typed constant}. Notation: $\afun \in \F$ or $(\afun :: \atype) \in \F$ if we wish to
+explicitly refer to the type (but the type should be considered implicit in the symbol).
+Function symbols will generally be referred to as $\afun,\bfun,\cfun$ or using more suggestive
+notation.
+
+In addition, we fix a set $\Vbound$ of \emph{binder variables}, which are typed constants in the
+same way.  $\Vbound$ should be disjoint from $\F$ and contain infinitely many binder variables of
+each type.  We also assume given a set $\Vmeta$ of \emph{meta-variables}, which are constants with
+a type and arity, i.e., $(\avar :: \atype,k) \in \Vmeta$; we require that $k$ is at most the arity
+of $\atype$, and may also denote this as $(\avar :: [\atype_1 \times \dots \times \atype_k] \arrtype
+\btype)$, which means a symbol named $\avar$ with type $\atype_1 \arrtype \dots \arrtype \atype_k
+\arrtype \btype$ and arity $k$.
+We define the subset $\Vfree := \{ \avar :: \atype \mid (\avar :: \atype,0) \in \Vmeta \}$ of
+\emph{non-binder variables} to be the set of those meta-variables which have arity $0$, and
+collectively refer to \emph{variables} for the set $\V := \Vbound \cup \Vfree$.
+Binder variables and meta-variables will generally be referred to as $\avar,\bvar,\cvar,\Avar,\Bvar,
+\Cvar,\AFvar,\BFvar,\CFvar$ or using more suggestive notation.
+
+\mysubsection{Term formation}\label{subsec:form}
+
+Terms are those expressions $s$ such that $s :: \atype$ can be derived for some $\atype \in \Types$
+using the following clauses:
+
+\begin{description}
+\item[constant] if $(\afun :: \atype) \in \F$ then $\afun :: \atype$
+\item[variable] if $(\avar :: \atype) \in \V$ then $\avar :: \atype$
+\item[abstraction] if $(\avar :: \atype) \in \Vbound$ and $t :: \btype$ then $\abs{\avar}{t} ::
+  \atype \arrtype \btype$
+\item[meta-application] if $(\avar :: [\atype_1 \times \dots \times \atype_k] \arrtype \btype) \in
+  \Vmeta$ with $k > 0$ and $t_1 :: \atype_1,\dots,t_k :: \atype_n$ then $\meta{\avar}{t_1,\dots,t_k}
+  :: \btype$
+\item[application] if $h :: \atype_1 \arrtype \dots \arrtype \atype_n \arrtype \btype$ with $n > 0$
+  and $h$ is a constant, variable, abstraction or meta-application,
+  and if $s_1 :: \atype_1,\dots,s_n :: \atype_n$,
+  then $h(s_1,\dots,s_n) :: \btype$
+\end{description}
+
+If we identify $h() = h$, then any term can be written in a form $h(s_1,\dots,s_n)$ with the
+\emph{head} $h$ either a constant, variable, abstraction or meta-application.  We will often use
+this notation.
+Similarly, we will sometimes refer to $\meta{\avar}{t_1,\dots,t_k}$ with $k \geq 0$, where
+$\meta{\avar}{}$ is just $\avar \in \Vfree$.
+
+A term of the form $\afun(s_1,\dots,s_n)$ is called a \emph{functional term} and $\afun$ is its
+root. \\
+A term of the form $\avar(s_1,\dots,s_n)$ is called a \emph{var term}, and $\avar$ is its
+variable. \\
+The variable of an abstraction $\abs{\avar}{t}$ or a meta-application $\meta{x}{t_1,\dots,t_k}$ is
+$\avar$. \\
+An application of the form $(\abs{\avar}{t})(s_0,\dots,s_n)$ is called a \emph{$\beta$-redex} and
+$\avar$ is its variable. \\
+A term of the form $\meta{x}{t_1,\dots,t_k}(s_{k+1},\dots,s_n)$ with $n > k > 0$ is a
+meta-application-application, and $\avar$ is its variable.  However, while we permit the formation
+of meta-application-applications to avoid requiring many exceptions in for instance termination
+techniques, in practice we will not consider terms of this form.
+
+If $s :: \atype$ then we say that $\atype$ is the type of $s$; it is clear from the definitions
+above that each term has a unique type.
+
+Note that in the \clause{application} clause, $n$ is not required to be maximal; for example, if
+$\symb{greater} :: \mathtt{int} \arrtype \mathtt{int} \arrtype \mathtt{bool}$, then each of
+$\symb{greater}(),\symb{greater}(\avar)$ and $\symb{greater}(\avar,\bvar)$ are terms (with distinct
+types); each having $\symb{greater}$ as its head.
+Note also that a variable $\avar$ is also considered a var term, and a constant $\afun$ is a
+functional term, but a plain abstraction is \emph{not} a $\beta$-redex.
+A term $\avar(s)$ is a varterm, not a meta-application, even if $\avar \in \Vmeta$.
+
+\mysubsection{$\alpha$-equality}
+We let $=_\alpha$ be the usual $\alpha$-renaming equivalence relation as used in the
+$\lambda$-calculus. This relation can be formally defined as follows:
+\begin{itemize}
+\item Let $\mu_0,\nu_0 : \Vbound \rightarrow \N$ be defined as follows:
+  $\mu_0(\avar) = \nu_0(\avar) = 0$ for all $\avar \in \Vbound$.
+\item Let $s =_\alpha t$ iff $s =_\alpha^{\mu_0,\nu_0,1} t$.
+\item For $\mu,\nu : \Vbound \rightarrow \N$ and $k \in \N$, let
+  $s =_\alpha^{\mu,\nu,k} t$ if and only if this can be defined by the following clauses:
+  \begin{itemize}
+  \item $a(s_1,\dots,s_n) =_\alpha^{\mu,\nu,k} b(t_1,\dots,t_n)$ with $n > 0$ if
+    $a =_\alpha^{\mu,\nu,k} b$ and $s_i =_\alpha^{\mu,\nu,k} t_i$ for all $i \in \{1,\dots,n\}$;
+  \item $\afun =_\alpha^{\mu,\nu,k} \afun$ for all $\afun \in \F$ and
+        $\avar =_\alpha^{\mu,\nu,k} \avar$ for all $\avar \in \Vfree$;
+  \item $\avar =_\alpha^{\mu,\nu,k} \bvar$ for $\avar,\bvar \in \Vbound$ if either
+    $\avar = \bvar$ and $\mu(\avar) = \nu(\bvar) = 0$, or $\mu(\avar) = \mu(\bvar) > 0$;
+  \item $\abs{\avar}{s} =_\alpha^{\mu,\nu,k} \abs{\bvar}{t}$ iff $s =_\alpha^{\mu[\avar:=k],
+    \mu[\bvar:=k],k+1} t$; \\
+    (Here, $\mu[\avar:=k]$ is the function that maps $\avar$ to $k$ and all other $\cvar$ to
+    $\mu(\cvar)$; similar for $\nu[\bvar:=k]$.)
+  \item $\meta{\avar}{s_1,\dots,s_k} =_\alpha^{\mu,\nu,k} \meta{\avar}{t_1,\dots,t_k}$ with $k
+    > 0$ if $s_i =_\alpha^{\mu,\nu,k+1} t_i$ for all $i \in \{1,\dots,k\}$.
+  \end{itemize}
+\end{itemize}
+That is, we progressively descend into the term and keep track of where variables are bound; the
+structure of the two terms has to be exactly the same, and function symbols and unbound variable
+should occur at the same positions in both terms. However, when encountering a bound variable, we
+only require that this variable was bound by the same $\lambda$ in both terms.
+We can straightforwardly prove that $=_\alpha$ is an equivalence relation (Corollary
+\ref{corr:alphaequiv}).
+
+\mysubsection{Restricted terms}\label{subsec:termsets}
+
+The definition of terms is deliberately broad, to support a rather liberal kind of higher-order
+rewriting; in some other works, what we call ``terms'' would be referred to as \emph{metaterms},
+with the word \emph{terms} referring to what we will call ``true terms''.
+We use this terminology simply because in an analysis tool, the vast majority of reasoning
+happens on metaterms, so these are the primary objects we wish to consider.
+
+However, in practice we do often consider limitations: specific kinds of terms which are built
+using subsets and restrictions of the clauses in Section \ref{subsec:form}.  We consider the most
+important ones:
+
+\begin{itemize}
+\item A \emph{true term} is a term without meta-applications; that is, a term whose type can be
+  derived using only the clauses \clause{constant}, \clause{variable}, \clause{abstraction} and
+  \clause{application}.
+  (Note that variables in $\Vfree$ are still allowed!)
+\item A term $s$ is a \emph{pattern} if abstractions, meta-applications and single meta-variables
+  may not occur at the head of an application, and the arguments to a meta-application must all be
+  distinct bound variables.  That is, a pattern is a term whose type can be derived using the
+  clauses:
+  \begin{description}
+  \item[func] if $(\afun :: \atype_1\!\arrtype\!\dots\!\arrtype\!\atype_n \arrtype \btype) \in \F$
+    and $s_1 :: \atype_1,\dots,s_n :: \atype_n$ then $\afun(s_1,\dots,s_n) :: \btype$
+  \item[bvarterm] if $(\avar :: \atype_1 \arrtype \dots \arrtype \atype_n \arrtype \btype) \in
+    \Vbound$ and $s_1 :: \atype_1,\dots,s_n :: \atype_n$ then $\avar(s_1,\dots,s_n) :: \btype$
+  \item[abstraction] if $(\avar :: \atype) \in \Vbound$ and $t :: \btype$ then $\abs{\avar}{t} ::
+    \atype \arrtype \btype$
+  \item[pmeta] if $(\avar :: [\atype_1 \times \dots \times \atype_k] \arrtype \btype) \in \Vmeta$
+    for $k \geq 0$ and $(\bvar_1 :: \atype_1),\dots,(\bvar_k :: \atype_k) \in \Vbound$ are all
+    distinct, then $\meta{\avar}{\bvar_1,\dots,\bvar_k} :: \btype$
+  \end{description}
+  (Note that \clause{func} is a combination of \clause{constant} and \clause{application},
+  \clause{bvarterm} combines a restriction of \clause{variable} and \clause{application},
+  \clause{abstraction} is the same as before, and \clause{pmeta} combines a restriction of
+  \clause{variable} (if we identify $\meta{x}{}$ with $x$) with a restriction of \clause{meta}.
+  So, any expression typed using these expressions is indeed a term.)
+
+\item Hence, a true term is a pattern if it can be typed using only \clause{func},
+  \clause{bvarterm}, \clause{abstraction} and:
+  \begin{description}
+  \item[fvar] if $(\avar :: \atype) \in \Vfree$ then $\avar :: \atype$
+  \end{description}
+
+\item A term $s$ is \emph{applicative} if it does not use meta-applications or variables in
+  $\Vbound$.  Note that this limitation excludes abstractions.  Hence, a term is applicative if it
+  can be typed using just the clauses \clause{constant}, \clause{fvar} and \clause{application}.
+  Equivalently, an applicative term can be typed using just \textbf{func} and:
+  \begin{description}
+  \item[fvarterm] if $(\avar :: \atype_1 \arrtype \dots \arrtype \atype_n \arrtype \btype) \in
+    \Vfree$ and $s_1 :: \atype_1,\dots,s_n :: \atype_n$ then $\avar(s_1,\dots,s_n) :: \btype$
+  \end{description}
+\item Hence, an \emph{applicative pattern} can be typed using just the clauses \clause{func} and
+  \clause{fvar}.
+\item A term is \emph{first-order} if it is an applicative pattern with only base-type subterms;
+  that is, a term whose type can be derived using only:
+  \begin{description}
+  \item[(fofunc)] if $(\afun :: \atype_1 \arrtype \dots \arrtype \atype_n \arrtype \asort) \in \F$
+    with $\asort \in \Sorts$ and $s_1 :: \atype_1,\dots,s_n :: \atype_n$ then
+    $\afun(s_1,\dots,s_n) :: \asort$
+  \item[(fovar)] if $(\avar :: \asort) \in \Vfree$ with $\asort \in \Sorts$ then $\avar :: \asort$.
+  \end{description}
+\end{itemize}
+
+We will consider term equality modulo $=_\alpha$.  Although in practice we will typically reason
+with terms directly rather than with equivalence classes, definitions should take $\alpha$-equality
+into account.
+
+We denote $\Terms(\F,\V)$ for the set of all true terms $s$, modulo $=_\alpha$.
+
+The set of applicative terms is denoted $\ATerms(\F,\V)$.  Note that $=_\alpha$ is the
+identity on applicative terms, and that every applicative term is a true term, so
+$\ATerms(\F,\V) \subseteq \Terms(\F,\V)$.
+
+The set of first-order terms is denoted $\FOTerms(\F,\V)$.  Since every first-order term is
+also an applicative pattern, $\FOTerms(\F,\V) \subseteq \ATerms(\F,\V) \subseteq \Terms(\F,\V)$.
+
+\subsection{Free variables}
+The set of \emph{free variables} of a term is inductively defined as follows:
+\begin{itemize}
+\item $\FV(h(s_1,\dots,s_n)) = \FV(h) \cup \FV(s_1) \cup \dots \cup \FV(s_n)$ if $n > 0$;
+\item $\FV(\afun) = \emptyset$;
+\item $\FV(\avar) = \{ \avar \}$;
+\item $\FV(\abs{\avar}{t}) = \FV(t) \setminus \{ \avar \}$;
+\item $\FV(\meta{\avar}{t_1,\dots,t_k}) = \{ \avar \} \cup \FV(t_1) \cup \dots \cup \FV(t_k)$.
+\end{itemize}
+That is, $\FV(s)$ contains all binder variables and meta-variables in $s$ except for those bound
+by a $\lambda$.
+For applicative and first-order terms $s$, this is the set of \emph{all} variables occurring in
+$s$.
+
+A term $s$ is \emph{closed} if $\FV(s) \subseteq \Vmeta$.
+A term $s$ is \emph{ground} if $\FV(s) = \emptyset$.
+
+Since $\FV(s) = \FV(t)$ whenever $s =_\alpha t$ (Lemma \ref{corr:alphafreevar}),
+$\FV$ also defines a function on equivalence classes of terms.
+
+\subsection{Application}\label{subsec:application}
+We have defined application as a clause, but it will sometimes be convenient to have it as an
+operation.  This is defined as follows:
+
+\begin{definition}
+For any term $h(s_1,\dots,s_n) :: \atype \arrtype \btype$ with $n \geq 0$, and $t :: \atype$, we
+let $h(s_1,\dots,s_n) \cdot t$ be the term $h(s_1,\dots,s_n,t) :: \btype$.
+The application operator $\cdot$ is left-associative, so $h(s_1,\dots,s_n) \cdot t_1 \cdots t_m$
+denotes $((h(s_1,\dots,s_n) \cdot t_1) \cdot t_2) \cdots t_m = h(s_1,\dots,s_n,t_1,\dots,t_m)$.
+\end{definition}
+
+We easily obtain the following result;
+
+\begin{lemma}\label{lem:applicative_notation}
+The set $\ATerms(\F,\V)$ is the smallest set such that:
+\begin{itemize}
+\item $\F \cup \V \subseteq \ATerms(\F,\V)$;
+\item if $s,t \in \ATerms(\F,\V)$ and $s : \atype \arrtype \btype$ and $t : \atype$ then
+  $s \cdot t \in \ATerms(\F,\V)$.
+\end{itemize}
+\end{lemma}
+
+\begin{proof}
+Trivial.
+\end{proof}
+
+Lemma~\ref{lem:applicative_notation} shows that our applicative terms are the same as applicative
+terms constructed in the traditional way; however, for convenience we denote them in a functional
+notation.
+We can similarly see easily that the set of all terms is exactly the smallest set which includes
+$\F,\V$ and is closed under abstraction, meta-application and this application operator.
+
+Application interacts with $\alpha$-equality as you would expect: $u \cdot s_1 \cdots s_n
+=_\alpha v \cdot t_1 \cdots t_n$ if and only if $u =_\alpha v$ and each $s_i =_\alpha t_i$ (Lemma
+\ref{lem:alphaappl}).
+
+\subsection{Substitution}
+
+A \emph{substitution} is a partial function $\gamma$ from $\Vbound \cup \Vmeta$ to the set of all
+terms, with the following properties:
+\begin{itemize}
+\item if $(\avar :: \atype) \in \domain(\gamma) \cap \Vbound$ then $\gamma(\avar) :: \atype$
+\item if $(\avar :: [\atype_1 \times \dots \times \atype_n] \arrtype \btype \in \domain(\gamma)
+  \cap \Vmeta$ then we can write $\gamma(\avar) = \abs{\bvar_1 \dots \bvar_n}{t}$ with
+  each $\bvar_i :: \atype_i$ and $t :: \btype$
+\end{itemize}
+Here, $\domain(\gamma) \subseteq \Vbound \cup \Vmeta$, is the domain of the partial function
+$\gamma$.  For $\avar \in (\Vbound \cup \Vmeta) \setminus \domain(\gamma)$ we will abuse notation
+and also write $\gamma(\avar) = \avar$.
+We denote $[\avar_1:=s_1,\dots,\avar_n:=s_n]$ for the substitution $\gamma$ on domain $\{\avar_1,
+\dots,\avar_n\}$ with $\gamma(x_i) = s_i$ for $1 \leq i \leq n$.
+Applying a substitution $\gamma$ to a term $s$, notation $s\gamma$, yields a new term of the same
+type, by the clauses:
+
+\begin{itemize}
+\item $h(s_1,\dots,s_n)\gamma = (h\gamma) \cdot (s_1\gamma) \cdots (s_n\gamma)$ if $n > 0$;
+\item $\afun\gamma = \afun$;
+\item $\avar\gamma = \gamma(\avar)$;
+\item $(\abs{\avar}{t})\gamma = \abs{\cvar}{(t ([\avar:=\cvar] \cup [\bvar:=\gamma(\bvar) \mid
+  \bvar \in \domain(\gamma) \setminus \{\avar\}]))}$ \\
+  for $\cvar$ a \emph{fresh}** variable in $\Vbound$ with the same type as $\avar$;
+\item $\meta{\avar}{s_1,\dots,s_k}\gamma = \meta{\avar}{s_1\gamma,\dots,s_k\gamma}$ if
+  $\avar \notin \domain(\gamma)$
+\item $\meta{\avar}{s_1,\dots,s_k}\gamma = t[\bvar_1:=s_1\gamma,\dots,\bvar_k:=s_k\gamma]$
+  if $\avar \in \domain(\gamma)$ and $\gamma(\avar) = \abs{\bvar_1 \dots \bvar_k}{t}$ \\
+  (Here, if some $x_i = x_j$ for $i < j$, the substitution $[x_1:=u_1,\dots,x_n:=u_n]$ maps
+  $x_i$ to $u_j$.)
+\end{itemize}
+** A \emph{fresh} variable $\cvar$ is one that does not occur in $\FV(\gamma(\bvar))$ for any
+$\bvar \in \FV(s)$.
+
+It is not immediately obvious that this definitions is well-founded: it is not the case that each
+step is defined in terms of an obviously smaller substitution / application.  However, we can see
+this in two steps: substitutions are well-defined when $\domain(\gamma) \subseteq \Vbound$; and
+because of this, we can handle the meta-application case of the proof that all substitutions are
+well-defined (Lemma \ref{lem:substdefined}).
+
+More critically, this definition technically does not define a function on terms: the substitution
+of an abstraction may lead to any fresh variable being chosen.  Hence, we should perhaps think of
+it as defining a \emph{relation} between terms.  However, substitution does define a function on
+\emph{equivalence classes} (by Corollary \ref{cor:substitutionalpha}):
+  if $s_1 =_\alpha s_2$ and $s_1\gamma = t_1$ and $s_2\gamma' = t_2$ and $\gamma(x) =_\alpha
+  \gamma'(x)$ for all $x \in \FV(s_1)$, then $t_1 =_\alpha t_2$.
+As a special case we see that, if $s_1 =_\alpha s_2$ and $s_1\gamma = t_1$ and $s_2\gamma = t_2$,
+  then $t_1 =_\alpha t_2$.
+Hence, the difference is not significant, and we can safely think of substitution as defining a
+function.
+
+For two substitutions $\gamma$ and $\delta$, we let $\gamma\delta$ denote the substitution
+$[\avar := \gamma(\avar)\delta \mid \avar \in \domain(\gamma)] \cup
+[\avar := \delta(\avar) \mid \avar \in \domain(\delta) \setminus \domain(\gamma)]$.
+Essentially, applying a substitution $\gamma$ to a term corresponds with replacing each variable
+$\avar$ by $\avar\gamma$ (and evaluating the applications of abstractions that are created as a
+result), and applying $\gamma\delta$ corresponds to replacing $\avar$ by $(\avar\gamma)\delta$.
+We can prove (Lemma \ref{lem:combinesubst}) that $s(\gamma\delta)$ is exactly $(s\gamma)\delta$.
+
+A \emph{renaming} is a substitution $[x_1:=y_1,\dots,x_n:=y_n]$ with $x_1,\dots,x_n$ pairwise
+distinct, and $y_1,\dots,y_n$ pairwise distinct.
+
+We have the following results, which will often be used quietly in proofs:
+\begin{itemize}
+\item $(s \cdot t_1 \cdots t_n)\gamma = (s\gamma) \cdot (t_1\gamma) \cdots (t_n\gamma)$
+  (Lemma \ref{lem:appsubstitute})
+\item For all terms $s$, $s[] = s$, where $[]$ is the empty substitution
+  (Lemma \ref{lem:substitutionrefl})
+\item For all terms $s$ and substitutions $\gamma,\delta$ such that $\gamma(\avar) = \delta(\avar)$
+  for all $\avar \in \FV(s)$: $s\gamma = s\delta$ (Lemma \ref{lem:substextend})
+\item For all abstractions $\abs{\avar}{s}$ and $\abs{\bvar}{t}$:
+  $\abs{\avar}{s} =_\alpha \abs{\bvar}{t}$ if and only if $\bvar \notin \FV(\abs{\avar}{s})$ and
+  $s[\avar:=\bvar] = t$ (Lemma \ref{lem:alternativealpha})
+\end{itemize}
+
+\subsection{Positions}
+
+The \emph{head positions} of a given term are the paths to specific subterms, defined as follows:
+
+\begin{itemize}
+\item $\HeadPositions(h(s_1,\dots,s_n)) = \{ \epsilon, \star 0, \dots, \star (n-1) \} \cup
+  \{ i \cdot p \mid \exists i \in \{1,\dots,n\}. p \in \HeadPositions(s_i) \} \cup
+  \SubPositions(h)$
+\item $\SubPositions(\afun) = \SubPositions(\avar) = \emptyset$
+\item $\SubPositions(\abs{\avar}{t}) = \{ 0 \cdot p \mid p \in \HeadPositions(t) \}$
+\item $\SubPositions(\meta{\avar}{t_1,\dots,t_k}) = \{ !i \cdot p \mid p \in
+  \HeadPositions(t) \}$
+\end{itemize}
+
+The \emph{positions} of a given term are all the head positions of a form $p_1 \cdots p_n \epsilon$,
+so those that do not contain $\star$.
+Note that (head) positions are associated to a term; thus, not every sequence of natural numbers
+and exclamation marks is a position.
+
+For a term $s$ and a position $p \in \HeadPositions(s)$, the \emph{subterm of $s$ at position $p$},
+denoted $s|_p$, is defined as follows:
+\begin{itemize}
+\item $s|_\epsilon = s$;
+\item $h(s_1,\dots,s_n)|_{\star i} = h(s_1,\dots,s_i)$ (so just $h$ if $i = 0$);
+\item $h(s_1,\dots,s_n)|_{i \cdot p} = s_i|_p$ if $1 \leq i \leq n$;
+\item $(\abs{\avar}{t})(s_1,\dots,s_n)|_{0 \cdot p} = t|_p$;
+\item $\meta{\avar}{t_1,\dots,t_k}(s_1,\dots,s_n)|_{!i \cdot p} = t_i|_p$.
+\end{itemize}
+
+If $s|_p$ has the same type as some term $u$, then $s[u]_p$ denotes $s$ with the subterm at position
+$p$ replaced by $u$.  Formally, $s[u]_p$ is obtained as follows:
+\begin{itemize}
+\item $s[u]_\epsilon = u$;
+\item $h(s_1,\dots,s_n)[u]_{\star i} = u \cdot s_{i+1} \cdots s_n$;
+\item $h(s_1,\dots,s_n)[u]_{i \cdot p} = h(s_1,\dots,s_{i-1},s_i[u]_p,s_{i+1},\dots,s_n)$;
+\item $(\abs{\avar}{t})(s_1,\dots,s_n)[u]_{0 \cdot p} = (\abs{\avar}{t[u]_p})(s_1,\dots,s_n)$;
+\item $\meta{x}{t_1,\dots,t_k}(s_1,\dots,s_n)[u]_{!i \cdot p} = \meta{x}{t_1,\dots,t_{i-1},t_i[u]_p,t_{i+1},\dots,t_k}(s_1,\dots,s_n)$;
+\end{itemize}
+Thus, we can find and replace the subterm at a given position.
+Note that this is \emph{not} an operation on equivalence classes of terms; for example,
+$\abs{x}{x} =_\alpha \abs{y}{y}$, but $(\abs{x}{x})[x]_0 = \abs{x}{x} \not =_\alpha
+\abs{y}{x} = (\abs{y}{y})[y]_0$.  Hence, when subterms are considered this should usually be
+accompanied by some result that guarantees the operation handles bound variables properly.
+
+Note that we do \emph{not} have the property that if $p$ is a position of $s$, then $p$ is a
+position of $s\gamma$ for any substitution $\gamma$; for example, $x(\afun(y))$ has a position
+$1\ 1\ \epsilon$, with $x(\afun(y))|_{1\ 1\ \epsilon} = y$.  However,
+$x(\afun(y))[x:=\bfun(\identifier{a})] = \bfun(\identifier{a},\afun(y))$, which does not have this
+position.  If we ever need it, we could define alternative positions with the property that
+if $s|_p = t$ then $(s\gamma)|_p = t\gamma$ for $s$ a proper term.  However, we cannot have both
+this, and that positions correspond to the usual definition of positions in the first-order setting.
+
+\subsection{Subterms}
+
+We say that \emph{$t$ is a subterm of $s$}, notation $t \subtermeq s$, if there is some position
+$p \in \Positions(s)$ with $t = s|_p$.  This could equivalently be formulated as follows:
+
+\begin{lemma}
+$u \subtermeq s$ if and only if one of the following holds:
+\begin{itemize}
+\item $s = u$;
+\item $s = h(s_1,\dots,s_n)$ and $u \subtermeq s_i$ for some $i$;
+\item $s = (\abs{x}{t})(s_1,\dots,s_n)$ and $u \subtermeq t$;
+\item $s = \meta{x}{t_1,\dots,t_k}(s_1,\dots,s_n)$ and $u \subtermeq t_i$ for some $i$.
+\end{itemize}
+\end{lemma}
+
+We also observe that $\subtermeq$ is transitive:
+
+\begin{lemma}
+If $s \subtermeq t$ and $t \subtermeq q$ then $s \subtermeq q$.
+\end{lemma}
+
+This is obvious because if $t = q|_p$ and $s = t|_{p'}$ then $s = q|_{p \cdot p'}$.
+
+It should be noted that in contrast to most definitions of higher-order rewriting, we do \emph{not}
+consider, for example, $\afun(x)$ to be a subterm of $\afun(x,y)$.  Instead, we define the
+following: \emph{$t$ is a head-subterm of $s$}, notation $t \headsubtermeq s$ if $s|_p = t$ for
+$p \in \HeadPositions(s)$.
+
+It should also be noted that if $s =_\alpha t$, it does not follow that $s$ and $t$ have the same
+subterms: $\abs{x}{x}$ has a subterm $x$, while $\abs{y}{y}$ does not.  For applicative and
+first-order terms, this is not an issue.
+In addition, subterms are not preserved under substitution: $\symb{a} \subtermeq \meta{\avar}{\symb{a}}$
+but not $\symb{a}[\avar:=\abs{\bvar}{\symb{b}}] \subtermeq \meta{\avar}{\symb{a}}[\avar:=\abs{\bvar}{\symb{b}}]$.
+Subterms of true terms \emph{are} preserved under substitution; i.e., if $s \subtermeq t
+\in \Terms(\F,\V)$ then $s\gamma \subtermeq t\gamma$.
+
+Regarding different kinds of terms: the subterms and positions of a first-order term by these
+definitions are exactly the subterms and positions as they are usually considered in first-order
+term rewriting; however, head-subterms are generally not considered.  For applicative terms,
+both subterms and head-subterms are usually referred to as just ``subterms''; we distinguish them
+here because doing so is practical for analysis.
+
+\subsection{Rules and rewriting}
+
+A rule $\rho$ is a pair $\ell \arrz r$ of two closed terms with the same type, such that
+$\FV(r) \subseteq \FV(\ell)$.
+
+A rule is a \emph{pattern rule} if the left-hand side $\ell$ is a pattern.
+
+For terms $s,t$ and a set of rules $\Rules$, we say $s \arr{\Rules} t$ if there exist a head
+position $p$ of $s$, rule $\ell \arrz r \in \Rules$ and substitution $\gamma$ such that $s|_p =
+\ell\gamma$ and $t = s[r\gamma]_p$.
+
+Although we use positions -- which is dangerous in the presence of binders -- we can see without
+much effort that $\arr{\Rules}$ really does define a reduction on the set of terms: if
+$s =_\alpha s'$ and $s \arr{\Rules} t$, then $s' \arr{\Rules} t'$ with $t =_\alpha t'$ (Lemma
+\ref{lem:reductionwelldefined}).  This holds because $\FV(r) \subseteq \FV(\ell)$ for all rules.
+
+\subsection{Different kinds of term rewriting systems.}
+
+Using these ingredients, we can define a term rewriting system in a variety of ways.  Formally,
+an abstract rewriting system is a pair $(\mathcal{A},\arrz)$ where $\mathcal{A}$ is a set and
+$\arrz$ a binary relation on that set.  Properties such as termination and confluence can be
+expressed in terms of abstract rewriting systems.  We consider a number of such kinds of ARSs.
+In all cases, we often omit the set of terms (assuming it understood from context) and only
+refer to it by the ARS kind (e.g., AMS or MTRS) and the set of $\Rules$ that generates the
+rewrite relation.
+
+An \emph{applicative meta-variable system} (AMS) is an ARS of the form
+$(\Terms(\F,\V),\arr{\Rules})$.  That is, we rewrite true terms, and impose no restrictions on
+reduction.
+
+A \emph{well-behaved meta-variable system} (WAMS) is an AMS with rules $\Rules$ where all
+$\ell \arrz r \in \Rules$ are pattern rules of the form $\afun\ \ell_1 \cdots \ell_k \arrz r$.
+
+A \emph{curried functional system} (CFS) is an AMS with rules $\Rules$ where both sides of all
+$\ell \arrz r \in \Rules$ are true terms.
+
+An \emph{algebraic functional system} (AFS) is an ARS of the form $(T^\arity,\arr{\Rules})$ where
+$T^\arity \subseteq \Terms(\F,\V)$ and:
+\begin{itemize}
+\item $\arity$ is a function from $\F$ to $\N$ with $\arity(\afun) \leq \mathit{arity}(\atype)$
+  for every $(\afun :: \atype) \in \F$
+\item $\F$ contains, for all types $\atype,\btype$, a symbol $@_{\atype,\btype} :: (\atype
+  \arrtype \btype) \arrtype \atype \arrtype \btype$ with $\arity(@_{\atype,\btype}) = 2$
+\item $\Rules \supseteq B$ where $B = \{ @_{\atype,\btype}(\abs{\avar}{\meta{F}{\avar}},Y) \to
+  \meta{F}{Y} \mid \atype,\btype \in \Types \}$
+\item all terms in $T^\arity$ are \emph{algebraic}: they are constructed using only the clauses
+  \clause{variable}, \clause{abstraction} and:
+  \begin{description}
+  \item[ar-func] if $(\afun :: \atype_1 \arrtype \dots \arrtype \atype_k \arrtype \btype) \in \F$
+    with $k = \arity(\afun)$ and $s_1 :: \atype_1,\dots,s_k :: \atype_k$ then $\afun(s_1,\dots,
+    s_n) :: \btype$
+  \end{description}
+\item both sides of all $\ell \arrz r \in \Rules \setminus B$ are algebraic terms as well.
+\end{itemize}
+Hence, an AFS can be viewed as a system with mostly functional notation, but which does admit an
+explicit application implemented as a function symbol in our system.
+
+An \emph{applicative term rewriting system} (ATRS) is an ARS of the form $(\ATerms(\F,\V),
+\arr{\Rules})$ where both sides of all rules are applicative terms as well.  If the left-hand sides
+of all rules are applicative patterns, we condier it a \emph{pattern ATRS}.
+
+A \emph{many-sorted term rewriting system} (MTRS) is an ARS of the form $(\FOTerms(\F,\V),
+\arr{\Rules})$ with the following properties:
+\begin{itemize}
+\item for all $(\afun : \atype) \in \F$: $\order(\atype) \leq 1$;
+\item for all $\ell \arrz r \in \Rules$: $\ell$ is not a variable and both $\ell$ and $r$ are in
+  $\FOTerms(\F,\V)$.
+\end{itemize}
+Note that in a many-sorted term rewriting system, rules have base type (since $\ell$ and $r$ in
+$\FOTerms(\F,\V)$), so they cannot be applied at the head of a term.
+
+An \emph{unsorted first-order term rewriting system} (TRS) is a many-sorted term rewriting system
+with $\Sorts = \{ \unitsort \}$.
+
+\newpage\appendix
+
+\newcommand{\hideproof}[1]{[Details hidden]}
+\newcommand{\showproof}[1]{\ \\\textbf{(details:)}\\#1}
+
+\section{Correctness of the unconstrained formalism}
+
+\subsection{$\alpha$-equality}
+
+We first see that $=_\alpha$ is an equivalence relation (on terms, so also on true terms), so that
+we can reason modulo it!
+
+\begin{lemma}\label{lem:alphaequiv}
+For all terms $s,t,q$, functions $\mu,\xi,\chi : \V \to \N$ and $k \in \N$:
+\begin{enumerate}
+\item\label{lem:alphaequiv:reflexive}
+  $s =_\alpha^{\mu,\mu,k} s$;
+\item\label{lem:alphaequiv:symmetric}
+  if $s =_\alpha^{\mu,\xi,k} t$ then $t =_\alpha^{\xi,\mu,k} s$;
+\item\label{lem:alphaequiv:transitive}
+  if $s =_\alpha^{\mu,\xi,k} t$ and $t =_\alpha^{\xi,\chi,k} q$ then $s =_\alpha^{\mu,\chi,k} q$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+All follow by a straightforward induction on the size of $s$.
+\hideproof{
+    (\ref{lem:alphaequiv:reflexive})
+    If $s = h(s_1,\dots,s_n)$ with $n > 0$ then by IH both $h =_\alpha^{\mu,\mu,k} h$ and $s_i
+    =_\alpha^{\mu,\mu,k} s_i$ for all $i$, which immediately gives $s =_\alpha^{\mu,\mu,k} s$.
+    We similarly complete by the IH if $s = \meta{\avar}{t_1,\dots,t_k}$.
+    If $s = \afun \in \F$ or $\avar \in \Vfree$ the result is immediate.
+    If $s = \avar \in \Vbound$, then whether $\mu(\avar) = 0$ or $\mu(\avar) = \mu(\avar) > 0$,
+    $\avar =_\alpha^{\mu,\nu,k} \avar$ follows.
+    If $s = \abs{x}{t}$ then by IH $t =_\alpha^{\mu[x:=k],\mu[x:=k],k+1} t$; here also
+    $s =_\alpha^{\mu,\mu,k} s$ follows directly.
+    
+    (\ref{lem:alphaequiv:symmetric})
+    If $s = a(s_1,\dots,s_n)$ with $n > 0$ then $t = b(t_1,\dots,t_n)$ with $a =_\alpha^{\mu,\xi,k} b$
+    and $s_i =_\alpha^{\mu,\xi,k} t_i$ for all $i$; by IH then $b =_\alpha^{\xi,\mu,k} a$ and
+    $t_i =_\alpha^{\xi,\mu,k} s_i$ for all $i$, so $t =_\alpha^{\xi,\mu,k} s$.
+    We similarly complete by IH if $s = \meta{\avar}{t_1,\dots,t_k}$ and
+    $t = \meta{\avar}{t_1,\dots,t_k}$.
+    If $s \in \F \cup \Vfree$ then $t = s$ and clearly also $t =_\alpha^{\xi,\mu,k} s$.
+    If $s = \avar \in \Vbound$ then $t = \bvar \in \Vbound$ and $\mu(\avar) = \xi(\bvar)$; either
+    $\mu(\avar) = 0$ and $\bvar = \avar$ or $\mu(\avar) > 0$, but in both cases
+    $t =_\alpha^{\xi,\mu,k}$ holds.
+    If $s = \abs{x}{s'}$ then $t = \abs{y}{t'}$ and $s' =_\alpha^{\mu[x:=k],\xi[y:=k],k+1} t'$. By IH
+    also $t' =_\alpha^{\xi[y:=k],[x:=k],k+1} s'$.
+    
+    (\ref{lem:alphaequiv:transitive})
+    If $s = a(s_1,\dots,s_n)$ with $n > 0$ then $t = b(t_1,\dots,t_n)$ and $q = c(q_1,\dots,q_n)$ with
+    $a =_\alpha^{\mu,\xi,k} b =_\alpha^{\xi,\chi,k} c$ and $s_i =_\alpha^{\mu,\xi,k} t_i =_\alpha^{\xi,
+    \chi,k} q_i$ for all $i$.  By IH therefore $a =_\alpha^{\mu,\chi,k} c$ and $s_i =_\alpha^{\mu,\chi,
+    k} t_i$ for all $i$, allowing for the conclusion $s =_\alpha^{\mu,\chi,k} q$.
+    The case $s = \meta{\avar}{t_1,\dots,t_k}$ follows from IH in the same way.
+    If $s \in \F \cup \Vfree$ then $t = s$ and $q = s$, and $s =_\alpha^{\mu,\chi,k} q$ follows
+    directly.
+    If $s = \avar \in \Vbound$ and $\mu(\avar) = 0$ then $t = \avar$ and $\xi(\avar) = 0$, and therefore
+    $q = \avar$ and $\chi(\avar) = 0$; hence also $s =_\alpha^{\mu,\chi,k} q$.
+    If $s = \avar \in \Vbound$ and $\mu(\avar) > 0$ then $t = \bvar \in \Vbound$ and $\xi(\bvar) =
+    \mu(\avar) > 0$, and therefore $q = \cvar \in \Vbound$ and $\chi(\cvar) = \xi(\bvar) = \mu(\avar) >
+    0$.
+    Finally, if $s = \abs{\avar}{s'}$ then $t = \abs{\bvar}{t'}$ and $q = \abs{\cvar}{q'}$, with
+    $s' =_\alpha{\mu[x:=k],\xi[x:=k],k+1} t' =_\alpha{\xi[x:=k],\chi[x:=k],k+1} q'$.
+    By IH then $s' =_\alpha^{\mu[x:=k],\chi[x:=k],k+1} q'$.
+}
+\end{proof}
+
+Choosing $k = 1$ and $\mu,\xi,\chi$ the function mapping everything to $0$, we obtain:
+
+\begin{corollary}\label{corr:alphaequiv}
+$=_\alpha$ is an equivalence relation.
+\end{corollary}
+
+As noted in the text, $\FV$ defines a function on equivalence classes:
+
+\begin{lemma}\label{lem:alphafreevar}
+If $s =_\alpha^{\mu,\xi,k} t$ then $\FV(s) \setminus \{ x \mid \mu(x) \neq 0 \} = \FV(t) \setminus \{ x \mid \xi(x) \neq 0 \}$.
+\end{lemma}
+
+\begin{proof}
+By induction on the size of $s$.
+All cases are straightforward.
+\hideproof{
+    For brevity, we denote $M := \{ x \mid \mu(x) \neq 0 \}$ and $X :=  \{ x \mid \xi(x) \neq 0 \}$.
+    \begin{itemize}
+    \item If $s = a(s_1,\dots,s_n)$ then $t = b(t_1,\dots,t_n)$ and both $a =_\alpha^{\mu,\xi,k} b$ and
+      each $s_i =_\alpha^{\mu,\xi,k} t_i$.
+      By the induction hypothesis, $\FV(a) \setminus M = \FV(b) \setminus X$ and
+      $\FV(s_i) \setminus M = \FV(t_i) \setminus X$.
+      Since $\FV(s) \setminus M = (\FV(a) \setminus M) \cup (\FV(s_1) \setminus M) \cup \dots \cup (\FV(s_n) \setminus M)$ for any set $M$,
+      and similar for $\FV(t) \setminus X$, we are done.
+    \item If $s = \meta{\avar}{s_1,\dots,s_k}$ and $t = \meta{\avar}{t_1,\dots,t_k}$ we similarly complete
+      with the induction hypothesis.
+    \item If $s = \afun$ then $t = \afun$ and both sets are empty.
+    \item If $s = \avar \in \Vfree$ then $t = \avar$ and both sets are $\{\avar\}$.
+    \item If $s = \avar \in \Vbound$ and $\mu(\avar) = 0$ then $t = \avar$ and $\xi(\avar) = 0$ as well.
+      Therefore $\avar \notin M$ and $\avar \notin X$.
+      Hence $\FV(s) \setminus M = \{ x \} = \FV(t) \setminus X$.
+    \item If $s = \avar \in \Vbound$ and $\mu(\avar) > 0$ then $t = \bvar \in \Vbound$ and
+      $\xi(\bvar) = mu(\avar) > 0$ as well.  Therefore $\avar \in M$ and $\bvar \in X$.
+      Hence $\FV(s) \setminus M = \emptyset = \FV(t) \setminus X$.
+    \item If $s = \abs{x}{s'}$ then $t = \abs{y}{t'}$ and $s' =_\alpha^{\mu[x:=k],\xi[y:=k],k+1} t'$.
+      We have $\FV(s) \setminus M = (\FV(s') \setminus \{ x \}) \setminus M = \FV(s') \setminus \{ z \mid \mu[x:=k](z) \neq 0 \}$.
+      Moreover, $\FV(t) \setminus X = (\FV(t') \setminus \{ z \mid \xi[y:=k](z) \neq 0 \}$.
+      We complete again by the induction hypothesis.
+      \qedhere
+    \end{itemize}
+}
+\end{proof}
+
+Choosing $k = 1$ and $\mu,\xi$ the empty functions again, we obtain:
+
+\begin{corollary}\label{corr:alphafreevar}
+If $s =_\alpha t$ then $\FV(s) = \FV(t)$.
+\end{corollary}
+
+Next, we define some helper results that have little meaning on their own, but will prove useful
+when reasoning about $\alpha$-equivalence (especially in combination with substitution).
+
+\begin{lemma}\label{lem:alphaincrease}
+If $s =_\alpha^{\mu,\xi,k} t$ then $s =_\alpha^{\mu,\xi,k+1} t$.
+\end{lemma}
+
+\begin{proof}
+For an integer $0 < n \leq k$, let $\mathit{up}_n(i) = i$ for $i \leq n$ and $\mathit{up}_n(i) = i+1$ for $i > n$.
+Let $\mu_n(x) = \mathit{up}(\mu(x))$ and $\xi_n(x) = \mathit{up}_n(x)$.
+We will prove by induction on $s$ that for fixed $n > 0$, all $k \geq n$: if $s =_\alpha^{\mu,\xi,k} t$ then $s =_\alpha^{\mu_n,\xi_n,k+1} t$.
+The proof is straightforward.
+\hideproof{
+    \begin{itemize}
+    \item If $s = a(s_1,\dots,s_m)$ then $t = b(t_1,\dots,b_m)$ with $a =_\alpha^{\mu,\xi,k} b$ and
+      each $s_i =_\alpha^{\mu,\xi,k} t_i$.
+      By the IH, $a =_\alpha^{\mu_n,\xi_n,k+1} b$ and each $s_i =_\alpha^{\mu_n,\xi_n,k+1} t_i$;
+      hence, the result follows.
+    \item If $s = \afun$ or $s = \avar \in \Vfree$, then $t = s$ and the result immediately follows.
+    \item If $s = \avar \in \Vbound$ and $\mu(\avar) = 0$ then $t = \avar$ and $\xi(\avar) = 0$;
+      then also $\mu_n(\avar) = \xi_n(\avar) = 0$, and we are done.
+    \item If $s = \avar \in \Vbound$ and $\mu(\avar) > 0$ then $t = \bvar \in \Vbound$ and
+      $\xi(\avar) = \mu(\avar) > 0$.  But then, whether $\mu(\avar) > n$ or not, $\mu_n(\avar) =
+      \mathit{up}(\mu(\avar)) = \mathit{up}(\xi(\bvar)) = \xi_n(\avar)$ as well, giving the
+      required result.
+    \item If $s = \abs{x}{s'}$ then $t = \abs{y}{t'}$ and $s' =_\alpha^{\mu[x:=k],\xi[y:=k],k+1} t'$.
+      Since $k \geq n$, certainly $(\mu[x:=k])_n = \mu_n[x:=k+1]$ and $(\xi[y:=k])_n = \xi_n[y:=k+1]$.
+      Hence, by the induction hypothesis, $s' =_\alpha^{\mu_n[x:=k+1],\xi_n[x:=k+1],k+2} t'$ and
+      therefore $s =_\alpha^{\mu_n,\xi_n,k+1} t$.
+      \qedhere
+    \end{itemize}
+}
+\end{proof}
+
+\begin{lemma}\label{lem:alphaunusedvar}
+Suppose $s =_\alpha^{\mu,\xi,k} t$ and $\mu'(x) = \mu(x)$ for all $x \in \FV(s) \cap \Vbound$, and $\xi'(y) = \xi(y)$ for all $y \in \FV(t)$.
+Then $s =_\alpha^{\mu',\xi',k} t$.
+\end{lemma}
+
+\begin{proof}
+By induction on the size of $s$.
+All cases are straightforward.
+\hideproof{
+    \begin{itemize}
+    \item If $s = a(s_1,\dots,s_n)$ with $n > 0$ then $t = b(t_1,\dots,t_n)$ and $a =_\alpha^{\mu,\xi,k} b$
+      and each $s_i =_\alpha^{\mu,\xi,k} t_i$.
+      By the induction hypothesis, $a =_\alpha^{\mu',\xi',k} b$ and each $s_i =_\alpha^{\mu',\xi',k} t_i$.
+      This immediately gives $s =_\alpha^{\mu',\xi',k} t$ as required.
+    \item If $s = \afun$ or $s = x \in \Vfree$ then $t = s$ and the result immediately follows.
+    \item If $s = \avar \in \Vbound$ and $\mu(\avar) = 0$ then $t = \avar$ and $\xi(\avar) = 0$.
+      Since clearly $\avar \in \FV(s)$ and $\avar \in \FV(t)$ we have $\mu'(x) = \xi'(y) = 0$ as well.
+      Hence indeed $s =_\alpha^{\mu',\xi',k} t$.
+    \item If $s = \avar \in \Vbound$ and $\mu(\avar) > 0$ then $t = \bvar \in \Vbound$ and $\xi(\bvar)
+      > 0$.  Since clearly $\avar \in \FV(s)$ and $\bvar \in \FV(t)$ we have $\mu'(\avar) = \mu(\avar)
+      = \xi(\bvar) = \xi'(\bvar) > 0$ as well.
+    \item If $s = \abs{x}{s'}$ then $t = \abs{y}{t'}$ and $s' =_\alpha^{\mu[x:=k],\xi[y:=k],k+1} t'$.
+      Now,for all $z \in \FV(s')$: either $z = x$ and $\mu'[x:=k](z) = k = \mu[x:=k](z)$, or $z \in
+      \FV(s)$ and $\mu[x:=k](z) = \mu(z) = \mu'(z) = \mu'[x:=k](z)$ by assumption.
+      Similarly, for all $z \in \FV(t')$ we have $\xi'[y:=k](z) = \xi[y:=k](z)$.
+      Hence we can apply the induction hypothesis on $s'$ to obtain $s' =_\alpha^{\mu'[x:=k],\xi'[y:=k],k+1} t'$.
+      This immediately implies $s =_\alpha^{\mu',\xi',k} t$.
+      \qedhere
+    \end{itemize}
+}
+\end{proof}
+
+We also observe that $\alpha$-equality interacts well with application:
+
+\begin{lemma}\label{lem:alphaappl}
+Let $s = u \cdot s_1 \cdots s_n$ and $t = v \cdot t_1 \cdots t_n$.
+Then $s =_\alpha^{\mu,\xi,k} t$ if and only if $u =_\alpha^{\mu,\xi,k} v$ and
+$s_i =_\alpha^{\mu,\xi,k} t_i$ for $1 \leq i \leq n$.
+\end{lemma}
+
+\begin{proof}
+This is easily seen by inspecting the definitions.
+\hideproof{
+    First suppose $u =_\alpha^{\mu,\xi,k} v$ and each $s_i =_\alpha^{\mu,\xi,k} t_i$.
+    Consider the form of $u$; we can always write $u = a(u_1,\dots,u_m)$ with $m \geq 0$, and
+    since $u =_\alpha^{\mu,\xi,k}$, necessarily $v = b(v_1,\dots,v_m)$ with $a =_\alpha^{\mu,
+    \xi,k} b$ and each $u_i =_\alpha^{\mu,\xi,k} v_i$.  But then $s = a(u_1,\dots,u_m,s_1,
+    \dots,s_n)$ and $t = b(v_1,\dots,v_m,t_1,\dots,t_n)$; it immediately follows that
+    $s =_\alpha^{\mu,\xi,k} t$.
+    
+    Alternatively, suppose that $s =_\alpha^{\mu,\xi,k} t$.  Again denote $u = a(u_1,\dots,u_m)$.
+    Then necessarily $s = a(u_1,\dots,u_m,s_1,\dots,s_n)$.  Also write $v = b(v_1,\dots,v_k)$;
+    then $t = b(v_1,\dots,v_k,t_1,\dots,t_n)$.  But by definition of $s =_\alpha^{\mu,\xi,k} t$
+    necessarily $m + n = k + n$; that is, $m = k$.  Moreover, necessarily $a =_\alpha^{\mu,\xi,k}
+    b$, each $u_i =_\alpha^{\mu,\xi,k} b$, and each $s_i =_\alpha^{\mu,\xi,k} t_i$.  But then
+    also $u = a(u_1,\dots,u_m) =_\alpha^{\mu,\xi,k} b(v_1,\dots,v_m) = v$.
+}
+\end{proof}
+
+\subsection{Well-definedness of substitution}
+
+\newcommand{\aprel}[1]{\mathsf{ap}(#1)}
+\newcommand{\subrel}[1]{\mathsf{subst}(#1)}
+
+Avoiding the suggestive equality notation, let us reformulate the notion of substitution as a \emph{relation}, as follows:
+
+\begin{enumerate}
+\item\label{subst:appl} $\subrel{h(s_1,\dots,s_n), \gamma, u \cdot t_1 \cdots t_n)}$ if $\subrel{h,\gamma,u}$ and $\subrel{s_i,\gamma,t_i}$ for $1 \leq i \leq n$;
+\item\label{subst:func} $\subrel{\afun,\gamma,\afun}$
+\item\label{subst:var} $\subrel{\avar,\gamma,\gamma(\avar)}$
+\item\label{subst:abs} $\subrel{\abs{\avar}{s},\gamma,\abs{\cvar}{q}}$ if $\cvar$ has the same type as $\avar$ and:
+  \begin{itemize}
+  \item $\cvar \notin \FV(\gamma(\bvar))$ for any $\bvar \in \FV(\abs{\avar}{s})$;
+  \item $\subrel{s,[\avar:=\cvar] \cup [\bvar := \gamma(\bvar) \mid \bvar \in \domain(\gamma) \setminus \{\avar\}],q}$.
+  \end{itemize}
+\item\label{subst:boringmeta} $\subrel{\meta{\avar}{s_1,\dots,s_n},\gamma,\meta{\avar}{t_1,\dots,t_n}}$ if
+  $x \notin \domain(\gamma)$ and $\subrel{s_1,\gamma,t_i}$ for $1 \leq i \leq n$
+\item\label{subst:meta} $\subrel{\meta{\avar}{s_1,\dots,s_k},\gamma,q}$ if $\avar \in \domain(\gamma)$ and
+  $\gamma(\avar) = \abs{\bvar_1 \dots \bvar_k}{t}$ and there exist $t_1,\dots,t_k$ such that
+  $\subrel{s_i,\gamma,t_i}$ for $1 \leq i \leq n$ and
+  $\subrel{t,[\bvar_1:=t_1,\dots,\bvar_k:=t_k],q}$.
+\end{enumerate}
+It is easy to see that this defines the same relation as substitution in the main text.
+
+We can now specify and prove the well-definedness result:
+
+\begin{lemma}\label{lem:substdefined}
+For every term $s$ and substitution $\gamma$ there exists $q$ with $\subrel{s,\gamma,q}$. %$s\gamma = q$.
+\end{lemma}
+
+\begin{proof}
+We prove the statement by induction on (1) the boolean $\domain(\gamma) \subseteq \Vbound$ (with
+$\bot > \top$), (2) the size of $s$.  All cases are easy by the second induction hypothesis, except
+for the meta-application case $\meta{\avar}{s_1,\dots,s_k}$ with $\avar \in \domain(\gamma)$; but
+here we quickly complete with the first induction hypothesis.
+\hideproof{
+    \begin{itemize}
+    \item If $s = h(s_1,\dots,s_n)$ with $n > 0$ then by the second induction hypothesis there exist
+      $u$ such that $\subrel{h,\gamma,u}$ and $t_1,\dots,t_n$ such that $\subrel{s_i,\gamma,t_i}$ for
+      all $i$.  As normal application (the $\cdot$ operator) is unambiguously defined, we can choose
+      $q := u \cdot t_1 \cdots t_n$.
+    \item If $s = \afun$ we can choose $q := \afun$.
+    \item If $s = \avar$ we can choose $q := \gamma(\avar)$ (note that $\gamma(\avar) = \avar$ when
+      $\avar \notin \domain(\gamma)$).
+    \item If $s = \abs{\avar}{s'}$ then first note that a suitable $\cvar$ can always be found, as $\Vbound$
+      has infinitely many variables of all types and $\bigcup_{\bvar \in \FV(s)}
+      \FV(\gamma(\bvar))$ is finite.  Then, writing $\delta := [\avar:=\cvar] \cup [\bvar:=\gamma(\bvar) \mid
+      \bvar \in \domain(\gamma) \setminus \{\avar\}]$, there exists $q'$ such that
+      $\subrel{s',\delta,q'}$ by the second induction hypothesis on $s'$ (adding a variable in
+      $\Vbound$ to the domain does not affect the value for the first IH).
+      We complete with $q := \abs{\cvar}{q}$.
+    \item If $s = \meta{x}{s_1,\dots,s_k}$ with $\avar \notin \domain(\gamma)$, then by the second induction
+      hypothesis we find $t_1,\dots,t_k$ with $\subrel{s_i,\gamma,t_i}$ for all $i$.  We can choose
+      $q := \meta{x}{t_1,\dots,t_k}$.
+    \item If $s = \meta{\avar}{s_1,\dots,s_k}$ with $\avar \in \domain(\gamma)$, then note that
+      $\avar \in \Vmeta$ so the first value for the induction hypothesis is $\bot$. By the second
+      induction hypothesis we find $t_1,\dots,t_k$ with $\subrel{s_i,\gamma,t_i}$ for all $i$.
+      Now, we can write $\gamma(\avar) = \abs{\bvar_1,\dots,\bvar_k}{t}$.
+      Let $\delta := [\bvar_1:=t_1,\dots,\bvar_k:=t_k]$.
+      Observing that $\domain(\delta) = \{\bvar_1,\dots,\bvar_k\} \subseteq \Vbound$, we can apply
+      the first induction hypothesis to find $q$ such that $\subrel{t,\delta,q}$ and therefore
+      $\subrel{s,\gamma,q}$.
+      \qedhere
+    \end{itemize}
+}
+\end{proof}
+
+Towards the second result for well-definedness, that substitution and application define functions
+on equivalence classes, we specify the following lemma.  This is formulated more generally than we
+need to obtain an easier induction.
+
+\begin{lemma}\label{lem:substitutionalpha}
+Let $k$ be an integer, and $\nu,\chi : \Vbound \mapsto \{0,\dots,k\}$.
+Assume given terms $s,s'$, an integer $p$, mappings $\mu,\xi : \Vbound \mapsto \{0,\dots,p\}$ and substitutions $\gamma,\gamma'$ such that:
+\begin{itemize}
+\item $\domain(\gamma) \cap \Vmeta = \domain(\gamma') \cap \Vmeta$
+\item for all $x \in \FV(s)$ with $\mu(x) = 0$ we have:
+  $\gamma(x) =_\alpha^{\nu,\chi,k+1} \gamma'(x)$ \\
+  (for simplicity, we let $\mu(\avar) = \chi(\avar) = 0$ when $\avar \in \Vmeta$)
+\item for all $x \in \FV(s)$, $y \in \FV(s')$ such that $\mu(x) = \xi(y) > 0$ we have:
+  $\gamma(x) =_\alpha^{\nu,\chi,k+1} \gamma'(y)$
+\item $s =_\alpha^{\mu,\xi,p+1} s'$
+\end{itemize}
+Assume given $t,t'$ such that $\subrel{s,\gamma,t}$ and $\subrel{s',\gamma',t'}$.  Then $t =_\alpha^{\nu,\chi,k+1} t'$.
+\end{lemma}
+
+\begin{proof}
+We prove this by induction on the definition of $\subrel$ (so, essentially on the pair
+($\domain(\gamma)$ contains non-binder variables, size of $s$) as in the proof of Lemma \ref{lem:substdefined}).
+Although the proof is not overly complex, it is quite long, and requires multiple applications of
+both Lemmas \ref{lem:alphafreevar} and  \ref{lem:alphaappl}, as well as an application of both
+Lemmas \ref{lem:alphaincrease} and \ref{lem:alphaunusedvar}.
+\hideproof{
+    Consider the shape of $s$.
+    \begin{itemize}
+    \item Suppose $s = h(s_1,\dots,s_n)$ with $n > 0$.
+      Then $s' = h'(s_1',\dots,s_n')$ with $h =_\alpha^{\mu,\xi,p+1} h'$ and $s_i =_\alpha^{\mu,\xi,p+1} s_i'$ for all $i$. \\
+      From $\subrel{s,\gamma,t}$ we obtain: $t = u \cdot t_1 \cdots t_n$ with $\subrel{h,\gamma,u}$ and $\subrel{s_i,\gamma,t_i}$ for all $i$.
+      From $\subrel{s',\gamma',t'}$ we obtain: $t' = u' \cdot t_1' \cdots t_n'$ with $\subrel{h',\gamma',u'}$ and $\subrel{s_i',\gamma',t_i'}$ for all $i$. \\
+      Hence, by the induction hypothesis on $\subrel{h,\gamma,u}$ and $\subrel{h',\gamma',u'}$ we have: $u =_\alpha^{\nu,\chi,k+1} u'$. \\
+      Similarly, by the IH on each $\subrel{s_i,\gamma,t_i}$ and $\subrel{s_i',\gamma',t_i'}$ we have: $t_i =_\alpha^{\nu,\chi,k+1} t_i'$. \\
+      By Lemma \ref{lem:alphaappl} we obtain the required conclusion $t =_\alpha^{\nu,\chi,k+1} t'$.
+    \item Suppose $s = \afun$.  Then $s' = t = t' = \afun$ and indeed $t =_\alpha^{\nu,\chi,k+1} t'$.
+    \item Suppose $s = \avar$ with $\avar \in \Vfree$, or $\avar \in \Vbound$ and $\mu(\avar) = 0$.
+      Then $s' = \avar$ and $t = \gamma(x) =_\alpha^{\nu,\chi,k+1} \gamma'(x) = t'$ by assumption.
+    \item Suppose $s = \avar$ with $\mu(\avar) > 0$.  Then $s' = \bvar$ with $\xi(\bvar) = \mu(\avar)$, so also by assumption
+      $t = \gamma(x) =_\alpha^{\nu,\chi,k+1} \gamma'(y) = t'$.
+    \item Suppose $s = \abs{x}{u}$. Then:
+      \begin{itemize}
+      \item $s' = \abs{x'}{u'}$ for some $u'$ with $u =_\alpha^{\mu[x:=p+1],\xi[x':=p+1],p+2} u'$;
+      \item $t = \abs{z}{q}$ and $t' = \abs{z'}{q'}$ for some $z,z'$ such that:
+        \begin{itemize}
+        \item $z \notin \FV(\gamma(y))$ for any $y \in \FV(s)$ and \\
+          $z' \notin \FV(\gamma'(y))$ for any $y \in \FV(s')$;
+        \item $\subrel{u,\delta,q}$ for $\delta := [x:=z] \cup [y:=\gamma(y) \mid y \in \domain(\gamma) \setminus \{x\}]$ and \\
+          $\subrel{u',\delta',q'}$ for $\delta' := [x':=z'] \cup [y:=\gamma'(y) \mid y \in \domain(\gamma') \setminus \{x'\}]$
+        \end{itemize}
+      \end{itemize}
+      \ \\
+      Now, let $\mu_b := \mu[x:=p+1]$ and $\xi_b := \xi[x':=p+1]$ and $\nu_b := \nu[z:=k+1]$ and $\chi_b := \chi[z':=k+1]$.
+      We apply the induction hypothesis on $\subrel{u,\delta,q}$ and $\subrel{u',\delta',q'}$. (**)
+      This gives $q =_\alpha^{\nu_b,\chi_b,k+2} q'$, and therefore $t = \abs{z}{q} =_\alpha^{\nu,\chi,k+1} \abs{z'}{q'} = t'$ as required.
+    
+      (**) To see that we may apply the induction hypothesis to obtain this conclusion, we observe that
+      $\nu_b,\chi_b$ are functions in $\Vbound \to \{0,\dots,k+1\}$, that $\mu_b,\xi_b$ are functions in $\Vbound \to \{0,\dots,p+1\}$,
+      and that $u =_\alpha^{\mu_b,\xi_b,p+2} u'$ as observed above.
+      Clearly $\domain(\delta) \cap \Vmeta = \domain(\gamma) \cap \Vmeta = \domain(\gamma') \cap \Vmeta = \domain(\delta') \cap \Vmeta$.
+      For the substitutions, we must show that for all $y \in \FV(u)$:
+      \begin{itemize}
+      \item if $\mu_b(y) = 0$ then $\delta(y) =_\alpha^{\nu_b,\chi_b,k+2} \delta'(y)$;
+      \item if $\mu_b(y) > 0$ and $y' \in \FV(u')$ is such that $\mu_b(y) = \xi_b(y')$ then $\delta(y) =_\alpha^{\nu_b,\chi_b,k+2} \delta'(y')$.
+      \end{itemize}
+      \ \\
+      So let $y \in \FV(u)$; if $y \in \Vfree$ or $\mu_b(y) = 0$ then let $y' := y$, otherwise let $y'$ be such that $\mu_b(y) = \xi_b(y')$.
+    
+      If $y = x$, then $\mu_b(y) = p + 1$, so we should show the second case.
+      Since $\xi$ maps to $\{0,\dots,p\}$ and $\xi_b(x') = p + 1$, necessarily $y' = x'$.
+      Hence we must show: $z = \delta(x) =_\alpha^{\nu_b,\chi_b,k+2} \delta'(x') = z'$.
+      Since $\nu_b(z) = k + 1 = \chi_b(z')$ this clearly holds.
+    
+      Alternatively, if $y \neq x$, then $\mu_b(y) = \mu(y) \leq p$.
+      \begin{itemize}
+      \item If $\mu_b(y) > 0$ and $y' \in \FV(u')$ has $\mu_b(y) = \xi_b(y')$, then note that $y' \neq x'$, as $\xi_b(x') = p+1 > \mu_b(y)$.
+        Hence, $\xi_b(y') = \xi(y')$.
+      \item Otherwise, $y' = y$ by definition and since $y \in \FV(u) \setminus \{ x \} = \FV(s)$ we can apply Lemma \ref{lem:alphafreevar}
+        to obtain $y \in \FV(s')$ and $\xi(y) = 0$; so $y \in \FV(u')$ and $y \neq x'$, hence $\xi_b(y) = \xi(y) = 0$.\\
+      \end{itemize}
+      Hence, either way, $y' \neq x'$ and $\xi_b(y') = \xi(y')$.
+      Then also $\delta(y) = \gamma(y)$ and $\delta'(y') = \gamma'(y')$, and by the assumptions on $\gamma,\gamma'$ we have:
+      $\delta(y) =_\alpha^{\nu,\chi,k+1} \delta'(y)$.
+      Hence by Lemma \ref{lem:alphaincrease}, $\delta(y) =_\alpha^{\nu,\chi,k+2} \delta'(y)$. (a) \\
+      Now, since $y \in \FV(u)$ and $y \neq x$, we have $y \in \FV(s)$.  Similarly, $y' \in \FV(s')$.
+      By the freshness condition on $z,z'$ we have: $z \notin \FV(\gamma(y)) = \FV(\delta(y))$, and $z' \notin \FV(\delta'(y'))$.
+      But then by (a) and Lemma \ref{lem:alphaunusedvar}, $\delta(w) =_\alpha^{\nu_b,\chi_b,k+2} \delta'(w')$ as required.
+    \item Suppose $s = \meta{\avar}{s_1,\dots,s_n}$ and $\avar \notin \domain(\gamma)$, so by assumption (since $\avar \in \Vmeta$)
+      also $\avar \notin \domain(\gamma)$.  There exist $t_1,\dots,t_n$ such that $\subrel{s_i,\gamma,t_i}$ and $t =
+      \meta{\avar}{t_1,\dots,t_n}$, and $t_1',\dots,t_n'$ such that $\subrel{s_i,\gamma,t_i}$ and $t' = \meta{\avar}{t_1',\dots,t_n'}$.
+      Since, by the induction hypothesis, each $t_i =_\alpha^{\nu,\chi,k+1} t_i'$, we directly obtain $t =_\alpha^{\nu,\chi,k+1} t'$.
+    \item Finally, suppose $s = \meta{\avar}{s_1,\dots,s_n}$ and $\gamma(\avar) = \abs{\bvar_1 \dots \bvar_n}{q}$.  Then:
+      \begin{itemize}
+      \item $s' = \meta{\avar}{s_1',\dots,s_n'}$ with $s_i =_\alpha^{\mu,\xi,p+1} s_i'$ for all $i$;
+      \item $\gamma'(\avar) = \abs{\cvar_1 \dots \cvar_n}{q'}$ with $q =_\alpha^{\nu',\chi',k+n+1} q'$,
+        where $\nu' := \nu[\bvar_1:=k+1]\dots[\bvar_n:=k+n]$ and $\chi' := \chi[\cvar_1:=k+1]\dots[\cvar_n:=k+n]$
+      \item there exist $t_1,\dots,t_n$ such that $\subrel{s_i,\gamma,t_i}$ for all $i$ and
+        $\subrel{q,\delta[\bvar_1:=t_1,\dots,\bvar_n:=t_n],t}$ where $\delta := [\bvar_1:=t_1,\dots,\bvar_n:=t_n]$
+      \item there exist $t_1',\dots,t_n'$ such that $\subrel{s_i',\gamma,t_i'}$ for all $i$ and
+        $\subrel{q',\delta',t'}$ where $\delta' := [\cvar_1:=t_1',\dots,\cvar_n:=t_n']$
+      \end{itemize}
+      \ \\
+      By the induction hypothesis on each $s_i$, we obtain from $\subrel{s_i,\gamma,t_i}$ and $\subrel{s_i',\gamma,t_i'}$ that
+      $t_i =_\alpha^{\nu,\chi,k+1} t_i'$.
+      By the induction hypothesis on the presence of meta-variables in the domain of the $\gamma$, we obtain from:
+      \begin{itemize}
+      \item $\domain(\delta) \cap \Vmeta = \domain(\delta') \cap \Vmeta = \emptyset$
+      \item for all $\avar \in \FV(q)$ with $\nu'(\avar) = 0$ we have:
+        $\delta(\avar) =_\alpha^{\nu,\chi,k+1} \delta'(\avar)$
+        \begin{itemize}
+        \item[]
+          (if $\nu'(\avar) = 0$ then $\avar \notin \domain(\delta)$, so (a) $\delta(\avar) = \avar$;
+          and since $\avar \in \FV(q) \setminus \{ \cvar \mid \nu'(\cvar) \neq 0 \}$ we have
+          $\avar \in \FV(q') \setminus \{ \cvar \mid \chi'(\cvar) \neq 0 \}$ by Lemma
+          \ref{lem:alphafreevar}, so (b) $\delta'(\avar) = \avar$;
+          and since $\nu'(\avar) = \chi'(\avar) = 0$ also (c) $\nu(\avar) = \chi(\avar) = 0$;
+          from (a)--(c) we obtain $\delta(\avar) = \avar =_\alpha^{\nu,\chi,k+1} \avar = \delta'(\avar)$)
+        \end{itemize}
+      \item for all $\avar \in \FV(q)$, $\avar' \in \FV(q')$ such that $\nu'(\avar) = \chi'(\avar') > 0$
+        also $\delta(\avar) =_\alpha^{\nu,\chi,k+1} \delta'(\avar)$
+        \begin{itemize}
+        \item[]
+          (if $k < \nu'(\avar) \leq k+n$ then $\avar = \bvar_i$ and $\avar' = \cvar_i$ for some $i$;
+          and $\delta(\avar) = t_i =_\alpha^{\nu,\chi,k+1} t_i' = \delta'(\avar')$ by assumption;
+          otherwise, $0 < \nu'(\avar) \leq k$ so $\nu'(\avar) = \nu(\avar)$ and $\chi'(\avar') =
+          \chi(\avar')$, so $\delta(\avar) = \avar =_{\nu,\chi,k+1} \avar' = \delta'(\avar')$)
+        \end{itemize}
+      \item $q =_\alpha^{\nu',\chi',k+n+1} q'$
+      \end{itemize}
+      \ \\
+      that $t =_\alpha^{\nu,\chi,k+1} t'$ as required.
+      \qedhere
+    \end{itemize}
+}
+\end{proof}
+
+\begin{corollary}\label{cor:substitutionalpha}
+If $s =_\alpha s'$ and $\subrel{s,\gamma,t}$ and $\subrel{s',\gamma',t'}$ and
+  $\gamma(x) =_\alpha \gamma'(x)$ for all $x \in \FV(s)$, then $t =_\alpha t'$.
+\end{corollary}
+
+\subsection{Some results on $\alpha$-equivalence and substitution}
+
+We will now prove several useful results regarding substitution that will often be silently used in
+proofs.
+
+\begin{lemma}\label{lem:appsubstitute}
+We have:
+\begin{enumerate}
+\item
+  If $\subrel{s_i,\gamma,t_i}$ for $0 \leq i \leq n$, then $\subrel{s_0 \cdot s_1 \cdots s_n,\gamma,
+  t_0 \cdot t_1 \cdots t_n}$.
+\item
+  If $\subrel{s_0 \cdot s_1 \cdots s_n,\gamma,t}$, then we can write $t = t_0 \cdot t_1 \cdots t_n$
+  with $\subrel{s_i,\gamma,t_i}$ for $0 \leq i \leq n$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Both sides are immediate by definition.
+\hideproof{
+    In the following, let $s = s_0 \cdot s_1 \cdots s_n$, and write $s_0 = h(u_1,\dots,u_k)$ with $k
+    \geq 0$ (this is always possible), so $s = h(u_1,\dots,u_k,s_1,\dots,s_n)$.
+    
+    First suppose $\subrel{s_i,\gamma,t_i}$ for $0 \leq i \leq n$.
+    Then (by definition of $\subrel{}$) necessarily $t_0 = w \cdot v_1 \cdots v_k$, where
+    $\subrel{h,\gamma,w}$ and $\subrel{u_i,\gamma,v_i}$ for $1 \leq i \leq k$.
+    Hence, writing $t = t_0 \cdot t_1 \cdots t_n$ we have $t = (w \cdot v_1 \cdots v_k) \cdot t_1
+    \cdots t_n$.  Since $\cdot$ is left-associative, this is exactly $w \cdot v_1 \cdots v_k \cdot
+    t_1 \cdots t_n$, and $\subrel{h(u_1,\dots,u_k,s_1,\dots,s_n),\gamma,t}$ follows immediately.
+    
+    Next suppose $\subrel{s,\gamma,t}$.  Then $t = w \cdot v_1 \cdots v_k \cdot t_1 \cdots t_n$ with
+    $\subrel{h,\gamma,w}$ and $\subrel{u_i,\gamma,v_i}$ for $1 \leq i \leq k$ and $\subrel{s_i,\gamma,
+    t_i}$ for $1 \leq i \leq n$.  Write $t_0 := w \cdot v_1 \cdots v_k$; then also $t = t_0 \cdot t_1
+    \cdots t_n$, and $\subrel{s_0,\gamma,t_0}$ follows immediately.
+}
+\end{proof}
+
+Hence, viewing substitution as a function rather than a relation, we have shown that $(s_0 \cdot
+s_1 \cdots s_n)\gamma = (s_0\gamma) \cdot (s_1\gamma) \cdots (s_n\gamma)$ as claimed in the text.
+
+\begin{lemma}\label{lem:substitutionrefl}
+For all terms $s$ and substitutions $\gamma$ with $\gamma(\avar) = \avar$ for all $\avar \in \FV(s)$:
+$\subrel{s,\gamma,s}$.
+\end{lemma}
+
+\begin{proof}
+By a straightforward induction on the size of $s$.
+\hideproof{
+    \begin{itemize}
+    \item If $s = h(s_1,\dots,s_n)$ with $n > 0$ then by the induction hypothesis,
+      $\subrel{h,\gamma,h}$ and $\subrel{s_i,\gamma,s_i}$ for all $i$; hence
+      $\subrel{s,\gamma,h \cdot s_1 \cdots s_n}$, and $h \cdot s_1 \cdots s_n$ is exactly $s$.
+    \item If $s = \afun$ then clearly $\subrel{s,\gamma,s}$
+    \item If $s = \avar$ then by assumption $\gamma(\avar) = \avar$, so $\subrel{s,\gamma,s}$.
+    \item If $s = \abs{\avar}{s'}$ then note that $\gamma(\bvar) = \bvar$ for all $\bvar \in \FV(s)$,
+      and that $\avar \notin \FV(s)$, so clearly $\avar \notin \FV(\gamma(\bvar))$ holds for all $\bvar
+      \in \FV(s)$
+      Also note that $\gamma' := [\avar:=\avar] \cup [\bvar:=\gamma(\bvar) \mid \bvar \in \domain(\gamma)
+      \setminus \{\avar\}]$ satisfies the property that $\gamma'(\bvar) = \bvar$ for all $\bvar \in
+      \FV(s')$ (since it holds both for $s'$ and all variables in $\FV(s)$).
+      Hence, we can apply the induction hypothesis to obtain $\subrel{s',\gamma',s'}$, and therefore
+      $\subrel{s,\gamma,\abs{\avar}{s'}}$.
+    \item If $s = \meta{\avar}{s_1,\dots,s_k}$ with $k > 0$, then note that $\avar \notin
+      \domain(\gamma)$, as otherwise $\gamma(\avar)$ would have to be an abstraction.
+      By the induction hypothesis, $\subrel{s_i,\gamma,s_i}$ for $1 \leq i \leq k$.
+      Since $\avar \notin \domain(\gamma)$, we indeed have
+      $\subrel{s,\gamma,\meta{\avar}{s_1,\dots,s_k}}$.
+    \qedhere
+    \end{itemize}
+}
+\end{proof}
+
+Hence, applying an irrelevant substitution can be done without effect; even without any variables
+being renamed.
+
+\begin{lemma}\label{lem:substextend}
+If $\gamma(x) = \delta(x)$ for all $x \in \FV(s)$, then $\subrel{s,\gamma,t}$ implies $\subrel{s,\delta,t}$.
+\end{lemma}
+
+\begin{proof}
+We prove the lemma by a straightforward induction on the size of $s$.
+For the abstraction case, we observe that the substitutions
+$[\avar:=\cvar] \cup [\bvar:=\gamma(\bvar) \mid \bvar \in \domain(\gamma) \setminus \{\avar\}]$ and
+$[\avar:=\cvar] \cup [\bvar:=\delta(\bvar) \mid \bvar \in \domain(\delta) \setminus \{\avar\}]$
+agree on all variables in $\FV(s) \cup \{\avar\}$ because $\gamma$ and $\delta$ do.
+In the case $\meta{x}{s_1,\dots,s_k}$, we use that $\gamma(x) = \delta(x)$, and consequently do not
+require an additional induction hypothesis on the presence of meta-variables in $\domain(\gamma)$.
+\hideproof{
+    Cases:
+    \begin{itemize}
+    \item 
+      If $s = h(s_1,\dots,s_n)$ with $n > 0$ then $t = w \cdot t_1 \cdots t_n$ with $\subrel{h,\gamma,w}$ and
+      $\subrel{s_i,\gamma,t_i}$ for all $i$.  Note that $\FV(w) \subseteq \FV(s)$, and therefore also
+      $\gamma(x) = \delta(x)$ for all $x \in \FV(w)$; the same holds for all $s_i$.  Hence, by the induction
+      hypothesis, also $\subrel{h,\delta,w}$ and $\subrel{s_i,\delta,t_i}$ for all $i$, so cleary also
+      $\subrel{s,\delta,t}$.
+    \item
+      If $s = \afun$ then $t = \afun$ and indeed $\subrel{s,\delta,t}$.
+    \item
+      If $s = \avar$ then $t = \gamma(\avar) = \delta(\avar)$ by assumption (as $\avar \in \FV(s)$).
+    \item
+      If $s = \abs{\avar}{s'}$ then $t = \abs{\cvar}{t'}$ where
+      (a) $\cvar$ has the same type as $\avar$,
+      (b) $\cvar \notin \FV(\gamma(\bvar))$ for any $\bvar \in \FV(s)$, and therefore also $\cvar \notin
+      \FV(\delta(\bvar))$ for any $\bvar \in \FV(s)$, and
+      (c) $\subrel{s',[\avar:=\cvar] \cup [\bvar:=\gamma(\bvar) \mid \bvar \in \domain(\gamma) \setminus
+      \{\avar\}],t'}$, which by the induction hypothesis means that also
+      $\subrel{s',[\avar:=\cvar] \cup [\bvar:=\delta(\bvar) \mid \bvar \in \domain(\delta) \setminus
+      \{\avar\}],t'}$.
+    \item If $s = \meta{x}{s_1,\dots,s_k}$ and $x \notin \domain(\gamma)$, then $\delta(x) = \gamma(x) = x$
+      is not an abstraction, so also $x \notin \domain(\delta)$; and there exist $t_1,\dots,t_k$ with
+      $\subrel{s_i,\gamma,t_i}$ and $t = \meta{x}{t_1,\dots,t_k}$.  By the induction hypothesis also
+      $\subrel{s_i,\delta,t_i}$, so $\subrel{s,\delta,t}$ follows immediately.
+    \item
+      If $s = \meta{\avar}{s_1,\dots,s_k}$ and $\avar \in \domain(\gamma)$, then we can write
+      $\gamma(\avar) = \delta(\avar) = \abs{\bvar_1 \dots \bvar_k}{q}$;
+      and there exist $t_1,\dots,t_k$ with $\subrel{s_i,\gamma,t_i}$ and
+      $\subrel{q,[\bvar_1:=t_1,\dots,\bvar_k:=t_k],t}$.  By the induction hypothesis also
+      $\subrel{s_i,\delta,t_i}$, so we directly obtain $\subrel{s,\delta,t}$.
+      \qedhere
+    \end{itemize}
+}
+\end{proof}
+
+Hence, the only relevant part of a substitution is its value on the free variables of the term it
+is applied on.
+
+Our following result is a helper to assess what substitution does to a longer abstraction.
+
+\begin{lemma}\label{lem:abssubst}
+If $\subrel{\abs{\avar_1 \dots \avar_n}{s},\gamma,u}$ then $u = \abs{\bvar_1 \dots \bvar_n}{t}$ such
+that:
+\begin{itemize}
+\item each $\bvar_i \notin \FV(\gamma(\cvar))$ for any $\cvar \in \FV(s) \setminus \{\avar_1,\dots,\avar_n\}$
+\item if $\bvar_i = \bvar_j$ for some $i < j$, then $\avar_i \notin \FV(s)$ or $\avar_i = \avar_k$ for some $k > i$ 
+\item $\subrel{s,\gamma',t}$ where $\gamma' = [\avar_1:=\bvar_1,\dots,\avar_n:=\bvar_n] \cup [\cvar :=
+  \gamma(\cvar) \mid \cvar \in \domain(\gamma) \setminus \{\vec{\avar}\}]$ \\
+  (here, as before, if $\avar_i = \avar_j$ for some $i < j$ and not $\avar_j = \avar_k$ for any $k > j$,
+  then $\gamma'(\avar_i) = \bvar_j$ -- the later assignments in the mapping may overwrite the earlier ones)
+\end{itemize}
+\end{lemma}
+
+\begin{proof}
+By induction on $n$.  For $n = 0$ the lemma clearly holds.
+Now if $\subrel{\abs{\avar_1 \cdots \avar_n}{s},\gamma,u}$ and $n > 0$ then clearly $u = \abs{\bvar_1}{u'}$
+with $\bvar_1 \notin \FV(\gamma(\cvar))$ for any $\cvar \in \FV(\abs{\avar_1 \dots \avar_n}{s}) =
+\FV(s) \setminus \{\avar_1,\dots,\avar_n\}$, and $\subrel{\abs{\avar_2 \dots \avar_n}{s},[\avar_1:=\bvar_1]
+\cup [\cvar:=\gamma(\cvar) \mid \cvar \in \domain(\gamma) \setminus \{\avar_1\}],u'}$.
+Each of the three requirements now follows easily by the induction hypothesis.
+\hideproof{
+    Write $\gamma^{\avar_1:=\bvar_1} = [\avar_1:=\bvar_1] \cup [\cvar:=\gamma(\cvar) \mid \cvar \in \domain(\gamma)
+    \setminus \{\avar_1\}]$.  We have:
+    \begin{itemize}
+    \item By definition of substitution, $\bvar_1 \notin \FV(\abs{\vec{\avar}}{s}) = \FV(s) \setminus
+      \{\avar_1,\dots,\avar_n\}$.
+    \item By the first part of the induction hypothesis:
+      for $i > 1$ each $\bvar_i \notin \FV(\gamma^{\avar_1:=\bvar_1}(\cvar))$ for any
+      $\cvar \in \FV(s) \setminus \{\avar_2,\dots,\avar_n\}$.  Since $\gamma^{\avar_1:=\bvar_1}(\cvar) =
+      \gamma(\cvar)$ for any $\cvar \neq \avar_1$, this implies $\bvar_i \notin \FV(\gamma(\cvar))$ for any
+      $\cvar \in \FV(s) \setminus \{\avar_1,\dots,\avar_n\}$. \\
+      Combined with the previous point, we have proved the first requirement for all $i$.
+    \item From $\bvar_i \notin \FV(\gamma^{\avar_1:=\bvar_1}(\cvar))$ for $i > 1$ and $\cvar \in \FV(s)
+      \setminus \{\avar_2,\dots,\avar_n\}$ we also obtain (choosing $\cvar := \avar_1$) that
+      if $\bvar_i = \bvar_1$ then $\avar_1 \notin \FV(s)$ or $\avar_1 = \avar_k$ for some $k > 1$.
+    \item By the second part of the induction hypothesis: if $\bvar_i = \bvar_j$ for $1 < i < j$ then
+      $\avar_i \notin \FV(s)$ or $\avar_i = \avar_k$ for some $k > i$.  Hence, combined with the previous
+      point, this holds for \emph{all} $i < j$; which gives the second requirement we have to prove.
+    \item By the last part of the induction hypothesis, $\subrel{s,\gamma',t}$, where $\gamma'(\avar_i) =
+      [\avar_2:=\bvar_2,\dots,\avar_n:=\bvar_n] \cup [\cvar := \gamma^{\avar_1:=\bvar_1}(\cvar) \mid
+      \cvar \in \domain(\gamma^{\avar_1:=\bvar_1}) \setminus \{\avar_2,\dots,\avar_n\}]$.
+      This substitution has domain $\{\avar_2,\dots,\avar_n\} \cup \domain^{\avar_1:=\bvar_2} =
+      \{\avar_1,\dots,\avar_n\} \cup \domain(\gamma)$; it maps:
+      \begin{itemize}
+      \item $\avar_1$ to $\bvar_1$ unless there exists $j > 1$ with $\avar_1 = \avar_k$, in which
+        case it maps $\avar_1$ to $\bvar_k$ for $k$ the largest number with $\avar_1 = \avar_k$
+      \item $\avar_i$ to $\bvar_i$ if there is no $j > i$ with $\avar_i = \avar_j$ (for $i > 1$)
+      \item all other variables $\cvar$ to $\gamma(\cvar)$
+      \end{itemize}
+      \ \\
+      That is, this substitution is exactly $[\avar_1:=\bvar_1,\dots,\avar_n:=\bvar_n] \cup [\cvar:=
+      \gamma(\cvar) \mid \cvar \in \domain(\gamma) \setminus \{\avar_1,\dots,\avar_n\}]$.
+      \qedhere
+    \end{itemize}
+}
+\end{proof}
+
+\begin{lemma}\label{lem:alternativealpha}
+Let $s,t$ be terms, and $\avar,\bvar \in \Vbound$ variables of the same type.
+Then $\abs{\avar}{s} =_\alpha \abs{\bvar}{t}$ if and only if $\bvar \notin \FV(\abs{\avar}{s})$ and $\subrel{s,[\avar:=\bvar],t}$.
+\end{lemma}
+
+\begin{proof}
+First suppose $\bvar \notin \FV(s)$ and $\subrel{s,[\avar:=\bvar],t}$.  Then by definition,
+$\subrel{\abs{\avar}{s}, [], \abs{\bvar}{t}}$.
+By Lemma \ref{lem:substitutionrefl}, $\subrel{\abs{\avar}{s}, [], \abs{\avar}{s}}$, so
+by Lemma \ref{lem:substitutionalpha}, $\abs{\avar}{s} =_\alpha \abs{\bvar}{t}$.
+
+Next suppose $\abs{\avar}{s} =_\alpha \abs{\bvar}{t}$.  As $\avar \notin \FV(s)$, by Corollary
+\ref{corr:alphafreevar}, $\bvar \notin \FV(\abs{\bvar}{t})$.
+We can prove:
+\begin{itemize}
+\item if $\mu,\xi : \Vbound \mapsto \{0,\dots,k\}$ such that for all $\cvar_1,\cvar_2 \in
+  \Vbound$: if $\mu(\cvar_1) = \mu(\cvar_2) > 0$ or $\xi(\cvar_1) = \xi(\cvar_2) > 0$, then
+  $\cvar_1 = \cvar_2$,
+\item $\gamma$ is a substitution in $\{ \cvar \in \Vbound \mid \mu(\cvar) > 0 \} \mapsto \{ \cvar \in \Vbound \mid \xi(\cvar) > 0 \}$,
+\item for every $\cvar \in \FV(s)$ with $\mu(\cvar) = 0$ also $\xi(\cvar) = 0$,
+\item for every $\cvar \in \FV(s)$ with $\mu(\cvar) > 0$ also $\xi(\gamma(\cvar)) = \mu(\cvar)$
+\item and $s =_\alpha^{\mu,\xi,k+1} t$
+\item then $\subrel{s,\gamma,t}$.
+\end{itemize}
+Using $\gamma = [\avar:=\bvar]$, $\mu = [\avar:=1]$, $\xi = [\bvar:=1]$, $\gamma = [\avar:=\bvar]$ and $k = 1$ we are done.
+
+The proof of the above claim is done by a straightforward induction on $s$.
+\hideproof{
+    \begin{itemize}
+    \item If $s = a(s_1,\dots,s_n)$ with $n > 0$ then $t = b(t_1,\dots,t_n)$ with $a =_\alpha^{\mu,\xi,k+1} b$
+      and $s_i =_\alpha^{\mu,\xi,k+1} t_i$ for all $i$.
+      By the induction hypothesis, $\subrel{a,\gamma,b}$ and $\subrel{s_i,\gamma,t_i}$ for all $i$, and
+      therefore $\subrel{s,\gamma,t}$ by definition. %Lemma \ref{lem:appsubstitute}.
+    \item If $s = \afun$ then $t = s$ and indeed $\subrel{s,\gamma,t}$.
+    \item If $s = \avar$ with $\avar \notin \domain(\gamma)$, then $\mu(\avar) = 0$ (or $\avar \in \Vfree$)
+      so $t = \avar$ as well, and indeed $\subrel{s,\gamma,t}$.
+    \item If $s = \avar \in \domain(\gamma)$ then $t = \bvar$ such that $\mu(\avar) = \xi(\bvar) > 0$.
+      By assumption, $\bvar$ is unique, and since $\xi(\gamma(\avar)) = \mu(\avar)$ we must have
+      $t = \gamma(\avar)$, so $\subrel{s,\gamma,t}$.
+    \item If $s = \abs{\avar}{s'}$ then $t = \abs{\bvar}{t'}$ with $s' =_\alpha^{\mu[\avar:=k+1],
+      \xi[\bvar:=k+1],k+2} t'$.  Let $\gamma^{\avar:=\bvar} := [\avar := \bvar] \cup [\cvar :=
+      \gamma(\cvar) \mid \cvar \in \domain(\gamma) \setminus \{\avar\}]$.
+      Then by the induction hypothesis, $\subrel{s',\gamma^{\avar:=\bvar},t'}$.
+      We immediately obtain $\subrel{s,\gamma,t}$.
+    \item If $s = \meta{\avar}{s_1,\dots,s_k}$ then note that $\avar \notin \domain(\gamma)$.
+      As $t = \meta{\avar}{t_1,\dots,t_k}$ with $s_i =_\alpha^{\mu,\xi,k+1} t_i$, we find
+      $\subrel{s_i,\gamma,t_i}$ for all $i$ by the induction hypothesis; $\subrel{s,\gamma,t}$
+      immediately follows.
+    \end{itemize}
+}
+\end{proof}
+
+\subsection{Combining substitutions}
+
+The proof that $(s\gamma)\delta = s(\gamma\delta)$ is actually quite complex, both due to abstraction
+and meta-application.  For this reason, we split it up into multiple smaller steps.
+
+To start, we prove a version of this result limited to substitutions on $\Vbound$.
+
+\begin{lemma}\label{lem:combinesubst:allbound}
+Let $\domain(\gamma),\domain(\delta),\domain(\eta) \subseteq \Vbound$ with
+and let $s$ be a term such that
+$\subrel{\gamma(\avar),\delta,\eta(\avar)}$ for all $\avar \in \FV(s)$.
+Let $t$ be such that $\subrel{s,\gamma,t}$.
+Then there exists $u$ such that both $\subrel{t,\delta,u}$ and $\subrel{s,\eta,u}$.
+\end{lemma}
+
+If $\eta = \gamma\delta$ -- that is, $\domain(\eta) = \domain(\gamma) \cup \domain(\delta)$ and
+$\subrel{\gamma(\avar),\delta,\eta(\avar)}$ for all $\avar$ in this domain -- then the
+requirement on $\eta$ is certainly satisfied: it is satisfied for $\avar \in \domain(\eta)$ by
+definition, and for $\avar$ not in this domain, $\subrel{\avar,\delta,\avar}$ holds.
+We formulate it in this more general way because this will be convenient in the induction.
+
+\begin{proof}
+By induction on the size of $s$.
+In the case of an abstraction $s = \abs{\avar}{s'}$ and $t = \abs{\bvar}{t'}$, we choose $\cvar$
+outside both $\FV(\delta(w))$ for all $w \in \FV(t)$, and $\FV(\eta(w))$ for all $w \in \FV(s)$.
+Since $\delta$ extended with $[\bvar:=\cvar]$ and $\eta$ extended with $[\avar:=\cvar]$ are both
+substitutions with domain $\subseteq \Vbound$, we can apply the induction hypothesis.
+The case of a meta-application $\meta{\avar}{s_1,\dots,s_k}$ is trivial with the induction
+hypothesis since $\avar$ is not in the domain of $\gamma$ or $\delta$.
+\hideproof{
+    \begin{itemize}
+    \item If $s = h(s_1,\dots,s_n)$ with $n > 0$, then there exist $q, t_1,\dots,t_n$ such that
+      $\subrel{h,\gamma,q}$ and $\subrel{s_i,\gamma,t_i}$ for all $i$, and $t = q \cdot t_1 \cdots
+      t_n$.  By the induction hypothesis, there exist $w$ such that both
+      $\subrel{q,\delta,w}$ and $\subrel{h,\eta,w}$, and $u_1,\dots,u_n$ such that for all $i$
+      both $\subrel{t_i,\delta,u_i}$ and $\subrel{s_i,\eta,u_i}$.
+      Choose $u := w \cdot u_1 \cdots u_n$.
+      Then $\subrel{t,\delta,u}$ by Lemma \ref{lem:appsubstitute}, and $\subrel{s,\eta,u}$ by
+      definition.
+    \item If $s = \afun$ then $t = \afun$; we choose $u := \afun$ as well.
+    \item If $s = \avar$ then $t = \gamma(\avar)$ and $\subrel{t,\delta,\eta(\avar)}$ by assumption.
+      We let $u := \eta(\avar)$.
+    \item If $s = \abs{\avar}{s'}$ then $t = \abs{\bvar}{t'}$ with
+      $\bvar \notin \FV(\gamma(w))$ for any $w \in \FV(s)$, and we have
+      $\subrel{s',\gamma^{\avar:=\bvar},t'}$ where $\gamma^{\avar:=\bvar} = [\avar:=\bvar] \cup
+      [w:=\gamma(w) \mid w \in \domain(\gamma) \setminus \{\avar\}]$.
+      Let $\cvar$ be a variable of the same type as $\avar$, such that:
+      \begin{itemize}
+      \item $\cvar \notin \FV(\delta(w))$ for any $w \in \FV(t)$;
+      \item $\cvar \notin \FV(\eta(w))$ for any $w \in \FV(s)$;
+      \end{itemize}
+      \ \\
+      Since $\cvar$ is only required to be unequal to a finite number of variables, and $\Vbound$ has
+      infinitely many elements of each type, such a variable can always be found.
+    
+      Now let $\delta^{\bvar:=\cvar} = [\bvar:=\cvar] \cup [w:=\delta(w) \mid w \in \domain(\delta)
+      \setminus \{\bvar\}]$ and let $\eta^{\avar:=\cvar} = [\avar:=\cvar] \cup [w:=\eta(w) \mid w \in
+      \domain(\eta) \setminus \{\avar\}]$.  Then clearly $\subrel{\gamma^{\avar:=\bvar}(w),\delta^{
+      \bvar:=\cvar},\eta^{\avar:=\cvar}(w)}$ for all $w \in \FV(s')$:
+      \begin{itemize}
+      \item for $w = \avar$ we have $\subrel{\bvar,\delta^{\bvar:=\cvar},\cvar}$;
+      \item and for all other $w$ we have $\subrel{\gamma(w),\delta^{\bvar:=\cvar},\eta(w)}$ by Lemma
+        \ref{lem:substextend},because $\bvar \notin \FV(\gamma(w))$ when $w \in \FV(s) = \FV(s')
+        \setminus \{\avar\}$ (by choice of $\bvar$).
+      \end{itemize}
+      \ \\
+      Hence, we can apply the induction hypothesis on $\subrel{s',\gamma^{\avar:=\bvar},t'}$ to obtain
+      $u'$ such that both $\subrel{t',\delta^{\bvar;=\cvar},u'}$ and $\subrel{s',\eta^{\avar:=\cvar},
+      u'}$.  We choose $u := \abs{\cvar}{u'}$.  Due to the requirements on $\cvar'$ we have both
+      $\subrel{t,\delta,u}$ and $\subrel{s,\eta,u}$.
+    \item If $s = \meta{\avar}{s_1,\dots,s_k}$ then $\avar \in \Vmeta$, so $\avar \notin \domain(\gamma)
+      \cup \domain(\delta)$.  Hence, $t = \meta{\avar}{t_1,\dots,t_k}$ for some $t_1,\dots,t_k$ such that
+      $\subrel{s_i,\gamma,t_i}$ for all $i$.  By the induction hypothesis on each $s_i$, there exist
+      $u_1,\dots,u_k$ such that $\subrel{t_i,\delta,u_i}$ and $\subrel{s_i,\eta,u_i}$ for all $i \in
+      \{1,\dots,k\}$.  We are done choosing $u := \meta{\avar}{u_1,\dots,u_k}$.
+      \qedhere
+    \end{itemize}
+}
+\end{proof}
+
+The next helper result is phrased in a very technical way so as to be usable in other proofs, but
+it essentially expands on Lemma \ref{lem:combinesubst:allbound} by allowing the second substitution,
+but not the first, to have non-binder variables in its domain.  It is not quite the same, however;
+rather than showing that $(s\gamma)\delta = s(\gamma\delta)$ it states that, under certain
+restrictions, $(s\gamma)\delta = s\delta_1(\gamma\delta)_2$, where $\delta_1$ is the
+restriction of $\delta$ to variables which do not occur in $\domain(\gamma)$, and $(\gamma\delta)_2$
+is the restriction of $\gamma\delta$ to variables in the domain of $\gamma$.
+This for instance allows us to conclude that $a[\avar_1:=s_1,\dots,\avar_k:=s_k]\delta =
+a[\avar_1:=s_1\delta,\dots,\avar_k:=s_k\delta]$ if $\FV(s) \cap (\domain(\delta) \setminus
+\{\avar_1,\dots,\avar_k\}) = \emptyset$.
+
+\begin{lemma}\label{lem:combinesubst:gammabound}
+Let $\domain(\gamma),\domain(\eta) \subseteq \Vbound$,
+$s$ a term, and $\chi$ a mapping from $\domain(\gamma)$ to $\domain(\eta)$, such that:
+\begin{itemize}
+\item $\subrel{s,\gamma,t}$
+\item $\subrel{\gamma(\avar),\delta,\eta(\chi(\avar))}$ for all $\avar \in \domain(\gamma) \cap
+  \FV(s)$
+\item $\domain(\eta) \cap \FV(\delta(\avar)) = \emptyset$ for all $\avar \in \FV(s) \setminus
+  \domain(\gamma)$
+\item $\subrel{s,\delta^\chi,q}$, where $\delta^\chi$ is the substitution on domain
+  $\domain(\gamma) \cup \domain(\delta)$ with
+  $\delta^\chi(\avar) = \chi(\avar)$ if $\avar \in \domain(\gamma)$ and $\delta^\chi(\avar) =
+  \delta(\avar)$ otherwise.
+\end{itemize}
+Then there exists $u$ such that both $\subrel{t,\delta,u}$ and $\subrel{q,\eta,u}$.
+\end{lemma}
+
+\begin{proof}
+We prove the result by induction on the size of $s$.
+The proof has quite a few intricate cases, and relies on the previous results.
+We use Lemma \ref{lem:appsubstitute} for the case of $a$ being an application $h(s_1,\dots,s_n)$ with $n > 0$;
+Lemma \ref{lem:substitutionrefl} for the case of a variable $\avar \notin \{\bvar_1,\dots,\avar_k\}$;
+Lemma \ref{lem:substextend} and careful variable renaming for the case of an abstraction; and
+Lemma \ref{lem:combinesubst:allbound} for the case of a meta-application.
+\hideproof{
+    \begin{itemize}
+    \item If $s = h(s_1,\dots,s_n)$ with $n > 0$ then:
+      \begin{itemize}
+      \item $t = v_0 \cdot v_1 \cdots v_n$ with $\subrel{h,\gamma,v_0}$ and $\subrel{s_i,\gamma,v_i}$
+        for $1 \leq i \leq n$, and
+      \item $q = w_0 \cdot w_1 \cdots w_n$ with $\subrel{h,\delta^\chi,w_0}$ and
+        $\subrel{s_i,\delta^\chi,w_i}$ for $1 \leq i \leq n$.
+      \end{itemize}
+      \ \\
+      Hence, by the induction hypothesis, there exist $u_0,\dots,u_n$ with
+      $\subrel{v_i,\delta,u_i}$ and $\subrel{w_i,\eta,u_i}$ for $0 \leq i \leq n$.
+      Choose $u := u_0 \cdot u_1 \cdots u_n$. Then both
+      $\subrel{t,\delta,u}$ and $\subrel{q,\eta,u}$ by Lemma \ref{lem:appsubstitute}.
+    \item If $s = \afun$ then necessarily $t = q = \afun$ as well; we let $u := \afun$.
+    \item If $s = \avar \in \domain(\gamma)$ then $t = \gamma(\avar)$ and $q = \delta^\chi(\avar) =
+      \chi(\avar)$.  We choose $u := \eta(\chi(\avar))$.  Then by assumption $\subrel{t,\delta,u}$
+      (since $\avar \in \FV(s) \cap \domain(\gamma)$) and by definition $\subrel{q,\eta,u}$.
+    \item If $s = \avar \in \V \setminus \domain(\gamma)$, then $t = \avar$ and $q = \delta(\avar)$.
+      We choose $u := q$.  Then clearly $\subrel{t,\delta,u}$.  Since $\domain(\eta) \cap \FV(q) =
+      \emptyset$ we have $\subrel{q,\eta,u}$ by Lemma \ref{lem:substitutionrefl}.
+    \item If $s = \abs{\avar}{s'}$ then $t = \abs{\bvar_1}{t'}$ and $q = \abs{\bvar_2}{q'}$ with:
+      \begin{itemize}
+      \item $\bvar_1 \notin \FV(\gamma(w))$ for any $w \in \FV(s) = \FV(s') \setminus \{\avar\}$
+      \item $\bvar_2 \notin \FV(\delta^\chi(w))$ for any $w \in \FV(s) = \FV(s') \setminus \{\avar\}$
+      \end{itemize}
+      \ \\
+      Let $\cvar$ be a variable of the same type as $\avar$, such that $\cvar \notin \FV(\delta(w))$
+      for any $w \in \FV(t)$ and $\cvar \notin \FV(\eta(w))$ for any $w \in \FV(q)$.
+      Since there are infinitely many binder variables of all types, we can always find such $\cvar$.
+      Now let:
+      \begin{itemize}
+      \item $\gamma^{\avar:=\bvar_1} := [\avar:=\bvar_1] \cup [w:=\gamma(w) \mid w \in \domain(\gamma)
+        \setminus \{\avar\}$
+      \item $\delta^{\bvar_1:=\cvar} := [\bvar_1:=\cvar] \cup [w:=\delta(w) \mid w \in \domain(\delta)
+        \setminus \{\bvar\}]$
+      \item $\eta^{\bvar_2:=\cvar} := [\bvar_2:=\cvar] \cup [w:=\eta(w) \mid w \in \domain(\eta)
+        \setminus \{\bvar\}]$
+      \item $\chi^{\avar:=\bvar_2} := [\avar:=\bvar_2] \cup [w := \chi(w) \mid w \in \domain(\chi)
+        \setminus \{\avar\}]$
+      \end{itemize}
+      \ \\
+      We can apply the induction hypothesis, because:
+      \begin{itemize}
+      \item $\chi^{\avar:=\bvar_2}$ maps $\domain(\gamma) \cup \{\avar\} =
+        \domain(\gamma^{\avar:=\bvar_1})$ to $\domain(\eta) \cup \{\bvar_2\} = \domain(\eta^{\bvar_2:=
+        \cvar})$
+      \item $\domain(\gamma^{\avar:=\bvar_1}),\domain(\eta^{\bvar_2:=\cvar}) \subseteq \Vbound$;
+      \item $\subrel{s',\gamma^{\avar:=\bvar},t'}$ follows from $\subrel{s,\gamma,t}$
+      \item $\subrel{\gamma^{\avar:=\bvar_1}(w),\delta^{\bvar_1:=\cvar},\eta^{\bvar_2:=\cvar}(\chi^{
+        \avar:=\bvar_2}(w))}$ for all $w \in \FV(s') \cap \domain(\gamma^{\avar:=\bvar})$:
+        \begin{itemize}
+        \item if $w = \avar$ then this exactly says $\subrel{\bvar_1,\delta^{\bvar_1:=\cvar},\cvar}$,
+          which clearly holds;
+        \item otherwise, we must show $\subrel{\gamma(w),\delta^{\bvar_1:=\cvar},\eta^{\bvar_2:=\cvar}(
+          \chi(w))}$; we have $\chi(w) \neq \bvar_2$ because otherwise $\bvar_2 \in \FV(\delta^{\chi(w)})$
+          (as $w \in \FV(s') \setminus \{\avar\}$), and therefore $\eta^{\bvar_2:=\cvar}(\chi(w)) =
+          \eta(\chi(w))$; and since $\bvar_1 \notin \FV(\gamma(w))$, Lemma \ref{lem:substextend} allows
+          us to derive $\subrel{\gamma(w),\delta^{\bvar_1:=\cvar},\eta(\chi(w))}$ from
+          $\subrel{\gamma(w),\delta,\eta(\chi(w))}$
+        \end{itemize}
+      \item $\domain(\eta^{\bvar_2:=\cvar}) \cap \FV(\delta^{\bvar_1:=\cvar}(w)) = \emptyset$ for all
+        $w \in \FV(s') \setminus \domain(\gamma^{\avar:=\bvar_1})$:
+        \begin{itemize}
+        \item $w = \avar$ cannot hold, since $\avar \in \domain(\gamma^{\avar:=\bvar_1})$
+        \item $w = \bvar_1$ cannot hold, since $\bvar_1 \notin \FV(\gamma(a))$ for any $a \in
+          \FV(s') \setminus \{\avar\}$; so if $\bvar_1 \in \FV(s')$ then $\FV \in \domain(\gamma)
+          \subseteq \domain(\gamma^{\avar:=\bvar_1})$
+        \item otherwise, note that $w \notin \domain(\gamma^{\avar:=\bvar})$ implies $w \notin
+          \domain(\gamma)$, so $\delta^{\bvar_1:=\cvar}(w) = \delta(w) =
+          \delta^\chi(w)$; we both have $\bvar_2 \notin \FV(\delta^\chi(w))$ and $\domain(\eta) \cap
+          \FV(\delta^\chi(w)) = \emptyset$, so $\domain(\eta^{\bvar_2:=\cvar}) \cap
+          \FV(\delta^{\bvar_1:=\cvar}(w)) = \emptyset$ as well
+        \end{itemize}
+      \item $\subrel{s',\delta_1,q'}$, where $\delta_1$ is the substitution on domain
+        $\domain(\delta^{\bvar_1:=\cvar}) \cup \domain(\gamma^{\avar:=\bvar_1})$ with $\delta_1(w) =
+        \chi^{\avar:=\bvar_2}(w)$ if $w \in \domain(\gamma^{\avar:=\bvar_1})$ and $\delta_1(w) =
+        \delta^{\bvar_1:=\cvar}(w)$ otherwise:
+        \begin{itemize}
+          \item from $\subrel{s,\delta^\chi,q}$ we obtain $\subrel{s',\delta_2,q'}$, where
+            $\delta_2 = [\avar:=\bvar_2] \cup [w := \delta^\chi(w) \mid w \in \domain(\delta^\chi)
+            \setminus \{\avar\}]$;
+          \item for all $w \in \FV(s')$: $\delta_1(w) = \delta_2(w)$:
+            \begin{itemize}
+            \item if $w = \avar$ then $\delta_1(w) = \bvar_2 = \delta_2(w)$
+              % NOTE: here we use that $\avar \in \domain(\gamma^{\avar:=\bvar_1}) even if
+              % $\avar = \bvar_1$!  So this lemma only holds because we use an unusual definition
+              % of domain.  For the common definition, it needs to be reformulated in a less
+              % convenient way.
+            \item if $w \in \domain(\gamma) \setminus \{\avar\}$ then $\delta_1(w) = \chi(w) =
+              \delta^\chi(w) = \delta_2(w)$
+            \item if $w \in \domain(\delta) \setminus (\domain(\gamma) \cup \{\avar\})$ then
+              $\delta_1(w) = \delta^{\bvar_1:=\cvar}(w) = \delta(w)$ (**), $= \delta^\chi(w) =
+              \delta_2(w)$, where (**) holds because $w \neq \bvar_1$:
+              if $w = \bvar_1$, then $\bvar_1 \in \FV(\gamma(\bvar_1))$, contradicting the
+              earlier assumption on $\bvar_1$
+            \end{itemize}
+          \item hence, by Lemma \ref{lem:substextend}, also $\subrel{s',\delta',q'}$
+        \end{itemize}
+      \end{itemize}
+      \ \\
+      Hence, by the induction hypothesis there exists $u'$ such that
+      $\subrel{t', \delta^{\bvar_1:=\cvar}, u'}$ and $\subrel{q',\eta^{\bvar_2:=\cvar}, u'}$.
+      We are done choosing $u := \abs{\cvar}{u}$.
+    \item If $s = \meta{\avar}{s_1,\dots,s_k}$ then $\avar \in \Vmeta$ so $\avar \notin
+      \domain(\gamma)$.  Hence, $t = \meta{\avar}{t_1,\dots,t_k}$ with $\subrel{s_i,\gamma,t_i}$ for
+      $1 \leq i \leq k$.  Moreover, $\delta^\chi(\avar) = \delta(\avar)$.
+    
+      If $\avar \notin \domain(\delta)$, then $\avar \notin \domain(\delta^\chi(\avar))$ and
+      $q = \meta{\avar}{q_1,\dots,q_k}$ where $\subrel{s_i,\delta^\chi,q_i}$ for $1 \leq i \leq k$.
+      We apply the induction hypothesis to find $u_1,\dots,u_k$ such that
+      $\subrel{t_i,\delta,u_i}$ and $\subrel{q_i,\eta,u_i}$ for $1 \leq i \leq k$.
+      Since $\avar \notin \domain(\eta)$ either, we are done choosing $u := \meta{\avar}{u_1,\dots,
+      u_k}$.
+    
+      Otherwise, write $\delta(\avar) = \abs{\bvar_1 \dots \bvar_k}{w}$.
+      Then there exist $q_1,\dots,q_k$ such that $\subrel{w, [\bvar_1:=q_1,\dots,\bvar_k:=q_k],q}$
+      and $\subrel{s_i,\delta^\chi,q_i}$ for $1 \leq i \leq k$.
+      Again, we apply the induction hypothesis to find $u_1,\dots,u_k$ such that
+      $\subrel{t_i,\delta,u_i}$ and $\subrel{q_i,\eta,u_i}$ for $1 \leq i \leq k$.
+      Then we have:
+      \begin{itemize}
+      \item the substitutions $\gamma' := [\bvar_1:=q_1,\dots,\bvar_k:=q_k]$;
+        $\delta' := \eta$;
+        $\eta' := [\bvar_1:=u_1,\dots,\bvar_k:=u_k]$
+        all have a domain $\subseteq \Vbound$;
+      \item for all $\cvar \in \FV(w)$: $\subrel{\gamma'(\cvar),\delta',\eta'(\cvar)}$:
+        if $\cvar = \bvar_i$ (with not $\bvar_i = \bvar_j$ for any $j > i$) then
+        this says $\subrel{q_i,\eta,u_i}$; and otherwise, this says $\subrel{\cvar,\eta,
+        \cvar}$ which holds because if $\cvar \in \FV(w) \setminus \{\bvar_1,\dots,
+        \bvar_k\}$ then $\cvar \in \FV(\delta(\avar))$, so $\cvar \notin \domain(\eta)$ by
+        assumption
+      \item $\subrel{w,\gamma',q}$
+      \end{itemize}
+      \ \\
+      Hence, by Lemma \ref{lem:combinesubst:allbound} we find $u$ such that boy
+      $\subrel{q,\eta,u}$ and $\subrel{w,[\bvar_1:=u_1,\dots,\bvar_k:=u_k],u}$; the latter
+      immediately gives $\subrel{t,\delta,u}$.
+      \qedhere
+    \end{itemize}
+}
+\end{proof}
+
+With these preparations we are ready to show that $s(\gamma\delta) = (s\gamma)\delta$.
+Using the $\subrel{}$ relation, this is formulated as follows:
+
+\begin{lemma}\label{lem:combinesubst:main}
+Let $s,t$ be terms, and $\gamma,\delta,\eta$ be substitutions, such that for all variables $x$ in
+$\FV(s)$: $\subrel{\gamma(x),\delta,\eta(x)}$.  Then,
+  if $\subrel{s,\gamma,t}$ then there exists $u$ such that both $\subrel{t,\delta,u}$ and
+  $\subrel{s,\eta,u}$.
+\end{lemma}
+
+\begin{proof}
+By induction on the definition of $\subrel{}$ (or, put differently, induction first on the presence
+of $\Vmeta$ variables in $\domain(\gamma)$, second on the size of $s$).
+The cases where $s$ is not a meta-application are exactly the same as in the proof of Lemma
+\ref{lem:combinesubst:allbound}, so we only need to consider the cases $s =
+\meta{\avar}{s_1,\dots,s_k}$.  These follows easily with the induction hypothesis and 
+Lemma \ref{lem:combinesubst:gammabound}.
+\hideproof{
+    \begin{itemize}
+    \item If $s = \meta{\avar}{s_1,\dots,s_k}$ and $\avar \notin \domain(\gamma)$, then
+      $t = \meta{\avar}{t_1,\dots,t_k}$ with $\subrel{s_i,\gamma,t_i}$ for all $i$.  By the
+      induction hypothesis we find $u_1,\dots,u_k$ such that both $\subrel{t_i,\delta,u_i}$
+      and $\subrel{s_i,\eta,u_i}$ for all $i$.
+      If also $\avar \notin \domain(\delta)$, then we are done choosing $u := \meta{\avar}{
+      u_1,\dots,u_k}$.  Otherwise, write $\delta(\avar) = \abs{\bvar_1 \dots \bvar_k}{q}$.
+      By Lemma \ref{lem:substdefined}, there exists $u$ such that
+      $\subrel{q,[\bvar_1:=u_1,\dots,\bvar_k:=u_k],u}$.
+      This property gives both $\subrel{t,\delta,u}$ and $\subrel{s,\eta,u}$ (since
+      $\eta(\avar) = \delta(\avar)$).
+    \item If $s = \meta{\avar}{s_1,\dots,s_k}$ and $\avar \in \domain(\gamma)$, we can write
+      $\gamma(\avar) = \abs{\bvar_1 \dots \bvar_k}{a}$.
+      There exist $t_1,\dots,t_k$ such that $\subrel{s_i,\gamma,t_i}$ for all $i$, and
+      $\subrel{a,[\bvar_1:=t_1,\dots,\bvar_n:=t_k],t}$.
+      By the induction hypothesis on each $s_i$, there exist $u_1,\dots,u_k$ such that both
+      $\subrel{t_i,\delta,u_i}$ and $\subrel{s_i,\eta,u_i}$ for all $i \in \{1,\dots,k\}$.
+    
+      By Lemma \ref{lem:abssubst} and $\subrel{\gamma(\avar),\delta,\eta(\avar)}$, we can write
+      $\eta(\avar) = \abs{\cvar_1 \cdots \cvar_k}{b}$ such that:
+      \begin{itemize}
+      \item each $\cvar_i \notin \FV(\delta(w))$ for any $w \in \FV(a) \setminus \{\bvar_1,\dots,\bvar_k\}$
+      \item if $\cvar_i = \cvar_j$ for some $i < j$ then $\bvar_i \notin \FV(a)$ or $\bvar_i = \bvar_l$ for some $l > i$
+      \item $\subrel{a,[\bvar_1:=\cvar_1,\dots,\bvar_k:=\cvar_k] \cup [w := \delta(w) \mid
+        w \in \domain(\delta) \setminus \{\bvar_1,\dots,\bvar_k\}],b}$
+      \end{itemize}
+      \ \\
+      We apply Lemma \ref{lem:combinesubst:gammabound} using:
+        $s' := a$, $t' := t$, $q' := b$;
+        $\gamma' := [\bvar_1:=t_1,\dots,\bvar_k:=t_k]$;
+        $\delta' := \delta$;
+        $\eta' := [\cvar_1:=u_1,\dots,\cvar_k:=u_k]$; and
+        $\chi' := [\bvar_1:=\cvar_1,\dots,\bvar_k:=\cvar_k]$.
+      This provides $u$ such that both $\subrel{t,\delta,u}$ and $\subrel{b,[\cvar_1:=u_1,\dots,\cvar_k:=u_k],u}$;
+      this latter relation immediately gives $\subrel{s,\eta,u}$ as required.
+
+      To see that we are allowed to apply Lemma \ref{lem:combinesubst:gammabound} (and thus complete the proof),
+      we note:
+      \begin{itemize}
+      \item $\subrel{s',\gamma',t'}$ is given directly by $\subrel{a,[\bvar_1:=t_1,\dots,\bvar_n:=t_k],t}$;
+      \item each variable in $\FV(a) \cap \domain(\gamma')$ is some $\bvar_i$ such that no $j > i$ exists
+        with $\bvar_i = \bvar_j$; then also there exists no $j > i$ with $\cvar_i = \cvar_j$, so
+        $\gamma'(\bvar_i) = t_i$ and $\eta'(\chi(\bvar_i)) = \eta'(\cvar_i) = u_i$, and since
+        we chose $u_i$ so that $\subrel{t_i,\delta,u_i}$ we indeed have
+        $\subrel{\gamma'(\bvar_i),\delta',\eta'(\chi'(\bvar_i))}$
+      \item for $w \in \FV(a) \setminus \domain(\gamma')$, so $w \in \FV(a) \setminus \{\bvar_1,\dots,\bvar_k\}$,
+        we have already observed $\cvar_i \notin \FV(\delta(w))$ for any $i$;
+        hence, $\domain(\eta') \cap \FV(\delta(w)) = \emptyset$
+      \item $\subrel{a,\delta^\chi,b}$ is given.
+        \qedhere
+      \end{itemize}
+    \end{itemize}
+}
+\end{proof}
+
+We conclude:
+
+\begin{lemma}\label{lem:combinesubst}
+Always $s(\gamma\delta) =_\alpha (s\gamma)\delta$.
+\end{lemma}
+
+\begin{proof}
+Let $\eta = \gamma\delta$; that is, $\domain(\eta) = \domain(\gamma) \cup \domain(\delta)$ and
+$\eta(x) = \gamma(x)\delta$ for all $x \in \domain(\eta)$.  Then clearly $\subrel{\gamma(x),
+\delta,\eta(x)}$ for all $x$:
+if $x \in \domain(\gamma) \cup \domain(\delta)$ this is assumed,
+and otherwise $\subrel{x,\delta,x}$.
+By Lemma \ref{lem:combinesubst:main} there exists $u$ such that $s\eta =_\alpha (s\gamma)\eta$,
+so if $s\eta = t$ and $(s\gamma)\delta = t'$ then by Corollary \ref{cor:substitutionalpha}
+also $t =_\alpha u =_\alpha t'$.
+\end{proof}
+
+\subsection{Well-definedness of reduction}
+
+We need to prove that reduction is well-defined on equivalence classes of terms, since the
+definition uses subterms, which are not the same under $\alpha$-equivalence.
+
+\begin{lemma}\label{lem:reductionwelldefined}
+If $s =_\alpha s'$ and $s \arr{\Rules} t$ then exists $t'$ with $t =_\alpha t'$ such that
+$s' \arr{\Rules} t'$.
+\end{lemma}
+
+\begin{proof}
+TODO
+\end{proof}
+
+\end{document}
+
+%\section{Unconstrained first-order term rewriting}
+%
+%Although first-order (many-sorted) term rewriting systems can be seen as a kind of higher-order
+%term rewriting system, we will present their definition separately first, and later explain how
+%they can be viewed as part of the larger framework.
+%
+%\subsection{Terms} When considering \emph{first-order} term rewriting, we limit interest to $\F$
+%with the following property: for every $(\afun : \atype) \in \F$ we have $\order(\atype) \leq 1$.
+%First-order terms are those expressions $s$ such that $s : \asort$ can be derived for some
+%\emph{base type} $\asort$ using the following clauses:
+%\begin{itemize}
+%\item if $(\afun : \atype_1 \arrtype \dots \arrtype \atype_n \arrtype \asort) \in \F$ and
+%  $s_1 : \atype_1,\dots,s_n : \atype_n$ then $\afun(s_1,\dots,s_n) : \asort$;
+%\item if $(\avar : \asort) \in \V$ then $\avar : \asort$.
+%\end{itemize}
+%We denote $\FOTerms(\F,\V)$ for the set of all first-order terms $s$.
+%A first-order term of the form $\afun(s_1,\dots,s_n)$ is called a \emph{functional term} and
+%$\afun$ is its root; a term $\avar$ is simply called a variable.
+%If $s : \asort$ then we say that $\asort$ is the type of $s$; it is clear from the definitions
+%above that each term has a unique type (which is a base type).
+%
+%The set $\FV(s)$ of \emph{variables} of a term $s$ is inductively defined as follows:
+%\begin{itemize}
+%\item $\FV(\afun(s_1,\dots,s_n)) = \FV(s_1) \cup \dots \cup \FV(s_n)$;
+%\item $\FV(\avar) = \{ \avar \}$.
+%\end{itemize}
+%%That is, $\FV(s)$ contains all variables in $s$.
+%
+%\bigskip
+%The \emph{subterm} relation $\subtermeq$ is defined as follows:
+%\begin{itemize}
+%\item $s \subtermeq s$ for all $s$;
+%\item $s \subtermeq \afun(s_1,\dots,s_n)$ if $s \subtermeq s_i$ for some $i$.
+%\end{itemize}
+%If $s \subtermeq t$ we say that $s$ \emph{is a subterm of} $t$.
+%
+%\subsection{Substitution}
+%
+%A substitution is a function $\gamma$ that maps each variable $\avar \in \V$ to a term
+%$\gamma(\avar)$ of the same type.  A substitution is applied to an arbitrary first-order term as
+%follows:
+%\begin{itemize}
+%\item $\afun(s_1,\dots,s_n)\gamma = \afun(s_1\gamma,\dots,s_n\gamma)$;
+%\item $\avar\gamma = \gamma(\avar)$.
+%\end{itemize}
+%
+%The \emph{domain} $\domain(\gamma)$ of a substitution $\gamma$ is the set of all variables $x$
+%such that $\gamma(x) \neq x$.
+%We denote $[x_1:=s_1,\dots,x_n:=s_n]$ for the substitution $\gamma$ with $\gamma(x_i) = s_i$ for
+%$1 \leq i \leq n$ and $\gamma(y) = y$ for $y \notin \{x_1,\dots,x_n\}$.
+%For two substitutions $\gamma$ and $\delta$, we let $\gamma\delta$ denote the substitution that
+%maps each variable $x$ to $\gamma(x)\delta$.
+%
+%\subsection{Positions}
+%
+%The \emph{positions} of a given first-order term are the paths to specific subterms, defined as
+%follows:
+%
+%\begin{itemize}
+%\item $\Positions(\afun(s_1,\dots,s_n)) = \{ \epsilon \} \cup \{ i \cdot p \mid 1 \leq i \leq n
+%  \wedge p \in \Positions(s_i) \}$;
+%\item $\Positions(\avar) = \{ \epsilon \}$.
+%\end{itemize}
+%Note that positions are associated to a term; thus, not every integer sequence is a position.
+%
+%For a term $s$ and a position $p \in \Positions(s)$, the \emph{subterm of $s$ at position $p$},
+%denoted $s|_p$, is defined as follows:
+%\begin{itemize}
+%\item $s|_\epsilon = s$;
+%\item $\afun(s_1,\dots,s_n)|_{i \cdot p} = s_i|_p$;
+%\end{itemize}
+%
+%Note that $t \subtermeq s$ if and only if there is some position $p \in \Positions(s)$ with
+%$t = s|_p$.
+%If $s|_p$ has the same type as some term $t$, then $s[t]_p$ denotes $s$ with the subterm at position
+%$p$ replaced by $t$.  Formally, $s[t]_p$ is obtained as follows:
+%\begin{itemize}
+%\item $s[t]_p = t$;
+%\item $\afun(s_1,\dots,s_n)[t]_{i \cdot p} = \afun(s_1,\dots,s_{i-1},s_i[t]_p,s_{i+1},\dots,s_n)$.
+%\end{itemize}
+%
+%\subsection{Rules and reduction}
+%
+%A rule is a pair $\ell \arrz r$ of two terms with the same type.
+%For a given set of rules $\Rules$, the reduction relation $\arr{\Rules}$ is given by:
+%\begin{itemize}
+%\item if there exist $\ell \arrz r \in \Rules$ and $p \in \Positions(s)$ and substitution $\gamma$
+%  such that $s|_p = \ell\gamma$, then $s \arr{\Rules} s[r\gamma]_p$.
+%\end{itemize}
+%
+%\bigskip
+%A \emph{first-order term rewriting system (TRS)} is an abstract rewriting system of the form
+%$(\FOTerms(\F,\V),\arr{\Rules})$.
+%
+%In principle, we have defined a \emph{many-sorted} TRS here; a traditional unsorted TRS is obtained
+%by limiting interest to the case $\Sorts = \{ \unitsort \}$.
+
+
