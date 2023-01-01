@@ -24,10 +24,10 @@ import cora.types.TypeFactory;
 public class EnvTest {
   @Test
   public void testAddContains() {
-    Variable x = new Var("x", TypeFactory.createSort("a"));
-    Var y = new Var("y", TypeFactory.createSort("b"));
-    Var yy = new Var("y", TypeFactory.createSort("b"));
-    Var z = new Var("z", TypeFactory.createSort("b"));
+    Variable x = new Var("x", TypeFactory.createSort("a"), false);
+    Var y = new Var("y", TypeFactory.createSort("b"), true);
+    Var yy = new Var("y", TypeFactory.createSort("b"), true);
+    Var z = new Var("z", TypeFactory.createSort("b"), false);
     Environment env = new Env();
     env.add(x);
     env.add(y);
@@ -39,7 +39,7 @@ public class EnvTest {
 
   @Test
   public void testAddVariableTwice() {
-    Variable x = new Var("x", TypeFactory.createSort("a"));
+    Variable x = new Var("x", TypeFactory.createSort("a"), false);
     Environment env = new Env();
     env.add(x);
     env.add(x);
@@ -49,8 +49,8 @@ public class EnvTest {
 
   @Test
   public void testAddingTwoVariablesWithTheSameName() {
-    Variable x = new Var("x", TypeFactory.createSort("a"));
-    Var y = new Var("x", TypeFactory.createSort("b"));
+    Variable x = new Var("x", TypeFactory.createSort("a"), true);
+    Var y = new Var("x", TypeFactory.createSort("b"), true);
     Environment env = new Env();
     env.add(x);
     env.add(y);
@@ -61,8 +61,8 @@ public class EnvTest {
 
   @Test
   public void testCreationWithThreeSimilarVariables() {
-    Variable x = new Var("x", TypeFactory.createSort("a"));
-    Var y = new Var("x", TypeFactory.createSort("b"));
+    Variable x = new Var("x", TypeFactory.createSort("a"), false);
+    Var y = new Var("x", TypeFactory.createSort("a"), true);
     ArrayList<Variable> vars = new ArrayList<Variable>();
     vars.add(x);
     vars.add(y);
@@ -75,9 +75,9 @@ public class EnvTest {
 
   @Test
   public void testCopyingComplete() {
-    Variable x = new Var("x", TypeFactory.createSort("a"));
-    Variable y = new Var("y", TypeFactory.createSort("b"));
-    Variable z = new Var("z", TypeFactory.createSort("c"));
+    Variable x = new Var("x", TypeFactory.createSort("a"), false);
+    Variable y = new Var("y", TypeFactory.createSort("b"), true);
+    Variable z = new Var("z", TypeFactory.createSort("c"), true);
     Environment env = new Env();
     env.add(x);
     env.add(y);
@@ -96,3 +96,4 @@ public class EnvTest {
     assertTrue(foundZ);
   }
 }
+

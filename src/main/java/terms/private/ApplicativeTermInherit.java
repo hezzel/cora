@@ -120,16 +120,25 @@ abstract class ApplicativeTermInherit extends TermInherit implements Term {
     return _outputType;
   }
 
+  /** For a term h(s1,...,sn), this returns true if and only if n > 0. */
+  public boolean isApplication() {
+    return _args.size() > 0;
+  }
+
   /** For a term head(s1,...,sn), this returns n. */
-  public int numberImmediateSubterms() {
+  public int numberArguments() {
     return _args.size();
   }
 
+  /** For a term head(s1,...,sn), this returns the list [s1,...,sn]. */
+  public List<Term> queryArguments() {
+    return new ArrayList<Term>(_args);
+  }
+
   /** For a term head(s1,...,sn), this returns si if 1 <= i <= n, and throws an error otherwise. */
-  public Term queryImmediateSubterm(int i) {
+  public Term queryArgument(int i) {
     if (i <= 0 || i > _args.size()) {
-      throw new IndexingError(queryMyClassName(), "queryImmediateSubterm", i, 1,
-                              _args.size());
+      throw new IndexingError(queryMyClassName(), "queryArgument", i, 1, _args.size());
     }
     return _args.get(i-1);
   }

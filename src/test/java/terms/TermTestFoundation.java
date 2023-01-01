@@ -43,9 +43,9 @@ public class TermTestFoundation {
 
   protected Term twoArgVarTerm() {
     Type type = TypeFactory.createArrow(baseType("a"), arrowType("b", "a"));
-    Variable x = new Var("x", type);
+    Variable x = TermFactory.createVar("x", type);
     Term arg1 = constantTerm("c", baseType("a"));
-    Term arg2 = unaryTerm("g", baseType("b"), new Var("y", baseType("b")));
+    Term arg2 = unaryTerm("g", baseType("b"), TermFactory.createVar("y", baseType("b")));
     return new VarTerm(x, arg1, arg2);
   }
 

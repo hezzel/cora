@@ -98,6 +98,11 @@ class FunctionalTerm extends ApplicativeTermInherit {
   }
 
   /** For a term f(s1,...,sn), this returns f. */
+  public FunctionSymbol queryHead() {
+    return _f;
+  }
+
+  /** For a term f(s1,...,sn), this returns f. */
   public FunctionSymbol queryRoot() {
     return _f;
   }
@@ -164,11 +169,11 @@ class FunctionalTerm extends ApplicativeTermInherit {
   public String match(Term other, Substitution gamma) {
     if (other == null) throw new NullCallError("FunctionalTerm", "match", "argument term (other)");
     if (!other.isFunctionalTerm() || !_f.equals(other.queryRoot()) ||
-        _args.size() != other.numberImmediateSubterms()) {
+        _args.size() != other.numberArguments()) {
       return "functional term " + toString() + " is not instantiated by " + other.toString() + ".";
     }   
     for (int i = 0; i < _args.size(); i++) {
-      String warning = _args.get(i).match(other.queryImmediateSubterm(i+1), gamma);
+      String warning = _args.get(i).match(other.queryArgument(i+1), gamma);
       if (warning != null) return warning;
     }
     return null;
@@ -190,9 +195,9 @@ class FunctionalTerm extends ApplicativeTermInherit {
     if (term == null) return false;
     if (!term.isFunctionalTerm()) return false;
     if (!_f.equals(term.queryRoot())) return false;
-    if (_args.size() != term.numberImmediateSubterms()) return false;
+    if (_args.size() != term.numberArguments()) return false;
     for (int i = 0; i < _args.size(); i++) {
-      if (!_args.get(i).equals(term.queryImmediateSubterm(i+1))) return false;
+      if (!_args.get(i).equals(term.queryArgument(i+1))) return false;
     }
     return true;
   }

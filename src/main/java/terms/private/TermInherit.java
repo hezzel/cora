@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -42,6 +42,20 @@ abstract class TermInherit implements Term {
     Substitution gamma = new Subst();
     if (match(other, gamma) == null) return gamma;
     return null;
+  }
+
+  /** Returns true if the set vars() is empty. */
+  public boolean isGround() {
+    return vars().size() == 0;
+  }
+
+  /** Returns true if vars() contains only non-binder variables. */
+  public boolean isClosed() {
+    Environment env = vars();
+    for (Variable x : env) {
+      if (x.isBinderVariable()) return false;
+    }
+    return true;
   }
 
   /** This method verifies equality to another Term. */

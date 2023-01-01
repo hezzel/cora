@@ -157,8 +157,8 @@ public class CoraTermReadingTest {
     assertTrue(term.queryType().queryArrowInputType().equals(TypeFactory.createSort("c")));
     assertTrue(term.queryType().queryArrowOutputType().equals(TypeFactory.createSort("d")));
     assertTrue(term.queryRoot().equals(generateSymbol("f", "a -> b -> c -> d")));
-    assertTrue(term.queryImmediateSubterm(1).equals(generateSymbol("aa", "a")));
-    assertTrue(term.queryImmediateSubterm(2).equals(x));
+    assertTrue(term.queryArgument(1).equals(generateSymbol("aa", "a")));
+    assertTrue(term.queryArgument(2).equals(x));
   }
 
   @Test(expected = cora.exceptions.TypingException.class)

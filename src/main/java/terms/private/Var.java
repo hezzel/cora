@@ -33,20 +33,26 @@ class Var extends LeafTermInherit implements Variable {
   private static int COUNTER = 0;
   private String _name;
   private int _index;
+  private boolean _binder;
 
-  /** Create a variable with the given name and type. */
-  Var(String name, Type type) {
+  /** Create a variable with the given name and type, and which is in Vbinder if binder is true. */
+  Var(String name, Type type, boolean binder) {
     super(type);
     _name = name;
+    _binder = binder;
     _index = COUNTER;
     COUNTER++;
     if (name == null) throw new NullInitialisationError("Var", "name");
   }
 
-  /** Create a variable without a name; a name will be automatically generated. */
-  Var(Type type) {
+  /**
+   * Create a variable without a name; a name will be automatically generated.
+   * If binder is true, this variable will be marked as being in Vbinder; otherfise in Vnonb.
+   */
+  Var(Type type, boolean binder) {
     super(type);
     _name = "x[" + COUNTER + "]";
+    _binder = binder;
     _index = COUNTER;
     COUNTER++;
   }
@@ -63,6 +69,16 @@ class Var extends LeafTermInherit implements Variable {
   /** @return false */
   public boolean isFunctionalTerm() { return false; }
 
+  /** @return whether or not this variable is in Vbinder */
+  public boolean isBinderVariable() {
+    return _binder;
+  }
+
+  /** @return true if the type is base and the variable is not in Vbinder */
+  public boolean isFirstOrder() {
+    return queryType().isBaseType() && !_binder;
+  }
+
   /** Returns the name this variable was set up with, or renamed to. */
   public String queryName() {
     return _name;
@@ -73,7 +89,7 @@ class Var extends LeafTermInherit implements Variable {
     return _index;
   }
 
-  /** @return the name of the variable, along with its index. */
+  /** @return the name of the variable. */
   public String toString() {
     return _name;
   }
@@ -129,11 +145,13 @@ class Var extends LeafTermInherit implements Variable {
   }
 
   /**
-   * Two variables are equal if and only if they share an index and have the same type.
+   * Two variables are equal if and only if they share an index, and both binder or non-binder,
+   * and have the same type.
    * Currently, this can only occur if they are the same object, but this may change in the future.
    */
   public boolean equals(Variable other) {
-    return other.queryVariableIndex() == _index && queryType().equals(other.queryType());
+    return other.queryVariableIndex() == _index && queryType().equals(other.queryType()) &&
+           other.isBinderVariable() == _binder;
   }
 
   /** A Variable can only be equal to another term if that term is this same Variable */
@@ -146,7 +164,9 @@ class Var extends LeafTermInherit implements Variable {
   public int compareTo(Variable other) {
     if (_index < other.queryVariableIndex()) return -1;
     if (_index > other.queryVariableIndex()) return 1;
-    return 0;
+    if (_binder && !other.isBinderVariable()) return -1;
+    if (!_binder && other.isBinderVariable()) return 1;
+    return queryType().toString().compareTo(other.queryType().toString());
   }
 }
 

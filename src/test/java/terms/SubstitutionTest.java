@@ -41,12 +41,12 @@ public class SubstitutionTest {
 
   @Test(expected = NullStorageError.class)
   public void testNullValueCreation() {
-    Substitution gamma = new Subst(new Var("x", baseType("Int")), null);
+    Substitution gamma = new Subst(TermFactory.createVar("x", baseType("Int")), null);
   }
 
   @Test(expected = TypingError.class)
   public void testIlltypedCreation() {
-    Variable x = new Var("x", baseType("Int"));
+    Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("false", baseType("Bool"));
     Substitution gamma = new Subst(x, xterm);
   }
@@ -54,28 +54,28 @@ public class SubstitutionTest {
   @Test(expected = NullStorageError.class)
   public void testNullKeyExtension() {
     Substitution gamma = new Subst();
-    Variable x = new Var("x", baseType("o"));
+    Variable x = TermFactory.createVar("x", baseType("o"));
     gamma.extend(null, x);
   }
 
   @Test(expected = NullStorageError.class)
   public void testNullValueExtension() {
     Substitution gamma = new Subst();
-    Variable x = new Var("x", baseType("o"));
+    Variable x = TermFactory.createVar("x", baseType("o"));
     gamma.extend(x, null);
   }
 
   @Test(expected = TypingError.class)
   public void testIllTypedExtension() {
-    Variable x = new Var("x", baseType("Int"));
+    Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("37", baseType("Int"));
     Substitution gamma = new Subst(x, xterm);
-    gamma.extend(new Var("y", baseType("Int")), constantTerm("false", baseType("Bool")));
+    gamma.extend(TermFactory.createVar("y", baseType("Int")), constantTerm("false", baseType("Bool")));
   }
 
   @Test(expected = NullStorageError.class)
   public void testNullKeyReplacement() {
-    Variable x = new Var("x", baseType("Int"));
+    Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("37", baseType("Int"));
     Substitution gamma = new Subst(x, xterm);
     gamma.replace(null, xterm);
@@ -83,7 +83,7 @@ public class SubstitutionTest {
   
   @Test(expected = NullStorageError.class)
   public void testNullValueReplacement1() {
-    Variable x = new Var("x", baseType("Int"));
+    Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("37", baseType("Int"));
     Substitution gamma = new Subst(x, xterm);
     gamma.replace(x, null);
@@ -91,7 +91,7 @@ public class SubstitutionTest {
 
   @Test(expected = TypingError.class)
   public void testIllTypedReplacement() {
-    Variable x = new Var("x", baseType("Int"));
+    Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("37", baseType("Int"));
     Substitution gamma = new Subst(x, xterm);
     gamma.extend(x, constantTerm("false", baseType("Bool")));
@@ -100,16 +100,16 @@ public class SubstitutionTest {
   @Test
   public void testEmptySubstitutionBasics() {
     Substitution gamma = new Subst();
-    Variable x = new Var("x", baseType("o"));
+    Variable x = TermFactory.createVar("x", baseType("o"));
     assertTrue(gamma.get(x) == null);
     assertTrue(gamma.getReplacement(x).equals(x));
   }
 
   @Test
   public void testExtendingWithNewKey() {
-    Variable x = new Var("x", baseType("Int"));
-    Variable y = new Var("y", baseType("o"));
-    Variable z = new Var("z", baseType("o"));
+    Variable x = TermFactory.createVar("x", baseType("Int"));
+    Variable y = TermFactory.createVar("y", baseType("o"));
+    Variable z = TermFactory.createVar("z", baseType("o"));
     Term xterm = constantTerm("37", baseType("Int"));
     Term yterm = z;
 
@@ -122,7 +122,7 @@ public class SubstitutionTest {
 
   @Test
   public void testExtendingWithExistingKey() {
-    Variable x = new Var("x", baseType("Int"));
+    Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("37", baseType("Int"));
     Term xxterm = constantTerm("42", baseType("Int"));
 
@@ -134,9 +134,9 @@ public class SubstitutionTest {
 
   @Test
   public void testReplacingWithNewKey() {
-    Variable x = new Var("x", baseType("Int"));
-    Variable y = new Var("y", baseType("o"));
-    Variable z = new Var("z", baseType("o"));
+    Variable x = TermFactory.createVar("x", baseType("Int"));
+    Variable y = TermFactory.createVar("y", baseType("o"));
+    Variable z = TermFactory.createVar("z", baseType("o"));
     Term xterm = constantTerm("37", baseType("Int"));
     Term yterm = z;
 
@@ -149,7 +149,7 @@ public class SubstitutionTest {
 
   @Test
   public void testReplacingWithExistingKey() {
-    Variable x = new Var("x", baseType("Int"));
+    Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("37", baseType("Int"));
     Term xxterm = constantTerm("42", baseType("Int"));
 
@@ -161,9 +161,9 @@ public class SubstitutionTest {
 
   @Test
   public void testRemoving() {
-    Variable x = new Var("x", baseType("Int"));
-    Variable y = new Var("y", baseType("o"));
-    Variable z = new Var("z", baseType("o"));
+    Variable x = TermFactory.createVar("x", baseType("Int"));
+    Variable y = TermFactory.createVar("y", baseType("o"));
+    Variable z = TermFactory.createVar("z", baseType("o"));
 
     Term xterm = constantTerm("37", baseType("Int"));
     Term yterm = z;
@@ -181,9 +181,9 @@ public class SubstitutionTest {
 
   @Test
   public void testDomain() {
-    Variable x = new Var("x", baseType("Int"));
-    Variable y = new Var("y", baseType("o"));
-    Variable z = new Var("z", baseType("o"));
+    Variable x = TermFactory.createVar("x", baseType("Int"));
+    Variable y = TermFactory.createVar("y", baseType("o"));
+    Variable z = TermFactory.createVar("z", baseType("o"));
 
     Term xterm = constantTerm("37", baseType("Int"));
     Term yterm = z;

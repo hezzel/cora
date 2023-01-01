@@ -67,13 +67,13 @@ public class FunctionalTermTest extends TermTestFoundation {
   @Test(expected = IndexingError.class)
   public void testTooSmallSubterm() {
     Term t = twoArgFuncTerm();
-    Term x = t.queryImmediateSubterm(0);
+    Term x = t.queryArgument(0);
   }
 
   @Test(expected = IndexingError.class)
   public void testTooLargeSubterm() {
     Term t = twoArgFuncTerm();
-    Term x = t.queryImmediateSubterm(3);
+    Term x = t.queryArgument(3);
   }
 
   @Test(expected = InappropriatePatternDataError.class)
@@ -90,11 +90,14 @@ public class FunctionalTermTest extends TermTestFoundation {
   }
 
   @Test
-  public void testImmediateSubterms() {
+  public void testArguments() {
     Term t = twoArgFuncTerm();
-    assertTrue(t.numberImmediateSubterms() == 2);
-    assertTrue(t.queryImmediateSubterm(1).equals(constantTerm("c", baseType("a"))));
-    assertTrue(t.queryImmediateSubterm(2).toString().equals("g(d)"));
+    assertTrue(t.numberArguments() == 2);
+    assertTrue(t.queryArgument(1).equals(constantTerm("c", baseType("a"))));
+    assertTrue(t.queryArgument(2).toString().equals("g(d)"));
+    List<Term> args = t.queryArguments();
+    assertTrue(args.get(0) == t.queryArgument(1));
+    assertTrue(args.get(1) == t.queryArgument(2));
   }
 
   @Test
@@ -114,7 +117,9 @@ public class FunctionalTermTest extends TermTestFoundation {
     assertFalse(t.isVariable());
     assertFalse(t.isVarTerm());
     assertTrue(t.isPattern());
+    assertTrue(t.isApplication());
     assertTrue(t.queryRoot().equals(new Constant("f", type)));
+    assertTrue(t.queryHead().equals(t.queryRoot()));
     assertTrue(t.toString().equals("f(c, g(d))"));
   }
 
@@ -124,6 +129,7 @@ public class FunctionalTermTest extends TermTestFoundation {
     List<Term> args = new ArrayList<Term>();
     Term fterm = new FunctionalTerm(f, args);
     assertTrue(fterm.isConstant());
+    assertFalse(fterm.isApplication());
   }
 
   @Test
@@ -136,7 +142,7 @@ public class FunctionalTermTest extends TermTestFoundation {
     assertFalse(s2.equals(s1));
     assertTrue(s2.equals(s3));
     assertFalse(s2.equals(s4));
-    assertFalse(s1.equals(new Var("x", baseType("o"))));
+    assertFalse(s1.equals(new Var("x", baseType("o"), false)));
     assertTrue(s1.equals(new FunctionalTerm(new Constant("x", baseType("o")),
                                             new ArrayList<Term>())));
   }
@@ -147,18 +153,32 @@ public class FunctionalTermTest extends TermTestFoundation {
     FunctionSymbol f = new Constant("f", arrowType(baseType("a"),arrowType("b","a")));
     FunctionSymbol g = new Constant("g", arrowType(baseType("b"),arrowType("a","b")));
     FunctionSymbol c = new Constant("c", baseType("b"));
-    Variable x = new Var("x", baseType("a"));
-    Variable y = new Var("y", baseType("b"));
+    Variable x = new Var("x", baseType("a"), false);
+    Variable y = new Var("y", baseType("b"), true);
     Term s = new FunctionalTerm(f, new FunctionalTerm(f, x, c), new FunctionalTerm(g, y, x));
     Environment env = s.vars();
     assertTrue(env.contains(x));
     assertTrue(env.contains(y));
     assertTrue(env.size() == 2);
+    // with x a non-binder variable, the term is neither closed nor ground
+    assertFalse(s.isGround());
+    assertFalse(s.isClosed());
+    // but if all variables are non-binder variables, the term is closed
+    y = new Var("y", baseType("b"), false);
+    s = new FunctionalTerm(f, new FunctionalTerm(f, x, c), new FunctionalTerm(g, y, x));
+    assertFalse(s.isGround());
+    assertTrue(s.isClosed());
+    // and if there are no variables, the term is ground
+    FunctionSymbol a = new Constant("a", baseType("a"));
+    FunctionSymbol b = new Constant("b", baseType("b"));
+    s = new FunctionalTerm(f, new FunctionalTerm(f, a, c), new FunctionalTerm(g, b, a));
+    assertTrue(s.isGround());
+    assertTrue(s.isClosed());
   }
 
   @Test
   public void testVarOrFunctionalTerm() {
-    Term s1 = new Var("x", baseType("o"));
+    Term s1 = new Var("x", baseType("o"), false);
     Term s2 = constantTerm("x", baseType("o"));
     assertFalse(s2.equals(s1));
   }
@@ -167,7 +187,7 @@ public class FunctionalTermTest extends TermTestFoundation {
   public void testFirstOrder() {
     Type aa = arrowType("a", "a");
     Term s = twoArgFuncTerm();
-    Term t = unaryTerm("h", aa, new Var("x", baseType("b")));
+    Term t = unaryTerm("h", aa, new Var("x", baseType("b"), false));
     Type utype = arrowType(baseType("a"), arrowType(aa, baseType("b")));
     Term q = new FunctionalTerm(new Constant("u", utype), s, t);
     assertTrue(s.isFirstOrder());
@@ -177,7 +197,7 @@ public class FunctionalTermTest extends TermTestFoundation {
 
   @Test
   public void testNonPattern() {
-    Var x = new Var("x", arrowType("A", "B"));
+    Var x = new Var("x", arrowType("A", "B"), false);
     Term xa = new VarTerm(x, constantTerm("a", baseType("A")));
     FunctionSymbol f = new Constant("f", arrowType("B", "B"));
     Term fxa = new FunctionalTerm(f, xa);
@@ -189,7 +209,7 @@ public class FunctionalTermTest extends TermTestFoundation {
     Type type = arrowType(baseType("a"), arrowType("b", "a"));
     FunctionSymbol f = new Constant("f", type);
     Term arg1 = constantTerm("c", baseType("a"));
-    Term arg2 = unaryTerm("g", baseType("b"), new Var("x", baseType("b")));
+    Term arg2 = unaryTerm("g", baseType("b"), new Var("x", baseType("b"), true));
     Term term = new FunctionalTerm(f, arg1, arg2);    // f(c,g(x))
     List<Position> lst = term.queryAllPositions();
     assertTrue(lst.size() == 4);
@@ -223,7 +243,7 @@ public class FunctionalTermTest extends TermTestFoundation {
     Term s = unaryTerm("f", baseType("Int"), constantTerm("37", baseType("Int")));
     Term t = s.replaceSubterm(PositionFactory.createArg(1, PositionFactory.empty), s);
     assertTrue(s.toString().equals("f(37)"));
-    assertTrue(t.queryImmediateSubterm(1).equals(s));
+    assertTrue(t.queryArgument(1).equals(s));
     assertTrue(t.toString().equals("f(f(37))"));
   }
 
@@ -268,8 +288,8 @@ public class FunctionalTermTest extends TermTestFoundation {
 
   @Test
   public void testSubstituting() {
-    Variable x = new Var("x", baseType("Int"));
-    Variable y = new Var("y", baseType("Int"));
+    Variable x = new Var("x", baseType("Int"), false);
+    Variable y = new Var("y", baseType("Int"), true);
     Type plustype = arrowType(baseType("Int"),arrowType(baseType("Int"), baseType("Int")));
     Type geqtype = arrowType(baseType("Int"),arrowType(baseType("Int"), baseType("Bool")));
     FunctionSymbol plus = new Constant("plus", plustype);
@@ -287,17 +307,17 @@ public class FunctionalTermTest extends TermTestFoundation {
     assertTrue(additionsub.toString().equals("plus(37, 42)"));
     Term comparisonsub = comparison.substitute(gamma);
     assertTrue(comparisonsub.isFunctionalTerm());
-    assertTrue(comparisonsub.numberImmediateSubterms() == 2);
-    assertTrue(comparisonsub.queryImmediateSubterm(1).equals(additionsub));
-    assertTrue(comparisonsub.queryImmediateSubterm(2).equals(x));
+    assertTrue(comparisonsub.numberArguments() == 2);
+    assertTrue(comparisonsub.queryArgument(1).equals(additionsub));
+    assertTrue(comparisonsub.queryArgument(2).equals(x));
   }
 
   @Test
   public void testFirstOrderMatching() {
     Type ii = baseType("Int");
-    Variable x = new Var("x", ii);
-    Variable y = new Var("y", ii);
-    Variable z = new Var("z", ii);
+    Variable x = new Var("x", ii, false);
+    Variable y = new Var("y", ii, false);
+    Variable z = new Var("z", ii, true);
     Type ty = arrowType(ii, arrowType(ii, ii));
     FunctionSymbol plus = new Constant("plus", ty);
     FunctionSymbol f = new Constant("f", ty);

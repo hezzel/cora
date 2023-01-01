@@ -80,6 +80,11 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   /** @return true */
   public boolean isFunctionalTerm() { return true; }
 
+  /** @return true if the type of the constant is a base type */
+  public boolean isFirstOrder() {
+    return queryType().isBaseType();
+  }
+
   /** Returns the current symbol f, which is the root of the corresponding term f(). */
   public FunctionSymbol queryRoot() {
     return this;

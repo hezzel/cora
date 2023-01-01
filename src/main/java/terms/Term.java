@@ -42,14 +42,28 @@ public interface Term {
   /** Returns whether or not the current term has the form x(s1,...,sn) with n ≥ 0. */
   boolean isVarTerm();
 
-  /** Returns the number of immediate subterms (that is, n for a term f(s1,...,sn)). */
-  int numberImmediateSubterms();
-  
+  /** Returns whether or not the current term has the form h(s1,...,sn) with n > 0. */
+  boolean isApplication();
+
+  /** Returns whether the set of variables is empty. */
+  boolean isGround();
+
+  /** Returns whether the set of variables contains only non-binder variables. */
+  boolean isClosed();
+
   /**
-   * If 1 <= i <= numberImmediateSubterms, this returns the thus indexed subterm.
+   * Returns the number of arguments; that is, n for a term f(s1,...,sn).
+   */
+  int numberArguments();
+
+  /** Returns the list of arguments; that is, [s1,...,sn] for a term f(s1,...,sn). */
+  List<Term> queryArguments();
+ 
+  /**
+   * If 1 <= i <= numberArguments, this returns the thus indexed argument.
    * Otherwise, this results in an IndexingError.
    */
-  Term queryImmediateSubterm(int i);
+  Term queryArgument(int i);
 
   /**
    * For an applicative term a(s1,...,sn) (where a itself is not an application), the immediate
@@ -60,7 +74,10 @@ public interface Term {
    */
   Term queryImmediateHeadSubterm(int i);
 
-  /**
+  /** Writing the term as an application h(s1,...,sn) with h not an application, returns h. */
+  Term queryHead();
+
+   /**
    * If this is a functional term f(s1,...,sn) or constant f, this returns the root symbol f.
    * Otherwise, an InappropriatePatternDataError is thrown.
    */

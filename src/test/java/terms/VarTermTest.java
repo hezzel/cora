@@ -25,7 +25,7 @@ import cora.types.Type;
 public class VarTermTest extends TermTestFoundation {
   @Test(expected = NullInitialisationError.class)
   public void testUnaryWithNullArg() {
-    Variable x = new Var("x", arrowType("a", "b"));
+    Variable x = new Var("x", arrowType("a", "b"), true);
     Term arg = null;
     Term t = new VarTerm(x, arg);
   }
@@ -38,7 +38,7 @@ public class VarTermTest extends TermTestFoundation {
 
   @Test(expected = NullInitialisationError.class)
   public void testNullArgs() {
-    Variable x = new Var("x", arrowType("a", "b"));
+    Variable x = new Var("x", arrowType("a", "b"), false);
     List<Term> args = null;
     Term t = new VarTerm(x, args);
   }
@@ -46,7 +46,7 @@ public class VarTermTest extends TermTestFoundation {
   @Test(expected = ArityError.class)
   public void testTooManyArgs() {
     Type type = arrowType(baseType("a"), arrowType("b", "a"));
-    Variable x = new Var("x", type);
+    Variable x = new Var("x", type, true);
     List<Term> args = new ArrayList<Term>();
     args.add(constantTerm("c", baseType("a")));
     args.add(constantTerm("d", baseType("b")));
@@ -57,7 +57,7 @@ public class VarTermTest extends TermTestFoundation {
   @Test(expected = TypingError.class)
   public void testConstructorBadArgType() {
     Type type = arrowType(baseType("a"), arrowType("b", "a"));
-    Variable x = new Var("x", type);
+    Variable x = new Var("x", type, false);
     List<Term> args = new ArrayList<Term>();
     args.add(constantTerm("c", baseType("a")));
     args.add(constantTerm("d", baseType("a")));
@@ -67,13 +67,13 @@ public class VarTermTest extends TermTestFoundation {
   @Test(expected = IndexingError.class)
   public void testTooSmallSubterm() {
     Term t = twoArgVarTerm();
-    Term sub = t.queryImmediateSubterm(0);
+    Term sub = t.queryArgument(0);
   }
 
   @Test(expected = IndexingError.class)
   public void testTooLargeSubterm() {
     Term t = twoArgVarTerm();
-    Term sub = t.queryImmediateSubterm(3);
+    Term sub = t.queryArgument(3);
   }
 
   @Test(expected = InappropriatePatternDataError.class)
@@ -92,9 +92,13 @@ public class VarTermTest extends TermTestFoundation {
   @Test
   public void testImmediateSubterms() {
     Term t = twoArgVarTerm();
-    assertTrue(t.numberImmediateSubterms() == 2);
-    assertTrue(t.queryImmediateSubterm(1).equals(constantTerm("c", baseType("a"))));
-    assertTrue(t.queryImmediateSubterm(2).toString().equals("g(y)"));
+    assertTrue(t.numberArguments() == 2);
+    assertTrue(t.queryArgument(1).equals(constantTerm("c", baseType("a"))));
+    assertTrue(t.queryArgument(2).toString().equals("g(y)"));
+    List<Term> args = t.queryArguments();
+    assertTrue(args.get(0) == t.queryArgument(1));
+    assertTrue(args.get(1) == t.queryArgument(2));
+    assertTrue(args.size() == 2);
   }
 
   @Test
@@ -114,6 +118,8 @@ public class VarTermTest extends TermTestFoundation {
     assertFalse(t.isVariable());
     assertFalse(t.isFunctionalTerm());
     assertFalse(t.isPattern());
+    assertTrue(t.isApplication());
+    assertTrue(t.queryHead().equals(t.queryVariable()));
     assertTrue(t.queryVariable().toString().equals("x"));
     assertTrue(t.queryVariable().queryType().toString().equals("a ⇒ b ⇒ a"));
     assertTrue(t.toString().equals("x(c, g(y))"));
@@ -121,17 +127,34 @@ public class VarTermTest extends TermTestFoundation {
 
   @Test
   public void testConstantVarTerm() {
-    Variable x = new Var("x", arrowType("b", "a"));
+    Variable x = new Var("x", arrowType("b", "a"), true);
     List<Term> args = new ArrayList<Term>();
     Term xterm = new VarTerm(x, args);
     assertTrue(xterm.isVariable());
     assertTrue(xterm.isPattern());
+    assertFalse(xterm.isApplication());
+  }
+
+  @Test
+  public void testBinderPattern() {
+    Variable x = new Var("x", arrowType(baseType("b"), arrowType("b", "a")), true);
+    Variable y = new Var("y", baseType("b"), false);
+    Variable z = new Var("z", arrowType("b", "b"), false);
+    Constant bb = new Constant("bb", baseType("b"));
+    List<Term> args = new ArrayList<Term>();
+    args.add(y);
+    args.add(bb);
+    Term xybterm = new VarTerm(x, args);
+    assertTrue(xybterm.isPattern());    // we're allowed to apply binder variables
+    args.set(1, z.apply(bb));
+    Term combiterm = new VarTerm(x, args);
+    assertFalse(combiterm.isPattern()); // but the arguments do all need to be patterns :)
   }
 
   @Test
   public void testTermEquality() {
-    Variable x = new Var("x", baseType("o"));
-    Variable y = new Var("y", arrowType(baseType("o"), arrowType("o", "o")));
+    Variable x = new Var("x", baseType("o"), false);
+    Variable y = new Var("y", arrowType(baseType("o"), arrowType("o", "o")), false);
     List<Term> empty = new ArrayList<Term>();
     Term s1 = x;
     Term s2 = new VarTerm(x, empty);
@@ -139,7 +162,7 @@ public class VarTermTest extends TermTestFoundation {
     Term s4 = new VarTerm(y, x);
     Term s5 = new VarTerm(y, x, x);
     Term s6 = new VarTerm(y, x, x);
-    Term s7 = new VarTerm(y, x, new Var("x", baseType("o")));
+    Term s7 = new VarTerm(y, x, new Var("x", baseType("o"), false));
     
     assertTrue(s1.equals(s1));
     assertTrue(s1.equals(s2));
@@ -155,11 +178,11 @@ public class VarTermTest extends TermTestFoundation {
   @Test
   public void testVars() {
     // let's create: Z(Z(x,c),g(y,x)), where Z, x and y are variables
-    Variable z = new Var("Z", arrowType(baseType("a"),arrowType("b","a")));
+    Variable z = new Var("Z", arrowType(baseType("a"),arrowType("b","a")), true);
     FunctionSymbol g = new Constant("g", arrowType(baseType("b"),arrowType("a","b")));
     FunctionSymbol c = new Constant("c", baseType("b"));
-    Variable x = new Var("x", baseType("a"));
-    Variable y = new Var("y", baseType("b"));
+    Variable x = new Var("x", baseType("a"), true);
+    Variable y = new Var("y", baseType("b"), false);
     Term s = new VarTerm(z, new VarTerm(z, x, c), new FunctionalTerm(g, y, x));
     Environment env = s.vars();
     assertTrue(env.contains(x));
@@ -170,17 +193,20 @@ public class VarTermTest extends TermTestFoundation {
 
   @Test
   public void testFirstOrder() {
-    Variable x = new Var("x", baseType("o"));
-    Variable y = new Var("y", arrowType("o", "o"));
+    Variable x = new Var("x", baseType("o"), false);
+    Variable y = new Var("y", arrowType("o", "o"), false);
+    Variable z = new Var("x", baseType("o"), true);
     List<Term> args = new ArrayList<Term>();
     Term x1 = x;
     Term x2 = new VarTerm(x, args);
     Term x3 = y;
     Term x4 = new VarTerm(y, constantTerm("c", baseType("o")));
+    Term x5 = new VarTerm(z, args);
     assertTrue(x1.isFirstOrder());
     assertTrue(x2.isFirstOrder());
     assertFalse(x3.isFirstOrder());
     assertFalse(x4.isFirstOrder());
+    assertFalse(x5.isFirstOrder());
   }
 
   @Test(expected = ArityError.class)
@@ -196,7 +222,7 @@ public class VarTermTest extends TermTestFoundation {
     Type a = baseType("a");
     Type type = arrowType(a, arrowType(o, a));
     Term c = constantTerm("c", a);
-    Variable x = new Var("f", type);
+    Variable x = new Var("f", type, false);
     Term xc = new VarTerm(x, c);
     xc.apply(c);
   }
@@ -207,7 +233,7 @@ public class VarTermTest extends TermTestFoundation {
     Type a = baseType("a");
     Type type = arrowType(a, arrowType(o, a));
     Term c = constantTerm("c", a);
-    Variable x = new Var("x", type);
+    Variable x = new Var("x", type, false);
     Term xc = new VarTerm(x, c);
     Term xcb = xc.apply(constantTerm("b", o));
     assertTrue(xcb.toString().equals("x(c, b)"));
@@ -216,8 +242,8 @@ public class VarTermTest extends TermTestFoundation {
   @Test
   public void testPositions() {
     Type type = arrowType(baseType("a"), arrowType("b", "a"));
-    Variable z = new Var("Z", type);
-    Term arg1 = unaryTerm("g", baseType("a"), new Var("x", baseType("b")));
+    Variable z = new Var("Z", type, true);
+    Term arg1 = unaryTerm("g", baseType("a"), new Var("x", baseType("b"), false));
     Term arg2 = constantTerm("c", baseType("b"));
     Term term = new VarTerm(z, arg1, arg2);    // Z(g(x),c)
     List<Position> lst = term.queryAllPositions();
@@ -249,40 +275,40 @@ public class VarTermTest extends TermTestFoundation {
 
   @Test
   public void testSubtermReplacementGood() {
-    Variable z = new Var("Z", arrowType("Int", "Int"));
+    Variable z = new Var("Z", arrowType("Int", "Int"), false);
     Term s = new VarTerm(z, constantTerm("37", baseType("Int")));
     Term t = s.replaceSubterm(new ArgumentPosition(1, PositionFactory.empty), s);
     assertTrue(s.toString().equals("Z(37)"));
-    assertTrue(t.queryImmediateSubterm(1).equals(s));
+    assertTrue(t.queryArgument(1).equals(s));
     assertTrue(t.toString().equals("Z(Z(37))"));
   }
 
   @Test(expected = IndexingError.class)
   public void testSubtermReplacementBadPosition() {
-    Variable z = new Var("Z", arrowType("Int", "Int"));
+    Variable z = new Var("Z", arrowType("Int", "Int"), false);
     Term s = new VarTerm(z, constantTerm("37", baseType("Int")));
     Term t = s.replaceSubterm(new ArgumentPosition(2, PositionFactory.empty), s);
   }
 
   @Test(expected = TypingError.class)
   public void testSubtermReplacementBadTypeSub() {
-    Variable z = new Var("Z", arrowType("Int", "Bool"));
+    Variable z = new Var("Z", arrowType("Int", "Bool"), false);
     Term s = new VarTerm(z, constantTerm("37", baseType("Int")));
     Term t = s.replaceSubterm(new ArgumentPosition(1, PositionFactory.empty), s);
   }
 
   @Test(expected = TypingError.class)
   public void testSubtermReplacementBadTypeTop() {
-    Variable z = new Var("Z", arrowType("Int", "Bool"));
+    Variable z = new Var("Z", arrowType("Int", "Bool"), true);
     Term s = new VarTerm(z, constantTerm("37", baseType("Int")));
     Term t = s.replaceSubterm(PositionFactory.empty, constantTerm("42", baseType("Int")));
   }
 
   @Test
   public void testSubstituting() {
-    Variable x = new Var("x", baseType("Int"));
-    Variable y = new Var("y", baseType("Int"));
-    Variable z = new Var("Z", arrowType(baseType("Int"), arrowType("Bool", "Int")));
+    Variable x = new Var("x", baseType("Int"), true);
+    Variable y = new Var("y", baseType("Int"), false);
+    Variable z = new Var("Z", arrowType(baseType("Int"), arrowType("Bool", "Int")), false);
     Term s = new VarTerm(z, x, unaryTerm("f", baseType("Bool"), y));
 
     Term thirtyseven = constantTerm("37", baseType("Int"));
@@ -300,8 +326,8 @@ public class VarTermTest extends TermTestFoundation {
 
   @Test
   public void testBasicMatching() {
-    Variable x = new Var("x", baseType("Int"));
-    Variable z = new Var("Z", arrowType(baseType("Int"), arrowType("Int", "Int")));
+    Variable x = new Var("x", baseType("Int"), true);
+    Variable z = new Var("Z", arrowType(baseType("Int"), arrowType("Int", "Int")), true);
     Term three = constantTerm("3", baseType("Int"));
     Term four = constantTerm("4", baseType("Int"));
     Type intintint = arrowType(baseType("Int"), arrowType("Int", "Int"));
@@ -331,7 +357,7 @@ public class VarTermTest extends TermTestFoundation {
 
   @Test
   public void testNonLinearMatching() {
-    Variable x = new Var("x", arrowType("o", "o"));
+    Variable x = new Var("x", arrowType("o", "o"), true);
     Term a = constantTerm("a", baseType("o"));
     Term b = constantTerm("b", baseType("o"));
     Type ooo = arrowType(baseType("o"), arrowType("o", "o"));

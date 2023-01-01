@@ -79,6 +79,9 @@ public class ConstantTest extends TermTestFoundation {
     assertTrue(f.queryName().equals("ff"));
     assertTrue(f.toString().equals("ff"));
     assertTrue(f.queryType().equals(combi));
+    assertTrue(f.isClosed());
+    assertTrue(f.isGround());
+    assertFalse(f.isApplication());
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(new Constant("aa", a));
     args.add(new Constant("bb", b));
@@ -134,14 +137,16 @@ public class ConstantTest extends TermTestFoundation {
     Type c = baseType("c3");
     Type combi = arrowType(a, arrowType(b, c));
     Term f = new Constant("ff", combi);
-    Var x = new Var("ff", combi);
+    Var x = new Var("ff", combi, false);
 
     assertTrue(f.queryType().equals(combi));
     assertTrue(f.isConstant());
     assertTrue(f.isFunctionalTerm());
     assertFalse(f.isVariable());
     assertFalse(f.isVarTerm());
-    assertTrue(f.numberImmediateSubterms() == 0);
+    assertTrue(f.numberArguments() == 0);
+    assertTrue(f.queryArguments().size() == 0);
+    assertTrue(f.queryRoot().equals(f));
     assertTrue(f.queryRoot().equals(f));
     assertTrue(f.queryAllPositions().size() == 1);
     assertTrue(f.queryAllPositions().get(0).isEmpty());

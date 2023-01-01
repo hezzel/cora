@@ -57,7 +57,7 @@ class AtrsRule extends RuleInherit {
 
   /** A rule is applicable to a term if the left-hand side matches its head. */
   public boolean applicable(Term t) {
-    int n = t.numberImmediateSubterms();
+    int n = t.numberArguments();
     int k = findHeadAdditions(t);
     if (k == -1 || n < k) return false;
     Term head = t.queryImmediateHeadSubterm(n-k);
@@ -65,14 +65,14 @@ class AtrsRule extends RuleInherit {
   }
 
   public Term apply(Term t) {
-    int n = t.numberImmediateSubterms();
+    int n = t.numberArguments();
     int k = findHeadAdditions(t);
     if (k == -1) return null;
     Term head = t.queryImmediateHeadSubterm(n-k);
     Substitution subst = _left.match(head);
     if (subst == null) return null;
     ArrayList<Term> args = new ArrayList<Term>();
-    for (int i = n-k+1; i <= n; i++) args.add(t.queryImmediateSubterm(i));
+    for (int i = n-k+1; i <= n; i++) args.add(t.queryArgument(i));
     Term righthead = _right.substitute(subst);
     return righthead.apply(args);
   }

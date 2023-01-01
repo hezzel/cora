@@ -21,6 +21,11 @@ import cora.types.Type;
 /**
  * Variables are both used as parts of constraints, as binders in an abstraction, as generic
  * expression in terms and as open spots for matching in rules.
+ *
+ * There are two kinds of variables: binder variables and non-binder variables.  The former are
+ * used as binders in abstraction; the latter are used for matching.  In true terms, both can be
+ * used as free variables.
+ *
  * Multiple distinct variables are allowed to share the same name.  In practice, this name is
  * intended to be used to define the basis of the actual variable name in pretty printing (although
  * it is also used directly in printing).  Thus, variables are not defined by their name, but
@@ -43,5 +48,8 @@ public interface Variable extends Term, Comparable<Variable> {
 
   /** A variable is uniquely defined by its ID (two Variables are equal iff they share indexes). */
   int queryVariableIndex();
+
+  /** Returns true if this is a binder variable, false if it is a non-binder variable. */
+  public boolean isBinderVariable();
 }
 

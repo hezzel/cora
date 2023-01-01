@@ -96,6 +96,11 @@ class VarTerm extends ApplicativeTermInherit implements Term {
     return false;
   }
 
+  /** For a term x(s1,...,sn), this returns x. */
+  public Term queryHead() {
+    return _x;
+  }
+
   /** Throws an error, because a varterm does not have a "root" function symbol. */
   public FunctionSymbol queryRoot() {
     throw new InappropriatePatternDataError("VarTerm", "queryRoot", "functional terms");
@@ -125,9 +130,15 @@ class VarTerm extends ApplicativeTermInherit implements Term {
     return _args.size() == 0 && _x.isFirstOrder();
   }
 
-  /** Returns true only if this is a single, unapplied variable. */
+  /**
+   * Returns true only if this is a single, unapplied variable, or it is a binder variable applied
+   * to patterns.
+   */
   public boolean isPattern() {
-    return _args.size() == 0;
+    if (_args.size() == 0) return true;
+    if (!_x.isBinderVariable()) return false;
+    for (int i = 0; i < _args.size(); i++) if (!_args.get(i).isPattern()) return false;
+    return true;
   }
 
   /** This adds the variables that occur freely in the current term into env. */
@@ -167,14 +178,14 @@ class VarTerm extends ApplicativeTermInherit implements Term {
       throw new UnexpectedPatternError("VarTerm", "match", other.toString(),
                                        "a term x(s1,...,sn) or f(s1,...,sn)");
     }
-    if (other.numberImmediateSubterms() < _args.size()) {
+    if (other.numberArguments() < _args.size()) {
       return other.toString() + " does not instantiate " + toString() + " (too few arguments).";
     }
-    int i = other.numberImmediateSubterms();
-    int j = numberImmediateSubterms();
+    int i = other.numberArguments();
+    int j = numberArguments();
     for (; j > 0; i--, j--) {
-      Term mysub = queryImmediateSubterm(j);
-      Term hissub = other.queryImmediateSubterm(i);
+      Term mysub = queryArgument(j);
+      Term hissub = other.queryArgument(i);
       String warning = mysub.match(hissub, gamma);
       if (warning != null) return warning;
     }
@@ -197,9 +208,9 @@ class VarTerm extends ApplicativeTermInherit implements Term {
     if (term == null) return false;
     if (!term.isVarTerm()) return false;
     if (!_x.equals(term.queryVariable())) return false;
-    if (_args.size() != term.numberImmediateSubterms()) return false;
+    if (_args.size() != term.numberArguments()) return false;
     for (int i = 0; i < _args.size(); i++) {
-      if (!_args.get(i).equals(term.queryImmediateSubterm(i+1))) return false;
+      if (!_args.get(i).equals(term.queryArgument(i+1))) return false;
     }
     return true;
   }

@@ -165,10 +165,10 @@ public class TrsReadingTest {
     declaredVars.add("y");
     Term t = TrsInputReader.readUnsortedTermFromString("f(g(x,y),a)", declaredVars);
     FunctionSymbol f = t.queryRoot();
-    FunctionSymbol g = t.queryImmediateSubterm(1).queryRoot();
-    FunctionSymbol a = t.queryImmediateSubterm(2).queryRoot();
-    Variable x = t.queryImmediateSubterm(1).queryImmediateSubterm(1).queryVariable();
-    Variable y = t.queryImmediateSubterm(1).queryImmediateSubterm(2).queryVariable();
+    FunctionSymbol g = t.queryArgument(1).queryRoot();
+    FunctionSymbol a = t.queryArgument(2).queryRoot();
+    Variable x = t.queryArgument(1).queryArgument(1).queryVariable();
+    Variable y = t.queryArgument(1).queryArgument(2).queryVariable();
     Term combi = TermFactory.createApp(f, TermFactory.createApp(g, x, y), a);
     assertTrue(t.equals(combi));
   }
@@ -201,15 +201,15 @@ public class TrsReadingTest {
     MSTRS trs = new MSTRS(new Alphabet(symbols), new ArrayList<Rule>());
     Term t = TrsInputReader.readTermFromString("f(g(x,y),g(x,a))", trs);
     FunctionSymbol f = t.queryRoot();
-    FunctionSymbol g = t.queryImmediateSubterm(1).queryRoot();
-    FunctionSymbol aa = t.queryImmediateSubterm(2).queryImmediateSubterm(2).queryRoot();
-    Variable x = t.queryImmediateSubterm(1).queryImmediateSubterm(1).queryVariable();
-    Variable y = t.queryImmediateSubterm(1).queryImmediateSubterm(2).queryVariable();
+    FunctionSymbol g = t.queryArgument(1).queryRoot();
+    FunctionSymbol aa = t.queryArgument(2).queryArgument(2).queryRoot();
+    Variable x = t.queryArgument(1).queryArgument(1).queryVariable();
+    Variable y = t.queryArgument(1).queryArgument(2).queryVariable();
     Term combi = TermFactory.createApp(f, TermFactory.createApp(g, x, y),
                                           TermFactory.createApp(g, x, aa));
     assertTrue(t.equals(combi));
     assertTrue(combi.queryType().equals(b));
-    assertTrue(combi.queryImmediateSubterm(1).queryType().equals(a));
+    assertTrue(combi.queryArgument(1).queryType().equals(a));
   }
 
   @Test(expected = TypingException.class)
@@ -341,7 +341,7 @@ public class TrsReadingTest {
     assertTrue(lenadvanced.toString().equals("len(cons(x, xs)) → s(len(xs))"));
     Term left = lenadvanced.queryLeftSide();
     assertTrue(left.queryType().equals(TypeFactory.createSort("Nat")));
-    assertTrue(left.queryImmediateSubterm(1).queryType().equals(TypeFactory.createSort("List")));
+    assertTrue(left.queryArgument(1).queryType().equals(TypeFactory.createSort("List")));
   }
 
   @Test

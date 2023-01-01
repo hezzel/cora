@@ -47,7 +47,7 @@ public class ProgramReadingTest {
                  "f(X(3,y,7), y) -> X(7,3,y) {X :: Int -> Int -> Int -> Bool}";
     TRS trs = CoraInputReader.readProgramFromString(str);
     assertTrue(trs.queryRuleCount() == 1);
-    assertTrue(trs.queryRule(0).queryLeftSide().queryImmediateSubterm(1).isVarTerm());
+    assertTrue(trs.queryRule(0).queryLeftSide().queryArgument(1).isVarTerm());
   }
 
   @Test(expected = DeclarationException.class)

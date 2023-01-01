@@ -44,22 +44,31 @@ abstract class LeafTermInherit extends TermInherit {
     return _type;
   }
 
-  public boolean isFirstOrder() {
-    return _type.isBaseType();
-  }
-
   public boolean isPattern() {
     return true;
   }
 
+  public boolean isApplication() {
+    return false;
+  }
+
+  public Term queryHead() {
+    return this;
+  }
+
   /** @return 0, since leaf terms do not have immediate subterms */
-  public int numberImmediateSubterms() {
+  public int numberArguments() {
     return 0;
   }
+
+  /** @return the empty list, since leaf terms do not have arguments */
+  public ArrayList<Term> queryArguments() {
+    return new ArrayList<Term>();
+  }
   
-  /** @throws IndexingError, as a leaf term does not have immediate subterms */
-  public Term queryImmediateSubterm(int i) {
-    throw new IndexingError(queryMyClassName(), "queryImmediateSubterm", i); 
+  /** @throws IndexingError, as a leaf term does not have arguments */
+  public Term queryArgument(int i) {
+    throw new IndexingError(queryMyClassName(), "queryArgument", i); 
   }
 
   /** Either returns this (if i == 0) or throws an IndexingError. */
