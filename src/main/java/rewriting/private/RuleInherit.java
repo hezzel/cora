@@ -75,7 +75,11 @@ abstract class RuleInherit implements Rule {
   }
 
   public String toString() {
-    return _left.toString() + " → " + _right.toString();
+    StringBuilder builder = new StringBuilder();
+    _left.addToString(builder);
+    builder.append(" → ");
+    _right.addToString(builder);
+    return builder.toString();
   }
 }
 

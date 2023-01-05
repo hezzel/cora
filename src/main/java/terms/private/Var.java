@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -89,9 +89,9 @@ class Var extends LeafTermInherit implements Variable {
     return _index;
   }
 
-  /** @return the name of the variable. */
-  public String toString() {
-    return _name;
+  /** Appends the name of te variable to the builder. */
+  public void addToString(StringBuilder builder) {
+    builder.append(_name);
   }
 
   /** @return this */

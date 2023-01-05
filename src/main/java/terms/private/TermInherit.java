@@ -63,5 +63,12 @@ abstract class TermInherit implements Term {
     if (other instanceof Term) return equals((Term)other);
     return false;
   }
+
+  /** This method returns a string representation of the current term. */
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    addToString(builder);
+    return builder.toString();
+  }
 }
 

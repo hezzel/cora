@@ -310,16 +310,15 @@ class Application extends TermInherit implements Term {
   }
 
   /** This method gives a string representation of the term. */
-  public String toString() {
-    StringBuilder ret = new StringBuilder(_head.toString());
-    ret.append("(");
-    ret.append(_args.get(0).toString());
+  public void addToString(StringBuilder builder) {
+    _head.addToString(builder);
+    builder.append("(");
+    _args.get(0).addToString(builder);
     for (int i = 1; i < _args.size(); i++) {
-      ret.append(", ");
-      ret.append(_args.get(i).toString());
+      builder.append(", ");
+      _args.get(i).addToString(builder);
     }
-    ret.append(")");
-    return ret.toString();
+    builder.append(")");
   }
 
   /** This method verifies equality to another Term. */

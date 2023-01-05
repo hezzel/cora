@@ -159,8 +159,8 @@ public interface Term {
    */
   public Substitution match(Term other);
 
-  /**Returns a string representation of the term. */
-  String toString();
+  /** Adds the string representation of the current term to the given string builder. */
+  public void addToString(StringBuilder builder);
 
   /**
    * Performs an equality check with the given other term.
