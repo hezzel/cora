@@ -109,12 +109,6 @@ class Var extends LeafTermInherit implements Variable {
     env.add(this);
   }
 
-  /** Returns the VarTerm x(args). */
-  public Term apply(List<Term> args) {
-    if (args.size() == 0) return this;
-    return new VarTerm(this, args);
-  }
-
   /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */
   public Term substitute(Substitution gamma) {
     if (gamma == null) throw new NullCallError("Var", "substitute", "substitution gamma");

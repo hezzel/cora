@@ -106,7 +106,7 @@ public class VarTest extends TermTestFoundation {
     Variable z = new Var("z", arrowType("o", "o"), false);
     assertFalse(z.isFirstOrder());
     assertTrue(z.isPattern());
-    assertTrue(z.apply(y).equals(new VarTerm(z, y)));
+    assertTrue(z.apply(y).equals(new Application(z, y)));
   }
 
   @Test

@@ -95,10 +95,7 @@ public interface Term {
    */
   boolean isFirstOrder();
 
-  /**
-   * Returns true if this term is a pattern (so: variables are not applied at all, or only to
-   * distinct binder-variables).
-   */
+  /** Returns true if this term is a pattern (so: non-binder variables are not applied at all). */
   boolean isPattern();
 
   /**

@@ -99,12 +99,6 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   /** Does nothing, since a function symbol does not use any variables. */
   public void updateVars(Environment env) {}
 
-  /** Returns the FunctionalTerm f(args). */
-  public Term apply(List<Term> args) {
-    if (args.size() == 0) return this;
-    return new FunctionalTerm(this, args);
-  }
-
   /** Returns the current constant unmodified (there is nothing to substitute in a constant). */
   public Term substitute(Substitution gamma) {
     return this;

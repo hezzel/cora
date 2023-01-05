@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -19,20 +19,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import java.lang.Error;
 import java.util.ArrayList;
-import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.IndexingError;
-import cora.exceptions.NullInitialisationError;
-import cora.exceptions.ArityError;
-import cora.exceptions.TypingError;
+import cora.exceptions.*;
 import cora.types.Type;
-import cora.terms.FunctionSymbol;
-import cora.terms.Term;
-import cora.types.*;
-import cora.terms.PositionFactory;
-import cora.terms.Constant;
-import cora.terms.Var;
-import cora.terms.FunctionalTerm;
-import cora.terms.Subst;
 
 public class ConstantTest extends TermTestFoundation {
   @Test(expected = NullInitialisationError.class)
@@ -176,15 +164,12 @@ public class ConstantTest extends TermTestFoundation {
     assertFalse(f.equals((Term)h));
 
     ArrayList<Term> args = new ArrayList<Term>();
-    Term ff = new FunctionalTerm(f, args);
-    Term gg = new FunctionalTerm(g, args);
     args.add(new Constant("aa", a));
-    Term fa = new FunctionalTerm(f, args);
+    Term fa = new Application(f, args);
 
-    assertTrue(f.equals(ff));
-    assertTrue(f.equals(gg));
-    assertFalse(f.equals(a));
+    assertFalse(f.equals(fa));
+    assertTrue(fa.equals(g.apply(new Constant("aa", a))));
 
-    assertTrue(f.match(ff) != null);
+    assertTrue(f.match(g) != null);
   }
 }

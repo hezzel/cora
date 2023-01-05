@@ -15,6 +15,7 @@
 
 package cora.terms;
 
+import java.util.List;
 import java.util.ArrayList;
 import cora.exceptions.IndexingError;
 import cora.exceptions.NullCallError;
@@ -100,6 +101,12 @@ abstract class LeafTermInherit extends TermInherit {
       return replacement;
     }
     throw new IndexingError(queryMyClassName(), "replaceSubterm", toString(), pos.toString());
+  }
+
+  /** Returns the Application this(args). */
+  public Term apply(List<Term> args) {
+    if (args.size() == 0) return this;
+    return new Application(this, args);
   }
 }
 

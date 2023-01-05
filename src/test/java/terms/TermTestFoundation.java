@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2022 Cynthia Kop
+ Copyright 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -38,7 +38,7 @@ public class TermTestFoundation {
   protected Term unaryTerm(String name, Type output, Term arg) {
     Type arrtype = TypeFactory.createArrow(arg.queryType(), output);
     FunctionSymbol f = new Constant(name, arrtype);
-    return new FunctionalTerm(f, arg);
+    return new Application(f, arg);
   }
 
   protected Term twoArgVarTerm() {
@@ -46,7 +46,7 @@ public class TermTestFoundation {
     Variable x = TermFactory.createVar("x", type);
     Term arg1 = constantTerm("c", baseType("a"));
     Term arg2 = unaryTerm("g", baseType("b"), TermFactory.createVar("y", baseType("b")));
-    return new VarTerm(x, arg1, arg2);
+    return new Application(x, arg1, arg2);
   }
 
   protected Term twoArgFuncTerm() {
@@ -54,7 +54,7 @@ public class TermTestFoundation {
     FunctionSymbol f = new Constant("f", type);
     Term arg1 = constantTerm("c", baseType("a"));
     Term arg2 = unaryTerm("g", baseType("b"), constantTerm("d", baseType("b")));
-    return new FunctionalTerm(f, arg1, arg2);
+    return new Application(f, arg1, arg2);
   }
 }
 

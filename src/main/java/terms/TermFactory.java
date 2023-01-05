@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2022 Cynthia Kop
+ Copyright 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,6 +16,7 @@
 package cora.terms;
 
 import java.util.List;
+import java.util.ArrayList;
 import cora.types.Type;
 import cora.types.TypeFactory;
 
@@ -55,17 +56,34 @@ public class TermFactory {
     return new Constant(name, type);
   }
 
-  /** Create a varterm or functional term which takes one argument. */
+  /** Creates a functional term f(args) */
+  public static Term createFunctionalTerm(FunctionSymbol f, List<Term> args) {
+    return new Application(f, args);
+  }
+
+  /**
+   * Create an application which takes one argument.  Here, head may be anything,
+   * including another application.
+   */
   public static Term createApp(Term head, Term arg) {
     return head.apply(arg);
   }
 
-  /** Create a varterm or functional term which takes two arguments. */
+  /**
+   * Create an application which takes two arguments.  Here, head may be anything,
+   * including another application.
+   */
   public static Term createApp(Term head, Term arg1, Term arg2) {
-    return head.apply(arg1).apply(arg2);
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(arg1);
+    args.add(arg2);
+    return head.apply(args);
   }
 
-  /** Create a varterm or functional term with the given arguments. */
+  /**
+   * Create an application with the given head and arguments.  If the head is an application, the
+   * given arguments are just appended to the existing argument list.
+   */
   public static Term createApp(Term head, List<Term> args) {
     if (args.size() == 0) return head;
     return head.apply(args);
