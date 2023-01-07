@@ -232,12 +232,33 @@ public class ApplicationTest extends TermTestFoundation {
     Term arg1 = unaryTerm("g", baseType("a"), new Var("x", baseType("b"), false));
     Term arg2 = constantTerm("c", baseType("b"));
     Term term = new Application(z, arg1, arg2);    // Z(g(x),c)
-    List<Position> lst = term.queryAllPositions();
+    List<Path> lst = term.queryPositions();
     assertTrue(lst.size() == 4);
     assertTrue(lst.get(0).toString().equals("1.1.ε"));
     assertTrue(lst.get(1).toString().equals("1.ε"));
     assertTrue(lst.get(2).toString().equals("2.ε"));
     assertTrue(lst.get(3).toString().equals("ε"));
+    assertTrue(lst.get(1).queryAssociatedTerm() == term);
+    assertTrue(lst.get(2).queryCorrespondingSubterm() == term.queryArgument(2));
+    assertTrue(lst.get(3).queryCorrespondingSubterm() == term);
+  }
+
+  @Test
+  public void testHeadPositions() {
+    Type type = arrowType(baseType("a"), arrowType("b", "a"));
+    Variable z = new Var("Z", type, true);
+    Term arg1 = unaryTerm("g", baseType("a"), new Var("x", baseType("b"), false));
+    Term arg2 = constantTerm("c", baseType("b"));
+    Term term = new Application(z, arg1, arg2);    // Z(g(x),c)
+    List<HeadPosition> lst = term.queryHeadPositions();
+    assertTrue(lst.size() == 7);
+    assertTrue(lst.get(0).toString().equals("1.1.ε"));
+    assertTrue(lst.get(1).toString().equals("1.☆1"));
+    assertTrue(lst.get(2).toString().equals("1.ε"));
+    assertTrue(lst.get(3).toString().equals("2.ε"));
+    assertTrue(lst.get(4).toString().equals("☆2"));
+    assertTrue(lst.get(5).toString().equals("☆1"));
+    assertTrue(lst.get(6).toString().equals("ε"));
   }
 
   @Test
@@ -268,10 +289,29 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(s.querySubterm(p).equals(constantTerm("d", baseType("b"))));
   }
 
+  @Test
+  public void testHeadSubtermGood() {
+    HeadPosition p;
+    Term s = twoArgFuncTerm();
+    p = new HeadPosition(PositionFactory.empty, 1);
+    assertTrue(s.querySubterm(p).toString().equals("f(c)"));
+    p = new HeadPosition(PositionFactory.createArg(1, PositionFactory.empty));
+    assertTrue(s.querySubterm(p).equals(constantTerm("c", baseType("a"))));
+    p = new HeadPosition(PositionFactory.createArg(2, PositionFactory.empty), 1);
+    assertTrue(s.querySubterm(p).toString().equals("g"));
+  }
+
   @Test(expected = IndexingError.class)
   public void testSubtermBad() {
     Term s = twoArgVarTerm();
-    Position pos = new ArgumentPosition(1, new ArgumentPosition(2, PositionFactory.empty));
+    Position pos = PositionFactory.createArg(1,PositionFactory.createArg(2,PositionFactory.empty));
+    Term t = s.querySubterm(pos);
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testHeadSubtermBad() {
+    Term s = twoArgFuncTerm();
+    HeadPosition pos = new HeadPosition(PositionFactory.createArg(2,PositionFactory.empty), 2);
     Term t = s.querySubterm(pos);
   }
 
@@ -279,24 +319,55 @@ public class ApplicationTest extends TermTestFoundation {
   public void testSubtermReplacementGood() {
     Variable z = new Var("Z", arrowType("Int", "Int"), false);
     Term s = new Application(z, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new ArgumentPosition(1, PositionFactory.empty), s);
+    Term t = s.replaceSubterm(PositionFactory.createArg(1, PositionFactory.empty), s);
     assertTrue(s.toString().equals("Z(37)"));
     assertTrue(t.queryArgument(1).equals(s));
     assertTrue(t.toString().equals("Z(Z(37))"));
+  }
+
+  @Test
+  public void testSubtermHeadReplacementGood() {
+    Term s = twoArgFuncTerm();  // f(c, g(d))
+    HeadPosition pos = new HeadPosition(PositionFactory.createArg(2, PositionFactory.empty), 1);
+    Term a = constantTerm("a", baseType("A"));
+    Var x = new Var("x", arrowType(baseType("A"), arrowType("b", "b")), true);
+    Term t = s.replaceSubterm(pos, x.apply(a));
+    assertTrue(t.toString().equals("f(c, x(a, d))"));
+    Term q = t.replaceSubterm(pos, x.apply(a));
+    assertTrue(t.equals(q));
+    pos = new HeadPosition(PositionFactory.createArg(2, PositionFactory.empty));
+    t = s.replaceSubterm(pos, constantTerm("B", baseType("b")));
+    assertTrue(t.toString().equals("f(c, B)"));
   }
 
   @Test(expected = IndexingError.class)
   public void testSubtermReplacementBadPosition() {
     Var z = new Var("Z", arrowType("Int", "Int"), false);
     Term s = new Application(z, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new ArgumentPosition(2, PositionFactory.empty), s);
+    Term t = s.replaceSubterm(PositionFactory.createArg(2, PositionFactory.empty), s);
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testSubtermHeadReplacementBadPosition() {
+    Var z = new Var("Z", arrowType("Int", "Int"), false);
+    Term s = new Application(z, constantTerm("37", baseType("Int")));
+    Term t = s.replaceSubterm(new HeadPosition(PositionFactory.createArg(2,
+      PositionFactory.empty)), s);
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testSubtermHeadReplacementBadHeadPosition() {
+    Constant f = new Constant("f", arrowType("Int", "Int"));
+    Term s = new Application(f, constantTerm("37", baseType("Int")));
+    Term t = s.replaceSubterm(new HeadPosition(PositionFactory.empty, 2),
+      constantTerm("a", baseType("B")));
   }
 
   @Test(expected = TypingError.class)
   public void testSubtermReplacementBadTypeSub() {
     Constant f = new Constant("f", arrowType("Int", "Bool"));
     Term s = new Application(f, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new ArgumentPosition(1, PositionFactory.empty), s);
+    Term t = s.replaceSubterm(PositionFactory.createArg(1, PositionFactory.empty), s);
   }
 
   @Test(expected = TypingError.class)
@@ -304,6 +375,14 @@ public class ApplicationTest extends TermTestFoundation {
     Variable z = new Var("Z", arrowType("Int", "Bool"), true);
     Term s = new Application(z, constantTerm("37", baseType("Int")));
     Term t = s.replaceSubterm(PositionFactory.empty, constantTerm("42", baseType("Int")));
+  }
+
+  @Test(expected = TypingError.class)
+  public void testSubtermHeadReplacementBadType() {
+    Variable z = new Var("Z", arrowType("Int", "Bool"), true);
+    Term s = new Application(z, constantTerm("37", baseType("Int")));
+    Term replacement = constantTerm("f", arrowType("Int", "Int"));
+    s.replaceSubterm(new HeadPosition(PositionFactory.empty, 1), replacement);
   }
 
   @Test(expected = ArityError.class)

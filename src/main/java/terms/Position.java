@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,9 +16,12 @@
 package cora.terms;
 
 /**
- * A position indicates a location in a term.
- * It can be used to find (and possibly replace) the subterm at that position.
+ * A position indicates a location in a term, which has one of the following shapes:
+ * - ε, which refers to the current term
+ * - [index] tail, where the term is h(s1,...,sn), index ∈ {1..n}, and tail a position in s_index
+ * So this does NOT include head positions.
  *
+ * A Position can be used to find (and possibly replace) the subterm at that position.
  * Note: all instances of Position must (and can be expected to) be immutable.
  */
 
@@ -26,15 +29,20 @@ public interface Position {
   /** Returns whether or not this is the empty position. */
   public boolean isEmpty();
 
+  /** Returns whether or not this is an argument position. */
+  public boolean isArgument();
+
   /**
-   * If the position is in a subterm of some argument, this function returns the index of the
-   * relevant argument (1..number of arguments); otherwise it returns -1.
+   * If the position is in a subterm of argument si of an application h(s1,...,sn), this function
+   * returns the index i of the relevant argument (1..n); otherwise it throws an
+   * InappropriatePatternDataError.
    */
   public int queryArgumentPosition();
 
   /**
    * If the position is in a subterm of some argument t, this function returns the position of
-   * the relevant subterm in t; otherwise it returns null.
+   * the relevant subterm in t; otherwise it throws an
+   * InappropriatePatternDataError.
    */
   public Position queryTail();
 

@@ -100,12 +100,21 @@ public class ConstantTest extends TermTestFoundation {
   }
 
   @Test(expected = IndexingError.class)
-  public void testBadPositionRequest() {
+  public void testArgumentPositionRequest() {
     Type a = baseType("a");
     Type b = baseType("b");
     Type combi = arrowType(a, b);
     Constant f = new Constant("f", combi);
     Term tmp = f.querySubterm(PositionFactory.createArg(1, PositionFactory.empty));
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testHeadPositionRequest() {
+    Type a = baseType("a");
+    Type b = baseType("b");
+    Type combi = arrowType(a, b);
+    Constant f = new Constant("f", combi);
+    Term tmp = f.querySubterm(new HeadPosition(PositionFactory.empty, 1));
   }
 
   @Test(expected = IndexingError.class)
@@ -116,6 +125,14 @@ public class ConstantTest extends TermTestFoundation {
     Constant f = new Constant("f", combi);
     Term tmp = f.replaceSubterm(PositionFactory.createArg(1, PositionFactory.empty),
                                 new Constant("a", a));
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testBadHeadPositionReplacement() {
+    Constant f = new Constant("f", baseType("a"));
+    Term tmp = f.replaceSubterm(
+      new HeadPosition(PositionFactory.createArg(1, PositionFactory.empty)),
+      new Constant("a", baseType("a")));
   }
 
   @Test
@@ -136,10 +153,6 @@ public class ConstantTest extends TermTestFoundation {
     assertTrue(f.queryArguments().size() == 0);
     assertTrue(f.queryRoot().equals(f));
     assertTrue(f.queryRoot().equals(f));
-    assertTrue(f.queryAllPositions().size() == 1);
-    assertTrue(f.queryAllPositions().get(0).isEmpty());
-    assertTrue(f.querySubterm(PositionFactory.empty).equals(f));
-    assertTrue(f.replaceSubterm(PositionFactory.empty, x).equals(x));
     assertFalse(f.isFirstOrder());
     assertTrue(f.isPattern());
     Subst gamma = new Subst(x, new Constant("gg", combi));
@@ -148,6 +161,29 @@ public class ConstantTest extends TermTestFoundation {
     Term aa = new Constant("g", a);
     assertTrue(aa.isFirstOrder());
     assertTrue(aa.isPattern());
+  }
+
+  @Test
+  public void testTermPositions() {
+    Type a = baseType("a");
+    Type b = baseType("b");
+    Type c = baseType("c3");
+    Type combi = arrowType(a, arrowType(b, c));
+    Term f = new Constant("ff", combi);
+    Var x = new Var("ff", combi, false);
+
+    assertTrue(f.queryPositions().size() == 1);
+    assertTrue(f.queryPositions().get(0).isEmpty());
+    assertTrue(f.queryPositions().get(0).queryCorrespondingSubterm() == f);
+    assertTrue(f.queryHeadPositions().size() == 1);
+    assertTrue(f.queryHeadPositions().get(0).isEnd());
+    assertTrue(f.queryHeadPositions().get(0).isPosition());
+
+    assertTrue(f.querySubterm(PositionFactory.empty).equals(f));
+    assertTrue(f.replaceSubterm(PositionFactory.empty, x).equals(x));
+
+    assertTrue(f.querySubterm(new HeadPosition(PositionFactory.empty)).equals(f));
+    assertTrue(f.replaceSubterm(new HeadPosition(PositionFactory.empty), x).equals(x));
   }
 
   @Test

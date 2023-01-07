@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,23 +15,29 @@
 
 package cora.terms;
 
+import cora.exceptions.InappropriatePatternDataError;
+
 /** The empty position is used to indicate the current location in a term. */
 class EmptyPosition implements Position {
-  /**
-   * This should only be created through the PositionFactory, or through terms in the same package.
-   */
+  /** This should only be created through the PositionFactory, or EmptyPath. */
   EmptyPosition() { }
 
   public boolean isEmpty() {
     return true;
   }
 
+  public boolean isArgument() {
+    return false;
+  }
+
   public int queryArgumentPosition() {
-    return -1;
+    throw new InappropriatePatternDataError("EmptyPosition", "queryArgumentPosition",
+      "positions of the form i.tail with i > 0");
   }
 
   public Position queryTail() {
-    return null;
+    throw new InappropriatePatternDataError("EmptyPosition", "queryTail",
+      "positions of the form i.tail with");
   }
 
   public boolean equals(Position other) {

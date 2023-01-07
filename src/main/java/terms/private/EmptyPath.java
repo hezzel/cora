@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2022, 2023 Cynthia Kop
+ Copyright 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,16 +15,27 @@
 
 package cora.terms;
 
-public class PositionFactory {
-  public static Position empty = new EmptyPosition();
+import cora.exceptions.InappropriatePatternDataError;
 
-  public static Position createArg(int index, Position tail) {
-    return new ConsPosition(index, tail);
+class EmptyPath extends EmptyPosition implements Path {
+  private Term _term;
+
+  /** The constructor may only be called by Terms. */
+  EmptyPath(Term myterm) {
+    _term = myterm;
   }
 
-  public static HeadPosition createHead(Position pos, int chop) {
-    if (chop == 0) return new HeadPosition(pos);
-    else return new HeadPosition(pos, chop);
+  public Term queryAssociatedTerm() {
+    return _term;
+  }
+
+  public Term queryCorrespondingSubterm() {
+    return _term;
+  }
+
+  public Path queryTail() {
+    throw new InappropriatePatternDataError("EmptyPath", "queryTail",
+      "positions of the form i.tail");
   }
 }
 

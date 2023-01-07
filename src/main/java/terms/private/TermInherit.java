@@ -15,7 +15,9 @@
 
 package cora.terms;
 
+import java.util.List;
 import java.util.ArrayList;
+import cora.exceptions.IndexingError;
 
 /**
  * A TermInherit supplies default functionality for all instances of Term.
@@ -56,6 +58,34 @@ abstract class TermInherit implements Term {
       if (x.isBinderVariable()) return false;
     }
     return true;
+  }
+
+  /** Returns the set of all head positions for this term, in leftmost innermost order. */
+  public ArrayList<HeadPosition> queryHeadPositions() {
+    List<Path> posses = queryPositions();
+    ArrayList<HeadPosition> ret = new ArrayList<HeadPosition>();
+    for (int i = 0; i < posses.size(); i++) {
+      Term t = posses.get(i).queryCorrespondingSubterm();
+      for (int j = t.numberArguments(); j > 0; j--) {
+        ret.add(new HeadPosition(posses.get(i), j));
+      }
+      ret.add(new HeadPosition(posses.get(i)));
+    }
+    return ret;
+  }
+
+  /** Returns the subterm at the given head position. */
+  public Term querySubterm(HeadPosition hpos) {
+    Term sub = querySubterm(hpos.queryPosition());
+    int chop = hpos.queryChopCount();
+    if (chop == 0) return sub;
+    List<Term> args = sub.queryArguments();
+    Term head = sub.queryHead();
+    if (args.size() < chop) {
+      throw new IndexingError("TermInherit", "querySubTerm(HeadPosition)", chop,
+        0, args.size());
+    }
+    return head.apply(args.subList(0, args.size()-chop));
   }
 
   /** This method verifies equality to another Term. */

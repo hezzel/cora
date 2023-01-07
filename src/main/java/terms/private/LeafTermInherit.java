@@ -79,9 +79,9 @@ abstract class LeafTermInherit extends TermInherit {
   }
 
   /** @return a list containing only the empty Position. */
-  public ArrayList<Position> queryAllPositions() {
-    ArrayList<Position> ret = new ArrayList<Position>();
-    ret.add(new EmptyPosition());
+  public ArrayList<Path> queryPositions() {
+    ArrayList<Path> ret = new ArrayList<Path>();
+    ret.add(new EmptyPath(this));
     return ret;
   }
 
@@ -94,6 +94,18 @@ abstract class LeafTermInherit extends TermInherit {
   /** @return the replacement if pos is the empty position; otherwise throws an IndexingError */
   public Term replaceSubterm(Position pos, Term replacement) {
     if (pos.isEmpty()) {
+      if (!queryType().equals(replacement.queryType())) {
+        throw new TypingError(queryMyClassName(), "replaceSubterm", "replacement term " +
+          replacement.toString(), replacement.queryType().toString(), queryType().toString());
+      }
+      return replacement;
+    }
+    throw new IndexingError(queryMyClassName(), "replaceSubterm", toString(), pos.toString());
+  }
+
+  /** @return the replacement if pos is the empty head position; otherwise throws an IndexingError */
+  public Term replaceSubterm(HeadPosition pos, Term replacement) {
+    if (pos.isEnd() && pos.queryChopCount() == 0) {
       if (!queryType().equals(replacement.queryType())) {
         throw new TypingError(queryMyClassName(), "replaceSubterm", "replacement term " +
           replacement.toString(), replacement.queryType().toString(), queryType().toString());

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019 Cynthia Kop
+ Copyright 2019, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,28 +15,32 @@
 
 package cora.terms;
 
+import cora.exceptions.IllegalArgumentError;
 import cora.exceptions.NullInitialisationError;
 
 /**
- * An ArgumentPosition is a position of the form i.pos, where i indicates the index of an argument
- * in the corresponding term and pos a position within that argument.
+ * A ConsPosition is a position of the form i.pos, where i can take any of the permitted forms
+ * (currently only an integer ≥ 1).
  */
-class ArgumentPosition implements Position {
+class ConsPosition implements Position {
   private int _argPos;
   private Position _tail;
 
-  /**
-   * Default because it should only be created through the position factory, or directly inside
-   * terms.
-   */
-  ArgumentPosition(int argumentIndex, Position tail) {
+  /** Default because it should only be created through the position factory. */
+  ConsPosition(int argumentIndex, Position tail) {
     _argPos = argumentIndex;
     _tail = tail;
     if (tail == null) throw new NullInitialisationError("ArgumentPosition", "tail");
+    if (_argPos <= 0) throw new IllegalArgumentError("ConsPosition", "constructor",
+      "Trying to create a position with an index ≤ 0.");
   }
 
   public boolean isEmpty() {
     return false;
+  }
+
+  public boolean isArgument() {
+    return true;
   }
 
   public int queryArgumentPosition() {
@@ -48,7 +52,8 @@ class ArgumentPosition implements Position {
   }
 
   public boolean equals(Position other) {
-    return other.queryArgumentPosition() == _argPos &&
+    return other.isArgument() &&
+           other.queryArgumentPosition() == _argPos &&
            _tail.equals(other.queryTail());
   }
 

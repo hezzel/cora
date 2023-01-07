@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -51,9 +51,7 @@ public interface Term {
   /** Returns whether the set of variables contains only non-binder variables. */
   boolean isClosed();
 
-  /**
-   * Returns the number of arguments; that is, n for a term f(s1,...,sn).
-   */
+  /** Returns the number of arguments; that is, n for a term f(s1,...,sn). */
   int numberArguments();
 
   /** Returns the list of arguments; that is, [s1,...,sn] for a term f(s1,...,sn). */
@@ -99,12 +97,19 @@ public interface Term {
   boolean isPattern();
 
   /**
-   * Returns the set of all positions of subterms in the current Term, in leftmost innermost
-   * order.
+   * Returns the set of all non-head positions in the current Term, in leftmost innermost order.
    * Note that this set is non-epmty as it always contains the empty position (representing the
    * current term).
+   * The positions are all Paths, which means they contain the information of the referenced
+   * subterm (and the complete path to it).
    */
-  List<Position> queryAllPositions();
+  List<Path> queryPositions();
+
+  /**
+   * Returns the set of all head-positions in the current Term, in leftmost innermost order.
+   * Note that this includes all positions (as these are head positions with 0 chop).
+   */
+  List<HeadPosition> queryHeadPositions();
 
   /** Returns the set of all variables that occur in the current term. */
   Environment vars();
@@ -123,8 +128,19 @@ public interface Term {
    */
   Term querySubterm(Position pos);
 
+  /**
+   * Returns the subterm at the given head position, assuming that this is indeed a head position
+   * of the current term.  If not, an IndexingError is thrown.
+   */
+  Term querySubterm(HeadPosition pos);
+
   /** Returns the term obtained by replacing the subterm at the given position by replacement. */
   Term replaceSubterm(Position pos, Term replacement);
+
+  /**
+   * Returns the term obtained by replacing the subterm at the given head position by replacement.
+   */
+  Term replaceSubterm(HeadPosition pos, Term replacement);
 
   /**
    * If the current term has a type σ1 →...→ σn → τ and args = [s1,...,sn] with each si : σi, then

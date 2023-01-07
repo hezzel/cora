@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2022 Cynthia Kop 
+ Copyright 2022, 2023 Cynthia Kop 
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -20,22 +20,83 @@ import static org.junit.Assert.*;
 
 public class PositionTest {
   @Test
-  public void testEmpty() {
+  public void testEmptyPosition() {
     Position pos = new EmptyPosition();
     assertTrue(pos.toString().equals("ε"));
     assertTrue(pos.equals(new EmptyPosition()));
-    assertTrue(pos.queryArgumentPosition() == -1);
-    assertTrue(pos.queryTail() == null);
+    assertTrue(pos.equals(new EmptyPath(TermFactory.createVar("y"))));
+    assertFalse(pos.equals(new ConsPosition(1, new EmptyPosition())));
     assertTrue(pos.isEmpty());
+    assertFalse(pos.isArgument());
   }
 
   @Test
-  public void testArgument() {
-    Position pos = new ArgumentPosition(0, new ArgumentPosition(37, new EmptyPosition()));
-    assertTrue(pos.toString().equals("0.37.ε"));
-    assertTrue(pos.queryArgumentPosition() == 0);
-    assertTrue(pos.queryTail().queryArgumentPosition() == 37);
+  public void testEmptyPath() {
+    Term s = TermFactory.createConstant("c", 1).apply(TermFactory.createVar("x"));
+    Path p = new EmptyPath(s);
+    Position pos = p;
+    assertTrue(pos.toString().equals("ε"));
+    assertTrue(pos.equals(new EmptyPosition()));
+    assertTrue(pos.equals(new EmptyPath(TermFactory.createConstant("a", 0))));
+    assertFalse(pos.equals(new ArgumentPath(s, 1, new EmptyPath(s.queryArgument(1)))));
+    assertTrue(pos.isEmpty());
+    assertFalse(pos.isArgument());
+    assertTrue(p.queryAssociatedTerm() == s);
+    assertTrue(p.queryCorrespondingSubterm() == s);
+  }
+
+  @Test(expected = cora.exceptions.InappropriatePatternDataError.class)
+  public void testNoArgument() {
+    Position pos = new EmptyPosition();
+    pos.queryArgumentPosition();
+  }
+
+  @Test(expected = cora.exceptions.InappropriatePatternDataError.class)
+  public void testPositionNoTail() {
+    Position pos = new EmptyPosition();
+    pos.queryTail();
+  }
+
+  @Test(expected = cora.exceptions.InappropriatePatternDataError.class)
+  public void testPathNoTail() {
+    Position pos = new EmptyPosition();
+    pos.queryTail();
+  }
+
+  @Test
+  public void testConsPosition() {
+    Position pos = new ConsPosition(1, new ConsPosition(2, new EmptyPosition()));
+    assertTrue(pos.toString().equals("1.2.ε"));
+    assertTrue(pos.queryArgumentPosition() == 1);
+    assertTrue(pos.queryTail().queryArgumentPosition() == 2);
     assertFalse(pos.isEmpty());
+    assertTrue(pos.isArgument());
+    Term fgab = TermFactory.createConstant("f", 1).apply(
+      TermFactory.createConstant("g", 2).apply(TermFactory.createConstant("a", 0)).apply(
+      TermFactory.createConstant("b", 0)));
+    Path path = new ArgumentPath(fgab, 1,
+      new ArgumentPath(fgab.queryArgument(1), 2,
+      new EmptyPath(TermFactory.createConstant("b", 0))));
+    assertTrue(pos.equals(path));
+  }
+
+  @Test
+  public void testArgumentPath() {
+    Term fgab = TermFactory.createConstant("f", 1).apply(
+      TermFactory.createConstant("g", 2).apply(TermFactory.createConstant("a", 0)).apply(
+      TermFactory.createConstant("b", 0)));
+    Path path = new ArgumentPath(fgab, 1,
+      new ArgumentPath(fgab.queryArgument(1), 2,
+      new EmptyPath(TermFactory.createConstant("b", 0))));
+    assertTrue(path.toString().equals("1.2.ε"));
+    assertTrue(path.queryArgumentPosition() == 1);
+    assertTrue(path.queryTail().queryArgumentPosition() == 2);
+    assertFalse(path.isEmpty());
+    assertTrue(path.isArgument());
+    Position pos = new ConsPosition(1, new ConsPosition(2, new EmptyPosition()));
+    assertTrue(path.equals(pos));
+    assertTrue(path.queryAssociatedTerm() == fgab);
+    assertTrue(path.queryCorrespondingSubterm().equals(TermFactory.createConstant("b", 0)));
   }
 }
 

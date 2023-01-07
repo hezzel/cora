@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -23,7 +23,7 @@ import cora.exceptions.IndexingError;
 import cora.exceptions.NullInitialisationError;
 import cora.terms.FunctionSymbol;
 import cora.terms.Term;
-import cora.terms.Position;
+import cora.terms.Path;
 
 /**
  * A TRS (term rewriting system) is an abstract rewriting system based on a set of rules.
@@ -77,11 +77,11 @@ public abstract class TRS {
    * Returns the leftmost, innermost position where a rule may be applied, or null if no such
    * position exists.
    */
-  public Position leftmostInnermostRedexPosition(Term s) {
-    List<Position> positions = s.queryAllPositions();
+  public Path leftmostInnermostRedexPosition(Term s) {
+    List<Path> positions = s.queryPositions();
     for (int i = 0; i < positions.size(); i++) {
-      Position pos = positions.get(i);
-      Term sub = s.querySubterm(pos);
+      Path pos = positions.get(i);
+      Term sub = pos.queryCorrespondingSubterm();
       for (int j = 0; j < _rules.size(); j++) {
         if (_rules.get(j).applicable(sub)) return pos;
       }
@@ -97,9 +97,9 @@ public abstract class TRS {
   public Term leftmostInnermostReduce(Term s) {
     List<Rule> tmp = new ArrayList<Rule>(_rules);
     Collections.shuffle(tmp);
-    Position pos = leftmostInnermostRedexPosition(s);
+    Path pos = leftmostInnermostRedexPosition(s);
     if (pos == null) return null;
-    Term subterm = s.querySubterm(pos);
+    Term subterm = pos.queryCorrespondingSubterm();
     for (int j = 0; j < tmp.size(); j++) {
       Term result = tmp.get(j).apply(subterm);
       if (result != null) return s.replaceSubterm(pos, result);

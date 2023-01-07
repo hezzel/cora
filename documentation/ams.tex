@@ -469,7 +469,7 @@ We have the following results, which will often be used quietly in proofs:
 The \emph{head positions} of a given term are the paths to specific subterms, defined as follows:
 
 \begin{itemize}
-\item $\HeadPositions(h(s_1,\dots,s_n)) = \{ \epsilon, \star 0, \dots, \star (n-1) \} \cup
+\item $\HeadPositions(h(s_1,\dots,s_n)) = \{ \epsilon, \star 1, \dots, \star n \} \cup
   \{ i \cdot p \mid \exists i \in \{1,\dots,n\}. p \in \HeadPositions(s_i) \} \cup
   \SubPositions(h)$
 \item $\SubPositions(\afun) = \SubPositions(\avar) = \emptyset$
@@ -487,7 +487,7 @@ For a term $s$ and a position $p \in \HeadPositions(s)$, the \emph{subterm of $s
 denoted $s|_p$, is defined as follows:
 \begin{itemize}
 \item $s|_\epsilon = s$;
-\item $h(s_1,\dots,s_n)|_{\star i} = h(s_1,\dots,s_i)$ (so just $h$ if $i = 0$);
+\item $h(s_1,\dots,s_n)|_{\star i} = h(s_1,\dots,s_{n-i})$ (so just $h$ if $i = n$);
 \item $h(s_1,\dots,s_n)|_{i \cdot p} = s_i|_p$ if $1 \leq i \leq n$;
 \item $(\abs{\avar}{t})(s_1,\dots,s_n)|_{0 \cdot p} = t|_p$;
 \item $\meta{\avar}{t_1,\dots,t_k}(s_1,\dots,s_n)|_{!i \cdot p} = t_i|_p$.
@@ -497,7 +497,7 @@ If $s|_p$ has the same type as some term $u$, then $s[u]_p$ denotes $s$ with the
 $p$ replaced by $u$.  Formally, $s[u]_p$ is obtained as follows:
 \begin{itemize}
 \item $s[u]_\epsilon = u$;
-\item $h(s_1,\dots,s_n)[u]_{\star i} = u \cdot s_{i+1} \cdots s_n$;
+\item $h(s_1,\dots,s_n)[u]_{\star i} = u \cdot s_{n-i+1} \cdots s_n$;
 \item $h(s_1,\dots,s_n)[u]_{i \cdot p} = h(s_1,\dots,s_{i-1},s_i[u]_p,s_{i+1},\dots,s_n)$;
 \item $(\abs{\avar}{t})(s_1,\dots,s_n)[u]_{0 \cdot p} = (\abs{\avar}{t[u]_p})(s_1,\dots,s_n)$;
 \item $\meta{x}{t_1,\dots,t_k}(s_1,\dots,s_n)[u]_{!i \cdot p} = \meta{x}{t_1,\dots,t_{i-1},t_i[u]_p,t_{i+1},\dots,t_k}(s_1,\dots,s_n)$;
