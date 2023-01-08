@@ -98,5 +98,50 @@ public class PositionTest {
     assertTrue(path.queryAssociatedTerm() == fgab);
     assertTrue(path.queryCorrespondingSubterm().equals(TermFactory.createConstant("b", 0)));
   }
+
+  @Test
+  public void testCorrectParsing() {
+    Position pos = PositionFactory.parsePos("5.6.7");
+    assertTrue(pos.toString().equals("5.6.7.ε"));
+    pos = PositionFactory.parsePos("19.12.ε");
+    assertTrue(pos.toString().equals("19.12.ε"));
+    pos = PositionFactory.parsePos("2.1.");
+    assertTrue(pos.toString().equals("2.1.ε"));
+  }
+
+  @Test(expected = cora.exceptions.ParserError.class)
+  public void testParseWithAsciiStar() {
+    PositionFactory.parsePos("1.254.*3.☆15");
+  }
+
+  @Test(expected = cora.exceptions.ParserError.class)
+  public void testParseWithUniStar() {
+    PositionFactory.parsePos(("3.111.☆2"));
+  }
+
+  @Test(expected = cora.exceptions.ParserError.class)
+  public void testParseWithEmptyIndex() {
+    PositionFactory.parsePos("1..254");
+  }
+
+  @Test(expected = cora.exceptions.ParserError.class)
+  public void testParseWithEmptyIndexAtTheEnd() {
+    PositionFactory.parsePos("1.254.3..");
+  }
+
+  @Test(expected = cora.exceptions.ParserError.class)
+  public void testParseWithZeroIndex() {
+    PositionFactory.parsePos("0.19.12.ε");
+  }
+
+  @Test(expected = cora.exceptions.ParserError.class)
+  public void testParseWithNegativeIndex() {
+    PositionFactory.parsePos("19.-1.12.ε");
+  }
+
+  @Test(expected = cora.exceptions.ParserError.class)
+  public void testParseWithIllegalCharacter() {
+    PositionFactory.parsePos("5.1@.3");
+  }
 }
 
