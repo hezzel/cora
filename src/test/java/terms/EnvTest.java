@@ -95,5 +95,29 @@ public class EnvTest {
     assertTrue(foundY);
     assertTrue(foundZ);
   }
+
+  @Test
+  public void testImmutableCopy() {
+    Variable x = new Var("x", TypeFactory.createSort("a"), false);
+    Variable y = new Var("y", TypeFactory.createSort("b"), true);
+    Variable z = new Var("z", TypeFactory.createSort("c"), true);
+    Environment env = new Env();
+    env.add(x);
+    env.add(y);
+    env.add(z);
+    VariableList lst = env.getImmutableCopy();
+    boolean foundX = false;
+    boolean foundY = false;
+    boolean foundZ = false;
+    for (Variable v : lst) {
+      if (v.equals(x)) foundX = true;
+      if (v.equals(y)) foundY = true;
+      if (v.equals(z)) foundZ = true;
+    }
+    assertTrue(foundX);
+    assertTrue(foundY);
+    assertTrue(foundZ);
+    assertTrue(lst.size() == env.size());
+  }
 }
 

@@ -23,13 +23,27 @@ import cora.exceptions.IndexingError;
  * A TermInherit supplies default functionality for all instances of Term.
  * This is the functionality that calls other functions in Term to for instance build up a
  * substitution or environment.
+ * All inheriting classes should make sure to call setVariables in their constructor, to set up the
+ * set of variables occurring in the term.
  */
 abstract class TermInherit implements Term {
+  private VariableList _variables;
+
+  /**
+   * Sets the set of all variables occurring in this term.  Should be called from the constructor,
+   * and only there.
+   */
+  protected void setVariables(VariableList vs) {
+    if (_variables != null) throw new Error("Setting VariableList twice for " +
+      this.getClass().getSimpleName());
+    _variables = vs;
+  }
+
   /** Returns the set of all variables occurring in the current term. */
-  public Environment vars() {
-    Environment env = new Env();
-    updateVars(env);
-    return env;
+  public VariableList vars() {
+    if (_variables == null) throw new Error("Variable list has not been set up for " +
+      this.getClass().getSimpleName());
+    return _variables;
   }
 
   /** Applies the current term (with functional type) to other. */
@@ -53,8 +67,8 @@ abstract class TermInherit implements Term {
 
   /** Returns true if vars() contains only non-binder variables. */
   public boolean isClosed() {
-    Environment env = vars();
-    for (Variable x : env) {
+    VariableList vs = vars();
+    for (Variable x : vs) {
       if (x.isBinderVariable()) return false;
     }
     return true;

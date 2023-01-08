@@ -16,6 +16,7 @@
 package cora.terms;
 
 import java.util.List;
+import java.util.TreeSet;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.NullCallError;
@@ -37,6 +38,7 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     _name = name;
     if (name == null) throw new NullInitialisationError("Constant", "name");
     if (name.equals("")) throw new Error("Function Symbol created with empty name.");
+    setVariables(VarList.EMPTY);
   }
 
   /** Returns the name of the current user-defined symbol. */
@@ -95,9 +97,6 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     throw new InappropriatePatternDataError("Constant", "queryVariable",
                                             "variables or lambda-expressions");
   }
-
-  /** Does nothing, since a function symbol does not use any variables. */
-  public void updateVars(Environment env) {}
 
   /** Returns the current constant unmodified (there is nothing to substitute in a constant). */
   public Term substitute(Substitution gamma) {

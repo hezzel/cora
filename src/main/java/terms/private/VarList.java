@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,42 +15,35 @@
 
 package cora.terms;
 
-import java.lang.Iterable;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.TreeSet;
 
 /**
- * Env is the default implementation of Environment: a set of variables with not-necessarily-unique
- * names.
+ * VarList is the default implementation of VariableList: an immutable set of variables with
+ * not-necessarily-unique names.
  */
-class Env implements Environment {
+class VarList implements VariableList {
   private TreeSet<Variable> _variables;
+  public static VarList EMPTY = new VarList();
 
-  /**
-   * Constructs an empty environment. (Default because it should only be created from inside the
-   * terms package, for example the factory.)
-   */
-  Env() {
+  /** Constructs the empty varlist */
+  private VarList() {
     _variables = new TreeSet<Variable>();
   }
 
-  /**
-   * Constructs an environment containing the given variables. (Default because it should only be
-   * created from inside the terms package, for example the factory.)
-   *
-   * Note that both Environment and VarList are iterables, so can be used as an argument.
-   */
-  Env(Iterable<Variable> vars) {
-    _variables = new TreeSet<Variable>();
-    for (Variable x : vars) add(x);
+  /** Constructs the varlist with a copy of the given variables. */
+  VarList(Collection<Variable> vars) {
+    _variables = new TreeSet<Variable>(vars);
   }
 
   /**
-   * Adds the given variable to the environment.
-   * Does nothing if a variable of the same name is already in the environment.
+   * Constructs the varlist with the given variables, which become the property of this VarList.
+   * The second variable is a dummy, to clearly distinguish between this constructor and the
+   * other one.
    */
-  public void add(Variable x) {
-    _variables.add(x);
+  VarList(TreeSet<Variable> vars, boolean dummy) {
+    _variables = vars;
   }
 
   /** Returns whether the given variable is an element of the environment. */
@@ -66,16 +59,6 @@ class Env implements Environment {
   /** Returns an iterator over all variables in the environment. */
   public Iterator<Variable> iterator() {
     return _variables.iterator();
-  }
-
-  /** Returns the VarList corresponding to the current environment. */
-  public VarList getImmutableCopy() {
-    return new VarList(_variables);
-  }
-
-  /** Returns a copy of the current environment. */
-  public Environment copy() {
-    return new Env(_variables);
   }
 }
 

@@ -16,6 +16,7 @@
 package cora.terms;
 
 import java.util.List;
+import java.util.TreeSet;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullCallError;
 import cora.exceptions.NullInitialisationError;
@@ -43,6 +44,9 @@ class Var extends LeafTermInherit implements Variable {
     _index = COUNTER;
     COUNTER++;
     if (name == null) throw new NullInitialisationError("Var", "name");
+    TreeSet<Variable> vars = new TreeSet<Variable>();
+    vars.add(this);
+    setVariables(new VarList(vars, true));
   }
 
   /**

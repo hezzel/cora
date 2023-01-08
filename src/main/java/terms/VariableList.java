@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,29 +15,16 @@
 
 package cora.terms;
 
-import java.lang.Iterable;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.TreeSet;
 
-/**
- * An Environment is a finite set of variables.
- * It is used for instance to list the variables used in an individual term.
- */
-public interface Environment extends Iterable<Variable> {
+/** An immutable collection of variables. */
+public interface VariableList extends Iterable<Variable> {
   /** Returns whether the given variable is an element of the environment. */
   boolean contains(Variable x);
 
-  /** Adds the given variable to the environment, if it is not in there yet. */
-  void add(Variable x);
-
   /** Returns the number of variables currently in the environment. */
   int size();
-
-  /** Returns an immutable copy of the current Environment. */
-  public VariableList getImmutableCopy();
-
-  /**
-   * Returns a copy of the same Environment (since implementations of Environment are not
-   * immutable).
-   */
-  Environment copy();
 }
 

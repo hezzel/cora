@@ -17,6 +17,7 @@ package cora.terms;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.TreeSet;
 import cora.exceptions.ArityError;
 import cora.exceptions.*;
 import cora.types.Type;
@@ -29,8 +30,26 @@ class Application extends TermInherit implements Term {
   public Type _outputType;
 
   /**
+   * Returns the list of all variables used in this term.  Meant for use in the constructors, so
+   * it cannot use the vars() function, but rather, sets up the result of that function.
+   */
+  private VariableList getMyVariables() {
+    TreeSet<Variable> ret = new TreeSet<Variable>();
+
+    VariableList largest = _head.vars();
+    for (Variable x : largest) ret.add(x);
+    for (int i = 0; i < _args.size(); i++) {
+      VariableList vs = _args.get(i).vars();
+      if (vs.size() > largest.size()) largest = vs;
+      for (Variable x : vs) ret.add(x);
+    }
+    if (ret.size() == largest.size()) return largest;
+    return new VarList(ret, true);
+  }
+
+  /**
    * This helper function handles the functionality for the constructors to set up _head, _args
-   * and _outputType.
+   * and _outputType, and store the variables.
    * If there are any problems -- such as the head or an argument being null, or the types not
    * checking out -- an appropriate Error is thrown. However, it *is* assumed that args is not
    * null.
@@ -71,6 +90,7 @@ class Application extends TermInherit implements Term {
       type = type.queryArrowOutputType();
     }
     _outputType = type;
+    setVariables(getMyVariables());
   }
 
   /**
@@ -219,14 +239,6 @@ class Application extends TermInherit implements Term {
     }
     ret.add(new EmptyPath(this));
     return ret;
-  }
-
-  /** This adds the variables that occur freely in the current term into env. */
-  public void updateVars(Environment env) {
-    _head.updateVars(env);
-    for (int i = 0; i < _args.size(); i++) {
-      _args.get(i).updateVars(env);
-    }   
   }
 
   /** @return this if the position is empty; otherwise the position in the given subterm */

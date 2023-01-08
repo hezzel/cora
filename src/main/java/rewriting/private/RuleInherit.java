@@ -19,7 +19,7 @@ import cora.exceptions.IllegalRuleError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.types.Type;
-import cora.terms.Environment;
+import cora.terms.VariableList;
 import cora.terms.Term;
 import cora.terms.Variable;
 
@@ -48,8 +48,8 @@ abstract class RuleInherit implements Rule {
     _left = left;
     _right = right;
     // no variables should occur on the right that don't also occur on the left
-    Environment lvars = left.vars();
-    Environment rvars = right.vars();
+    VariableList lvars = left.vars();
+    VariableList rvars = right.vars();
     for (Variable x : rvars) {
       if (!lvars.contains(x)) {
         throw new IllegalRuleError(queryMyClassName(), "right-hand side of rule [" + toString() +

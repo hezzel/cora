@@ -112,16 +112,9 @@ public class VarTest extends TermTestFoundation {
   @Test
   public void testTermVarVars() {
     Variable x = new Var("x", baseType("oo"), true);
-    Environment env = x.vars();
-    assertTrue(env.size() == 1);
-    assertTrue(env.contains(x));
-    Environment other = new Env();
-    other.add(new Var("y", baseType("aa"), false));
-    x.updateVars(other);
-    assertTrue(other.size() == 2);
-    assertTrue(other.contains(x));
-    x.updateVars(other);
-    assertTrue(other.size() == 2);
+    VariableList lst = x.vars();
+    assertTrue(lst.size() == 1);
+    assertTrue(lst.contains(x));
   }
 
   @Test

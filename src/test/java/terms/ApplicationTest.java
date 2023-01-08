@@ -270,11 +270,24 @@ public class ApplicationTest extends TermTestFoundation {
     Variable x = new Var("x", baseType("a"), true);
     Variable y = new Var("y", baseType("b"), false);
     Term s = new Application(z, new Application(z, x, c), new Application(g, y, x));
-    Environment env = s.vars();
-    assertTrue(env.contains(x));
-    assertTrue(env.contains(y));
-    assertTrue(env.contains(z));
-    assertTrue(env.size() == 3);
+    VariableList lst = s.vars();
+    assertTrue(lst.contains(x));
+    assertTrue(lst.contains(y));
+    assertTrue(lst.contains(z));
+    assertTrue(lst.size() == 3);
+  }
+
+  @Test
+  public void testVarsReuse() {
+    // let's create: f(g(x), h(y,y))
+    Variable x = new Var("x", baseType("o"), false);
+    Variable y = new Var("x", baseType("o"), false);
+    Term gx = unaryTerm("g", baseType("o"), x);
+    Term hyy = TermFactory.createConstant("h", 2).apply(y).apply(y);
+    Term term = TermFactory.createConstant("f", 2).apply(gx).apply(hyy);
+    assertTrue(gx.vars() == x.vars());
+    assertTrue(hyy.vars() == y.vars());
+    assertTrue(term.vars().size() == 2);
   }
 
   @Test

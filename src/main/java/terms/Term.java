@@ -111,15 +111,11 @@ public interface Term {
    */
   List<HeadPosition> queryHeadPositions();
 
-  /** Returns the set of all variables that occur in the current term. */
-  Environment vars();
-
-  /**
-   * This adds the variables that occur in the current term into env.
-   * Note that this will throw an error if any variable in env has the same name as a variable in
-   * the current term (but is a different variable).
+  /** 
+   * Returns the set of all variables that occur in the current term.
+   * This is efficient, as it returns a cached set.
    */
-  void updateVars(Environment env);
+  VariableList vars();
 
   /**
    * Returns the subterm at the given position, assuming that this is indeed a position of the
