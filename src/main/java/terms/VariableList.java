@@ -18,6 +18,7 @@ package cora.terms;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.TreeSet;
+import java.util.TreeMap;
 
 /** An immutable collection of variables. */
 public interface VariableList extends Iterable<Variable> {
@@ -26,5 +27,11 @@ public interface VariableList extends Iterable<Variable> {
 
   /** Returns the number of variables currently in the environment. */
   int size();
+
+  /**
+   * Returns a unique name for all the variables in the list (since it is allowed for distinct
+   * variables to have the same name).
+   */
+  TreeMap<Variable,String> getUniqueNaming();
 }
 

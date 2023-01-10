@@ -18,6 +18,7 @@ package cora.terms;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.ArrayList;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import cora.types.Type;
 import cora.types.TypeFactory;
@@ -54,6 +55,28 @@ public class VarListTest {
     set.add(z);
     assertTrue(lst.size() == 3);
     assertTrue(lst.contains(z));
+  }
+
+  @Test
+  public void testRenaming() {
+    Type a = TypeFactory.createSort("a");
+    Type b = TypeFactory.createSort("b");
+    Type ab = TypeFactory.createArrow(a, b);
+    TreeSet<Variable> set = new TreeSet<Variable>();
+    Variable x1 = new Var("x", a, false); set.add(x1);
+    Variable x2 = new Var("x", a, false); set.add(x2);
+    Variable x3 = new Var("x", b, true); set.add(x3);
+    Variable y = new Var("y", b, true); set.add(y);
+    Variable z1 = new Var("z", ab, true); set.add(z1);
+    Variable z2 = new Var("z", ab, false); set.add(z2);
+    VarList lst = new VarList(set);
+    TreeMap<Variable,String> naming = lst.getUniqueNaming();
+    assertTrue(naming.get(x1).equals("x__1"));
+    assertTrue(naming.get(x2).equals("x__2"));
+    assertTrue(naming.get(x3).equals("x__3"));
+    assertTrue(naming.get(y).equals("y"));
+    assertTrue(naming.get(z1).equals("z__1"));
+    assertTrue(naming.get(z2).equals("z__2"));
   }
 }
 

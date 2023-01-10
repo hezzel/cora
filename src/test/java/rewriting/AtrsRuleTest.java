@@ -186,5 +186,14 @@ public class AtrsRuleTest {
     assertFalse(rule.applicable(noninstance));
     assertTrue(rule.apply(noninstance) == null);
   }
+
+  @Test
+  public void testVariableNaming() {
+    Variable x = TermFactory.createVar("x", baseType("a"));
+    Variable y = TermFactory.createVar("x", baseType("b"));
+    FunctionSymbol f = makeConstant("f", arrowType(baseType("a"), arrowType("b", "b")));
+    Rule rule = new AtrsRule(TermFactory.createApp(f, x, y), y);
+    assertTrue(rule.toString().equals("f(x__1, x__2) → x__2"));
+  }
 }
 

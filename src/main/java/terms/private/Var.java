@@ -16,6 +16,7 @@
 package cora.terms;
 
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullCallError;
@@ -94,8 +95,9 @@ class Var extends LeafTermInherit implements Variable {
   }
 
   /** Appends the name of te variable to the builder. */
-  public void addToString(StringBuilder builder) {
-    builder.append(_name);
+  public void addToString(StringBuilder builder, Map<Variable,String> renaming) {
+    if (renaming == null || !renaming.containsKey(this)) builder.append(_name);
+    else builder.append(renaming.get(this));
   }
 
   /** @return this */

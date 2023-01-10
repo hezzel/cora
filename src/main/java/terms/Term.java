@@ -16,6 +16,7 @@
 package cora.terms;
 
 import java.util.List;
+import java.util.Map;
 import cora.types.Type;
 
 /**
@@ -171,8 +172,13 @@ public interface Term {
    */
   public Substitution match(Term other);
 
-  /** Adds the string representation of the current term to the given string builder. */
-  public void addToString(StringBuilder builder);
+  /**
+   * Adds the string representation of the current term to the given string builder.
+   * Some variables may be renamed; if the mapping for a variable is not given, or renaming is null,
+   * then the default name for that variable is used.
+   * (To get a suitable renaming, you can use vars().getUniqueNaming().)
+   */
+  public void addToString(StringBuilder builder, Map<Variable,String> renaming);
 
   /**
    * Performs an equality check with the given other term.

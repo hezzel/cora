@@ -15,10 +15,12 @@
 
 package cora.rewriting;
 
+import java.util.TreeMap;
 import cora.exceptions.IllegalRuleError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.types.Type;
+import cora.terms.Variable;
 import cora.terms.VariableList;
 import cora.terms.Term;
 import cora.terms.Variable;
@@ -76,9 +78,10 @@ abstract class RuleInherit implements Rule {
 
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    _left.addToString(builder);
+    TreeMap<Variable,String> renaming = _left.vars().getUniqueNaming();
+    _left.addToString(builder, renaming);
     builder.append(" → ");
-    _right.addToString(builder);
+    _right.addToString(builder, renaming);
     return builder.toString();
   }
 }

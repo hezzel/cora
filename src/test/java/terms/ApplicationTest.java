@@ -19,6 +19,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.TreeMap;
 import cora.exceptions.*;
 import cora.types.Type;
 
@@ -587,5 +588,22 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(s2.equals(s3));
     assertFalse(s2.equals(s4));
     assertFalse(s1.equals(new Var("x", baseType("o"), false)));
+  }
+
+  @Test
+  public void testVariableRenaming() {
+    Variable a = new Var("x", arrowType(baseType("o"), arrowType("o", "o")), true);
+    Variable b = new Var("x", baseType("o"), false);
+    Variable c = new Var("x", baseType("o"), false);
+    Term combi = new Application(a, b, c);
+    assertTrue(combi.toString().equals("x__1(x__2, x__3)"));
+    StringBuilder builder = new StringBuilder();
+    combi.addToString(builder, null);
+    assertTrue(builder.toString().equals("x(x, x)"));
+    TreeMap<Variable,String> naming = new TreeMap<Variable,String>();
+    naming.put(b, "y");
+    builder.setLength(0);
+    combi.addToString(builder, naming);
+    assertTrue(builder.toString().equals("x(y, x)"));
   }
 }

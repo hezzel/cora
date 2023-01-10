@@ -18,6 +18,7 @@ package cora.terms;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.TreeSet;
+import java.util.TreeMap;
 
 /**
  * VarList is the default implementation of VariableList: an immutable set of variables with
@@ -59,6 +60,39 @@ class VarList implements VariableList {
   /** Returns an iterator over all variables in the environment. */
   public Iterator<Variable> iterator() {
     return _variables.iterator();
+  }
+
+  /** Returns a mapping with a unique name for every variable in the temr. */
+  public TreeMap<Variable,String> getUniqueNaming() {
+    // determine if any variable names occur more than once
+    TreeMap<String,TreeSet<Variable>> map = new TreeMap<String,TreeSet<Variable>>();
+    for (Variable x : _variables) {
+      String name = x.queryName();
+      if (!map.containsKey(name)) {
+        TreeSet<Variable> vars = new TreeSet<Variable>();
+        vars.add(x);
+        map.put(name, vars);
+      }
+      else map.get(name).add(x);  // variable occurs more than once!
+    }
+    TreeMap<Variable,String> renaming = new TreeMap<Variable,String>();
+    // for any that do, come up with new names; for any that don't, use the default name
+    for (TreeSet<Variable> set : map.values()) {
+      if (set.size() == 1) {
+        Variable x = set.first();
+        renaming.put(x, x.queryName());
+      }
+      else {
+        int counter = 1;
+        for (Variable x : set) {
+          String name = x.queryName() + "__" + counter;
+          counter++;
+          for (; map.containsKey(name); counter++) name = x.queryName() + "__" + counter;
+          renaming.put(x, name);
+        }
+      }
+    }
+    return renaming;
   }
 }
 

@@ -18,6 +18,7 @@ package cora.terms;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.List;
+import java.util.TreeMap;
 import cora.exceptions.*;
 import cora.types.Type;
 
@@ -244,6 +245,20 @@ public class VarTest extends TermTestFoundation {
     assertTrue(x.match(t, gamma) != null);
     assertTrue(gamma.get(x).equals(q));
     assertTrue(gamma.domain().size() == 1);
+  }
+
+  @Test
+  public void testRenaming() {
+    Variable x = new Var("x", baseType("a"), false);
+    StringBuilder builder = new StringBuilder();
+    x.addToString(builder, null);
+    builder.append(" ");
+    TreeMap<Variable,String> map = new TreeMap<Variable,String>();
+    x.addToString(builder, map);
+    builder.append(" ");
+    map.put(x, "y");
+    x.addToString(builder, map);
+    assertTrue(builder.toString().equals("x x y"));
   }
 }
 

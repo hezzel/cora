@@ -15,8 +15,10 @@
 
 package cora.terms;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import cora.exceptions.IndexingError;
 
 /**
@@ -111,7 +113,7 @@ abstract class TermInherit implements Term {
   /** This method returns a string representation of the current term. */
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    addToString(builder);
+    addToString(builder, _variables.getUniqueNaming());
     return builder.toString();
   }
 }

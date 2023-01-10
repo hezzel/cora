@@ -76,9 +76,5 @@ class AtrsRule extends RuleInherit {
     Term righthead = _right.substitute(subst);
     return righthead.apply(args);
   }
-
-  public String toString() {
-    return _left.toString() + " → " + _right.toString();
-  }
 }
 

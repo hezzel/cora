@@ -15,8 +15,9 @@
 
 package cora.terms;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import cora.exceptions.ArityError;
 import cora.exceptions.*;
@@ -359,13 +360,13 @@ class Application extends TermInherit implements Term {
   }
 
   /** This method gives a string representation of the term. */
-  public void addToString(StringBuilder builder) {
-    _head.addToString(builder);
+  public void addToString(StringBuilder builder, Map<Variable,String> renaming) {
+    _head.addToString(builder, renaming);
     builder.append("(");
-    _args.get(0).addToString(builder);
+    _args.get(0).addToString(builder, renaming);
     for (int i = 1; i < _args.size(); i++) {
       builder.append(", ");
-      _args.get(i).addToString(builder);
+      _args.get(i).addToString(builder, renaming);
     }
     builder.append(")");
   }
