@@ -263,14 +263,17 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testVars() {
-    // let's create: Z(Z(x,c),g(y,x)), where Z, x and y are variables
+  public void testFreeVars() {
+    // let's create: Z(Z(x,h(λz.c(z))),g(y,x)), where Z, x and y are variables
     Variable z = new Var("Z", arrowType(baseType("a"),arrowType("b","a")), true);
     FunctionSymbol g = new Constant("g", arrowType(baseType("b"),arrowType("a","b")));
-    FunctionSymbol c = new Constant("c", baseType("b"));
+    FunctionSymbol c = new Constant("c", arrowType("o", "o"));
+    FunctionSymbol h = new Constant("h", arrowType(arrowType("o", "o"), baseType("b")));
     Variable x = new Var("x", baseType("a"), true);
     Variable y = new Var("y", baseType("b"), false);
-    Term s = new Application(z, new Application(z, x, c), new Application(g, y, x));
+    Variable z2 = new Var("z", baseType("o"), true);
+    Term hlambdazcz = new Application(h, new Abstraction(z2, c.apply(z2)));
+    Term s = new Application(z, new Application(z, x, hlambdazcz), new Application(g, y, x));
     VariableList lst = s.vars();
     assertTrue(lst.contains(x));
     assertTrue(lst.contains(y));
@@ -279,7 +282,7 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testVarsReuse() {
+  public void testFreeVarsReuse() {
     // let's create: f(g(x), h(y,y))
     Variable x = new Var("x", baseType("o"), false);
     Variable y = new Var("x", baseType("o"), false);
@@ -289,6 +292,68 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(gx.vars() == x.vars());
     assertTrue(hyy.vars() == y.vars());
     assertTrue(term.vars().size() == 2);
+  }
+
+  @Test
+  public void testBoundVars() {
+    // let's create: f(λx.Z(x), Y, g(λz.z, λx,u.h(x,y)))
+    Variable x = new Var("x", baseType("o"), true);
+    Variable y = new Var("y", baseType("o"), true);
+    Variable z = new Var("z", baseType("o"), true);
+    Variable u = new Var("u", baseType("o"), true);
+    Variable bZ = new Var("Z", arrowType("o", "o"), false);
+    Variable bY = new Var("Y", baseType("o"), false);
+    FunctionSymbol h = new Constant("h", arrowType(baseType("o"), arrowType("o", "o")));
+    FunctionSymbol g = new Constant("g", arrowType(arrowType("o", "o"),
+      arrowType(arrowType(baseType("o"), arrowType("o", "o")), baseType("o"))));
+    FunctionSymbol f = new Constant("f",
+      arrowType(arrowType("o", "o"), arrowType(baseType("o"), arrowType("o", "o"))));
+    Term ahxy = new Abstraction(x, new Abstraction(u, new Application(h, x, y)));
+    Term az = new Abstraction(z, z);
+    Term gterm = new Application(g, az, ahxy);
+    Term aZx = new Abstraction(x, new Application(bZ, x));
+    Term fterm = new Application(f, aZx, bY).apply(gterm);
+
+    VariableList freeVars = fterm.vars();
+    VariableList boundVars = fterm.boundVars();
+    assertTrue(freeVars.size() == 3);
+    assertTrue(boundVars.size() == 3);
+    assertTrue(boundVars.contains(x));
+    assertTrue(boundVars.contains(z));
+    assertTrue(boundVars.contains(u));
+    assertTrue(freeVars.contains(y));
+    assertTrue(freeVars.contains(bY));
+    assertTrue(freeVars.contains(bZ));
+  }
+
+  @Test
+  public void testBoundVarsReuse() {
+    Variable x = new Var("x", baseType("o"), true);
+    Variable y = new Var("y", baseType("o"), true);
+    Variable bY = new Var("Y", baseType("o"), false);
+    Type oo = arrowType("o", "o");
+    Constant f = new Constant("f", arrowType(baseType("o"), oo));
+    Constant g = new Constant("g", arrowType(oo, baseType("o")));
+    Constant h = new Constant("h", arrowType(baseType("o"), arrowType(oo, oo)));
+    Constant i = new Constant("i", arrowType(oo, arrowType(oo, oo)));
+    Constant b = new Constant("B", baseType("o"));
+    // let's create: (λxy.f(x,y))(g(λx.x), g(λy.y))
+    Term ax = new Abstraction(x, x);
+    Term gx = g.apply(ax);
+    Term gy = g.apply(new Abstraction(y, y));
+    Term head = new Abstraction(x, new Abstraction(y, new Application(f, x, y)));
+    Term term1 = new Application(head, gx, gy);
+    assertTrue(ax.boundVars() == gx.boundVars());
+    assertTrue(term1.boundVars() == head.boundVars());
+    // let's create: h(Y, λx.x, B)
+    Term term2 = (new Application(h, bY, ax)).apply(b);
+    assertTrue(term2.boundVars() == ax.boundVars());
+    // let's create: i(λx.x, λy.f(g(λx.x), y))
+    Term fterm = new Application(f, gx, y);
+    Term afterm = new Abstraction(y, fterm);
+    Term term3 = new Application(i, ax, afterm);
+    assertTrue(term3.boundVars() == afterm.boundVars());
+    assertFalse(afterm.boundVars() == fterm.boundVars());
   }
 
   @Test
@@ -591,7 +656,7 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testVariableRenaming() {
+  public void testFreeVariableRenaming() {
     Variable a = new Var("x", arrowType(baseType("o"), arrowType("o", "o")), true);
     Variable b = new Var("x", baseType("o"), false);
     Variable c = new Var("x", baseType("o"), false);
@@ -605,5 +670,26 @@ public class ApplicationTest extends TermTestFoundation {
     builder.setLength(0);
     combi.addToString(builder, naming);
     assertTrue(builder.toString().equals("x(y, x)"));
+  }
+
+  @Test
+  public void testCorrectPrintingWithoundVariables() {
+    // (λx0.x0)(f(g(x1, x2), λx3.g(x2, x3), λx4.λx3.g(x3,x4)))
+    Variable x0 = new Var("x", baseType("o"), true);
+    Variable x1 = new Var("x", baseType("o"), true);
+    Variable x2 = new Var("x", baseType("o"), true);
+    Variable x3 = new Var("x", baseType("o"), true);
+    Variable x4 = new Var("x", baseType("o"), true);
+    Term g = constantTerm("g", arrowType(baseType("o"), arrowType("o", "o")));
+    Term f = constantTerm("f", arrowType(baseType("o"), arrowType(
+      arrowType("o", "o"), arrowType(arrowType(baseType("o"), arrowType("o", "o")),
+      baseType("o")))));
+    Term abs = new Abstraction(x0,x0);
+    Term arg1 = new Application(g, x1, x2);
+    Term arg2 = new Abstraction(x3, new Application(g, x2, x3));
+    Term arg3 = new Abstraction(x4, new Abstraction(x3, new Application(g, x3, x4)));
+    Term total = new Application(abs, (new Application(f, arg1, arg2)).apply(arg3));
+    assertTrue(total.toString().equals(
+      "(λx1.x1)(f(g(x__1, x__2), λx1.g(x__2, x1), λx1.λx2.g(x2, x1)))"));
   }
 }

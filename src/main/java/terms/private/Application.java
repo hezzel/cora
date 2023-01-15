@@ -18,34 +18,50 @@ package cora.terms;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
+import java.util.Set;
 import cora.exceptions.ArityError;
 import cora.exceptions.*;
 import cora.types.Type;
 import cora.types.TypeFactory;
 
 /** An Application is a term of the form h(s1,...,sn) where h is not an application. */
-class Application extends TermInherit implements Term {
+class Application extends TermInherit {
   public Term _head;
   public List<Term> _args;
   public Type _outputType;
 
   /**
-   * Returns the list of all variables used in this term.  Meant for use in the constructors, so
-   * it cannot use the vars() function, but rather, sets up the result of that function.
+   * Sets up the lists of free and bound variables used in this term.
+   * Meant for use in the constructors, so it cannot use the vars() function, but rather, sets up
+   * the result of that function.
    */
-  private VariableList getMyVariables() {
-    TreeSet<Variable> ret = new TreeSet<Variable>();
-
+  private void setupVariables() {
+    // find the largest of the free variable sets to combine the rest into 
     VariableList largest = _head.vars();
-    for (Variable x : largest) ret.add(x);
+    int best = 0;
     for (int i = 0; i < _args.size(); i++) {
-      VariableList vs = _args.get(i).vars();
-      if (vs.size() > largest.size()) largest = vs;
-      for (Variable x : vs) ret.add(x);
+      if (_args.get(i).vars().size() > largest.size()) {
+        best = i + 1;
+        largest = _args.get(i).vars();
+      }
     }
-    if (ret.size() == largest.size()) return largest;
-    return new VarList(ret, true);
+    // combine the rest into it!
+    VariableList frees = largest;
+    if (best != 0) frees = frees.combine(_head.vars());
+    for (int i = 0; i < _args.size(); i++) {
+      if (best != i + 1) frees = frees.combine(_args.get(i).vars());
+    }
+    // combine all the bound variable sets
+    VariableList bounds = null;
+    if (_head.boundVars().size() > 0) bounds = _head.boundVars();
+    for (int i = 0; i < _args.size(); i++) {
+      VariableList vs = _args.get(i).boundVars();
+      if (vs.size() > 0) {
+        if (bounds == null) bounds = vs;
+        else bounds = bounds.combine(vs);
+      }
+    }
+    setVariables(frees, bounds);
   }
 
   /**
@@ -84,14 +100,14 @@ class Application extends TermInherit implements Term {
       }
       Type input = type.queryArrowInputType();
       if (!input.equals(arg.queryType())) {
-        throw new TypingError("Application", "constructor", "arg " + i + " of " +
+        throw new TypingError("Application", "constructor", "arg " + (i+1) + " of " +
           _head.toString(), arg.queryType() == null ? "null" : arg.queryType().toString(),
           input.toString());
       }
       type = type.queryArrowOutputType();
     }
     _outputType = type;
-    setVariables(getMyVariables());
+    setupVariables();
   }
 
   /**
@@ -140,6 +156,11 @@ class Application extends TermInherit implements Term {
     return false;
   }
 
+  /** @return false, since an application is not an abstraction. */
+  public boolean isAbstraction() {
+    return false;
+  }
+
   /** @return true, since the current term is an application. */
   public boolean isApplication() {
     return true;
@@ -153,6 +174,11 @@ class Application extends TermInherit implements Term {
   /** Returns whether or not the head of this application is a variable. */
   public boolean isVarTerm() {
     return _head.isVariable();
+  }
+
+  /** Returns whether or not the head of this application is an abstraction. */
+  public boolean isBetaRedex() {
+    return _head.isAbstraction();
   }
 
   /** For a term h(s1,...,sn), this returns n. */
@@ -307,14 +333,6 @@ class Application extends TermInherit implements Term {
   }
 
   /**
-   * If the current term is h(t1,...,tk) and has a type σ1 →...→ σn → τ and args = [s1,...,sn] with
-   * each si : σi, then this function returns h(t1,...,tk,s1,...,sn).
-   */
-  public Term apply(List<Term> args) {
-    return new Application(this, args);
-  }
-
-  /**
    * This method replaces each variable x in the term by gamma(x) (or leaves x alone if x is not
    * in the domain of gamma); the result is returned.
    */
@@ -360,13 +378,15 @@ class Application extends TermInherit implements Term {
   }
 
   /** This method gives a string representation of the term. */
-  public void addToString(StringBuilder builder, Map<Variable,String> renaming) {
-    _head.addToString(builder, renaming);
+  public void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid) {
+    if (_head.isAbstraction()) builder.append("(");
+    _head.addToString(builder, renaming, avoid);
+    if (_head.isAbstraction()) builder.append(")");
     builder.append("(");
-    _args.get(0).addToString(builder, renaming);
+    _args.get(0).addToString(builder, renaming, avoid);
     for (int i = 1; i < _args.size(); i++) {
       builder.append(", ");
-      _args.get(i).addToString(builder, renaming);
+      _args.get(i).addToString(builder, renaming, avoid);
     }
     builder.append(")");
   }

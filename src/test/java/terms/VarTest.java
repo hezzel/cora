@@ -19,6 +19,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import cora.exceptions.*;
 import cora.types.Type;
 
@@ -116,6 +117,7 @@ public class VarTest extends TermTestFoundation {
     VariableList lst = x.vars();
     assertTrue(lst.size() == 1);
     assertTrue(lst.contains(x));
+    assertTrue(x.boundVars().size() == 0);
   }
 
   @Test
@@ -254,7 +256,7 @@ public class VarTest extends TermTestFoundation {
     x.addToString(builder, null);
     builder.append(" ");
     TreeMap<Variable,String> map = new TreeMap<Variable,String>();
-    x.addToString(builder, map);
+    x.addToString(builder, map, new TreeSet<String>());
     builder.append(" ");
     map.put(x, "y");
     x.addToString(builder, map);

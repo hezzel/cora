@@ -17,7 +17,7 @@ package cora.terms;
 
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
+import java.util.Set;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullCallError;
 import cora.exceptions.NullInitialisationError;
@@ -25,11 +25,13 @@ import cora.types.Type;
 import cora.types.TypeFactory;
 
 /**
- * Variables are both used as parts of constraints, as generic expressions in terms and as open
- * spots for matching in rules; this class represents all those kinds of variables.
+ * Variables are both used as parts of constraints, as generic expressions in terms, as binders
+ * in an abstraction and as open spots for matching in rules; this class represents all those kinds
+ * of variables.
  * Variables have a name for printing purposes, but are not uniquely defined by it (distinct
  * variables may have the same name and type, although this will typically be avoided within a
- * single term).  Rather, variables are uniquely identified by an internally kept index.
+ * single term).  Rather, variables are uniquely identified by an internally kept index.  By
+ * construction, no variables with an index greater than COUNTER can exist in the program.
  */
 class Var extends LeafTermInherit implements Variable {
   private static int COUNTER = 0;
@@ -45,9 +47,7 @@ class Var extends LeafTermInherit implements Variable {
     _index = COUNTER;
     COUNTER++;
     if (name == null) throw new NullInitialisationError("Var", "name");
-    TreeSet<Variable> vars = new TreeSet<Variable>();
-    vars.add(this);
-    setVariables(new VarList(vars, true));
+    setVariables(new VarList(this));
   }
 
   /**
@@ -95,7 +95,7 @@ class Var extends LeafTermInherit implements Variable {
   }
 
   /** Appends the name of te variable to the builder. */
-  public void addToString(StringBuilder builder, Map<Variable,String> renaming) {
+  public void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid) {
     if (renaming == null || !renaming.containsKey(this)) builder.append(_name);
     else builder.append(renaming.get(this));
   }
@@ -108,11 +108,6 @@ class Var extends LeafTermInherit implements Variable {
   /** @throws InappropriatePatternDataError, as a variable does not have a function symbol root */
   public FunctionSymbol queryRoot() {
     throw new InappropriatePatternDataError("Var", "queryRoot", "functional terms");
-  }
-
-  /** Adds the current variable into env. */
-  public void updateVars(Environment env) {
-    env.add(this);
   }
 
   /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */

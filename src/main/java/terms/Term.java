@@ -17,11 +17,13 @@ package cora.terms;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import cora.types.Type;
 
 /**
  * Terms are the main object to be rewritten.  There are various kinds of terms,
- * currently including functional terms f(s1,...,sk) and var terms x(s1,...,xk).
+ * currently including functional terms f(s1,...,sk), var terms x(s1,...,xk), and
+ * abstractions λx.s.
  * In the future it is likely that additional constructions will be allowed.
  *
  * Note: all instances of Term must (and can be expected to) be immutable.
@@ -45,6 +47,12 @@ public interface Term {
 
   /** Returns whether or not the current term has the form h(s1,...,sn) with n > 0. */
   boolean isApplication();
+
+  /** Returns whether or not the current term is a lambda-abstraction λx.s. */
+  boolean isAbstraction();
+
+  /** Returns whether or not the current term has the form (λx.t)(s1,...sn) with n > 0. */
+  boolean isBetaRedex();
 
   /** Returns whether the set of variables is empty. */
   boolean isGround();
@@ -83,7 +91,7 @@ public interface Term {
   FunctionSymbol queryRoot();
 
   /**
-   * If this is a variable x or varterm x(s1,...,sn), this returns x.
+   * If the head of this term is a variable x or abstraction λx.s, this returns x.
    * Otherwise, an InappropriatePatternDataError is thrown.
    */
   Variable queryVariable();
@@ -113,10 +121,18 @@ public interface Term {
   List<HeadPosition> queryHeadPositions();
 
   /** 
-   * Returns the set of all variables that occur in the current term.
+   * Returns the set of all free variables that occur in the current term.
    * This is efficient, as it returns a cached set.
+   * Note that two α-equal terms will have the same set of bound variables.
    */
   VariableList vars();
+
+  /**
+   * Returns the set of all variables that occur bound in the current term.
+   * This is efficient, as it returns a cached set.
+   * Note that if two terms are α-equal, they don't need to have the same set of bound variables.
+   */
+  VariableList boundVars();
 
   /**
    * Returns the subterm at the given position, assuming that this is indeed a position of the
@@ -164,24 +180,37 @@ public interface Term {
    * Whether or not null is returned, gamma is likely to be extended (although without overriding)
    * by this function.
    */
-  public String match(Term other, Substitution gamma);
+  String match(Term other, Substitution gamma);
 
   /**
    * This method returns the substitution gamma such that <this term> gamma = other, if such a
    * substitution exists; if it does not, then null is returned instead.
    */
-  public Substitution match(Term other);
+  Substitution match(Term other);
 
   /**
    * Adds the string representation of the current term to the given string builder.
-   * Some variables may be renamed; if the mapping for a variable is not given, or renaming is null,
-   * then the default name for that variable is used.
-   * (To get a suitable renaming, you can use vars().getUniqueNaming().)
+   * Some free variables may be renamed; if the mapping for a variable is not given, then the
+   * default name for that variable is used.
+   * (To get a suitable renaming, you can use vars().getUniqueNaming().  You can also supply null,
+   * which has the same effect as supplying an empty mapping: no free variables are renamed.)
    */
-  public void addToString(StringBuilder builder, Map<Variable,String> renaming);
+  void addToString(StringBuilder builder, Map<Variable,String> renaming);
+
+  /**
+   * Adds the string representation of the current term to the given string builder.
+   * Some free variables may be renamed; if the mapping for a variable is not given, then the
+   * default name for that variable is used.
+   * For names of bound variables, none of the names in the "avoid" set are allowed to be used.
+   * The renaming and avoid set may not be null.
+   * (This function is primarily intended for the recusive definition of strings; for functions
+    *outside the terms package, it is recommended to use the other addToString function instead.)
+   */
+  void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid);
 
   /**
    * Performs an equality check with the given other term.
+   * Equality is modulo alpha (but this is only relevant for higher-order rewriting with lambdas).
    */
   boolean equals(Term term);
 }

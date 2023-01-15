@@ -41,21 +41,81 @@ public class VarListTest {
   }
 
   @Test
-  public void testInternalCreation() {
-    TreeSet<Variable> set = new TreeSet<Variable>();
+  public void testSingleCreation() {
     Var x = new Var("x", TypeFactory.createSort("a"), false);
-    Var y = new Var("y", TypeFactory.createSort("b"), true);
-    set.add(x);
-    set.add(y);
-    VarList lst = new VarList(set, true);
+    VarList lst = new VarList(x);
     assertTrue(lst.contains(x));
-    assertTrue(lst.contains(y));
-    assertTrue(lst.size() == 2);
-    Var z = new Var("z", TypeFactory.createSort("c"), false);
-    set.add(z);
-    assertTrue(lst.size() == 3);
-    assertTrue(lst.contains(z));
+    assertTrue(lst.size() == 1);
   }
+
+  @Test
+  public void testAdd() {
+    Variable x = new Var("x", TypeFactory.createSort("a"), false);
+    Variable y = new Var("y", TypeFactory.createSort("a"), false);
+    Variable z = new Var("z", TypeFactory.createSort("a"), false);
+    VariableList lst1 = new VarList(x);
+    VariableList lst2 = lst1.add(y);
+    VariableList lst3 = lst2.add(z);
+    assertTrue(lst1.size() == 1);
+    assertTrue(lst2.size() == 2);
+    assertTrue(lst3.size() == 3);
+    assertTrue(lst2.contains(y));
+    assertFalse(lst2.contains(z));
+  }
+
+  @Test
+  public void testRemove() {
+    Variable x = new Var("x", TypeFactory.createSort("a"), false);
+    Variable y = new Var("y", TypeFactory.createSort("a"), false);
+    Variable z = new Var("z", TypeFactory.createSort("a"), false);
+    ArrayList<Variable> vars = new ArrayList<Variable>();
+    vars.add(x);
+    vars.add(y);
+    vars.add(z);
+    VariableList lst3 = new VarList(vars);
+    VariableList lst2 = lst3.remove(x);
+    VariableList lst1 = lst2.remove(z);
+    assertTrue(lst1.size() == 1);
+    assertTrue(lst2.size() == 2);
+    assertTrue(lst3.size() == 3);
+    assertTrue(lst3.contains(y));
+    assertFalse(lst2.contains(x));
+  }
+
+  @Test
+  public void testCombineEquals() {
+    Variable x = new Var("x", TypeFactory.createSort("a"), false);
+    Variable y = new Var("y", TypeFactory.createSort("a"), false);
+    Variable z = new Var("z", TypeFactory.createSort("a"), false);
+    ArrayList<Variable> vars = new ArrayList<Variable>();
+    vars.add(x);
+    vars.add(y);
+    VariableList a = new VarList(vars);
+    vars.add(z);
+    VariableList b = new VarList(vars);
+    assertTrue(a.combine(b) == b);
+    assertTrue(b.combine(a) == b);
+  }
+
+  @Test
+  public void testTrueCombination() {
+    Variable x = new Var("x", TypeFactory.createSort("a"), false);
+    Variable y = new Var("y", TypeFactory.createSort("a"), false);
+    Variable z = new Var("z", TypeFactory.createSort("a"), false);
+    ArrayList<Variable> vars = new ArrayList<Variable>();
+    vars.add(x);
+    vars.add(y);
+    VariableList a = new VarList(vars);
+    vars.set(1, z);
+    VariableList b = new VarList(vars);
+    VariableList c = a.combine(b);
+    assertTrue(a.size() == 2);
+    assertTrue(b.size() == 2);
+    assertTrue(c.size() == 3);
+    assertTrue(c.contains(x));
+    assertTrue(c.contains(y));
+    assertTrue(c.contains(z));
+   }
 
   @Test
   public void testRenaming() {

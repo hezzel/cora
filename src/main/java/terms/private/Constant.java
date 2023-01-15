@@ -17,7 +17,7 @@ package cora.terms;
 
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
+import java.util.Set;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.NullCallError;
@@ -48,7 +48,7 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   }
 
   /** Add a description of the current function symbol to the string; the type is not indicated. */
-  public void addToString(StringBuilder builder, Map<Variable,String> renaming) {
+  public void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid) {
     builder.append(_name);
   }
 

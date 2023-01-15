@@ -33,18 +33,15 @@ class VarList implements VariableList {
     _variables = new TreeSet<Variable>();
   }
 
+  /** Constructors the varlist with just the given variable */
+  public VarList(Variable x) {
+    _variables = new TreeSet<Variable>();
+    _variables.add(x);
+  }
+
   /** Constructs the varlist with a copy of the given variables. */
   VarList(Collection<Variable> vars) {
     _variables = new TreeSet<Variable>(vars);
-  }
-
-  /**
-   * Constructs the varlist with the given variables, which become the property of this VarList.
-   * The second variable is a dummy, to clearly distinguish between this constructor and the
-   * other one.
-   */
-  VarList(TreeSet<Variable> vars, boolean dummy) {
-    _variables = vars;
   }
 
   /** Returns whether the given variable is an element of the environment. */
@@ -62,7 +59,36 @@ class VarList implements VariableList {
     return _variables.iterator();
   }
 
-  /** Returns a mapping with a unique name for every variable in the temr. */
+  /** Returns a copy of this list with the given variable added. */
+  public VarList add(Variable x) {
+    if (_variables.contains(x)) return this;
+    VarList ret = new VarList(_variables);
+    ret._variables.add(x);
+    return ret;
+  }
+
+  /** Returns a copy of this list with the given variable removed. */
+  public VarList remove(Variable x) {
+    if (!_variables.contains(x)) return this;
+    VarList ret = new VarList(_variables);
+    ret._variables.remove(x);
+    return ret;
+  }
+
+  /** Returns a combination of the current list with the given list. */
+  public VariableList combine(VariableList other) {
+    if (size() < other.size()) return other.combine(this);
+    VarList ret = null;
+    for (Variable x : other) {
+      if (_variables.contains(x)) continue;
+      if (ret == null) ret = new VarList(_variables);
+      ret._variables.add(x);
+    }
+    if (ret == null) return this;
+    return ret;
+  }
+
+  /** Returns a mapping with a unique name for every variable in the term. */
   public TreeMap<Variable,String> getUniqueNaming() {
     // determine if any variable names occur more than once
     TreeMap<String,TreeSet<Variable>> map = new TreeMap<String,TreeSet<Variable>>();

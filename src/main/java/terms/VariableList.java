@@ -28,6 +28,15 @@ public interface VariableList extends Iterable<Variable> {
   /** Returns the number of variables currently in the environment. */
   int size();
 
+  /** Returns a copy of the VariableList with the given Variable added. */
+  VariableList add(Variable x);
+
+  /** Returns a copy of the VariableList with the given Variable removed. */
+  VariableList remove(Variable x);
+
+  /** Returns a VariableList that contains all the variables in both this and other. */
+  VariableList combine(VariableList other);
+
   /**
    * Returns a unique name for all the variables in the list (since it is allowed for distinct
    * variables to have the same name).

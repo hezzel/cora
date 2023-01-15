@@ -17,6 +17,7 @@ package cora.terms;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import cora.exceptions.IndexingError;
@@ -29,23 +30,45 @@ import cora.exceptions.IndexingError;
  * set of variables occurring in the term.
  */
 abstract class TermInherit implements Term {
-  private VariableList _variables;
+  private VariableList _freeVariables;
+  private VariableList _boundVariables;
 
   /**
-   * Sets the set of all variables occurring in this term.  Should be called from the constructor,
-   * and only there.
+   * Sets the set of all free variables occurring in this term to vs, and the set of bound
+   * variables to empty.
+   * One of the setVariables functions should be called from the constructor, and only there.
    */
   protected void setVariables(VariableList vs) {
-    if (_variables != null) throw new Error("Setting VariableList twice for " +
+    if (_freeVariables != null) throw new Error("Setting VariableList twice for " +
       this.getClass().getSimpleName());
-    _variables = vs;
+    _freeVariables = vs;
+    _boundVariables = VarList.EMPTY;
   }
 
-  /** Returns the set of all variables occurring in the current term. */
-  public VariableList vars() {
-    if (_variables == null) throw new Error("Variable list has not been set up for " +
+  /**
+   * Sets the sets of all free and all bound variables occuring in this term.
+   * One of the setVariables functions should be called from the constructor, and only there.
+   */
+  protected void setVariables(VariableList frees, VariableList bounds) {
+    if (_freeVariables != null) throw new Error("Setting VariableList twice for " +
       this.getClass().getSimpleName());
-    return _variables;
+    _freeVariables = frees;
+    if (bounds == null) _boundVariables = VarList.EMPTY;
+    else _boundVariables = bounds;
+  }
+
+  /** Returns the set of all variables occurring free in the current term. */
+  public VariableList vars() {
+    if (_freeVariables == null) throw new Error("Variable list has not been set up for " +
+      this.getClass().getSimpleName());
+    return _freeVariables;
+  }
+
+  /** Returns the set of all variables occurring bound in the current term. */
+  public VariableList boundVars() {
+    if (_freeVariables == null) throw new Error("Variable list has not been set up for " +
+      this.getClass().getSimpleName());
+    return _boundVariables;
   }
 
   /** Applies the current term (with functional type) to other. */
@@ -104,6 +127,15 @@ abstract class TermInherit implements Term {
     return head.apply(args.subList(0, args.size()-chop));
   }
 
+  /** 
+   * If the current term is h(t1,...,tk) and has a type σ1 →...→ σn → τ and args = [s1,...,sn] with
+   * each si : σi, then this function returns h(t1,...,tk,s1,...,sn).
+   */
+  public Term apply(List<Term> args) {
+    if (args.size() == 0) return this;
+    return new Application(this, args);
+  }
+
   /** This method verifies equality to another Term. */
   public boolean equals(Object other) {
     if (other instanceof Term) return equals((Term)other);
@@ -113,8 +145,20 @@ abstract class TermInherit implements Term {
   /** This method returns a string representation of the current term. */
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    addToString(builder, _variables.getUniqueNaming());
+    addToString(builder, _freeVariables.getUniqueNaming());
     return builder.toString();
+  }
+
+  /** This function adds a representation of the current term to the given builder. */
+  public void addToString(StringBuilder builder, Map<Variable,String> renaming) {
+    TreeSet<String> avoid = new TreeSet<String>();
+    if (renaming == null) renaming = new TreeMap<Variable,String>();
+    for (Variable x : _freeVariables) {
+      String name = x.queryName();
+      avoid.add(name);
+      if (renaming.containsKey(x)) avoid.add(renaming.get(x));
+    }
+    addToString(builder, renaming, avoid);
   }
 }
 
