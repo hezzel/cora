@@ -19,6 +19,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import java.lang.Error;
 import java.util.ArrayList;
+import java.util.TreeMap;
 import cora.exceptions.*;
 import cora.types.Type;
 
@@ -99,6 +100,12 @@ public class ConstantTest extends TermTestFoundation {
     Term x = f.queryVariable();
   }
 
+  @Test(expected = InappropriatePatternDataError.class)
+  public void testAbstractionSubtermRequest() {
+    Constant f = new Constant("a", arrowType("o", "O"));
+    f.queryAbstractionSubterm();
+  }
+
   @Test(expected = IndexingError.class)
   public void testArgumentPositionRequest() {
     Type a = baseType("a");
@@ -162,6 +169,9 @@ public class ConstantTest extends TermTestFoundation {
     Term aa = new Constant("g", a);
     assertTrue(aa.isFirstOrder());
     assertTrue(aa.isPattern());
+    assertTrue(f.refreshBinders() == f);
+    String s = null;
+    assertFalse(f.equals(s));
   }
 
   @Test
@@ -199,6 +209,11 @@ public class ConstantTest extends TermTestFoundation {
     assertTrue(f.equals((Term)f));
     assertTrue(f.equals((Term)g));
     assertFalse(f.equals((Term)h));
+
+    TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
+    TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
+    assertTrue(f.alphaEquals(f, mu, xi, 3));
+    assertFalse(f.alphaEquals(h, mu, xi, 1));
 
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(new Constant("aa", a));

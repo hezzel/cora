@@ -127,6 +127,11 @@ abstract class TermInherit implements Term {
     return head.apply(args.subList(0, args.size()-chop));
   }
 
+  /** Returns te present term with all binder-variables replaced by fresh ones. */
+  public Term refreshBinders() {
+    return substitute(new Subst());
+  }
+
   /** 
    * If the current term is h(t1,...,tk) and has a type σ1 →...→ σn → τ and args = [s1,...,sn] with
    * each si : σi, then this function returns h(t1,...,tk,s1,...,sn).
@@ -137,6 +142,14 @@ abstract class TermInherit implements Term {
   }
 
   /** This method verifies equality to another Term. */
+  public boolean equals(Term other) {
+    if (other == null) return false;
+    TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
+    TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
+    return alphaEquals(other, mu, xi, 1);
+  }
+
+  /** This method verifies equality to another Java object. */
   public boolean equals(Object other) {
     if (other instanceof Term) return equals((Term)other);
     return false;

@@ -88,6 +88,15 @@ class VarList implements VariableList {
     return ret;
   }
 
+  /** Returns the set of Variables that occur both in this list and the given iterable. */
+  public TreeSet<Variable> getOverlap(Iterable<Variable> other) {
+    TreeSet<Variable> ret = new TreeSet<Variable>();
+    for (Variable x : other) {
+      if (_variables.contains(x)) ret.add(x);
+    }
+    return ret;
+  }
+
   /** Returns a mapping with a unique name for every variable in the term. */
   public TreeMap<Variable,String> getUniqueNaming() {
     // determine if any variable names occur more than once

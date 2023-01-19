@@ -118,6 +118,8 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.queryHead().queryType().toString().equals("a ⇒ b ⇒ a"));
     assertTrue(t.queryType().equals(baseType("a")));
     assertTrue(t.toString().equals("f(c, g(d))"));
+    Term q = null;
+    assertFalse(t.equals(q));
   }
 
   @Test
@@ -180,6 +182,14 @@ public class ApplicationTest extends TermTestFoundation {
   public void testInappropriateVariableRequest() {
     Term t = twoArgFuncTerm();
     Term f = t.queryVariable();
+  }
+
+  @Test(expected = InappropriatePatternDataError.class)
+  public void testInappropriateAbstractionSubtermRequest() {
+    Variable x = new Var("x", baseType("o"), true);
+    Term abs = new Abstraction(x, x);
+    Term term = new Application(abs, constantTerm("a", baseType("o")));
+    term.queryAbstractionSubterm();
   }
 
   @Test
@@ -653,6 +663,26 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(s2.equals(s3));
     assertFalse(s2.equals(s4));
     assertFalse(s1.equals(new Var("x", baseType("o"), false)));
+  }
+
+  @Test
+  public void testAlphaEquality() {
+    // (λx.x) (f(y, λx.x)) =[y:=1,z:=1] (λy.y) (f(z, λx.x))
+    Var x = new Var("x", baseType("o"), true);
+    Var y = new Var("y", baseType("o"), true);
+    Var z = new Var("z", baseType("o"), true);
+    Constant f = new Constant("f", arrowType(baseType("o"), arrowType(
+      arrowType("o", "o"), baseType("o"))));
+    TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
+    TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
+    mu.put(y, 1);
+    xi.put(z, 1);
+    Term xx = new Abstraction(x, x);
+    Term s = new Application(xx, new Application(f, y, xx));
+    Term t = new Application(new Abstraction(y, y), new Application(f, z, xx));
+    assertTrue(s.equals(s));
+    assertFalse(s.equals(t));
+    assertTrue(s.alphaEquals(t, mu, xi, 2));
   }
 
   @Test

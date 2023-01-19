@@ -109,6 +109,8 @@ public class VarTest extends TermTestFoundation {
     assertFalse(z.isFirstOrder());
     assertTrue(z.isPattern());
     assertTrue(z.apply(y).equals(new Application(z, y)));
+    assertTrue(x.refreshBinders() == x);
+    assertTrue(y.refreshBinders() == y);
   }
 
   @Test
@@ -126,6 +128,27 @@ public class VarTest extends TermTestFoundation {
     Term s2 = new Var("x", baseType("o"), false);
     assertTrue(s1.equals(s1));
     assertFalse(s1.equals(s2));
+    assertFalse(s1.equals(null));
+  }
+
+  @Test
+  public void testAlpaEquality() {
+    Var x = new Var("x", baseType("o"), true);
+    Var z = new Var("z", baseType("o"), true);
+    TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
+    TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
+    assertFalse(x.alphaEquals(z, mu, xi, 2));
+    mu.put(x, 3);
+    assertFalse(x.alphaEquals(z, mu, xi, 4));
+    xi.put(z, 3);
+    assertTrue(x.alphaEquals(z, mu, xi, 4));
+    mu.remove(x);
+    assertFalse(x.alphaEquals(z, mu, xi, 4));
+    mu.put(x, 2);
+    assertFalse(x.alphaEquals(z, mu, xi, 4));
+    assertFalse(x.alphaEquals(x, mu, xi, 4));
+    assertFalse(z.alphaEquals(z, mu, xi, 4));
+    assertTrue(x.alphaEquals(x, xi, xi, 5));
   }
 
   @Test
@@ -169,6 +192,12 @@ public class VarTest extends TermTestFoundation {
     Term s = new Var("x", baseType("o"), false);
     Position p = PositionFactory.createArg(1, PositionFactory.empty);
     Term t = s.querySubterm(new HeadPosition(p));
+  }
+
+  @Test(expected = InappropriatePatternDataError.class)
+  public void testAbstractionSubtermRequest() {
+    Term s = new Var("x", arrowType("o", "O"), true);
+    s.queryAbstractionSubterm();
   }
 
   @Test

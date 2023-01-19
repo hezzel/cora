@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import cora.exceptions.ArityError;
 import cora.exceptions.*;
 import cora.types.Type;
 import cora.types.TypeFactory;
@@ -51,12 +50,20 @@ class Application extends TermInherit {
     for (int i = 0; i < _args.size(); i++) {
       if (best != i + 1) frees = frees.combine(_args.get(i).vars());
     }
-    // combine all the bound variable sets
+    // combine all the bound variable sets, and recreate the binders if necessary to ensure
+    // well-behavedness
     VariableList bounds = null;
-    if (_head.boundVars().size() > 0) bounds = _head.boundVars();
+    if (_head.boundVars().size() > 0) {
+      if (!_head.boundVars().getOverlap(frees).isEmpty()) _head = _head.refreshBinders();
+      bounds = _head.boundVars();
+    }
     for (int i = 0; i < _args.size(); i++) {
       VariableList vs = _args.get(i).boundVars();
       if (vs.size() > 0) {
+        if (!vs.getOverlap(frees).isEmpty()) {
+          _args.set(i, _args.get(i).refreshBinders());
+          vs = _args.get(i).boundVars();
+        }
         if (bounds == null) bounds = vs;
         else bounds = bounds.combine(vs);
       }
@@ -208,6 +215,12 @@ class Application extends TermInherit {
     List<Term> newargs = new ArrayList<Term>();
     for (int j = 0; j < i; j++) newargs.add(_args.get(j));
     return new Application(_head, newargs);
+  }
+
+  /** @throws InappropriatePatternDataError, as an application is not an abstraction */
+  public Term queryAbstractionSubterm() {
+    throw new InappropriatePatternDataError("Application", "queryAbstractionSubterm",
+                                            "lambda-abstractions");
   }
 
   /** @return the head of the application. */
@@ -392,13 +405,12 @@ class Application extends TermInherit {
   }
 
   /** This method verifies equality to another Term. */
-  public boolean equals(Term term) {
-    if (term == null) return false;
+  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
     if (!term.isApplication()) return false;
-    if (!_head.equals(term.queryHead())) return false;
+    if (!_head.alphaEquals(term.queryHead(), mu, xi, k)) return false;
     if (_args.size() != term.numberArguments()) return false;
     for (int i = 0; i < _args.size(); i++) {
-      if (!_args.get(i).equals(term.queryArgument(i+1))) return false;
+      if (!_args.get(i).alphaEquals(term.queryArgument(i+1), mu, xi, k)) return false;
     }
     return true;
   }

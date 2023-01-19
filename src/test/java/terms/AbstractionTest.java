@@ -136,23 +136,37 @@ public class AbstractionTest extends TermTestFoundation {
     assertTrue(main.toString().equals("λx.g(λx1.x1, h(x, x), λx1.f(x1))"));
   }
 
-  /*
   @Test
   public void testBasics() {
-    // TODO:
-    // queryType
-    // isVariable
-    // isConstant
-    // isFunctionalTerm
-    // isVarTerm
-    // isApplication
-    // isFirstOrder
-    // numberArguments
-    // queryArguments
-    // queryImmediateHeadSubterm
-    // queryHead
-    // queryVariable
-    // apply
+    // λx.f(x, λy.y)
+    Variable x = new Var("x", arrowType("o", "o"), true);
+    Variable y = new Var("y", baseType("a"), true);
+    Constant f = new Constant("f", arrowType(arrowType("o", "o"), arrowType(
+      arrowType("a", "a"), baseType("b"))));
+    Term abs = new Abstraction(x, new Application(f, x, new Abstraction(y, y)));
+
+    assertTrue(abs.queryType().toString().equals("(o ⇒ o) ⇒ b"));
+    assertFalse(abs.isVariable());
+    assertFalse(abs.isConstant());
+    assertFalse(abs.isFunctionalTerm());
+    assertFalse(abs.isVarTerm());
+    assertFalse(abs.isApplication());
+    assertFalse(abs.isFirstOrder());
+    assertTrue(abs.numberArguments() == 0);
+    assertTrue(abs.queryArguments().size() == 0);
+    assertTrue(abs.queryImmediateHeadSubterm(0) == abs);
+    assertTrue(abs.queryAbstractionSubterm().equals(new Application(f, x, new Abstraction(y, y))));
+    assertTrue(abs.queryHead() == abs);
+    assertTrue(abs.queryVariable() == x);
+    assertTrue(abs.apply(constantTerm("u", arrowType("o", "o"))).toString().equals(
+      "(λx.f(x, λy.y))(u)"));
+  }
+
+  /*
+
+  @Test(expected = InappropriatePatternDataError.class)
+  public void testImmediateHeadSubterm() {
+    // TODO: queryImmediateHeadSubterm(1)
   }
 
   @Test(expected = InappropriatePatternDataError.class)
@@ -197,10 +211,115 @@ public class AbstractionTest extends TermTestFoundation {
   public void testBadHeadPositionReplacement() {
     // TODO: try to replace a head position that doesn't exist
   }
+  */
 
   @Test
-  public void testAlphaEquality() {
-    // TODO: check some things that are equal, and some that are not
+  public void testAlphaEquals() {
+    Var x = new Var("x", baseType("o"), true);
+    Var y = new Var("u", baseType("o"), true);
+    Var z = new Var("z", baseType("o"), true);
+    Var u = new Var("u", baseType("o"), true);
+    Term f = new Constant("f", arrowType(baseType("o"), arrowType("o", "o")));
+    Term s = new Abstraction(x, new Application(f, x, y)); // λx.f(x, y)
+    Term t = new Abstraction(z, new Application(f, z, u)); // λz.f(z, u)
+    TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
+    TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
+
+    // in principle they differ because y != u
+    assertFalse(s.alphaEquals(t, mu, xi, 1));
+
+    // but with the right renaming, they are alpha-equal
+    mu.put(y, 1);
+    xi.put(u, 1);
+    assertTrue(s.alphaEquals(t, mu, xi, 2));
+
+    // after a check, the size and contents of mu and xi are unaltered
+    assertTrue(mu.size() == 1);
+    assertTrue(mu.get(y) == 1);
+    assertFalse(mu.containsKey(x));
+    assertTrue(xi.size() == 1);
+    assertTrue(xi.get(u) == 1);
+    assertFalse(xi.containsKey(x));
+    assertFalse(xi.containsKey(z));
+
+    // there is no issue if x is in xi, or z in mu
+    mu.put(z, 2);
+    xi.put(x, 3);
+    assertTrue(s.alphaEquals(t, mu, xi, 4));
   }
-  */
+
+  @Test(expected = IllegalTermError.class)
+  public void testBinderAlreadyInMu() {
+    Var x = new Var("x", baseType("o"), true);
+    Term term = new Abstraction(x, x);
+    TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
+    TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
+    mu.put(x, 1);
+    term.alphaEquals(term, mu, xi, 2);
+  }
+
+  @Test(expected = IllegalTermError.class)
+  public void testBinderAlreadyInXi() {
+    Var x = new Var("x", baseType("o"), true);
+    Term term = new Abstraction(x, x);
+    TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
+    TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
+    xi.put(x, 1);
+    term.alphaEquals(term, mu, xi, 2);
+  }
+
+  @Test
+  public void testEqualsWithDifferentBinderTypes() {
+    Term a = constantTerm("q", baseType("o"));
+    Var x = new Var("x", baseType("a"), true);
+    Var y = new Var("x", baseType("b"), true);
+    Term term1 = new Abstraction(x, a);
+    Term term2 = new Abstraction(y, a);
+    assertFalse(term1.equals(term2));
+    assertTrue(term1.equals(new Abstraction(x, a)));
+  }
+
+  @Test
+  public void testSimpleAlphaEquivalence() {
+    Variable x = new Var("x", baseType("o"), true);
+    Variable y = new Var("y", baseType("o"), true);
+    Constant f = new Constant("f", arrowType(baseType("o"), arrowType("o", "o")));
+    Term a = constantTerm("a", baseType("o"));
+    Term fxa = new Application(f, x, a);
+    Term fya = new Application(f, y, a);
+    Term abs1 = new Abstraction(x, fxa);  // λx.f(x, a)
+    Term abs2 = new Abstraction(y, fya);  // λy.f(y, a)
+
+    assertTrue(abs1.equals(abs1));
+    assertTrue(abs1.equals(abs2));
+  }
+
+  @Test
+  public void testSwitchingAlphaEquivalence() {
+    Variable x = new Var("x", baseType("o"), true);
+    Variable y = new Var("y", baseType("o"), true);
+    Constant f = new Constant("f", arrowType(baseType("o"), arrowType("o", "o")));
+
+    // λxy.f(x,f(x,y))
+    Term fxy = new Application(f, x, y);
+    Term abs1 = new Abstraction(x, new Abstraction(y, new Application(f, x, fxy)));
+    // λyx.f(y,f(y,x))
+    Term fyx = new Application(f, y, x);
+    Term abs2 = new Abstraction(y, new Abstraction(x, new Application(f, y, fyx)));
+
+    assertTrue(abs1.equals(abs2));
+  }
+
+  @Test
+  public void testNonEquivalenceWhereOnlyOneIsBound() {
+    Variable x = new Var("x", baseType("a"), true);
+    Variable y = new Var("y", baseType("b"), true);
+    Abstraction abs1 = new Abstraction(x, x);
+    Abstraction abs2 = new Abstraction(x, y);
+
+    assertFalse(abs1.equals(abs2));
+    assertFalse(abs2.equals(abs1));
+  }
+
 }
+

@@ -34,8 +34,11 @@ public interface VariableList extends Iterable<Variable> {
   /** Returns a copy of the VariableList with the given Variable removed. */
   VariableList remove(Variable x);
 
-  /** Returns a VariableList that contains all the variables in both this and other. */
+  /** Returns a VariableList that contains all variables that occur in this or other. */
   VariableList combine(VariableList other);
+
+  /** Returns a set that contains all the variables that occur in both this and other. */
+  TreeSet<Variable> getOverlap(Iterable<Variable> other);
 
   /**
    * Returns a unique name for all the variables in the list (since it is allowed for distinct

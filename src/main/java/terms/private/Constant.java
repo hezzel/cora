@@ -114,8 +114,8 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     return "constant " + _name + " is not instantiated by " + other.toString() + ".";
   }
 
-  public boolean equals(Term term) {
-    if (term == null) return false;
+  /** f =_α^{μ,ξ,k} t if and only if f and t are the same constant. */
+  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
     if (!term.isConstant()) return false;
     return equals(term.queryRoot());
   }

@@ -149,10 +149,15 @@ class Var extends LeafTermInherit implements Variable {
            other.isBinderVariable() == _binder;
   }
 
-  /** A Variable can only be equal to another term if that term is this same Variable */
-  public boolean equals(Term other) {
-    if (!other.isVariable()) return false;
-    return equals(other.queryVariable());
+  /**
+   * Alpha-equality of a variable to another variable holds if either mu[this] = xi[that], or both
+   * mu[this] and xi[that] are undefined and they are the same Variable.
+   */
+  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
+    if (!term.isVariable()) return false;
+    if (mu.containsKey(this)) return mu.get(this).equals(xi.get(term.queryVariable()));
+    else if (xi.containsKey(term.queryVariable())) return false;
+    return equals(term.queryVariable());
   }
 
   /** Implements a total ordering on variables using the index. */

@@ -45,14 +45,14 @@ class Abstraction extends TermInherit {
     if (!binder.isBinderVariable()) {
       throw new IllegalTermError("Abstraction", binder.toString() + " is not marked as a binder.");
     }
+    // to guarantee well-behavedness, make sure that subterm does not already bind the binder
+    if (subterm.boundVars().contains(binder)) subterm = subterm.refreshBinders();
     _binder = binder;
     _subterm = subterm;
     _type = TypeFactory.createArrow(binder.queryType(), subterm.queryType());
     VariableList frees = subterm.vars().remove(binder);
     VariableList bounds = subterm.boundVars().add(binder);
     setVariables(frees, bounds);
-    // TODO: make sure the term is well-behaved by creating a fresh binder variable for any
-    // instance of binder in subterm
   }
 
   /** @return <type of bindre> → <type of subterm> */
@@ -114,6 +114,11 @@ class Abstraction extends TermInherit {
   public Term queryImmediateHeadSubterm(int i) {
     if (i == 0) return this;
     throw new IndexingError("Abstraction", "queryImmediateHeadSubterm", i);
+  }
+
+  /** @return the subterm s for an abstraction λx.s */
+  public Term queryAbstractionSubterm() {
+    return _subterm;
   }
 
   /** @return this, since this is not an application */
@@ -200,9 +205,25 @@ class Abstraction extends TermInherit {
     // the well-definedness constraint; hence, we do not have to restore anything here
   }
 
-  public boolean equals(Term other) {
-    // TODO
-    return false;
+  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
+    if (!term.isAbstraction()) return false;
+    Variable x = _binder;
+    Variable y = term.queryVariable();
+    if (!x.queryType().equals(y.queryType())) return false;
+    if (mu.containsKey(x)) {
+      throw new IllegalTermError("Abstraction",
+        "Calling alphaEquals when mu already maps " + x.toString() + ".");
+    }   
+    if (xi.containsKey(y)) {
+      throw new IllegalTermError("Abstraction",
+        "Calling alphaEquals when xi already maps " + y.toString() + ".");
+    }   
+    mu.put(x, k); 
+    xi.put(y, k); 
+    boolean retval = _subterm.alphaEquals(term.queryAbstractionSubterm(), mu, xi, k + 1); 
+    mu.remove(x);
+    xi.remove(y);
+    return retval;
   }
 }
 

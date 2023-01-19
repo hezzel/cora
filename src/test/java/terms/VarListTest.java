@@ -117,6 +117,29 @@ public class VarListTest {
     assertTrue(c.contains(z));
    }
 
+   @Test
+   public void testOverlap() {
+    Variable x = new Var("x", TypeFactory.createSort("a"), false);
+    Variable y = new Var("y", TypeFactory.createSort("a"), false);
+    Variable z = new Var("x", TypeFactory.createSort("a"), false);
+    Variable u = new Var("u", TypeFactory.createSort("b"), true);
+    ArrayList<Variable> vars1 = new ArrayList<Variable>();
+    vars1.add(x);
+    vars1.add(y);
+    vars1.add(u);
+    VariableList l1 = new VarList(vars1);
+    ArrayList<Variable> vars2 = new ArrayList<Variable>();
+    vars2.add(z);
+    vars2.add(y);
+    vars2.add(u);
+    VariableList l2 = new VarList(vars2);
+
+    TreeSet<Variable> overlap = l1.getOverlap(l2);
+    assertTrue(overlap.size() == 2);
+    assertTrue(overlap.contains(y));
+    assertTrue(overlap.contains(u));
+   }
+
   @Test
   public void testRenaming() {
     Type a = TypeFactory.createSort("a");

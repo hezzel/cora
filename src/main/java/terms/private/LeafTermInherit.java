@@ -17,10 +17,7 @@ package cora.terms;
 
 import java.util.List;
 import java.util.ArrayList;
-import cora.exceptions.IndexingError;
-import cora.exceptions.NullCallError;
-import cora.exceptions.NullInitialisationError;
-import cora.exceptions.TypingError;
+import cora.exceptions.*;
 import cora.types.Type;
 
 /**
@@ -84,6 +81,12 @@ abstract class LeafTermInherit extends TermInherit {
   public Term queryImmediateHeadSubterm(int i) {
     if (i == 0) return this;
     throw new IndexingError(queryMyClassName(), "queryImmediateHeadSubterm", i);
+  }
+
+  /** @throws InappropriatePatternDataError, as a leaf term is not an abstraction */
+  public Term queryAbstractionSubterm() {
+    throw new InappropriatePatternDataError(queryMyClassName(), "queryAbstractionSubterm",
+                                            "lambda-abstractions");
   }
 
   /** @return a list containing only the empty Position. */

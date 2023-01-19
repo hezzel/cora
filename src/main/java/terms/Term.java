@@ -73,6 +73,12 @@ public interface Term {
   Term queryArgument(int i);
 
   /**
+   * If the present term is an abstraction λx.s, this returns s.
+   * Otherwise, an InappropriatePatternDataError is thrown.
+   */
+  public Term queryAbstractionSubterm();
+
+  /**
    * For an applicative term a(s1,...,sn) (where a itself is not an application), the immediate
    * subterms are s1,...,sn.  There are also n+1 head subterms: a, a(s1), a(s1,s2), ...,
    * a(s1,...,sn).  Here, queryImmediateHeadSubterm(i) returns a(s1,...,si).
@@ -171,6 +177,8 @@ public interface Term {
    * in the domain of gamma); the result is returned.
    * The original term remains unaltered.  Gamma may be *temporarily* altered to apply the
    * substitution, but is the same at the end of the function as at the start.
+   * Note that the result of substituting is a term where all binders in lambdas are freshly
+   * generated.
    */
   Term substitute(Substitution gamma);
 
@@ -198,12 +206,19 @@ public interface Term {
   void addToString(StringBuilder builder, Map<Variable,String> renaming);
 
   /**
+   * Replaces all the binders in lambdas by fresh variables.
+   * (This method is mostly intended for internal use in the terms package, to guarantee that all
+   * terms are well-behaved.)
+   */
+  Term refreshBinders();
+
+  /**
    * Adds the string representation of the current term to the given string builder.
    * Some free variables may be renamed; if the mapping for a variable is not given, then the
    * default name for that variable is used.
    * For names of bound variables, none of the names in the "avoid" set are allowed to be used.
    * The renaming and avoid set may not be null.
-   * (This function is primarily intended for the recusive definition of strings; for functions
+   * (This function is primarily intended for the recursive definition of terms; for functions
     *outside the terms package, it is recommended to use the other addToString function instead.)
    */
   void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid);
@@ -213,5 +228,8 @@ public interface Term {
    * Equality is modulo alpha (but this is only relevant for higher-order rewriting with lambdas).
    */
   boolean equals(Term term);
+
+  /** Determines the =_α^{μ,ξ,k} relation as described in the documentation. */
+  boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k);
 }
 
