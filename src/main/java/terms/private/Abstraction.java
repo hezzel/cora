@@ -22,10 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Set;
 import java.util.TreeSet;
-import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.IndexingError;
-import cora.exceptions.IllegalTermError;
-import cora.exceptions.NullInitialisationError;
+import cora.exceptions.*;
 import cora.types.Type;
 import cora.types.TypeFactory;
 
@@ -148,38 +145,106 @@ class Abstraction extends TermInherit {
     return _subterm.isPattern();
   }
 
+  /** @return the list of all positions in this term, in innermost-left order */
   public List<Path> queryPositions() {
-    // TODO
-    return null;
+    List<Path> ret = _subterm.queryPositions();
+    for (int i = 0; i < ret.size(); i++) {
+      ret.set(i, new LambdaPath(this, ret.get(i)));
+    }
+    ret.add(new EmptyPath(this));
+    return ret;
   }
 
+  /** @return the subterm at the given position */
   public Term querySubterm(Position pos) {
-    // TODO
-    return null;
+    if (pos.isEmpty()) return this;
+    if (!pos.isLambda()) throw new IndexingError("Abstraction", "querySubterm", toString(),
+      pos.toString());
+    return _subterm.querySubterm(pos.queryTail());
   }
 
-  public Term querySubterm(HeadPosition pos) {
-    // TODO
-    return null;
-  }
-
+  /** @return the current term with the subterm at pos replaced by replacement */
   public Term replaceSubterm(Position pos, Term replacement) {
-    // TODO
-    return null;
+    if (pos.isEmpty()) {
+      if (!queryType().equals(replacement.queryType())) {
+        throw new TypingError("Abstraction", "replaceSubterm", "replacement term " +
+                    replacement.toString(), replacement.queryType().toString(),
+                    queryType().toString());
+      }   
+      return replacement;
+    }
+    if (!pos.isLambda()) throw new IndexingError("Abstraction", "replaceSubterm",
+      toString(), pos.toString());
+    return new Abstraction(_binder, _subterm.replaceSubterm(pos.queryTail(), replacement));
   }
 
+  /** @return the current term with the head subterm at pos replaced by replacement */
   public Term replaceSubterm(HeadPosition pos, Term replacement) {
-    // TODO
-    return null;
+    if (pos.isEnd() && pos.queryChopCount() != 0) {
+      throw new IndexingError("Abstraction", "replaceSubterm(HeadPosition)",
+        toString(), pos.toString());
+    }
+    if (!pos.isLambda()) return replaceSubterm(pos.queryPosition(), replacement);
+    return new Abstraction(_binder, _subterm.replaceSubterm(pos.queryTail(), replacement));
   }
 
+  /** (λx.s).substitute(γ) returns λz.(s.substitute(γ)), where z is fully fresh */
   public Term substitute(Substitution gamma) {
-    // TODO
-    return null;
+    Variable freshvar = new Var(_binder.queryName(), _binder.queryType(), true);
+    Term subtermSubstitute;
+    if (gamma.extend(_binder, freshvar)) {
+      subtermSubstitute = _subterm.substitute(gamma);
+      gamma.delete(_binder);
+    }
+    else {
+      Term previous = gamma.get(_binder);
+      gamma.replace(_binder, freshvar);
+      subtermSubstitute = _subterm.substitute(gamma);
+      gamma.replace(_binder, previous);
+    }
+    return new Abstraction(freshvar, subtermSubstitute);
   }
 
+  /**
+   * Updates γ so that this gamma =α other if possible, and returns a string describing the reason
+   * for impossibility if not.
+   * (λx.s)γ =α t   iff
+   * λz.(s ([x:=z] ∪ (γ \ {x}))) =α t where z is fresh     iff
+   * t = λy.t' and y ∉ FV( s ([x:=z] ∪ (γ \ {x})) ) \ {z} and (s ([x:=z] ∪ (γ \ {x}))) [z:=y] =α t'
+   * iff (since z is fresh) all the following hold:
+   * - t = λy.t'
+   * - y ∉ FV( γ(a) ) for any a ∈ FV(s) \ {x}
+   * - s ([x:=y] ∪ (γ \ {x})) =α t'
+   */
   public String match(Term other, Substitution gamma) {
-    // TODO
+    if (other == null) throw new NullCallError("Var", "match", "other (matched term)");
+    if (gamma == null) throw new NullCallError("Var", "match", "gamma (matching substitution");
+
+    if (!other.isAbstraction()) {
+      return "Abstraction " + toString() + " is not instantiated by " + other + ".";
+    }
+
+    Variable x = _binder;
+    Variable y = other.queryVariable();
+
+    Term backup = gamma.get(x);
+    if (backup == null) gamma.extend(x, y);
+    else gamma.replace(x, y);
+    String ret = _subterm.match(other.queryAbstractionSubterm(), gamma);
+    if (backup == null) gamma.delete(x);
+    else gamma.replace(x, backup);
+
+    if (ret != null) return ret;
+
+    for (Variable z : vars()) {
+      Term gammaz = gamma.get(z);
+      if (gammaz != null && gammaz.vars().contains(y)) {
+        return "Abstraction " + toString() + " is not instantiated by " + other.toString() +
+          " because the induced mapping [" + z.toString() + " := " + gammaz.toString() +
+          "] contains the binder variable of " + other.toString() + ".";
+      }
+    }
+
     return null;
   }
 

@@ -284,6 +284,7 @@ class Application extends TermInherit {
   /** @return this if the position is empty; otherwise the position in the given subterm */
   public Term querySubterm(Position pos) {
     if (pos.isEmpty()) return this;
+    if (!pos.isArgument()) return _head.querySubterm(pos);
     int index = pos.queryArgumentPosition();
     if (index < 1 || index > _args.size()) {
       throw new IndexingError("Application", "querySubterm", toString(), pos.toString());
@@ -304,13 +305,19 @@ class Application extends TermInherit {
       }
       return replacement;
     }
+    if (!pos.isArgument()) {
+      Term newhead = _head.replaceSubterm(pos, replacement);
+      return new Application(newhead, _args);
+    }
     int index = pos.queryArgumentPosition();
     if (index < 1 || index > _args.size()) {
       throw new IndexingError("Application", "replaceSubterm", toString(), pos.toString());
     }
-    List<Term> args = new ArrayList<Term>(_args);
-    args.set(index-1, args.get(index-1).replaceSubterm(pos.queryTail(), replacement));
-    return new Application(_head, args);
+    Term tmp = _args.get(index-1);
+    _args.set(index-1, tmp.replaceSubterm(pos.queryTail(), replacement));
+    Term ret = new Application(_head, _args);
+    _args.set(index-1, tmp);
+    return ret;
   }
 
   /**
@@ -335,14 +342,20 @@ class Application extends TermInherit {
       }
       return replacement.apply(_args.subList(_args.size()-chopcount, _args.size()));
     }
+    if (!pos.isArgument()) {
+      Term newhead = _head.replaceSubterm(pos, replacement);
+      return new Application(newhead, _args);
+    }
     int index = pos.queryArgumentPosition();
     if (index < 1 || index > _args.size()) {
       throw new IndexingError("Application", "replaceSubterm(HeadPosition)", toString(),
         pos.toString());
     }
-    List<Term> args = new ArrayList<Term>(_args);
-    args.set(index-1, args.get(index-1).replaceSubterm(pos.queryTail(), replacement));
-    return new Application(_head, args);
+    Term tmp = _args.get(index-1);
+    _args.set(index-1, tmp.replaceSubterm(pos.queryTail(), replacement));
+    Term ret = new Application(_head, _args);
+    _args.set(index-1, tmp);
+    return ret;
   }
 
   /**

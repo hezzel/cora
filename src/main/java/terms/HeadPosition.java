@@ -62,6 +62,11 @@ public class HeadPosition {
     return _pos.isArgument();
   }
 
+  /** Returns whether or not this is a head position of the form 0.tail. */
+  public boolean isLambda() {
+    return _pos.isLambda();
+  }
+
   /** Retuns whether this head position is actually a position (so nothing is chopped). */
   public boolean isPosition() {
     return _chop == 0;

@@ -96,6 +96,7 @@ public class VarTest extends TermTestFoundation {
     assertFalse(s.isApplication());
     assertTrue(s.isClosed());
     assertFalse(s.isGround());
+    assertTrue(s.refreshBinders() == s);
     Variable y = new Var("x", baseType("o"), true);
     Variable other = new Var("x", baseType("o"), false);
     assertFalse(x.isBinderVariable());
@@ -105,6 +106,7 @@ public class VarTest extends TermTestFoundation {
     assertFalse(y.isGround());
     assertTrue(x.queryVariableIndex() != y.queryVariableIndex());
     assertTrue(x.queryVariableIndex() != other.queryVariableIndex());
+    assertTrue(y.refreshBinders() == y);
     Variable z = new Var("z", arrowType("o", "o"), false);
     assertFalse(z.isFirstOrder());
     assertTrue(z.isPattern());

@@ -18,6 +18,12 @@ package cora.terms;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import cora.exceptions.IllegalArgumentError;
+import cora.exceptions.InappropriatePatternDataError;
+import cora.exceptions.IndexingError;
+import cora.types.Type;
+import cora.types.TypeFactory;
+
 public class PositionTest {
   @Test
   public void testEmptyPosition() {
@@ -28,6 +34,7 @@ public class PositionTest {
     assertFalse(pos.equals(new ConsPosition(1, new EmptyPosition())));
     assertTrue(pos.isEmpty());
     assertFalse(pos.isArgument());
+    assertFalse(pos.isLambda());
   }
 
   @Test
@@ -41,62 +48,156 @@ public class PositionTest {
     assertFalse(pos.equals(new ArgumentPath(s, 1, new EmptyPath(s.queryArgument(1)))));
     assertTrue(pos.isEmpty());
     assertFalse(pos.isArgument());
+    assertFalse(pos.isLambda());
     assertTrue(p.queryAssociatedTerm() == s);
     assertTrue(p.queryCorrespondingSubterm() == s);
   }
 
-  @Test(expected = cora.exceptions.InappropriatePatternDataError.class)
-  public void testNoArgument() {
+  @Test(expected = InappropriatePatternDataError.class)
+  public void testNoArgumentForEmpty() {
     Position pos = new EmptyPosition();
     pos.queryArgumentPosition();
   }
 
-  @Test(expected = cora.exceptions.InappropriatePatternDataError.class)
+  @Test(expected = InappropriatePatternDataError.class)
   public void testPositionNoTail() {
     Position pos = new EmptyPosition();
     pos.queryTail();
   }
 
-  @Test(expected = cora.exceptions.InappropriatePatternDataError.class)
+  @Test(expected = InappropriatePatternDataError.class)
   public void testPathNoTail() {
-    Position pos = new EmptyPosition();
+    Term s = TermFactory.createConstant("c", 1).apply(TermFactory.createVar("x"));
+    Path pos = new EmptyPath(s);
     pos.queryTail();
   }
 
   @Test
-  public void testConsPosition() {
+  public void testArgumentConsPosition() {
     Position pos = new ConsPosition(1, new ConsPosition(2, new EmptyPosition()));
     assertTrue(pos.toString().equals("1.2.ε"));
     assertTrue(pos.queryArgumentPosition() == 1);
     assertTrue(pos.queryTail().queryArgumentPosition() == 2);
     assertFalse(pos.isEmpty());
     assertTrue(pos.isArgument());
+    assertFalse(pos.isLambda());
+    Term b = TermFactory.createConstant("b", 0);
     Term fgab = TermFactory.createConstant("f", 1).apply(
-      TermFactory.createConstant("g", 2).apply(TermFactory.createConstant("a", 0)).apply(
-      TermFactory.createConstant("b", 0)));
+      TermFactory.createConstant("g", 2).apply(TermFactory.createConstant("a", 0)).apply(b));
     Path path = new ArgumentPath(fgab, 1,
-      new ArgumentPath(fgab.queryArgument(1), 2,
-      new EmptyPath(TermFactory.createConstant("b", 0))));
+      new ArgumentPath(fgab.queryArgument(1), 2, new EmptyPath(b)));
     assertTrue(pos.equals(path));
   }
 
   @Test
   public void testArgumentPath() {
+    Term b = TermFactory.createConstant("b", 0);
     Term fgab = TermFactory.createConstant("f", 1).apply(
-      TermFactory.createConstant("g", 2).apply(TermFactory.createConstant("a", 0)).apply(
-      TermFactory.createConstant("b", 0)));
+      TermFactory.createConstant("g", 2).apply(TermFactory.createConstant("a", 0)).apply(b));
     Path path = new ArgumentPath(fgab, 1,
-      new ArgumentPath(fgab.queryArgument(1), 2,
-      new EmptyPath(TermFactory.createConstant("b", 0))));
+      new ArgumentPath(fgab.queryArgument(1), 2, new EmptyPath(b)));
     assertTrue(path.toString().equals("1.2.ε"));
     assertTrue(path.queryArgumentPosition() == 1);
     assertTrue(path.queryTail().queryArgumentPosition() == 2);
     assertFalse(path.isEmpty());
     assertTrue(path.isArgument());
+    assertFalse(path.isLambda());
     Position pos = new ConsPosition(1, new ConsPosition(2, new EmptyPosition()));
     assertTrue(path.equals(pos));
     assertTrue(path.queryAssociatedTerm() == fgab);
     assertTrue(path.queryCorrespondingSubterm().equals(TermFactory.createConstant("b", 0)));
+  }
+
+  @Test(expected = IllegalArgumentError.class)
+  public void testIllegalArgumentPositionCreation() {
+    Position pos = new ConsPosition(-1, new EmptyPosition());
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testIllegalArgumentPathCreationTooSmall() {
+    Term a = TermFactory.createConstant("a", 0);
+    Term fab =
+      TermFactory.createConstant("f", 2).apply(a).apply(TermFactory.createConstant("b", 0));
+    Path toosmall = new ArgumentPath(fab, 0, new EmptyPath(a));
+  }
+
+  @Test(expected = IndexingError.class)
+  public void testIllegalArgumentPathCreationTooLarge() {
+    Term b = TermFactory.createConstant("a", 0);
+    Term fab =
+      TermFactory.createConstant("f", 2).apply(TermFactory.createConstant("a", 0)).apply(b);
+    Path toolarge = new ArgumentPath(fab, 3, new EmptyPath(b));
+  }
+
+  @Test(expected = IllegalArgumentError.class)
+  public void testIllegalArgumentPathCreationBadTerms() {
+    Term b = TermFactory.createConstant("a", 0);
+    Term fab =
+      TermFactory.createConstant("f", 2).apply(TermFactory.createConstant("a", 0)).apply(b);
+    new ArgumentPath(fab, 1, new EmptyPath(b));
+  }
+
+  @Test
+  public void testLambdaConsPosition() {
+    Position empty = new EmptyPosition();
+    Position pos = new ConsPosition(0, new ConsPosition(1, new ConsPosition(0, empty)));
+    assertTrue(pos.toString().equals("0.1.0.ε"));
+    assertFalse(pos.isArgument());
+    assertTrue(pos.isLambda());
+    assertFalse(pos.isEmpty());
+    assertTrue(pos.queryTail().queryArgumentPosition() == 1);
+    
+    Type o = TypeFactory.unitSort;
+    Var x = new Var("x", o, true);
+    Var y = new Var("y", o, true);
+    Term g = new Constant("g", TypeFactory.createArrow(TypeFactory.createArrow(o, o), o));
+    Term f = new Constant("f", TypeFactory.createArrow(o, o));
+    Term fx = f.apply(x);
+    Term xfx = new Abstraction(x, fx);
+    Term gxfx = g.apply(xfx);
+    Term term = new Abstraction(y, gxfx);
+    Path path = new LambdaPath(term, new ArgumentPath(gxfx, 1, new LambdaPath(xfx,
+      new EmptyPath(fx))));
+    assertTrue(pos.equals(path));
+    assertTrue(path.equals(pos));
+  }
+
+  @Test
+  public void testLambdaPath() {
+    Type o = TypeFactory.unitSort;
+    Var x = new Var("x", o, true);
+    Var y = new Var("y", o, true);
+    Term g = new Constant("g", TypeFactory.createArrow(TypeFactory.createArrow(o, o), o));
+    Term f = new Constant("f", TypeFactory.createArrow(o, o));
+    Term fx = f.apply(x);
+    Term xfx = new Abstraction(x, fx);
+    Term gxfx = g.apply(xfx);
+    Term term = new Abstraction(y, gxfx); // λy.g(λx.f(x))
+    Path path = new LambdaPath(term, new ArgumentPath(gxfx, 1, new LambdaPath(xfx,
+      new EmptyPath(fx))));
+
+    assertTrue(path.toString().equals("0.1.0.ε"));
+    assertFalse(path.isArgument());
+    assertTrue(path.isLambda());
+    assertFalse(path.isEmpty());
+    assertTrue(path.queryTail().queryArgumentPosition() == 1);
+    assertTrue(path.queryAssociatedTerm() == term);
+    assertTrue(path.queryCorrespondingSubterm() == fx);
+  }
+
+
+  @Test(expected = InappropriatePatternDataError.class)
+  public void testNoArgumentForLambda() {
+    Position empty = new EmptyPosition();
+    Position pos = new ConsPosition(0, new ConsPosition(1, new ConsPosition(0, empty)));
+    pos.queryArgumentPosition();
+  }
+
+  @Test(expected = IllegalArgumentError.class)
+  public void testIllegalLambdaPathCreationDifferentTerms() {
+    Var x = new Var("x", TypeFactory.unitSort, true);
+    Term term = new Abstraction(x, x);
+    new LambdaPath(term, new EmptyPath(term));
   }
 
   @Test
@@ -107,6 +208,8 @@ public class PositionTest {
     assertTrue(pos.toString().equals("19.12.ε"));
     pos = PositionFactory.parsePos("2.1.");
     assertTrue(pos.toString().equals("2.1.ε"));
+    pos = PositionFactory.parsePos("0.19.12.ε");
+    assertTrue(pos.toString().equals("0.19.12.ε"));
   }
 
   @Test(expected = cora.exceptions.ParserError.class)
@@ -127,11 +230,6 @@ public class PositionTest {
   @Test(expected = cora.exceptions.ParserError.class)
   public void testParseWithEmptyIndexAtTheEnd() {
     PositionFactory.parsePos("1.254.3..");
-  }
-
-  @Test(expected = cora.exceptions.ParserError.class)
-  public void testParseWithZeroIndex() {
-    PositionFactory.parsePos("0.19.12.ε");
   }
 
   @Test(expected = cora.exceptions.ParserError.class)

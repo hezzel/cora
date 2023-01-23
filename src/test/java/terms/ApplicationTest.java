@@ -212,12 +212,20 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testNonPattern() {
+  public void testNonPatternDueToVariableApplication() {
     Var x = new Var("x", arrowType("A", "B"), false);
     Term xa = new Application(x, constantTerm("a", baseType("A")));
     Term f = new Constant("f", arrowType("B", "B"));
     Term fxa = new Application(f, xa);
     assertFalse(fxa.isPattern());
+  }
+
+  @Test
+  public void testNonPatternDueToAbstractionAppplication() {
+    // (λx.x)(a)
+    Var x = new Var("x", baseType("A"), true);
+    Term term = new Application(new Abstraction(x, x), constantTerm("a", baseType("A")));
+    assertFalse(term.isPattern());
   }
 
   @Test
@@ -252,6 +260,23 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(lst.get(1).queryAssociatedTerm() == term);
     assertTrue(lst.get(2).queryCorrespondingSubterm() == term.queryArgument(2));
     assertTrue(lst.get(3).queryCorrespondingSubterm() == term);
+  }
+
+  @Test
+  public void testPositionsForBetaRedex() {
+    Variable x = new Var("x", baseType("A"), true);
+    Constant a = new Constant("a", baseType("A"));
+    Constant b = new Constant("b", baseType("B"));
+    Constant f = new Constant("f", arrowType(baseType("A"), arrowType("B", "C")));
+    Term term = new Application(new Abstraction(x, f.apply(x)), a, b); // (λx.f(x))(a, b)
+    List<Path> lst = term.queryPositions();
+    assertTrue(lst.size() == 5);
+    assertTrue(lst.get(0).toString().equals("0.1.ε"));
+    assertTrue(lst.get(0).queryCorrespondingSubterm() == x);
+    assertTrue(lst.get(1).toString().equals("0.ε"));
+    assertTrue(lst.get(2).toString().equals("1.ε"));
+    assertTrue(lst.get(3).toString().equals("2.ε"));
+    assertTrue(lst.get(4).toString().equals("ε"));
   }
 
   @Test
@@ -390,6 +415,16 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(s.querySubterm(p).toString().equals("g"));
   }
 
+  @Test
+  public void testSubtermInHead() {
+    // (λx.f(x))(a)
+    Var x = new Var("x", baseType("o"), true);
+    Term s = new Application(new Abstraction(x, unaryTerm("f", baseType("o"), x)),
+                             constantTerm("a", baseType("o")));
+    assertTrue(s.querySubterm(PositionFactory.createLambda(PositionFactory.createArg(1,
+      PositionFactory.empty))) == x);
+  }
+
   @Test(expected = IndexingError.class)
   public void testSubtermBad() {
     Term s = twoArgVarTerm();
@@ -415,6 +450,26 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
+  public void testSubtermInHeadReplacementGood() {
+    // (λxy.f(y,x))(a, b)
+    Variable x = new Var("x", baseType("o"), true);
+    Variable y = new Var("y", baseType("o"), true);
+    Term f = constantTerm("f", arrowType(baseType("o"), arrowType("o", "o")));
+    Term a = constantTerm("a", baseType("o"));
+    Term b = constantTerm("b", baseType("o"));
+    Term s = new Application(new Abstraction(x, new Abstraction(y, new Application(f, y, x))),
+                             a, b);
+    
+    // replace y in f(y,x) by x
+    Term t = s.replaceSubterm(PositionFactory.parsePos("0.0.1"), x);
+    assertTrue(t.toString().equals("(λx.λy.f(x, x))(a, b)"));
+
+    // replace f(y) by (λy.y)
+    Term u = s.replaceSubterm(PositionFactory.parseHPos("0.0.*1"), new Abstraction(y, y));
+    assertTrue(u.toString().equals("(λx.λy.(λy1.y1)(x))(a, b)"));
+  }
+
+  @Test
   public void testSubtermHeadReplacementGood() {
     Term s = twoArgFuncTerm();  // f(c, g(d))
     HeadPosition pos = new HeadPosition(PositionFactory.createArg(2, PositionFactory.empty), 1);
@@ -427,6 +482,7 @@ public class ApplicationTest extends TermTestFoundation {
     pos = new HeadPosition(PositionFactory.createArg(2, PositionFactory.empty));
     t = s.replaceSubterm(pos, constantTerm("B", baseType("b")));
     assertTrue(t.toString().equals("f(c, B)"));
+    assertTrue(s.toString().equals("f(c, g(d))"));
   }
 
   @Test(expected = IndexingError.class)
@@ -506,7 +562,7 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testSubstituting() {
+  public void testApplicativeSubstituting() {
     Variable x = new Var("x", baseType("Int"), true);
     Variable y = new Var("y", baseType("Int"), false);
     Variable z = new Var("Z", arrowType(baseType("Int"), arrowType("Bool", "Int")), false);
@@ -524,6 +580,92 @@ public class ApplicationTest extends TermTestFoundation {
 
     Term q = s.substitute(gamma);
     assertTrue(q.toString().equals("g(c, 37, f(x))"));
+  }
+
+  @Test
+  public void testLambdaSubstituting() {
+    // X(a, f(λy.g(y, z)), f(λy.g(y, y)))
+    Term g = constantTerm("g", arrowType(baseType("o"), arrowType("o", "o")));
+    Term f = constantTerm("f", arrowType(arrowType("o", "o"), baseType("o")));
+    Term a = constantTerm("a", baseType("o"));
+    Var x = new Var("X", arrowType(baseType("o"), arrowType(baseType("o"),
+      arrowType("o", "o"))), true);
+    Var y = new Var("y", baseType("o"), true);
+    Var z = new Var("z", baseType("o"), true);
+    Term term = new Application(new Application(x, a),
+      new Application(f, new Abstraction(y, new Application(g, y, z))),
+      new Application(f, new Abstraction(y, new Application(g, y, y))));
+    // [X := λxy.h(y, z), y := a, z := g(a, y)]
+    Term h = constantTerm("h", arrowType(baseType("o"), arrowType(baseType("o"),
+      arrowType("o", "o"))));
+    Var x1 = new Var("x", baseType("o"), true);
+    Subst subst = new Subst();
+    subst.extend(x, new Abstraction(x1, new Abstraction(y, new Application(h, y, z))));
+    subst.extend(y, a);
+    subst.extend(z, new Application(g, a, y));
+
+    Term s = term.substitute(subst);
+    assertTrue(s.toString().equals("(λx.λy1.h(y1, z))(a, f(λy1.g(y1, g(a, y))), f(λy1.g(y1, y1)))"));
+  }
+
+  @Test
+  public void testRefreshBinders() {
+    // (λxy.f(x,y))(g(λz.z), g(λz.z))
+    Variable x = new Var("x", baseType("o"), true);
+    Variable y = new Var("x", baseType("o"), true);
+    Variable z = new Var("x", baseType("o"), true);
+    Term f = constantTerm("f", arrowType(baseType("o"), arrowType("o", "o")));
+    Term g = constantTerm("g", arrowType(arrowType("o", "o"), baseType("o")));
+    Term zz = new Abstraction(z, z);
+    Term abs = new Abstraction(x, new Abstraction(y, new Application(f, x, y)));
+    Term term = new Application(abs, new Application(g, zz), new Application(g, zz));
+
+    Term t = term.refreshBinders();
+    assertTrue(t.equals(term));
+    Variable a = t.queryVariable();
+    Variable b = t.queryHead().queryAbstractionSubterm().queryVariable();
+    Variable c = t.queryArgument(1).queryArgument(1).queryVariable();
+    Variable d = t.queryArgument(2).queryArgument(1).queryVariable();
+
+    assertTrue(a.compareTo(z) > 0);
+    assertTrue(b.compareTo(z) > 0);
+    assertTrue(c.compareTo(z) > 0);
+    assertTrue(d.compareTo(z) > 0);
+    assertFalse(a.equals(b));
+    assertFalse(a.equals(c));
+    assertFalse(a.equals(d));
+    assertFalse(b.equals(c));
+    assertFalse(b.equals(d));
+    assertFalse(c.equals(d));
+  }
+
+  @Test
+  public void testWellbehaved() {
+    // f(x, λy.g(y, x), λx.x, λz.z, y)
+    Var x = new Var("x", baseType("a"), true);
+    Var y = new Var("y", arrowType("b", "b"), true);
+    Var z = new Var("z", baseType("c"), true);
+    Term g = new Constant("g", arrowType(arrowType("b", "b"), arrowType("a", "d")));
+    Term f = new Constant("f", arrowType(
+      baseType("a"), arrowType(
+      arrowType(arrowType("b", "b"), baseType("d")), arrowType(
+      arrowType("a", "a"), arrowType(
+      arrowType("c", "c"), arrowType(
+      arrowType("b", "b"), baseType("e")))))));
+    Term arg2 = new Abstraction(y, new Application(g, y, x));
+    Term arg3 = new Abstraction(x, x);
+    Term arg4 = new Abstraction(z, z);
+    Term s = new Application(new Application(new Application(f, x, arg2), arg3, arg4), y);
+    assertTrue(s.queryArgument(1) == x);
+    assertTrue(s.queryArgument(2).queryVariable() != y);
+    assertTrue(s.queryArgument(2).queryAbstractionSubterm().queryArgument(1) ==
+               s.queryArgument(2).queryVariable());
+    assertTrue(s.queryArgument(2).queryAbstractionSubterm().queryArgument(2) == x);
+    assertTrue(s.queryArgument(3).queryVariable() != x);
+    assertTrue(s.queryArgument(3).queryAbstractionSubterm().queryVariable() ==
+               s.queryArgument(3).queryVariable());
+    assertTrue(s.queryArgument(4).queryVariable() == z);
+    assertTrue(s.queryArgument(5).queryVariable() == y);
   }
 
   @Test(expected = NullCallError.class)

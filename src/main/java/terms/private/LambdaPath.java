@@ -16,36 +16,34 @@
 package cora.terms;
 
 import cora.exceptions.IllegalArgumentError;
+import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.IndexingError;
 import cora.exceptions.NullInitialisationError;
 
 /**
- * An ArgumentPath is a position of the form i.pos, where i indicates the index of an argument
- * in the corresponding term and pos a position within that argument.  Since it is a path, it
- * keeps track of the terms on the way from the top of the term to the referenced subterm.
+ * A LambdaPath is a position of the form 0.pos, which indicates that we are passing into an
+ * abstraction.  Since it is a path, it keeps track of the terms on the way from the top of the
+ * term to the referenced subterm.
  */
-class ArgumentPath implements Path {
-  private int _argPos;
+class LambdaPath implements Path {
   private Path _tail;
   private Term _topterm;
   private Term _subterm;
 
   /** Should only be called by Terms; nothing outside the package. */
-  ArgumentPath(Term myterm, int argumentIndex, Path tail) {
-    _argPos = argumentIndex;
+  LambdaPath(Term myterm, Path tail) {
     _tail = tail;
-    if (tail == null) throw new NullInitialisationError("ArgumentPath", "tail");
+    if (tail == null) throw new NullInitialisationError("LambdaPath", "tail");
     _topterm = myterm;
-    if (myterm == null) throw new NullInitialisationError("ArgumentPath", "myterm");
+    if (myterm == null) throw new NullInitialisationError("LambdaPath", "myterm");
     _subterm = tail.queryCorrespondingSubterm();
-    if (argumentIndex <= 0 || argumentIndex > myterm.numberArguments()) {
-      throw new IndexingError("ArgumentPath", "constructor", argumentIndex, 1,
-        myterm.numberArguments());
+    if (!myterm.isAbstraction()) {
+      throw new IllegalArgumentError("LambdaPath", "constructor",
+        "trying to create a lambda-path for non-lambda expression " + myterm);
     }
-    if (myterm.queryArgument(argumentIndex) != tail.queryAssociatedTerm()) {
-      throw new IllegalArgumentError("ArgumentPath", "constructor",
-        "subterm " + argumentIndex + " of " + myterm + " is " +
-        myterm.queryArgument(argumentIndex) + ", while tail refers to " +
+    if (myterm.queryAbstractionSubterm() != tail.queryAssociatedTerm()) {
+      throw new IllegalArgumentError("LambdaPath", "constructor", "immediate subterm of " +
+        myterm + " is " + myterm.queryAbstractionSubterm() + ", while tail refers to " +
         tail.queryAssociatedTerm() + ".");
     }
   }
@@ -55,11 +53,11 @@ class ArgumentPath implements Path {
   }
 
   public boolean isArgument() {
-    return true;
+    return false;
   }
 
   public boolean isLambda() {
-    return false;
+    return true;
   }
 
   public Term queryAssociatedTerm() {
@@ -71,7 +69,8 @@ class ArgumentPath implements Path {
   }
 
   public int queryArgumentPosition() {
-    return _argPos;
+    throw new InappropriatePatternDataError("LambdaPath", "queryArgumentPosition",
+      "positions of the form i.tail with i > 0");
   }
 
   public Path queryTail() {
@@ -79,13 +78,12 @@ class ArgumentPath implements Path {
   }
 
   public boolean equals(Position other) {
-    return other.isArgument() &&
-           other.queryArgumentPosition() == _argPos &&
+    return other.isLambda() &&
            _tail.equals(other.queryTail());
   }
 
   public String toString() {
-    return "" + _argPos + "." + _tail.toString();
+    return "0." + _tail.toString();
   }
 }
 

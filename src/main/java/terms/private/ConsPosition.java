@@ -16,6 +16,7 @@
 package cora.terms;
 
 import cora.exceptions.IllegalArgumentError;
+import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullInitialisationError;
 
 /**
@@ -31,8 +32,8 @@ class ConsPosition implements Position {
     _argPos = argumentIndex;
     _tail = tail;
     if (tail == null) throw new NullInitialisationError("ArgumentPosition", "tail");
-    if (_argPos <= 0) throw new IllegalArgumentError("ConsPosition", "constructor",
-      "Trying to create a position with an index ≤ 0.");
+    if (_argPos < 0) throw new IllegalArgumentError("ConsPosition", "constructor",
+      "Trying to create a position with an index < 0.");
   }
 
   public boolean isEmpty() {
@@ -40,10 +41,16 @@ class ConsPosition implements Position {
   }
 
   public boolean isArgument() {
-    return true;
+    return _argPos > 0;
+  }
+
+  public boolean isLambda() {
+    return _argPos == 0;
   }
 
   public int queryArgumentPosition() {
+    if (_argPos == 0) throw new InappropriatePatternDataError("ConsPosition for λ",
+      "queryArgumentPosition", "ConsPosition for argument positions");
     return _argPos;
   }
 
@@ -52,9 +59,14 @@ class ConsPosition implements Position {
   }
 
   public boolean equals(Position other) {
-    return other.isArgument() &&
-           other.queryArgumentPosition() == _argPos &&
-           _tail.equals(other.queryTail());
+    if (_argPos > 0) {
+      return other.isArgument() &&
+             other.queryArgumentPosition() == _argPos &&
+             _tail.equals(other.queryTail());
+    }
+    else {
+      return other.isLambda() && _tail.equals(other.queryTail());
+    }
   }
 
   public String toString() {

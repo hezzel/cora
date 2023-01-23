@@ -19,6 +19,7 @@ package cora.terms;
  * A position indicates a location in a term, which has one of the following shapes:
  * - ε, which refers to the current term
  * - [index] tail, where the term is h(s1,...,sn), index ∈ {1..n}, and tail a position in s_index
+ * - [0] tail, where the term is λx.s and tail a position in s
  * So this does NOT include head positions.
  *
  * A Position can be used to find (and possibly replace) the subterm at that position.
@@ -31,6 +32,9 @@ public interface Position {
 
   /** Returns whether or not this is an argument position. */
   public boolean isArgument();
+
+  /** Returns whether or not this is a lambda position. */
+  public boolean isLambda();
 
   /**
    * If the position is in a subterm of argument si of an application h(s1,...,sn), this function

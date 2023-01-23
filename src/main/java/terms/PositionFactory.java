@@ -24,6 +24,10 @@ public class PositionFactory {
     return new ConsPosition(index, tail);
   }
 
+  public static Position createLambda(Position tail) {
+    return new ConsPosition(0, tail);
+  }
+
   public static HeadPosition createHead(Position pos, int chop) {
     if (chop == 0) return new HeadPosition(pos);
     else return new HeadPosition(pos, chop);
@@ -63,7 +67,7 @@ public class PositionFactory {
       catch (NumberFormatException ex) {
         throw new ParserError(1, dot+1, part, "position index should be an integer");
       }
-      if (num < 1) throw new ParserError(1, dot+1, part, "position index should be at least 1");
+      if (num < 0) throw new ParserError(1, dot+1, part, "position index should be at least 0");
       ret = new ConsPosition(num, ret);
       n = dot;
     }

@@ -30,6 +30,10 @@ class EmptyPosition implements Position {
     return false;
   }
 
+  public boolean isLambda() {
+    return false;
+  }
+
   public int queryArgumentPosition() {
     throw new InappropriatePatternDataError("EmptyPosition", "queryArgumentPosition",
       "positions of the form i.tail with i > 0");

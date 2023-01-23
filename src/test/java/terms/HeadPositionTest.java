@@ -76,8 +76,8 @@ public class HeadPositionTest {
     assertTrue(hpos.toString().equals("1.254.3.☆15"));
     hpos = PositionFactory.parseHPos("5.6.7");
     assertTrue(hpos.toString().equals("5.6.7.ε"));
-    hpos = PositionFactory.parseHPos("19.12.ε");
-    assertTrue(hpos.toString().equals("19.12.ε"));
+    hpos = PositionFactory.parseHPos("19.0.12.ε");
+    assertTrue(hpos.toString().equals("19.0.12.ε"));
     hpos = PositionFactory.parseHPos(("3.111.☆2"));
     assertTrue(hpos.toString().equals("3.111.☆2"));
     hpos = PositionFactory.parseHPos("2.1.");
@@ -97,11 +97,6 @@ public class HeadPositionTest {
   @Test(expected = cora.exceptions.ParserError.class)
   public void testParseWithEmptyIndexAtTheEnd() {
     PositionFactory.parseHPos("1.254.3..");
-  }
-
-  @Test(expected = cora.exceptions.ParserError.class)
-  public void testParseWithZeroIndex() {
-    PositionFactory.parseHPos("0.19.12.ε");
   }
 
   @Test(expected = cora.exceptions.ParserError.class)
