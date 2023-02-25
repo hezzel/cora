@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import cora.exceptions.ParserException;
 import cora.exceptions.AntlrParserException;
+import cora.exceptions.TypingException;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.Term;
@@ -207,6 +208,69 @@ public class CoraTermReadingTest {
   public void testMissingComma() throws ParserException {
     ParseData sigma = generateSignature();
     Term term = CoraInputReader.testReadTermFromString("f(x,h(f(x, bb)) cc)", sigma, null);
+  }
+
+  @Test
+  public void testReadAbstractionWithBinderDeclarations() throws ParserException {
+    ParseData sigma = generateSignature();
+    Term term = CoraInputReader.testReadTermFromString("λx :: a, y ::c. f(x, bb, y)", sigma, null);
+    assertTrue(term.queryType().toString().equals("a ⇒ c ⇒ d"));
+    assertTrue(term.toString().equals("λx.λy.f(x, bb, y)"));
+  }
+
+  @Test
+  public void testReadAbstractionWithoutBinderDeclarations() throws ParserException {
+    ParseData sigma = generateSignature();
+    Term term = CoraInputReader.testReadTermFromString("h(\\x.f(aa,bb,x))", sigma, null);
+    assertTrue(term.toString().equals("h(λx.f(aa, bb, x))"));
+  }
+
+  @Test
+  public void testReadAbstractionExpectedGivenButUnnecessary() throws ParserException {
+    ParseData sigma = generateSignature();
+    Term term = CoraInputReader.testReadTermFromString("\\x :: a.f(x,bb,cc)", sigma,
+      CoraInputReader.readTypeFromString("a => d"));
+    assertTrue(term.toString().equals("λx.f(x, bb, cc)"));
+    assertTrue(sigma.lookupVariable("x") == null);
+  }
+
+  @Test(expected = TypingException.class)
+  public void testReadAbstractionWhereTypeCannotFullyBeDerived() throws ParserException {
+    ParseData sigma = generateSignature();
+    Term term = CoraInputReader.testReadTermFromString("\\x :: a, y, z :: c.f(x,y,z)", sigma, null);
+  }
+
+  @Test(expected = TypingException.class)
+  public void testReadAbstractionTypeOfVariableGivenInTheWrongWay() throws ParserException {
+    ParseData sigma = generateSignature();
+    sigma.addVariable(TermFactory.createVar("x"));
+    Term term = CoraInputReader.testReadTermFromString("λx.x", sigma, null);
+  }
+
+  @Test
+  public void testReadAbstractionWhenParseDataAlreadyContainsVariable() throws ParserException {
+    ParseData sigma = generateSignature();
+    sigma.addVariable(TermFactory.createVar("x", TypeFactory.createSort("a")));
+    Term term = CoraInputReader.testReadTermFromString("λx::b.x", sigma, null);
+    assertTrue(term.queryType().toString().equals("b ⇒ b"));
+    assertTrue(sigma.lookupVariable("x").queryType().toString().equals("a"));
+  }
+
+  @Test
+  public void testReadAbstractionWithDuplicateVariableName() throws ParserException {
+    ParseData sigma = generateSignature();
+    Term term = CoraInputReader.testReadTermFromString("λx :: a, y :: b, x :: c.x", sigma, null);
+    assertTrue(term.toString().equals("λx.λy.λx1.x1"));
+    assertTrue(term.queryType().toString().equals("a ⇒ b ⇒ c ⇒ c"));
+  }
+
+  @Test
+  public void testReadAbstractionAtHeadOfApplication() throws ParserException {
+    ParseData sigma = generateSignature();
+    Term term = CoraInputReader.testReadTermFromString(
+      "(λx :: a, y ::c. f(x, bb, y))(aa, cc)", sigma, null);
+    assertTrue(term.toString().equals("(λx.λy.f(x, bb, y))(aa, cc)"));
+    assertTrue(term.queryType().toString().equals("d"));
   }
 }
 

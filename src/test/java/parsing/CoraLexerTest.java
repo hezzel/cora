@@ -96,8 +96,8 @@ public class CoraLexerTest {
 
   @Test
   public void testAllBasicTokens() {
-    ArrayList<Token> parts = tokenise("xx(y){,+#a∀ ∃7*}():::a[b→b]c");
-    assertTrue(parts.size() == 18);
+    ArrayList<Token> parts = tokenise("xx(y){,+#\\a∀ ∃7*}():::a[b→b.]cλ");
+    assertTrue(parts.size() == 22);
     assertTrue(parts.get(0).getType() == CoraLexer.IDENTIFIER);
     assertTrue(parts.get(1).getType() == CoraLexer.BRACKETOPEN);
     assertTrue(parts.get(2).getType() == CoraLexer.IDENTIFIER);
@@ -105,14 +105,18 @@ public class CoraLexerTest {
     assertTrue(parts.get(4).getType() == CoraLexer.BRACEOPEN);
     assertTrue(parts.get(5).getType() == CoraLexer.COMMA);
     assertTrue(parts.get(6).getType() == CoraLexer.IDENTIFIER);
-    assertTrue(parts.get(7).getType() == CoraLexer.IDENTIFIER);
-    assertTrue(parts.get(8).getType() == CoraLexer.BRACECLOSE);
-    assertTrue(parts.get(9).getType() == CoraLexer.BRACKETOPEN);
-    assertTrue(parts.get(10).getType() == CoraLexer.BRACKETCLOSE);
-    assertTrue(parts.get(11).getType() == CoraLexer.DECLARE);
-    assertTrue(parts.get(12).getType() == CoraLexer.COLON);
-    assertTrue(parts.get(14).getType() == CoraLexer.SQUAREOPEN);
-    assertTrue(parts.get(16).getType() == CoraLexer.SQUARECLOSE);
+    assertTrue(parts.get(7).getType() == CoraLexer.LAMBDA);
+    assertTrue(parts.get(8).getType() == CoraLexer.IDENTIFIER);
+    assertTrue(parts.get(9).getType() == CoraLexer.IDENTIFIER);
+    assertTrue(parts.get(10).getType() == CoraLexer.BRACECLOSE);
+    assertTrue(parts.get(11).getType() == CoraLexer.BRACKETOPEN);
+    assertTrue(parts.get(12).getType() == CoraLexer.BRACKETCLOSE);
+    assertTrue(parts.get(13).getType() == CoraLexer.DECLARE);
+    assertTrue(parts.get(14).getType() == CoraLexer.COLON);
+    assertTrue(parts.get(16).getType() == CoraLexer.SQUAREOPEN);
+    assertTrue(parts.get(18).getType() == CoraLexer.DOT);
+    assertTrue(parts.get(19).getType() == CoraLexer.SQUARECLOSE);
+    assertTrue(parts.get(21).getType() == CoraLexer.LAMBDA);
   }
 
   @Test

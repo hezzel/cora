@@ -217,10 +217,9 @@ class Application extends TermInherit {
     return new Application(_head, newargs);
   }
 
-  /** @throws InappropriatePatternDataError, as an application is not an abstraction */
+  /** Returns the abstraction-subterm of the head (if head is an abstraction) */
   public Term queryAbstractionSubterm() {
-    throw new InappropriatePatternDataError("Application", "queryAbstractionSubterm",
-                                            "lambda-abstractions");
+    return _head.queryAbstractionSubterm();
   }
 
   /** @return the head of the application. */
@@ -264,13 +263,21 @@ class Application extends TermInherit {
     return true;
   }
 
+  /** Returns true if all strict subterms are applicative. */
+  public boolean isApplicative() {
+    if (!_head.isApplicative()) return false;
+    for (int i = 0; i < _args.size(); i++) {
+      if (!_args.get(i).isApplicative()) return false;
+    }
+    return true;
+  }
+
   /**
    * Returns the non-head positions in all subterms, from left to right, followed by the empty
    * position.
    */
   public List<Path> queryPositions() {
-    List<Path> ret = _head.queryPositions();
-    ret.remove(ret.size()-1); // remove the root position, as we don't include that for the head
+    List<Path> ret = _head.queryPositionsForHead(this);
     for (int i = 0; i < _args.size(); i++) {
       List<Path> subposses = _args.get(i).queryPositions();
       for (int j = 0; j < subposses.size(); j++) {
@@ -279,6 +286,12 @@ class Application extends TermInherit {
     }
     ret.add(new EmptyPath(this));
     return ret;
+  }
+
+  /** Throws an error, since this should only be called on the head of top. */
+  public List<Path> queryPositionsForHead(Term top) {
+    throw new InappropriatePatternDataError("Application", "queryPositionsForHead",
+      "head terms (which cannot be applications)");
   }
 
   /** @return this if the position is empty; otherwise the position in the given subterm */

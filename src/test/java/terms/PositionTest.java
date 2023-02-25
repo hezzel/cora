@@ -51,6 +51,7 @@ public class PositionTest {
     assertFalse(pos.isLambda());
     assertTrue(p.queryAssociatedTerm() == s);
     assertTrue(p.queryCorrespondingSubterm() == s);
+    Term t = TermFactory.createConstant("a", 0);
   }
 
   @Test(expected = InappropriatePatternDataError.class)
@@ -185,6 +186,29 @@ public class PositionTest {
     assertTrue(path.queryCorrespondingSubterm() == fx);
   }
 
+  @Test
+  public void testLambdaPathInApplication() {
+    Type o = TypeFactory.unitSort;
+    Var x = new Var("x", o, true);
+    Var y = new Var("y", o, true);
+    Term g = new Constant("g", TypeFactory.createArrow(TypeFactory.createArrow(o, o), o));
+    Term f = new Constant("f", TypeFactory.createArrow(o, o));
+    Term fx = f.apply(x);
+    Term xfx = new Abstraction(x, fx);
+    Term gxfx = g.apply(xfx);
+    Term abs = new Abstraction(y, gxfx); // λy.g(λx.f(x))
+    Term term = new Application(abs, new Constant("a", TypeFactory.createSort("o")));
+    Path path = new LambdaPath(term, new ArgumentPath(gxfx, 1, new LambdaPath(xfx,
+      new EmptyPath(fx))));
+
+    assertTrue(path.toString().equals("0.1.0.ε"));
+    assertFalse(path.isArgument());
+    assertTrue(path.isLambda());
+    assertFalse(path.isEmpty());
+    assertTrue(path.queryTail().queryArgumentPosition() == 1);
+    assertTrue(path.queryAssociatedTerm() == term);
+    assertTrue(path.queryCorrespondingSubterm() == fx);
+  }
 
   @Test(expected = InappropriatePatternDataError.class)
   public void testNoArgumentForLambda() {

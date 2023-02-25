@@ -40,6 +40,13 @@ public class TypeReadingTest {
   }
 
   @Test
+  public void testReadTypeEndingWithBrackets() throws ParserException {
+    String str = "(a -> b) => (c -> d => e)";
+    Type type = CoraInputReader.readTypeFromString(str);
+    assertTrue(type.toString().equals("(a ⇒ b) ⇒ c ⇒ d ⇒ e"));
+  }
+
+  @Test
   public void testReadBrokenType() throws ParserException {
     String str = "a -> b -> -> c";
     try {

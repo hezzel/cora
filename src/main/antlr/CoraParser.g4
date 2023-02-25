@@ -17,7 +17,7 @@
 parser grammar CoraParser;
 
 @header {
-package cora.parsers;
+  package cora.parsers;
 }
 
 options {
@@ -36,6 +36,7 @@ constant            : IDENTIFIER
 type                : constant
                     | lowarrowtype
                     | higherarrowtype
+                    | BRACKETOPEN type BRACKETCLOSE
                     ;
 lowarrowtype        : constant typearrow type ;
 higherarrowtype     : BRACKETOPEN type BRACKETCLOSE typearrow type ;
@@ -53,9 +54,21 @@ declaration         : constant DECLARE type ;
 term                : constant
                     | constant BRACKETOPEN BRACKETCLOSE
                     | constant BRACKETOPEN term commatermlist
+                    | abstraction
+                    | BRACKETOPEN abstraction BRACKETCLOSE BRACKETOPEN term commatermlist
                     ;
+
+abstraction         : LAMBDA binderlist DOT term
+                    ;
+
 commatermlist       : BRACKETCLOSE
                     | COMMA term commatermlist
+                    ;
+binderlist          : binder
+                    | binder COMMA binderlist
+                    ;
+binder              : IDENTIFIER
+                    | IDENTIFIER DECLARE type
                     ;
 
 onlyterm            : term EOF ;

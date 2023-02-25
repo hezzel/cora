@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -23,12 +23,9 @@ import cora.terms.*;
 import cora.parsers.CoraInputReader;
 
 public class MstrsTest {
-  private Type baseType(String name) {
-    return TypeFactory.createSort(name);
-  }
-
-  private Type arrowType(String name1, String name2) {
-    return TypeFactory.createArrow(baseType(name1), baseType(name2));
+  private Type type(String str) {
+    try { return CoraInputReader.readTypeFromString(str); }
+    catch (Exception e) { System.out.println(e); return null; }
   }
 
   private FunctionSymbol a() {
@@ -47,7 +44,7 @@ public class MstrsTest {
     return TermFactory.createConstant("g", 3);
   }
 
-  private MSTRS createTermRewritingSystem() {
+  private TRS createTermRewritingSystem() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     symbols.add(a());
     symbols.add(b());
@@ -59,7 +56,7 @@ public class MstrsTest {
     Variable x = TermFactory.createVar("x");
     Term left1 = TermFactory.createApp(f(), x, a());
     Term right1 = x;
-    rules.add(new FirstOrderRule(left1, right1));
+    rules.add(new Rule(left1, right1));
       // f(x, a) -> x
 
     ArrayList<Term> args = new ArrayList<Term>();
@@ -68,15 +65,26 @@ public class MstrsTest {
     args.add(b());
     Term left2 = TermFactory.createApp(g(), args);
     Term right2 = TermFactory.createApp(f(), b(), x);
-    rules.add(new FirstOrderRule(left2, right2));
+    rules.add(new Rule(left2, right2));
       // g(x, x, b) -> f(b, x)
 
-    return new MSTRS(alf, rules);
+    return TRSFactory.createMSTRS(alf, rules);
+  }
+
+  @Test
+  public void testBasics() {
+    TRS trs = createTermRewritingSystem();
+    assertTrue(trs.queryRuleCount() == 2);
+    assertTrue(trs.queryRule(0).toString().equals("f(x, a) → x"));
+    assertTrue(trs.queryRule(1).toString().equals("g(x, x, b) → f(b, x)"));
+    assertTrue(trs.querySchemeCount() == 0);
+    assertTrue(trs.lookupSymbol("f").equals(f()));
+    assertTrue(trs.lookupSymbol("ff") == null);
   }
 
   @Test
   public void testLeftmostInnermostRedex() {
-    MSTRS trs = createTermRewritingSystem();
+    TRS trs = createTermRewritingSystem();
     String str = "g(f(a, b), f(g(a, b, a), g(b, b, b)), b)";
     Term term = CoraInputReader.readTermFromString(str, trs);
     Position pos = trs.leftmostInnermostRedexPosition(term);
@@ -85,7 +93,7 @@ public class MstrsTest {
 
   @Test
   public void testLeftmostInnermostReduction() {
-    MSTRS trs = createTermRewritingSystem();
+    TRS trs = createTermRewritingSystem();
     String str = "g(f(a, b), f(g(a, b, a), g(b, b, b)), b)";
     Term term = CoraInputReader.readTermFromString(str, trs);
     String reduct = trs.leftmostInnermostReduce(term).toString();
@@ -94,7 +102,7 @@ public class MstrsTest {
 
   @Test
   public void testLeftmostInnermostIrreducible() {
-    MSTRS trs = createTermRewritingSystem();
+    TRS trs = createTermRewritingSystem();
     String str = "g(f(a, b), f(g(a, b, a), x), b)";
     Term term = CoraInputReader.readTermFromString(str, trs);
     assertTrue(trs.leftmostInnermostReduce(term) == null);
@@ -105,15 +113,14 @@ public class MstrsTest {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     symbols.add(a());
     symbols.add(b());
-    symbols.add(TermFactory.createConstant("i",
-                  TypeFactory.createArrow(arrowType("a", "b"), baseType("a"))));
+    symbols.add(TermFactory.createConstant("i", type("(a ⇒ b) ⇒ a")));
     symbols.add(f());
     Alphabet alf = new Alphabet(symbols);
     ArrayList<Rule> rules = new ArrayList<Rule>();
     Variable x = TermFactory.createVar("x");
-    rules.add(new FirstOrderRule(TermFactory.createApp(f(), x, a()), x));
+    rules.add(RuleFactory.createFirstOrderRule(TermFactory.createApp(f(), x, a()), x));
 
-    new MSTRS(alf, rules);
+    TRSFactory.createMSTRS(alf, rules);
   }
 
   @Test(expected = cora.exceptions.IllegalRuleError.class)
@@ -125,13 +132,13 @@ public class MstrsTest {
     Alphabet alf = new Alphabet(symbols);
     ArrayList<Rule> rules = new ArrayList<Rule>();
     Variable x = TermFactory.createVar("x");
-    rules.add(new AtrsRule(f().apply(x), g.apply(x)));
+    rules.add(RuleFactory.createApplicativeRule(f().apply(x), g.apply(x)));
 
-    new MSTRS(alf, rules);
+    TRSFactory.createMSTRS(alf, rules);
   }
 
   @Test
-  public void testCreateMSTRSWithLegalAtrsRule() {
+  public void testCreateMSTRSWithLegalApplicativeRule() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     symbols.add(a());
     symbols.add(b());
@@ -140,10 +147,29 @@ public class MstrsTest {
     Alphabet alf = new Alphabet(symbols);
     ArrayList<Rule> rules = new ArrayList<Rule>();
     Variable x = TermFactory.createVar("x");
-    rules.add(new AtrsRule(TermFactory.createApp(f(), x, a()),
-                           TermFactory.createApp(g().apply(b()), x, x)));
+    rules.add(RuleFactory.createApplicativeRule(TermFactory.createApp(f(), x, a()),
+                                                TermFactory.createApp(g().apply(b()), x, x)));
 
-    new MSTRS(alf, rules);
+    TRSFactory.createMSTRS(alf, rules);
+  }
+
+  @Test
+  public void testExpandMSTRSAfterCreation() {
+    ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
+    ArrayList<Rule> rules = new ArrayList<Rule>();
+    symbols.add(f());
+    Variable x = TermFactory.createVar("x");
+    Variable y = TermFactory.createVar("y");
+    rules.add(RuleFactory.createFirstOrderRule(TermFactory.createApp(f(), x, y), x));
+    TRS trs = TRSFactory.createMSTRS(new Alphabet(symbols), rules);
+    symbols.add(a());
+    rules.add(RuleFactory.createFirstOrderRule(a(), a()));
+
+    assertTrue(trs.queryRuleCount() == 1);
+    assertTrue(trs.queryRule(0).toString().equals("f(x, y) → x"));
+    assertTrue(trs.querySchemeCount() == 0);
+    assertTrue(trs.lookupSymbol("f").equals(f()));
+    assertTrue(trs.lookupSymbol("a") == null);
   }
 }
 

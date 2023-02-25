@@ -92,6 +92,16 @@ public class ParseDataTest {
     assertTrue(data.lookupVariable("bing").queryType().equals(TypeFactory.createSort("a")));
   }
 
+  @Test
+  public void testVariableRemoval() {
+    ParseData data = new ParseData();
+    Variable x = TermFactory.createVar("bing", TypeFactory.createSort("a"));
+    data.addVariable(x);
+    data.removeVariable("bing");
+    assertTrue(data.lookupVariable("bing") == null);
+    data.addVariable(TermFactory.createVar("bing", TypeFactory.createSort("q"))); // no error
+  }
+
   @Test(expected = java.lang.Error.class)
   public void testFunctionSymbolIllegalOverride() {
     ParseData data = new ParseData();
@@ -133,7 +143,7 @@ public class ParseDataTest {
     FunctionSymbol bong = TermFactory.createConstant("bong", TypeFactory.createSort("b"));
     symbols.add(bing);
     Alphabet alf = new Alphabet(symbols);
-    TRS trs = new MSTRS(alf, new ArrayList<Rule>());
+    TRS trs = TRSFactory.createMSTRS(alf, new ArrayList<Rule>());
     ParseData data = new ParseData(trs);
 
     assertTrue(data.lookupFunctionSymbol("bing").equals(bing));
@@ -151,7 +161,7 @@ public class ParseDataTest {
     FunctionSymbol bing = TermFactory.createConstant("bing", TypeFactory.createSort("a"));
     symbols.add(bing);
     Alphabet alf = new Alphabet(symbols);
-    TRS trs = new MSTRS(alf, new ArrayList<Rule>());
+    TRS trs = TRSFactory.createMSTRS(alf, new ArrayList<Rule>());
     ParseData data = new ParseData(trs);
 
     FunctionSymbol bong = TermFactory.createConstant("bing", TypeFactory.createSort("b"));

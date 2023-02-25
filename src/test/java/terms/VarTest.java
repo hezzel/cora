@@ -94,6 +94,7 @@ public class VarTest extends TermTestFoundation {
     assertTrue(s.isPattern());
     assertTrue(s.isFirstOrder());
     assertFalse(s.isApplication());
+    assertTrue(s.isApplicative());
     assertTrue(s.isClosed());
     assertFalse(s.isGround());
     assertTrue(s.refreshBinders() == s);
@@ -104,6 +105,7 @@ public class VarTest extends TermTestFoundation {
     assertFalse(y.isFirstOrder());
     assertFalse(y.isClosed());
     assertFalse(y.isGround());
+    assertFalse(y.isApplicative());
     assertTrue(x.queryVariableIndex() != y.queryVariableIndex());
     assertTrue(x.queryVariableIndex() != other.queryVariableIndex());
     assertTrue(y.refreshBinders() == y);
@@ -169,6 +171,8 @@ public class VarTest extends TermTestFoundation {
     assertTrue(lst.get(0).toString().equals("ε"));
     assertTrue(lst.get(0).queryAssociatedTerm() == s);
     assertTrue(lst.get(0).queryCorrespondingSubterm() == s);
+    lst = s.queryPositionsForHead((new Var("y", arrowType("o", "o"), false)).apply(s));
+    assertTrue(lst.size() == 0);
     List<HeadPosition> posses = s.queryHeadPositions();
     assertTrue(posses.size() == 1);
     assertTrue(posses.get(0).isPosition());
@@ -278,6 +282,14 @@ public class VarTest extends TermTestFoundation {
     assertTrue(x.match(t, gamma) != null);
     assertTrue(gamma.get(x).equals(q));
     assertTrue(gamma.domain().size() == 1);
+  }
+
+  @Test
+  public void testMatchingBadType() {
+    Variable x = new Var("x", baseType("a"), false);
+    Term t = constantTerm("u", baseType("b"));
+    Subst gamma = new Subst();
+    assertTrue(x.match(t, gamma) != null);
   }
 
   @Test

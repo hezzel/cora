@@ -83,6 +83,9 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   /** @return true */
   public boolean isFunctionalTerm() { return true; }
 
+  /** @return true */
+  public boolean isApplicative() { return true; }
+
   /** @return true if the type of the constant is a base type */
   public boolean isFirstOrder() {
     return queryType().isBaseType();

@@ -188,6 +188,7 @@ public class AbstractionTest extends TermTestFoundation {
     assertFalse(abs.isFunctionalTerm());
     assertFalse(abs.isVarTerm());
     assertFalse(abs.isApplication());
+    assertFalse(abs.isApplicative());
     assertFalse(abs.isFirstOrder());
     assertTrue(abs.numberArguments() == 0);
     assertTrue(abs.queryArguments().size() == 0);
@@ -248,6 +249,18 @@ public class AbstractionTest extends TermTestFoundation {
                posses.get(2).queryCorrespondingSubterm().queryVariable());
     assertTrue(posses.get(3).toString().equals("0.ε"));
     assertTrue(posses.get(4).isEmpty());
+
+    // (λx.f(x, λy.y))(A)
+    Term a = constantTerm("A", arrowType("a", "b"));
+    Term s = new Application(term, a);
+    List<Path> subposses = term.queryPositionsForHead(s);
+
+    assertTrue(subposses.size() == 4);
+    assertTrue(subposses.get(0).toString().equals("0.1.ε"));
+    assertTrue(subposses.get(0).queryCorrespondingSubterm() == x);
+    assertTrue(subposses.get(0).queryAssociatedTerm() == s);
+    assertTrue(subposses.get(2).toString().equals("0.2.ε"));
+    assertTrue(subposses.get(3).queryAssociatedTerm() == s);
   }
 
   @Test

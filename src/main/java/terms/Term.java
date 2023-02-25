@@ -59,7 +59,7 @@ public interface Term {
 
   /** Returns whether the set of variables contains only non-binder variables. */
   boolean isClosed();
-
+  
   /** Returns the number of arguments; that is, n for a term f(s1,...,sn). */
   int numberArguments();
 
@@ -73,7 +73,7 @@ public interface Term {
   Term queryArgument(int i);
 
   /**
-   * If the present term is an abstraction λx.s, this returns s.
+   * If the present term is an abstraction λx.s or a beta-redex (λx.s)(t1,...,tn), this returns s.
    * Otherwise, an InappropriatePatternDataError is thrown.
    */
   public Term queryAbstractionSubterm();
@@ -111,14 +111,25 @@ public interface Term {
   /** Returns true if this term is a pattern (so: non-binder variables are not applied at all). */
   boolean isPattern();
 
+  /** Returns true if this term is applicative (so: without binder variables or meta-application) */
+  boolean isApplicative();
+
   /**
    * Returns the set of all non-head positions in the current Term, in leftmost innermost order.
-   * Note that this set is non-epmty as it always contains the empty position (representing the
+   * Note that this set is non-empty as it always contains the empty position (representing the
    * current term).
    * The positions are all Paths, which means they contain the information of the referenced
    * subterm (and the complete path to it).
    */
   List<Path> queryPositions();
+
+  /**
+   * Returns the set of all non-head non-root positions in the current term, in leftmost innermost
+   * order, except that the associated term of each path is set to the given term rather than the
+   * current term; the current term is expected to be the head term of top.
+   * This is not meant to be called by classes outside the current package.
+   */
+  List<Path> queryPositionsForHead(Term top);
 
   /**
    * Returns the set of all head-positions in the current Term, in leftmost innermost order.

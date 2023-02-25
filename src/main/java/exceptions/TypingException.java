@@ -26,5 +26,10 @@ public class TypingException extends ParserException {
   public TypingException(Token token, String term, String given, String expected) {
     super(token, "Type error: " + term + " has type " + given + "; expected " + expected);
   }
+
+  /** Thrown when the type of a term cannot be derived. */
+  public TypingException(Token token, String term) {
+    super(token, "Ambiguous type error: cannot derive type of " + term);
+  }
 }
 

@@ -79,6 +79,11 @@ class Var extends LeafTermInherit implements Variable {
     return _binder;
   }
 
+  /** @return true if this is not a binder variable */
+  public boolean isApplicative() {
+    return !_binder;
+  }
+
   /** @return true if the type is base and the variable is not in Vbinder */
   public boolean isFirstOrder() {
     return queryType().isBaseType() && !_binder;
@@ -131,6 +136,9 @@ class Var extends LeafTermInherit implements Variable {
     Term previous = gamma.get(this);
     
     if (previous == null) {
+      if (!other.queryType().equals(queryType())) {
+        return "Variable " + _name + " has a different type from " + other.toString() + ".";
+      }
       gamma.extend(this, other);
       return null;
     }   

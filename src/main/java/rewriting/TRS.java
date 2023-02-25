@@ -26,30 +26,29 @@ import cora.terms.Term;
 import cora.terms.Path;
 
 /**
- * A TRS (term rewriting system) is an abstract rewriting system based on a set of rules.
+ * A TRS (term rewriting system) is an abstract rewriting system based on a (possibly infinite)
+ * set of rules and a set of rule schemes.
  * It is key to rewriting, and it is that which we analyse for various properties.
  *
- * There are many kinds of term rewriting systems, with different restrictions on rule and term
- * formation.  Hence, this is an abstract class; most techniques will wish to deal with specific
- * instances, such as many-sorted TRSs or higher-order LCTRSs.
- *
- * We do impose the limitation that the set of rules for a TRS is finite.  However, since a "Rule"
- * can also be a rule scheme, this seems reasonable.
+ * To be able to analyse TRSs, we impose the limitation that the rules can be expressed as a finite
+ * number of standard rules, and a finite number of rule schemes, where the latter essentially
+ * generates a countable number of rules.  For now, we limit interest to beta and eta as rule
+ * schemes, so techniques know how to deal with this.
  */
-public abstract class TRS {
+public class TRS {
   private Alphabet _alphabet;
   private List<Rule> _rules;
+  private List<Scheme> _schemes;
 
-  /** Create a TRS with the given alphabet and rules. */
-  protected TRS(Alphabet alphabet, List<Rule> rules) {
-    if (alphabet == null) throw new NullInitialisationError("TRS", "alphabet");
-    if (rules == null) throw new NullInitialisationError("TRS", "rules set");
-    for (int i = 0; i < rules.size(); i++) {
-      if (rules.get(i) == null) throw new NullInitialisationError("TRS", "rule " + i); 
-    }   
-
-    _alphabet = alphabet.copy();
-    _rules = new ArrayList<Rule>(rules);
+  /**
+   * Create a TRS with the given alphabet, rules and rule schemes.  Default because this should
+   * only be called by the factory, which also does the correctness checking (such as making sure
+   * that none of the components are null, and that the lists are not used elsewhere.
+   */
+  TRS(Alphabet alphabet, List<Rule> rules, List<Scheme> schemes) {
+    _alphabet = alphabet;
+    _rules = rules;
+    _schemes = schemes;
   }
 
   /** @return the number of rules in the TRS that can be queried. */
@@ -65,6 +64,19 @@ public abstract class TRS {
     return _rules.get(index);
   }
 
+  /** @return the number of schemes in the TRS that can be queried. */
+  public int querySchemeCount() {
+    return _schemes.size();
+  }
+
+  /** For 0 ≤ index < querySchemeCount(), this returns one of the schemes in the system. */
+  public Scheme queryScheme(int index) {
+    if (index < 0 || index >= querySchemeCount()) {
+      throw new IndexingError("TRS", "queryScheme", index, 0, querySchemeCount()-1);
+    }
+    return _schemes.get(index);
+  }
+
   /**
    * Returns the FunctionSymbol associated to the given name in this TRS, if there is a unique
    * one.
@@ -74,8 +86,8 @@ public abstract class TRS {
   }
 
   /**
-   * Returns the leftmost, innermost position where a rule may be applied, or null if no such
-   * position exists.
+   * Returns the leftmost, innermost position where a rule or scheme may be applied, or null if no
+   * such position exists.
    */
   public Path leftmostInnermostRedexPosition(Term s) {
     List<Path> positions = s.queryPositions();
@@ -85,25 +97,42 @@ public abstract class TRS {
       for (int j = 0; j < _rules.size(); j++) {
         if (_rules.get(j).applicable(sub)) return pos;
       }
+      for (int j = 0; j < _schemes.size(); j++) {
+        if (_schemes.get(j).applicable(sub)) return pos;
+      }
     }
     return null;
+  }
+
+  private class RuleOrScheme {
+    boolean rule;
+    int index;
+    public RuleOrScheme(boolean r, int i) { rule = r; index = i; }
   }
 
   /**
    * Reduces the given term at the leftmost, innermost redex position, and returns the result;
    * if no such position exists, null is returned instead.
-   * If multiple rules match, an arbitrary one is chosen.
+   * If multiple rules or schemes match, an arbitrary one is chosen.
    */
   public Term leftmostInnermostReduce(Term s) {
-    List<Rule> tmp = new ArrayList<Rule>(_rules);
-    Collections.shuffle(tmp);
     Path pos = leftmostInnermostRedexPosition(s);
     if (pos == null) return null;
+
+    // get a shuffled list of all the rules and schemes
+    ArrayList<RuleOrScheme> lst = new ArrayList<RuleOrScheme>();
+    for (int i = 0; i < _rules.size(); i++) lst.add(new RuleOrScheme(true, i));
+    for (int i = 0; i < _schemes.size(); i++) lst.add(new RuleOrScheme(false, i));
+    Collections.shuffle(lst);
+    
     Term subterm = pos.queryCorrespondingSubterm();
-    for (int j = 0; j < tmp.size(); j++) {
-      Term result = tmp.get(j).apply(subterm);
+    for (int i = 0; i < lst.size(); i++) {
+      Term result;
+      if (lst.get(i).rule) result = _rules.get(lst.get(i).index).apply(subterm);
+      else result = _schemes.get(lst.get(i).index).apply(subterm);
       if (result != null) return s.replaceSubterm(pos, result);
     }
+
     return null;
   }
 
@@ -113,6 +142,9 @@ public abstract class TRS {
     String ret = _alphabet.toString() + "\n";
     for (int i = 0; i < _rules.size(); i++) {
       ret += _rules.get(i).toString() + "\n";
+    }
+    for (int i = 0; i < _schemes.size(); i++) {
+      ret += _schemes.get(i).toString() + "\n";
     }
     return ret;
   }

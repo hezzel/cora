@@ -98,6 +98,7 @@ public class CoraInputReader extends InputReader {
     if (kind.equals("rule constant")) return readTypeConstant(tree.getChild(0));
     if (kind.equals("rule lowarrowtype")) return readLowArrowType(tree.getChild(0));
     if (kind.equals("rule higherarrowtype")) return readHigherArrowType(tree.getChild(0));
+    if (kind.equals("token BRACKETOPEN")) return readType(tree.getChild(1));
     throw buildError(tree, "Child of type has an unexpected shape (" + kind + ").");
   }
 
@@ -154,17 +155,17 @@ public class CoraInputReader extends InputReader {
   }
 
   /**
-   * Given that tree is a parse tree for a term of the form <function symbol> <bracket> <term>
+   * Given that tree is a parse tree for a term of the form <start> <bracket> <term>
    * <commatermlist>, this function reads the entire argument list into an arraylist. No term
-   * parsing is yet done.
+   * parsing is yet done.  The start is assumed to take NUMBER tokens.
    */
-  private ArrayList<ParseTree> readCommaSeparatedList(ParseTree tree) {
+  private ArrayList<ParseTree> readCommaSeparatedList(ParseTree tree, int number) {
     ArrayList<ParseTree> ret = new ArrayList<ParseTree>();
-    verifyChildIsToken(tree, 1, "BRACKETOPEN", "an opening bracket '('");
-    verifyChildIsRule(tree, 2, "term", "a term");
-    ret.add(tree.getChild(2));
-    verifyChildIsRule(tree, 3, "commatermlist", "a comma-separated list of terms");
-    ParseTree list = tree.getChild(3);
+    verifyChildIsToken(tree, number, "BRACKETOPEN", "an opening bracket '('");
+    verifyChildIsRule(tree, number+1, "term", "a term");
+    ret.add(tree.getChild(number+1));
+    verifyChildIsRule(tree, number+2, "commatermlist", "a comma-separated list of terms");
+    ParseTree list = tree.getChild(number+2);
     while (true) {
       String kind = checkChild(list, 0);
       if (kind.equals("token BRACKETCLOSE")) return ret;
@@ -181,6 +182,12 @@ public class CoraInputReader extends InputReader {
    * @see readTermFromString.
    */
   private Term readTerm(ParseTree tree, ParseData pd, Type expectedType) throws ParserException {
+    if (checkChild(tree, 0).equals("rule abstraction")) {
+      return readAbstraction(tree.getChild(0), pd, expectedType);
+    }
+    if (checkChild(tree, 0).equals("token BRACKETOPEN")) {
+      return readBetaRedex(tree, pd, expectedType);
+    }
     verifyChildIsRule(tree, 0, "constant", "a declared function symbol or variable");
     String constant = readConstant(tree.getChild(0));
     FunctionSymbol f = pd.lookupFunctionSymbol(constant);
@@ -195,7 +202,7 @@ public class CoraInputReader extends InputReader {
     if (tree.getChildCount() == 1 || checkChild(tree,2).equals("token BRACKETCLOSE")) {
       arguments = new ArrayList<ParseTree>();
     }
-    else arguments = readCommaSeparatedList(tree);
+    else arguments = readCommaSeparatedList(tree, 1);
 
     // parse the arguments and typecheck them against the input types of f
     ArrayList<Term> args = new ArrayList<Term>();
@@ -218,6 +225,85 @@ public class CoraInputReader extends InputReader {
     else return TermFactory.createApp(x, args);
   }
 
+  /** Reads a parsetree of the form LAMBDA binderlist DOT term. */
+  private Term readAbstraction(ParseTree tree, ParseData pd, Type exType) throws ParserException {
+    // read the binder list
+    ArrayList<Variable> vars = new ArrayList<Variable>();
+    verifyChildIsRule(tree, 1, "binderlist", "a list of binders");
+    ParseTree blist = tree.getChild(1);
+    while (true) {
+      verifyChildIsRule(blist, 0, "binder", "a binder");
+      vars.add(readBinder(blist.getChild(0), pd,
+                          exType == null ? null : exType.queryArrowInputType()));
+      if (exType != null) exType = exType.queryArrowOutputType();
+      if (blist.getChildCount() == 1) break;
+      verifyChildIsRule(blist, 2, "binderlist", "the remaining list of binders");
+      blist = blist.getChild(2);
+    }
+    // store the variables in the data; back up the name if it's in use
+    ArrayList<Variable> backup = new ArrayList<Variable>();
+    for (int i = 0; i < vars.size(); i++) {
+      backup.add(pd.removeVariable(vars.get(i).queryName()));
+      pd.addVariable(vars.get(i));
+    }
+    // parse the subterm
+    verifyChildIsRule(tree, 3, "term", "a subterm");
+    Term ret = readTerm(tree.getChild(3), pd, exType);
+    // create the abstraction, and restore the original variables to the parse data
+    for (int i = vars.size()-1; i >= 0; i--) {
+      pd.removeVariable(vars.get(i).queryName());
+      ret = TermFactory.createAbstraction(vars.get(i), ret);
+      if (backup.get(i) != null) pd.addVariable(backup.get(i));
+    }
+    return ret;
+  }
+
+  private Term readBetaRedex(ParseTree tree, ParseData pd, Type exType) throws ParserException {
+    verifyChildIsRule(tree, 1, "abstraction", "an abstraction");
+    verifyChildIsRule(tree, 4, "term", "a term");
+    verifyChildIsRule(tree, 5, "commatermlist", "a (possibly empty) list of terms");
+    Term head = readAbstraction(tree.getChild(1), pd, null);
+    ArrayList<ParseTree> arguments = readCommaSeparatedList(tree, 3);
+    Type type = head.queryType();
+    ArrayList<Term> args = new ArrayList<Term>();
+    for (int i = 0; i < arguments.size(); i++) {
+      if (!type.isArrowType()) {
+        throw new TypingException(firstToken(tree), head.toString(), type.toString(),
+                                  "type of arity at least " + arguments.size());
+      }
+      args.add(readTerm(arguments.get(i), pd, type.queryArrowInputType()));
+      type = type.queryArrowOutputType();
+    }
+    
+    if (exType != null && !type.equals(exType)) {
+      throw new TypingException(firstToken(tree), tree.getText(), type.toString(),
+                                exType.toString());
+    }
+
+    return TermFactory.createApp(head, args);
+  }
+
+  /** Reads a variable x or x :: type as a bind variable with the given expected type. */
+  private Variable readBinder(ParseTree tree, ParseData pd, Type exType) throws ParserException {
+    // binder = IDENTIFIER | IDENTIFIER DECLARE type
+    verifyChildIsToken(tree, 0, "IDENTIFIER", "a variable name");
+    String name = tree.getChild(0).getText();
+    if (!isValidVariable(name)) {
+      throw new DeclarationException(firstToken(tree), name, "not a valid binder name");
+    }
+    if (tree.getChildCount() == 1) {
+      if (exType == null) throw new TypingException(firstToken(tree), name);
+      return TermFactory.createBinder(name, exType);
+    }
+    verifyChildIsRule(tree, 2, "type", "a type");
+    Type type = readType(tree.getChild(2));
+    if (exType != null && !type.equals(exType)) {
+      throw new TypingException(firstToken(tree.getChild(2)), name, type.toString(),
+                                exType.toString());
+    }
+    return TermFactory.createBinder(name, type);
+  }
+
   /**
    * Reads a term from the given parse tree, using ParseData for the declarations of function
    * symbols and variables.
@@ -232,7 +318,6 @@ public class CoraInputReader extends InputReader {
     verifyChildIsToken(tree, 1, "EOF", "end of input");
     return readTerm(tree.getChild(0), pd, expectedType);
   }
-
 
   /* ========== WHOLE PROGRAM PARSING ========== */
 
@@ -289,7 +374,7 @@ public class CoraInputReader extends InputReader {
     Type type = left.queryType();
     Term right = readTerm(tree.getChild(2), pd, type);
     pd.clearVariables();
-    return RuleFactory.createAtrsRule(left, right);
+    return RuleFactory.createRule(left, right);
   }
 
   /**
@@ -313,7 +398,7 @@ public class CoraInputReader extends InputReader {
       tree = tree.getChild(1);
     }
 
-    return new ATRS(pd.queryCurrentAlphabet(), ret);
+    return TRSFactory.createApplicativeTRS(pd.queryCurrentAlphabet(), ret);
   }
 
   private TRS readFullProgram(ParseTree tree) throws ParserException {

@@ -297,7 +297,7 @@ public class TrsInputReader extends InputReader {
     verifyChildIsRule(tree, 2, "term", "a term");
     Term left = readTerm(tree.getChild(0), data, null, mstrs);
     Term right = readTerm(tree.getChild(2), data, left.queryType(), mstrs);
-    try { return RuleFactory.createFORule(left, right); }
+    try { return RuleFactory.createFirstOrderRule(left, right); }
     catch (IllegalRuleError e) {
       throw new ParserException(firstToken(tree), e.queryProblem());
     }
@@ -321,7 +321,7 @@ public class TrsInputReader extends InputReader {
 
   /* ========== READ A WHOLE TRS ========== */
 
-  private MSTRS readTRS(ParseTree tree) throws ParserException {
+  private TRS readTRS(ParseTree tree) throws ParserException {
     ParseData data = new ParseData();
     boolean mstrs = false;
     int k = 0;
@@ -343,7 +343,7 @@ public class TrsInputReader extends InputReader {
     }
     verifyChildIsRule(tree, k, "ruleslist", "a list of rules");
     ArrayList<Rule> rules = readRuleList(tree.getChild(k), data, mstrs);
-    return new MSTRS(data.queryCurrentAlphabet(), rules);
+    return TRSFactory.createMSTRS(data.queryCurrentAlphabet(), rules);
   }
 
   /* ========== STATIC ACCESS METHODS ========== */
@@ -397,7 +397,7 @@ public class TrsInputReader extends InputReader {
    * Note that this can safely be used for a TRS that was read as an unsorted TRS, since the
    * resulting TRS is always many-sorted (just with a single sort).
    */
-  public static Term readTermFromString(String str, MSTRS trs) throws ParserException {
+  public static Term readTermFromString(String str, TRS trs) throws ParserException {
     ErrorCollector collector = new ErrorCollector();
     TrsParser parser = createTrsParserFromString(str, collector);
     TrsInputReader reader = new TrsInputReader();
@@ -409,7 +409,7 @@ public class TrsInputReader extends InputReader {
   }
 
   /** Parses the given program, and returns the TRS that it defines. */
-  public static MSTRS readTrsFromString(String str) throws ParserException {
+  public static TRS readTrsFromString(String str) throws ParserException {
     ErrorCollector collector = new ErrorCollector();
     TrsParser parser = createTrsParserFromString(str, collector);
     TrsInputReader reader = new TrsInputReader();
@@ -420,7 +420,7 @@ public class TrsInputReader extends InputReader {
   }
 
   /** Reads the given file, parses the program in it, and returns the TRS that it defines. */
-  public static MSTRS readTrsFromFile(String filename) throws ParserException, IOException {
+  public static TRS readTrsFromFile(String filename) throws ParserException, IOException {
     ErrorCollector collector = new ErrorCollector();
     TrsParser parser = createTrsParserFromFile(filename, collector);
     TrsInputReader reader = new TrsInputReader();

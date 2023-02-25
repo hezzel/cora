@@ -573,6 +573,16 @@ Although we use positions -- which is dangerous in the presence of binders -- we
 much effort that $\arr{\Rules}$ really does define a reduction on the set of terms: if
 $s =_\alpha s'$ and $s \arr{\Rules} t$, then $s' \arr{\Rules} t'$ with $t =_\alpha t'$ (Lemma
 \ref{lem:reductionwelldefined}).  This holds because $\FV(r) \subseteq \FV(\ell)$ for all rules.
+We have the following result:
+
+\begin{lemma} $s \arr{\Rules} t$ if one of the following statements holds:
+\begin{itemize}
+\item $s = \ell\gamma$ and $t = r\gamma$
+\item $s = s_1 \cdot s_2$ and $t = s_1 \cdot t_2$ and $s_2 \arr{\Rules} t_2$
+\item $s = s_1 \cdot s_2$ and $t = t_1 \cdot s_2$ and $s_1 \arr{\Rules} t_1$
+\item $s = \abs{\avar}{s'}$ and $t = \abs{\avar}{t'}$ and $s' \arr{\Rules} t'$
+\end{itemize}
+\end{lemma}
 
 \subsection{Different kinds of term rewriting systems.}
 
@@ -585,17 +595,21 @@ refer to it by the ARS kind (e.g., AMS or MTRS) and the set of $\Rules$ that gen
 rewrite relation.
 
 An \emph{applicative meta-variable system} (AMS) is an ARS of the form
-$(\Terms(\F,\V),\arr{\Rules})$.  That is, we rewrite true terms, and impose no restrictions on
-reduction.
+$(\Terms(\F,\V),\arr{\Rules \cup \beta})$ where $\beta =
+\{ (\abs{\avar}{\meta{F_{\atype,\btype}}{\avar}})(Z) \to \meta{F}{Z} \mid F_{\atype,
+\btype} :: [\atype] \arrtype \btype \in \Vmeta \wedge \atype,\btype \in \Types\}$.
+That is, we rewrite true terms, and impose no restrictions on reduction, except that a
+$\beta$-rule $(\abs{\avar}{\meta{F}{\avar}})(Z) \to \meta{F}{Z}$ is included for every pair of
+types $\atype,\btype$.
 
-A \emph{well-behaved meta-variable system} (WAMS) is an AMS with rules $\Rules$ where all
-$\ell \arrz r \in \Rules$ are pattern rules of the form $\afun\ \ell_1 \cdots \ell_k \arrz r$.
+A \emph{well-behaved meta-variable system} (WAMS) is an AMS with rules $\Rules$ where
+all $\ell \arrz r \in \Rules$ are pattern rules of the form $\afun\ \ell_1 \cdots \ell_k \arrz r$.
 
 A \emph{curried functional system} (CFS) is an AMS with rules $\Rules$ where both sides of all
 $\ell \arrz r \in \Rules$ are true terms.
 
-An \emph{algebraic functional system} (AFS) is an ARS of the form $(T^\arity,\arr{\Rules})$ where
-$T^\arity \subseteq \Terms(\F,\V)$ and:
+An \emph{algebraic functional system} (AFS) is an ARS of the form $(T^\arity,\arr{\Rules \cup
+\beta})$ where $T^\arity \subseteq \Terms(\F,\V)$ and:
 \begin{itemize}
 \item $\arity$ is a function from $\F$ to $\N$ with $\arity(\afun) \leq \mathit{arity}(\atype)$
   for every $(\afun :: \atype) \in \F$

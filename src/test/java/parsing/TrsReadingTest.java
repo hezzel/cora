@@ -28,7 +28,8 @@ import cora.types.*;
 import cora.terms.*;
 import cora.rewriting.Alphabet;
 import cora.rewriting.Rule;
-import cora.rewriting.MSTRS;
+import cora.rewriting.TRS;
+import cora.rewriting.TRSFactory;
 
 public class TrsReadingTest {
   @Test
@@ -198,7 +199,7 @@ public class TrsReadingTest {
     symbols.add(TermFactory.createConstant("f", ftype));
     symbols.add(TermFactory.createConstant("g", gtype));
     symbols.add(TermFactory.createConstant("a", d));
-    MSTRS trs = new MSTRS(new Alphabet(symbols), new ArrayList<Rule>());
+    TRS trs = TRSFactory.createMSTRS(new Alphabet(symbols), new ArrayList<Rule>());
     Term t = TrsInputReader.readTermFromString("f(g(x,y),g(x,a))", trs);
     FunctionSymbol f = t.queryRoot();
     FunctionSymbol g = t.queryArgument(1).queryRoot();
@@ -224,7 +225,7 @@ public class TrsReadingTest {
     symbols.add(TermFactory.createConstant("f", ftype));
     symbols.add(TermFactory.createConstant("g", gtype));
     symbols.add(TermFactory.createConstant("a", c));
-    MSTRS trs = new MSTRS(new Alphabet(symbols), new ArrayList<Rule>());
+    TRS trs = TRSFactory.createMSTRS(new Alphabet(symbols), new ArrayList<Rule>());
     Term t = TrsInputReader.readTermFromString("f(g(x,y),g(x,a))", trs);
   }
 
@@ -240,13 +241,13 @@ public class TrsReadingTest {
     symbols.add(TermFactory.createConstant("f", ftype));
     symbols.add(TermFactory.createConstant("g", gtype));
     symbols.add(TermFactory.createConstant("a", d));
-    MSTRS trs = new MSTRS(new Alphabet(symbols), new ArrayList<Rule>());
+    TRS trs = TRSFactory.createMSTRS(new Alphabet(symbols), new ArrayList<Rule>());
     Term t = TrsInputReader.readTermFromString("f(g(x,y),g(x,a))", trs);
   }
 
   @Test
   public void readSimpleUnsortedTrs() throws ParserException {
-    MSTRS trs = TrsInputReader.readTrsFromString("(VAR x y)\n" +
+    TRS trs = TrsInputReader.readTrsFromString("(VAR x y)\n" +
                                                  "(RULES\n" +
                                                  "  +(x, 0) -> x\n" +
                                                  "  +(x, s(y)) -> s(+(x,y))\n" +
@@ -266,7 +267,7 @@ public class TrsReadingTest {
                  "  append(nil, ys) -> ys\n" +
                  "  append(cons(x, xs), ys) -> cons(x, append(xs, ys))\n" +
                  ")";
-    MSTRS trs = TrsInputReader.readTrsFromString(str);
+    TRS trs = TrsInputReader.readTrsFromString(str);
     FunctionSymbol append = trs.lookupSymbol("append");
     FunctionSymbol cons = trs.lookupSymbol("cons");
     FunctionSymbol nil = trs.lookupSymbol("nil");
@@ -290,7 +291,7 @@ public class TrsReadingTest {
                  "  append(nil, ys) -> ys\n" +
                  "  append(cons(x, xs), ys) -> cons(x, append(xs, ys))\n" +
                  ")";
-    MSTRS trs = TrsInputReader.readTrsFromString(str);
+    TRS trs = TrsInputReader.readTrsFromString(str);
   }
 
   @Test
@@ -301,7 +302,7 @@ public class TrsReadingTest {
                  "  append(nil, ys) -> ys\n" +
                  "  append(cons(x, xs), ys) -> cons(x, append(xs, ys))\n" +
                  ")";
-    MSTRS trs = TrsInputReader.readTrsFromString(str);
+    TRS trs = TrsInputReader.readTrsFromString(str);
     Term t = TrsInputReader.readTermFromString("append ( cons ( 0 , nil ) , lst )", trs);
     assertTrue(t.toString().equals("append(cons(0, nil), lst)"));
   }
@@ -313,7 +314,7 @@ public class TrsReadingTest {
                  "  append(nil, ys) -> ys\n" +
                  "  append(cons(x, xs), ys) -> cons(x, append(xs, ys))\n" +
                  ")";
-    MSTRS trs = TrsInputReader.readTrsFromString(str);
+    TRS trs = TrsInputReader.readTrsFromString(str);
     Term t = TrsInputReader.readTermFromString("append(cons(s(0), nil), lst)", trs);
   }
 
@@ -332,7 +333,7 @@ public class TrsReadingTest {
                  "  len(nil) -> 0" +
                  "  len(cons(x, xs)) -> s(len(xs))" +
                  ")";
-    MSTRS trs = TrsInputReader.readTrsFromString(str);
+    TRS trs = TrsInputReader.readTrsFromString(str);
     FunctionSymbol app = trs.lookupSymbol("app");
     assertTrue(app.queryType().toString().equals("List ⇒ List ⇒ List"));
     Rule appbase = trs.queryRule(0);
@@ -347,7 +348,7 @@ public class TrsReadingTest {
   @Test
   public void readSortedTrsWithVariableTypeChange() throws ParserException {
     String str = "(SIG (f a -> a) (g b -> b)) (RULES f(x) -> x g(x) -> x)";
-    MSTRS trs = TrsInputReader.readTrsFromString(str);
+    TRS trs = TrsInputReader.readTrsFromString(str);
     Rule a = trs.queryRule(0);
     Rule b = trs.queryRule(1);
     assertFalse(a.queryRightSide().queryType().equals(b.queryRightSide().queryType()));

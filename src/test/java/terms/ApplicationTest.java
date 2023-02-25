@@ -107,6 +107,7 @@ public class ApplicationTest extends TermTestFoundation {
     Term t = twoArgFuncTerm();
     Type type = arrowType(baseType("a"), arrowType("b", "a"));
     assertTrue(t.isApplication());
+    assertTrue(t.isApplicative());
     assertTrue(t.isFunctionalTerm());
     assertFalse(t.isConstant());
     assertFalse(t.isVariable());
@@ -127,6 +128,7 @@ public class ApplicationTest extends TermTestFoundation {
     Term t = twoArgVarTerm();
     Type type = arrowType(baseType("a"), arrowType("b", "a"));
     assertTrue(t.isApplication());
+    assertTrue(t.isApplicative());
     assertTrue(t.isVarTerm());
     assertFalse(t.isConstant());
     assertFalse(t.isVariable());
@@ -138,6 +140,45 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.queryHead().queryType().toString().equals("a ⇒ b ⇒ a"));
     assertTrue(t.queryType().equals(baseType("a")));
     assertTrue(t.toString().equals("x(c, g(y))"));
+  }
+
+  @Test
+  public void testAbstractionTermBasics() {
+    Variable x = new Var("x", baseType("o"), true);
+    Term abs = new Abstraction(x, x);
+    Term t = new Application(abs, constantTerm("a", baseType("o")));
+    assertTrue(t.isApplication());
+    assertFalse(t.isApplicative());
+    assertFalse(t.isVarTerm());
+    assertFalse(t.isFunctionalTerm());
+    assertFalse(t.isConstant());
+    assertFalse(t.isVariable());
+    assertFalse(t.isPattern());
+    assertTrue(t.queryVariable() == x);
+    assertTrue(t.queryHead() == abs);
+    assertTrue(t.queryType().toString().equals("o"));
+    assertTrue(t.toString().equals("(λx.x)(a)"));
+  }
+
+  @Test
+  public void testPatternWithAbstractionBasics() {
+    // x(y, λz.f(z))
+    Variable x = new Var("x", arrowType(baseType("A"), arrowType(
+      arrowType("B", "A"), baseType("B"))), true);
+    Variable y = new Var("y", baseType("A"), false);
+    Variable z = new Var("z", baseType("B"), true);
+    Constant f = new Constant("f", arrowType("B", "A"));
+    Term abs = new Abstraction(z, new Application(f, z));
+    Term t = new Application(x, y, abs);
+
+    assertTrue(t.isApplication());
+    assertFalse(t.isApplicative());
+    assertTrue(t.isPattern());
+    assertTrue(t.isVarTerm());
+    assertTrue(t.queryVariable() == x);
+    assertTrue(t.queryHead() == x);
+    assertTrue(t.queryType().equals(baseType("B")));
+    assertTrue(t.toString().equals("x(y, λz.f(z))"));
   }
 
   @Test(expected = IndexingError.class)
@@ -186,10 +227,16 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test(expected = InappropriatePatternDataError.class)
   public void testInappropriateAbstractionSubtermRequest() {
+    Term t = twoArgFuncTerm();
+    Term f = t.queryAbstractionSubterm();
+  }
+
+  @Test
+  public void testGoodAbstractionSubtermRequest() {
     Variable x = new Var("x", baseType("o"), true);
     Term abs = new Abstraction(x, x);
     Term term = new Application(abs, constantTerm("a", baseType("o")));
-    term.queryAbstractionSubterm();
+    assertTrue(term.queryAbstractionSubterm() == x);
   }
 
   @Test
@@ -218,14 +265,6 @@ public class ApplicationTest extends TermTestFoundation {
     Term f = new Constant("f", arrowType("B", "B"));
     Term fxa = new Application(f, xa);
     assertFalse(fxa.isPattern());
-  }
-
-  @Test
-  public void testNonPatternDueToAbstractionAppplication() {
-    // (λx.x)(a)
-    Var x = new Var("x", baseType("A"), true);
-    Term term = new Application(new Abstraction(x, x), constantTerm("a", baseType("A")));
-    assertFalse(term.isPattern());
   }
 
   @Test
@@ -260,6 +299,17 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(lst.get(1).queryAssociatedTerm() == term);
     assertTrue(lst.get(2).queryCorrespondingSubterm() == term.queryArgument(2));
     assertTrue(lst.get(3).queryCorrespondingSubterm() == term);
+  }
+
+  @Test(expected = InappropriatePatternDataError.class)
+  public void testPositionsForHead() {
+    Type type = arrowType(baseType("a"), arrowType("b", "a"));
+    Variable z = new Var("Z", type, true);
+    Term arg1 = unaryTerm("g", baseType("a"), new Var("x", baseType("b"), false));
+    Term arg2 = constantTerm("c", baseType("b"));
+    Term s = new Application(z, arg1, arg2);    // Z(g(x),c)
+    Term t = new Application(z, arg1);
+    t.queryPositionsForHead(s);
   }
 
   @Test

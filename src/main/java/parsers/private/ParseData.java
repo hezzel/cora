@@ -100,6 +100,13 @@ class ParseData {
     _environment.put(varname, variable);
   }
 
+  /** Remove the variable by the given name, if any; and return it in this case. */
+  public Variable removeVariable(String name) {
+    Variable existing = _environment.get(name);
+    _environment.remove(name);
+    return existing;
+  }
+
   /** This function removes all variable declarations from the current parse data. */
   public void clearVariables() {
     _environment.clear();

@@ -145,6 +145,11 @@ class Abstraction extends TermInherit {
     return _subterm.isPattern();
   }
 
+  /** @return false, as an applicative term cannot include abstractions. */
+  public boolean isApplicative() {
+    return false;
+  }
+
   /** @return the list of all positions in this term, in innermost-left order */
   public List<Path> queryPositions() {
     List<Path> ret = _subterm.queryPositions();
@@ -152,6 +157,22 @@ class Abstraction extends TermInherit {
       ret.set(i, new LambdaPath(this, ret.get(i)));
     }
     ret.add(new EmptyPath(this));
+    return ret;
+  }
+
+  /**
+   * @return the list of all non-root positions in this term, in innermost-left order; however,
+   *   the associated term is set to top rather than the current term
+   */
+  public List<Path> queryPositionsForHead(Term top) {
+    if (top.queryHead() != this) {
+      throw new Error("queryPositionsForHead called with top term whose head is not the " +
+        "current term! (current = " + toString() + " and top = " + top.toString() + ").");
+    }
+    List<Path> ret = _subterm.queryPositions();
+    for (int i = 0; i < ret.size(); i++) {
+      ret.set(i, new LambdaPath(top, ret.get(i)));
+    }
     return ret;
   }
 

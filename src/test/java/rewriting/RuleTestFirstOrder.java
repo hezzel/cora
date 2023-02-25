@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -25,7 +25,7 @@ import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;
 
-public class FirstOrderRuleTest {
+public class RuleTestFirstOrder {
   private Type baseType(String name) {
     return TypeFactory.createSort(name);
   }
@@ -46,26 +46,26 @@ public class FirstOrderRuleTest {
 
   @Test(expected = NullInitialisationError.class)
   public void testLeftNullCreation() {
-    Rule rule = new FirstOrderRule(makeConstant("a", baseType("b")), null);
+    Rule rule = RuleFactory.createFirstOrderRule(makeConstant("a", baseType("b")), null);
   }
 
   @Test(expected = NullInitialisationError.class)
   public void testRightNullCreation() {
-    Rule rule = new FirstOrderRule(null, makeConstant("a", baseType("b")));
+    Rule rule = RuleFactory.createFirstOrderRule(null, makeConstant("a", baseType("b")));
   }
 
   @Test(expected = TypingError.class)
   public void testIlltypedRule() {
     Variable x = TermFactory.createVar("x", baseType("a"));
     Term left = unaryTerm("id", baseType("b"), x);
-    Rule rule = new FirstOrderRule(left, x);
+    Rule rule = RuleFactory.createFirstOrderRule(left, x);
   }
 
   @Test(expected = IllegalRuleError.class)
   public void testVariableLeft() {
     Variable x = TermFactory.createVar("x", baseType("a"));
     Term right = unaryTerm("id", baseType("a"), x);
-    Rule rule = new FirstOrderRule(x, right);
+    Rule rule = RuleFactory.createFirstOrderRule(x, right);
   }
 
   @Test(expected = IllegalRuleError.class)
@@ -73,7 +73,7 @@ public class FirstOrderRuleTest {
     Type type = arrowType("a", "b");
     Variable x = TermFactory.createVar("x", type);
     Term left = unaryTerm("id", type, x);
-    Rule rule = new FirstOrderRule(left, x);
+    Rule rule = RuleFactory.createFirstOrderRule(left, x);
   }
 
   @Test(expected = IllegalRuleError.class)
@@ -85,18 +85,19 @@ public class FirstOrderRuleTest {
     FunctionSymbol f = TermFactory.createConstant("f", type);
     Term left = TermFactory.createApp(f, x, y);
     Term right = TermFactory.createApp(f, x, z);
-    Rule rule = new FirstOrderRule(left, right);
+    Rule rule = RuleFactory.createFirstOrderRule(left, right);
   }
 
   @Test
   public void testBasics() {
     Variable x = TermFactory.createVar("x", baseType("a"));
     Term left = unaryTerm("id", baseType("a"), x);
-    Rule rule = new FirstOrderRule(left, x);
+    Rule rule = RuleFactory.createFirstOrderRule(left, x);
     assertTrue(rule.queryLeftSide().equals(left));
     assertTrue(rule.queryRightSide().equals(x));
     assertTrue(rule.queryType().equals(baseType("a")));
     assertTrue(rule.toString().equals("id(x) → x"));
+    assertTrue(rule.isApplicative());
   }
 
   @Test
@@ -111,7 +112,7 @@ public class FirstOrderRuleTest {
       TypeFactory.createArrow(baseType("Int"), arrowType("Int", "Int")));
     Term left = TermFactory.createApp(f, g.apply(x), y);
     Term right = TermFactory.createApp(h, x, makeConstant("3", baseType("Int")));
-    Rule rule = new FirstOrderRule(left, right);
+    Rule rule = RuleFactory.createFirstOrderRule(left, right);
 
     Term instance = TermFactory.createApp(f, TermFactory.createApp(g, TermFactory.createApp(h,
       makeConstant("5", baseType("Int")), z)), makeConstant("true", baseType("Bool")));
@@ -127,7 +128,7 @@ public class FirstOrderRuleTest {
     Variable x = TermFactory.createVar("x", baseType("Int"));
     FunctionSymbol f = makeConstant("f",
       TypeFactory.createArrow(baseType("Int"), arrowType("Int", "Int")));
-    Rule rule = new FirstOrderRule(TermFactory.createApp(f, x, x), x);
+    Rule rule = RuleFactory.createFirstOrderRule(TermFactory.createApp(f, x, x), x);
     Term noninstance = TermFactory.createApp(f, makeConstant("1", baseType("Int")),
       makeConstant("2", baseType("Int")));
 

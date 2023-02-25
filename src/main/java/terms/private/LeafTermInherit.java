@@ -96,6 +96,12 @@ abstract class LeafTermInherit extends TermInherit {
     return ret;
   }
 
+  /** @return an empty list. */
+  public ArrayList<Path> queryPositionsForHead(Term top) {
+    ArrayList<Path> ret = new ArrayList<Path>();
+    return ret;
+  }
+
   /** @return this if the position is empty; otherwise throws an IndexingError */
   public Term querySubterm(Position pos) {
     if (pos.isEmpty()) return this;

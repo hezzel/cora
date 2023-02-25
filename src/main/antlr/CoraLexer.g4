@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -43,7 +43,7 @@ import java.util.ArrayList;
 
 /* Lexer */
 
-fragment IDCHAR     : ~[ \t\n\r{}()[\]",:/*] ;
+fragment IDCHAR     : ~[ \t\n\r\\.{}()[\]λ",:/*] ;
 fragment IDPART     : IDCHAR | '/'+ IDCHAR | '*'+ IDCHAR ;
 
 fragment A          : 'a' | 'A' ;
@@ -93,6 +93,10 @@ COMMA               : ',' ;
 COLON               : ':' ;
 
 DECLARE             : '::' ;
+
+LAMBDA              : 'λ' | '\\' ;
+
+DOT                 : '.' ;
 
 ARROW               : '-' '>' | '→' ;
 

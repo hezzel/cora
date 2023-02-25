@@ -44,6 +44,11 @@ public class TermFactory {
     return new Var(TypeFactory.unitSort, false);
   }
 
+  /** Create a binder variable with the given default name and type. */
+  public static Variable createBinder(String name, Type type) {
+    return new Var(name, type, true);
+  }
+
   /** Create a function symbol with the given name and type. */
   public static FunctionSymbol createConstant(String name, Type type) {
     return new Constant(name, type);
@@ -89,8 +94,13 @@ public class TermFactory {
     return head.apply(args);
   }
 
+  /** Creates an abstraction λbinder.subterm */
+  public static Term createAbstraction(Variable binder, Term subterm) {
+    return new Abstraction(binder, subterm);
+  }
+
   /** Creates an empty substitution. */
-  public Substitution createEmptySubstitution() {
+  public static Substitution createEmptySubstitution() {
     return new Subst();
   }
 }

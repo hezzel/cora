@@ -37,7 +37,7 @@ class LambdaPath implements Path {
     _topterm = myterm;
     if (myterm == null) throw new NullInitialisationError("LambdaPath", "myterm");
     _subterm = tail.queryCorrespondingSubterm();
-    if (!myterm.isAbstraction()) {
+    if (!myterm.queryHead().isAbstraction()) {
       throw new IllegalArgumentError("LambdaPath", "constructor",
         "trying to create a lambda-path for non-lambda expression " + myterm);
     }

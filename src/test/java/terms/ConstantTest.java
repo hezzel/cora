@@ -71,6 +71,7 @@ public class ConstantTest extends TermTestFoundation {
     assertTrue(f.isClosed());
     assertTrue(f.isGround());
     assertFalse(f.isApplication());
+    assertTrue(f.isApplicative());
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(new Constant("aa", a));
     args.add(new Constant("bb", b));
@@ -190,6 +191,7 @@ public class ConstantTest extends TermTestFoundation {
     assertTrue(f.queryHeadPositions().size() == 1);
     assertTrue(f.queryHeadPositions().get(0).isEnd());
     assertTrue(f.queryHeadPositions().get(0).isPosition());
+    assertTrue(f.queryPositionsForHead(f.apply(new Constant("A", baseType("a")))).size() == 0);
 
     assertTrue(f.querySubterm(PositionFactory.empty).equals(f));
     assertTrue(f.replaceSubterm(PositionFactory.empty, x).equals(x));
