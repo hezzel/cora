@@ -16,3 +16,7 @@ application {
     // Define the main class for the application.
     mainClass = 'cora.app.App'
 }
+
+run {
+    standardInput = System.in
+}
