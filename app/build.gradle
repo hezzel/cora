@@ -4,6 +4,7 @@
 
 plugins {
     id 'cora.java-application-conventions'
+    id 'distribution'
 }
 
 dependencies {
