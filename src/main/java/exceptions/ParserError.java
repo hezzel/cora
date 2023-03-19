@@ -25,6 +25,11 @@ import org.antlr.v4.runtime.Token;
 public class ParserError extends Error {
   private String _text;
 
+  public ParserError(String position, String text, String message) {
+    super(position + ": Parser exception on input [" + text + "]: " + message);
+    _text = text;
+  }
+
   public ParserError(int line, int pos, String text, String message) {
     super(line + ":" + pos + ": Parser exception on input [" + text + "]: " + message);
     _text = text;
