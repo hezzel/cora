@@ -1,4 +1,19 @@
-package cora.parsing;
+/**************************************************************************************************
+ Copyright 2023 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
+package cora.parsing.lib;
 
 /** A position in a file or line; for convenient printing in error messages. */
 class ParsePosition {
@@ -64,6 +79,22 @@ class ParsePosition {
    */
   int getPosition() {
     return _pos;
+  }
+
+  /**
+   * Returns true if the current position is strictly before te given position in the same file.
+   * Note that positions in different files are not comparable.
+   */
+  public boolean before(ParsePosition other) {
+    if (_file == null && other._file != null) return false;
+    if (_file != null && other._file == null) return false;
+    if (_file != null && other._file != null && !_file.equals(other._file)) return false;
+    // they're in the same file!
+    if (_line == 0 && other._line != 0) return false;
+    if (other._line < _line) return false;
+    if (_line < other._line) return true;
+    // they're in the same line!
+    return _pos < other._pos;
   }
 
   /** Returns a new ParsePosition with the position in line increased by offset. */

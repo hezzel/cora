@@ -1,4 +1,19 @@
-package cora.parsing;
+/**************************************************************************************************
+ Copyright 2023 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
+package cora.parsing.lib;
 
 /**
  * A StringLexer takes a single string of input, and tokenises it.  When the source ends, the lexer
@@ -53,13 +68,15 @@ class StringLexer implements Lexer {
 
   /**
    * Returns the next token that was read, or EOF if all tokens from the source have already been
-   * returned.
+   * returned.  Any SKIP tokens are automatically passed by.
    */
   public Token nextToken() {
-    ParsePosition pos = new ParsePosition(_filename, _lineno, _linepos + _start);
-    Token ret = _tokenfinder.matchStart(_mystring, _start, pos);
-    if (ret == null) return Token.eofToken(pos);
-    _start += ret.getText().length();
-    return ret;
+    while (true) {  // repeat this until we get a non-skip token
+      ParsePosition pos = new ParsePosition(_filename, _lineno, _linepos + _start);
+      Token ret = _tokenfinder.matchStart(_mystring, _start, pos);
+      if (ret == null) return Token.eofToken(pos);
+      _start += ret.getText().length();
+      if (!ret.getName().equals(Token.SKIP)) return ret;
+    }
   }
 }

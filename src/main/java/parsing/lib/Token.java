@@ -1,4 +1,19 @@
-package cora.parsing;
+/**************************************************************************************************
+ Copyright 2023 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
+package cora.parsing.lib;
 
 /** This class represents a single Token in an input string or file. */
 public class Token {
@@ -11,6 +26,11 @@ public class Token {
   /** The CATCHALL token is returned when none of the user-defined tokens match, and is always a
       single character. */
   public static String CATCHALL   = "CATCHALL";
+  /** The SKIP token is not a true token; rather, it is the name that you should use to indicate
+      that you do NOT want a token to be generated for given regular expression.  You can have
+      multiple SKIP "tokens" in the token definition list.  This is typically used for whitespace
+      and single-line comments. */
+  public static String SKIP       = "SKIP";
   /** Returns the token that represents end-of-file (or rather, end-of-input) */
   public static Token eofToken(ParsePosition pos) { return new Token(pos, null, null); }
 
@@ -31,6 +51,14 @@ public class Token {
   /** Returns a description of the position in the input where this token was found. */
   public String getPosition() {
     return _position.toString();
+  }
+
+  /**
+   * Returns true if the position of the current token is before the position of the given toekn.
+   * Note that not all positions are comparable.
+   */
+  public boolean before(Token other) {
+    return _position.before(other._position);
   }
 
   /** Returns the name of the token (e.g, IDENTIFIER, WHITESPACE, BRACKETOPEN) */

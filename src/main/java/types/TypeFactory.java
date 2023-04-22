@@ -15,6 +15,8 @@
 
 package cora.types;
 
+import java.util.List;
+
 /**
  * This static class generates basic types and arrow types, which are otherwise not directly
  * accessible outside the types package.
@@ -28,7 +30,14 @@ public class TypeFactory {
     return new Sort(name);
   }
 
-  /** Creates a type of the form left → right */
+  /** Creates a type of the form inp_1 ⇒...⇒ inp_n → output */
+  public static Type createSortDeclaration(List<BaseType> inputs, BaseType output) {
+    Type ret = output;
+    for (int i = inputs.size()-1; i >= 0; i--) ret = new ArrowType(inputs.get(i), ret);
+    return ret;
+  }
+
+  /** Creates a type of the form left ⇒ right */
   public static Type createArrow(Type left, Type right) {
     return new ArrowType(left, right);
   }

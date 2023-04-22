@@ -161,7 +161,7 @@ public class TrsInputReader extends InputReader {
                                       boolean mstrs) throws ParserException {
     String name = tree.getText();
 
-    // if it's declared as a variable or function symbol, return that (if there's no tpye conflict)
+    // if it's declared as a variable or function symbol, return that (if there's no type conflict)
     Term ret = data.lookupVariable(name);
     if (ret == null) ret = data.lookupFunctionSymbol(name);
     if (ret != null) {

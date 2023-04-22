@@ -63,6 +63,7 @@ public class TermFactory {
 
   /** Creates a functional term f(args) */
   public static Term createFunctionalTerm(FunctionSymbol f, List<Term> args) {
+    if (args == null || args.size() == 0) return f;
     return new Application(f, args);
   }
 

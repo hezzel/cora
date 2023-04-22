@@ -1,4 +1,4 @@
-package cora.parsing;
+package cora.parsing.lib;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -24,6 +24,18 @@ public class TokenTest {
     assertTrue(token.getText().equals(""));
     assertTrue(token.getPosition().equals(position.toString()));
     assertTrue(token.toString().equals("test.trs:4:7:  (EOF)"));
+  }
+
+  @Test
+  public void testBefore() {
+    ParsePosition pos1 = new ParsePosition("test.trs", 1, 2);
+    ParsePosition pos2 = new ParsePosition("test.trs", 1, 2);
+    ParsePosition pos3 = new ParsePosition("test.trs", 2, 1);
+    Token tok1 = new Token(pos1, "IDENTIFIER", "a");
+    Token tok2 = new Token(pos2, "IDENTIFIER", "a");
+    Token tok3 = new Token(pos3, "IDENTIFIER", "a");
+    assertFalse(tok1.before(tok2));
+    assertTrue(tok1.before(tok3));
   }
 }
 

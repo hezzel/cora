@@ -1,7 +1,21 @@
-package cora.parsing;
+/**************************************************************************************************
+ Copyright 2023 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
+package cora.parsing.lib;
 
 import cora.exceptions.IllegalArgumentError;
-import cora.exceptions.ParserError;
 
 /**
  * A CommentRemoverLexer adapts a given Lexer by removing comments of the form
@@ -29,15 +43,15 @@ class CommentRemoverLexer implements Lexer {
   }
 
   /** Returns the next token that is not within a comment block. */
-  public Token nextToken() {
+  public Token nextToken() throws LexerException {
     Token ret = _mylexer.nextToken();
     while (!ret.isEof() && ret.getName().equals(_commentOpenString)) {
       int opened = 1;
       while (opened > 0) {
         Token tok = _mylexer.nextToken();
         if (tok.isEof()) {
-          throw new ParserError(ret.getPosition(), ret.getText(),
-            "end of input was reached before comment was closed");
+          throw new LexerException(ret,
+            "end of input was reached before comment [" + ret.getText() + "] was closed");
         }
         if (tok.getName().equals(_commentCloseString)) opened--;
         else if (tok.getName().equals(_commentOpenString) && _allowNesting) opened++;

@@ -1,11 +1,11 @@
-package cora.parsing;
+package cora.parsing.lib;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class MultilineStringLexerTest {
   @Test
-  public void testLexer() {
+  public void testLexer() throws LexerException {
     TokenFinder tf = new TokenFinder(new String[] {
                                        "[a-zA-Z_][a-z0-9A-Z_]*", "IDENTIFIER",
                                        "0|[1-9][0-9]*", "INTEGER",

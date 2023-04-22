@@ -1,4 +1,19 @@
-package cora.parsing;
+/**************************************************************************************************
+ Copyright 2023 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
+package cora.parsing.lib;
 
 /**
  * A MultilineStringLexer is used to lex a string that may contain newlines, when it is given that
@@ -36,7 +51,7 @@ class MultilineStringLexer implements Lexer {
   }
 
   /** Returns the next token, which may be on a different line of the input. */
-  public Token nextToken() {
+  public Token nextToken() throws LexerException {
     Token lastEof = null;
     while (_currentLineLexer != null) {
       Token ret = _currentLineLexer.nextToken();

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.parsers;
+package cora.parsing;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -23,11 +23,11 @@ import cora.terms.*;
 import cora.rewriting.Alphabet;
 import cora.rewriting.*;
 
-/** This class tests the helper class ParseData that stores information on function symbols. */
-public class ParseDataTest {
+/** This class tests the helper class SymbolData that stores information on function symbols. */
+public class SymbolDataTest {
   @Test
   public void testBasics() {
-    ParseData data = new ParseData();
+    SymbolData data = new SymbolData();
     FunctionSymbol bing = TermFactory.createConstant("bing", TypeFactory.createSort("a"));
     Variable bong = TermFactory.createVar("bong", TypeFactory.createSort("b"));
     data.addFunctionSymbol(bing);
@@ -42,7 +42,7 @@ public class ParseDataTest {
 
   @Test
   public void testCounts() {
-    ParseData data = new ParseData();
+    SymbolData data = new SymbolData();
     FunctionSymbol bing = TermFactory.createConstant("bing", TypeFactory.createSort("a"));
     Variable bongv = TermFactory.createVar("bong", TypeFactory.createSort("b"));
     FunctionSymbol bongf = TermFactory.createConstant("bong", TypeFactory.createSort("a"));
@@ -58,7 +58,7 @@ public class ParseDataTest {
 
   @Test
   public void testEqualVariableAndFunction() {
-    ParseData data = new ParseData();
+    SymbolData data = new SymbolData();
     FunctionSymbol bing1 = TermFactory.createConstant("bing", TypeFactory.createSort("a"));
     Variable bing2 = TermFactory.createVar("bing", TypeFactory.createSort("b"));
     data.addFunctionSymbol(bing1);
@@ -69,7 +69,7 @@ public class ParseDataTest {
 
   @Test
   public void testLookupNonExisting() {
-    ParseData data = new ParseData();
+    SymbolData data = new SymbolData();
     data.addFunctionSymbol(TermFactory.createConstant("bing", TypeFactory.createSort("a")));
     assertTrue(data.lookupFunctionSymbol("bong") == null);
     assertTrue(data.lookupVariable("bing") == null);
@@ -77,7 +77,7 @@ public class ParseDataTest {
 
   @Test
   public void testFunctionSymbolLegalOverride() {
-    ParseData data = new ParseData();
+    SymbolData data = new SymbolData();
     data.addFunctionSymbol(TermFactory.createConstant("bing", TypeFactory.createSort("a")));
     data.addFunctionSymbol(TermFactory.createConstant("bing", TypeFactory.createSort("a")));
     assertTrue(data.lookupFunctionSymbol("bing").queryType().equals(TypeFactory.createSort("a")));
@@ -85,7 +85,7 @@ public class ParseDataTest {
 
   @Test
   public void testVariableLegalOverride() {
-    ParseData data = new ParseData();
+    SymbolData data = new SymbolData();
     Variable x = TermFactory.createVar("bing", TypeFactory.createSort("a"));
     data.addVariable(x);
     data.addVariable(x);
@@ -94,7 +94,7 @@ public class ParseDataTest {
 
   @Test
   public void testVariableRemoval() {
-    ParseData data = new ParseData();
+    SymbolData data = new SymbolData();
     Variable x = TermFactory.createVar("bing", TypeFactory.createSort("a"));
     data.addVariable(x);
     data.removeVariable("bing");
@@ -104,14 +104,14 @@ public class ParseDataTest {
 
   @Test(expected = java.lang.Error.class)
   public void testFunctionSymbolIllegalOverride() {
-    ParseData data = new ParseData();
+    SymbolData data = new SymbolData();
     data.addFunctionSymbol(TermFactory.createConstant("bing", TypeFactory.createSort("a")));
     data.addFunctionSymbol(TermFactory.createConstant("bing", TypeFactory.createSort("b")));
   }
 
   @Test(expected = java.lang.Error.class)
   public void testVariableIllegalOverride() {
-    ParseData data = new ParseData();
+    SymbolData data = new SymbolData();
     //  variables with the same name and type are not equal if they are different objects
     data.addVariable(TermFactory.createVar("bing", TypeFactory.createSort("a")));
     data.addVariable(TermFactory.createVar("bing", TypeFactory.createSort("a")));
@@ -119,7 +119,7 @@ public class ParseDataTest {
 
   @Test
   public void testGenerateAlphabet() {
-    ParseData data = new ParseData();
+    SymbolData data = new SymbolData();
     FunctionSymbol bing = TermFactory.createConstant("bing", TypeFactory.createSort("a"));
     FunctionSymbol bong = TermFactory.createConstant("bong", TypeFactory.createSort("a"));
     Variable bang = TermFactory.createVar("bang", TypeFactory.createSort("b"));
@@ -144,7 +144,7 @@ public class ParseDataTest {
     symbols.add(bing);
     Alphabet alf = new Alphabet(symbols);
     TRS trs = TRSFactory.createMSTRS(alf, new ArrayList<Rule>());
-    ParseData data = new ParseData(trs);
+    SymbolData data = new SymbolData(trs);
 
     assertTrue(data.lookupFunctionSymbol("bing").equals(bing));
     assertTrue(data.lookupVariable("bing") == null);
@@ -162,7 +162,7 @@ public class ParseDataTest {
     symbols.add(bing);
     Alphabet alf = new Alphabet(symbols);
     TRS trs = TRSFactory.createMSTRS(alf, new ArrayList<Rule>());
-    ParseData data = new ParseData(trs);
+    SymbolData data = new SymbolData(trs);
 
     FunctionSymbol bong = TermFactory.createConstant("bing", TypeFactory.createSort("b"));
     data.addFunctionSymbol(bong);
