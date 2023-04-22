@@ -21,7 +21,7 @@ import cora.exceptions.ParserException;
 import cora.terms.Term;
 import cora.rewriting.TRS;
 import cora.parsers.CoraInputReader;
-import cora.parsers.TrsInputReader;
+import cora.parsing.TrsInputReader;
 
 /** Basic entry class: this reads a TRS and asks the user for a term, then reduces this term. */
 public class Main {
