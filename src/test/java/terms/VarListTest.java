@@ -26,8 +26,8 @@ import cora.types.TypeFactory;
 public class VarListTest {
   @Test
   public void testCreationWithThreeSimilarVariables() {
-    Variable x = new Var("x", TypeFactory.createSort("a"), false);
-    Var y = new Var("x", TypeFactory.createSort("a"), true);
+    Variable x = new Var("x", TypeFactory.createSort("a"));
+    Variable y = new Binder("x", TypeFactory.createSort("a"));
     ArrayList<Variable> vars = new ArrayList<Variable>();
     vars.add(x);
     vars.add(y);
@@ -42,7 +42,7 @@ public class VarListTest {
 
   @Test
   public void testSingleCreation() {
-    Var x = new Var("x", TypeFactory.createSort("a"), false);
+    Variable x = new Var("x", TypeFactory.createSort("a"));
     VarList lst = new VarList(x);
     assertTrue(lst.contains(x));
     assertTrue(lst.size() == 1);
@@ -50,9 +50,9 @@ public class VarListTest {
 
   @Test
   public void testAdd() {
-    Variable x = new Var("x", TypeFactory.createSort("a"), false);
-    Variable y = new Var("y", TypeFactory.createSort("a"), false);
-    Variable z = new Var("z", TypeFactory.createSort("a"), false);
+    Variable x = new Var("x", TypeFactory.createSort("a"));
+    Variable y = new Var("y", TypeFactory.createSort("a"));
+    Variable z = new Var("z", TypeFactory.createSort("a"));
     VariableList lst1 = new VarList(x);
     VariableList lst2 = lst1.add(y);
     VariableList lst3 = lst2.add(z);
@@ -65,9 +65,9 @@ public class VarListTest {
 
   @Test
   public void testRemove() {
-    Variable x = new Var("x", TypeFactory.createSort("a"), false);
-    Variable y = new Var("y", TypeFactory.createSort("a"), false);
-    Variable z = new Var("z", TypeFactory.createSort("a"), false);
+    Variable x = new Var("x", TypeFactory.createSort("a"));
+    Variable y = new Var("y", TypeFactory.createSort("a"));
+    Variable z = new Var("z", TypeFactory.createSort("a"));
     ArrayList<Variable> vars = new ArrayList<Variable>();
     vars.add(x);
     vars.add(y);
@@ -84,9 +84,9 @@ public class VarListTest {
 
   @Test
   public void testCombineEquals() {
-    Variable x = new Var("x", TypeFactory.createSort("a"), false);
-    Variable y = new Var("y", TypeFactory.createSort("a"), false);
-    Variable z = new Var("z", TypeFactory.createSort("a"), false);
+    Variable x = new Var("x", TypeFactory.createSort("a"));
+    Variable y = new Var("y", TypeFactory.createSort("a"));
+    Variable z = new Var("z", TypeFactory.createSort("a"));
     ArrayList<Variable> vars = new ArrayList<Variable>();
     vars.add(x);
     vars.add(y);
@@ -99,9 +99,9 @@ public class VarListTest {
 
   @Test
   public void testTrueCombination() {
-    Variable x = new Var("x", TypeFactory.createSort("a"), false);
-    Variable y = new Var("y", TypeFactory.createSort("a"), false);
-    Variable z = new Var("z", TypeFactory.createSort("a"), false);
+    Variable x = new Var("x", TypeFactory.createSort("a"));
+    Variable y = new Var("y", TypeFactory.createSort("a"));
+    Variable z = new Var("z", TypeFactory.createSort("a"));
     ArrayList<Variable> vars = new ArrayList<Variable>();
     vars.add(x);
     vars.add(y);
@@ -119,10 +119,10 @@ public class VarListTest {
 
    @Test
    public void testOverlap() {
-    Variable x = new Var("x", TypeFactory.createSort("a"), false);
-    Variable y = new Var("y", TypeFactory.createSort("a"), false);
-    Variable z = new Var("x", TypeFactory.createSort("a"), false);
-    Variable u = new Var("u", TypeFactory.createSort("b"), true);
+    Variable x = new Var("x", TypeFactory.createSort("a"));
+    Variable y = new Var("y", TypeFactory.createSort("a"));
+    Variable z = new Var("x", TypeFactory.createSort("a"));
+    Variable u = new Binder("u", TypeFactory.createSort("b"));
     ArrayList<Variable> vars1 = new ArrayList<Variable>();
     vars1.add(x);
     vars1.add(y);
@@ -146,20 +146,21 @@ public class VarListTest {
     Type b = TypeFactory.createSort("b");
     Type ab = TypeFactory.createArrow(a, b);
     TreeSet<Variable> set = new TreeSet<Variable>();
-    Variable x1 = new Var("x", a, false); set.add(x1);
-    Variable x2 = new Var("x", a, false); set.add(x2);
-    Variable x3 = new Var("x", b, true); set.add(x3);
-    Variable y = new Var("y", b, true); set.add(y);
-    Variable z1 = new Var("z", ab, true); set.add(z1);
-    Variable z2 = new Var("z", ab, false); set.add(z2);
+    Variable x1 = new Var("x", a); set.add(x1);
+    Variable x2 = new Var("x", a); set.add(x2);
+    Variable x3 = new Binder("x", b); set.add(x3);
+    Variable y = new Binder("y", b); set.add(y);
+    Variable z1 = new Binder("z", ab); set.add(z1);
+    Variable z2 = new Var("z", ab); set.add(z2);
     VarList lst = new VarList(set);
     TreeMap<Variable,String> naming = lst.getUniqueNaming();
+    System.out.println("x1 has been named: " + naming.get(x1));
     assertTrue(naming.get(x1).equals("x__1"));
     assertTrue(naming.get(x2).equals("x__2"));
     assertTrue(naming.get(x3).equals("x__3"));
     assertTrue(naming.get(y).equals("y"));
-    assertTrue(naming.get(z1).equals("z__1"));
-    assertTrue(naming.get(z2).equals("z__2"));
+    assertTrue(naming.get(z1).equals("z__2"));  // binders come after non-binders
+    assertTrue(naming.get(z2).equals("z__1"));
   }
 }
 

@@ -23,7 +23,7 @@ import cora.types.TypeFactory;
 public class TermFactory {
   /** Create a non-binder variable with the given name and type. */
   public static Variable createVar(String name, Type type) {
-    return new Var(name, type, false);
+    return new Var(name, type);
   }
 
   /**
@@ -31,22 +31,22 @@ public class TermFactory {
    * rewriting.
    */
   public static Variable createVar(String name) {
-    return new Var(name, TypeFactory.unitSort, false);
+    return new Var(name, TypeFactory.unitSort);
   }
 
   /** Create a non-binder variable without a name; a name will be automatically generated. */
   public static Variable createVar(Type type) {
-    return new Var(type, false);
+    return new Var(type);
   }
 
   /** Create a variable with auto-generated name and the unit sort, for unsorted rewriting. */
   public static Variable createVar() {
-    return new Var(TypeFactory.unitSort, false);
+    return new Var(TypeFactory.unitSort);
   }
 
   /** Create a binder variable with the given default name and type. */
   public static Variable createBinder(String name, Type type) {
-    return new Var(name, type, true);
+    return new Binder(name, type);
   }
 
   /** Create a function symbol with the given name and type. */

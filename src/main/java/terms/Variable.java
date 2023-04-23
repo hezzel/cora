@@ -46,7 +46,12 @@ public interface Variable extends Term, Comparable<Variable> {
   /** @return equality to another Variable */
   boolean equals(Variable x);
 
-  /** A variable is uniquely defined by its ID (two Variables are equal iff they share indexes). */
+  /**
+   * A variable is uniquely defined by the combination of its type, binder/free status, and its ID.
+   * Since distinct variables can have the same ID (for instance if one is a binder and the other a
+   * free variable), this is mostly intended for internal use, to support a total ordering on
+   * variables.
+   */
   int queryVariableIndex();
 
   /** Returns true if this is a binder variable, false if it is a non-binder variable. */

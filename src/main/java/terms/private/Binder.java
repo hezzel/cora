@@ -25,33 +25,34 @@ import cora.types.Type;
 import cora.types.TypeFactory;
 
 /**
- * Non-binder variables are both used as parts of constraints, as generic expressions in terms, and
- * as open spots for matching in rules; this class represents all those kinds of variables.
- * Variables have a name for printing purposes, but are not uniquely defined by it (distinct
- * variables may have the same name and type, although this will typically be avoided within a
- * single term).  Rather, variables are uniquely identified by an internally kept index (along with
- * their binder/non-binder status).  By construction, no non-binder variables with an index greater
- * than COUNTER can exist in the program.
+ * Binders are variables in Vbinder: variables that are only meant to be used as binders in an
+ * abstraction (and the corresponding occurrences in the term), not for matching purposes.
+ * Like all variables, Binders have a name for printing purposes, but are not in any way defined by
+ * it; variables are likely to be renamed while printing, with the basic name only used as a
+ * suggestion for what the printed name should look like.  Hence, binder variables can have the
+ * same name and type, but still be unequal.  Rather, they are uniquely identified by an internally
+ * kept index.  By construction, no binder variables with an index greater than COUNTER can exist
+ * in the program.
  */
-class Var extends LeafTermInherit implements Variable {
+class Binder extends LeafTermInherit implements Variable {
   private static int COUNTER = 0;
   private String _name;
   private int _index;
 
-  /** Create a non-binder variable with the given name and type. */
-  Var(String name, Type type) {
+  /** Create a binder variable with the given name and type. */
+  Binder(String name, Type type) {
     super(type);
     _name = name;
     _index = COUNTER;
     COUNTER++;
-    if (name == null) throw new NullInitialisationError("Var", "name");
+    if (name == null) throw new NullInitialisationError("Binder", "name");
     setVariables(new VarList(this));
   }
 
-  /** Create a non-binder variable without a name; a name will be automatically generated. */
-  Var(Type type) {
+  /** Create a binder variable without a name; a name will be automatically generated. */
+  Binder(Type type) {
     super(type);
-    _name = "X{" + COUNTER + "}";
+    _name = "x{" + COUNTER + "}";
     _index = COUNTER;
     COUNTER++;
   }
@@ -68,28 +69,26 @@ class Var extends LeafTermInherit implements Variable {
   /** @return false */
   public boolean isFunctionalTerm() { return false; }
 
-  /** @return false */
-  public boolean isBinderVariable() { return false; }
-
   /** @return true */
-  public boolean isApplicative() { return true; }
+  public boolean isBinderVariable() { return true; }
 
-  /** @return true if the type is base */
-  public boolean isFirstOrder() {
-    return queryType().isBaseType();
-  }
+  /** @return false (binder variables do not occur in applicative terms) */
+  public boolean isApplicative() { return false; }
+
+  /** @return false (binder variables do not occur in first-order terms) */
+  public boolean isFirstOrder() { return false; }
 
   /** Returns the name this variable was set up with. */
   public String queryName() {
     return _name;
   }
 
-  /** @return an integer uniquely identifying this non-binder variable */
+  /** @return an integer uniquely identifying this binder variable */
   public int queryVariableIndex() {
     return _index;
   }
 
-  /** Appends the name of te variable to the builder. */
+  /** Appends the name of the variable to the builder. */
   public void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid) {
     if (renaming == null || !renaming.containsKey(this)) builder.append(_name);
     else builder.append(renaming.get(this));
@@ -102,12 +101,12 @@ class Var extends LeafTermInherit implements Variable {
 
   /** @throws InappropriatePatternDataError, as a variable does not have a function symbol root */
   public FunctionSymbol queryRoot() {
-    throw new InappropriatePatternDataError("Var", "queryRoot", "functional terms");
+    throw new InappropriatePatternDataError("Binder", "queryRoot", "functional terms");
   }
 
   /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */
   public Term substitute(Substitution gamma) {
-    if (gamma == null) throw new NullCallError("Var", "substitute", "substitution gamma");
+    if (gamma == null) throw new NullCallError("Binder", "substitute", "substitution gamma");
     return gamma.getReplacement(this);
   }
 
@@ -120,42 +119,48 @@ class Var extends LeafTermInherit implements Variable {
    * If other or gamma is null, then a NullCallError is thrown instead.
    */
   public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullCallError("Var", "match", "other (matched term)");
-    if (gamma == null) throw new NullCallError("Var", "match", "gamma (matching substitution");
+    if (other == null) throw new NullCallError("Binder", "match", "other (matched term)");
+    if (gamma == null) throw new NullCallError("Binder", "match", "gamma (matching substitution");
 
     Term previous = gamma.get(this);
     
     if (previous == null) {
       if (!other.queryType().equals(queryType())) {
-        return "Variable " + _name + " has a different type from " + other.toString() + ".";
+        return "Binder " + _name + " has a different type from " + other.toString() + ".";
       }
       gamma.extend(this, other);
       return null;
     }   
     else if (previous.equals(other)) return null;
-    else return "Variable " + _name + " mapped both to " + previous.toString() + " and to " +
+    else return "Binder " + _name + " mapped both to " + previous.toString() + " and to " +
       other.toString() + ".";
   }
 
   /**
-   * Two variables are equal if and only if they share an index, are both binder or non-binder,
-   * and have the same type.
+   * Two variables are equal if and only if they share an index, a type, and are both binder or
+   * both non-binder.
    * Currently, this can only occur if they are the same object, but this may change in the future.
    */
   public boolean equals(Variable other) {
-    return !other.isBinderVariable() && other.queryVariableIndex() == _index &&
+    return other.queryVariableIndex() == _index && other.isBinderVariable() &&
            queryType().equals(other.queryType());
   }
 
-  /** Alpha-equality of a non-binder variable to another variable holds iff they are the same. */
+  /**
+   * Alpha-equality of a binder to another binder holds if either mu[this] = xi[that], or both
+   * mu[this] and xi[that] are undefined and they are the same Variable.
+   */
   public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
-    return term.isVariable() && equals(term.queryVariable());
+    if (!term.isVariable()) return false;
+    if (mu.containsKey(this)) return mu.get(this).equals(xi.get(term.queryVariable()));
+    else if (xi.containsKey(term.queryVariable())) return false;
+    return equals(term.queryVariable());
   }
 
   /** Implements a total ordering on variables using the index. */
   public int compareTo(Variable other) {
-    if (other == this) return 0;    // shortcut
-    if (other.isBinderVariable()) return -1;
+    if (other == this) return 0;  // shortcut
+    if (!other.isBinderVariable()) return 1;
     if (_index < other.queryVariableIndex()) return -1;
     if (_index > other.queryVariableIndex()) return 1;
     return queryType().toString().compareTo(other.queryType().toString());

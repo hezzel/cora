@@ -24,10 +24,10 @@ import cora.types.TypeFactory;
 public class EnvTest {
   @Test
   public void testAddContains() {
-    Variable x = new Var("x", TypeFactory.createSort("a"), false);
-    Var y = new Var("y", TypeFactory.createSort("b"), true);
-    Var yy = new Var("y", TypeFactory.createSort("b"), true);
-    Var z = new Var("z", TypeFactory.createSort("b"), false);
+    Variable x = new Var("x", TypeFactory.createSort("a"));
+    Variable y = new Binder("y", TypeFactory.createSort("b"));
+    Variable yy = new Binder("y", TypeFactory.createSort("b"));
+    Variable z = new Var("z", TypeFactory.createSort("b"));
     Environment env = new Env();
     env.add(x);
     env.add(y);
@@ -39,7 +39,7 @@ public class EnvTest {
 
   @Test
   public void testAddVariableTwice() {
-    Variable x = new Var("x", TypeFactory.createSort("a"), false);
+    Variable x = new Var("x", TypeFactory.createSort("a"));
     Environment env = new Env();
     env.add(x);
     env.add(x);
@@ -49,8 +49,8 @@ public class EnvTest {
 
   @Test
   public void testAddingTwoVariablesWithTheSameName() {
-    Variable x = new Var("x", TypeFactory.createSort("a"), true);
-    Var y = new Var("x", TypeFactory.createSort("b"), true);
+    Variable x = new Binder("x", TypeFactory.createSort("a"));
+    Variable y = new Binder("x", TypeFactory.createSort("b"));
     Environment env = new Env();
     env.add(x);
     env.add(y);
@@ -61,8 +61,8 @@ public class EnvTest {
 
   @Test
   public void testCreationWithThreeSimilarVariables() {
-    Variable x = new Var("x", TypeFactory.createSort("a"), false);
-    Var y = new Var("x", TypeFactory.createSort("a"), true);
+    Variable x = new Var("x", TypeFactory.createSort("a"));
+    Variable y = new Binder("x", TypeFactory.createSort("a"));
     ArrayList<Variable> vars = new ArrayList<Variable>();
     vars.add(x);
     vars.add(y);
@@ -75,9 +75,9 @@ public class EnvTest {
 
   @Test
   public void testCopyingComplete() {
-    Variable x = new Var("x", TypeFactory.createSort("a"), false);
-    Variable y = new Var("y", TypeFactory.createSort("b"), true);
-    Variable z = new Var("z", TypeFactory.createSort("c"), true);
+    Variable x = new Var("x", TypeFactory.createSort("a"));
+    Variable y = new Binder("y", TypeFactory.createSort("b"));
+    Variable z = new Binder("z", TypeFactory.createSort("c"));
     Environment env = new Env();
     env.add(x);
     env.add(y);
@@ -98,9 +98,9 @@ public class EnvTest {
 
   @Test
   public void testImmutableCopy() {
-    Variable x = new Var("x", TypeFactory.createSort("a"), false);
-    Variable y = new Var("y", TypeFactory.createSort("b"), true);
-    Variable z = new Var("z", TypeFactory.createSort("c"), true);
+    Variable x = new Var("x", TypeFactory.createSort("a"));
+    Variable y = new Binder("y", TypeFactory.createSort("b"));
+    Variable z = new Binder("z", TypeFactory.createSort("c"));
     Environment env = new Env();
     env.add(x);
     env.add(y);

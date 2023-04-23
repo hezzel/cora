@@ -150,7 +150,7 @@ public class ConstantTest extends TermTestFoundation {
     Type c = baseType("c3");
     Type combi = arrowType(a, arrowType(b, c));
     Term f = new Constant("ff", combi);
-    Var x = new Var("ff", combi, false);
+    Variable x = new Var("ff", combi);
 
     assertTrue(f.queryType().equals(combi));
     assertTrue(f.isConstant());
@@ -183,7 +183,7 @@ public class ConstantTest extends TermTestFoundation {
     Type c = baseType("c3");
     Type combi = arrowType(a, arrowType(b, c));
     Term f = new Constant("ff", combi);
-    Var x = new Var("ff", combi, false);
+    Variable x = new Var("ff", combi);
 
     assertTrue(f.queryPositions().size() == 1);
     assertTrue(f.queryPositions().get(0).isEmpty());

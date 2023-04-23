@@ -211,7 +211,7 @@ class Abstraction extends TermInherit {
 
   /** (λx.s).substitute(γ) returns λz.(s.substitute(γ)), where z is fully fresh */
   public Term substitute(Substitution gamma) {
-    Variable freshvar = new Var(_binder.queryName(), _binder.queryType(), true);
+    Variable freshvar = new Binder(_binder.queryName(), _binder.queryType());
     Term subtermSubstitute;
     if (gamma.extend(_binder, freshvar)) {
       subtermSubstitute = _subterm.substitute(gamma);

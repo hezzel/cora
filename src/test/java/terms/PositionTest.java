@@ -149,8 +149,8 @@ public class PositionTest {
     assertTrue(pos.queryTail().queryArgumentPosition() == 1);
     
     Type o = TypeFactory.unitSort;
-    Var x = new Var("x", o, true);
-    Var y = new Var("y", o, true);
+    Variable x = new Binder("x", o);
+    Variable y = new Binder("y", o);
     Term g = new Constant("g", TypeFactory.createArrow(TypeFactory.createArrow(o, o), o));
     Term f = new Constant("f", TypeFactory.createArrow(o, o));
     Term fx = f.apply(x);
@@ -166,8 +166,8 @@ public class PositionTest {
   @Test
   public void testLambdaPath() {
     Type o = TypeFactory.unitSort;
-    Var x = new Var("x", o, true);
-    Var y = new Var("y", o, true);
+    Variable x = new Binder("x", o);
+    Variable y = new Binder("y", o);
     Term g = new Constant("g", TypeFactory.createArrow(TypeFactory.createArrow(o, o), o));
     Term f = new Constant("f", TypeFactory.createArrow(o, o));
     Term fx = f.apply(x);
@@ -189,8 +189,8 @@ public class PositionTest {
   @Test
   public void testLambdaPathInApplication() {
     Type o = TypeFactory.unitSort;
-    Var x = new Var("x", o, true);
-    Var y = new Var("y", o, true);
+    Variable x = new Binder("x", o);
+    Variable y = new Binder("y", o);
     Term g = new Constant("g", TypeFactory.createArrow(TypeFactory.createArrow(o, o), o));
     Term f = new Constant("f", TypeFactory.createArrow(o, o));
     Term fx = f.apply(x);
@@ -219,7 +219,7 @@ public class PositionTest {
 
   @Test(expected = IllegalArgumentError.class)
   public void testIllegalLambdaPathCreationDifferentTerms() {
-    Var x = new Var("x", TypeFactory.unitSort, true);
+    Variable x = new Binder("x", TypeFactory.unitSort);
     Term term = new Abstraction(x, x);
     new LambdaPath(term, new EmptyPath(term));
   }
