@@ -191,6 +191,7 @@ public class AbstractionTest extends TermTestFoundation {
     assertFalse(abs.isApplicative());
     assertFalse(abs.isFirstOrder());
     assertTrue(abs.numberArguments() == 0);
+    assertTrue(abs.numberMetaArguments() == 0);
     assertTrue(abs.queryArguments().size() == 0);
     assertTrue(abs.queryImmediateHeadSubterm(0) == abs);
     assertTrue(abs.queryAbstractionSubterm().toString().equals("f(x, λy.y)"));

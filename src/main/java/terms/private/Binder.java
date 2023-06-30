@@ -69,6 +69,9 @@ class Binder extends LeafTermInherit implements Variable {
   /** @return false */
   public boolean isFunctionalTerm() { return false; }
 
+  /** @return false */
+  public boolean isMetaApplication() { return false; }
+
   /** @return true */
   public boolean isBinderVariable() { return true; }
 
@@ -104,6 +107,12 @@ class Binder extends LeafTermInherit implements Variable {
     throw new InappropriatePatternDataError("Binder", "queryRoot", "functional terms");
   }
 
+  /** @throws InappropriatePatternDataError, as a binder variable cannot be a meta-variable */
+  public MetaVariable queryMetaVariable() {
+    throw new InappropriatePatternDataError("Binder", "queryMetaVariable",
+      "meta-variable applications");
+  }
+
   /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */
   public Term substitute(Substitution gamma) {
     if (gamma == null) throw new NullCallError("Binder", "substitute", "substitution gamma");
@@ -136,14 +145,9 @@ class Binder extends LeafTermInherit implements Variable {
       other.toString() + ".";
   }
 
-  /**
-   * Two variables are equal if and only if they share an index, a type, and are both binder or
-   * both non-binder.
-   * Currently, this can only occur if they are the same object, but this may change in the future.
-   */
+  /** Two variables are equal if and only if they are the same object. */
   public boolean equals(Variable other) {
-    return other.queryVariableIndex() == _index && other.isBinderVariable() &&
-           queryType().equals(other.queryType());
+    return other == this;
   }
 
   /**

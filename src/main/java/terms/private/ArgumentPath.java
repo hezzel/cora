@@ -15,9 +15,7 @@
 
 package cora.terms;
 
-import cora.exceptions.IllegalArgumentError;
-import cora.exceptions.IndexingError;
-import cora.exceptions.NullInitialisationError;
+import cora.exceptions.*;
 
 /**
  * An ArgumentPath is a position of the form i.pos, where i indicates the index of an argument
@@ -62,6 +60,10 @@ class ArgumentPath implements Path {
     return false;
   }
 
+  public boolean isMeta() {
+    return false;
+  }
+
   public Term queryAssociatedTerm() {
     return _topterm;
   }
@@ -72,6 +74,11 @@ class ArgumentPath implements Path {
 
   public int queryArgumentPosition() {
     return _argPos;
+  }
+
+  public int queryMetaPosition() {
+    throw new InappropriatePatternDataError("ArgumentPath", "queryMetaPosition",
+      "positions of the form !i.tail");
   }
 
   public Path queryTail() {

@@ -15,17 +15,28 @@
 
 package cora.terms;
 
+import cora.exceptions.IllegalArgumentError;
 import cora.exceptions.ParserError;
 
 public class PositionFactory {
   public static Position empty = new EmptyPosition();
 
   public static Position createArg(int index, Position tail) {
+    if (index <= 0) {
+      throw new IllegalArgumentError("PositionFactory", "createArg", "given index is not positive");
+    }
     return new ConsPosition(index, tail);
   }
 
   public static Position createLambda(Position tail) {
     return new ConsPosition(0, tail);
+  }
+
+  public static Position createMeta(int index, Position tail) {
+    if (index <= 0) {
+      throw new IllegalArgumentError("PositionFactory","createMeta","given index is not positive");
+    }
+    return new ConsPosition(-index, tail);
   }
 
   public static HeadPosition createHead(Position pos, int chop) {
@@ -62,12 +73,18 @@ public class PositionFactory {
       int dot = text.lastIndexOf('.', n-1);
       if (dot == n-1) throw new ParserError(1, dot+1, text, "empty position index");
       String part = text.substring(dot+1, n);
+      boolean meta = false;
+      if (part.length() > 0 && part.charAt(0) == '!') {
+        meta = true;
+        part = part.substring(1);
+      }
       int num;
       try { num = Integer.parseInt(part); }
       catch (NumberFormatException ex) {
         throw new ParserError(1, dot+1, part, "position index should be an integer");
       }
       if (num < 0) throw new ParserError(1, dot+1, part, "position index should be at least 0");
+      if (meta) num = -num;
       ret = new ConsPosition(num, ret);
       n = dot;
     }

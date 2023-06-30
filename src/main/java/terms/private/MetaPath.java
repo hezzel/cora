@@ -18,30 +18,34 @@ package cora.terms;
 import cora.exceptions.*;
 
 /**
- * A LambdaPath is a position of the form 0.pos, which indicates that we are passing into an
- * abstraction.  Since it is a path, it keeps track of the terms on the way from the top of the
- * term to the referenced subterm.
+ * A MetaPath is a position of the form !i.pos, where i indicates the index of a meta-argument in
+ * the corresponding meta-application and pos a position within that meta-argument.  Since it is a
+ * path, it keeps track of the terms on the way from the top of the term to the referenced subterm.
  */
-class LambdaPath implements Path {
+class MetaPath implements Path {
+  private int _argPos;
   private Path _tail;
   private Term _topterm;
   private Term _subterm;
 
   /** Should only be called by Terms; nothing outside the package. */
-  LambdaPath(Term myterm, Path tail) {
+  MetaPath(Term myterm, int argumentIndex, Path tail) {
+    _argPos = argumentIndex;
     _tail = tail;
-    if (tail == null) throw new NullInitialisationError("LambdaPath", "tail");
+    if (tail == null) throw new NullInitialisationError("ArgumentPath", "tail");
     _topterm = myterm;
-    if (myterm == null) throw new NullInitialisationError("LambdaPath", "myterm");
+    if (myterm == null) throw new NullInitialisationError("ArgumentPath", "myterm");
     _subterm = tail.queryCorrespondingSubterm();
-    if (!myterm.queryHead().isAbstraction()) {
-      throw new IllegalArgumentError("LambdaPath", "constructor",
-        "trying to create a lambda-path for non-lambda expression " + myterm);
+    if (!myterm.queryHead().isMetaApplication()) throw new IndexingError("MetaPath", "constructor",
+      argumentIndex);
+    if (argumentIndex <= 0 || argumentIndex > myterm.numberMetaArguments()) {
+      throw new IndexingError("MetaPath", "constructor", argumentIndex, 1,
+                              myterm.numberMetaArguments());
     }
-    if (myterm.queryAbstractionSubterm() != tail.queryAssociatedTerm()) {
-      throw new IllegalArgumentError("LambdaPath", "constructor", "immediate subterm of " +
-        myterm + " is " + myterm.queryAbstractionSubterm() + ", while tail refers to " +
-        tail.queryAssociatedTerm() + ".");
+    if (myterm.queryMetaArgument(argumentIndex) != tail.queryAssociatedTerm()) {
+      throw new IllegalArgumentError("MetaPath", "constructor", "subterm !" + argumentIndex +
+        " of " + myterm + " is " + myterm.queryMetaArgument(argumentIndex) +
+        ", while tail refers to " + tail.queryAssociatedTerm() + ".");
     }
   }
 
@@ -54,11 +58,11 @@ class LambdaPath implements Path {
   }
 
   public boolean isLambda() {
-    return true;
+    return false;
   }
 
   public boolean isMeta() {
-    return false;
+    return true;
   }
 
   public Term queryAssociatedTerm() {
@@ -70,13 +74,12 @@ class LambdaPath implements Path {
   }
 
   public int queryArgumentPosition() {
-    throw new InappropriatePatternDataError("LambdaPath", "queryArgumentPosition",
+    throw new InappropriatePatternDataError("MetaPath", "queryArgumentPosition",
       "positions of the form i.tail with i > 0");
   }
 
   public int queryMetaPosition() {
-    throw new InappropriatePatternDataError("LambdaPath", "queryMetaPosition",
-      "positions of the form !i.tail");
+    return _argPos;
   }
 
   public Path queryTail() {
@@ -84,12 +87,13 @@ class LambdaPath implements Path {
   }
 
   public boolean equals(Position other) {
-    return other.isLambda() &&
+    return other.isMeta() &&
+           other.queryMetaPosition() == _argPos &&
            _tail.equals(other.queryTail());
   }
 
   public String toString() {
-    return "0." + _tail.toString();
+    return "!" + _argPos + "." + _tail.toString();
   }
 }
 

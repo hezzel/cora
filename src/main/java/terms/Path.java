@@ -21,8 +21,8 @@ package cora.terms;
  * subterm associated to this position takes no extra time, and it is easy to investigate whether
  * its context satisfies certain requirements.
  * Note: like Position, all instances of Path must (and can be expected to) be immutable.
- * Also note: while positions are retained under alpha-conversion, subterms at these positions are
- * not: (λx.x)|)0 != (λy.y)|_0.  Hence, when using a Path, note that any binder variables in the
+ * Also note: while positions are preserved under alpha-conversion, subterms at these positions are
+ * not: (λx.x)|_0 != (λy.y)|_0.  Hence, when using a Path, note that any binder variables in the
  * "corresponding subterm" may end up differing from the original term if substitute() or
  * refreshBinders() is called on that.
  */

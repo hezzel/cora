@@ -57,6 +57,48 @@ abstract class TermInherit implements Term {
     else _boundVariables = bounds;
   }
 
+  /** Returns a combined variable list for the given subterms, which also includes extra. */
+  protected static VariableList calculateFreeVariablesForSubterms(List<Term> subs,
+                                                                  VariableList extra) {
+    VariableList largest = extra;
+    int best = 0;
+    for (int i = 0; i < subs.size(); i++) {
+      if (subs.get(i).vars().size() > largest.size()) {
+        best = i + 1;
+        largest = subs.get(i).vars();
+      }
+    }
+    // combine the rest into it!
+    VariableList frees = largest;
+    if (best != 0) frees = frees.combine(extra);
+    for (int i = 0; i < subs.size(); i++) {
+      if (best != i + 1) frees = frees.combine(subs.get(i).vars());
+    }
+    return frees;
+  }
+
+  /**
+   * Refreshes bound variables in the given list if necessary to ensure that they do not overlap
+   * with the variables in the given "avoid" set (to ensure well-behavedness of terms), and
+   * returns the resulting combined set of bound variables, including all those in "include".
+   */
+  protected static VariableList calculateBoundVariablesAndRefreshSubterms(List<Term> subs,
+                                                                          VariableList include,
+                                                                          VariableList avoid) {
+    for (int i = 0; i < subs.size(); i++) {
+      VariableList vs = subs.get(i).boundVars();
+      if (vs.size() > 0) {
+        if (!vs.getOverlap(avoid).isEmpty()) {
+          subs.set(i, subs.get(i).refreshBinders());
+          vs = subs.get(i).boundVars();
+        }
+        if (include.size() == 0) include = vs;
+        else include = include.combine(vs);
+      }   
+    }
+    return include;
+  }
+
   /** Returns the set of all variables occurring free in the current term. */
   public VariableList vars() {
     if (_freeVariables == null) throw new Error("Variable list has not been set up for " +

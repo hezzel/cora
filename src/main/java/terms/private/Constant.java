@@ -83,6 +83,9 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   /** @return true */
   public boolean isFunctionalTerm() { return true; }
 
+  /** @return false */
+  public boolean isMetaApplication() { return false; }
+
   /** @return true */
   public boolean isApplicative() { return true; }
 
@@ -100,6 +103,12 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   public Variable queryVariable() {
     throw new InappropriatePatternDataError("Constant", "queryVariable",
                                             "variables or lambda-expressions");
+  }
+
+  /** Throws an error, because a constant is not a meta-application (or associated with one). */
+  public MetaVariable queryMetaVariable() {
+    throw new InappropriatePatternDataError("Constant", "queryMetaVariable",
+                                            "meta-variable applications (or terms headed by one)");
   }
 
   /** Returns the current constant unmodified (there is nothing to substitute in a constant). */

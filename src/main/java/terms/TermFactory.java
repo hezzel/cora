@@ -17,6 +17,8 @@ package cora.terms;
 
 import java.util.List;
 import java.util.ArrayList;
+import cora.exceptions.ArityError;
+import cora.exceptions.IllegalArgumentError;
 import cora.types.Type;
 import cora.types.TypeFactory;
 
@@ -67,6 +69,22 @@ public class TermFactory {
     return new Application(f, args);
   }
 
+  /** Creates a meta-variable X with arity k */
+  public static MetaVariable createMetaVar(String name, Type type, int arity) {
+    if (arity == 0) return new Var(name, type);
+    if (arity < 0) throw new IllegalArgumentError("TermFactory", "createMetaVar",
+      "received negative arity " + arity + ".");
+    ArrayList<Type> inputs = new ArrayList<Type>();
+    for (int i = 0; i < arity; i++) {
+      if (!type.isArrowType()) throw new ArityError("TermFactory", "createMetaVar",
+        "trying to create a meta-variable with arity " + arity + " while the given type (" +
+        type.toString() + ") only has arity " + i);
+      inputs.add(type.queryArrowInputType());
+      type = type.queryArrowOutputType();
+    }
+    return new HigherMetaVar(name, inputs, type);
+  }
+
   /**
    * Create an application which takes one argument.  Here, head may be anything,
    * including another application.
@@ -98,6 +116,27 @@ public class TermFactory {
   /** Creates an abstraction λbinder.subterm */
   public static Term createAbstraction(Variable binder, Term subterm) {
     return new Abstraction(binder, subterm);
+  }
+
+  /** Creates a meta-application Z[args] */
+  public static Term createMeta(MetaVariable mv, List<Term> args) {
+    if (args != null && args.size() == 0 && (mv instanceof Var)) return (Var)mv;
+    return new MetaApplication(mv, args);
+  }
+
+  /** Create a meta-application Z[arg1] */
+  public static Term createMeta(MetaVariable mv, Term arg1) {
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(arg1);
+    return new MetaApplication(mv, args);
+  }
+
+  /** Create a meta-application Z[arg2] */
+  public static Term createMeta(MetaVariable mv, Term arg1, Term arg2) {
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(arg1);
+    args.add(arg2);
+    return new MetaApplication(mv, args);
   }
 
   /** Creates an empty substitution. */

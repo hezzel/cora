@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import cora.exceptions.InappropriatePatternDataError;
+import cora.exceptions.IndexingError;
 import cora.exceptions.NullCallError;
 import cora.exceptions.NullInitialisationError;
 import cora.types.Type;
@@ -27,13 +28,16 @@ import cora.types.TypeFactory;
 /**
  * Non-binder variables are both used as parts of constraints, as generic expressions in terms, and
  * as open spots for matching in rules; this class represents all those kinds of variables.
+ *
  * Variables have a name for printing purposes, but are not uniquely defined by it (distinct
  * variables may have the same name and type, although this will typically be avoided within a
  * single term).  Rather, variables are uniquely identified by an internally kept index (along with
  * their binder/non-binder status).  By construction, no non-binder variables with an index greater
  * than COUNTER can exist in the program.
+ *
+ * A non-binder variable is also a meta-variable with arity 0.
  */
-class Var extends LeafTermInherit implements Variable {
+class Var extends LeafTermInherit implements Variable, MetaVariable {
   private static int COUNTER = 0;
   private String _name;
   private int _index;
@@ -68,11 +72,17 @@ class Var extends LeafTermInherit implements Variable {
   /** @return false */
   public boolean isFunctionalTerm() { return false; }
 
+  /** @return true */
+  public boolean isMetaApplication() { return true; }
+
   /** @return false */
   public boolean isBinderVariable() { return false; }
 
   /** @return true */
   public boolean isApplicative() { return true; }
+
+  /** @return 0 */
+  public int queryArity() { return 0; }
 
   /** @return true if the type is base */
   public boolean isFirstOrder() {
@@ -89,6 +99,16 @@ class Var extends LeafTermInherit implements Variable {
     return _index;
   }
 
+  /** @return the type of this variable */
+  public Type queryOutputType() {
+    return queryType();
+  }
+
+  /** @throws an IndexingError, since there are no arguments */
+  public Type queryInputType(int index) {
+    throw new IndexingError("Var", "queryInputType", index);
+  }
+
   /** Appends the name of te variable to the builder. */
   public void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid) {
     if (renaming == null || !renaming.containsKey(this)) builder.append(_name);
@@ -97,6 +117,11 @@ class Var extends LeafTermInherit implements Variable {
 
   /** @return this */
   public Variable queryVariable() {
+    return this;
+  }
+
+  /** @return this */
+  public MetaVariable queryMetaVariable() {
     return this;
   }
 
@@ -137,14 +162,14 @@ class Var extends LeafTermInherit implements Variable {
       other.toString() + ".";
   }
 
-  /**
-   * Two variables are equal if and only if they share an index, are both binder or non-binder,
-   * and have the same type.
-   * Currently, this can only occur if they are the same object, but this may change in the future.
-   */
+  /** Two variables are equal if and only if they are the same object. */
   public boolean equals(Variable other) {
-    return !other.isBinderVariable() && other.queryVariableIndex() == _index &&
-           queryType().equals(other.queryType());
+    return other == this;
+  }
+
+  /** We are equal to another meta-variable if and only if it is the same as us. */
+  public boolean equals(MetaVariable other) {
+    return other == this;
   }
 
   /** Alpha-equality of a non-binder variable to another variable holds iff they are the same. */

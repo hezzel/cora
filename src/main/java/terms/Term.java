@@ -51,6 +51,9 @@ public interface Term {
   /** Returns whether or not the current term is a lambda-abstraction λx.s. */
   boolean isAbstraction();
 
+  /** Returns whether or not the current term is a meta-variable application Z⟨s1,...,sk⟩. */
+  boolean isMetaApplication();
+
   /** Returns whether or not the current term has the form (λx.t)(s1,...sn) with n > 0. */
   boolean isBetaRedex();
 
@@ -63,6 +66,9 @@ public interface Term {
   /** Returns the number of arguments; that is, n for a term f(s1,...,sn). */
   int numberArguments();
 
+  /** Returns the number of meta-arguments; that is, k for a term Z⟨t1,...,tk⟩(s1,...,sn). */
+  int numberMetaArguments();
+
   /** Returns the list of arguments; that is, [s1,...,sn] for a term f(s1,...,sn). */
   List<Term> queryArguments();
  
@@ -71,6 +77,13 @@ public interface Term {
    * Otherwise, this results in an IndexingError.
    */
   Term queryArgument(int i);
+
+  /**
+   * If the current term is a meta-variable application, and its variable has arity k, and
+   * 1 ≤ i ≤ k, this returns the thus indexed argument to the meta-variable application.
+   * Otherwise, this results in an IndexingError.
+   */
+  Term queryMetaArgument(int i);
 
   /**
    * If the present term is an abstraction λx.s or a beta-redex (λx.s)(t1,...,tn), this returns s.
@@ -103,12 +116,21 @@ public interface Term {
   Variable queryVariable();
 
   /**
+   * If the head of this term is a meta-application Z⟨s1,...,sk⟩, this returns Z.
+   * Otherwise, an InappropriatePatternDataError is thrown.
+   */
+  MetaVariable queryMetaVariable();
+
+  /**
    * Returns true if this term is first-order (so: the subterms at all positions have base type,
    * and no abstractions or variable applications are used), false otherwise.
    */
   boolean isFirstOrder();
 
-  /** Returns true if this term is a pattern (so: non-binder variables are not applied at all). */
+  /**
+   * Returns true if this term is a pattern (so: non-binder variables are not applied at all, and
+   * meta-variables 
+   */
   boolean isPattern();
 
   /** Returns true if this term is applicative (so: without binder variables or meta-application) */

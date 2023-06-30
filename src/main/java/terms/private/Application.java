@@ -35,39 +35,13 @@ class Application extends TermInherit {
    * the result of that function.
    */
   private void setupVariables() {
-    // find the largest of the free variable sets to combine the rest into 
-    VariableList largest = _head.vars();
-    int best = 0;
-    for (int i = 0; i < _args.size(); i++) {
-      if (_args.get(i).vars().size() > largest.size()) {
-        best = i + 1;
-        largest = _args.get(i).vars();
-      }
-    }
-    // combine the rest into it!
-    VariableList frees = largest;
-    if (best != 0) frees = frees.combine(_head.vars());
-    for (int i = 0; i < _args.size(); i++) {
-      if (best != i + 1) frees = frees.combine(_args.get(i).vars());
-    }
-    // combine all the bound variable sets, and recreate the binders if necessary to ensure
-    // well-behavedness
-    VariableList bounds = null;
-    if (_head.boundVars().size() > 0) {
-      if (!_head.boundVars().getOverlap(frees).isEmpty()) _head = _head.refreshBinders();
+    VariableList frees = calculateFreeVariablesForSubterms(_args, _head.vars());
+    VariableList bounds = _head.boundVars();
+    if (bounds.size() > 0 && !bounds.getOverlap(frees).isEmpty()) {
+      _head = _head.refreshBinders();
       bounds = _head.boundVars();
     }
-    for (int i = 0; i < _args.size(); i++) {
-      VariableList vs = _args.get(i).boundVars();
-      if (vs.size() > 0) {
-        if (!vs.getOverlap(frees).isEmpty()) {
-          _args.set(i, _args.get(i).refreshBinders());
-          vs = _args.get(i).boundVars();
-        }
-        if (bounds == null) bounds = vs;
-        else bounds = bounds.combine(vs);
-      }
-    }
+    bounds = calculateBoundVariablesAndRefreshSubterms(_args, bounds, frees);
     setVariables(frees, bounds);
   }
 
@@ -121,7 +95,7 @@ class Application extends TermInherit {
    * This constructor is used to create a term which takes one argument.
    * Throws an error if the head is null or does not have arity ≥ 1, or the argument is null.
    */
-  public Application(Term head, Term arg) {
+  Application(Term head, Term arg) {
     List<Term> args = new ArrayList<Term>();
     args.add(arg);
     construct(head, args);
@@ -131,7 +105,7 @@ class Application extends TermInherit {
    * This constructor is used to create a term which takes two arguments.
    * Throws an error if the head does not have arity ≥ 2, or one of the arguments is null.
    */
-  public Application(Term head, Term arg1, Term arg2) {
+  Application(Term head, Term arg1, Term arg2) {
     List<Term> args = new ArrayList<Term>();
     args.add(arg1);
     args.add(arg2);
@@ -143,7 +117,7 @@ class Application extends TermInherit {
    * Throws an error if n does not match the arity of the head, if args is empty or or if the
    * types of the arguments are not the expected input types of the head.
    */
-  public Application(Term head, List<Term> args) {
+  Application(Term head, List<Term> args) {
     if (args == null) throw new NullInitialisationError("Application", "argument list");
     construct(head, new ArrayList<Term>(args));
   }
@@ -183,6 +157,11 @@ class Application extends TermInherit {
     return _head.isVariable();
   }
 
+  /** @return false, since an application is not a meta-variable application. */
+  public boolean isMetaApplication() {
+    return false;
+  }
+
   /** Returns whether or not the head of this application is an abstraction. */
   public boolean isBetaRedex() {
     return _head.isAbstraction();
@@ -191,6 +170,11 @@ class Application extends TermInherit {
   /** For a term h(s1,...,sn), this returns n. */
   public int numberArguments() {
     return _args.size();
+  }
+
+  /** For a term h(s1,...,sn), this returns h.numberMetaArguments(). */
+  public int numberMetaArguments() {
+    return _head.numberMetaArguments();
   }
 
   /** Returns the list of all arguments, so [s1,...,sn] for h(s1,...,sn). */
@@ -204,6 +188,11 @@ class Application extends TermInherit {
       throw new IndexingError("Application", "queryArgument", i, 1, _args.size());
     }
     return _args.get(i-1);
+  }
+
+  /** For a term Z⟨t1,...,tk⟩(s1,...,sn), this returns ti, provided 1 ≤ i ≤ k. */
+  public Term queryMetaArgument(int i) {
+    return _head.queryMetaArgument(i);
   }
 
   /** For a term h(s1,...,sn) this returns h(s1,...,si). */
@@ -235,6 +224,11 @@ class Application extends TermInherit {
   /** @return the variable of the head. */
   public Variable queryVariable() {
     return _head.queryVariable();
+  }
+
+  /** @return the meta-variable of the head. */
+  public MetaVariable queryMetaVariable() {
+    return _head.queryMetaVariable();
   }
 
   /**

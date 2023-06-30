@@ -30,6 +30,10 @@ class EmptyPosition implements Position {
     return false;
   }
 
+  public boolean isMeta() {
+    return false;
+  }
+
   public boolean isLambda() {
     return false;
   }
@@ -39,9 +43,14 @@ class EmptyPosition implements Position {
       "positions of the form i.tail with i > 0");
   }
 
+  public int queryMetaPosition() {
+    throw new InappropriatePatternDataError("EmptyPosition", "queryMetaPosition",
+      "positions of the form !i.tail with i > 0");
+  }
+
   public Position queryTail() {
     throw new InappropriatePatternDataError("EmptyPosition", "queryTail",
-      "positions of the form i.tail with");
+      "positions of the form i.tail");
   }
 
   public boolean equals(Position other) {

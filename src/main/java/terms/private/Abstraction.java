@@ -82,6 +82,11 @@ class Abstraction extends TermInherit {
     return false;
   }
 
+  /** @return false, since an abstraction is not a meta-application */
+  public boolean isMetaApplication() {
+    return false;
+  }
+
   /** @return true, since this is indeed an abstraction */
   public boolean isAbstraction() {
     return true;
@@ -97,6 +102,11 @@ class Abstraction extends TermInherit {
     return 0;
   }
 
+  /** @return 0, since the subterm is not a meta-argument */
+  public int numberMetaArguments() {
+    return 0;
+  }
+
   /** @return the empty list, since the subterm is not an argument */
   public ArrayList<Term> queryArguments() {
     return new ArrayList<Term>();
@@ -105,6 +115,11 @@ class Abstraction extends TermInherit {
   /** @throws IndexingError, since the subterm is not an argument */
   public Term queryArgument(int i) {
     throw new IndexingError("Abstraction", "queryArgument", i);
+  }
+
+  /** @throws IndexingError, since the subterm is not an meta-argument */
+  public Term queryMetaArgument(int i) {
+    throw new IndexingError("Abstraction", "queryMetaArgument", i);
   }
 
   /** Either returns this (if i == 0) or throws an IndexingError. */
@@ -127,7 +142,13 @@ class Abstraction extends TermInherit {
    * @throws InappropriatePatternDataError, as an abstraction does not have a function symbol root
    */
   public FunctionSymbol queryRoot() {
-    throw new InappropriatePatternDataError("Var", "queryRoot", "functional terms");
+    throw new InappropriatePatternDataError("Abstraction", "queryRoot", "functional terms");
+  }
+
+  /** @throws InappropriatePatternDataError, as an abstraction is not a meta-application */
+  public MetaVariable queryMetaVariable() {
+    throw new InappropriatePatternDataError("Abstraction", "queryMetaVariable", "meta-variable " +
+      "applications or terms with meta-variable applications as the head");
   }
 
   /** @return the binder of the abstraction */

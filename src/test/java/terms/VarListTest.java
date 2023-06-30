@@ -154,7 +154,6 @@ public class VarListTest {
     Variable z2 = new Var("z", ab); set.add(z2);
     VarList lst = new VarList(set);
     TreeMap<Variable,String> naming = lst.getUniqueNaming();
-    System.out.println("x1 has been named: " + naming.get(x1));
     assertTrue(naming.get(x1).equals("x__1"));
     assertTrue(naming.get(x2).equals("x__2"));
     assertTrue(naming.get(x3).equals("x__3"));

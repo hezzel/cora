@@ -20,6 +20,7 @@ package cora.terms;
  * - ε, which refers to the current term
  * - [index] tail, where the term is h(s1,...,sn), index ∈ {1..n}, and tail a position in s_index
  * - [0] tail, where the term is λx.s or (λx.s)(t1,...,tn)  and tail a position in s
+ * - ![index] tail, where the term is Z[s1,...,sk], index ∈ {1..k}, and tail a position in s_index
  * So this does NOT include head positions.
  *
  * A Position can be used to find (and possibly replace) the subterm at that position.
@@ -36,12 +37,22 @@ public interface Position {
   /** Returns whether or not this is a lambda position. */
   public boolean isLambda();
 
+  /** Returns whether or not this is a meta position. */
+  public boolean isMeta();
+
   /**
    * If the position is in a subterm of argument si of an application h(s1,...,sn), this function
    * returns the index i of the relevant argument (1..n); otherwise it throws an
    * InappropriatePatternDataError.
    */
   public int queryArgumentPosition();
+
+  /**
+   * If the position is in a subterm of argument si of a meta-application Z⟨s1,...,sk⟩, this
+   * function returns the index i of the relevant argument (1..k); otherwise it throws an
+   * InappropriatePatternDataError.
+   */
+  public int queryMetaPosition();
 
   /**
    * If the position is in a subterm of some argument t, this function returns the position of

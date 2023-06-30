@@ -67,6 +67,11 @@ public class HeadPosition {
     return _pos.isLambda();
   }
 
+  /** Returns whether or not this is a head position of the form !i.tail with i ≥ 1. */
+  public boolean isMeta() {
+    return _pos.isMeta();
+  }
+
   /** Retuns whether this head position is actually a position (so nothing is chopped). */
   public boolean isPosition() {
     return _chop == 0;
@@ -79,6 +84,15 @@ public class HeadPosition {
    */
   public int queryArgumentPosition() {
     return _pos.queryArgumentPosition();
+  }
+
+  /**
+   * If the head position is in a subterm of argument si of a meta-application Z[s1,...,sk], this
+   * function returns the index i of the relevant argument (1..k); otherwise it throws an
+   * InappropriatePatternDataError.
+   */
+  public int queryMetaPosition() {
+    return _pos.queryMetaPosition();
   }
 
   /**

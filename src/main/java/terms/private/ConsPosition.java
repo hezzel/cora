@@ -32,8 +32,6 @@ class ConsPosition implements Position {
     _argPos = argumentIndex;
     _tail = tail;
     if (tail == null) throw new NullInitialisationError("ArgumentPosition", "tail");
-    if (_argPos < 0) throw new IllegalArgumentError("ConsPosition", "constructor",
-      "Trying to create a position with an index < 0.");
   }
 
   public boolean isEmpty() {
@@ -48,10 +46,24 @@ class ConsPosition implements Position {
     return _argPos == 0;
   }
 
+  public boolean isMeta() {
+    return _argPos < 0;
+  }
+
   public int queryArgumentPosition() {
     if (_argPos == 0) throw new InappropriatePatternDataError("ConsPosition for λ",
       "queryArgumentPosition", "ConsPosition for argument positions");
+    if (_argPos < 0) throw new InappropriatePatternDataError("ConsPosition for meta-application",
+      "queryArgumentPosition", "ConsPosition for argument positions");
     return _argPos;
+  }
+
+  public int queryMetaPosition() {
+    if (_argPos == 0) throw new InappropriatePatternDataError("ConsPosition for λ",
+      "queryMetaPosition", "ConsPosition for meta-application positions");
+    if (_argPos > 0) throw new InappropriatePatternDataError("ConsPosition for meta-application",
+      "queryMetaPosition", "ConsPosition for meta-application positions");
+    return -_argPos;
   }
 
   public Position queryTail() {
@@ -64,12 +76,18 @@ class ConsPosition implements Position {
              other.queryArgumentPosition() == _argPos &&
              _tail.equals(other.queryTail());
     }
+    else if (_argPos < 0) {
+      return other.isMeta() &&
+             other.queryMetaPosition() == -_argPos &&
+             _tail.equals(other.queryTail());
+    }
     else {
       return other.isLambda() && _tail.equals(other.queryTail());
     }
   }
 
   public String toString() {
+    if (_argPos < 0) return "!" + (-_argPos) + "." + _tail.toString();
     return "" + _argPos + "." + _tail.toString();
   }
 }

@@ -67,6 +67,11 @@ abstract class LeafTermInherit extends TermInherit {
     return 0;
   }
 
+  /** @return 0, since leaf terms do not have meta subterms */
+  public int numberMetaArguments() {
+    return 0;
+  }
+
   /** @return the empty list, since leaf terms do not have arguments */
   public ArrayList<Term> queryArguments() {
     return new ArrayList<Term>();
@@ -75,6 +80,11 @@ abstract class LeafTermInherit extends TermInherit {
   /** @throws IndexingError, as a leaf term does not have arguments */
   public Term queryArgument(int i) {
     throw new IndexingError(queryMyClassName(), "queryArgument", i); 
+  }
+
+  /** @throws IndexingError, as a leaf term does not have meta-arguments */
+  public Term queryMetaArgument(int i) {
+    throw new IndexingError(queryMyClassName(), "queryMetaArgument", i); 
   }
 
   /** Either returns this (if i == 0) or throws an IndexingError. */
