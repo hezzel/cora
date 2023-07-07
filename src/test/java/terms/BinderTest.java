@@ -100,7 +100,7 @@ public class BinderTest extends TermTestFoundation {
     assertFalse(s.isGround());
     assertTrue(s.refreshBinders() == s);
     assertTrue(x.isBinderVariable());
-    assertTrue(x.queryVariableIndex() != other.queryVariableIndex());
+    assertTrue(x.queryIndex() != other.queryIndex());
     Variable z = new Binder("z", arrowType("o", "o"));
     assertFalse(z.isFirstOrder());
     assertFalse(z.isApplicative());

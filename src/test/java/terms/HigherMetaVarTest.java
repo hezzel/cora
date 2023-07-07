@@ -86,10 +86,38 @@ public class HigherMetaVarTest {
     MetaVariable x = TermFactory.createMetaVar("xx", type, 3);
     assertTrue(x.queryName().equals("xx"));
     assertTrue(x.queryArity() == 3);
+    assertTrue(x.queryReplaceableKind() == Replaceable.KIND_METAVAR);
     assertTrue(x.queryInputType(1).equals(TypeFactory.createSort("a")));
     assertTrue(x.queryInputType(2).equals(TypeFactory.createSort("b")));
     assertTrue(x.queryInputType(3).equals(TypeFactory.createSort("c")));
     assertTrue(x.queryOutputType().toString().equals("d ⇒ e"));
     assertTrue(x.queryType().equals(type));
+  }
+
+  @Test
+  public void testMetavarIndexes() {
+    ArrayList<Type> inputs = new ArrayList<Type>();
+    inputs.add(TypeFactory.createSort("a"));
+    inputs.add(TypeFactory.createSort("b"));
+    MetaVariable z1 = new HigherMetaVar("z", inputs, TypeFactory.createSort("c"));
+    MetaVariable z2 = new HigherMetaVar("z", inputs, TypeFactory.createSort("c"));
+    assertTrue(z1.queryIndex() < z2.queryIndex());
+    assertTrue(z1.compareTo(z2) == -1);
+    assertTrue(z2.compareTo(z1) == 1);
+  }
+
+  @Test
+  public void testMetavarComparison() {
+    ArrayList<Type> inputs = new ArrayList<Type>();
+    inputs.add(TypeFactory.createSort("a"));
+    inputs.add(TypeFactory.createSort("b"));
+    Replaceable z = new HigherMetaVar("z", inputs, TypeFactory.createSort("c"));
+    Replaceable x = new Var("z", z.queryType());
+    Replaceable y = new Binder("z", x.queryType());
+    assertTrue(z.compareTo(z) == 0);
+    assertTrue(z.compareTo(x) < 0);
+    assertTrue(z.compareTo(y) < 0);
+    assertTrue(x.compareTo(z) > 0);
+    assertTrue(y.compareTo(z) > 0);
   }
 }

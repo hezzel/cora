@@ -265,12 +265,28 @@ class MetaApplication extends TermInherit {
 
   /**
    * This method replaces each variable x in the term by gamma(x) (or leaves x alone if x is not
-   * in the domain of gamma); the result is returned.
-   *
-   * TODO: actually implement this
+   * in the domain of gamma), and each meta-application Z[s1,...,sk] with γ(Z) = λx1...xk.t by
+   * t[x1:=s1γ,...,xk:=skγ]; the result is returned.
    */
   public Term substitute(Substitution gamma) {
-    return this;
+    if (gamma == null) throw new NullCallError("Application", "substitute", "substitution (gamma)");
+    ArrayList<Term> newArgs = new ArrayList<Term>();
+    for (int i = 0; i < _args.size(); i++) newArgs.add(_args.get(i).substitute(gamma));
+    Term value = gamma.get(_metavar);
+    if (value == null) return new MetaApplication(_metavar, newArgs);
+    Substitution delta = new Subst();
+    Term v = value;
+    for (int i = 0; i < newArgs.size(); i++) {
+      if (!v.isAbstraction()) {
+        throw new ArityError("MetaApplication", "substitute", "trying to substitute " +
+          "meta-variable in " + toString() + " by " + value.toString() +
+          ": there should be " + newArgs.size() + " abstractions!");
+      }
+      Variable x = v.queryVariable();
+      v = v.queryAbstractionSubterm();
+      delta.replace(x, newArgs.get(i));
+    }
+    return v.substitute(delta);
   }
 
   /**

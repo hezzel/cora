@@ -86,9 +86,19 @@ class Binder extends LeafTermInherit implements Variable {
     return _name;
   }
 
+  /** @return KIND_BINDER */
+  public int queryReplaceableKind() {
+    return Replaceable.KIND_BINDER;
+  }
+
   /** @return an integer uniquely identifying this binder variable */
-  public int queryVariableIndex() {
+  public int queryIndex() {
     return _index;
+  }
+
+  /** @return 0, since only meta-variables have an arity */
+  public int queryArity() {
+    return 0;
   }
 
   /** Appends the name of the variable to the builder. */
@@ -145,11 +155,6 @@ class Binder extends LeafTermInherit implements Variable {
       other.toString() + ".";
   }
 
-  /** Two variables are equal if and only if they are the same object. */
-  public boolean equals(Variable other) {
-    return other == this;
-  }
-
   /**
    * Alpha-equality of a binder to another binder holds if either mu[this] = xi[that], or both
    * mu[this] and xi[that] are undefined and they are the same Variable.
@@ -161,13 +166,24 @@ class Binder extends LeafTermInherit implements Variable {
     return equals(term.queryVariable());
   }
 
-  /** Implements a total ordering on variables using the index. */
-  public int compareTo(Variable other) {
+  /** Implements a total ordering on replaceables using the kind, index and type. */
+  public int compareTo(Replaceable other) {
     if (other == this) return 0;  // shortcut
-    if (!other.isBinderVariable()) return 1;
-    if (_index < other.queryVariableIndex()) return -1;
-    if (_index > other.queryVariableIndex()) return 1;
+    int d = other.queryReplaceableKind() - queryReplaceableKind();
+    if (d != 0) return d;
+    if (_index < other.queryIndex()) return -1;
+    if (_index > other.queryIndex()) return 1;
     return queryType().toString().compareTo(other.queryType().toString());
+  }
+
+  /** Shortcut: two replaceables are equal if and only if they are the same object. */
+  public boolean equals(Replaceable other) {
+    return other == this;
+  }
+
+  /** Shortcut: two variables are equal if and only if they are the same object. */
+  public boolean equals(Variable other) {
+    return other == this;
   }
 }
 

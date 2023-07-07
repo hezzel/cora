@@ -95,8 +95,12 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
   }
 
   /** @return an integer uniquely identifying this non-binder variable */
-  public int queryVariableIndex() {
+  public int queryIndex() {
     return _index;
+  }
+
+  public int queryReplaceableKind() {
+    return Replaceable.KIND_BASEVAR;
   }
 
   /** @return the type of this variable */
@@ -167,8 +171,8 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
     return other == this;
   }
 
-  /** We are equal to another meta-variable if and only if it is the same as us. */
-  public boolean equals(MetaVariable other) {
+  /** We are equal to another replaceable if and only if it is the same as us. */
+  public boolean equals(Replaceable other) {
     return other == this;
   }
 
@@ -177,12 +181,13 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
     return term.isVariable() && equals(term.queryVariable());
   }
 
-  /** Implements a total ordering on variables using the index. */
-  public int compareTo(Variable other) {
+  /** Implements a total ordering on replaceables using the kind, type and index. */
+  public int compareTo(Replaceable other) {
     if (other == this) return 0;    // shortcut
-    if (other.isBinderVariable()) return -1;
-    if (_index < other.queryVariableIndex()) return -1;
-    if (_index > other.queryVariableIndex()) return 1;
+    int d = other.queryReplaceableKind() - queryReplaceableKind();
+    if (d != 0) return d;
+    if (_index < other.queryIndex()) return -1; 
+    if (_index > other.queryIndex()) return 1;
     return queryType().toString().compareTo(other.queryType().toString());
   }
 }

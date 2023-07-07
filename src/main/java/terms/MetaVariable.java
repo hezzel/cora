@@ -29,7 +29,7 @@ import cora.types.Type;
  *
  * Note: all instances of MetaVariable must (and can be expected to) be immutable.
  */
-public interface MetaVariable {
+public interface MetaVariable extends Replaceable {
   /**
    * @return a string representation of the metavariable.
    * Metavariable names are not unique, and metavariables are not identified by their name.
@@ -53,8 +53,5 @@ public interface MetaVariable {
 
   /** @return σ_1 ⇒ ... ⇒ σ_k ⇒ τ if the current meta-variable has a type [σ_1 x ... x σ_k] ⇒ τ */
   Type queryType();
-
-  /** @return equality to another MetaVariable */
-  boolean equals(MetaVariable x);
 }
 

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import java.lang.Error;
 import java.util.Set;
 import java.util.ArrayList;
+import cora.exceptions.ArityError;
 import cora.exceptions.NullStorageError;
 import cora.exceptions.TypingError;
 import cora.types.Type;
@@ -28,6 +29,10 @@ import cora.types.TypeFactory;
 public class SubstitutionTest {
   private Type baseType(String name) {
     return TypeFactory.createSort(name);
+  }
+  
+  private Type arrowType(String left, String right) {
+    return TypeFactory.createArrow(baseType(left), baseType(right));
   }
 
   private Term constantTerm(String name, Type type) {
@@ -51,7 +56,14 @@ public class SubstitutionTest {
     Substitution gamma = new Subst(x, xterm);
   }
 
-  @Test(expected = NullStorageError.class)
+  @Test(expected = ArityError.class)
+  public void testIncorrectArityInCreation() {
+    MetaVariable x = TermFactory.createMetaVar("x", arrowType("o", "o"), 1);
+    Term xterm = constantTerm("a", arrowType("o", "o"));
+    Substitution gamma = new Subst(x, xterm);
+  }
+ 
+   @Test(expected = NullStorageError.class)
   public void testNullKeyExtension() {
     Substitution gamma = new Subst();
     Variable x = TermFactory.createVar("x", baseType("o"));
@@ -63,6 +75,15 @@ public class SubstitutionTest {
     Substitution gamma = new Subst();
     Variable x = TermFactory.createVar("x", baseType("o"));
     gamma.extend(x, null);
+  }
+
+  @Test(expected = ArityError.class)
+  public void testIncorrectArityExtension() {
+    MetaVariable z = TermFactory.createMetaVar("z", arrowType("o", "o"), 0);
+    Term zterm = constantTerm("a", arrowType("o", "o"));
+    Substitution gamma = new Subst(z, zterm);
+    MetaVariable y = TermFactory.createMetaVar("y", arrowType("o", "o"), 1);
+    gamma.extend(y, zterm);
   }
 
   @Test(expected = TypingError.class)
@@ -94,10 +115,19 @@ public class SubstitutionTest {
     Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("37", baseType("Int"));
     Substitution gamma = new Subst(x, xterm);
-    gamma.extend(x, constantTerm("false", baseType("Bool")));
+    gamma.replace(x, constantTerm("false", baseType("Bool")));
   }
- 
-  @Test
+
+  @Test(expected = ArityError.class)
+  public void testIncorrectArityReplacement() {
+    MetaVariable z = TermFactory.createMetaVar("z", arrowType("o", "o"), 1);
+    Variable x = TermFactory.createBinder("x", baseType("o"));
+    Term zterm = TermFactory.createAbstraction(x, x);
+    Substitution gamma = new Subst(z, zterm);
+    gamma.replace(z, constantTerm("37", zterm.queryType()));
+  }
+
+ @Test
   public void testEmptySubstitutionBasics() {
     Substitution gamma = new Subst();
     Variable x = TermFactory.createVar("x", baseType("o"));
@@ -118,6 +148,18 @@ public class SubstitutionTest {
     assertTrue(gamma.get(x).equals(xterm));
     assertTrue(gamma.get(y).equals(yterm));
     assertTrue(gamma.getReplacement(z).equals(z));
+  }
+
+  @Test
+  public void testExtendingWithMetavariable() {
+    MetaVariable z = TermFactory.createMetaVar("z", arrowType("o", "o"), 1);
+    Variable x = TermFactory.createBinder("x", baseType("o"));
+    Term zterm = TermFactory.createAbstraction(x, x);
+    Substitution gamma = new Subst(z, zterm);
+    MetaVariable y = TermFactory.createMetaVar("y", arrowType("o", "o"), 1);
+    assertTrue(gamma.get(z).equals(zterm));
+    assertTrue(gamma.get(y) == null);
+    assertTrue(gamma.extend(y, zterm));
   }
 
   @Test
@@ -191,7 +233,7 @@ public class SubstitutionTest {
     Substitution gamma = new Subst();
     gamma.extend(x, xterm);
     gamma.extend(y, yterm);
-    Set<Variable> domain = gamma.domain();
+    Set<Replaceable> domain = gamma.domain();
 
     assertTrue(domain.contains(x));
     assertTrue(domain.contains(y));

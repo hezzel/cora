@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,7 +15,6 @@
 
 package cora.terms;
 
-import java.lang.Comparable;
 import cora.types.Type;
 
 /**
@@ -33,26 +32,15 @@ import cora.types.Type;
  *
  * Note: all instances of Variable must (and can be expected to) be immutable.
  */
-public interface Variable extends Term, Comparable<Variable> {
+public interface Variable extends Term, Replaceable {
   /**
    * @return a string representation of the variable.
    * Variable names are not unique, and variables are not identified by their name.
    */
   String queryName();
 
-  /** @return the type of the variable */
-  Type queryType();
-
   /** @return equality to another Variable */
   boolean equals(Variable x);
-
-  /**
-   * A variable is uniquely defined by the combination of its type, binder/free status, and its ID.
-   * Since distinct variables can have the same ID (for instance if one is a binder and the other a
-   * free variable), this is mostly intended for internal use, to support a total ordering on
-   * variables.
-   */
-  int queryVariableIndex();
 
   /** Returns true if this is a binder variable, false if it is a non-binder variable. */
   public boolean isBinderVariable();

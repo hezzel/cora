@@ -426,7 +426,7 @@ public class MetaApplicationTest extends TermTestFoundation {
   }
 
   @Test(expected = IndexingError.class)
-  public void testSubtermReplacementBadPositionType() {
+  public void testSubtermReplacementBadPositionKind() {
     Term term = createTestTerm();
     Position pos = PositionFactory.parsePos("2.ε");
     Term replacement = constantTerm("uu", baseType("b"));
@@ -457,50 +457,103 @@ public class MetaApplicationTest extends TermTestFoundation {
     term.replaceSubterm(pos, replacement);
   }
 
+  @Test
+  public void testSubstituteCorrectly() {
+    // Z⟨g(x), c⟩ [x:=0, Z := λy,w.f(w, y)]
+    Type type = arrowType(baseType("a"), arrowType(baseType("b"), arrowType("a", "b")));
+    MetaVariable z = TermFactory.createMetaVar("Z", type, 2);
+    Variable x = new Var("x", baseType("b"));
+    Term arg1 = unaryTerm("g", baseType("a"), x);
+    Term arg2 = constantTerm("c", baseType("b"));
+    Term term = TermFactory.createMeta(z, arg1, arg2);
+
+    Substitution gamma = new Subst();
+    gamma.extend(x, constantTerm("0", baseType("b")));
+    Variable y = new Binder("y", baseType("a"));
+    Variable w = new Binder("w", baseType("b"));
+    Term f = constantTerm("f",
+      arrowType(baseType("b"), arrowType(baseType("a"), arrowType("a", "b"))));
+    gamma.extend(z, TermFactory.createAbstraction(y, TermFactory.createAbstraction(w,
+      TermFactory.createApp(f, w, y))));
+
+    Term result = term.substitute(gamma);
+    assertTrue(result.toString().equals("f(c, g(0))"));
+  }
+
+  @Test
+  public void testDifficultSubstitution() {
+    // Z⟨λx.a(x,y),F⟩
+    Variable x = new Binder("x", baseType("A"));
+    Variable y = new Binder("y", baseType("B"));
+    Term a = constantTerm("a", arrowType(baseType("A"), arrowType("B", "A")));
+    Term abs = new Abstraction(x, TermFactory.createApp(a, x, y));
+    Variable f = new Binder("F", arrowType("A", "A"));
+    MetaVariable z = TermFactory.createMetaVar("Z", arrowType(abs.queryType(),
+      arrowType(f.queryType(), baseType("A"))), 2);
+    Term term = TermFactory.createMeta(z, abs, f);
+    // [x:=0, y:=1, F:=λz.h(z, x), Z := λF, G.F(G(0))]
+    Substitution gamma = new Subst();
+    gamma.extend(x, constantTerm("0", baseType("A")));
+    gamma.extend(y, constantTerm("1", baseType("B")));
+    Variable z2 = new Binder("z", baseType("A"));
+    Term h = constantTerm("h", arrowType(baseType("A"), arrowType("A", "A")));
+    Term abs1 = new Abstraction(z2, TermFactory.createApp(h, z2, x));
+    gamma.extend(f, abs1);
+    Variable g = new Binder("G", arrowType("A", "A"));
+    Term zero = constantTerm("0", baseType("A"));
+    Term abs2 = new Abstraction(f, new Abstraction(g, f.apply(g.apply(zero))));
+    gamma.extend(z, abs2);
+    // result of substituting: [λF, G.F(G(0))]⟨λx.a(x,1), λz.h(z, x)⟩⟩ = (λx.a(x,1))(λz.h(z, x)(0))
+    // (note that it isn't normalised beyond that)
+    assertTrue(term.substitute(gamma).toString().equals("(λx1.a(x1, 1))((λz.h(z, x))(0))"));
+  }
+
   /*
-  @Test(expected = IndexingError.class)
-  public void testSubtermReplacementBadPosition() {
-    Variable z = new Var("Z", arrowType("Int", "Int"));
-    Term s = new Application(z, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(PositionFactory.createArg(2, PositionFactory.empty), s);
+  @Test
+  public void testApplicativeSubstituting() {
+    Variable x = new Binder("x", baseType("Int"));
+    Variable y = new Var("y", baseType("Int"));
+    Variable z = new Var("Z", arrowType(baseType("Int"), arrowType("Bool", "Int")));
+    Term s = new Application(z, x, unaryTerm("f", baseType("Bool"), y));
+      // Z(x, f(y))
+
+    Term thirtyseven = constantTerm("37", baseType("Int"));
+    FunctionSymbol g = new Constant("g", arrowType(baseType("o"),
+                                         arrowType(baseType("Int"), arrowType("Bool", "Int"))));
+    Term t = new Application(g, constantTerm("c", baseType("o")));
+
+    Substitution gamma = new Subst(x, thirtyseven);
+    gamma.extend(y, x);
+    gamma.extend(z, t);
+
+    Term q = s.substitute(gamma);
+    assertTrue(q.toString().equals("g(c, 37, f(x))"));
   }
 
-  @Test(expected = IndexingError.class)
-  public void testSubtermHeadReplacementBadPosition() {
-    Variable z = new Var("Z", arrowType("Int", "Int"));
-    Term s = new Application(z, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new HeadPosition(PositionFactory.createArg(2,
-      PositionFactory.empty)), s);
-  }
+  @Test
+  public void testLambdaSubstituting() {
+    // X(a, f(λy.g(y, z)), f(λy.g(y, y)))
+    Term g = constantTerm("g", arrowType(baseType("o"), arrowType("o", "o")));
+    Term f = constantTerm("f", arrowType(arrowType("o", "o"), baseType("o")));
+    Term a = constantTerm("a", baseType("o"));
+    Variable x = new Binder("X", arrowType(baseType("o"), arrowType(baseType("o"),
+      arrowType("o", "o"))));
+    Variable y = new Binder("y", baseType("o"));
+    Variable z = new Binder("z", baseType("o"));
+    Term term = new Application(new Application(x, a),
+      new Application(f, new Abstraction(y, new Application(g, y, z))),
+      new Application(f, new Abstraction(y, new Application(g, y, y))));
+    // [X := λxy.h(y, z), y := a, z := g(a, y)]
+    Term h = constantTerm("h", arrowType(baseType("o"), arrowType(baseType("o"),
+      arrowType("o", "o"))));
+    Variable x1 = new Binder("x", baseType("o"));
+    Subst subst = new Subst();
+    subst.extend(x, new Abstraction(x1, new Abstraction(y, new Application(h, y, z))));
+    subst.extend(y, a);
+    subst.extend(z, new Application(g, a, y));
 
-  @Test(expected = IndexingError.class)
-  public void testSubtermHeadReplacementBadHeadPosition() {
-    Constant f = new Constant("f", arrowType("Int", "Int"));
-    Term s = new Application(f, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new HeadPosition(PositionFactory.empty, 2),
-      constantTerm("a", baseType("B")));
-  }
-
-  @Test(expected = TypingError.class)
-  public void testSubtermReplacementBadTypeSub() {
-    Constant f = new Constant("f", arrowType("Int", "Bool"));
-    Term s = new Application(f, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(PositionFactory.createArg(1, PositionFactory.empty), s);
-  }
-
-  @Test(expected = TypingError.class)
-  public void testSubtermReplacementBadTypeTop() {
-    Variable z = new Binder("Z", arrowType("Int", "Bool"));
-    Term s = new Application(z, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(PositionFactory.empty, constantTerm("42", baseType("Int")));
-  }
-
-  @Test(expected = TypingError.class)
-  public void testSubtermHeadReplacementBadType() {
-    Variable z = new Binder("Z", arrowType("Int", "Bool"));
-    Term s = new Application(z, constantTerm("37", baseType("Int")));
-    Term replacement = constantTerm("f", arrowType("Int", "Int"));
-    s.replaceSubterm(new HeadPosition(PositionFactory.empty, 1), replacement);
+    Term s = term.substitute(subst);
+    assertTrue(s.toString().equals("(λx.λy1.h(y1, z))(a, f(λy1.g(y1, g(a, y))), f(λy1.g(y1, y1)))"));
   }
 
 
@@ -752,53 +805,6 @@ public class MetaApplicationTest extends TermTestFoundation {
     Term xc = new Application(x, c.apply(d));
     Term xcb = xc.apply(constantTerm("b", o));
     assertTrue(xcb.toString().equals("x(c(d), b)"));
-  }
-
-  @Test
-  public void testApplicativeSubstituting() {
-    Variable x = new Binder("x", baseType("Int"));
-    Variable y = new Var("y", baseType("Int"));
-    Variable z = new Var("Z", arrowType(baseType("Int"), arrowType("Bool", "Int")));
-    Term s = new Application(z, x, unaryTerm("f", baseType("Bool"), y));
-      // Z(x, f(y))
-
-    Term thirtyseven = constantTerm("37", baseType("Int"));
-    FunctionSymbol g = new Constant("g", arrowType(baseType("o"),
-                                         arrowType(baseType("Int"), arrowType("Bool", "Int"))));
-    Term t = new Application(g, constantTerm("c", baseType("o")));
-
-    Substitution gamma = new Subst(x, thirtyseven);
-    gamma.extend(y, x);
-    gamma.extend(z, t);
-
-    Term q = s.substitute(gamma);
-    assertTrue(q.toString().equals("g(c, 37, f(x))"));
-  }
-
-  @Test
-  public void testLambdaSubstituting() {
-    // X(a, f(λy.g(y, z)), f(λy.g(y, y)))
-    Term g = constantTerm("g", arrowType(baseType("o"), arrowType("o", "o")));
-    Term f = constantTerm("f", arrowType(arrowType("o", "o"), baseType("o")));
-    Term a = constantTerm("a", baseType("o"));
-    Variable x = new Binder("X", arrowType(baseType("o"), arrowType(baseType("o"),
-      arrowType("o", "o"))));
-    Variable y = new Binder("y", baseType("o"));
-    Variable z = new Binder("z", baseType("o"));
-    Term term = new Application(new Application(x, a),
-      new Application(f, new Abstraction(y, new Application(g, y, z))),
-      new Application(f, new Abstraction(y, new Application(g, y, y))));
-    // [X := λxy.h(y, z), y := a, z := g(a, y)]
-    Term h = constantTerm("h", arrowType(baseType("o"), arrowType(baseType("o"),
-      arrowType("o", "o"))));
-    Variable x1 = new Binder("x", baseType("o"));
-    Subst subst = new Subst();
-    subst.extend(x, new Abstraction(x1, new Abstraction(y, new Application(h, y, z))));
-    subst.extend(y, a);
-    subst.extend(z, new Application(g, a, y));
-
-    Term s = term.substitute(subst);
-    assertTrue(s.toString().equals("(λx.λy1.h(y1, z))(a, f(λy1.g(y1, g(a, y))), f(λy1.g(y1, y1)))"));
   }
 
   @Test

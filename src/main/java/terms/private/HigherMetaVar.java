@@ -26,14 +26,18 @@ import cora.types.TypeFactory;
  * This class is for Meta-variables of higher type; that is, arity ≥ 1.
  */
 class HigherMetaVar implements MetaVariable {
+  private static int _COUNTER = 0;
   private String _name;
   private ArrayList<Type> _inputs;
   private Type _output;
+  private int _index;
 
   HigherMetaVar(String name, ArrayList<Type> inputs, Type output) {
     _name = name;
     _inputs = inputs;
     _output = output;
+    _index = _COUNTER;
+    _COUNTER++;
     if (name == null) throw new NullInitialisationError("HigherMetaVar", "name");
     if (inputs == null) throw new NullInitialisationError("HigherMetaVar", "inputs");
     if (output == null) throw new NullInitialisationError("HigherMetaVar", "output");
@@ -53,8 +57,16 @@ class HigherMetaVar implements MetaVariable {
     return _name;
   }
 
+  public int queryIndex() {
+    return _index;
+  }
+
   public int queryArity() {
     return _inputs.size();
+  }
+
+  public int queryReplaceableKind() {
+    return Replaceable.KIND_METAVAR;
   }
 
   public Type queryInputType(int i) {
@@ -73,8 +85,20 @@ class HigherMetaVar implements MetaVariable {
     return ret;
   }
 
-  /** Two meta-variables are equal if and only if they are the same object. */
-  public boolean equals(MetaVariable other) {
+  public int compareTo(Replaceable other) {
+    if (other == this) return 0;    // shortcut
+    int d = other.queryReplaceableKind() - queryReplaceableKind();
+    if (d != 0) return d;
+    d = _index - other.queryIndex();
+    if (d != 0) return d;
+    d = _inputs.size() - other.queryArity();
+    if (d != 0) return d;
+    // we really shouldn't get here, but just in case...
+    return queryType().toString().compareTo(other.queryType().toString());
+  }
+
+  /** Two replaceables are equal if and only if they are the same object. */
+  public boolean equals(Replaceable other) {
     return other == this;
   }
 
