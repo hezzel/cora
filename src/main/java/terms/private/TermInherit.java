@@ -26,53 +26,53 @@ import cora.exceptions.IndexingError;
  * A TermInherit supplies default functionality for all instances of Term.
  * This is the functionality that calls other functions in Term to for instance build up a
  * substitution or environment.
- * All inheriting classes should make sure to call setVariables in their constructor, to set up the
- * set of variables occurring in the term.
+ * All inheriting classes should make sure to call setVariables in their constructor, to set up
+ * the set of variables and meta-variables occurring in the term.
  */
 abstract class TermInherit implements Term {
-  private VariableList _freeVariables;
-  private VariableList _boundVariables;
+  private ReplaceableList _freeReplaceables;
+  private ReplaceableList _boundVariables;
 
   /**
-   * Sets the set of all free variables occurring in this term to vs, and the set of bound
-   * variables to empty.
+   * Sets the set of all meta-variables and free variables occurring in this term to vs, and the
+   * set of bound variables to empty.
    * One of the setVariables functions should be called from the constructor, and only there.
    */
-  protected void setVariables(VariableList vs) {
-    if (_freeVariables != null) throw new Error("Setting VariableList twice for " +
+  protected void setVariables(ReplaceableList vs) {
+    if (_freeReplaceables != null) throw new Error("Setting ReplaceableList twice for " +
       this.getClass().getSimpleName());
-    _freeVariables = vs;
-    _boundVariables = VarList.EMPTY;
+    _freeReplaceables = vs;
+    _boundVariables = ReplaceableList.EMPTY;
   }
 
   /**
-   * Sets the sets of all free and all bound variables occuring in this term.
+   * Sets the sets of all free/meta and all bound variables occuring in this term.
    * One of the setVariables functions should be called from the constructor, and only there.
    */
-  protected void setVariables(VariableList frees, VariableList bounds) {
-    if (_freeVariables != null) throw new Error("Setting VariableList twice for " +
+  protected void setVariables(ReplaceableList frees, ReplaceableList bounds) {
+    if (_freeReplaceables != null) throw new Error("Setting ReplaceableList twice for " +
       this.getClass().getSimpleName());
-    _freeVariables = frees;
-    if (bounds == null) _boundVariables = VarList.EMPTY;
+    _freeReplaceables = frees;
+    if (bounds == null) _boundVariables = ReplaceableList.EMPTY;
     else _boundVariables = bounds;
   }
 
-  /** Returns a combined variable list for the given subterms, which also includes extra. */
-  protected static VariableList calculateFreeVariablesForSubterms(List<Term> subs,
-                                                                  VariableList extra) {
-    VariableList largest = extra;
+  /** Returns a combined replaceable list for the given subterms, which also includes extra. */
+  protected static ReplaceableList calculateFreeReplaceablesForSubterms(List<Term> subs,
+                                                                        ReplaceableList extra) {
+    ReplaceableList largest = extra;
     int best = 0;
     for (int i = 0; i < subs.size(); i++) {
-      if (subs.get(i).vars().size() > largest.size()) {
+      if (subs.get(i).freeReplaceables().size() > largest.size()) {
         best = i + 1;
-        largest = subs.get(i).vars();
+        largest = subs.get(i).freeReplaceables();
       }
     }
     // combine the rest into it!
-    VariableList frees = largest;
+    ReplaceableList frees = largest;
     if (best != 0) frees = frees.combine(extra);
     for (int i = 0; i < subs.size(); i++) {
-      if (best != i + 1) frees = frees.combine(subs.get(i).vars());
+      if (best != i + 1) frees = frees.combine(subs.get(i).freeReplaceables());
     }
     return frees;
   }
@@ -82,11 +82,11 @@ abstract class TermInherit implements Term {
    * with the variables in the given "avoid" set (to ensure well-behavedness of terms), and
    * returns the resulting combined set of bound variables, including all those in "include".
    */
-  protected static VariableList calculateBoundVariablesAndRefreshSubterms(List<Term> subs,
-                                                                          VariableList include,
-                                                                          VariableList avoid) {
+  protected static ReplaceableList calculateBoundVariablesAndRefreshSubs(List<Term> subs,
+                                                                         ReplaceableList include,
+                                                                         ReplaceableList avoid) {
     for (int i = 0; i < subs.size(); i++) {
-      VariableList vs = subs.get(i).boundVars();
+      ReplaceableList vs = subs.get(i).boundVars();
       if (vs.size() > 0) {
         if (!vs.getOverlap(avoid).isEmpty()) {
           subs.set(i, subs.get(i).refreshBinders());
@@ -100,16 +100,30 @@ abstract class TermInherit implements Term {
   }
 
   /** Returns the set of all variables occurring free in the current term. */
-  public VariableList vars() {
-    if (_freeVariables == null) throw new Error("Variable list has not been set up for " +
-      this.getClass().getSimpleName());
-    return _freeVariables;
+  public Environment<Variable> vars() {
+    if (_freeReplaceables == null) throw new Error("Variable list requested when it has not been " +
+      "set up for " + this.getClass().getSimpleName());
+    return new VariableEnvironment(_freeReplaceables);
+  }
+
+  /** Returns the set of all meta-variables occurring in the current term. */
+  public Environment<MetaVariable> mvars() {
+    if (_freeReplaceables == null) throw new Error("Meta-variable list requested when it has not " +
+      "been set up for " + this.getClass().getSimpleName());
+    return new MetaVariableEnvironment(_freeReplaceables);
+  }
+
+  /** Returns the set of all meta-variables and variables occurring free in the current term. */
+  public ReplaceableList freeReplaceables() {
+    if (_freeReplaceables == null) throw new Error("Replaceable list has not been set up for " +
+      this.getClass().getSimpleName() + " when requesting free replaceables.");
+    return _freeReplaceables;
   }
 
   /** Returns the set of all variables occurring bound in the current term. */
-  public VariableList boundVars() {
-    if (_freeVariables == null) throw new Error("Variable list has not been set up for " +
-      this.getClass().getSimpleName());
+  public ReplaceableList boundVars() {
+    if (_freeReplaceables == null) throw new Error("Replaceable list has not been set up for " +
+      this.getClass().getSimpleName() + " when requesting bound variables");
     return _boundVariables;
   }
 
@@ -127,16 +141,25 @@ abstract class TermInherit implements Term {
     return null;
   }
 
-  /** Returns true if the set vars() is empty. */
+  /** Returns true if there are no free variables (meta-variables are allowed). */
   public boolean isGround() {
-    return vars().size() == 0;
+    return _freeReplaceables.size() == 0;
   }
 
-  /** Returns true if vars() contains only non-binder variables. */
+  /** Returns true if freeReplaceables() contains no binder variables. */
   public boolean isClosed() {
-    VariableList vs = vars();
-    for (Variable x : vs) {
-      if (x.isBinderVariable()) return false;
+    ReplaceableList vs = freeReplaceables();
+    for (Replaceable x : vs) {
+      if (x.queryReplaceableKind() == Replaceable.KIND_BINDER) return false;
+    }
+    return true;
+  }
+
+  /** Returns true if freeReplaceables() contains no meta-variables. */
+  public boolean isTrueTerm() {
+    ReplaceableList vs = freeReplaceables();
+    for (Replaceable x : vs) {
+      if (x.queryReplaceableKind() == Replaceable.KIND_METAVAR) return false;
     }
     return true;
   }
@@ -169,7 +192,7 @@ abstract class TermInherit implements Term {
     return head.apply(args.subList(0, args.size()-chop));
   }
 
-  /** Returns te present term with all binder-variables replaced by fresh ones. */
+  /** Returns the present term with all binder-variables replaced by fresh ones. */
   public Term refreshBinders() {
     return substitute(new Subst());
   }
@@ -200,20 +223,25 @@ abstract class TermInherit implements Term {
   /** This method returns a string representation of the current term. */
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    addToString(builder, _freeVariables.getUniqueNaming());
+    addToString(builder, _freeReplaceables.getUniqueNaming());
     return builder.toString();
   }
 
   /** This function adds a representation of the current term to the given builder. */
-  public void addToString(StringBuilder builder, Map<Variable,String> renaming) {
+  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming) {
     TreeSet<String> avoid = new TreeSet<String>();
-    if (renaming == null) renaming = new TreeMap<Variable,String>();
-    for (Variable x : _freeVariables) {
+    if (renaming == null) renaming = new TreeMap<Replaceable,String>();
+    for (Replaceable x : _freeReplaceables) {
       String name = x.queryName();
       avoid.add(name);
       if (renaming.containsKey(x)) avoid.add(renaming.get(x));
     }
     addToString(builder, renaming, avoid);
+  }
+
+  /** This function returns the default unique naming scheme for this term. */
+  public TreeMap<Replaceable,String> getUniqueNaming() {
+    return _freeReplaceables.getUniqueNaming();
   }
 }
 

@@ -84,6 +84,28 @@ public class RuleTest {
     Rule rule = RuleFactory.createApplicativeRule(a, g.apply(TermFactory.createAbstraction(z, z)));
   }
 
+  @Test(expected = IllegalRuleError.class)
+  public void testCMSRuleWithMetaVariables() {
+    // f(λx.Z⟨x⟩) → a
+    Term f = TermFactory.createConstant("f", type("(o ⇒ o) ⇒ o"));
+    Variable x = TermFactory.createBinder("x", type("o"));
+    MetaVariable z = TermFactory.createMetaVar("Z", type("o ⇒ o"), 1);
+    Term left = f.apply(TermFactory.createAbstraction(x, TermFactory.createMeta(z, x)));
+    Term right = makeConstant("a", "o");
+    Rule rule = RuleFactory.createCFSRule(left, right);
+  }
+
+  @Test(expected = IllegalRuleError.class)
+  public void testNonPatternRule() {
+    // f(λx.Z(x)) → a
+    Term f = TermFactory.createConstant("f", type("(o ⇒ o) ⇒ o"));
+    Variable x = TermFactory.createBinder("x", type("o"));
+    Variable z = TermFactory.createVar("Z", type("o ⇒ o"));
+    Term left = f.apply(TermFactory.createAbstraction(x, z.apply(x)));
+    Term right = makeConstant("a", "o");
+    Rule rule = RuleFactory.createPatternRule(left, right);
+  }
+
   @Test
   public void testVariableNaming() {
     // f(x, y) → g(y, λz.z) -- except all variables have the same default name
@@ -94,7 +116,7 @@ public class RuleTest {
     FunctionSymbol g = makeConstant("g", "b ⇒ (c ⇒ c) ⇒ d");
     Term left = TermFactory.createApp(f, x, y);
     Term right = TermFactory.createApp(g, y, TermFactory.createAbstraction(z, z));
-    Rule rule = RuleFactory.createRule(left, right);
+    Rule rule = RuleFactory.createCFSRule(left, right);
     assertTrue(rule.toString().equals("f(x__1, x__2) → g(x__2, λx1.x1)"));
   }
 
@@ -114,9 +136,10 @@ public class RuleTest {
     assertTrue(rule.toString().equals("f(λx.x(a), y) → y"));
     assertFalse(rule.isApplicative());
 
-    rule = RuleFactory.createRule(y, y);
+    rule = RuleFactory.createPatternRule(y, y);
     assertTrue(rule.toString().equals("y → y"));
     assertTrue(rule.isApplicative());
+    assertTrue(rule.isPattenrRule());
   }
 
   @Test

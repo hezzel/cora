@@ -47,8 +47,8 @@ class Abstraction extends TermInherit {
     _binder = binder;
     _subterm = subterm;
     _type = TypeFactory.createArrow(binder.queryType(), subterm.queryType());
-    VariableList frees = subterm.vars().remove(binder);
-    VariableList bounds = subterm.boundVars().add(binder);
+    ReplaceableList frees = subterm.freeReplaceables().remove(binder);
+    ReplaceableList bounds = subterm.boundVars().add(binder);
     setVariables(frees, bounds);
   }
 
@@ -278,9 +278,9 @@ class Abstraction extends TermInherit {
 
     if (ret != null) return ret;
 
-    for (Variable z : vars()) {
+    for (Replaceable z : freeReplaceables()) {
       Term gammaz = gamma.get(z);
-      if (gammaz != null && gammaz.vars().contains(y)) {
+      if (gammaz != null && gammaz.freeReplaceables().contains(y)) {
         return "Abstraction " + toString() + " is not instantiated by " + other.toString() +
           " because the induced mapping [" + z.toString() + " := " + gammaz.toString() +
           "] contains the binder variable of " + other.toString() + ".";
@@ -294,7 +294,7 @@ class Abstraction extends TermInherit {
    * Appends a string representation of the current abstraction to the given string builder.
    * The binder is renamed if its default name occurs in avoid.
    */
-  public void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid) {
+  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming, Set<String> avoid) {
     String bname = _binder.queryName();
     String name = bname;
     for (int i = 1; avoid.contains(name); i++) name = bname + i;

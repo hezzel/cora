@@ -110,9 +110,9 @@ public class VarTest extends TermTestFoundation {
   }
 
   @Test
-  public void testTermVarVars() {
+  public void testTermVarReplaceables() {
     Variable x = new Var("x", baseType("oo"));
-    VariableList lst = x.vars();
+    ReplaceableList lst = x.freeReplaceables();
     assertTrue(lst.size() == 1);
     assertTrue(lst.contains(x));
     assertTrue(x.boundVars().size() == 0);
@@ -287,7 +287,7 @@ public class VarTest extends TermTestFoundation {
     StringBuilder builder = new StringBuilder();
     x.addToString(builder, null);
     builder.append(" ");
-    TreeMap<Variable,String> map = new TreeMap<Variable,String>();
+    TreeMap<Replaceable,String> map = new TreeMap<Replaceable,String>();
     x.addToString(builder, map, new TreeSet<String>());
     builder.append(" ");
     map.put(x, "y");

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import cora.exceptions.*;
 import cora.types.Type;
 import cora.types.TypeFactory;
@@ -61,11 +62,13 @@ class MetaApplication extends TermInherit {
       }
       if (!arg.queryType().equals(mvar.queryInputType(i+1))) {
         throw new TypingError("MetaApplication", "constructor", "arg " + (i+1) + " of " +
-          mvar.toString(), arg.queryType().toString(), mvar.queryInputType(i).toString());
+          mvar.toString(), arg.queryType().toString(), mvar.queryInputType(i+1).toString());
       }
     }
-    VariableList frees = calculateFreeVariablesForSubterms(_args, VarList.EMPTY);
-    VariableList bounds = calculateBoundVariablesAndRefreshSubterms(_args, VarList.EMPTY, frees);
+    ReplaceableList empty = ReplaceableList.EMPTY;
+    ReplaceableList start = new ReplaceableList(_metavar);
+    ReplaceableList frees = calculateFreeReplaceablesForSubterms(_args, start);
+    ReplaceableList bounds = calculateBoundVariablesAndRefreshSubs(_args, empty, frees);
     setVariables(frees, bounds);
   }
 
@@ -178,7 +181,7 @@ class MetaApplication extends TermInherit {
 
   /** Returns true if this meta-application is applied to distinct binder variables. */
   public boolean isPattern() {
-    if (vars().size() != _args.size()) return false;
+    if (freeReplaceables().size() != _args.size() + 1) return false;
     for (int i = 0; i < _args.size(); i++) {
       if (!_args.get(i).isVariable()) return false;
       if (!_args.get(i).queryVariable().isBinderVariable()) return false;
@@ -292,17 +295,64 @@ class MetaApplication extends TermInherit {
   /**
    * This method either extends gamma so that <this term> gamma = other and returns null, or
    * returns a string describing why other is not an instance of gamma.
-   * TODO: actually implement this.
+   * This function may only be called if the meta-application is a semi-pattern; that is, the
+   * arguments to this meta-variable are all binder variables, and are substituted to distinct
+   * binder variables.  If any of the arguments violates this restriction, a PatternRequiredError
+   * is thrown.
    */
   public String match(Term other, Substitution gamma) {
     if (other == null) throw new NullCallError("Application", "match", "argument term (other)");
     if (gamma == null) throw new NullCallError("Application", "match", "substitution (gamma)");
-    return "TODO: meta-application matching has not yet been implemented.";
+    // get all the substituted arguments, and make sure they are distinct bound variables
+    ArrayList<Variable> substitutedArgs = new ArrayList<Variable>();
+    TreeSet<Variable> set = new TreeSet<Variable>();
+    for (int i = 0; i < _args.size(); i++) {
+      if (!_args.get(i).isVariable()) throw new PatternRequiredError(toString(), "match",
+        "argument " + (i+1) + " (" + _args.get(i) + ") is not a variable.");
+      Variable x = _args.get(i).queryVariable();
+      if (!x.isBinderVariable()) throw new PatternRequiredError(toString(), "match",
+        "argument " + (i+1) + " ( " + x.toString() + ") is not a binder variable.");
+      Term replacement = gamma.get(x);
+      if (replacement == null) throw new PatternRequiredError(toString(), "match",
+        "argument " + (i+1) + " ( " + x.toString() + ") is not bound above " + toString() + ".");
+      if (!replacement.isVariable()) throw new PatternRequiredError(toString(), "match",
+        "argument " + (i+1) + " ( " + x.toString() + ") is substituted to " +
+        replacement.toString() + " in the context, which is not a variable.");
+      Variable y = replacement.queryVariable();
+      if (!y.isBinderVariable()) throw new PatternRequiredError(toString(), "match",
+        "argument " + (i+1) + " ( " + x.toString() + ") is substituted to " +
+        y.toString() + " in the context, which is a non-binder variable.");
+      substitutedArgs.add(y);
+      if (set.contains(y)) throw new PatternRequiredError(toString(), "match",
+        "duplicate argument to meta-variable: argument " + (i+1) + " ( " + x.toString() + ") is " +
+        "substituted to " + y.toString() + " which occurred before.");
+      set.add(y);
+    }
+    // create abstraction
+    Term ret = other;
+    for (int i = substitutedArgs.size()-1; i >= 0; i--) {
+      ret = new Abstraction(substitutedArgs.get(i), ret);
+    }
+    // check if the type matches (and perhaps a previous match), and add the mapping!
+    Term previous = gamma.get(_metavar);
+    if (previous == null) {
+      if (!other.queryType().equals(queryType())) {
+        return "Cannot match " + toString() + " against " + other.toString() + " as types do not " +
+          "match.";
+      }
+      gamma.extend(_metavar, ret);
+      return null;
+    }
+    else if (previous.equals(ret)) return null;
+    else return "Meta-variable " + _metavar.toString() + " is mapped to both " +
+      previous.toString() + " and to " + ret.toString() + ".";
   }
 
   /** This method gives a string representation of the term. */
-  public void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid) {
-    builder.append(_metavar.queryName());
+  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
+                          Set<String> avoid) {
+    if (renaming == null || !renaming.containsKey(_metavar)) builder.append(_metavar.queryName());
+    else builder.append(renaming.get(_metavar));
     builder.append("⟨");
     _args.get(0).addToString(builder, renaming, avoid);
     for (int i = 1; i < _args.size(); i++) {

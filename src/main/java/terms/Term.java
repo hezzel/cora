@@ -21,10 +21,10 @@ import java.util.Set;
 import cora.types.Type;
 
 /**
- * Terms are the main object to be rewritten.  There are various kinds of terms,
- * currently including functional terms f(s1,...,sk), var terms x(s1,...,xk), and
- * abstractions λx.s.
- * In the future it is likely that additional constructions will be allowed.
+ * Terms are the main object to be rewritten, or used to construct rules.  There are various kinds
+ * of terms: functional terms f(s1,...,sn), var terms x(s1,...,xn), abstractions λx.s and
+ * meta-applications Z⟨s1,...,sk⟩.  (The latter would traditionally be considered a _meta_term
+ * rather than a term, but it is convenient to use the same interface for it.)
  *
  * Note: all instances of Term must (and can be expected to) be immutable.
  */
@@ -57,11 +57,14 @@ public interface Term {
   /** Returns whether or not the current term has the form (λx.t)(s1,...sn) with n > 0. */
   boolean isBetaRedex();
 
-  /** Returns whether the set of variables is empty. */
+  /** Returns whether the sets of variables and meta-variables are empty. */
   boolean isGround();
 
   /** Returns whether the set of variables contains only non-binder variables. */
   boolean isClosed();
+
+  /** Returns whether the set of meta-variables is emtpy. */
+  boolean isTrueTerm();
   
   /** Returns the number of arguments; that is, n for a term f(s1,...,sn). */
   int numberArguments();
@@ -159,19 +162,28 @@ public interface Term {
    */
   List<HeadPosition> queryHeadPositions();
 
-  /** 
-   * Returns the set of all free variables that occur in the current term.
-   * This is efficient, as it returns a cached set.
-   * Note that two α-equal terms will have the same set of bound variables.
+  /**
+   * Returns the set of all variables occurring freely in the current term.  This may be both binder
+   * variables and free variables.
+   * Note that two α-equal terms will have the same set of variables.
    */
-  VariableList vars();
+  Environment<Variable> vars();
 
   /**
-   * Returns the set of all variables that occur bound in the current term.
-   * This is efficient, as it returns a cached set.
-   * Note that if two terms are α-equal, they don't need to have the same set of bound variables.
+   * Returns the set of all meta-variables that occur in the current term.  Note that, for closed
+   * terms, this includes vars(), but it may also include higher meta-variables.
    */
-  VariableList boundVars();
+  Environment<MetaVariable> mvars();
+
+  /** 
+   * Returns the set of all variables that occur freely in the current term, alongside all
+   * meta-variables that occur in it.  All are cast as Replaceables (the parent class for
+   * Variable and MetaVariable).
+   * This is efficient, as it returns a cached set.
+   * This function is primarily meant for package-internal use, but may be used outside the package
+   * by some classes.  If you want either variables or meta-variables, use vars() or mvars().
+   */
+  ReplaceableList freeReplaceables();
 
   /**
    * Returns the subterm at the given position, assuming that this is indeed a position of the
@@ -207,7 +219,8 @@ public interface Term {
 
   /**
    * This method replaces each variable x in the term by gamma(x) (or leaves x alone if x is not
-   * in the domain of gamma); the result is returned.
+   * in the domain of gamma), and similarly replaces Z⟨s1,...,sk⟩ with gamma(Z) = λx1...xk.t by
+   * t[x1:=s1 gamma,...,xk:=sk gamma]; the result is returned.
    * The original term remains unaltered.  Gamma may be *temporarily* altered to apply the
    * substitution, but is the same at the end of the function as at the start.
    * Note that the result of substituting is a term where all binders in lambdas are freshly
@@ -230,13 +243,36 @@ public interface Term {
   Substitution match(Term other);
 
   /**
+   * Provides a string representation of the current term.  Here, variables and meta-variables are
+   * renamed as needed to avoid distinct (meta-)variables having the same name.
+   */
+  String toString();
+
+  /**
    * Adds the string representation of the current term to the given string builder.
+   * The caller may rename some meta-variables and free variables by including those in "renaming";
+   * if the mapping for a (meta-)variable is not given, then its default name is used (but note
+   * that it is not guaranteed that different variables in the same Term have different names).
    * Some free variables may be renamed; if the mapping for a variable is not given, then the
    * default name for that variable is used.
-   * (To get a suitable renaming, you can use vars().getUniqueNaming().  You can also supply null,
+   * To get a suitable renaming, callers can use getUniqueNaming().  You can also supply null,
    * which has the same effect as supplying an empty mapping: no free variables are renamed.)
    */
-  void addToString(StringBuilder builder, Map<Variable,String> renaming);
+  void addToString(StringBuilder builder, Map<Replaceable,String> renaming);
+
+  /**
+   * This function returns a unique name for every variable and meta-variable occurring in the
+   * term.  For use in addToString.
+   */
+  Map<Replaceable,String> getUniqueNaming();
+
+  /**
+   * Performs an equality check with the given other term.
+   * Equality is modulo alpha (but this is only relevant for higher-order rewriting with lambdas).
+   */
+  boolean equals(Term term);
+
+  /* ======== the following functions are intended for internal use in the terms package ======== */
 
   /**
    * Replaces all the binders in lambdas by fresh variables.
@@ -247,20 +283,21 @@ public interface Term {
 
   /**
    * Adds the string representation of the current term to the given string builder.
-   * Some free variables may be renamed; if the mapping for a variable is not given, then the
-   * default name for that variable is used.
+   * Some meta-variables and free variables may be renamed by incluing them in "renaming"; if the
+   * mapping for a (meta-)variable is not given, then the default name for that variable is used.
    * For names of bound variables, none of the names in the "avoid" set are allowed to be used.
    * The renaming and avoid set may not be null.
    * (This function is primarily intended for the recursive definition of terms; for functions
     *outside the terms package, it is recommended to use the other addToString function instead.)
    */
-  void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid);
+  void addToString(StringBuilder builder, Map<Replaceable,String> renaming, Set<String> avoid);
 
   /**
-   * Performs an equality check with the given other term.
-   * Equality is modulo alpha (but this is only relevant for higher-order rewriting with lambdas).
+   * Returns the set of all variables that occur bound in the current term, cast as Replaceables.
+   * This is efficient, as it returns a cached set.
+   * It is meant for package-intenral use only.  Use vars() or mvars() outside the package.
    */
-  boolean equals(Term term);
+  ReplaceableList boundVars();
 
   /** Determines the =_α^{μ,ξ,k} relation as described in the documentation. */
   boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k);

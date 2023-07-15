@@ -118,6 +118,9 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.queryHead().equals(t.queryRoot()));
     assertTrue(t.queryHead().queryType().toString().equals("a ⇒ b ⇒ a"));
     assertTrue(t.queryType().equals(baseType("a")));
+    assertTrue(t.isClosed());
+    assertTrue(t.isGround());
+    assertTrue(t.isTrueTerm());
     assertTrue(t.toString().equals("f(c, g(d))"));
     Term q = null;
     assertFalse(t.equals(q));
@@ -140,6 +143,9 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.queryHead().queryType().toString().equals("a ⇒ b ⇒ a"));
     assertTrue(t.queryType().equals(baseType("a")));
     assertTrue(t.toString().equals("x(c, g(y))"));
+    assertTrue(t.isClosed());
+    assertFalse(t.isGround());
+    assertTrue(t.isTrueTerm());
   }
 
   @Test
@@ -364,8 +370,9 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testFreeVars() {
-    // let's create: Z(Z(x,h(λz.c(z))),g(y,x)), where Z, x and y are variables
+  public void testFreeReplaceables() {
+    // let's create: Z(Z(x,h(λz.c(z))),g(J[y],x)), where Z, x and y are variables and J is a
+    // meta-variable
     Variable z = new Binder("Z", arrowType(baseType("a"),arrowType("b","a")));
     FunctionSymbol g = new Constant("g", arrowType(baseType("b"),arrowType("a","b")));
     FunctionSymbol c = new Constant("c", arrowType("o", "o"));
@@ -373,26 +380,29 @@ public class ApplicationTest extends TermTestFoundation {
     Variable x = new Binder("x", baseType("a"));
     Variable y = new Var("y", baseType("b"));
     Variable z2 = new Binder("z", baseType("o"));
+    MetaVariable j = TermFactory.createMetaVar("J", arrowType("b", "b"), 1);
+    Term jy = TermFactory.createMeta(j, y);
     Term hlambdazcz = new Application(h, new Abstraction(z2, c.apply(z2)));
-    Term s = new Application(z, new Application(z, x, hlambdazcz), new Application(g, y, x));
-    VariableList lst = s.vars();
+    Term s = new Application(z, new Application(z, x, hlambdazcz), new Application(g, jy, x));
+    ReplaceableList lst = s.freeReplaceables();
     assertTrue(lst.contains(x));
     assertTrue(lst.contains(y));
     assertTrue(lst.contains(z));
-    assertTrue(lst.size() == 3);
+    assertTrue(lst.contains(j));
+    assertTrue(lst.size() == 4);
   }
 
   @Test
-  public void testFreeVarsReuse() {
+  public void testFreeReplaceablesReuse() {
     // let's create: f(g(x), h(y,y))
     Variable x = new Var("x", baseType("o"));
     Variable y = new Var("x", baseType("o"));
     Term gx = unaryTerm("g", baseType("o"), x);
     Term hyy = TermFactory.createConstant("h", 2).apply(y).apply(y);
     Term term = TermFactory.createConstant("f", 2).apply(gx).apply(hyy);
-    assertTrue(gx.vars() == x.vars());
-    assertTrue(hyy.vars() == y.vars());
-    assertTrue(term.vars().size() == 2);
+    assertTrue(gx.freeReplaceables() == x.freeReplaceables());
+    assertTrue(hyy.freeReplaceables() == y.freeReplaceables());
+    assertTrue(term.freeReplaceables().size() == 2);
   }
 
   @Test
@@ -415,8 +425,8 @@ public class ApplicationTest extends TermTestFoundation {
     Term aZx = new Abstraction(x, new Application(bZ, x));
     Term fterm = new Application(f, aZx, bY).apply(gterm);
 
-    VariableList freeVars = fterm.vars();
-    VariableList boundVars = fterm.boundVars();
+    ReplaceableList freeVars = fterm.freeReplaceables();
+    ReplaceableList boundVars = fterm.boundVars();
     assertTrue(freeVars.size() == 3);
     assertTrue(boundVars.size() == 3);
     assertTrue(boundVars.contains(x));
@@ -455,6 +465,34 @@ public class ApplicationTest extends TermTestFoundation {
     Term term3 = new Application(i, ax, afterm);
     assertTrue(term3.boundVars() == afterm.boundVars());
     assertFalse(afterm.boundVars() == fterm.boundVars());
+  }
+
+  @Test
+  public void testMVars() {
+    // let's create: a(f(Z[X], X), Y[b])
+    Variable a = new Binder("a", arrowType(baseType("o"), arrowType("o", "o")));
+    Variable b = new Binder("b", baseType("o"));
+    Var x = new Var("Y", baseType("o"));
+    MetaVariable y = TermFactory.createMetaVar("Y", arrowType("o", "o"), 1);
+    MetaVariable z = TermFactory.createMetaVar("Z", arrowType("o", "o"), 1);
+    Term zx = TermFactory.createMeta(z, x);
+    Term f = constantTerm("f", arrowType(baseType("o"), arrowType("o", "o")));
+    Term fzxx = TermFactory.createApp(f, zx, x);
+    Term yb = TermFactory.createMeta(y, b);
+    Term term = TermFactory.createApp(a, fzxx, yb);
+    // let's see if all the mvars are as expected!
+    Environment<MetaVariable> mvars = term.mvars();
+    assertTrue(mvars.size() == 3);
+    assertTrue(mvars.contains(x));
+    assertTrue(mvars.contains(y));
+    assertTrue(mvars.contains(z));
+    mvars = fzxx.mvars();
+    assertTrue(mvars.size() == 2);
+    assertTrue(mvars.contains(x));
+    assertFalse(mvars.contains(y));
+    assertTrue(mvars.contains(z));
+    mvars = yb.mvars();
+    assertTrue(mvars.size() == 1);
   }
 
   @Test
@@ -861,6 +899,34 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
+  public void testOnlySemiPattern() {
+    // F⟨x⟩(a, Y) matched against both h(g(x), a, b) and h(g(x), b, a)
+    Variable x = new Binder("x", baseType("o"));
+    Variable y = new Var("Y", baseType("o"));
+    Term a = constantTerm("a", baseType("o"));
+    Term b = constantTerm("b", baseType("o"));
+    Term g = constantTerm("g", arrowType("o", "o"));
+    Type oooo = arrowType(baseType("o"), arrowType(baseType("o"), arrowType("o", "o")));
+    Term h = constantTerm("h", oooo);
+    MetaVariable f = TermFactory.createMetaVar("F", oooo, 1); 
+    Term term = new Application(TermFactory.createMeta(f, x), a, y); 
+
+    Term m1 = new Application(h.apply(g.apply(x)), a, b); 
+    Term m2 = new Application(h.apply(g.apply(x)), b, a); 
+
+    Substitution subst = new Subst();
+    subst.extend(x, x); 
+    assertTrue(term.match(m1, subst) == null);
+    assertTrue(subst.get(x) == x); 
+    assertTrue(subst.get(y) == b); 
+    assertTrue(subst.get(f).equals(new Abstraction(x, h.apply(g.apply(x)))));
+
+    subst = new Subst();
+    subst.extend(x, x); 
+    assertTrue(term.match(m2, subst) != null);
+  }
+
+  @Test
   public void testFunctionalTermEquality() {
     Term s1 = constantTerm("x", baseType("o"));
     Term s2 = unaryTerm("x", baseType("o"), constantTerm("y", baseType("a")));
@@ -903,7 +969,7 @@ public class ApplicationTest extends TermTestFoundation {
     StringBuilder builder = new StringBuilder();
     combi.addToString(builder, null);
     assertTrue(builder.toString().equals("x(x, x)"));
-    TreeMap<Variable,String> naming = new TreeMap<Variable,String>();
+    TreeMap<Replaceable,String> naming = new TreeMap<Replaceable,String>();
     naming.put(b, "y");
     builder.setLength(0);
     combi.addToString(builder, naming);

@@ -30,24 +30,24 @@ class Application extends TermInherit {
   public Type _outputType;
 
   /**
-   * Sets up the lists of free and bound variables used in this term.
-   * Meant for use in the constructors, so it cannot use the vars() function, but rather, sets up
-   * the result of that function.
+   * Sets up the lists of free, bound and meta-variables used in this term.
+   * Meant for use in the constructors, so it cannot use the freeReplaceables() function, but
+   * rather, sets up the result of that function.
    */
-  private void setupVariables() {
-    VariableList frees = calculateFreeVariablesForSubterms(_args, _head.vars());
-    VariableList bounds = _head.boundVars();
+  private void setupReplaceables() {
+    ReplaceableList frees = calculateFreeReplaceablesForSubterms(_args, _head.freeReplaceables());
+    ReplaceableList bounds = _head.boundVars();
     if (bounds.size() > 0 && !bounds.getOverlap(frees).isEmpty()) {
       _head = _head.refreshBinders();
       bounds = _head.boundVars();
     }
-    bounds = calculateBoundVariablesAndRefreshSubterms(_args, bounds, frees);
+    bounds = calculateBoundVariablesAndRefreshSubs(_args, bounds, frees);
     setVariables(frees, bounds);
   }
 
   /**
    * This helper function handles the functionality for the constructors to set up _head, _args
-   * and _outputType, and store the variables.
+   * and _outputType, and store the variables and meta-variables.
    * If there are any problems -- such as the head or an argument being null, or the types not
    * checking out -- an appropriate Error is thrown. However, it *is* assumed that args is not
    * null.
@@ -88,7 +88,7 @@ class Application extends TermInherit {
       type = type.queryArrowOutputType();
     }
     _outputType = type;
-    setupVariables();
+    setupReplaceables();
   }
 
   /**
@@ -411,7 +411,8 @@ class Application extends TermInherit {
   }
 
   /** This method gives a string representation of the term. */
-  public void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid) {
+  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
+                          Set<String> avoid) {
     if (_head.isAbstraction()) builder.append("(");
     _head.addToString(builder, renaming, avoid);
     if (_head.isAbstraction()) builder.append(")");

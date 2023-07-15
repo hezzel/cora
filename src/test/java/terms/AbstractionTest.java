@@ -46,15 +46,15 @@ public class AbstractionTest extends TermTestFoundation {
   }
 
   @Test
-  public void testVariables() {
+  public void testReplaceables() {
     Variable x = TermFactory.createBinder("x", baseType("a"));
     Variable y = TermFactory.createBinder("y", baseType("b"));
     Term f = constantTerm("f", arrowType(baseType("a"), arrowType("b", "c")));
     Term fxy = new Application(f, x, y);
     Term abs = new Abstraction(x, fxy); // λx.f(x,y)
-    assertTrue(abs.vars().size() == 1);
-    assertFalse(abs.vars().contains(x));
-    assertTrue(abs.vars().contains(y));
+    assertTrue(abs.freeReplaceables().size() == 1);
+    assertFalse(abs.freeReplaceables().contains(x));
+    assertTrue(abs.freeReplaceables().contains(y));
     assertTrue(abs.boundVars().size() == 1);
     assertTrue(abs.boundVars().contains(x));
     assertFalse(abs.boundVars().contains(y));
@@ -126,7 +126,7 @@ public class AbstractionTest extends TermTestFoundation {
 
     StringBuilder builder = new StringBuilder();
     TreeSet<String> set = new TreeSet<String>();
-    TreeMap<Variable,String> renaming = new TreeMap<Variable,String>();
+    TreeMap<Replaceable,String> renaming = new TreeMap<Replaceable,String>();
 
     assertTrue(abs.toString().equals("λx.λy.λx1.f(g(z__2, x1), z__1, x)"));
 
@@ -197,6 +197,11 @@ public class AbstractionTest extends TermTestFoundation {
     assertTrue(abs.queryAbstractionSubterm().toString().equals("f(x, λy.y)"));
     assertTrue(abs.queryHead() == abs);
     assertTrue(abs.queryVariable() == x);
+    assertTrue(abs.isClosed());
+    assertTrue(abs.isGround());
+    assertFalse(abs.queryAbstractionSubterm().isClosed());
+    assertFalse(abs.queryAbstractionSubterm().isGround());
+    assertTrue(abs.isTrueTerm());
     assertTrue(abs.apply(constantTerm("u", arrowType("o", "o"))).toString().equals(
       "(λx.f(x, λy.y))(u)"));
   }
@@ -537,6 +542,50 @@ public class AbstractionTest extends TermTestFoundation {
 
     Substitution gamma = new Subst();
     assertTrue(term.match(m, gamma) != null);
+  }
+
+  @Test
+  public void testMatchWithMetaApplication() {
+    // λx.g(F⟨z,x⟩)
+    Variable x = new Binder("x", baseType("o"));
+    Variable z = new Binder("z", baseType("o"));
+    MetaVariable f =
+      TermFactory.createMetaVar("F", arrowType(baseType("o"), arrowType("o", "o")), 2);
+    Term g = constantTerm("g", arrowType("o", "o"));
+    Term term = new Abstraction(x, g.apply(TermFactory.createMeta(f, z, x)));
+
+    // λy.g(h(a(y), z))
+    Variable y = new Binder("y", baseType("o"));
+    Term a = constantTerm("a", arrowType("o", "o"));
+    Term h = constantTerm("h", arrowType(baseType("o"), arrowType("o", "o")));
+    Term m = new Abstraction(y, g.apply(new Application(h, a.apply(y), z)));
+
+    Substitution gamma = new Subst();
+    gamma.extend(z, z);
+    assertTrue(term.match(m, gamma) == null);
+    assertTrue(gamma.get(x) == null);
+    assertTrue(gamma.get(y) == null);
+    assertTrue(gamma.get(z) == z);
+    assertTrue(gamma.get(f).toString().equals("λz.λy.h(a(y), z)"));
+  }
+
+  @Test
+  public void testMatchWithPartialMetaApplication() {
+    // λx.λy.F[x]
+    Variable x = new Binder("x", baseType("o"));
+    Variable y = new Binder("y", baseType("o"));
+    MetaVariable f = TermFactory.createMetaVar("Z", arrowType("o", "o"), 1);
+    Term term = new Abstraction(x, new Abstraction(y, TermFactory.createMeta(f, x)));
+
+    // λx.λy.h(x, z)
+    Variable z = new Binder("z", baseType("o"));
+    Term h = constantTerm("h", arrowType(baseType("o"), arrowType("o", "o")));
+    Term m1 = new Abstraction(x, new Abstraction(y, new Application(h, x, z)));
+    // λx.λy.h(x, y)
+    Term m2 = new Abstraction(x, new Abstraction(y, new Application(h, x, y)));
+
+    assertTrue(term.match(m1, new Subst()) == null);
+    assertTrue(term.match(m2, new Subst()) != null);
   }
 
   @Test

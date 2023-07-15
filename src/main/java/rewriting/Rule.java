@@ -16,10 +16,10 @@
 package cora.rewriting;
 
 import java.util.ArrayList;
-import java.util.TreeMap;
+import java.util.Map;
 import cora.types.Type;
 import cora.terms.Term;
-import cora.terms.Variable;
+import cora.terms.Replaceable;
 import cora.terms.Substitution;
 
 /**
@@ -116,7 +116,7 @@ public class Rule {
   /** Gives a string representation of the current rule. */
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    TreeMap<Variable,String> renaming = _left.vars().getUniqueNaming();
+    Map<Replaceable,String> renaming = _left.getUniqueNaming();
     _left.addToString(builder, renaming);
     builder.append(" → ");
     _right.addToString(builder, renaming);

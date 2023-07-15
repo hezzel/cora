@@ -113,12 +113,24 @@ public class BinderTest extends TermTestFoundation {
   }
 
   @Test
-  public void testTermVarVars() {
+  public void testTermVarFreeReplaceables() {
     Variable x = new Binder("x", baseType("oo"));
-    VariableList lst = x.vars();
+    ReplaceableList lst = x.freeReplaceables();
     assertTrue(lst.size() == 1);
     assertTrue(lst.contains(x));
     assertTrue(x.boundVars().size() == 0);
+  }
+
+  @Test
+  public void testTermVarVars() {
+    Variable x = new Binder("x", baseType("oo"));
+    Environment<Variable> vars = x.vars();
+    int counter = 0;
+    for (Variable v : vars) {
+      counter++;
+      assertTrue(counter == 1);
+      assertTrue(v == x);
+    }
   }
 
   @Test
@@ -296,7 +308,7 @@ public class BinderTest extends TermTestFoundation {
     StringBuilder builder = new StringBuilder();
     x.addToString(builder, null);
     builder.append(" ");
-    TreeMap<Variable,String> map = new TreeMap<Variable,String>();
+    TreeMap<Replaceable,String> map = new TreeMap<Replaceable,String>();
     x.addToString(builder, map, new TreeSet<String>());
     builder.append(" ");
     map.put(x, "y");

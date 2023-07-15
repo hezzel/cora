@@ -39,7 +39,7 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     _name = name;
     if (name == null) throw new NullInitialisationError("Constant", "name");
     if (name.equals("")) throw new Error("Function Symbol created with empty name.");
-    setVariables(VarList.EMPTY);
+    setVariables(ReplaceableList.EMPTY);
   }
 
   /** Returns the name of the current user-defined symbol. */
@@ -48,7 +48,8 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   }
 
   /** Add a description of the current function symbol to the string; the type is not indicated. */
-  public void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid) {
+  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
+                          Set<String> avoid) {
     builder.append(_name);
   }
 

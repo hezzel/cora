@@ -13,19 +13,16 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.terms;
-
-import java.lang.Iterable;
+package cora.exceptions;
 
 /**
- * An Environment is a finite set of objects -- specifically, variables or meta-variables.
- * It is used for instance to list the variables used in an individual term.
+ * A PatternRequiredError is thrown when a certain function may only be called on patterns, or on
+ * semi-patterns (which may have subterms Z⟨x1,...,xk⟩(s1,...,sn) so long as all xi are distinct
+ * binder variables), yet is called on something else.
  */
-public interface Environment<T> extends Iterable<T> {
-  /** Returns whether the given (meta-)variable is an element of the environment. */
-  boolean contains(T x);
-
-  /** Returns the number of elements in the environment.  Note: calling this takes linear time. */
-  int size();
+public class PatternRequiredError extends Error {
+  public PatternRequiredError(String term, String function, String message) {
+    super("Calling " + function + " on term " + term + " which is not supported: " + message);
+  }
 }
 

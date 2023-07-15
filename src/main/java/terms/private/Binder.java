@@ -46,7 +46,7 @@ class Binder extends LeafTermInherit implements Variable {
     _index = COUNTER;
     COUNTER++;
     if (name == null) throw new NullInitialisationError("Binder", "name");
-    setVariables(new VarList(this));
+    setVariables(new ReplaceableList(this));
   }
 
   /** Create a binder variable without a name; a name will be automatically generated. */
@@ -102,7 +102,8 @@ class Binder extends LeafTermInherit implements Variable {
   }
 
   /** Appends the name of the variable to the builder. */
-  public void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid) {
+  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
+                          Set<String> avoid) {
     if (renaming == null || !renaming.containsKey(this)) builder.append(_name);
     else builder.append(renaming.get(this));
   }

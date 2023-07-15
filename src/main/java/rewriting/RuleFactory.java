@@ -19,8 +19,8 @@ import cora.exceptions.IllegalRuleError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.terms.Term;
-import cora.terms.Variable;
-import cora.terms.VariableList;
+import cora.terms.Replaceable;
+import cora.terms.ReplaceableList;
 
 public class RuleFactory {
   /** Prints a rule with the given left and right hand side, for use in error messages. */
@@ -41,13 +41,14 @@ public class RuleFactory {
       throw new TypingError("Rule", "constructor", "right-hand side", right.queryType().toString(),
                             left.queryType().toString());
     }
-    // no variables should occur on the right that don't also occur on the left
-    VariableList lvars = left.vars();
-    VariableList rvars = right.vars();
-    for (Variable x : rvars) {
+    // no variables or meta-variables should occur on the right that don't also occur on the left
+    ReplaceableList lvars = left.freeReplaceables();
+    ReplaceableList rvars = right.freeReplaceables();
+    for (Replaceable x : rvars) {
       if (!lvars.contains(x)) {
+        String kind = (x.queryReplaceableKind() == Replaceable.KIND_METAVAR ? "meta-" : "");
         throw new IllegalRuleError("Rule", "right-hand side of rule [" + toString(left, right) +
-          "] contains variable " + x.toString() + " which does not occur on the left.");
+          "] contains " + kind + "variable " + x.toString() + " which does not occur on the left.");
       }
     }
     // both sides should be closed; this is automatic if left is, since all variables occurring
@@ -61,7 +62,7 @@ public class RuleFactory {
   /**
    * Create a first-order rule.
    * If the rule is poorly formed or not first-order, an IllegalRuleError is thrown.
-   * (Poorly formed: FV(r) ⊆ FV(l) and both sides have the same sort.)
+   * (It is well-formed if: FV(r) ⊆ FV(l) and both sides have the same sort.)
    */
   public static Rule createFirstOrderRule(Term left, Term right) {
     // do the checks that apply to everything, not just first-order rules
@@ -82,10 +83,10 @@ public class RuleFactory {
   /**
    * Create an applicative higher-order rule.
    * If the rule is poorly formed or not applicative, an IllegalRuleError is thrown.
-   * (Poorly formed: FV(r) ⊆ FV(l) and both sides have the same sort.)
+   * (It is well-formed if: FV(r) ⊆ FV(l) and both sides have the same type.)
    */
   public static Rule createApplicativeRule(Term left, Term right) {
-    // do the checks that apply to everything, not just first-order rules
+    // do the checks that apply to everything, not just applicative rules
     doBasicChecks(left, right);
     // both sides need to be applicative
     if (!left.isApplicative() || !right.isApplicative()) {
@@ -96,8 +97,47 @@ public class RuleFactory {
   }
 
   /**
-   * Creates an AMS rule without limitations other than well-formedness: FV(r) ⊆ FV(l), both sides
-   * should have the same sort, and both sides should be closed.
+   * Create a meta-variable-free higher-order rule, so where both sides are true terms.
+   * If the rule is poorly formed or has meta-applications, an IllegalRuleError is thrown.
+   * (It is well-formed if: FV(r) ⊆ FV(l) and both sides have the same sort.)
+   */
+  public static Rule createCFSRule(Term left, Term right) {
+    // do the checks that apply to everything
+    doBasicChecks(left, right);
+    // both sides need to be true terms
+    if (!left.isTrueTerm() || !right.isTrueTerm()) {
+      throw new IllegalRuleError("RuleFactory::createCFSRule", "meta-terms in rule [" +
+        toString(left, right) + " are not true terms.");
+    }
+    return new Rule(left, right);
+  }
+
+  /**
+   * Create a pattern rule, so where the left-hand sides are patterns of the form
+   * f(l1,...,ln).  If the rule is poorly formed (i.e., the right-hand side contains a
+   * meta-variable not occurring on the left, the rule is not closed, the left-hand side has the
+   * wrong shape, or the sides do not have the same sort), an IllegalRuleError is thrown.
+   */
+  public static Rule createPatternRule(Term left, Term right) {
+    // do the checks that apply to everything
+    doBasicChecks(left, right);
+    // the left-hand side needs to be a pattern
+    if (!left.isPattern()) {
+      throw new IllegalRuleError("RuleFactory::createPatternRule", "left-hand side of rule [" +
+        toString(left, right) + " is not a pattern.");
+    }
+    // the left-hand side should have the form f(...)
+    if (!left.isFunctionalTerm()) {
+        throw new IllegalRuleError("RuleFactory::createPatternRule", "illegal rule [" +
+          toString(left, right) + "], where the left-hand side does not have a fucntion symbol " +
+          "as the root.");
+    }
+    return new Rule(left, right);
+  }
+
+  /**
+   * Creates an AMS rule without limitations other than well-formedness: FMV(r) ⊆ FMV(l), both
+   * sides should have the same sort, and both sides should be closed.
    */
   public static Rule createRule(Term left, Term right) {
     doBasicChecks(left, right);

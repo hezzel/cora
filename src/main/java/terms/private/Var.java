@@ -49,7 +49,7 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
     _index = COUNTER;
     COUNTER++;
     if (name == null) throw new NullInitialisationError("Var", "name");
-    setVariables(new VarList(this));
+    setVariables(new ReplaceableList(this));
   }
 
   /** Create a non-binder variable without a name; a name will be automatically generated. */
@@ -114,7 +114,8 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
   }
 
   /** Appends the name of te variable to the builder. */
-  public void addToString(StringBuilder builder, Map<Variable,String> renaming, Set<String> avoid) {
+  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
+                          Set<String> avoid) {
     if (renaming == null || !renaming.containsKey(this)) builder.append(_name);
     else builder.append(renaming.get(this));
   }
