@@ -129,17 +129,18 @@ public class RuleTest {
     Variable y = TermFactory.createVar("y", type("u"));
     Term f = makeConstant("f", "((o ⇒ o) ⇒ o) ⇒ u ⇒ u");
     Term left = TermFactory.createApp(f, abs, y);
-    Rule rule = RuleFactory.createRule(left, y);
+    Rule rule = RuleFactory.createPatternRule(left, y);
     assertTrue(rule.queryLeftSide().equals(left));
     assertTrue(rule.queryRightSide().equals(y));
     assertTrue(rule.queryType().equals(type("u")));
     assertTrue(rule.toString().equals("f(λx.x(a), y) → y"));
     assertFalse(rule.isApplicative());
+    assertTrue(rule.isPatternRule());
 
-    rule = RuleFactory.createPatternRule(y, y);
+    rule = RuleFactory.createRule(y, y);
     assertTrue(rule.toString().equals("y → y"));
     assertTrue(rule.isApplicative());
-    assertTrue(rule.isPattenrRule());
+    assertFalse(rule.isPatternRule());
   }
 
   @Test

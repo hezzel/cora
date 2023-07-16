@@ -68,9 +68,12 @@ public class Rule {
     return _left.isApplicative() && _right.isApplicative();
   }
 
-  /** This returns whether the rule is a pattern rule. */
+  /**
+   * This returns whether the rule is a pattern rule (which means that the left-hand side is a
+   * pattern of the form f(...).
+   */
   public boolean isPatternRule() {
-    return _left.isPattern();
+    return _left.isPattern() && _left.isFunctionalTerm();
   }
 
   /** This returns whether the current rule can be applied to t at the head. */

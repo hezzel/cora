@@ -40,7 +40,7 @@ public class TrsTokenData {
   /* Next, we define the regular expressions for all tokens. */
   public static String[] tokens = new String[] {
     "([^\\s()\",|\\-=\\\\]|(-(?!>))|(=(?!=)))+" , IDENTIFIER,
-      // identifiers are built from any characters other than whitespace, brackets, quotes, command
+      // identifiers are built from any characters other than whitespace, brackets, quotes, commas
       // and |; however, they may not contain -> or ==
 
     "\\("                                     , BRACKETOPEN,
