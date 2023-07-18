@@ -37,5 +37,14 @@ public class TokenTest {
     assertFalse(tok1.before(tok2));
     assertTrue(tok1.before(tok3));
   }
+
+  @Test
+  public void testUpdate() {
+    ParsePosition position = new ParsePosition("test.trs", 3, 9);
+    Token tok1 = new Token(position, "IDENTIFIER", "counter");
+    Token tok2 = tok1.updateText("tree");
+    assertTrue(tok1.toString().equals("test.trs:3:9: counter (IDENTIFIER)"));
+    assertTrue(tok2.toString().equals("test.trs:3:9: tree (IDENTIFIER)"));
+  }
 }
 

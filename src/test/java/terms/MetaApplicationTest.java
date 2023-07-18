@@ -885,7 +885,6 @@ public class MetaApplicationTest extends TermTestFoundation {
     subst.extend(x, x);
     subst.extend(y, y);
     subst.extend(f, new Abstraction(x, new Abstraction(y, new Application(g, y, x))));
-    System.out.println(term.match(m, subst));
     assertTrue(term.match(m, subst).equals(
       "Meta-variable F is mapped to both λx.λy.g(y, x) and to λx.λy.g(x, y)."));
   }

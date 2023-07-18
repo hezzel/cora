@@ -15,8 +15,6 @@
 
 package cora.parsing.lib;
 
-import cora.exceptions.IllegalArgumentError;
-
 /**
  * A CommentRemoverLexer adapts a given Lexer by removing comments of the form
  * COMMENTOPEN...COMMENTCLOSE, which are not represented by a single token (for example because
@@ -57,6 +55,10 @@ class CommentRemoverLexer implements Lexer {
         else if (tok.getName().equals(_commentOpenString) && _allowNesting) opened++;
       }
       ret = _mylexer.nextToken();
+    }
+    if (ret.getName().equals(_commentCloseString)) {
+      throw new LexerException(ret,
+        "unexpected comment-close token [" + ret.getText() + "] when no comment was open!");
     }
     return ret;
   }

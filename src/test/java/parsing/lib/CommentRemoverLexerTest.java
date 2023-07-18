@@ -26,8 +26,14 @@ public class CommentRemoverLexerTest {
     assertTrue(token.toString().equals("1:1: hello (IDENTIFIER)"));
     token = lexer.nextToken();
     assertTrue(token.toString().equals("2:32: world (IDENTIFIER)"));
-    token = lexer.nextToken();
-    assertTrue(token.toString().equals("2:38: *) (COMMENTCLOSE)"));
+    boolean errored = false;
+    try { lexer.nextToken(); }
+    catch (LexerException e) {
+      errored = true;
+      assertTrue(e.getMessage().equals(
+        "2:38: unexpected comment-close token [*)] when no comment was open!"));
+    }
+    assertTrue(errored);
     token = lexer.nextToken();
     assertTrue(token.toString().equals("2:40: aa (IDENTIFIER)"));
     token = lexer.nextToken();

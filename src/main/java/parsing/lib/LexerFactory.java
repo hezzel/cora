@@ -52,6 +52,29 @@ public class LexerFactory {
   }
 
   /**
+   * Adapts the given lexer to update the text of string tokens.
+   * String tokens should have getName() return stringTokenName,.
+   * The replacements are handled in the given order (replacements[0] is changed into
+   * replacements[1], then replacements[2] into replacements[3], and so on; replacements should
+   * have an even count).
+   * If escapeChar is something other than \0, then if there is any remaining occurrence of
+   * escapeChar after the replacements, \\ is replaced by \ and for a single \ a LexerException is
+   * thrown.  If the escapeChar is null, no LexerException will be thrown by this lexer.
+   */
+  public static Lexer createStringEditLexer(Lexer lexer, String stringTokenName,
+                                            String[] replacements, char escapeChar) {
+    return new StringEditLexer(lexer, stringTokenName, replacements, escapeChar);
+  }
+
+  /**
+   * Adapts the given lexer to throw an error when encountering a token by the given name.  To
+   * include the text of the token, put @TEXT@ in the message.
+   */
+  public static Lexer createErrorLexer(Lexer lexer, String token, String message) {
+    return new ErrorLexer(lexer, token, message);
+  }
+
+  /**
    * Adapts the given lexer to include pushback functionality.  The pushed tokens are simply the
    * first to be returned on nextToken().
    */
