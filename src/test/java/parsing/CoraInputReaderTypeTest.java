@@ -47,13 +47,6 @@ public class CoraInputReaderTypeTest {
   }
 
   @Test
-  public void testReadStringBaseType() {
-    Type t = CoraInputReader.readTypeFromString("\"hello\" \" world\"");
-    assertTrue(t.isBaseType());
-    assertTrue(t.toString().equals("hello world"));
-  }
-
-  @Test
   public void testSimpleArrowType() {
     Type t = CoraInputReader.readTypeFromString("xx ⇒ yy");
     assertTrue(t.isArrowType());
@@ -207,7 +200,7 @@ public class CoraInputReaderTypeTest {
     assertTrue(t.toString().equals("a ⇒ b ⇒ c"));
     assertTrue(collector.queryCollectedMessages().equals(
       "1:13: Incomplete string constant (ended by end of line).\n" +
-      "1:13: Expected closing bracket but got STRING ().\n"));
+      "1:13: Expected closing bracket but got STRING (\"\").\n"));
   }
 
   @Test

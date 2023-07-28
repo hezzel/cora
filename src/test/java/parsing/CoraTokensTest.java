@@ -248,7 +248,7 @@ public class CoraTokensTest {
   public void testBasicString() throws LexerException {
     Lexer lexer = createLexer("x\"xz\"uv");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "x");
-    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "xz");
+    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"xz\"");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "uv");
     assertTrue(lexer.nextToken().isEof());
   }
@@ -257,7 +257,7 @@ public class CoraTokensTest {
   public void testStringWithStuffInIt() throws LexerException {
     Lexer lexer = createLexer("x\"x/*z{\"uv");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "x");
-    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "x/*z{");
+    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"x/*z{\"");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "uv");
     assertTrue(lexer.nextToken().isEof());
   }
@@ -265,7 +265,7 @@ public class CoraTokensTest {
   @Test
   public void testStringWithEscapeCodes() throws LexerException {
     Lexer lexer = createLexer("\"x\\\"bl\\\\a\"bla");
-    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "x\"bl\\a");
+    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"x\\\"bl\\\\a\"");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "bla");
   }
 
@@ -273,32 +273,32 @@ public class CoraTokensTest {
   public void testUnterminatedStringEOF() throws LexerException {
     Lexer lexer = createLexer("\n\"bla");
     assertTrue(checkExceptionOnNextToken(lexer, "2:1:"));
-    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "bla");
+    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"bla\"");
   }
 
   @Test
   public void testUnterminatedStringEndLine() throws LexerException {
     Lexer lexer = createLexer("\"bla\nmeer bla\"");
     assertTrue(checkExceptionOnNextToken(lexer, "1:1:"));
-    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "bla");
+    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"bla\"");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "meer");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "bla");
     assertTrue(checkExceptionOnNextToken(lexer, "2:9:"));
-    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "");
+    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"\"");
   }
 
   @Test
   public void testIllegalEscape() throws LexerException {
     Lexer lexer = createLexer("\"hello\\x World\"");
     assertTrue(checkExceptionOnNextToken(lexer, "1:1:"));
-    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "hello\\x World");
+    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"hello\\x World\"");
   }
 
   @Test
   public void testStringEndsInEscape() throws LexerException {
     Lexer lexer = createLexer("\n\"bla\\");
     assertTrue(checkExceptionOnNextToken(lexer, "2:1:"));
-    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "bla\\");
+    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"bla\\\"");
   }
 }
 

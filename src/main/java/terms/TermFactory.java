@@ -85,6 +85,12 @@ public class TermFactory {
     return new HigherMetaVar(name, inputs, type);
   }
 
+  /** Creates a meta-variable X with arity k */
+  public static MetaVariable createMetaVar(String name, ArrayList<Type> inputs, Type output) {
+    if (inputs.size() == 0) return new Var(name, output);
+    return new HigherMetaVar(name, inputs, output);
+  }
+
   /**
    * Create an application which takes one argument.  Here, head may be anything,
    * including another application.

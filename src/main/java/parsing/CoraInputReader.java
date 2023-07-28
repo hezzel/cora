@@ -27,8 +27,51 @@ import cora.types.*;
 import cora.terms.*;
 import cora.rewriting.*;
 
+class TermStructure {
+  static int STRING = 1;
+  static int CONSTANT = 2;
+  static int META = 3;
+  static int ABSTRACTION = 4;
+  static int APPLICATION = 5;
+
+  Token token;                        // the token starting this term
+  int kind;                           // one of the five kinds above
+  String str;                         // for string, constant or meta
+  TermStructure head;                 // for application
+  ArrayList<TermStructure> children;  // for meta, application or abstraction
+  Type vartype;                       // for abstractions with typed binder
+  boolean errored;
+
+  TermStructure(Token t, int k) {
+    token = t;
+    kind = k;
+    str = null;
+    head = null;
+    children = null;
+    vartype = null;
+    errored = false;
+  }   
+
+  /** for debugging purposes */
+  public String toString() {
+    String ret = "(" + kind + ":";
+    if (str != null) ret += "\"" + str + "\"";
+    if (head != null) ret += "{" + head.toString() + "}";
+    if (children != null) {
+      ret += "[";
+      for (int i = 0; i < children.size(); i++) ret += children.get(i).toString() + ";";
+      ret += "]";
+    }
+    ret += (errored ? "ERR" : "");
+    return ret + ")";
+  }
+}
+
 /** This class reads text from string or file written in the internal .cora format. */
 public class CoraInputReader {
+  /** The type that should be used for all string constants. */
+  public static Type STRINGTYPE = TypeFactory.createSort("String");
+
   /**
    * The reader keeps track of the status of reading so far; all read functions have a (potential)
    * side effect of advancing the parsing status.
@@ -61,35 +104,16 @@ public class CoraInputReader {
   // ===================================== PARSING CONSTANTS ======================================
 
   /**
-   * string := STRING+
-   *
-   * This function checks if the next tokens represent a string, and if so, read them and return
-   * this string.  If not, null is returned and nothing is read.
+   * This function checks if the next tokens represent a string, and if so, returns the string.
+   * If not, null is returned and nothing is read.
    */
-  private String tryReadString() {
-    Token next;
-    StringBuilder ret = null;
-    while ((next = _status.readNextIf(CoraTokenData.STRING)) != null) {
-      if (ret == null) ret = new StringBuilder(next.getText());
-      else ret.append(next.getText());
-    }
-    if (ret == null) return null;
-    return ret.toString();
-  }
-
-  /**
-   * constant ::= IDENTIFIER | string
-   *
-   * This function checks if the next tokens represent a constant, and if so, read them and return
-   * this constant.  If not, null is returned and nothing is read.
-   */
-  private String tryReadConstant() {
+  private String tryReadIdentifier() {
     Token next = _status.readNextIf(CoraTokenData.IDENTIFIER);
     if (next != null) return next.getText();
-    return tryReadString();
+    return null;
   }
 
-  // ======================================== PARSING TYPES =======================================
+  // ======================================== READING TYPES =======================================
 
   /**
    * typearrow := TYPEARROW | ARROW
@@ -125,7 +149,7 @@ public class CoraInputReader {
   private Type readType() {
     Type start;
 
-    String constant = tryReadConstant();
+    String constant = tryReadIdentifier();
     if (constant == null) {
       Token bracket = _status.expect(CoraTokenData.BRACKETOPEN,
         "a type (started by a constant or bracket)");
@@ -146,14 +170,540 @@ public class CoraInputReader {
     return TypeFactory.createArrow(start, end);
   }
 
-  // ========================= READING FUNCTION AND VARIABLE DECLARATIONS =========================
+  // =================================== READING TERM STRUCTURES ==================================
 
+  /**
+   * term = string
+   *      | abstraction
+   *      | mainterm
+   *
+   * where
+   * mainterm = IDENTIFIER
+   *          | IDENTIFIER METAOPEN termlist METACLOSE
+   *          | mainterm BRACKETOPEN termlist BRACKETCLOSE
+   *          | BRACKETOPEN term BRACKETCLOSE
+   *
+   * When the current parsing status represents a term, this method reads it into a term structure,
+   * which does not yet check correct typing / arity use of the term.  If null is returned, parsing
+   * failed beyond the point where we could do error recovery.
+   */
+  private TermStructure readTermStructure() {
+    if (_status.nextTokenIs(CoraTokenData.LAMBDA)) return readAbstractionStructure();
+    if (_status.nextTokenIs(CoraTokenData.STRING)) return readStringStructure();
+
+    TermStructure ret;
+
+    // BRACKETOPEN term BRACKETCLOSE  -- we store term as ret
+    if (_status.readNextIf(CoraTokenData.BRACKETOPEN) != null) {
+      ret = readTermStructure();
+      if (ret == null) { _status.readNextIf(CoraTokenData.BRACKETCLOSE); return null; }
+      if (_status.expect(CoraTokenData.BRACKETCLOSE, "a closing bracket") == null) {
+        ret.errored = true;
+        return ret;
+      }
+    }
+    // IDENTIFIER
+    else {
+      Token token = _status.expect(CoraTokenData.IDENTIFIER, "term, started by an identifier, " +
+        "λ, string or (,");
+      if (token == null) return null;
+      ret = new TermStructure(token, TermStructure.CONSTANT);
+      ret.str = token.getText();
+      // IDENTIFIER METAOPEN termlist METACLOSE
+      if ((token = _status.readNextIf(CoraTokenData.METAOPEN)) != null) {
+        ret.kind = TermStructure.META;
+        readTermList(ret, CoraTokenData.METACLOSE, "meta-closing bracket " +
+          (token.getText().equals("[") ? "]" : "⟩"));
+      }
+    }
+
+    // if we see an argument list, read it, and make the application structure
+    while (_status.readNextIf(CoraTokenData.BRACKETOPEN) != null) {
+      TermStructure app = new TermStructure(ret.token, TermStructure.APPLICATION);
+      app.head = ret;
+      readTermList(app, CoraTokenData.BRACKETCLOSE, "closing bracket )");
+      ret = app;
+    }
+
+    return ret;
+  }
+
+  /**
+   * abstraction ::= LAMBDA vardec (COMMA vardec)* DOT term
+   *
+   * where
+   * vardec ::= IDENTIFIER
+   *          | IDENTIFIER DECLARE type
+   */
+  private TermStructure readAbstractionStructure() {
+    // read λ
+    if (_status.expect(CoraTokenData.LAMBDA, "a λ") == null) return null;
+    boolean errored = false;
+
+    // read every (name,type) combination into (variables,type); when type is not given, this
+    // component is simply left null
+    ArrayList<Token> tokens = new ArrayList<Token>();
+    ArrayList<String> variables = new ArrayList<String>();
+    ArrayList<Type> types = new ArrayList<Type>();
+    while (true) {
+      String name = null;
+      Type type = null;
+
+      Token token = _status.expect(CoraTokenData.IDENTIFIER, "an identifier (variable name)");
+      if (token != null) name = token.getText();
+      if (_status.readNextIf(CoraTokenData.DECLARE) != null) {
+        type = readType();
+        if (type == null) errored = true;
+      }
+
+      if (name != null) {
+        tokens.add(token);
+        variables.add(name);
+        types.add(type);
+      }
+      else errored = true;
+      
+      // stop reading once we encounter a .
+      if (_status.readNextIf(CoraTokenData.DOT) != null) break;
+      // following an identifier and a type, the only alternative is a comma; if this is not
+      // supplied, we either continue reading anyway (after giving an error), or abort if there are
+      // no more variable names to come
+      if (_status.expect(CoraTokenData.COMMA, "a comma or dot") == null) {
+        if (!_status.nextTokenIs(CoraTokenData.IDENTIFIER)) { errored = true; break; }
+      }
+    }
+    // we read LAMBDA vardec (COMMA vardec)* DOT, so now just read the term (which extends as far
+    // as it can)
+    TermStructure ret = readTermStructure();
+    if (ret == null) return null;
+
+    // put everything together
+    for (int i = variables.size()-1; i >= 0; i--) {
+      TermStructure tmp = new TermStructure(tokens.get(i), TermStructure.ABSTRACTION);
+      tmp.str = variables.get(i);
+      tmp.vartype = types.get(i);
+      tmp.children = new ArrayList<TermStructure>();
+      tmp.children.add(ret);
+      ret = tmp;
+      ret.errored = errored;
+    }
+    return ret;
+  }
+
+  /**
+   * string = STRING+
+   *
+   * This function is really only called when we already know the next token is a string, so should
+   * not fail.  It eagerly reads as many strings as are available.
+   */
+  private TermStructure readStringStructure() {
+    Token start = _status.expect(CoraTokenData.STRING, "A string constant");
+    if (start == null) return null;
+    // take the token's text without the closing "
+    StringBuilder text = new StringBuilder(start.getText().substring(0, start.getText().length()-1));
+    Token next;
+    while ((next = _status.readNextIf(CoraTokenData.STRING)) != null) {
+      // for each subsequent string, append it without quotes
+      text.append(next.getText().substring(1, next.getText().length()-1));
+    }
+    // append a final quote to make sure the string is well-formed
+    text.append("\"");
+    TermStructure ret = new TermStructure(start, TermStructure.STRING);
+    ret.str = text.toString();
+    return ret;
+  }
+
+  /**
+   * Returns true if it should be possible to read at least one token towards a term structure in
+   * the current status.
+   */
+  private boolean nextMayBeTerm() {
+    return _status.nextTokenIs(CoraTokenData.LAMBDA) ||
+           _status.nextTokenIs(CoraTokenData.STRING) ||
+           _status.nextTokenIs(CoraTokenData.BRACKETOPEN) ||
+           _status.nextTokenIs(CoraTokenData.IDENTIFIER);
+  }
+
+  /** 
+   * termlist ::= ε [followName] | term (COMMA term)* [followName]
+   *
+   * The terms are read into the "children" field of the given structure.
+   */
+  private void readTermList(TermStructure struc, String followName, String followDescription) {
+    Token token;
+    struc.children = new ArrayList<TermStructure>();
+
+    // handle the case ε [followName]
+    if (_status.readNextIf(followName) != null) return;
+
+    // read the arguments until we encounter [followName] or we're in an overly weird place
+    while (true) {
+      // appropriate error handling if we see commas where there shouldn't be
+      if ((token = _status.readNextIf(CoraTokenData.COMMA)) != null) {
+        _status.storeError("Unexpected comma; expected term or " + followDescription, token);
+        struc.errored = true;
+        while (_status.readNextIf(CoraTokenData.COMMA) != null);
+      }
+      // read the next term in the list
+      TermStructure arg = readTermStructure();
+      if (arg == null) struc.errored = true;
+      else struc.children.add(arg);
+      if (_status.readNextIf(followName) != null) return;
+      if (_status.expect(CoraTokenData.COMMA, "a comma or " + followDescription) == null) {
+        // we recover from a missing comma, but only if we're still followed by another term
+        struc.errored = true;
+        if (!nextMayBeTerm()) return;
+      }
+    }
+  }
+
+  // ============================ TURNING A TERM STRUCTURE INTO A TERM ============================
+
+  /**
+   * This attempts to turn a TermStructure into a Term, using that all function symbols are
+   * necessarily declared in the symbol data.  If the given type is not null, then the term is
+   * expected to be of that type (and this will be used to type previously unseen variables and
+   * meta-variables).
+   * If the given type is null, and the type cannot easily be derived (which is the case if the
+   * term is a variable), then if typeShouldBeDerivable is set to true, an error is stored.  If
+   * typeShouldBeDerivable is set to false, then the term is just given the unit sort as a default.
+   * If function symbols are used with arity different from their declared arity, or types do not
+   * match the declaration, then an appropriate error message is stored in the parser status.
+   *
+   * Regardless of errors, this is guaranteed to either throw a ParseError, or return a term of the
+   * expected type (if any).
+   */
+  private Term makeTerm(TermStructure structure, Type expectedType, boolean typeShouldBeDerivable) {
+    if (structure.kind == TermStructure.STRING) return makeStringTerm(structure, expectedType);
+    if (structure.kind == TermStructure.CONSTANT) {
+      return makeConstantTerm(structure, expectedType, typeShouldBeDerivable);
+    }
+    if (structure.kind == TermStructure.META) {
+      return makeMetaTerm(structure, expectedType, typeShouldBeDerivable);
+    }
+    if (structure.kind == TermStructure.ABSTRACTION) {
+      return makeAbstractionTerm(structure, expectedType);
+    }
+    if (structure.kind == TermStructure.APPLICATION) return makeApplTerm(structure, expectedType);
+    throw new Error("Unexpected term structure: " + structure.kind);
+  }
+
+  /**
+   * Turn a termstructure representing a string into the corresponding term, but also set an error
+   * if the expected type is not STRINGTYPE.
+   */
+  private Term makeStringTerm(TermStructure structure, Type expectedType) {
+    if (structure.str == null) {  // shouldn't happen
+      throw new Error("Called makeStringTerm when structure is not a string!");
+    }
+    if (expectedType == null || expectedType.equals(STRINGTYPE)) {
+      return TermFactory.createConstant(structure.str, STRINGTYPE);
+    }
+    _status.storeError("Expected term of type " + expectedType.toString() + ", but got a string " +
+      "constant (which has type " + STRINGTYPE.toString() + ").", structure.token);
+    return TermFactory.createConstant(structure.str, expectedType);
+  }
+
+  /**
+   * Turn a termstructure representing a constant (either function symbol or variable) into the
+   * corresponding term, but also throw errors if we know it should have a different type from
+   * what is expected, or is not derivable when it should be
+   */
+  private Term makeConstantTerm(TermStructure structure, Type expectedType, boolean deriveType) {
+    String name = structure.str;
+    if (name == null) {  // shouldn't happen
+      throw new Error("Called makeConstantTerm when the constant is not stored in str!");
+    }
+    // we know it as a function symbol
+    Term ret = _symbols.lookupFunctionSymbol(name);
+    if (ret != null) {
+      if (expectedType == null || expectedType.equals(ret.queryType())) return ret;
+      _status.storeError("Expected term of type " + expectedType.toString() + ", but got " +
+        name + ", which was declared as a function symbol of type " + ret.queryType() + ".",
+        structure.token);
+      return TermFactory.createConstant(name, expectedType);
+    }
+    // we know it as a variable
+    ret = _symbols.lookupVariable(name);
+    if (ret != null) {
+      if (expectedType == null || expectedType.equals(ret.queryType())) return ret;
+      _status.storeError("Expected term of type " + expectedType.toString() + ", but got " +
+        name + ", which was previously used as a variable of type " + ret.queryType() + ".",
+        structure.token);
+      return TermFactory.createVar(name, expectedType);
+    }
+    // we know it as a meta-variable, so it shouldn't be used in this way
+    if (_symbols.lookupMetaVariable(name) != null) {
+      _status.storeError("Symbol " + name + " was previously used (or declared) as a " +
+        "meta-variable with arity > 0; here it is used as a variable.", structure.token);
+      if (expectedType == null) expectedType = _symbols.lookupMetaVariable(name).queryType();
+    }
+    // we don't know it, but we know the type so we can declare it as a free variable
+    if (expectedType != null) {
+      Variable x = TermFactory.createVar(name, expectedType);
+      _symbols.addVariable(x);
+      return x;
+    }
+    // we don't know it, and can't deduce its type
+    if (deriveType) {
+      _status.storeError("Undeclared symbol: " + name + ".  Type cannot easily be deduced from " +
+      "context.", structure.token);
+    }
+    return TermFactory.createVar(name, TypeFactory.unitSort);
+  }
+
+  /**
+   * Turn a termstructure representing a meta-application X[s1,...,sk] into the corresponding Term,
+   * but also throw errors if we know it should have a different type from what is expected, or is
+   * not derivable when it should be, or if the arity does not match previous usage of this
+   * meta-variable.
+   */
+  private Term makeMetaTerm(TermStructure structure, Type expectedType, boolean deriveType) {
+    String name = structure.str;
+    if (name == null) { // shouldn't happen
+      throw new Error("Called makeMetaTerm when the meta-variable name is not stored in str!");
+    }
+    // no arguments are supplied -- it's actually a free variable
+    if (structure.children.size() == 0) {
+      return makeFreeVarTerm(structure.token, name, expectedType, deriveType);
+    }
+
+    // option 1: we know it as a meta-variable
+    MetaVariable mvar = _symbols.lookupMetaVariable(name);
+    if (mvar != null) {
+      return makeKnownMetaTerm(structure.token, mvar, structure.children, expectedType);
+    }
+
+    // eror option: we know it as something else
+    if (_symbols.lookupFunctionSymbol(name) != null) {
+      _status.storeError("Unexpected meta-application with meta-variable " + name + ", which " +
+        "was previously declared as a function symbol.", structure.token);
+    }
+    else if (_symbols.lookupVariable(name) != null) {
+      String kind = "variable without meta-arguments";
+      if (_symbols.lookupVariable(name).isBinderVariable()) kind = "binder variable";
+      _status.storeError("Unexpected meta-application with meta-variable " + name + ", which " +
+        "was previously used (or declared) as a " + kind +".", structure.token);
+    }
+    // error option: we don't know what type it should be
+    if (expectedType == null) {
+      if (deriveType) {
+        _status.storeError("Cannot derive output type of meta-variable " + name + " from context.",
+          structure.token);
+      }
+    }
+
+    // option 2: we don't know it yet, so we get to declare it
+    ArrayList<Term> args = new ArrayList<Term>();
+    ArrayList<Type> types = new ArrayList<Type>();
+    for (int i = 0; i < structure.children.size(); i++) {
+      Term arg = makeTerm(structure.children.get(i), null, deriveType);
+      args.add(arg);
+      types.add(arg.queryType());
+    }
+    mvar = TermFactory.createMetaVar(name, types,
+                                     expectedType == null ? TypeFactory.unitSort : expectedType);
+    if (expectedType != null) _symbols.addMetaVariable(mvar);
+    return TermFactory.createMeta(mvar, args);
+  }
+
+  /**
+   * Turn a termstructure representing a meta-application with no arguments X[] into the
+   * corresponding Term, but also throws errors as needed.
+   */
+  private Term makeFreeVarTerm(Token token, String name, Type expectedType, boolean deriveType) {
+    // we know it as a variable
+    Variable ret = _symbols.lookupVariable(name);
+    if (ret != null) {
+      if (ret.isBinderVariable()) {
+        _status.storeError("Binder variable " + name + " used as meta-variable.", token);
+      }
+      if (expectedType == null || expectedType.equals(ret.queryType())) return ret;
+      _status.storeError("Expected term of type " + expectedType.toString() + ", but got " +
+        name + ", which was previously used as a variable of type " + ret.queryType() + ".",
+        token);
+      return TermFactory.createVar(name, expectedType);
+    }
+    // we know it as a meta-variable, which means a higher type -- give a suitable error
+    if (_symbols.lookupMetaVariable(name) != null) {
+      _status.storeError("Meta-application for meta-variable " + name + " has no arguments, when " +
+        "it previously occurred (or was declared) with arity " +
+        _symbols.lookupMetaVariable(name).queryArity(), token);
+      if (expectedType == null) expectedType = _symbols.lookupMetaVariable(name).queryType();
+    }
+    // we know it as a function symbol -- give a suitable error
+    else if (_symbols.lookupFunctionSymbol(name) != null) {
+      _status.storeError("Meta-application for meta-variable " + name + ", which was previously " +
+        "declared as a function symbol.", token);
+      if (expectedType == null) expectedType = _symbols.lookupFunctionSymbol(name).queryType();
+    }
+    // regardless of errors: if we don't know it we get to create it as a free variable now
+    if (expectedType != null) {
+      Variable x = TermFactory.createVar(name, expectedType);
+      _symbols.addVariable(x);
+      return x;
+    }
+    // unfortunately, if we can't figure out the type, we just assign a default
+    if (deriveType) {
+      _status.storeError("Undeclared (meta-)variable: " + name + ".  Type cannot easily be " +
+        "deduced from context.", token);
+    }
+    return TermFactory.createVar(name, TypeFactory.unitSort);
+  }
+
+  /**
+   * This function handles a term structure mvar[children], when mvar has already been declared.
+   */
+  private Term makeKnownMetaTerm(Token token, MetaVariable mvar, ArrayList<TermStructure> children,
+                                 Type expectedType) {
+
+    ArrayList<Term> args = new ArrayList<Term>();
+    if (mvar.queryArity() == children.size()) {
+      for (int i = 0; i < children.size(); i++) {
+        args.add(makeTerm(children.get(i), mvar.queryInputType(i+1), true));
+      }
+      if (expectedType == null || expectedType.equals(mvar.queryOutputType())) {
+        return TermFactory.createMeta(mvar, args);
+      }
+    }
+
+    // error case: the children size does not match the previous / declared occurrence
+    else {
+      _status.storeError("Meta-variable " + mvar.queryName()+ " was previously used (or " +
+        "declared) with arity " + mvar.queryArity() + ", but is here used with " +
+        children.size() + " arguments.", token);
+      for (int i = 0; i < children.size(); i++) args.add(makeTerm(children.get(i), null, false));
+    }
+
+    // error case: the output type does not match the previous / declared occurrence
+    if (expectedType != null && !expectedType.equals(mvar.queryOutputType())) {
+      _status.storeError("Meta-variable " + mvar.queryName() + " has output type " +
+        mvar.queryOutputType().toString() + " while a term of type " + expectedType.toString() +
+        " was expected.", token);
+    }
+
+    // in either error case, create a new meta-variable with the right input and output types
+    ArrayList<Type> types = new ArrayList<Type>();
+    for (int i = 0; i < args.size(); i++) types.add(args.get(i).queryType());
+    if (expectedType == null) expectedType = mvar.queryOutputType();
+    mvar = TermFactory.createMetaVar(mvar.queryName(), types, expectedType);
+    return TermFactory.createMeta(mvar, args);
+  }
+
+  /**
+   * Turn a term structure representing an abstraction into the corresponding term, and check that
+   * it matches the expected type; if no expected type is given, then the binder should have a type
+   * denotation, and the type of the subterm derivable.
+   */
+  private Term makeAbstractionTerm(TermStructure structure, Type expectedType) {
+    String varname = structure.str;
+    Type type = structure.vartype;
+    Type expectedSubtype = null;
+
+    // special error case: if we have no idea what the type of the binder could be, we'll just do
+    // the type derivation without it (which results in the binder being treated as a free variable
+    // in the subterm)
+    if (expectedType == null && type == null) {
+      _status.storeError("Cannot derive type of binder " + varname + " from " +
+        "context; it should be denoted directly in the abstraction.", structure.token);
+      Term subterm = makeTerm(structure.children.get(0), null, false);
+      return TermFactory.createAbstraction(TermFactory.createBinder(varname,
+        TypeFactory.unitSort), subterm);
+    }
+
+    // in all other cases, we either have the type of the binder, or can derive it
+    if (type == null) type = expectedType.queryArrowInputType();
+    else if (expectedType != null && !type.equals(expectedType.queryArrowInputType())) {
+      _status.storeError("Type error: expected subterm of type " + expectedType.toString() +
+        ", but got abstraction with variable of type " + type.toString() + ".", structure.token);
+      type = expectedType.queryArrowInputType();
+    }
+
+    // generate the variable and store it in the environment
+    Variable tmp = _symbols.lookupVariable(varname);
+    if (tmp != null) _symbols.removeVariable(varname);
+    if (_symbols.lookupFunctionSymbol(varname) != null) {
+      _status.storeError("Ambiguous binder: this name has already been declared as a function " +
+        "symbol.", structure.token);
+    }
+    else if (_symbols.lookupMetaVariable(varname) != null) {
+      _status.storeError("Ambiguous binder: this name has already been declared as a " +
+        "meta-variable.", structure.token);
+    }
+    else if (tmp != null && !tmp.isBinderVariable()) {
+      _status.storeError("Ambiguous binder: this name has already been declared as a " +
+        "free variable.", structure.token);
+    }
+    Variable binder = TermFactory.createBinder(varname, type);
+    _symbols.addVariable(binder);
+
+    // read the subterm
+    Term subterm = makeTerm(structure.children.get(0),
+                            expectedType == null ? null : expectedType.queryArrowOutputType(),
+                            true);
+
+    // clean up and return the abstraction
+    _symbols.removeVariable(varname);
+    if (tmp != null) _symbols.addVariable(tmp);
+    return TermFactory.createAbstraction(binder, subterm);
+  }
+
+  /**
+   * Turn a term structure representing an application into the corresponding term, and check that
+   * it matches the expected type.  We require that the term at the head of an application can
+   * always figure out its own type, so the expected type is only used for checking here.
+   */
+  private Term makeApplTerm(TermStructure structure, Type expectedType) {
+    Term head = makeTerm(structure.head, null, true);
+    if (head.queryType().queryArity() >= structure.children.size()) {
+      for (int i = 0; i < structure.children.size(); i++) {
+        Term arg =
+          makeTerm(structure.children.get(i), head.queryType().queryArrowInputType(), true);
+        head = head.apply(arg);
+      }
+      if (expectedType == null || head.queryType().equals(expectedType)) return head;
+    }
+
+    // error handling: what if the type of head does not have the right arity?
+    else {
+      _status.storeError("Arity error: " + head.toString() + " has type " +
+        head.queryType().toString() + ", but " + structure.children.size() +
+        " arguments are given.", structure.token);
+      // read children
+      ArrayList<Term> args = new ArrayList<Term>();
+      for (int i = 0; i < structure.children.size(); i++) {
+        args.add(makeTerm(structure.children.get(i), null, false));
+      }
+      // make type that head _should_ have
+      Type type = (expectedType == null) ? head.queryType().queryOutputSort() : expectedType;
+      for (int i = args.size()-1; i >= 0; i--) {
+        type = TypeFactory.createArrow(args.get(i).queryType(), type);
+      }
+      // create a fake term of the right type
+      Term start = TermFactory.createConstant(head.toString(), type);
+      return TermFactory.createApp(start, args);
+    }
+
+    // remaining case: head had the right arity, but the resulting term did not have the right type
+    _status.storeError("Type error: expected term of type " + expectedType.toString() + ", but " +
+      "got " + head.toString() + " of type " + head.queryType() + ".", structure.token);
+    return TermFactory.createConstant(head.toString(), expectedType);
+  }
 
   // ============================= HELPER FUNCTIONALITY FOR UNIT TESTS ============================
 
   static Type readTypeForUnitTest(ParsingStatus ps) {
     CoraInputReader reader = new CoraInputReader(ps);
     return reader.readType();
+  }
+  
+  /** Data (the signature to use) and Type (the expected type of this term) may be null. */
+  static Term readTermForUnitTest(ParsingStatus ps, SymbolData data, Type type) {
+    CoraInputReader reader = new CoraInputReader(ps);
+    if (data != null) reader._symbols = data;
+    TermStructure structure = reader.readTermStructure();
+    if (structure == null || structure.errored) return null;
+    return reader.makeTerm(structure, type, true);
   }
 
   // ================================= FUNCTIONS FOR INTERNAL USE =================================
@@ -165,6 +715,19 @@ public class CoraInputReader {
     Type ret = reader.readType();
     Token token = status.nextToken();
     if (!token.isEof()) status.storeError("String continues after type has ended.", token);
+    status.throwCollectedErrors();
+    return ret;
+  }
+
+  /** Reads the given term from string */
+  public static Term readTermFromString(String str, TRS trs) {
+    ParsingStatus status = new ParsingStatus(CoraTokenData.getStringLexer(str), 10);
+    CoraInputReader reader = new CoraInputReader(status, trs);
+    TermStructure structure = reader.readTermStructure();
+    Term ret = null;
+    if (structure != null && !structure.errored) ret = reader.makeTerm(structure, null, true);
+    Token token = status.nextToken();
+    if (!token.isEof()) status.storeError("String continues after term has ended.", token);
     status.throwCollectedErrors();
     return ret;
   }

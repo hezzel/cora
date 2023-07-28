@@ -21,6 +21,7 @@ import cora.exceptions.TypingError;
 import cora.types.Type;
 import cora.terms.FunctionSymbol;
 import cora.terms.Variable;
+import cora.terms.MetaVariable;
 import cora.rewriting.Alphabet;
 import cora.rewriting.TRS;
 
@@ -31,12 +32,14 @@ import cora.rewriting.TRS;
 class SymbolData {
   private TRS _trs;                                   // TRS for parsing pre-defined symbols
   private TreeMap<String,FunctionSymbol> _alphabet;   // function symbols
-  private TreeMap<String,Variable> _environment;      // variables
+  private TreeMap<String,Variable> _variables;        // variables
+  private TreeMap<String,MetaVariable> _mvariables;   // meta-variables of arity ≥ 1
 
   SymbolData() {
     _trs = null;
     _alphabet = new TreeMap<String,FunctionSymbol>();
-    _environment = new TreeMap<String,Variable>();
+    _variables = new TreeMap<String,Variable>();
+    _mvariables = new TreeMap<String,MetaVariable>();
   }
 
   /**
@@ -47,7 +50,8 @@ class SymbolData {
   SymbolData(TRS trs) {
     _trs = trs;
     _alphabet = new TreeMap<String,FunctionSymbol>();
-    _environment = new TreeMap<String,Variable>();
+    _variables = new TreeMap<String,Variable>();
+    _mvariables = new TreeMap<String,MetaVariable>();
   }
 
   /**
@@ -92,39 +96,72 @@ class SymbolData {
     if (variable == null) throw new NullStorageError("SymbolData", "variable");
     String varname = variable.queryName();
     Type type = variable.queryType();
-    Variable existing = _environment.get(varname);
+    Variable existing = _variables.get(varname);
     if (existing != null && !variable.equals(existing)) {
       throw new Error("Duplicate call to SymbolData::addVariable: trying to overwrite " +
                       "previously declared variable " + varname);
     }
-    _environment.put(varname, variable);
+    _variables.put(varname, variable);
+  }
+
+  /**
+   * Save the given meta-variable: its name will now uniquely be associated with that meta-variable.
+   * Should not be used for meta-variables that have already been declared, although it is allowed
+   * if the meta-variables are equal.
+   * It is not intended to be used for meta-variables that are also variables (store those as
+   * variables instead), but this is not blocked.
+   */
+  public void addMetaVariable(MetaVariable mvar) {
+    if (mvar == null) throw new NullStorageError("SymbolData", "mvar");
+    String varname = mvar.queryName();
+    Type type = mvar.queryType();
+    MetaVariable existing = _mvariables.get(varname);
+    if (existing != null && !mvar.equals(existing)) {
+      throw new Error("Duplicate call to SymbolData::addMetaVariable: trying to overwrite " +
+                      "previously declared meta-variable " + varname);
+    }
+    _mvariables.put(varname, mvar);
   }
 
   /** Remove the variable by the given name, if any; and return it in this case. */
   public Variable removeVariable(String name) {
-    Variable existing = _environment.get(name);
-    _environment.remove(name);
+    Variable existing = _variables.get(name);
+    _variables.remove(name);
     return existing;
   }
 
-  /** This function removes all variable declarations from the current parse data. */
-  public void clearVariables() {
-    _environment.clear();
+  /**
+   * This function removes all variable and meta-variable declarations from the current parse data.
+   */
+  public void clearEnvironment() {
+    _variables.clear();
+    _mvariables.clear();
   }
 
   /** Returns the number of variables declared in the current parser data. */
   public int queryNumberVariables() {
-    return _environment.size();
+    return _variables.size();
   }
 
-  /** If the given variable has been declared, this returns its type, otherwise null. */
+  /** Returns the number of meta-variables declared in the current parser data. */
+  public int queryNumberMetaVariables() {
+    return _mvariables.size();
+  }
+
+  /** If the given variable has been declared, this returns it, otherwise null. */
   public Variable lookupVariable(String name) {
-    return _environment.get(name);
+    return _variables.get(name);
   }
 
-  /** Returns whether a symbol by the given name exists as a variable or function symbol. */
+  /** If the given meta-variable has been declared, this returns it, otherwise null. */
+  public MetaVariable lookupMetaVariable(String name) {
+    return _mvariables.get(name);
+  }
+
+  /** Returns whether a symbol by the given name exists as a (meta-)variable or function symbol. */
   public boolean symbolDeclared(String name) {
-    return lookupVariable(name) != null || lookupFunctionSymbol(name) != null;
+    return lookupVariable(name) != null || lookupMetaVariable(name) != null ||
+           lookupFunctionSymbol(name) != null;
   }
 
   /** Returns an Alphabet containing all the currently declared function symbols. */

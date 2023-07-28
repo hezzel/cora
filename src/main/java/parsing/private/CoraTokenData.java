@@ -81,8 +81,7 @@ public class CoraTokenData {
   private static TokenQueue combineLexer(Lexer lexer) {
     lexer = LexerFactory.createNestedCommentRemoverLexer(lexer, "COMMENTOPEN", "COMMENTCLOSE");
     lexer = new PartialStringWarner(lexer);
-    lexer = LexerFactory.createStringEditLexer(lexer, STRING,
-      new String[] {  "\\n", "\n", "\\\"", "\"" }, '\\');
+    lexer = new StringCheckLexer(lexer);
     return LexerFactory.createPushbackLexer(lexer);
   }
 
@@ -105,6 +104,27 @@ public class CoraTokenData {
     protected void modifyToken(Token token) throws LexerException {
       storeToken(token, 0, STRING, token.getText() + "\"");
       throw new LexerException(token, "Incomplete string constant (ended by end of line).");
+    }
+  }
+
+  /**
+   * Helper class used to throw an error when encountering incorrect escape characters in
+   * strings, but afterwards still process them anyway.
+   */
+  private static class StringCheckLexer extends TokenEditLexer {
+    StringCheckLexer(Lexer lexer) { super(lexer, STRING); }
+    protected void modifyToken(Token token) throws LexerException {
+      String str = token.getText();
+      storeToken(token, 0, STRING, str);
+      for (int i = 0; i < str.length()-1; i++) {
+        if (str.charAt(i) == '\\') {
+          if (str.charAt(i+1) == '\\') i++;
+          else if (str.charAt(i+1) != 'n' && str.charAt(i+1) != '\"') {
+            throw new LexerException(token, "Stray escape chacter at position " + (i+1) + " of " +
+              "string constant (" + str.substring(i,i+2) + " is not an escape sequence).");
+          }
+        }
+      }
     }
   }
 }

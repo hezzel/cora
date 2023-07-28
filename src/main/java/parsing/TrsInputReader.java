@@ -467,7 +467,7 @@ public class TrsInputReader {
           left.root);
       }
       r = makeSortedTerm(right, expected);
-      _symbols.clearVariables();
+      _symbols.clearEnvironment();
     }
 
     try { return RuleFactory.createFirstOrderRule(l, r); }
