@@ -23,7 +23,7 @@ import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.types.Type;
 import cora.terms.*;
-import cora.parsers.CoraInputReader;
+import cora.parsing.CoraInputReader;
 
 public class RuleTest {
   private Type type(String txt) {

@@ -16,7 +16,7 @@
 package cora.terms;
 
 import cora.exceptions.IllegalArgumentError;
-import cora.exceptions.ParserError;
+import cora.exceptions.CustomParserError;
 
 public class PositionFactory {
   public static Position empty = new EmptyPosition();
@@ -46,7 +46,7 @@ public class PositionFactory {
 
   /**
    * Returns the HeadPosition that the given string represents, or throws an appropriate
-   * ParserError if it does not represent anything.
+   * CustomParserError if it does not represent anything.
    */
   public static HeadPosition parseHPos(String text) {
     if (text.equals("")) return new HeadPosition(empty);
@@ -58,7 +58,7 @@ public class PositionFactory {
     if (star != -1) {
       try { chop = Integer.parseInt(text.substring(star+1)); }
       catch (NumberFormatException ex) {
-        throw new ParserError(1, star + 1, text.substring(star+1),
+        throw new CustomParserError(1, star + 1, text.substring(star+1),
           "head chop count should be an integer");
       }
       n = star;
@@ -71,7 +71,7 @@ public class PositionFactory {
     Position ret = empty;
     while (n > 0) {
       int dot = text.lastIndexOf('.', n-1);
-      if (dot == n-1) throw new ParserError(1, dot+1, text, "empty position index");
+      if (dot == n-1) throw new CustomParserError(1, dot+1, text, "empty position index");
       String part = text.substring(dot+1, n);
       boolean meta = false;
       if (part.length() > 0 && part.charAt(0) == '!') {
@@ -81,9 +81,11 @@ public class PositionFactory {
       int num;
       try { num = Integer.parseInt(part); }
       catch (NumberFormatException ex) {
-        throw new ParserError(1, dot+1, part, "position index should be an integer");
+        throw new CustomParserError(1, dot+1, part, "position index should be an integer");
       }
-      if (num < 0) throw new ParserError(1, dot+1, part, "position index should be at least 0");
+      if (num < 0) {
+        throw new CustomParserError(1, dot+1, part, "position index should be at least 0");
+      }
       if (meta) num = -num;
       ret = new ConsPosition(num, ret);
       n = dot;
@@ -99,7 +101,7 @@ public class PositionFactory {
   public static Position parsePos(String text) {
     int c = text.indexOf('*');
     if (c == -1) c = text.indexOf('☆');
-    if (c != -1) throw new ParserError(1, c, text,
+    if (c != -1) throw new CustomParserError(1, c, text,
       "a position does not contain * or ☆; only head positions do");
     HeadPosition pos = parseHPos(text);
     return pos.queryPosition();

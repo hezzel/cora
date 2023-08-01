@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import cora.types.*;
 import cora.terms.*;
-import cora.parsers.CoraInputReader;
+import cora.parsing.CoraInputReader;
 
 public class MstrsTest {
   private Type type(String str) {

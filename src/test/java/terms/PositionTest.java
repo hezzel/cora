@@ -364,32 +364,32 @@ public class PositionTest extends TermTestFoundation {
     assertTrue(pos.toString().equals("0.19.12.ε"));
   }
 
-  @Test(expected = cora.exceptions.ParserError.class)
+  @Test(expected = cora.exceptions.CustomParserError.class)
   public void testParseWithAsciiStar() {
     PositionFactory.parsePos("1.254.*3.☆15");
   }
 
-  @Test(expected = cora.exceptions.ParserError.class)
+  @Test(expected = cora.exceptions.CustomParserError.class)
   public void testParseWithUniStar() {
     PositionFactory.parsePos(("3.111.☆2"));
   }
 
-  @Test(expected = cora.exceptions.ParserError.class)
+  @Test(expected = cora.exceptions.CustomParserError.class)
   public void testParseWithEmptyIndex() {
     PositionFactory.parsePos("1..254");
   }
 
-  @Test(expected = cora.exceptions.ParserError.class)
+  @Test(expected = cora.exceptions.CustomParserError.class)
   public void testParseWithEmptyIndexAtTheEnd() {
     PositionFactory.parsePos("1.254.3..");
   }
 
-  @Test(expected = cora.exceptions.ParserError.class)
+  @Test(expected = cora.exceptions.CustomParserError.class)
   public void testParseWithNegativeIndex() {
     PositionFactory.parsePos("19.-1.12.ε");
   }
 
-  @Test(expected = cora.exceptions.ParserError.class)
+  @Test(expected = cora.exceptions.CustomParserError.class)
   public void testParseWithIllegalCharacter() {
     PositionFactory.parsePos("5.1@.3");
   }

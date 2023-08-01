@@ -17,10 +17,9 @@ package cora;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import cora.exceptions.ParserException;
 import cora.terms.Term;
 import cora.rewriting.TRS;
-import cora.parsers.CoraInputReader;
+import cora.parsing.CoraInputReader;
 import cora.parsing.TrsInputReader;
 
 /** Basic entry class: this reads a TRS and asks the user for a term, then reduces this term. */
@@ -36,7 +35,8 @@ public class Main {
     if (extension.equals("trs") || extension.equals("mstrs")) {
       return TrsInputReader.readTrsFromFile(file);
     }
-    if (extension.equals("cora")) {
+    if (extension.equals("cora") || extension.equals("strs") ||
+        extension.equals("cfs") || extension.equals("ams")) {
       return CoraInputReader.readProgramFromFile(file);
     }
     throw new Exception("Unknown file extension: " + extension + ".");
@@ -50,14 +50,17 @@ public class Main {
       System.out.print(trs.toString());
       System.out.print("Input term: ");
       String input = (new BufferedReader(new InputStreamReader(System.in))).readLine();
-      Term term = CoraInputReader.readTermFromString(input, trs, null);
+      Term term = CoraInputReader.readTermFromString(input, trs);
       do {
         term = trs.leftmostInnermostReduce(term);
         if (term != null) System.out.println("⇒ " + term.toString());
       } while (term != null);
     }
     catch (Exception e) {
-      System.out.println("Exception: " + e.getMessage());
+      System.out.println("Encountered an exception:\n" + e.getMessage());
+    }
+    catch (Error e) {
+      System.out.println("Encountered an error:\n" + e.getMessage());
     }
   }
 }

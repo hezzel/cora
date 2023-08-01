@@ -84,27 +84,27 @@ public class HeadPositionTest {
     assertTrue(hpos.toString().equals("2.1.ε"));
   }
 
-  @Test(expected = cora.exceptions.ParserError.class)
+  @Test(expected = cora.exceptions.CustomParserError.class)
   public void testParseWithDoubleStar() {
     PositionFactory.parseHPos("1.254.*3.☆15");
   }
 
-  @Test(expected = cora.exceptions.ParserError.class)
+  @Test(expected = cora.exceptions.CustomParserError.class)
   public void testParseWithEmptyIndex() {
     PositionFactory.parseHPos("1..254.*3");
   }
 
-  @Test(expected = cora.exceptions.ParserError.class)
+  @Test(expected = cora.exceptions.CustomParserError.class)
   public void testParseWithEmptyIndexAtTheEnd() {
     PositionFactory.parseHPos("1.254.3..");
   }
 
-  @Test(expected = cora.exceptions.ParserError.class)
+  @Test(expected = cora.exceptions.CustomParserError.class)
   public void testParseWithNegativeIndex() {
     PositionFactory.parseHPos("19.-1.12.ε");
   }
 
-  @Test(expected = cora.exceptions.ParserError.class)
+  @Test(expected = cora.exceptions.CustomParserError.class)
   public void testParseWithIllegalCharacter() {
     PositionFactory.parseHPos("5.1@.3.ε");
   }
