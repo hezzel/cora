@@ -99,17 +99,25 @@ public class TRSFactory {
     schemes.add(new Beta());
     if (includeEta) schemes.add(new Eta());
     doBasicChecks(alphabet, rules, schemes);
+    for (Rule rule : rules) {
+      if (!rule.queryLeftSide().isTrueTerm()) {
+        throw new IllegalRuleError("Curried Functionsal System", "Rule " + rule.toString() +
+          " cannot occur in a Curried Functional System, as it contains meta-variables.");
+      }
+    }
     return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes);
   }
 
   /**
    * Creates an Applicative Meta-variable System with the given alphabet, rules, the beta rule,
    * and also eta if this is indicated.
-   * For now, this just created a curried functional system, but once meta-variables are
-   * implemented a wider range of rules will be allowed.
    */
   public static TRS createAMS(Alphabet alphabet, List<Rule> rules, boolean includeEta) {
-    return createCFS(alphabet, rules, includeEta);
+    ArrayList<Scheme> schemes = new ArrayList<Scheme>();
+    schemes.add(new Beta());
+    if (includeEta) schemes.add(new Eta());
+    doBasicChecks(alphabet, rules, schemes);
+    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes);
   }
 }
 

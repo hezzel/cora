@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeMap;
 import cora.exceptions.IllegalRuleError;
+import cora.exceptions.IllegalSymbolError;
 import cora.exceptions.ParseError;
 import cora.parsing.lib.Token;
 import cora.parsing.lib.ParsingStatus;
@@ -71,6 +72,12 @@ class TermStructure {
 public class CoraInputReader {
   /** The type that should be used for all string constants. */
   public static Type STRINGTYPE = TypeFactory.createSort("String");
+
+  public static int MSTRS = 1;
+  public static int STRS = 2;
+  public static int CFS = 3;
+  public static int AMS = 4;
+  public static int DEFAULT = 4;
 
   /**
    * The reader keeps track of the status of reading so far; all read functions have a (potential)
@@ -690,6 +697,257 @@ public class CoraInputReader {
     return TermFactory.createConstant(head.toString(), expectedType);
   }
 
+  // ==================================== READING ENVIRONMENTS ====================================
+
+  /**
+   * environment ::= BRACEOPEN BRACECLOSE
+   *               | BRACEOPEN mdeclaration (COMMA mdeclaration)* BRACECLOSE
+   */
+  private void readEnvironment() {
+    if (_status.expect(CoraTokenData.BRACEOPEN, "environment opening brace {") == null) return;
+    if (_status.readNextIf(CoraTokenData.BRACECLOSE) != null) return;  // BRACEOPEN BRACECLOSE
+    while (true) {
+      readMetaVariableDeclaration();
+      if (_status.readNextIf(CoraTokenData.BRACECLOSE) != null) return;
+      if (_status.expect(CoraTokenData.COMMA, "comma or }") == null) {
+        if (!readRecoverEnvironment().getName().equals(CoraTokenData.COMMA)) return;
+      }
+    }
+  }
+
+  /**
+   * mdeclaration ::= IDENTIFIER DECLARE type
+   *                | IDENTIFIER DECLARE METAOPEN METACLOSE typearrow type
+   *                | IDENTIFIER DECLARE METAOPEN type (COMMA type)* METACLOSE typearrow type
+   */
+  private void readMetaVariableDeclaration() {
+    Token token = _status.expect(CoraTokenData.IDENTIFIER, "a variable or meta-variable name");
+    Token decl = _status.expect(CoraTokenData.DECLARE, "declare symbol (::)");
+    if (token == null && decl == null) return;
+
+    // METAOPEN METACLOSE typearrow or
+    // METAOPEN type (COMMA type)* METACLOSE typearrow
+    ArrayList<Type> args = new ArrayList<Type>();
+    if (_status.readNextIf(CoraTokenData.METAOPEN) != null) {
+      if (_status.readNextIf(CoraTokenData.METACLOSE) == null) {
+        while (true) {
+          Type type = readType();
+          if (type != null) args.add(type);
+          if (_status.readNextIf(CoraTokenData.METACLOSE) != null) break;
+          if (_status.expect(CoraTokenData.COMMA, "comma or ] or ⟩") == null) {
+            if (type == null) return; // no idea where we are now, probably try recovery
+          }
+        }
+      }
+      if (!tryReadTypeArrow()) {
+        Token tok = _status.peekNext();
+        _status.storeError("Unexpected token: " + tok.getText() + " (" + tok.getName() + "); " +
+          "expected type arrow ⇒.", tok);
+      }
+    }
+
+    Type type = readType();
+    if (type == null) return;
+
+    // make sure the symbol is new
+    String name = token.getText();
+    String kind = args.size() == 0 ? "variable" : "meta-variable";
+    if (_symbols.lookupFunctionSymbol(name) != null) {
+      _status.storeError("Name of " + kind + " " + name + " already occurs as a function symbol.",
+                         token);
+    }
+    else if (_symbols.symbolDeclared(name)) {
+      _status.storeError("Redeclaration of " + kind + " " + name + " in the same environment.",
+                         token);
+    }
+    // and if so, declare it!
+    else {
+      if (args.size() == 0) _symbols.addVariable(TermFactory.createVar(name, type));
+      else _symbols.addMetaVariable(TermFactory.createMetaVar(name, args, type));
+    }
+  }
+
+  /**
+   * We have encountered an error in an environment, and will now continue reading until the next
+   * token is a COMMA, BRACEOPEN, BRACECLOSE, or the end of a file.
+   *
+   * If it is BRACEOPEN or EOF, then the token is not read; if it is COMMA or BRACECLOSE, it is.
+   * The final token is returned.
+   */
+  private Token readRecoverEnvironment() {
+    Token next = _status.nextToken();
+    while (!next.isEof() && !next.getName().equals(CoraTokenData.COMMA) &&
+           !next.getName().equals(CoraTokenData.BRACEOPEN) &&
+           !next.getName().equals(CoraTokenData.BRACECLOSE)) next = _status.nextToken();
+    if (!next.getName().equals(CoraTokenData.COMMA) &&
+        !next.getName().equals(CoraTokenData.BRACECLOSE)) _status.pushBack(next);
+    return next;
+  }
+
+  // ====================================== READING PROGRAMS ======================================
+
+  /**
+   * This function recovers from a broken state, by reading until we come to something that is
+   * likely to be the start of a program line again.
+   */
+  private void recoverState() {
+    Token prev = null, curr = null;
+    boolean intype = true;    // set if there's any possibility we're inside a type
+    while (true) {
+      prev = curr;
+      curr = _status.nextToken();
+      if (curr.isEof()) return;
+      // { <-- we're at the start of a rule
+      if (curr.getName().equals(CoraTokenData.BRACEOPEN)) { _status.pushBack(curr); return; }
+      // } <-- we're past the rule declaration part, but still at the start of a rule; we're just
+      // probably going to run into typing trouble, but so be it
+      if (curr.getName().equals(CoraTokenData.BRACECLOSE)) { _status.pushBack(curr); return; }
+      // :: <-- we may be a token into a declaration; if it's not a function symbol declaration
+      // but a variable declaration, tryReadDeclaration has recovery functionality built in so we
+      // don't get illicit declarations
+      if (curr.getName().equals(CoraTokenData.DECLARE) && prev != null) {
+        _status.pushBack(curr);
+        _status.pushBack(prev);
+        return;
+      }
+      // ( or [ <-- if this comes directly after an identifier, we are not in a type
+      if ((curr.getName().equals(CoraTokenData.BRACKETOPEN) ||
+           curr.getName().equals(CoraTokenData.METAOPEN)) &&
+          prev != null && prev.getName().equals(CoraTokenData.IDENTIFIER)) {
+        intype = false;
+      }
+      // . <-- we're after a lambda declaration, so no longer in a type at least
+      if (curr.getName().equals(CoraTokenData.DOT)) intype = false;
+      // ⇒ <-- whatever we thought before, we are definitely reading a type
+      if (curr.getName().equals(CoraTokenData.TYPEARROW)) intype = true;
+      // → or -> when we're not in a type <-- we're before the right-hand side of a rule
+      if (curr.getName().equals(CoraTokenData.RULEARROW) ||
+          (curr.getName().equals(CoraTokenData.ARROW) && !intype)) {
+        TermStructure str = readTermStructure();
+        if (str != null) return;
+      }
+    }
+  }
+
+  /**
+   * declaration ::= IDENTIFIER DECLARE type
+   *
+   * A declaration for a symbol in the alphabet is immediately saved into the symbol data.  However,
+   * to avoid storing something that was actually meant to be part of an abstraction or variable
+   * declaration (with the user making errors), we also check if it is not followed by , or . or }
+   * before storing the declaration, to improve error recovery.
+   *
+   * If the upcoming two tokens are not IDENTIFIER DECLARE, then nothing is read and false returned.
+   * In all other cases, true is returned, and at least two tokens are read.
+   * If the type cannot be properly read, then error recovery is immediately done to get back to a
+   * program line.
+   */
+  private boolean tryReadDeclaration() {
+    Token constant = _status.readNextIf(CoraTokenData.IDENTIFIER);
+    if (constant == null) return false;
+    if (_status.readNextIf(CoraTokenData.DECLARE) == null) {
+      _status.pushBack(constant);
+      return false;
+    }
+    Type type = readType();
+    if (_status.nextTokenIs(CoraTokenData.BRACECLOSE)) return true;
+    if (_status.nextTokenIs(CoraTokenData.COMMA) || _status.nextTokenIs(CoraTokenData.DOT) ||
+        type == null) {
+      recoverState();
+      return true;
+    }
+
+    String name = constant.getText();
+    if (_symbols.lookupFunctionSymbol(name) != null) {
+      _status.storeError("Redeclaration of previously declared function symbol " + name + ".",
+                         constant);
+    }
+    else _symbols.addFunctionSymbol(TermFactory.createConstant(name, type));
+    return true;
+  }
+
+  /**
+   * rulearrow := RULEARROW | ARROW
+   *
+   * This function checks if the next token is one of the two arrows that may be used for rules,
+   * and if so, reads it and returns true.  If not, false is returned instead and an error stored.
+   *
+   * If a TYPEARROW is given instead, then it will also be read (since a type arrow should never
+   * occur at the place of a rule arrow) and true returned, but an error is still stored.
+   */
+  private boolean readRuleArrow() {
+    Token token;
+    if (_status.readNextIf(CoraTokenData.RULEARROW) != null) return true;
+    if ((token = _status.readNextIf(CoraTokenData.TYPEARROW)) != null) {
+      _status.storeError("Encountered unexpected type arrow ⇒; please use → for rules.", token);
+      return true;
+    }
+    return _status.expect(CoraTokenData.ARROW, "a rule arrow →, or ascii arrow ->") != null;
+  }
+
+  /**
+   * rule ::= environment? term rulearrow term
+   *
+   * When reading a rule, variables and meta-variables are refreshed because these differ for every
+   * rule.  If reading a term structure fails, we immediately do error recovery, to return to a
+   * state where the next rule or declaraiton can be read.
+   */
+  private Rule readRule() {
+    _symbols.clearEnvironment();
+    Token start = _status.peekNext();
+    if (_status.nextTokenIs(CoraTokenData.BRACEOPEN)) readEnvironment();
+    // this could happen due to error recovery, but means we should stop trying to read this rule
+    if (_status.nextTokenIs(CoraTokenData.BRACEOPEN)) return null;
+    TermStructure left = readTermStructure();
+    boolean ok = readRuleArrow();
+    TermStructure right = ok ? readTermStructure() : null;
+
+    if (left != null && right != null && !left.errored && !right.errored) {
+      Term l = makeTerm(left, null, true);
+      Term r = makeTerm(right, l.queryType(), false);
+      try { return RuleFactory.createRule(l, r); }
+      catch (IllegalRuleError e) {
+        _status.storeError(e.queryProblem(), start);
+        return null;
+      }
+    }
+
+    // error recovery: the structures aren't right
+    if (right != null && !right.errored) return null;
+    recoverState();
+    return null;
+  }
+
+
+  // =================================== READING A FULL PROGRAM ===================================
+
+  /**
+   * program ::= ( declaration | rule )*
+   */
+  private TRS readFullProgram(int kind) {
+    ArrayList<Rule> rules = new ArrayList<Rule>();
+    while (!_status.peekNext().isEof()) {
+      if (tryReadDeclaration()) continue;
+      Rule rule = readRule();
+      if (rule != null) rules.add(rule);
+    }
+
+    Alphabet alf = _symbols.queryCurrentAlphabet();
+    try {
+      if (kind == MSTRS) return TRSFactory.createMSTRS(alf, rules);
+      if (kind == STRS) return TRSFactory.createApplicativeTRS(alf, rules);
+      if (kind == CFS) return TRSFactory.createCFS(alf, rules, false);
+      return TRSFactory.createAMS(_symbols.queryCurrentAlphabet(), rules, false);
+    }
+    catch (IllegalRuleError e) {
+      _status.storeError(e.queryProblem(), null);
+    }
+    catch (IllegalSymbolError e) {
+      _status.storeError(e.queryProblem(), null);
+    }
+    return null;
+  }
+
   // ============================= HELPER FUNCTIONALITY FOR UNIT TESTS ============================
 
   static Type readTypeForUnitTest(ParsingStatus ps) {
@@ -704,6 +962,20 @@ public class CoraInputReader {
     TermStructure structure = reader.readTermStructure();
     if (structure == null || structure.errored) return null;
     return reader.makeTerm(structure, type, true);
+  }
+
+  /** Symbol declaration */
+  static boolean readDeclarationForUnitTest(ParsingStatus ps, SymbolData data) {
+    CoraInputReader reader = new CoraInputReader(ps);
+    if (data != null) reader._symbols = data;
+    return reader.tryReadDeclaration();
+  }
+
+  /** Reading rules */
+  static Rule readRuleForUnitTest(ParsingStatus ps, SymbolData data) {
+    CoraInputReader reader = new CoraInputReader(ps);
+    if (data != null) reader._symbols = data;
+    return reader.readRule();
   }
 
   // ================================= FUNCTIONS FOR INTERNAL USE =================================
@@ -728,6 +1000,41 @@ public class CoraInputReader {
     if (structure != null && !structure.errored) ret = reader.makeTerm(structure, null, true);
     Token token = status.nextToken();
     if (!token.isEof()) status.storeError("String continues after term has ended.", token);
+    status.throwCollectedErrors();
+    return ret;
+  }
+
+  /**
+   * Parses the given program, and returns the TRS that it defines.
+   * Here "kind" should be the kind of TRS (one of the constants defined at the head of the class).
+   */
+  public static TRS readProgramFromString(String str, int kind) {
+    ParsingStatus status = new ParsingStatus(CoraTokenData.getStringLexer(str), 10);
+    CoraInputReader reader = new CoraInputReader(status);
+    TRS ret = reader.readFullProgram(kind);
+    status.throwCollectedErrors();
+    return ret;
+  }
+
+  /**
+   * Parses the given program, and returns the TRS that it defines.  This assumes the input is
+   * the most permissive format currently supported.
+   */
+  public static TRS readProgramFromString(String str) {
+    return readProgramFromString(str, DEFAULT);
+  }
+
+  /** Reads the given file, parses the program in it, and returns the TRS that it defines. */
+  public static TRS readProgramFromFile(String filename) throws IOException {
+    ParsingStatus status = new ParsingStatus(CoraTokenData.getFileLexer(filename), 10);
+    CoraInputReader reader = new CoraInputReader(status);
+    String extension = filename.substring(filename.lastIndexOf(".") + 1, filename.length());
+    int kind = DEFAULT;
+    if (extension.equals("trs") || extension.equals("mstrs")) kind = MSTRS;
+    else if (extension.equals("atrs") || extension.equals("strs")) kind = STRS;
+    else if (extension.equals("cfs") || extension.equals("afs")) kind = CFS;
+    else if (extension.equals("ams") || extension.equals("afsm")) kind = AMS;
+    TRS ret = reader.readFullProgram(kind);
     status.throwCollectedErrors();
     return ret;
   }
