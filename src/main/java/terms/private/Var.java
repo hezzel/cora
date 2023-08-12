@@ -81,6 +81,15 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
   /** @return true */
   public boolean isApplicative() { return true; }
 
+  /** @return true (all variables are theory terms, since no non-theory symbols occur in them */
+  public boolean isTheoryTerm() { return true; }
+
+  /** @return false */
+  public boolean isValue() { return false; }
+
+  /** @return null, since this is not a value */
+  public Value toValue() { return null; }
+
   /** @return 0 */
   public int queryArity() { return 0; }
 

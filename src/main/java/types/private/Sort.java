@@ -24,13 +24,19 @@ import cora.exceptions.InappropriatePatternDataError;
  *
  * Note that Sort should not be used directly in the program.  Instead, use the Type or BaseType
  * interface, and the TypeFactory to create sorts.
+ *
+ * Sorts internally keep track whether they are a theory sort (which has some inherent meaning) or
+ * a non-theory sort.  However, equality of sorts is just by name; it is not allowed to use both a
+ * theory and non-theory sort of the same name in the same TRSs.
  */
 class Sort implements BaseType {
   private String _name;
+  private boolean _theorySort;
 
-  Sort(String name) {
+  Sort(String name, boolean theory) {
     if (name == null) throw new NullInitialisationError("Sort", "name");
     _name = name;
+    _theorySort = theory;
   }
 
   /** @return true */
@@ -38,6 +44,9 @@ class Sort implements BaseType {
 
   /** @return false */
   public boolean isArrowType() { return false; }
+
+  /** @return whether this was created to be a theory sort or not */
+  public boolean isTheorySort() { return _theorySort; }
 
   /** Returns a string representation of this sort. */
   public String toString() {

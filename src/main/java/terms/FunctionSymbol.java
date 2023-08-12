@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -37,9 +37,18 @@ public interface FunctionSymbol extends Term {
   /** Returns the number of arguments that this function symbol can (at most) be applied to. */
   public int queryArity();
 
+  /** Returns true if this is a theory symbol (which has a meaning in some theory). */
+  public boolean isTheorySymbol();
+
+  /**
+   * Returns a string that uniquely identifies the function symbol (which just the name does not).
+   */
+  public String toUniqueString();
+
   /**
    * Returns whether the current symbol is equal to another.
-   * This is the case if they have the same name, typing and other properties.
+   * This is the case if they have the same name, typing and other properties (e.g., a value and a
+   * non-value cannot be equal even if they have the same name and type).
    */
   public boolean equals(FunctionSymbol other);
 }

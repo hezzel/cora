@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.ArrayList;
 import cora.exceptions.ArityError;
 import cora.exceptions.IllegalArgumentError;
+import cora.exceptions.IncorrectStringException;
 import cora.types.Type;
 import cora.types.TypeFactory;
 
@@ -61,6 +62,26 @@ public class TermFactory {
     Type type = TypeFactory.unitSort;
     for (int i = 0; i < arity; i++) type = TypeFactory.createArrow(TypeFactory.unitSort, type);
     return new Constant(name, type);
+  }
+
+  /** Creates an Integer Value */
+  public static Value createValue(int n) {
+    return new IntegerValue(n);
+  }
+
+  /** Creates a Boolean Value */
+  public static Value createValue(boolean b) {
+    return new BooleanValue(b);
+  }
+
+  /** Create a String Value */
+  public static Value createValue(String s) {
+    return new StringValue(s);
+  }
+
+  /** Create a String Value with a string in quotes, and potentially with escape characters in it */
+  public static Value createEscapedStringValue(String s) throws IncorrectStringException {
+    return StringValue.parseUserStringValue(s);
   }
 
   /** Creates a functional term f(args) */

@@ -32,11 +32,11 @@ import cora.parsing.lib.ParsingStatus;
 
 public class CoraInputReaderTypeTest {
   private ParsingStatus makeStatus(String text) {
-    return new ParsingStatus(CoraTokenData.getStringLexer(text), 10);
+    return new ParsingStatus(CoraTokenData.getUnconstrainedStringLexer(text), 10);
   }
 
   private ParsingStatus makeStatus(String text, ErrorCollector collector) {
-    return new ParsingStatus(CoraTokenData.getStringLexer(text), collector);
+    return new ParsingStatus(CoraTokenData.getUnconstrainedStringLexer(text), collector);
   }
 
   @Test

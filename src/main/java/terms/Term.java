@@ -65,8 +65,14 @@ public interface Term {
 
   /** Returns whether the set of meta-variables is emtpy. */
   boolean isTrueTerm();
+
+  /** Returns whether the current term is a logical term. */
+  boolean isTheoryTerm();
   
-  /** Returns the number of arguments; that is, n for a term f(s1,...,sn). */
+  /** Returns whether the current term is a value (which implies that it is a logical term). */
+  boolean isValue();
+
+ /** Returns the number of arguments; that is, n for a term f(s1,...,sn). */
   int numberArguments();
 
   /** Returns the number of meta-arguments; that is, k for a term Z⟨t1,...,tk⟩(s1,...,sn). */
@@ -124,7 +130,10 @@ public interface Term {
    */
   MetaVariable queryMetaVariable();
 
-  /**
+  /** If the current term is a value, returns it; if not returns null. */
+  Value toValue();
+  
+   /**
    * Returns true if this term is first-order (so: the subterms at all positions have base type,
    * and no abstractions or variable applications are used), false otherwise.
    */

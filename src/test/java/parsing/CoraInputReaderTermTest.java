@@ -29,12 +29,12 @@ import cora.parsing.lib.ErrorCollector;
 import cora.parsing.lib.ParsingStatus;
 
 public class CoraInputReaderTermTest {
-  private ParsingStatus makeStatus(String text) {
-    return new ParsingStatus(CoraTokenData.getStringLexer(text), 10);
+  private ParsingStatus makeUStatus(String text, ErrorCollector collector) {
+    return new ParsingStatus(CoraTokenData.getUnconstrainedStringLexer(text), collector);
   }
 
-  private ParsingStatus makeStatus(String text, ErrorCollector collector) {
-    return new ParsingStatus(CoraTokenData.getStringLexer(text), collector);
+  private ParsingStatus makeCStatus(String text, ErrorCollector collector) {
+    return new ParsingStatus(CoraTokenData.getConstrainedStringLexer(text), collector);
   }
 
   private Type type(String str) {
@@ -51,14 +51,17 @@ public class CoraInputReaderTermTest {
     return data;
   }
 
-  private TRS generateTRS() {
-    return TRSFactory.createAMS(generateSignature().queryCurrentAlphabet(),
-                                new ArrayList<Rule>(), false);
+  private TRS generateTRS(boolean constrained) {
+    if (constrained) return TRSFactory.createCoraTRS(generateSignature().queryCurrentAlphabet(),
+                                                     new ArrayList<Rule>(), false);
+    else return TRSFactory.createAMS(generateSignature().queryCurrentAlphabet(),
+                                     new ArrayList<Rule>(), false);
   }
 
-  private Term readTerm(String txt, String expected, String message) {
+  private Term readTerm(String txt, String expected, boolean constrained, String message) {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus(txt + " NEXT", collector);
+    ParsingStatus status = constrained ? makeCStatus(txt + " NEXT", collector)
+                                       : makeUStatus(txt + " NEXT", collector);
     Type type = expected == null ? null : CoraInputReader.readTypeFromString(expected);
     Term t = CoraInputReader.readTermForUnitTest(status, generateSignature(), type);
     assertTrue(status.nextToken().getText().equals("NEXT"));
@@ -66,9 +69,10 @@ public class CoraInputReaderTermTest {
     return t;
   }
 
-  private Term readTermPrint(String txt, String expected, String message) {
+  private Term readTermPrint(String txt, String expected, boolean constrained, String message) {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus(txt, collector);
+    ParsingStatus status = constrained ? makeCStatus(txt + " NEXT", collector)
+                                       : makeUStatus(txt + " NEXT", collector);
     Type type = expected == null ? null : CoraInputReader.readTypeFromString(expected);
     Term t = CoraInputReader.readTermForUnitTest(status, generateSignature(), type);
     System.out.println("t = " + t);
@@ -77,52 +81,58 @@ public class CoraInputReaderTermTest {
     return null;
   }
 
+  @Test
+  public void testStringsNotAllowedInUnconstrainedTerms() {
+    Term t = readTerm("\"hi!\"", null, false,
+      "1:1: String constants are only allowed in constrained systems.\n");
+    assertTrue(t.queryType().equals(TypeFactory.stringSort));
+    assertTrue(t.toString().equals("\"hi!\""));
+  }
 
   @Test
   public void testReadSingleString() {
-    Term term = CoraInputReader.readTermFromString("\"hello world!\\n\"", generateTRS());
+    Term term = CoraInputReader.readTermFromString("\"hello world!\\n\"", generateTRS(true));
     assertTrue(term.queryType().toString().equals("String"));
     assertTrue(term.toString().equals("\"hello world!\\n\""));
   }
 
   @Test
   public void testReadMultipleStrings() {
-    Term term = CoraInputReader.readTermFromString("\"hello\"\n \" world!\"", generateTRS());
+    Term term = CoraInputReader.readTermFromString("\"hello\"\n \" world!\"", generateTRS(true));
     assertTrue(term.queryType().toString().equals("String"));
     assertTrue(term.toString().equals("\"hello world!\""));
   }
 
   @Test(expected = ParseError.class)
   public void testMoreThanAString() {
-    Term term = CoraInputReader.readTermFromString("\"a\"b", generateTRS());
+    Term term = CoraInputReader.readTermFromString("\"a\"b", generateTRS(true));
   }
 
   @Test
   public void testStringWithIllegalEscapeInIt() {
-    Term t = readTerm("\"a\\xb\"", null,
-      "1:1: Stray escape chacter at position 3 of string constant " +
-      "(\\x is not an escape sequence).\n");
+    Term t = readTerm("\"a\\xb\"", null, true,
+      "1:1: Cannot parse string \"a\\xb\": stray escape character at position 3: " +
+      "\\x is not an escape sequence.\n");
     assertTrue(t.toString().equals("\"a\\xb\""));
   }
 
   @Test
   public void testStringWithCorrectType() {
-    Term t = readTerm("\"test\"", "String", "");
+    Term t = readTerm("\"test\"", "String", true, "");
     assertTrue(t.queryType().toString().equals("String"));
   }
 
   @Test
   public void testStringWithIncorrectType() {
-    Term t = readTerm(" \"test\"", "string",
-      "1:2: Expected term of type string, but got a string constant " +
-        "(which has type String).\n");
+    Term t = readTerm(" \"test\"", "string", true,
+      "1:2: Expected term of type string, but got value \"test\" which has type String.\n");
     assertTrue(t.queryType().toString().equals("string"));
     assertTrue(t.toString().equals("\"test\""));
   }
 
   @Test
   public void testReadUndeclaredVariableWithoutType() {
-    Term t = readTerm("xx_yy", null,
+    Term t = readTerm("xx_yy", null, false,
       "1:1: Undeclared symbol: xx_yy.  Type cannot easily be deduced from context.\n");
     assertTrue(t.isVariable());
     assertFalse(t.queryVariable().isBinderVariable());
@@ -132,7 +142,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadUndeclaredVariableWithType() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("xx_yy next", collector);
+    ParsingStatus status = makeUStatus("xx_yy next", collector);
     Term t = CoraInputReader.readTermForUnitTest(status, generateSignature(), type("a -> b"));
     assertTrue(t.isVariable());
     assertFalse(t.queryVariable().isBinderVariable());
@@ -144,7 +154,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadDeclaredVariableWithoutType() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("x", collector);
+    ParsingStatus status = makeCStatus("x", collector);
     SymbolData data = generateSignature();
     Variable x = TermFactory.createVar("x", type("(a -> b) -> b"));
     data.addVariable(x);
@@ -156,7 +166,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadDeclaredVariableWithCorrectType() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("x", collector);
+    ParsingStatus status = makeUStatus("x", collector);
     SymbolData data = generateSignature();
     Variable x = TermFactory.createVar("x", type("(a -> b) -> b"));
     data.addVariable(x);
@@ -168,7 +178,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadDeclaredVariableWithIncorrectType() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("x", collector);
+    ParsingStatus status = makeCStatus("x", collector);
     SymbolData data = generateSignature();
     Variable x = TermFactory.createVar("x", type("(a -> b) -> b"));
     data.addVariable(x);
@@ -184,33 +194,33 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadBaseConstantWithoutType() {
-    Term t = CoraInputReader.readTermFromString("aa", generateTRS());
+    Term t = CoraInputReader.readTermFromString("aa", generateTRS(true));
     assertTrue(t.equals(TermFactory.createConstant("aa", type("a"))));
   }
 
   @Test
   public void testReadBaseConstantWithGoodType() {
-    Term t = readTerm("aa", "a", "");
+    Term t = readTerm("aa", "a", false, "");
     assertTrue(t.equals(TermFactory.createConstant("aa", type("a"))));
   }
 
   @Test
   public void testReadBaseConstantWithBadType() {
-    Term t = readTerm("aa", "b", "1:1: Expected term of type b, " +
-      "but got aa, which was declared as a function symbol of type a.\n");
+    Term t = readTerm("aa", "b", false, "1:1: Expected term of type b, " +
+      "but got function symbol aa which has type a.\n");
     assertTrue(t.equals(TermFactory.createConstant("aa", type("b"))));
   }
 
   @Test
   public void testReadHigherOrderConstant() {
-    Term t = readTerm("f", null, "");
+    Term t = readTerm("f", null, true, "");
     assertTrue(t.equals(TermFactory.createConstant("f", type("a ⇒ b ⇒ c ⇒ d"))));
   }
 
   @Test
   public void testReadDeclaredMetaVariableUsedAsVariableWithNoExpectedType() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("x", collector);
+    ParsingStatus status = makeUStatus("x", collector);
     SymbolData data = generateSignature();
     data.addMetaVariable(TermFactory.createMetaVar("x", type("a ⇒ b"), 1));
     Term t = CoraInputReader.readTermForUnitTest(status, data, null);
@@ -222,7 +232,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadDeclaredMetaVariableUsedAsVariableWithExpectedType() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("x", collector);
+    ParsingStatus status = makeCStatus("x", collector);
     SymbolData data = generateSignature();
     data.addMetaVariable(TermFactory.createMetaVar("x", type("a ⇒ b"), 1));
     Term t = CoraInputReader.readTermForUnitTest(status, data, type("c"));
@@ -233,26 +243,26 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadEmptyApplicationOfConstantWithType() {
-    Term t = readTerm("bb()", "b", "");
+    Term t = readTerm("bb()", "b", true, "");
     assertTrue(t.equals(TermFactory.createConstant("bb", type("b"))));
   }
 
   @Test
   public void testReadEmptyApplicationOfConstantWithoutType() {
-    Term t = readTerm("f()", null, "");
+    Term t = readTerm("f()", null, false, "");
     assertTrue(t.equals(TermFactory.createConstant("f", type("a -> b -> c -> d"))));
   }
 
   @Test
   public void testReadEmptyApplicationWithIncorrectType() {
-    Term t = readTerm("f()", "b", "1:1: Type error: expected term of " +
+    Term t = readTerm("f()", "b", false, "1:1: Type error: expected term of " +
       "type b, but got f of type a ⇒ b ⇒ c ⇒ d.\n");
     assertTrue(t.equals(TermFactory.createConstant("f", type("b"))));
   }
 
   @Test
   public void testReadFullApplication() {
-    Term t = readTerm("f(aa,bb,cc)", null, "");
+    Term t = readTerm("f(aa,bb,cc)", null, true, "");
     assertTrue(t.vars().size() == 0);
     assertTrue(t.toString().equals("f(aa, bb, cc)"));
     assertTrue(t.queryType().toString().equals("d"));
@@ -260,7 +270,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadIncompleteApplication() {
-    Term t = CoraInputReader.readTermFromString("f(aa,x)", generateTRS());
+    Term t = CoraInputReader.readTermFromString("f(aa,x)", generateTRS(false));
     assertTrue(t.vars().size() == 1);
     assertTrue(t.toString().equals("f(aa, x)"));
     assertTrue(t.queryType().toString().equals("c ⇒ d"));
@@ -268,7 +278,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadApplicationWithTooManyArgsNoTypeGiven() {
-    Term t = readTerm("h(aa, bb)", null,
+    Term t = readTerm("h(aa, bb)", null, false,
       "1:1: Arity error: h has type (c ⇒ d) ⇒ b, but 2 arguments are given.\n");
     assertTrue(t.vars().size() == 0);
     assertTrue(t.toString().equals("h(aa, bb)"));
@@ -277,7 +287,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadApplicationWithTooManyArgsSomeTypeGiven() {
-    Term t = readTerm("h(aa, bb)", "x",
+    Term t = readTerm("h(aa, bb)", "x", false,
       "1:1: Arity error: h has type (c ⇒ d) ⇒ b, but 2 arguments are given.\n");
     assertTrue(t.toString().equals("h(aa, bb)"));
     assertTrue(t.queryHead().equals(TermFactory.createConstant("h", type("a ⇒ b ⇒ x"))));
@@ -285,7 +295,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadApplicationWithIncorrectOutputType() {
-    Term t = readTerm("f(aa,x,cc)", "c",
+    Term t = readTerm("f(aa,x,cc)", "c", true,
       "1:1: Type error: expected term of type c, but got f(aa, x, cc) of type d.\n");
     assertTrue(t.toString().equals("f(aa, x, cc)"));
     assertTrue(t.isConstant());
@@ -294,8 +304,8 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadApplicationWithIncorrectArgumentType() {
-    Term t = readTerm("f(x,cc,y)", "d", "1:5: Expected term of type b, " +
-      "but got cc, which was declared as a function symbol of type c.\n");
+    Term t = readTerm("f(x,cc,y)", "d", true, "1:5: Expected term of type b, " +
+      "but got function symbol cc which has type c.\n");
     assertTrue(t.toString().equals("f(x, cc, y)"));
     assertTrue(t.queryHead().equals(TermFactory.createConstant("f", type("a ⇒ b ⇒ c ⇒ d"))));
     assertTrue(t.queryType().toString().equals("d"));
@@ -304,9 +314,9 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadApplicationWithIncorrectArgumentAndOutputType() {
-    Term t = readTerm("f(aa,cc,bb)", "c",
-      "1:6: Expected term of type b, but got cc, which was declared as a function symbol of type c.\n" +
-      "1:9: Expected term of type c, but got bb, which was declared as a function symbol of type b.\n" +
+    Term t = readTerm("f(aa,cc,bb)", "c", false,
+      "1:6: Expected term of type b, but got function symbol cc which has type c.\n" +
+      "1:9: Expected term of type c, but got function symbol bb which has type b.\n" +
       "1:1: Type error: expected term of type c, but got f(aa, cc, bb) of type d.\n");
     assertTrue(t.toString().equals("f(aa, cc, bb)"));
     assertTrue(t.isConstant());
@@ -315,7 +325,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadApplicationWithInconsistentVariables() {
-    Term t = readTerm("f(x, bb, x)", null, "1:10: Expected term of type c, " +
+    Term t = readTerm("f(x, bb, x)", null, false, "1:10: Expected term of type c, " +
       "but got x, which was previously used as a variable of type a.\n");
     assertTrue(t.toString().equals("f(x__1, bb, x__2)"));
     assertTrue(t.vars().size() == 2);
@@ -323,16 +333,29 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testNestedFunctionalTerm() {
-    Term t = readTerm("f(x,h(f(x, bb)),cc)", null, "");
+    Term t = readTerm("f(x,h(f(x, bb)),cc)", null, true, "");
     assertTrue(t.toString().equals("f(x, h(f(x, bb)), cc)"));
     assertTrue(t.queryType().equals(type("d")));
     assertTrue(t.vars().size() == 1);
   }
 
   @Test
+  public void testTermWithValues() {
+    ErrorCollector collector = new ErrorCollector(10);
+    ParsingStatus status = makeCStatus("new(3,true,\"test\",aa)", collector);
+    SymbolData data = generateSignature();
+    data.addFunctionSymbol(TermFactory.createConstant("new", type("Int ⇒ Bool ⇒ String ⇒ a ⇒ b")));
+    Term t = CoraInputReader.readTermForUnitTest(status, data, null);
+    assertTrue(t.toString().equals("new(3, true, \"test\", aa)"));
+    assertTrue(t.queryType().toString().equals("b"));
+    assertTrue(t.vars().size() == 0);
+    assertTrue(collector.queryErrorCount() == 0);
+  }
+
+  @Test
   public void testReadDeclaredVariableApplication() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z( aa,x )", collector);
+    ParsingStatus status = makeUStatus("Z( aa,x )", collector);
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createVar("Z", type("a ⇒ b ⇒ a")));
     Term t = CoraInputReader.readTermForUnitTest(status, data, null);
@@ -344,7 +367,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadUndeclaredVariableApplication() {
-    Term t = readTerm("Z(aa)", "b",
+    Term t = readTerm("Z(aa)", "b", false,
     // this is not allowed, even though technically we could derive the type
       "1:1: Undeclared symbol: Z.  Type cannot easily be deduced from context.\n");
     assertTrue(t.toString().equals("Z(aa)"));
@@ -354,7 +377,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testRepeatedApplication() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("f(aa)(x,cc) next", collector);
+    ParsingStatus status = makeCStatus("f(aa)(x,cc) next", collector);
     Term t = CoraInputReader.readTermForUnitTest(status, generateSignature(), null);
     assertTrue(t.toString().equals("f(aa, x, cc)"));
     assertTrue(status.nextToken().toString().equals("1:13: next (IDENTIFIER)"));
@@ -362,9 +385,20 @@ public class CoraInputReaderTermTest {
   }
 
   @Test
+  public void testValueAtHead() {
+    ErrorCollector collector = new ErrorCollector(10);
+    ParsingStatus status = makeCStatus("12(aa)", collector);
+    Term t = CoraInputReader.readTermForUnitTest(status, generateSignature(), null);
+    assertTrue(t.toString().equals("12"));
+    assertTrue(t.queryType().toString().equals("Int"));
+    assertTrue(status.nextToken().getText().equals("("));
+    assertTrue(collector.queryErrorCount() == 0);
+  }
+
+  @Test
   public void testMissingBracket() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("f(x,h(f(x, bb),cc)", collector);
+    ParsingStatus status = makeUStatus("f(x,h(f(x, bb),cc)", collector);
     assertTrue(CoraInputReader.readTermForUnitTest(status, generateSignature(), null) == null);
     assertTrue(collector.queryCollectedMessages().equals(
       "1:19: Expected a comma or closing bracket ) but got end of input.\n"));
@@ -373,7 +407,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testDuplicateComma() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("f(x,,y) next", collector);
+    ParsingStatus status = makeCStatus("f(x,,y) next", collector);
     assertTrue(CoraInputReader.readTermForUnitTest(status, generateSignature(), null) == null);
     assertTrue(status.nextToken().toString().equals("1:9: next (IDENTIFIER)"));
     assertTrue(collector.queryCollectedMessages().equals(
@@ -383,7 +417,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testOnlyCommas() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("f(,,,) next", collector);
+    ParsingStatus status = makeCStatus("f(,,,) next", collector);
     assertTrue(CoraInputReader.readTermForUnitTest(status, generateSignature(), null) == null);
     assertTrue(status.nextToken().toString().equals("1:8: next (IDENTIFIER)"));
     assertTrue(collector.queryCollectedMessages().equals(
@@ -394,7 +428,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testMissingComma() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("f(x,h(f(x, bb)) cc) next", collector);
+    ParsingStatus status = makeUStatus("f(x,h(f(x, bb)) cc) next", collector);
     assertTrue(CoraInputReader.readTermForUnitTest(status, generateSignature(), null) == null);
     assertTrue(status.nextToken().toString().equals("1:21: next (IDENTIFIER)"));
     assertTrue(collector.queryCollectedMessages().equals(
@@ -403,7 +437,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadBasicAbstraction() {
-    Term t = readTerm("λx :: a. f(x, bb, y)", null, "");
+    Term t = readTerm("λx :: a. f(x, bb, y)", null, false, "");
     assertTrue(t.toString().equals("λx.f(x, bb, y)"));
     assertTrue(t.vars().size() == 1);
     assertTrue(t.queryType().toString().equals("a ⇒ d"));
@@ -411,7 +445,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadMultipleAbstractionWithBinderDeclarations() {
-    Term t = readTerm("λx :: a, y ::c. f(x, bb, y)", null, "");
+    Term t = readTerm("λx :: a, y ::c. f(x, bb, y)", null, false, "");
     assertTrue(t.toString().equals("λx.λy.f(x, bb, y)"));
     assertTrue(t.vars().size() == 0);
     assertTrue(t.queryType().toString().equals("a ⇒ c ⇒ d"));
@@ -419,14 +453,14 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadAbstractionWithoutBinderDeclaration() {
-    Term t = readTerm("h(\\x.f(aa,bb,x))", null, "");
+    Term t = readTerm("h(\\x.f(aa,bb,x))", null, true, "");
     assertTrue(t.toString().equals("h(λx.f(aa, bb, x))"));
     assertTrue(t.vars().size() == 0);
   }
 
   @Test
   public void testReadAbstractionWithTypeExpectationGivenButUnnecessary() {
-    Term t = readTerm("\\x::a.f(x,bb, cc)", "a -> d", "");
+    Term t = readTerm("\\x::a.f(x,bb, cc)", "a -> d", true, "");
     assertTrue(t.toString().equals("λx.f(x, bb, cc)"));
     assertTrue(t.vars().size() == 0);
     assertTrue(t.queryType().toString().equals("a ⇒ d"));
@@ -434,7 +468,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadAbstractionWithTypeExpectationGivenAndNecessary() {
-    Term t = readTerm("λx.f(x,bb, cc)", "a -> d", "");
+    Term t = readTerm("λx.f(x,bb, cc)", "a -> d", true, "");
     assertTrue(t.toString().equals("λx.f(x, bb, cc)"));
     assertTrue(t.vars().size() == 0);
     assertTrue(t.queryType().toString().equals("a ⇒ d"));
@@ -442,7 +476,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadAbstractionWithTypeExpectationGivenThatDoesNotMatchInput() {
-    Term t = readTerm("\\x::a.f(x,bb, cc)", "b -> d",
+    Term t = readTerm("\\x::a.f(x,bb, cc)", "b -> d", false,
       "1:2: Type error: expected subterm of type b ⇒ d, but got abstraction with variable of type a.\n" +
       "1:9: Expected term of type a, but got x, which was previously used as a variable of type b.\n");
     assertTrue(t.toString().equals("λx1.f(x, bb, cc)"));
@@ -452,7 +486,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadAbstractionWithTypeExpectationGivenThatDoesNotMatchOutput() {
-    Term t = readTerm("\\x::a.f(x,bb, cc)", "a -> c",
+    Term t = readTerm("\\x::a.f(x,bb, cc)", "a -> c", false,
       "1:7: Type error: expected term of type c, but got f(x, bb, cc) of type d.\n");
     assertTrue(t.toString().equals("λx.f(x, bb, cc)"));
     assertTrue(t.vars().size() == 0);
@@ -461,7 +495,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadAbstractionWhereTypeCannotFullyBeDerived() {
-    Term t = readTerm("\\x :: a, y, z :: c.f(x,y,z)", null,
+    Term t = readTerm("\\x :: a, y, z :: c.f(x,y,z)", null, true,
       "1:10: Cannot derive type of binder y from context; it should be denoted directly in the "+
         "abstraction.\n");
     assertTrue(t.toString().equals("λx.λy1.λz.f(x, y, z)"));
@@ -472,7 +506,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadAbstractionTypeOfVariableGivenInTheWrongWay() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("λx.x", collector);
+    ParsingStatus status = makeUStatus("λx.x", collector);
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createVar("x", type("a")));
     Term t = CoraInputReader.readTermForUnitTest(status, data, null);
@@ -486,7 +520,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadAbstractionWhenParseDataAlreadyContainsVariableAsBinder() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("λx::b.x", collector);
+    ParsingStatus status = makeUStatus("λx::b.x", collector);
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createBinder("x", type("a")));
     Term t = CoraInputReader.readTermForUnitTest(status, data, null);
@@ -499,7 +533,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadAbstractionWhenParseDataAlreadyContainsVariableAsFree() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("λx::b.x", collector);
+    ParsingStatus status = makeUStatus("λx::b.x", collector);
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createVar("x", type("a")));
     Term t = CoraInputReader.readTermForUnitTest(status, data, null);
@@ -512,7 +546,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadAbstractionWhenParseDataAlreadyContainsVariableAsFunction() {
-    Term t = readTerm("λaa::b.aa", null,
+    Term t = readTerm("λaa::b.aa", null, true,
       "1:2: Ambiguous binder: this name has already been declared as a function symbol.\n");
     assertTrue(t.toString().equals("λaa.aa"));
     assertTrue(t.queryType().toString().equals("b ⇒ a"));
@@ -521,7 +555,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadAbstractionWhenParseDataAlreadyContainsVariableAsMetavariable() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("λx::a.x[ x ]", collector);
+    ParsingStatus status = makeCStatus("λx::a.x[ x ]", collector);
     SymbolData data = generateSignature();
     data.addMetaVariable(TermFactory.createMetaVar("x", type("a -> b"), 1));
     Term t = CoraInputReader.readTermForUnitTest(status, data, null);
@@ -535,7 +569,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadAbstractionWithDuplicateVariableName() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("λx::a, y :: b, x :: c.x", collector);
+    ParsingStatus status = makeUStatus("λx::a, y :: b, x :: c.x", collector);
     SymbolData data = generateSignature();
     Term t = CoraInputReader.readTermForUnitTest(status, data, null);
     assertTrue(t.toString().equals("λx.λy.λx1.x1"));
@@ -546,7 +580,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadAbstractionAtHeadOfApplication() {
-    Term t = readTerm("(λx :: a, y ::c. f(x,bb,y))(aa,cc)", null, "");
+    Term t = readTerm("(λx :: a, y ::c. f(x,bb,y))(aa,cc)", null, false, "");
     assertTrue(t.toString().equals("(λx.λy.f(x, bb, y))(aa, cc)"));
     assertTrue(t.queryType().toString().equals("d"));
   }
@@ -554,7 +588,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadAbstractionWithBrokenType() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("λx :: a -> .x y", collector);
+    ParsingStatus status = makeCStatus("λx :: a -> .x y", collector);
     Term t = CoraInputReader.readTermForUnitTest(status, generateSignature(), null);
     assertTrue(t.toString().equals("λx.x"));
     assertTrue(t.queryType().toString().equals("a ⇒ a"));
@@ -566,7 +600,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadAbstractionWithMissingType() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("λx :: .x y", collector);
+    ParsingStatus status = makeUStatus("λx :: .x y", collector);
     Term t = CoraInputReader.readTermForUnitTest(status, generateSignature(), type("o ⇒ o"));
     assertTrue(t == null);
     assertTrue(status.nextToken().toString().equals("1:10: y (IDENTIFIER)"));
@@ -576,7 +610,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testReadMultipleAbstractionWithMissingComma() {
-    Term t = readTerm("\\x :: a y.f(x,y,cc)", "a -> b -> d",
+    Term t = readTerm("\\x :: a y.f(x,y,cc)", "a -> b -> d", false,
       "1:9: Expected a comma or dot but got IDENTIFIER (y).\n");
     assertTrue(t.toString().equals("λx.λy.f(x, y, cc)"));
     assertTrue(t.queryType().toString().equals("a ⇒ b ⇒ d"));
@@ -585,7 +619,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testCompletelyDifferentTokenInAbstractionList() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("\\x \"test\".aa", collector);
+    ParsingStatus status = makeCStatus("\\x \"test\".aa", collector);
     assertTrue(CoraInputReader.readTermForUnitTest(status, generateSignature(), null) == null);
     assertTrue(status.nextToken().toString().equals("1:10: . (DOT)"));
     assertTrue(collector.queryCollectedMessages().equals(
@@ -594,21 +628,21 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testMissingBinderName() {
-    Term t = readTerm("λ :: a, x :: b.x", null,
+    Term t = readTerm("λ :: a, x :: b.x", null, true,
       "1:3: Expected an identifier (variable name) but got DECLARE (::).\n");
     assertTrue(t == null);
   }
 
   @Test
   public void testExtraCommaInAbstractionBinders() {
-    Term t = readTerm("λ x, .aa", null,
+    Term t = readTerm("λ x, .aa", null, true,
       "1:6: Expected an identifier (variable name) but got DOT (.).\n");
     assertTrue(t == null);
   }
 
   @Test
   public void testUndeclaredMetaVariableWithEmptyArgumentsListTypeGiven() {
-    Term t = readTerm("Z[]", "a ⇒ b", "");
+    Term t = readTerm("Z[]", "a ⇒ b", false, "");
     assertTrue(t.isVariable());
     assertTrue(t.queryType().equals(type("a ⇒ b")));
     assertTrue(t.toString().equals("Z"));
@@ -616,7 +650,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testUndeclaredMetaVariableWithEmptyArgumentsListTypeNotGiven() {
-    Term t = readTerm("Z⟨⟩", null,
+    Term t = readTerm("Z⟨⟩", null, true,
       "1:1: Undeclared (meta-)variable: Z.  Type cannot easily be deduced from context.\n");
     assertTrue(t.isVariable());
     assertTrue(t.queryType().toString().equals("o"));
@@ -626,7 +660,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testDeclaredMetaVariableWithEmptyArgumentsListCorrectTypeGiven() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z[⟩", collector);
+    ParsingStatus status = makeUStatus("Z[⟩", collector);
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createVar("Z", type("b")));
     Term t = CoraInputReader.readTermForUnitTest(status, data, type("b"));
@@ -639,7 +673,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testDeclaredMetaVariableWithEmptyArgumentsListIncorrectTypeGiven() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z⟨⟩", collector);
+    ParsingStatus status = makeCStatus("Z⟨⟩", collector);
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createVar("Z", type("b ⇒ a")));
     Term t = CoraInputReader.readTermForUnitTest(status, data, type("a ⇒ b"));
@@ -655,7 +689,7 @@ public class CoraInputReaderTermTest {
   public void testDeclaredMetaVariableWithEmptyArgumentsListTypeNotGiven() {
     // declared as higher type
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z⟨]", collector);
+    ParsingStatus status = makeCStatus("Z⟨]", collector);
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createVar("Z", type("b ⇒ a")));
     Term t = CoraInputReader.readTermForUnitTest(status, data, null);
@@ -667,7 +701,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testMetaVariableWithEmptyArgumentsListDeclaredAsFunctionSymbol() {
-    Term t = readTerm("aa[]", null, "1:1: Meta-application for meta-variable aa, " +
+    Term t = readTerm("aa[]", null, false, "1:1: Meta-application for meta-variable aa, " +
       "which was previously declared as a function symbol.\n");
     assertTrue(t.toString().equals("aa"));
     assertTrue(t.isVariable());
@@ -678,7 +712,7 @@ public class CoraInputReaderTermTest {
   public void testMetaVariableWithEmptyArgumentsListDeclaredAsBinder() {
     // declared as higher type
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z[]", collector);
+    ParsingStatus status = makeCStatus("Z[]", collector);
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createBinder("Z", type("b ⇒ a")));
     Term t = CoraInputReader.readTermForUnitTest(status, data, type("x"));
@@ -692,7 +726,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testMetaVariableWithEmptyArgumentsListDeclaredAsHigherMetaVar() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z⟨⟩", collector);
+    ParsingStatus status = makeUStatus("Z⟨⟩", collector);
     SymbolData data = generateSignature();
     data.addMetaVariable(TermFactory.createMetaVar("Z", type("b ⇒ a"), 1));
     Term t = CoraInputReader.readTermForUnitTest(status, data, null);
@@ -707,7 +741,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testMetaApplicationWithUndeclaredMetaButDeclaredArgsTypeKnown() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z[x]", collector);
+    ParsingStatus status = makeUStatus("Z[x]", collector);
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createBinder("x", type("a")));
     Term t = CoraInputReader.readTermForUnitTest(status, data, type("b -> c"));
@@ -723,7 +757,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testMetaApplicationWithUndeclaredMetaButDeclaredArgsTypeUnknown() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z[x]", collector);
+    ParsingStatus status = makeUStatus("Z[x]", collector);
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createBinder("x", type("a")));
     Term t = CoraInputReader.readTermForUnitTest(status, data, null);
@@ -738,7 +772,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testMetaApplicationWithDeclaredMetaButUndeclaredArg() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z[x]", collector);
+    ParsingStatus status = makeCStatus("Z[x]", collector);
     SymbolData data = generateSignature();
     data.addMetaVariable(TermFactory.createMetaVar("Z", type("a ⇒ a"), 1));
     Term t = CoraInputReader.readTermForUnitTest(status, data, null);
@@ -752,7 +786,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testMetaApplicationWithEverythingDeclaredButIncorrectType() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z[x⟩", collector);
+    ParsingStatus status = makeCStatus("Z[x⟩", collector);
     SymbolData data = generateSignature();
     data.addMetaVariable(TermFactory.createMetaVar("Z", type("a ⇒ a"), 1));
     Term t = CoraInputReader.readTermForUnitTest(status, data, type("b"));
@@ -766,7 +800,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testMetaApplicationWithNothingDeclared() {
-    Term t = readTerm("Z[x,aa,y]", null,
+    Term t = readTerm("Z[x,aa,y]", null, false,
       "1:1: Cannot derive output type of meta-variable Z from context.\n" +
       "1:3: Undeclared symbol: x.  Type cannot easily be deduced from context.\n" +
       "1:8: Undeclared symbol: y.  Type cannot easily be deduced from context.\n");
@@ -776,7 +810,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testMetaApplicationWithJustOnePartMissing() {
-    Term t = readTerm("Z[x,aa]", "u",
+    Term t = readTerm("Z[x,aa]", "u", true,
       "1:3: Undeclared symbol: x.  Type cannot easily be deduced from context.\n");
     assertTrue(t.toString().equals("Z⟨x, aa⟩"));
     assertTrue(t.queryType().toString().equals("u"));
@@ -784,7 +818,7 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testMetaVariableAlreadyDeclaredAsFunctionSymbolWithTypeExpected() {
-    Term t = readTerm("f⟨aa,y]", "c ⇒ e",
+    Term t = readTerm("f⟨aa,y]", "c ⇒ e", true,
       "1:1: Unexpected meta-application with meta-variable f, which was previously declared as a function symbol.\n" +
       "1:6: Undeclared symbol: y.  Type cannot easily be deduced from context.\n");
     assertTrue(t.queryType().toString().equals("c ⇒ e"));
@@ -793,8 +827,8 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testMetaVariableAlreadyDeclaredAsFunctionSymbolWithoutTypeExpected() {
-    Term t = readTerm("f⟨aa⟩", null, "1:1: Unexpected meta-application with meta-variable " +
-      "f, which was previously declared as a function symbol.\n");
+    Term t = readTerm("f⟨aa⟩", null, false, "1:1: Unexpected meta-application with " +
+      "meta-variable f, which was previously declared as a function symbol.\n");
     assertTrue(t.queryType().toString().equals("o"));
     assertTrue(t.toString().equals("f⟨aa⟩"));
   }
@@ -802,7 +836,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testMetaVariableAlreadyDeclaredAsVariable() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z[x]", collector);
+    ParsingStatus status = makeUStatus("Z[x]", collector);
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createVar("Z", type("a ⇒ a")));
     data.addVariable(TermFactory.createVar("x", type("b")));
@@ -820,7 +854,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testMetaVariableDeclaredWithGreaterArity() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z[x]", collector);
+    ParsingStatus status = makeUStatus("Z[x]", collector);
     SymbolData data = generateSignature();
     data.addMetaVariable(TermFactory.createMetaVar("Z", type("a ⇒ a ⇒ a"), 2));
     Term t = CoraInputReader.readTermForUnitTest(status, data, type("zot"));
@@ -836,7 +870,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testMetaVariableDeclaredWithSmallerArity() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z⟨aa,y⟩", collector);
+    ParsingStatus status = makeCStatus("Z⟨aa,y⟩", collector);
     SymbolData data = generateSignature();
     data.addMetaVariable(TermFactory.createMetaVar("Z", type("a ⇒ a ⇒ a"), 1));
     Term t = CoraInputReader.readTermForUnitTest(status, data, null);
@@ -851,7 +885,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testCorrectMultiApplicationWithMetaVariableDeclared() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z⟨x,y⟩", collector);
+    ParsingStatus status = makeUStatus("Z⟨x,y⟩", collector);
     SymbolData data = generateSignature();
     data.addMetaVariable(TermFactory.createMetaVar("Z", type("a ⇒ a ⇒ a"), 2));
     Term t = CoraInputReader.readTermForUnitTest(status, data, type("a"));
@@ -865,7 +899,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadNestedMeta() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z⟨aa,Y[x⟩,cc]", collector);
+    ParsingStatus status = makeCStatus("Z⟨aa,Y[x⟩,cc]", collector);
     SymbolData data = generateSignature();
     data.addMetaVariable(TermFactory.createMetaVar("Y", type("a ⇒ b"), 1));
     Term t = CoraInputReader.readTermForUnitTest(status, data, type("d"));
@@ -879,7 +913,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testAppliedMetaApplication() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z⟨aa⟩(bb,cc)", collector);
+    ParsingStatus status = makeCStatus("Z⟨aa⟩(bb,cc)", collector);
     SymbolData data = generateSignature();
     data.addMetaVariable(TermFactory.createMetaVar("Z", type("a ⇒ b ⇒ c ⇒ d"), 1));
     Term t = CoraInputReader.readTermForUnitTest(status, data, type("d"));
@@ -890,14 +924,14 @@ public class CoraInputReaderTermTest {
 
   @Test
   public void testMetaApplicationWithExtraComma() {
-    Term t = readTerm("Z[aa,,bb]", "u",
+    Term t = readTerm("Z[aa,,bb]", "u", true,
       "1:6: Unexpected comma; expected term or meta-closing bracket ]\n");
     assertTrue(t == null);
   }
 
   @Test
   public void testMetaApplicationWithMissingCommas() {
-    Term t = readTerm("Z[aa bb cc]", "u",
+    Term t = readTerm("Z[aa bb cc]", "u", false,
       "1:6: Expected a comma or meta-closing bracket ] but got IDENTIFIER (bb).\n" +
       "1:9: Expected a comma or meta-closing bracket ] but got IDENTIFIER (cc).\n");
     assertTrue(t == null);
@@ -906,7 +940,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testMissingCloseBracket() {
     ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("Z⟨aa,x}", collector);
+    ParsingStatus status = makeCStatus("Z⟨aa,x}", collector);
     Term t = CoraInputReader.readTermForUnitTest(status, generateSignature(), type("d"));
     assertTrue(t == null);
     assertTrue(status.nextToken().toString().equals("1:7: } (BRACECLOSE)"));

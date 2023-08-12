@@ -117,6 +117,21 @@ class MetaApplication extends TermInherit {
     return false;
   }
 
+  public boolean isTheoryTerm() {
+    for (int i = 0; i < _args.size(); i++) {
+      if (!_args.get(i).isTheoryTerm()) return false;
+    }
+    return true;
+  }
+
+  public boolean isValue() {
+    return false;
+  }
+
+  public Value toValue() {
+    return null;
+  }
+
   /** @return 0, since a meta-application does not have arguments */
   public int numberArguments() {
     return 0;

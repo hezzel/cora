@@ -97,6 +97,21 @@ class Abstraction extends TermInherit {
     return false;
   }
 
+  /** @return whether the immediate subterm is a logical term */
+  public boolean isTheoryTerm() {
+    return _subterm.isTheoryTerm();
+  }
+
+  /** @return false, since an abstraction cannot be a value */
+  public boolean isValue() {
+    return false;
+  }
+
+  /** @return null, since an abstraction is not a value. */
+  public Value toValue() {
+    return null;
+  }
+
   /** @return 0, since the subterm is not an argument */
   public int numberArguments() {
     return 0;

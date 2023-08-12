@@ -167,6 +167,25 @@ class Application extends TermInherit {
     return _head.isAbstraction();
   }
 
+  /** Returns whether the head and all arguments are logical terms. */
+  public boolean isTheoryTerm() {
+    if (!_head.isTheoryTerm()) return false;
+    for (int i = 0; i < _args.size(); i++) {
+      if (!_args.get(i).isTheoryTerm()) return false;
+    }
+    return true;
+  }
+  
+  /** Returns false, since an application cannot be a value. */
+  public boolean isValue() {
+    return false;
+  }
+
+  /** @return null, since an application is not a value. */
+  public Value toValue() {
+    return null;
+  }
+
   /** For a term h(s1,...,sn), this returns n. */
   public int numberArguments() {
     return _args.size();

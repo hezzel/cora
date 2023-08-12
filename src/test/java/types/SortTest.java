@@ -23,16 +23,16 @@ import java.util.ArrayList;
 
 public class SortTest {
   private BaseType intType() {
-    return new Sort("Int");
+    return new Sort("Int", true);
   }
 
   private BaseType boolType() {
-    return new Sort("Bool");
+    return new Sort("Bool", false);
   }
 
   @Test(expected = NullInitialisationError.class)
   public void testConstructionWithNullGivesError() {
-    Type x = new Sort(null);
+    Type x = new Sort(null, false);
   }
 
   @Test(expected = InappropriatePatternDataError.class)
@@ -47,7 +47,7 @@ public class SortTest {
 
   @Test
   public void testToStringIsJustTheName() {
-    Type xxx = new Sort("x⇒X(x)~ ");
+    Type xxx = new Sort("x⇒X(x)~ ", true);
     assertTrue(xxx.toString().equals("x⇒X(x)~ "));
   }
 
@@ -61,9 +61,9 @@ public class SortTest {
 
   @Test
   public void testEqualityWithCapitals() {
-    Type xxa = new Sort("xXx");
-    Type xxb = new Sort("xXx");
-    Type xxc = new Sort("xxX");
+    Type xxa = new Sort("xXx", true);
+    Type xxb = new Sort("xXx", false);
+    Type xxc = new Sort("xxX", false);
     assertTrue(xxa.equals(xxb));
     assertFalse(xxa.equals(xxc));
   }

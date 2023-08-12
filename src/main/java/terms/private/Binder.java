@@ -81,6 +81,15 @@ class Binder extends LeafTermInherit implements Variable {
   /** @return false (binder variables do not occur in first-order terms) */
   public boolean isFirstOrder() { return false; }
 
+  /** @return true (all variables are theory terms, since no non-theory symbols occur in them */
+  public boolean isTheoryTerm() { return true; }
+
+  /** @return false */
+  public boolean isValue() { return false; }
+
+  /** @return null, since this is not a value */
+  public Value toValue() { return null; }
+
   /** Returns the name this variable was set up with. */
   public String queryName() {
     return _name;

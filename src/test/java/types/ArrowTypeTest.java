@@ -23,11 +23,11 @@ import java.util.ArrayList;
 
 public class ArrowTypeTest {
   private BaseType intType() {
-    return new Sort("Int");
+    return new Sort("Int", false);
   }
 
   private BaseType boolType() {
-    return new Sort("Bool");
+    return new Sort("Bool", true);
   }
 
   @Test(expected = NullInitialisationError.class)
@@ -61,7 +61,7 @@ public class ArrowTypeTest {
   @Test
   public void testToString() {
     ArrowType at1 = new ArrowType(boolType(), intType());
-    ArrowType at2 = new ArrowType(at1, new Sort("Array"));
+    ArrowType at2 = new ArrowType(at1, new Sort("Array", false));
     ArrowType at3 = new ArrowType(at1, at1);
     assertTrue(at1.toString().equals("Bool ⇒ Int"));
     assertTrue(at2.toString().equals("(Bool ⇒ Int) ⇒ Array"));

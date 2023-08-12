@@ -31,24 +31,30 @@ import cora.terms.Path;
  * It is key to rewriting, and it is that which we analyse for various properties.
  *
  * To be able to analyse TRSs, we impose the limitation that the rules can be expressed as a finite
- * number of standard rules, and a finite number of rule schemes, where the latter essentially
- * generates a countable number of rules.  For now, we limit interest to beta and eta as rule
- * schemes, so techniques know how to deal with this.
+ * number of standard rules (which are allowed to be constrained), and a finite number of rule
+ * schemes, where the latter essentially generates a countable number of rules.  For now, we limit
+ * interest to beta and eta as rule schemes, so techniques know how to deal with this.
+ *
+ * To be able to deal with the constraints and calculation rules, the TRS internally tracks whether
+ * or not it supports a theory.  For now, we do not keep track of *which* theories the TRS supports;
+ * any TRS that supports theories is expected to support all the theories implemented in Cora.
  */
 public class TRS {
   private Alphabet _alphabet;
   private List<Rule> _rules;
   private List<Scheme> _schemes;
+  private boolean _theories;
 
   /**
    * Create a TRS with the given alphabet, rules and rule schemes.  Default because this should
    * only be called by the factory, which also does the correctness checking (such as making sure
    * that none of the components are null, and that the lists are not used elsewhere.
    */
-  TRS(Alphabet alphabet, List<Rule> rules, List<Scheme> schemes) {
+  TRS(Alphabet alphabet, List<Rule> rules, List<Scheme> schemes, boolean constrained) {
     _alphabet = alphabet;
     _rules = rules;
     _schemes = schemes;
+    _theories = constrained;
   }
 
   /** @return the number of rules in the TRS that can be queried. */
@@ -79,10 +85,15 @@ public class TRS {
 
   /**
    * Returns the FunctionSymbol associated to the given name in this TRS, if there is a unique
-   * one.
+   * one.  This does not include theory symbols since these are allowed to be polymorphic!
    */
   public FunctionSymbol lookupSymbol(String name) {
     return _alphabet.lookup(name);
+  }
+
+  /** Returns whether theory symbols and logical constraints are supported. */
+  public boolean isConstrained() {
+    return _theories;
   }
 
   /**
@@ -139,14 +150,21 @@ public class TRS {
 
   /** Gives a human-readable representation of the term rewriting system. */
   public String toString() {
-    String ret = _alphabet.toString() + "\n";
+    StringBuilder ret = new StringBuilder();
+    ret.append(_alphabet.toString());
+    ret.append("\n");
+    if (_theories) {
+      ret.append("All the standard theory symbols are also included.\n");
+    }
     for (int i = 0; i < _rules.size(); i++) {
-      ret += _rules.get(i).toString() + "\n";
+      ret.append(_rules.get(i).toString());
+      ret.append("\n");
     }
     for (int i = 0; i < _schemes.size(); i++) {
-      ret += _schemes.get(i).toString() + "\n";
+      ret.append(_schemes.get(i).toString());
+      ret.append("\n");
     }
-    return ret;
+    return ret.toString();
   }
 }
 

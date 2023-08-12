@@ -40,12 +40,8 @@ public class TRSFactory {
     }
   }
 
-  /**
-   * Creates a many-sorted or unsorted first-order term rewriting system with the given alphabet
-   * and rules.  No rule schemes are included.  If the alphabet or rules are not first-order, then
-   * an IllegalSymbolError or IllegalRulesError is thrown.
-   */
-  public static TRS createMSTRS(Alphabet alphabet, List<Rule> rules) {
+  /** Helper function for createMSTRS and createLCTRS */
+  private static TRS createFirstorderTRS(Alphabet alphabet, List<Rule> rules, boolean constrained) {
     ArrayList<Scheme> schemes = new ArrayList<Scheme>();
 
     doBasicChecks(alphabet, rules, schemes);
@@ -63,10 +59,30 @@ public class TRSFactory {
       if (!rule.isFirstOrder()) {
         throw new IllegalRuleError("MSTRS", "Rule " + rule.toString() + " cannot occur in a " +
           "many-sorted TRS, as it is not first-order.");
-      }   
+      }
     }
 
-    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes);
+    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, constrained);
+  }
+
+  /**
+   * Creates a many-sorted or unsorted first-order term rewriting system with the given alphabet
+   * and rules.  No rule schemes are included.  If the alphabet or rules are not first-order, then
+   * an IllegalSymbolError or IllegalRulesError is thrown.
+   */
+  public static TRS createMSTRS(Alphabet alphabet, List<Rule> rules) {
+    return createFirstorderTRS(alphabet, rules, false);
+  }
+
+  /**
+   * Creates a Logically Constrained TRS: a first-order (many-sorted) TRS, with theory symbols and
+   * constraints over the integers and booleans (and maybe some strings).
+   *
+   * Note that the given alphabet is the *non-theory* alphabet.  If this alphabet or the rules are
+   * not first-order, then an IllegalSymbolError or IllegalRulesError is thrown.
+   */
+  public static TRS createLCTRS(Alphabet alphabet, List<Rule> rules) {
+    return createFirstorderTRS(alphabet, rules, true);
   }
 
   /**
@@ -87,7 +103,7 @@ public class TRSFactory {
       }
     }
 
-    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes);
+    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, false);
   }
 
   /**
@@ -105,7 +121,7 @@ public class TRSFactory {
           " cannot occur in a Curried Functional System, as it contains meta-variables.");
       }
     }
-    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes);
+    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, false);
   }
 
   /**
@@ -117,7 +133,19 @@ public class TRSFactory {
     schemes.add(new Beta());
     if (includeEta) schemes.add(new Eta());
     doBasicChecks(alphabet, rules, schemes);
-    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes);
+    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, false);
+  }
+
+  /**
+   * Creates an Applicative Meta-variable System with constraints and theory symbols over the
+   * integers, booleans and strings.
+   */
+  public static TRS createCoraTRS(Alphabet alphabet, List<Rule> rules, boolean includeEta) {
+    ArrayList<Scheme> schemes = new ArrayList<Scheme>();
+    schemes.add(new Beta());
+    if (includeEta) schemes.add(new Eta());
+    doBasicChecks(alphabet, rules, schemes);
+    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, true);
   }
 }
 

@@ -19,25 +19,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeMap;
-import cora.exceptions.IllegalRuleError;
-import cora.exceptions.IllegalSymbolError;
-import cora.exceptions.ParseError;
+import cora.exceptions.*;
 import cora.parsing.lib.Token;
+import cora.parsing.lib.TokenQueue;
 import cora.parsing.lib.ParsingStatus;
 import cora.types.*;
 import cora.terms.*;
 import cora.rewriting.*;
 
 class TermStructure {
-  static int STRING = 1;
-  static int CONSTANT = 2;
+  static int CONSTANT = 1;
+  static int VARIABLE = 2;
   static int META = 3;
   static int ABSTRACTION = 4;
   static int APPLICATION = 5;
 
   Token token;                        // the token starting this term
   int kind;                           // one of the five kinds above
-  String str;                         // for string, constant or meta
+  FunctionSymbol symbol;              // for constant (a declared symbol)
+  String str;                         // for string or meta
   TermStructure head;                 // for application
   ArrayList<TermStructure> children;  // for meta, application or abstraction
   Type vartype;                       // for abstractions with typed binder
@@ -46,6 +46,7 @@ class TermStructure {
   TermStructure(Token t, int k) {
     token = t;
     kind = k;
+    symbol = null;
     str = null;
     head = null;
     children = null;
@@ -57,6 +58,7 @@ class TermStructure {
   public String toString() {
     String ret = "(" + kind + ":";
     if (str != null) ret += "\"" + str + "\"";
+    if (symbol != null) ret += "!" + symbol.toUniqueString() + "!";
     if (head != null) ret += "{" + head.toString() + "}";
     if (children != null) {
       ret += "[";
@@ -70,14 +72,12 @@ class TermStructure {
 
 /** This class reads text from string or file written in the internal .cora format. */
 public class CoraInputReader {
-  /** The type that should be used for all string constants. */
-  public static Type STRINGTYPE = TypeFactory.createSort("String");
-
   public static int MSTRS = 1;
   public static int STRS = 2;
   public static int CFS = 3;
   public static int AMS = 4;
-  public static int DEFAULT = 4;
+  public static int LCTRS = 5;
+  public static int DEFAULT = 6;
 
   /**
    * The reader keeps track of the status of reading so far; all read functions have a (potential)
@@ -180,7 +180,7 @@ public class CoraInputReader {
   // =================================== READING TERM STRUCTURES ==================================
 
   /**
-   * term = string
+   * term = value
    *      | abstraction
    *      | mainterm
    *
@@ -196,7 +196,10 @@ public class CoraInputReader {
    */
   private TermStructure readTermStructure() {
     if (_status.nextTokenIs(CoraTokenData.LAMBDA)) return readAbstractionStructure();
-    if (_status.nextTokenIs(CoraTokenData.STRING)) return readStringStructure();
+    if (_status.nextTokenIs(CoraTokenData.STRING) ||
+        _status.nextTokenIs(CoraTokenData.INTEGER) ||
+        _status.nextTokenIs(CoraTokenData.TRUE) ||
+        _status.nextTokenIs(CoraTokenData.FALSE)) return readValueStructure();
 
     TermStructure ret;
 
@@ -214,13 +217,25 @@ public class CoraInputReader {
       Token token = _status.expect(CoraTokenData.IDENTIFIER, "term, started by an identifier, " +
         "λ, string or (,");
       if (token == null) return null;
-      ret = new TermStructure(token, TermStructure.CONSTANT);
-      ret.str = token.getText();
+      Token next;
       // IDENTIFIER METAOPEN termlist METACLOSE
-      if ((token = _status.readNextIf(CoraTokenData.METAOPEN)) != null) {
-        ret.kind = TermStructure.META;
+      if ((next = _status.readNextIf(CoraTokenData.METAOPEN)) != null) {
+        ret = new TermStructure(token, TermStructure.META);
+        ret.str = token.getText();
         readTermList(ret, CoraTokenData.METACLOSE, "meta-closing bracket " +
-          (token.getText().equals("[") ? "]" : "⟩"));
+          (next.getText().equals("[") ? "]" : "⟩"));
+      }
+      else {
+        // just IDENTIFIER (so a constant or variable)
+        FunctionSymbol f = _symbols.lookupFunctionSymbol(token.getText());
+        if (f == null) {
+          ret = new TermStructure(token, TermStructure.VARIABLE);
+          ret.str = token.getText();
+        }
+        else {
+          ret = new TermStructure(token, TermStructure.CONSTANT);
+          ret.symbol = f;
+        }
       }
     }
 
@@ -298,25 +313,51 @@ public class CoraInputReader {
   }
 
   /**
-   * string = STRING+
+   * value = STRING+ | INT | TRUE | FALSE
    *
-   * This function is really only called when we already know the next token is a string, so should
-   * not fail.  It eagerly reads as many strings as are available.
+   * This function is really only called when we already know the next token is a string, int, or
+   * boolean constant, so should not fail.  In the case of strings, it eagerly reads as many
+   * strings as are available.
    */
-  private TermStructure readStringStructure() {
-    Token start = _status.expect(CoraTokenData.STRING, "A string constant");
-    if (start == null) return null;
-    // take the token's text without the closing "
-    StringBuilder text = new StringBuilder(start.getText().substring(0, start.getText().length()-1));
-    Token next;
-    while ((next = _status.readNextIf(CoraTokenData.STRING)) != null) {
-      // for each subsequent string, append it without quotes
-      text.append(next.getText().substring(1, next.getText().length()-1));
+  private TermStructure readValueStructure() {
+    Token token = _status.nextToken();
+    TermStructure ret = new TermStructure(token, TermStructure.CONSTANT);
+
+    if (token.getName().equals(CoraTokenData.TRUE)) ret.symbol = TermFactory.createValue(true);
+    else if (token.getName().equals(CoraTokenData.FALSE)) {
+      ret.symbol = TermFactory.createValue(false);
     }
-    // append a final quote to make sure the string is well-formed
-    text.append("\"");
-    TermStructure ret = new TermStructure(start, TermStructure.STRING);
-    ret.str = text.toString();
+    else if (token.getName().equals(CoraTokenData.INTEGER)) {
+      try {
+        int number = Integer.parseInt(token.getText());
+        ret.symbol = TermFactory.createValue(number);
+      }
+      catch (NumberFormatException e) {
+        _status.storeError(e.getMessage(), token);
+        ret.symbol = TermFactory.createConstant(token.getText(), TypeFactory.intSort);
+      }
+    }
+    else if (token.getName().equals(CoraTokenData.STRING)) {
+      // take the token's text without the closing "
+      StringBuilder text =
+        new StringBuilder(token.getText().substring(0, token.getText().length()-1));
+      Token next;
+      while ( (next = _status.readNextIf(CoraTokenData.STRING)) != null) {
+        // for each subsequent string, append it without quotes
+        text.append(next.getText().substring(1, next.getText().length()-1));
+      }
+      // append a final quote to make sure the string is well-formed
+      text.append("\"");
+      try {
+        ret.symbol = TermFactory.createEscapedStringValue(text.toString());
+      }
+      catch (IncorrectStringException e) {
+        _status.storeError(e.getMessage(), token);
+        ret.symbol = TermFactory.createConstant(token.getText(), TypeFactory.stringSort);
+      }
+    }
+    else throw new Error("Calling readValueStructure when it shouldn't be.");
+
     return ret;
   }
 
@@ -327,6 +368,9 @@ public class CoraInputReader {
   private boolean nextMayBeTerm() {
     return _status.nextTokenIs(CoraTokenData.LAMBDA) ||
            _status.nextTokenIs(CoraTokenData.STRING) ||
+           _status.nextTokenIs(CoraTokenData.INTEGER) ||
+           _status.nextTokenIs(CoraTokenData.TRUE) ||
+           _status.nextTokenIs(CoraTokenData.FALSE) ||
            _status.nextTokenIs(CoraTokenData.BRACKETOPEN) ||
            _status.nextTokenIs(CoraTokenData.IDENTIFIER);
   }
@@ -381,9 +425,9 @@ public class CoraInputReader {
    * expected type (if any).
    */
   private Term makeTerm(TermStructure structure, Type expectedType, boolean typeShouldBeDerivable) {
-    if (structure.kind == TermStructure.STRING) return makeStringTerm(structure, expectedType);
-    if (structure.kind == TermStructure.CONSTANT) {
-      return makeConstantTerm(structure, expectedType, typeShouldBeDerivable);
+    if (structure.kind == TermStructure.CONSTANT) return makeConstantTerm(structure, expectedType);
+    if (structure.kind == TermStructure.VARIABLE) {
+      return makeVariableTerm(structure, expectedType, typeShouldBeDerivable);
     }
     if (structure.kind == TermStructure.META) {
       return makeMetaTerm(structure, expectedType, typeShouldBeDerivable);
@@ -396,42 +440,35 @@ public class CoraInputReader {
   }
 
   /**
-   * Turn a termstructure representing a string into the corresponding term, but also set an error
-   * if the expected type is not STRINGTYPE.
+   * Turn a term structure representing a known function symbol into the corresponding term, but
+   * also set an error if the expected type is not the type of the function
    */
-  private Term makeStringTerm(TermStructure structure, Type expectedType) {
-    if (structure.str == null) {  // shouldn't happen
-      throw new Error("Called makeStringTerm when structure is not a string!");
+  private Term makeConstantTerm(TermStructure structure, Type expectedType) {
+    if (structure == null || structure.symbol == null) {  // shouldn't happen
+      throw new Error("Called makeConstantTerm when structure is null!");
     }
-    if (expectedType == null || expectedType.equals(STRINGTYPE)) {
-      return TermFactory.createConstant(structure.str, STRINGTYPE);
+    if (expectedType == null || expectedType.equals(structure.symbol.queryType())) {
+      return structure.symbol;
     }
-    _status.storeError("Expected term of type " + expectedType.toString() + ", but got a string " +
-      "constant (which has type " + STRINGTYPE.toString() + ").", structure.token);
-    return TermFactory.createConstant(structure.str, expectedType);
+    _status.storeError("Expected term of type " + expectedType.toString() + ", but got " +
+      (structure.symbol.isValue() ? "value " : "function symbol ") +
+      structure.symbol.toString() + " which has type " + structure.symbol.queryType().toString()
+      + ".", structure.token);
+    return TermFactory.createConstant(structure.symbol.queryName(), expectedType);
   }
 
   /**
-   * Turn a termstructure representing a constant (either function symbol or variable) into the
-   * corresponding term, but also throw errors if we know it should have a different type from
-   * what is expected, or is not derivable when it should be
+   * Turn a termstructure representing a variable (an identifier that is not declared as a function
+   * symbol) into the corresponding term, but also throw errors if we know it should have a
+   * different type from what is expected, or is not derivable when it should be
    */
-  private Term makeConstantTerm(TermStructure structure, Type expectedType, boolean deriveType) {
+  private Term makeVariableTerm(TermStructure structure, Type expectedType, boolean deriveType) {
     String name = structure.str;
     if (name == null) {  // shouldn't happen
-      throw new Error("Called makeConstantTerm when the constant is not stored in str!");
+      throw new Error("Called makeVariableTerm when the variable is not stored in str!");
     }
-    // we know it as a function symbol
-    Term ret = _symbols.lookupFunctionSymbol(name);
-    if (ret != null) {
-      if (expectedType == null || expectedType.equals(ret.queryType())) return ret;
-      _status.storeError("Expected term of type " + expectedType.toString() + ", but got " +
-        name + ", which was declared as a function symbol of type " + ret.queryType() + ".",
-        structure.token);
-      return TermFactory.createConstant(name, expectedType);
-    }
-    // we know it as a variable
-    ret = _symbols.lookupVariable(name);
+    // we have seen this variable before, or it's declared in our current context
+    Term ret = _symbols.lookupVariable(name);
     if (ret != null) {
       if (expectedType == null || expectedType.equals(ret.queryType())) return ret;
       _status.storeError("Expected term of type " + expectedType.toString() + ", but got " +
@@ -805,7 +842,8 @@ public class CoraInputReader {
       // :: <-- we may be a token into a declaration; if it's not a function symbol declaration
       // but a variable declaration, tryReadDeclaration has recovery functionality built in so we
       // don't get illicit declarations
-      if (curr.getName().equals(CoraTokenData.DECLARE) && prev != null) {
+      if (curr.getName().equals(CoraTokenData.DECLARE) && prev != null &&
+          prev.getName().equals(CoraTokenData.IDENTIFIER)) {
         _status.pushBack(curr);
         _status.pushBack(prev);
         return;
@@ -982,7 +1020,7 @@ public class CoraInputReader {
 
   /** Reads the given type from string */
   public static Type readTypeFromString(String str) {
-    ParsingStatus status = new ParsingStatus(CoraTokenData.getStringLexer(str), 10);
+    ParsingStatus status = new ParsingStatus(CoraTokenData.getUnconstrainedStringLexer(str), 10);
     CoraInputReader reader = new CoraInputReader(status);
     Type ret = reader.readType();
     Token token = status.nextToken();
@@ -993,7 +1031,11 @@ public class CoraInputReader {
 
   /** Reads the given term from string */
   public static Term readTermFromString(String str, TRS trs) {
-    ParsingStatus status = new ParsingStatus(CoraTokenData.getStringLexer(str), 10);
+    ParsingStatus status;
+    if (trs.isConstrained()) {
+      status = new ParsingStatus(CoraTokenData.getConstrainedStringLexer(str), 10);
+    }
+    else status = new ParsingStatus(CoraTokenData.getUnconstrainedStringLexer(str), 10);
     CoraInputReader reader = new CoraInputReader(status, trs);
     TermStructure structure = reader.readTermStructure();
     Term ret = null;
@@ -1009,7 +1051,10 @@ public class CoraInputReader {
    * Here "kind" should be the kind of TRS (one of the constants defined at the head of the class).
    */
   public static TRS readProgramFromString(String str, int kind) {
-    ParsingStatus status = new ParsingStatus(CoraTokenData.getStringLexer(str), 10);
+    boolean constrained = kind == DEFAULT || kind == LCTRS;
+    TokenQueue tq = constrained ? CoraTokenData.getConstrainedStringLexer(str)
+                                : CoraTokenData.getUnconstrainedStringLexer(str);
+    ParsingStatus status = new ParsingStatus(tq, 10);
     CoraInputReader reader = new CoraInputReader(status);
     TRS ret = reader.readFullProgram(kind);
     status.throwCollectedErrors();
@@ -1026,14 +1071,20 @@ public class CoraInputReader {
 
   /** Reads the given file, parses the program in it, and returns the TRS that it defines. */
   public static TRS readProgramFromFile(String filename) throws IOException {
-    ParsingStatus status = new ParsingStatus(CoraTokenData.getFileLexer(filename), 10);
-    CoraInputReader reader = new CoraInputReader(status);
-    String extension = filename.substring(filename.lastIndexOf(".") + 1, filename.length());
     int kind = DEFAULT;
+    String extension =
+      filename.substring(filename.lastIndexOf(".") + 1, filename.length()).toLowerCase();
     if (extension.equals("trs") || extension.equals("mstrs")) kind = MSTRS;
+    if (extension.equals("lctrs")) kind = LCTRS;
     else if (extension.equals("atrs") || extension.equals("strs")) kind = STRS;
     else if (extension.equals("cfs") || extension.equals("afs")) kind = CFS;
     else if (extension.equals("ams") || extension.equals("afsm")) kind = AMS;
+    boolean constrained = kind == DEFAULT || kind == LCTRS;
+
+    TokenQueue tq = constrained ? CoraTokenData.getConstrainedFileLexer(filename)
+                              : CoraTokenData.getUnconstrainedFileLexer(filename);
+    ParsingStatus status = new ParsingStatus(tq, 10);
+    CoraInputReader reader = new CoraInputReader(status);
     TRS ret = reader.readFullProgram(kind);
     status.throwCollectedErrors();
     return ret;

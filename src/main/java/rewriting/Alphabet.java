@@ -69,11 +69,14 @@ public class Alphabet {
 
   /** Returns a pleasant-to-read string representation of the current alphabet. */
   public String toString() {
-    String ret = "";
+    StringBuilder ret = new StringBuilder("");
     for (FunctionSymbol symbol : _symbols.values()) {
-      ret += symbol.queryName() + " : " + symbol.queryType() + "\n";
+      ret.append(symbol.queryName());
+      ret.append(" : ");
+      ret.append(symbol.queryType());
+      ret.append("\n");
     }
-    return ret;
+    return ret.toString();
   }
 }
 

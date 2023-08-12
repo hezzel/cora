@@ -69,6 +69,7 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   public boolean equals(FunctionSymbol symbol) {
     if (symbol == null) return false;
     if (!_name.equals(symbol.queryName())) return false;
+    if (symbol.isValue()) return false;
     return queryType().equals(symbol.queryType());
   }
 
@@ -93,6 +94,26 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   /** @return true if the type of the constant is a base type */
   public boolean isFirstOrder() {
     return queryType().isBaseType();
+  }
+
+  /** @return false, since theory symbols use a different class */
+  public boolean isTheorySymbol() {
+    return false;
+  }
+
+  /** @return false, since this is not a theory symbol */
+  public boolean isTheoryTerm() {
+    return false;
+  }
+
+  /** @return false, since values use a different class */
+  public boolean isValue() {
+    return false;
+  }
+
+  /** @return null, since this is not a value */
+  public Value toValue() {
+    return null;
   }
 
   /** Returns the current symbol f, which is the root of the corresponding term f(). */

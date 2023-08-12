@@ -22,12 +22,18 @@ import java.util.List;
  * accessible outside the types package.
  */
 public class TypeFactory {
+  /** The theory sort Int, representing the set of integer numbers. */
+  public static BaseType intSort = new Sort("Int", true);
+  /** The theory sort Bool, representing the set of boolean values {true, false}. */
+  public static BaseType boolSort = new Sort("Bool", true);
+  /** The theory sort String, representing the set of Strings. */
+  public static BaseType stringSort = new Sort("String", true);
   /** The unit sort is the unique sort that is used for "unsorted" term rewriting. */
-  public static BaseType unitSort = new Sort("o");
+  public static BaseType unitSort = new Sort("o", false);
 
-  /** Creates a basic type by the given name. */
+  /** Creates a basic (non-theory) type by the given name. */
   public static BaseType createSort(String name) {
-    return new Sort(name);
+    return new Sort(name, false);
   }
 
   /** Creates a type of the form inp_1 ⇒...⇒ inp_n → output */

@@ -94,6 +94,8 @@ public class SymbolDataTest {
     assertTrue(data.lookupFunctionSymbol("bong") == null);
     assertTrue(data.lookupVariable("bing") == null);
     assertTrue(data.lookupMetaVariable("bing") == null);
+    assertTrue(data.lookupFunctionSymbol("12") == null);
+    assertTrue(data.lookupFunctionSymbol("false") == null);
   }
 
   @Test

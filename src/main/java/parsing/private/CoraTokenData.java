@@ -16,6 +16,8 @@
 package cora.parsing;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import cora.parsing.lib.Token;
 import cora.parsing.lib.Lexer;
 import cora.parsing.lib.LexerException;
@@ -37,22 +39,53 @@ public class CoraTokenData {
   public static String METAOPEN       = "METAOPEN";
   public static String METACLOSE      = "METACLOSE";
   public static String COMMA          = "COMMA";
-  public static String COLON          = "COLON";
   public static String DECLARE        = "DECLARE";
   public static String LAMBDA         = "LAMBDA";
   public static String DOT            = "DOT";
   public static String ARROW          = "ARROW";
   public static String RULEARROW      = "RULEARROW";
   public static String TYPEARROW      = "TYPEARROW";
+  // The following are only used for constrained TRSs. */
+  public static String INTEGER        = "INTEGER";
+  public static String TRUE           = "TRUE";
+  public static String FALSE          = "FALSE";
   public static String STRING         = "STRING";
+  public static String PLUS           = "PLUS";
+  public static String MINUS          = "MINUS";
+  public static String TIMES          = "TIMES";
+  public static String INTTYPE        = "INTTYPE";
+  public static String BOOLTYPE       = "BOOLTYPE";
+  public static String STRINGTYPE     = "STRINGTYPE";
+  public static String COLON          = "COLON";
 
-  /* Next, we define the regular expressions for all tokens. */
-  public static String[] tokens = new String[] {
-    "([^\\s()\\[\\]⟨⟩\\{\\}\",:λ\\.\\*\\\\\\.→⇒/-]|(-(?!>))|(/(?!\\*))|(\\*(?!/)))+" , IDENTIFIER,
+  /** Unconstrained TRSs admit a more broad range of identifiers. */
+  private static String[] utokens = new String[] {
+    "([^\\s()\\[\\]⟨⟩\\{\\}\"',:λ\\.\\*\\\\\\.→⇒/-]|(-(?!>))|(/(?!\\*))|(\\*(?!/)))+" , IDENTIFIER,
       // identifiers are built from any characters other than whitespace, brackets (of any kind),
       // braces, quotes, commas, colons, lambda, backslash, dot, or unicode arrows
       // they also may not contain -> or /* or */
+    "\"([^\"\\\\]|(\\\\.))*\""                , "ILLEGALSTRING",
+  };
 
+  /** Constrained TRSs have special cases for the in-built symbols. */
+  private static String[] ctokens = new String[] {
+    "0|-?([1-9][0-9]*)"                       , INTEGER,
+    "true"                                    , TRUE,
+    "false"                                   , FALSE,
+    "\"([^\"\\\\]|(\\\\.))*\""                , STRING,
+    "-?[0-9]+"                                , "BADINT",
+    "\\+"                                     , PLUS,
+    "-"                                       , MINUS,
+    "\\*"                                     , TIMES,
+    "([^\\s()\\[\\]⟨⟩\\{\\}\"',:λ\\.\\*\\+\\\\\\.→⇒/-]|(/(?!\\*)))+" , IDENTIFIER,
+      // identifiers are now built from any characters other than whitespace, brackets (of any
+      // kind), braces, quotes, colons, lambda, backslash, dot, *, -, +, unicode arrows
+  };
+
+  /** Both constrained and unconstrained TRSs share the tokens below. */
+  private static String[] shared = new String[] {
+    "\"([^\"\\\\]|(\\\\.))*$"                 , "PARTIALSTRING",
+    "\"([^\"\\\\]|(\\\\.))*\\\\$"             , "PARTIALSTRING",
     "\\("                                     , BRACKETOPEN,
     "\\)"                                     , BRACKETCLOSE,
     "\\{"                                     , BRACEOPEN,
@@ -72,27 +105,60 @@ public class CoraTokenData {
     "⇒"                                       , TYPEARROW,
     "/\\*"                                    , "COMMENTOPEN",
     "\\*/"                                    , "COMMENTCLOSE",
-    "\"([^\"\\\\]|(\\\\.))*\""                , STRING,
-    "\"([^\"\\\\]|(\\\\.))*$"                 , "PARTIALSTRING",
-    "\"([^\"\\\\]|(\\\\.))*\\\\$"             , "PARTIALSTRING",
     "\\s"                                     , Token.SKIP,
   };
 
-  private static TokenQueue combineLexer(Lexer lexer) {
+  private static String[] unconstrainedTokens = null;
+  private static String[] constrainedTokens = null;
+
+  private static String[] getUnconstrainedTokens() {
+    if (unconstrainedTokens == null) {
+      ArrayList<String> tmp = new ArrayList<String>();
+      Collections.addAll(tmp, utokens);
+      Collections.addAll(tmp, shared);
+      unconstrainedTokens = tmp.toArray(new String[tmp.size()]);
+    }
+    return unconstrainedTokens;
+  }
+
+  private static String[] getConstrainedTokens() {
+    if (constrainedTokens == null) {
+      ArrayList<String> tmp = new ArrayList<String>();
+      Collections.addAll(tmp, ctokens);
+      Collections.addAll(tmp, shared);
+      constrainedTokens = tmp.toArray(new String[tmp.size()]);
+    }
+    return constrainedTokens;
+  }
+
+  private static TokenQueue setupLexer(Lexer base, boolean constrained) {
+    Lexer lexer = base;
     lexer = LexerFactory.createNestedCommentRemoverLexer(lexer, "COMMENTOPEN", "COMMENTCLOSE");
+    if (constrained) lexer = new BadIntWarner(lexer);
+    else lexer = new IllegalStringWarner(lexer);
     lexer = new PartialStringWarner(lexer);
-    lexer = new StringCheckLexer(lexer);
     return LexerFactory.createPushbackLexer(lexer);
   }
 
-  /** Returns a TokenQueue that goes through the given file. */
-  public static TokenQueue getFileLexer(String filename) throws IOException {
-    return combineLexer(LexerFactory.createFileLexer(tokens, filename));
+
+  /** Returns a TokenQueue that goes through the given file, tokenising for an unconstrained TRS. */
+  public static TokenQueue getUnconstrainedFileLexer(String filename) throws IOException {
+    return setupLexer(LexerFactory.createFileLexer(getUnconstrainedTokens(), filename), false);
   }
 
-  /** Returns a TokenQueue that goes through the given string. */
-  public static TokenQueue getStringLexer(String text) {
-    return combineLexer(LexerFactory.createStringLexer(tokens, text));
+  /** Returns a TokenQueue that goes through the given file, tokenising for a constrained TRS. */
+  public static TokenQueue getConstrainedFileLexer(String filename) throws IOException {
+    return setupLexer(LexerFactory.createFileLexer(getConstrainedTokens(), filename), true);
+  }
+
+  /** Returns a TokenQueue that goes through a string, tokenising for an unconstrained TRS. */
+  public static TokenQueue getUnconstrainedStringLexer(String text) {
+    return setupLexer(LexerFactory.createStringLexer(getUnconstrainedTokens(), text), false);
+  }
+
+  /** Returns a TokenQueue that goes through the given string, tokenising for a constrained TRS. */
+  public static TokenQueue getConstrainedStringLexer(String text) {
+    return setupLexer(LexerFactory.createStringLexer(getConstrainedTokens(), text), true);
   }
 
   /**
@@ -108,23 +174,32 @@ public class CoraTokenData {
   }
 
   /**
-   * Helper class used to throw an error when encountering incorrect escape characters in
-   * strings, but afterwards still process them anyway.
+   * Helper class used to throw an error when encountering a string constant even though we are
+   * using the unconstrained lexer which does not support strings.
    */
-  private static class StringCheckLexer extends TokenEditLexer {
-    StringCheckLexer(Lexer lexer) { super(lexer, STRING); }
+  private static class IllegalStringWarner extends TokenEditLexer {
+    IllegalStringWarner(Lexer lexer) { super(lexer, "ILLEGALSTRING"); }
     protected void modifyToken(Token token) throws LexerException {
-      String str = token.getText();
-      storeToken(token, 0, STRING, str);
-      for (int i = 0; i < str.length()-1; i++) {
-        if (str.charAt(i) == '\\') {
-          if (str.charAt(i+1) == '\\') i++;
-          else if (str.charAt(i+1) != 'n' && str.charAt(i+1) != '\"') {
-            throw new LexerException(token, "Stray escape chacter at position " + (i+1) + " of " +
-              "string constant (" + str.substring(i,i+2) + " is not an escape sequence).");
-          }
-        }
-      }
+      storeToken(token, 0, STRING, token.getText());
+      throw new LexerException(token, "String constants are only allowed in constrained systems.");
+    }
+  }
+
+  /**
+   * Helper class used to throw an error when encountering incomplete strings, but afterwards
+   * process them as proper string constants.
+   */
+  private static class BadIntWarner extends TokenEditLexer {
+    BadIntWarner(Lexer lexer) { super(lexer, "BADINT"); }
+    protected void modifyToken(Token token) throws LexerException {
+      String txt = token.getText();
+      boolean negative = txt.charAt(0) == '-';
+      int i = negative ? 1 : 0;
+      while (i < txt.length() && txt.charAt(i) == '0') i++;
+      if (i < txt.length()) txt = (negative ? "-" : "") + txt.substring(i);
+      else txt = "0";
+      storeToken(token, 0, INTEGER, txt);
+      throw new LexerException(token, "Illegal integer constant: " + token.getText() + ".");
     }
   }
 }

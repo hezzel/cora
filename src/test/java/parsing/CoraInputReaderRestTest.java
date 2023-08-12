@@ -30,7 +30,7 @@ import cora.parsing.lib.ParsingStatus;
 
 public class CoraInputReaderRestTest {
   private ParsingStatus makeStatus(String text, ErrorCollector collector) {
-    return new ParsingStatus(CoraTokenData.getStringLexer(text), collector);
+    return new ParsingStatus(CoraTokenData.getUnconstrainedStringLexer(text), collector);
   }
 
   private SymbolData makeBasicData() {
@@ -429,7 +429,7 @@ public class CoraInputReaderRestTest {
     Rule rule = CoraInputReader.readRuleForUnitTest(status, data);
     assertTrue(rule.toString().equals("aa → bb"));
     assertTrue(collector.queryCollectedMessages().equals("1:6: Expected term of type a, " +
-      "but got bb, which was declared as a function symbol of type b.\n"));
+      "but got function symbol bb which has type b.\n"));
   }
 
   @Test
@@ -531,8 +531,8 @@ public class CoraInputReaderRestTest {
       TRS trs = CoraInputReader.readProgramFromString("a :: type1 b :: type2 a -> b");
     }
     catch (ParseError e) {
-      assertTrue(e.getMessage().equals("1:28: Expected term of type type1, but got b, " +
-        "which was declared as a function symbol of type type2.\n"));
+      assertTrue(e.getMessage().equals("1:28: Expected term of type type1, but got function " +
+        "symbol b which has type type2.\n"));
       return;
     }
     assertTrue(false);
@@ -560,14 +560,13 @@ public class CoraInputReaderRestTest {
         "f(x) -> g(2,x)\n" +
         "a :: 3\n" +
         "g(a,y) -> a -> y\n" +
-        "f(2) -> 3\n");
+        "f(2) -> 3\n", CoraInputReader.AMS);
     }
     catch (ParseError e) {
       assertTrue(e.getMessage().equals(
         "3:9: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
         "5:1: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
-        "5:11: Expected term of type o, but got a, which was declared as a function symbol of " +
-          "type 3.\n" +
+        "5:11: Expected term of type o, but got function symbol a which has type 3.\n" +
         "5:13: Expected term, started by an identifier, λ, string or (, but got ARROW (->).\n" +
         "6:1: right-hand side of rule [f(2) → 3] contains variable 3 which does not occur on " +
           "the left.\n"));

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -26,5 +26,13 @@ package cora.types;
 public interface BaseType extends Type {
   /** Returns whether the given BaseType is equal to us. */
   public boolean equals(BaseType sort);
+
+  /**
+   * Base types can be marked as being a theory sort in a specific TRS.  The rest of the TRS has to
+   * ensure that base types are treated properly (that is, their values have a specific meaning),
+   * and that no second non-theory sort by the same name is created.  The sort merely remembers that
+   * it was created as a theory sort.
+   */
+  public boolean isTheorySort();
 }
 

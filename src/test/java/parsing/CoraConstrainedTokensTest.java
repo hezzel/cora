@@ -22,12 +22,12 @@ import cora.parsing.lib.Token;
 import cora.parsing.lib.LexerException;
 import cora.parsing.lib.Lexer;
 
-public class CoraTokensTest {
+public class CoraConstrainedTokensTest {
   private TreeSet<String> errors;
 
   private Lexer createLexer(String str) {
     errors = new TreeSet<String>();
-    return CoraTokenData.getStringLexer(str);
+    return CoraTokenData.getConstrainedStringLexer(str);
   }
 
   private void verifyToken(Token tk, String name, String text) {
@@ -45,9 +45,100 @@ public class CoraTokensTest {
   }
 
   @Test
+  public void testIntegerZero() throws LexerException {
+    Lexer lexer = createLexer("0");
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "0");
+    assertTrue(lexer.nextToken().isEof());
+  }
+
+  @Test
+  public void testPositiveInteger() throws LexerException {
+    Lexer lexer = createLexer("30");
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "30");
+    assertTrue(lexer.nextToken().isEof());
+  }
+
+  @Test
+  public void testLargePositiveInteger() throws LexerException {
+    Lexer lexer = createLexer("1796974521107176491");
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "1796974521107176491");
+    assertTrue(lexer.nextToken().isEof());
+  }
+
+  @Test
+  public void testNegativeInteger() throws LexerException {
+    Lexer lexer = createLexer("-2");
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "-2");
+    assertTrue(lexer.nextToken().isEof());
+  }
+
+  @Test
+  public void testLargerNegativeInteger() throws LexerException {
+    Lexer lexer = createLexer("-1208");
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "-1208");
+    assertTrue(lexer.nextToken().isEof());
+  }
+
+  @Test
+  public void testDoubleZero() throws LexerException {
+    Lexer lexer = createLexer("00");
+    assertTrue(checkExceptionOnNextToken(lexer, "1:1:"));
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "0");
+    assertTrue(lexer.nextToken().isEof());
+  }
+
+  @Test
+  public void testStartWithZero() throws LexerException {
+    Lexer lexer = createLexer(" 01234");
+    assertTrue(checkExceptionOnNextToken(lexer, "1:2:"));
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "1234");
+  }
+
+  @Test
+  public void testNegativeZero() throws LexerException {
+    Lexer lexer = createLexer("\n-0");
+    assertTrue(checkExceptionOnNextToken(lexer, "2:1:"));
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "0");
+    assertTrue(lexer.nextToken().isEof());
+  }
+
+  @Test
+  public void testMultipleNegatives() throws LexerException {
+    Lexer lexer = createLexer("-132-7");
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "-132");
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "-7");
+  }
+
+  @Test
+  public void testRecogniseTruth() throws LexerException {
+    Lexer lexer = createLexer("true");
+    verifyToken(lexer.nextToken(), CoraTokenData.TRUE, "true");
+  }
+
+  @Test
+  public void testRecogniseFalsehood() throws LexerException {
+    Lexer lexer = createLexer("false");
+    verifyToken(lexer.nextToken(), CoraTokenData.FALSE, "false");
+  }
+
+  @Test
   public void testLexSimpleIdentifier() throws LexerException {
     Lexer lexer = createLexer("myfun");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "myfun");
+    assertTrue(lexer.nextToken().isEof());
+  }
+
+  @Test
+  public void testIdentifierStartingWithIntegers() throws LexerException {
+    Lexer lexer = createLexer("1234abc");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "1234abc");
+    assertTrue(lexer.nextToken().isEof());
+  }
+
+  @Test
+  public void testIdentifierEndingWithIntegers() throws LexerException {
+    Lexer lexer = createLexer("abc1234");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "abc1234");
     assertTrue(lexer.nextToken().isEof());
   }
 
@@ -66,6 +157,12 @@ public class CoraTokensTest {
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "∃");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "x");
     assertTrue(lexer.nextToken().isEof());
+  }
+
+  @Test
+  public void testNumbersInIdentifier() throws LexerException {
+    Lexer lexer = createLexer("a134710b");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "a134710b");
   }
 
   @Test
@@ -88,17 +185,21 @@ public class CoraTokensTest {
 
   @Test
   public void testAllBasicTokens() throws LexerException {
-    Lexer lexer = createLexer("xx(y){,+#\\a∀ ∃7*}():::a[b→b.⇒]>c--λ12");
+    Lexer lexer = createLexer("xx(y){,+#-\\a∀ ∃7*Q}():::a[b→b.⇒]>c-+-3λ12");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "xx");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETOPEN, "(");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "y");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETCLOSE, ")");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACEOPEN, "{");
     verifyToken(lexer.nextToken(), CoraTokenData.COMMA, ",");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "+#");
+    verifyToken(lexer.nextToken(), CoraTokenData.PLUS, "+");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "#");
+    verifyToken(lexer.nextToken(), CoraTokenData.MINUS, "-");
     verifyToken(lexer.nextToken(), CoraTokenData.LAMBDA, "\\");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "a∀");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "∃7*");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "∃7");
+    verifyToken(lexer.nextToken(), CoraTokenData.TIMES, "*");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "Q");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACECLOSE, "}");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETOPEN, "(");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETCLOSE, ")");
@@ -112,20 +213,28 @@ public class CoraTokensTest {
     verifyToken(lexer.nextToken(), CoraTokenData.DOT, ".");
     verifyToken(lexer.nextToken(), CoraTokenData.TYPEARROW, "⇒");
     verifyToken(lexer.nextToken(), CoraTokenData.METACLOSE, "]");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, ">c--");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, ">c");
+    verifyToken(lexer.nextToken(), CoraTokenData.MINUS, "-");
+    verifyToken(lexer.nextToken(), CoraTokenData.PLUS, "+");
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "-3");
     verifyToken(lexer.nextToken(), CoraTokenData.LAMBDA, "λ");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "12");
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "12");
     assertTrue(lexer.nextToken().isEof());
   }
 
   @Test
   public void testArrowsInIdentifer() throws LexerException {
     Lexer lexer = createLexer("aa-b--->c⇒d=>-->e");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "aa-b--");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "aa");
+    verifyToken(lexer.nextToken(), CoraTokenData.MINUS, "-");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "b");
+    verifyToken(lexer.nextToken(), CoraTokenData.MINUS, "-");
+    verifyToken(lexer.nextToken(), CoraTokenData.MINUS, "-");
     verifyToken(lexer.nextToken(), CoraTokenData.ARROW, "->");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "c");
     verifyToken(lexer.nextToken(), CoraTokenData.TYPEARROW, "⇒");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "d=>-");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "d=>");
+    verifyToken(lexer.nextToken(), CoraTokenData.MINUS, "-");
     verifyToken(lexer.nextToken(), CoraTokenData.ARROW, "->");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "e");
     assertTrue(lexer.nextToken().isEof());
@@ -135,7 +244,7 @@ public class CoraTokensTest {
   public void testPartialArrows() throws LexerException {
     Lexer lexer = createLexer("-> - > x->y");
     verifyToken(lexer.nextToken(), CoraTokenData.ARROW, "->");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "-");
+    verifyToken(lexer.nextToken(), CoraTokenData.MINUS, "-");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, ">");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "x");
     verifyToken(lexer.nextToken(), CoraTokenData.ARROW, "->");
@@ -169,8 +278,13 @@ public class CoraTokensTest {
   @Test
   public void testRemoveNestedCommentButAllowMultiplication() throws LexerException {
     Lexer lexer = createLexer("x*x*a/***u/***3*/***/*yy");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "x*x*a");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "*yy");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "x");
+    verifyToken(lexer.nextToken(), CoraTokenData.TIMES, "*");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "x");
+    verifyToken(lexer.nextToken(), CoraTokenData.TIMES, "*");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "a");
+    verifyToken(lexer.nextToken(), CoraTokenData.TIMES, "*");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "yy");
   }
 
   @Test
@@ -181,16 +295,11 @@ public class CoraTokensTest {
   }
 
   @Test
-  public void testStarAllowedAsIdentifier() throws LexerException {
-    Lexer lexer = createLexer("*");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "*");
-    assertTrue(lexer.nextToken().isEof());
-  }
-
-  @Test
-  public void testSlashAndStarAllowedInIdentifier() throws LexerException {
+  public void testSlashAndStarSplitInIdentifier() throws LexerException {
     Lexer lexer = createLexer("a/b*c");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "a/b*c");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "a/b");
+    verifyToken(lexer.nextToken(), CoraTokenData.TIMES, "*");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "c");
     assertTrue(lexer.nextToken().isEof());
   }
 
@@ -214,10 +323,11 @@ public class CoraTokensTest {
 
   @Test
   public void testStrayCommentClosingInIdentifierWithStarsAtTheEnd() throws LexerException {
-    Lexer lexer = createLexer("asd****/*");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "asd***");
-    assertTrue(checkExceptionOnNextToken(lexer, "1:7:"));
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "*");
+    Lexer lexer = createLexer("asd**/*");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "asd");
+    verifyToken(lexer.nextToken(), CoraTokenData.TIMES, "*");
+    assertTrue(checkExceptionOnNextToken(lexer, "1:5:"));
+    verifyToken(lexer.nextToken(), CoraTokenData.TIMES, "*");
     assertTrue(lexer.nextToken().isEof());
   }
 
@@ -278,19 +388,18 @@ public class CoraTokensTest {
 
   @Test
   public void testUnterminatedStringEndLine() throws LexerException {
-    Lexer lexer = createLexer("\"bla\nmeer bla\"");
+    Lexer lexer = createLexer("\"bla\n20 bla\"");
     assertTrue(checkExceptionOnNextToken(lexer, "1:1:"));
     verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"bla\"");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "meer");
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "20");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "bla");
-    assertTrue(checkExceptionOnNextToken(lexer, "2:9:"));
+    assertTrue(checkExceptionOnNextToken(lexer, "2:7:"));
     verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"\"");
   }
 
   @Test
   public void testIllegalEscape() throws LexerException {
     Lexer lexer = createLexer("\"hello\\x World\"");
-    assertTrue(checkExceptionOnNextToken(lexer, "1:1:"));
     verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"hello\\x World\"");
   }
 
