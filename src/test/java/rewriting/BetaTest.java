@@ -32,6 +32,9 @@ public class BetaTest {
       TermFactory.createApp(f, x, y)), a);
 
     Beta beta = new Beta();
+    assertTrue(beta.isBeta());
+    assertFalse(beta.isEta());
+    assertFalse(beta.isCalc());
     assertTrue(beta.applicable(s));
     Term t = beta.apply(s);
     assertTrue(t.toString().equals("f(a, y)"));

@@ -47,6 +47,9 @@ class Sort implements BaseType {
 
   /** @return whether this was created to be a theory sort or not */
   public boolean isTheorySort() { return _theorySort; }
+  
+  /** @return whether this was created to be a theory sort or not */
+  public boolean isTheoryType() { return _theorySort; }
 
   /** Returns a string representation of this sort. */
   public String toString() {

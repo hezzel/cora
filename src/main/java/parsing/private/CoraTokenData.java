@@ -53,6 +53,15 @@ public class CoraTokenData {
   public static String PLUS           = "PLUS";
   public static String MINUS          = "MINUS";
   public static String TIMES          = "TIMES";
+  public static String DIV            = "DIV";
+  public static String GEQ            = "GEQ";
+  public static String GREATER        = "GREATER";
+  public static String LEQ            = "LEQ";
+  public static String SMALLER        = "SMALLER";
+  public static String AND            = "AND";
+  public static String OR             = "OR";
+  public static String NOT            = "NOT";
+  public static String IMPLIES        = "IMPLIES";
   public static String INTTYPE        = "INTTYPE";
   public static String BOOLTYPE       = "BOOLTYPE";
   public static String STRINGTYPE     = "STRINGTYPE";
@@ -69,17 +78,30 @@ public class CoraTokenData {
 
   /** Constrained TRSs have special cases for the in-built symbols. */
   private static String[] ctokens = new String[] {
-    "0|-?([1-9][0-9]*)"                       , INTEGER,
+    "0|([1-9][0-9]*)"                         , INTEGER,
+    "0[0-9]+"                                 , "BADINT",
     "true"                                    , TRUE,
     "false"                                   , FALSE,
     "\"([^\"\\\\]|(\\\\.))*\""                , STRING,
-    "-?[0-9]+"                                , "BADINT",
     "\\+"                                     , PLUS,
     "-"                                       , MINUS,
     "\\*"                                     , TIMES,
-    "([^\\s()\\[\\]⟨⟩\\{\\}\"',:λ\\.\\*\\+\\\\\\.→⇒/-]|(/(?!\\*)))+" , IDENTIFIER,
+    "/"                                       , DIV,
+    ">"                                       , GREATER,
+    "<"                                       , SMALLER,
+    "≥|(>=)"                                  , GEQ,
+    "≤|(<=)"                                  , LEQ,
+    "∧|(/\\\\)"                               , AND,
+    "∨|(\\\\/)"                               , OR,
+    "(not)|¬"                                 , NOT,
+    "=>"                                      , IMPLIES,
+    "Int"                                     , INTTYPE,
+    "Bool"                                    , BOOLTYPE,
+    "String"                                  , STRINGTYPE,
+    "([^\\s()\\[\\]⟨⟩\\{\\}\"',:λ\\.\\*\\+\\\\\\.><=≥≤→⇒∧∨¬/-]|)+" , IDENTIFIER,
       // identifiers are now built from any characters other than whitespace, brackets (of any
-      // kind), braces, quotes, colons, lambda, backslash, dot, *, -, +, unicode arrows
+      // kind), braces, quotes, colons, lambda, dot, *, -, +, >, =, <, ≥, ≤, /, \, ¬
+      // unicode arrows
   };
 
   /** Both constrained and unconstrained TRSs share the tokens below. */
@@ -186,17 +208,16 @@ public class CoraTokenData {
   }
 
   /**
-   * Helper class used to throw an error when encountering incomplete strings, but afterwards
-   * process them as proper string constants.
+   * Helper class used to throw an error when encountering integers whose first digit is a 0, but
+   * afterwards process them as proper int constants.
    */
   private static class BadIntWarner extends TokenEditLexer {
     BadIntWarner(Lexer lexer) { super(lexer, "BADINT"); }
     protected void modifyToken(Token token) throws LexerException {
       String txt = token.getText();
-      boolean negative = txt.charAt(0) == '-';
-      int i = negative ? 1 : 0;
+      int i = 0;
       while (i < txt.length() && txt.charAt(i) == '0') i++;
-      if (i < txt.length()) txt = (negative ? "-" : "") + txt.substring(i);
+      if (i < txt.length()) txt = txt.substring(i);
       else txt = "0";
       storeToken(token, 0, INTEGER, txt);
       throw new LexerException(token, "Illegal integer constant: " + token.getText() + ".");

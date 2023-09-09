@@ -31,6 +31,10 @@ class Eta implements Scheme {
     return true;
   }
 
+  public boolean isCalc() {
+    return false;
+  }
+
   public boolean applicable(Term t) {
     Term s = t.queryHead();
     if (!s.isAbstraction()) return false;

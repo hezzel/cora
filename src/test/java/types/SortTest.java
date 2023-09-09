@@ -52,6 +52,15 @@ public class SortTest {
   }
 
   @Test
+  public void testTheory() {
+    assertTrue(intType().isTheorySort());
+    assertTrue(intType().isTheoryType());
+    Sort xx = new Sort("Int", false);
+    assertFalse(xx.isTheorySort());
+    assertFalse(xx.isTheoryType());
+  }
+
+  @Test
   public void testEqualityIsStringEquality() {
     ArrayList<Type> types;
 

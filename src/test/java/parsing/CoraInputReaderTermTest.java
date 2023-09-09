@@ -389,10 +389,10 @@ public class CoraInputReaderTermTest {
     ErrorCollector collector = new ErrorCollector(10);
     ParsingStatus status = makeCStatus("12(aa)", collector);
     Term t = CoraInputReader.readTermForUnitTest(status, generateSignature(), null);
-    assertTrue(t.toString().equals("12"));
+    assertTrue(t.toString().equals("12(aa)"));
     assertTrue(t.queryType().toString().equals("Int"));
-    assertTrue(status.nextToken().getText().equals("("));
-    assertTrue(collector.queryErrorCount() == 0);
+    assertTrue(collector.queryCollectedMessages().equals(
+      "1:1: Arity error: 12 has type Int, but 1 arguments are given.\n"));
   }
 
   @Test
@@ -594,7 +594,7 @@ public class CoraInputReaderTermTest {
     assertTrue(t.queryType().toString().equals("a ⇒ a"));
     assertTrue(status.nextToken().toString().equals("1:15: y (IDENTIFIER)"));
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:12: Expected a type (started by a constant or bracket) but got DOT (.).\n"));
+      "1:12: Expected a type (started by a sort identifier or bracket) but got DOT (.).\n"));
   }
 
   @Test
@@ -605,7 +605,7 @@ public class CoraInputReaderTermTest {
     assertTrue(t == null);
     assertTrue(status.nextToken().toString().equals("1:10: y (IDENTIFIER)"));
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:7: Expected a type (started by a constant or bracket) but got DOT (.).\n"));
+      "1:7: Expected a type (started by a sort identifier or bracket) but got DOT (.).\n"));
   }
 
   @Test
@@ -946,6 +946,134 @@ public class CoraInputReaderTermTest {
     assertTrue(status.nextToken().toString().equals("1:7: } (BRACECLOSE)"));
     assertTrue(collector.queryCollectedMessages().equals("1:7: Expected a comma or " +
       "meta-closing bracket ⟩ but got BRACECLOSE (}).\n"));
+  }
+
+  @Test
+  public void testReadSimpleNot() {
+    Term t = readTerm("¬x", null, true, "");
+    assertTrue(t.isFunctionalTerm());
+    assertTrue(t.queryRoot().isTheorySymbol());
+    assertTrue(t.vars().size() == 1);
+    assertTrue(t.toString().equals("¬x"));
+  }
+
+  @Test
+  public void testMostlySimpleMinus() {
+    Term t = readTerm("- (3+x)", null, true, "");
+    assertTrue(t.toString().equals("-(3 + x)"));
+    assertTrue(t.queryType().toString().equals("Int"));
+  }
+
+  @Test
+  public void testDuplicateNot() {
+    Term t = readTerm("¬¬ ( x > 0)", null, true, "");
+    assertTrue(t.toString().equals("¬(¬(x > 0))"));
+  }
+
+  @Test
+  public void testBadBracketOmission() {
+    Term t = readTerm("¬ x > 0", "Bool", true,
+      "1:1: Type error: expected term of type Int, but got ¬x of type Bool.\n");
+    assertTrue(t.toString().equals("¬x > 0"));
+  }
+
+  @Test
+  public void testReadSimpleInfix() {
+    Term t = readTerm("1+2", null, true, "");
+    assertTrue(t.toString().equals("1 + 2"));
+    assertTrue(t.queryType().toString().equals("Int"));
+  }
+
+  @Test
+  public void testReadInfixWithLeftToRightPriority() {
+    Term t = readTerm("1*2+3  > x", null, true, "");
+    assertTrue(t.toString().equals("1 * 2 + 3 > x"));
+    assertTrue(t.vars().size() == 1);
+    assertTrue(t.queryType().toString().equals("Bool"));
+  }
+
+  @Test
+  public void testReadInfixWithRightToLeftPriority() {
+    Term t = readTerm("x >= 3 + y * 2", null, true, "");
+    assertTrue(t.toString().equals("x ≥ 3 + y * 2"));
+    assertTrue(t.vars().size() == 2);
+    assertTrue(t.queryType().toString().equals("Bool"));
+  }
+
+  @Test
+  public void testReadNegativeInteger() {
+    Term t = readTerm("-  5", null, true, "");
+    assertTrue(t.equals(TermFactory.createValue(-5)));
+  }
+
+  @Test
+  public void testMinusBeforeAddition() {
+    Term t = readTerm("- x + y", null, true, "");
+    assertTrue(t.toString().equals("-x + y"));
+    assertTrue(t.queryRoot().toString().equals("+"));
+    assertTrue(t.queryArgument(1).queryRoot().toString().equals("-"));
+  }
+
+  @Test
+  public void testNegativeIntegerInMultiplication() {
+    Term t = readTerm("-2*1", null, true, "");
+    assertTrue(t.toString().equals("-2 * 1"));
+    assertTrue(t.queryRoot().toString().equals("*"));
+    assertTrue(t.queryArgument(1).queryRoot().toString().equals("-2"));
+  }
+
+  @Test
+  public void testReadSimpleMinusWithNegation() {
+    Term t = readTerm("x - y", null, true, "");
+    // this becomes: x + -y
+    assertTrue(t.toString().equals("x - y"));
+    assertTrue(t.queryRoot().toString().equals("+"));
+    assertTrue(t.queryArgument(2).queryRoot().toString().equals("-"));
+  }
+
+  @Test
+  public void testReadSimpleMinusWithConstant() {
+    Term t = readTerm("x - 3", null, true, "");
+    assertTrue(t.toString().equals("x - 3"));
+    assertTrue(t.queryRoot().toString().equals("+"));
+    assertTrue(t.queryArgument(2).queryRoot().toString().equals("-3"));
+  }
+
+  @Test
+  public void testReadComplexMinuses() {
+    Term t = readTerm("x -3 * 5 + 1 < -1-y", null, true, "");
+    assertTrue(t.toString().equals("x - 3 * 5 + 1 < -1 - y"));
+    assertTrue(t.vars().size() == 2);
+    assertTrue(t.queryArgument(1).queryArgument(1).toString().equals("x - 3 * 5"));
+    assertTrue(t.queryArgument(1).queryArgument(1).queryArgument(2).toString().equals("-(3 * 5)"));
+  }
+
+  @Test
+  public void testMixedInfixPriorities() {
+    ErrorCollector collector = new ErrorCollector(10);
+    SymbolData data = generateSignature();
+    data.addFunctionSymbol(TermFactory.createConstant("q", type("b ⇒ Int")));
+    data.addMetaVariable(TermFactory.createMetaVar("Z", type("a ⇒ Int"), 1));
+    ParsingStatus status = makeCStatus("q(x) < y /\\ y > Z[aa] + -13 * z +9", collector);
+    Term t = CoraInputReader.readTermForUnitTest(status, data, type("Bool"));
+    assertTrue(t.isFunctionalTerm());
+    assertFalse(t.isTheoryTerm());
+    assertTrue(t.toString().equals("q(x) < y ∧ y > Z⟨aa⟩ + -13 * z + 9"));
+    assertTrue(data.lookupVariable("x").queryType().toString().equals("b"));
+    assertTrue(data.lookupVariable("z").queryType().toString().equals("Int"));
+    assertTrue(collector.queryErrorCount() == 0);
+  }
+
+  @Test
+  public void testDoublePlus() {
+    ErrorCollector collector = new ErrorCollector(10);
+    SymbolData data = generateSignature();
+    ParsingStatus status = makeCStatus("1 ++2", collector);
+    Term t = CoraInputReader.readTermForUnitTest(status, data, null);
+    assertTrue(t == null);
+    assertTrue(status.nextToken().toString().equals("1:4: + (PLUS)"));
+    assertTrue(collector.queryCollectedMessages().equals(
+      "1:4: Expected term, started by an identifier, λ, string or (, but got PLUS (+).\n"));
   }
 }
 

@@ -99,7 +99,7 @@ class Abstraction extends TermInherit {
 
   /** @return whether the immediate subterm is a logical term */
   public boolean isTheoryTerm() {
-    return _subterm.isTheoryTerm();
+    return _binder.queryType().isTheoryType() && _subterm.isTheoryTerm();
   }
 
   /** @return false, since an abstraction cannot be a value */

@@ -28,6 +28,9 @@ public class EtaTest {
     Variable x = TermFactory.createBinder("x", TypeFactory.unitSort);
     Term s = TermFactory.createAbstraction(x, f.apply(x));
     Eta eta = new Eta();
+    assertTrue(eta.isEta());
+    assertFalse(eta.isBeta());
+    assertFalse(eta.isCalc());
     assertTrue(eta.applicable(s));
     Term t = eta.apply(s);
     assertTrue(t.equals(f));

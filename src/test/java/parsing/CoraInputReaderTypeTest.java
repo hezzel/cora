@@ -43,7 +43,29 @@ public class CoraInputReaderTypeTest {
   public void testReadConstantBaseType() {
     Type t = CoraInputReader.readTypeFromString("aKKaO");
     assertTrue(t.isBaseType());
+    assertFalse(t.isTheoryType());
     assertTrue(t.toString().equals("aKKaO"));
+  }
+
+  @Test
+  public void testReadInt() {
+    Type t = CoraInputReader.readTypeFromString("Int");
+    assertTrue(t.toString().equals("Int"));
+    assertTrue(t.isTheoryType());
+  }
+
+  @Test
+  public void testReadBool() {
+    Type t = CoraInputReader.readTypeFromString("Bool");
+    assertTrue(t.toString().equals("Bool"));
+    assertTrue(t.isTheoryType());
+  }
+
+  @Test
+  public void testReadString() {
+    Type t = CoraInputReader.readTypeFromString("String");
+    assertTrue(t.toString().equals("String"));
+    assertTrue(t.isTheoryType());
   }
 
   @Test
@@ -103,6 +125,13 @@ public class CoraInputReaderTypeTest {
     assertTrue(t.queryArrowOutputType().toString().equals("c ⇒ d ⇒ e"));
   }
 
+  @Test
+  public void testReadTheoryArrowType() {
+    Type t = CoraInputReader.readTypeFromString("Int -> (Bool -> Int) ⇒ String");
+    assertTrue(t.toString().equals("Int ⇒ (Bool ⇒ Int) ⇒ String"));
+    assertTrue(t.isTheoryType());
+  }
+
   @Test(expected = ParseError.class)
   public void testArrowTypeWithIncorrectArrow() {
     Type t = CoraInputReader.readTypeFromString("xx → yy");
@@ -125,7 +154,7 @@ public class CoraInputReaderTypeTest {
     Type t = CoraInputReader.readTypeForUnitTest(status);
     assertTrue(t.toString().equals("a ⇒ b ⇒ c"));
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:11: Expected a type (started by a constant or bracket) but got ARROW (->).\n"));
+      "1:11: Expected a type (started by a sort identifier or bracket) but got ARROW (->).\n"));
   }
 
   @Test(expected = ParseError.class)
@@ -159,7 +188,7 @@ public class CoraInputReaderTypeTest {
     Type t = CoraInputReader.readTypeForUnitTest(status);
     assertTrue(t.toString().equals("b"));
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:1: Expected a type (started by a constant or bracket) but got ARROW (->).\n"));
+      "1:1: Expected a type (started by a sort identifier or bracket) but got ARROW (->).\n"));
   }
 
   @Test
@@ -169,7 +198,7 @@ public class CoraInputReaderTypeTest {
     Type t = CoraInputReader.readTypeForUnitTest(status);
     assertTrue(t.toString().equals("b ⇒ c"));
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:2: Expected a type (started by a constant or bracket) but got BRACKETCLOSE ()).\n"));
+      "1:2: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n"));
   }
 
   @Test
@@ -179,7 +208,7 @@ public class CoraInputReaderTypeTest {
     Type t = CoraInputReader.readTypeForUnitTest(status);
     assertTrue(t.toString().equals("b ⇒ c"));
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:9: Expected a type (started by a constant or bracket) but got end of input.\n"));
+      "1:9: Expected a type (started by a sort identifier or bracket) but got end of input.\n"));
   }
 
   @Test
@@ -189,7 +218,7 @@ public class CoraInputReaderTypeTest {
     Type t = CoraInputReader.readTypeForUnitTest(status);
     assertTrue(t.toString().equals("b"));
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:7: Expected a type (started by a constant or bracket) but got BRACKETCLOSE ()).\n"));
+      "1:7: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n"));
   }
 
   @Test

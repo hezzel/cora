@@ -29,6 +29,9 @@ public interface Type {
   boolean isBaseType();
   /** Return false for base types, true for arrow types. */
   boolean isArrowType();
+
+  /** Returns true if the type is fully built from theory sorts. */
+  boolean isTheoryType();
   
   /** Returns a string representation of the current type. */
   String toString();

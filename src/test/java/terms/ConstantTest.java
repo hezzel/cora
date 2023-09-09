@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.TreeMap;
 import cora.exceptions.*;
 import cora.types.Type;
+import cora.types.TypeFactory;
 
 public class ConstantTest extends TermTestFoundation {
   @Test(expected = NullInitialisationError.class)
@@ -76,6 +77,15 @@ public class ConstantTest extends TermTestFoundation {
     args.add(new Constant("aa", a));
     args.add(new Constant("bb", b));
     assertTrue(f.apply(args).toString().equals("ff(aa, bb)"));
+  }
+
+  @Test
+  public void testFunctionSymbolTheory() {
+    FunctionSymbol f = new Constant("0", TypeFactory.intSort);
+    assertFalse(f.isTheorySymbol());
+    assertFalse(f.isTheoryTerm());
+    assertFalse(f.isValue());
+    assertTrue(f.toValue() == null);
   }
 
   @Test

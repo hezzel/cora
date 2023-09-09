@@ -42,6 +42,9 @@ class ArrowType implements Type {
   /** @return true */
   public boolean isArrowType() { return true; }
 
+  /** @return whether all sorts occurring in us are theory sorts */
+  public boolean isTheoryType() { return _left.isTheoryType() && _right.isTheoryType(); }
+
   /** Returns a string representation which takes right-associativity into account. */
   public String toString() {
     String leftstring = _left.toString();

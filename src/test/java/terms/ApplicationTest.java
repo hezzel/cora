@@ -149,6 +149,28 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
+  public void testTheory() {
+    // +(x(0), y(z))
+    Term zero = new IntegerValue(0);
+    Type i = zero.queryType();
+    Term x = new Var("x", arrowType(i, i));
+    Term y = new Binder("y", i);
+    Term t = new Application(new PlusSymbol(), x.apply(zero), y);
+    assertTrue(t.isTheoryTerm());
+    assertFalse(t.isValue());
+    assertTrue(t.toValue() == null);
+    // z(0) with z :: Int ⇒ a
+    Var z = new Var("z", arrowType(i, baseType("a")));
+    t = z.apply(zero);
+    assertFalse(t.isTheoryTerm());
+    // +(1, 2)
+    t = new Application(new PlusSymbol(), new IntegerValue(1), new IntegerValue(2));
+    assertTrue(t.isTheoryTerm());
+    assertFalse(t.isValue());
+    assertTrue(t.toValue() == null);
+  }
+
+  @Test
   public void testAbstractionTermBasics() {
     Variable x = new Binder("x", baseType("o"));
     Term abs = new Abstraction(x, x);

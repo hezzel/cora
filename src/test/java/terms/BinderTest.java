@@ -22,6 +22,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import cora.exceptions.*;
 import cora.types.Type;
+import cora.types.TypeFactory;
 
 public class BinderTest extends TermTestFoundation {
   @Test(expected = NullInitialisationError.class)
@@ -110,6 +111,16 @@ public class BinderTest extends TermTestFoundation {
     assertTrue(x.compareTo(x) == 0);
     assertTrue(x.compareTo(z) == -1);
     assertTrue(x.compareTo(new Var("y", baseType("o"))) == 1);
+  }
+
+  @Test
+  public void testTheory() {
+    Variable x = new Binder("x", baseType("aa"));
+    Variable y = new Binder("y", TypeFactory.boolSort);
+    assertFalse(x.isTheoryTerm());
+    assertTrue(y.isTheoryTerm());
+    assertFalse(y.isValue());
+    assertTrue(y.toValue() == null);
   }
 
   @Test

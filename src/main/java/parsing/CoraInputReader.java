@@ -18,6 +18,7 @@ package cora.parsing;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeMap;
 import cora.exceptions.*;
 import cora.parsing.lib.Token;
@@ -144,6 +145,21 @@ public class CoraInputReader {
   }
 
   /**
+   * sort ::= INTTYPE | BOOLTYPE | STRINGTYPE | IDENTIFIER
+   *
+   * This function attempts to read a sort, and returns it.  If there is no sort at the start of
+   * the input, then nothing is read and null is returned.
+   */
+  private BaseType tryReadSort() {
+    if (_status.readNextIf(CoraTokenData.INTTYPE) != null) return TypeFactory.intSort;
+    if (_status.readNextIf(CoraTokenData.BOOLTYPE) != null) return TypeFactory.boolSort;
+    if (_status.readNextIf(CoraTokenData.STRINGTYPE) != null) return TypeFactory.stringSort;
+    String name = tryReadIdentifier();
+    if (name == null) return null;
+    return TypeFactory.createSort(name);
+  }
+
+  /**
    * type ::= constant (typearrow type)?
    *        | BRACKETOPEN type BRACKETCLOSE (typearrow type)?
    *
@@ -154,12 +170,10 @@ public class CoraInputReader {
    * recovery.
    */
   private Type readType() {
-    Type start;
-
-    String constant = tryReadIdentifier();
-    if (constant == null) {
+    Type start = tryReadSort();
+    if (start == null) {
       Token bracket = _status.expect(CoraTokenData.BRACKETOPEN,
-        "a type (started by a constant or bracket)");
+        "a type (started by a sort identifier or bracket)");
       if (bracket == null) { // error recovery
         if (tryReadTypeArrow()) return readType();  // maybe we have -> type or () -> type
         return null;                                // otherwise, no idea what they're trying to do
@@ -167,7 +181,6 @@ public class CoraInputReader {
       start = readType();
       if (_status.expect(CoraTokenData.BRACKETCLOSE, "closing bracket") == null) return start;
     }
-    else start = TypeFactory.createSort(constant);
 
     if (!tryReadTypeArrow()) return start;
     
@@ -180,15 +193,8 @@ public class CoraInputReader {
   // =================================== READING TERM STRUCTURES ==================================
 
   /**
-   * term = value
-   *      | abstraction
-   *      | mainterm
-   *
-   * where
-   * mainterm = IDENTIFIER
-   *          | IDENTIFIER METAOPEN termlist METACLOSE
-   *          | mainterm BRACKETOPEN termlist BRACKETCLOSE
-   *          | BRACKETOPEN term BRACKETCLOSE
+   * term = abstraction
+   *      | mainterm (infixsymbol mainterm)*
    *
    * When the current parsing status represents a term, this method reads it into a term structure,
    * which does not yet check correct typing / arity use of the term.  If null is returned, parsing
@@ -196,15 +202,138 @@ public class CoraInputReader {
    */
   private TermStructure readTermStructure() {
     if (_status.nextTokenIs(CoraTokenData.LAMBDA)) return readAbstractionStructure();
+
+    TermStructure struc = readMainTermStructure();
+    if (struc == null) return null;
+    Token optoken = _status.peekNext();
+    CalculationSymbol op = tryReadInfixSymbol();
+    if (op == null) return struc;
+
+    Stack<TermStructure> left = new Stack<TermStructure>();
+    left.push(struc);
+    Stack<CalculationSymbol> operator = new Stack<CalculationSymbol>();
+    operator.push(op);
+    Stack<Token> operatorToken = new Stack<Token>();
+    operatorToken.push(optoken);
+
+    while (true) {
+      struc = readMainTermStructure();
+      if (struc == null) break;
+      optoken = _status.peekNext();
+      op = tryReadInfixSymbol();
+      if (op == null) break;
+      while (!operator.empty()) {
+        if (op.queryInfixPriority() < operator.peek().queryInfixPriority() ||
+            op.equals(operator.peek())) {
+          struc = combineInfix(left, operator, operatorToken, struc);
+        }
+        else if (op.queryInfixPriority() == operator.peek().queryInfixPriority()) {
+          _status.storeError("Ambiguous priorities in parser: no clear priority has been set " +
+            "between " + operator.peek() + " (at " + operatorToken.peek().getPosition() + ") " +
+            "and " + op.toString() + ".", optoken);
+          struc = combineInfix(left, operator, operatorToken, struc);
+        }
+        else break;
+      }
+      left.push(struc);
+      operator.push(op);
+      operatorToken.push(optoken);
+    }
+
+    if (struc == null) { // error case
+      struc = left.pop();
+      operator.pop();
+      operatorToken.pop();
+      struc.errored = true;
+    }
+
+    while (!operator.empty()) struc = combineInfix(left, operator, operatorToken, struc);
+    return struc;
+  }
+
+  /** Given a term s, returns the term -s, where the token for - is given. */
+  private TermStructure negate(TermStructure struct, Token minustoken) {
+    if (struct.kind == TermStructure.CONSTANT &&
+        struct.symbol.isValue() &&
+        struct.symbol.queryType().equals(TypeFactory.intSort)) {
+      struct.symbol = TermFactory.createValue(-struct.symbol.toValue().getInt());
+      return struct;
+    }
+
+    TermStructure head = new TermStructure(minustoken, TermStructure.CONSTANT);
+    head.symbol = TermFactory.createMinus();
+    TermStructure ret = new TermStructure(minustoken, TermStructure.APPLICATION);
+    ret.head = head;
+    ret.children = new ArrayList<TermStructure>();
+    ret.children.add(struct);
+    ret.errored = struct.errored;
+    return ret;
+  }
+
+  /**
+   * Given that all the stacks have at least one argument, this will make the termstructure:
+   * operator.pop() ( left.pop(), struct), marked for token operatorToken.pop().
+   */
+  private TermStructure combineInfix(Stack<TermStructure> left, Stack<CalculationSymbol> operator,
+                                     Stack<Token> operatorToken, TermStructure struct) {
+    Token token = operatorToken.pop();
+    // a - has been treated as a +, but we still need to negate the argument
+    if (token.getName().equals(CoraTokenData.MINUS)) struct = negate(struct, token);
+    TermStructure root = new TermStructure(token, TermStructure.CONSTANT);
+    root.symbol = operator.pop();
+    TermStructure ret = new TermStructure(root.token, TermStructure.APPLICATION);
+    ret.head = root;
+    ret.children = new ArrayList<TermStructure>();
+    ret.children.add(left.pop());
+    ret.children.add(struct);
+    ret.errored = struct.errored;
+    return ret;
+  }
+
+  /**
+   * mainterm = value
+   *          | IDENTIFIER
+   *          | IDENTIFIER METAOPEN termlist METACLOSE
+   *          | mainterm BRACKETOPEN termlist BRACKETCLOSE
+   *          | BRACKETOPEN term BRACKETCLOSE
+   *          | NOT mainterm
+   *          | MINUS mainterm
+   */
+  private TermStructure readMainTermStructure() {
+    TermStructure ret;
+
+    // NOT mainterm
+    if (_status.nextTokenIs(CoraTokenData.NOT)) {
+      Token token = _status.nextToken();
+      ret = new TermStructure(token, TermStructure.APPLICATION);
+      ret.children = new ArrayList<TermStructure>();
+      ret.head = new TermStructure(token, TermStructure.CONSTANT);
+      ret.head.symbol = TermFactory.createNot();
+      TermStructure tmp = readMainTermStructure();
+      if (tmp == null) ret.errored = true;
+      else {
+        ret.errored = tmp.errored;
+        ret.children.add(tmp);
+      }
+      return ret;
+    }
+
+    // MINUS mainterm
+    if (_status.nextTokenIs(CoraTokenData.MINUS)) {
+      Token token = _status.nextToken();
+      TermStructure main = readMainTermStructure();
+      return negate(main, token);
+    }
+
+    // value
     if (_status.nextTokenIs(CoraTokenData.STRING) ||
         _status.nextTokenIs(CoraTokenData.INTEGER) ||
         _status.nextTokenIs(CoraTokenData.TRUE) ||
-        _status.nextTokenIs(CoraTokenData.FALSE)) return readValueStructure();
-
-    TermStructure ret;
-
+        _status.nextTokenIs(CoraTokenData.FALSE)) {
+      ret = readValueStructure();
+    }
     // BRACKETOPEN term BRACKETCLOSE  -- we store term as ret
-    if (_status.readNextIf(CoraTokenData.BRACKETOPEN) != null) {
+    else if (_status.readNextIf(CoraTokenData.BRACKETOPEN) != null) {
       ret = readTermStructure();
       if (ret == null) { _status.readNextIf(CoraTokenData.BRACKETCLOSE); return null; }
       if (_status.expect(CoraTokenData.BRACKETCLOSE, "a closing bracket") == null) {
@@ -406,6 +535,26 @@ public class CoraInputReader {
         if (!nextMayBeTerm()) return;
       }
     }
+  }
+
+  /**
+   * If the next token is an infix operator, this function reads it and returns the corresponding
+   * CalculationSymbol.  If not, nothing is read and null is returned.
+   * NOTE: when reading a minus, the PLUS symbol is returned, since a - b is treated like a + -b.
+   * The calling function should take care of this if the given token is a minus.
+   */
+  private CalculationSymbol tryReadInfixSymbol() {
+    if (_status.readNextIf(CoraTokenData.PLUS) != null) return TermFactory.createPlus();
+    if (_status.readNextIf(CoraTokenData.TIMES) != null) return TermFactory.createTimes();
+    if (_status.readNextIf(CoraTokenData.AND) != null) return TermFactory.createAnd();
+    if (_status.readNextIf(CoraTokenData.OR) != null) return TermFactory.createOr();
+    if (_status.readNextIf(CoraTokenData.GREATER) != null) return TermFactory.createGreater();
+    if (_status.readNextIf(CoraTokenData.SMALLER) != null) return TermFactory.createSmaller();
+    if (_status.readNextIf(CoraTokenData.GEQ) != null) return TermFactory.createGeq();
+    if (_status.readNextIf(CoraTokenData.LEQ) != null) return TermFactory.createLeq();
+    // a minus is treated as a plus
+    if (_status.readNextIf(CoraTokenData.MINUS) != null) return TermFactory.createPlus();
+    return null;
   }
 
   // ============================ TURNING A TERM STRUCTURE INTO A TERM ============================
@@ -1018,15 +1167,31 @@ public class CoraInputReader {
 
   // ================================= FUNCTIONS FOR INTERNAL USE =================================
 
-  /** Reads the given type from string */
-  public static Type readTypeFromString(String str) {
-    ParsingStatus status = new ParsingStatus(CoraTokenData.getUnconstrainedStringLexer(str), 10);
+  /**
+   * Reads the given type from string.
+   * If constrainedTRS is set to true, then Int, Bool and String are recognised as pre-defined
+   * sorts, and identifiers are restricted as they are when reading a constrained TRS (e.g., sort
+   * names may not contain "+").  If it is set to false, then identifiers are more general and
+   * the pre-defined types will not be marked as theory sorts.
+   */
+  public static Type readTypeFromString(String str, boolean constrainedTRS) {
+    ParsingStatus status =
+      constrainedTRS ? new ParsingStatus(CoraTokenData.getConstrainedStringLexer(str), 10)
+                     : new ParsingStatus(CoraTokenData.getUnconstrainedStringLexer(str), 10);
     CoraInputReader reader = new CoraInputReader(status);
     Type ret = reader.readType();
     Token token = status.nextToken();
     if (!token.isEof()) status.storeError("String continues after type has ended.", token);
     status.throwCollectedErrors();
     return ret;
+  }
+
+  /**
+   * Reads the given type from string, recognising the pre-defined sorts.
+   * This is the same as readTypeFromString(true).
+   */
+  public static Type readTypeFromString(String str) {
+    return readTypeFromString(str, true);
   }
 
   /** Reads the given term from string */

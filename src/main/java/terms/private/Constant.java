@@ -69,7 +69,7 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   public boolean equals(FunctionSymbol symbol) {
     if (symbol == null) return false;
     if (!_name.equals(symbol.queryName())) return false;
-    if (symbol.isValue()) return false;
+    if (symbol.isTheorySymbol()) return false;
     return queryType().equals(symbol.queryType());
   }
 
@@ -113,6 +113,11 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
 
   /** @return null, since this is not a value */
   public Value toValue() {
+    return null;
+  }
+
+  /** @return null, since this is not a calculation symbol */
+  public CalculationSymbol toCalculationSymbol() {
     return null;
   }
 

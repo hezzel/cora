@@ -30,6 +30,10 @@ class Beta implements Scheme {
   public boolean isEta() {
     return false;
   }
+  
+  public boolean isCalc() {
+    return false;
+  }
 
   public boolean applicable(Term t) {
     return t.isBetaRedex();

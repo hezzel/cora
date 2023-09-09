@@ -69,6 +69,15 @@ public class ArrowTypeTest {
   }
 
   @Test
+  public void testTheory() {
+    ArrowType abc = new ArrowType(new ArrowType(new Sort("a", true), new Sort("b", true)),
+                                  new Sort("c", true));
+    assertTrue(abc.isTheoryType());
+    ArrowType ib = new ArrowType(intType(), boolType());
+    assertFalse(ib.isTheoryType());
+  }
+
+  @Test
   public void testAppendInputTypes() {
     ArrowType intermediate = new ArrowType(intType(), boolType());
     ArrowType at = new ArrowType(intType(), new ArrowType(intermediate, boolType()));

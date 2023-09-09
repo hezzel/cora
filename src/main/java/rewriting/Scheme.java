@@ -19,9 +19,9 @@ import cora.terms.Term;
 
 /**
  * Rule schemes are a way to represent a countably infinite set of rules.  Typical examples of
- * rule schemes are beta and eta.
+ * rule schemes are beta, eta, and calculation rules.
  *
- * Note: all instances of Rule must (and can be expected to) be immutable.
+ * Note: all instances of Scheme must (and can be expected to) be immutable.
  */
 public interface Scheme {
   /** Returns whether this is the beta rule scheme (λx.s) t → s[x:=t]. */
@@ -29,6 +29,9 @@ public interface Scheme {
 
   /** Returns whether this is the eta-shortening rule scheme λx.s x → s with x ∉ FV(s) */
   boolean isEta();
+
+  /** Returns whether this is a calculation rule f(v1,...,vn) → w, with v1, ..., vn, w values. */
+  boolean isCalc();
 
   /** This returns whether the current rule scheme can be applied to t at the head of the term. */
   boolean applicable(Term t);

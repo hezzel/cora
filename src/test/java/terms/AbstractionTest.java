@@ -24,6 +24,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import cora.exceptions.*;
 import cora.types.Type;
+import cora.types.TypeFactory;
 
 public class AbstractionTest extends TermTestFoundation {
   @Test(expected = NullInitialisationError.class)
@@ -202,8 +203,26 @@ public class AbstractionTest extends TermTestFoundation {
     assertFalse(abs.queryAbstractionSubterm().isClosed());
     assertFalse(abs.queryAbstractionSubterm().isGround());
     assertTrue(abs.isTrueTerm());
+    assertFalse(abs.isValue());
+    assertFalse(abs.isTheoryTerm());
     assertTrue(abs.apply(constantTerm("u", arrowType("o", "o"))).toString().equals(
       "(λx.f(x, λy.y))(u)"));
+  }
+
+  @Test
+  public void testTheory() {
+    // λx::Int.x + 1
+    Variable x = new Binder("x", TypeFactory.intSort);
+    Term abs = new Abstraction(x, new Application(new PlusSymbol(), x, new IntegerValue(1)));
+    assertTrue(abs.toString().equals("λx.x + 1"));
+    assertTrue(abs.isTheoryTerm());
+    assertFalse(abs.isValue());
+    assertTrue(abs.toValue() == null);
+
+    // λy::o.0
+    Variable y = new Binder("y", TypeFactory.unitSort);
+    abs = new Abstraction(y, new IntegerValue(0));
+    assertFalse(abs.isTheoryTerm());
   }
 
   @Test(expected = IndexingError.class)

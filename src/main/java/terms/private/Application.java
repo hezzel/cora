@@ -432,6 +432,12 @@ class Application extends TermInherit {
   /** This method gives a string representation of the term. */
   public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
                           Set<String> avoid) {
+    // special case for a theory term
+    if (_head.isConstant()) {
+      CalculationSymbol f = _head.queryRoot().toCalculationSymbol();
+      if (f != null && f.printInfix(builder, _args, renaming, avoid)) return;
+    }
+
     if (_head.isAbstraction()) builder.append("(");
     _head.addToString(builder, renaming, avoid);
     if (_head.isAbstraction()) builder.append(")");

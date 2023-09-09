@@ -40,6 +40,9 @@ public interface FunctionSymbol extends Term {
   /** Returns true if this is a theory symbol (which has a meaning in some theory). */
   public boolean isTheorySymbol();
 
+  /** Casts the symbol to a CalculationSymbol if it is one, otherwise returns null. */
+  public CalculationSymbol toCalculationSymbol();
+
   /**
    * Returns a string that uniquely identifies the function symbol (which just the name does not).
    */

@@ -17,7 +17,6 @@ package cora.terms;
 
 import java.util.Map;
 import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.NullInitialisationError;
 import cora.exceptions.NullCallError;
 import cora.types.BaseType;
 import cora.types.TypeFactory;
@@ -74,6 +73,9 @@ public abstract class ValueInherit extends LeafTermInherit implements Value {
   /** @return this */
   public Value toValue() { return this; }
 
+  /** @return null, since a value is not a calculation symbol */
+  public CalculationSymbol toCalculationSymbol() { return null; }
+
   public boolean isIntegerValue() { return queryType().equals(TypeFactory.intSort); }
 
   public boolean isBooleanValue() { return queryType().equals(TypeFactory.boolSort); }
@@ -102,7 +104,7 @@ public abstract class ValueInherit extends LeafTermInherit implements Value {
    * description of the instantiation failure.
    */
   public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullCallError("Constant", "match", "other term");
+    if (other == null) throw new NullCallError("ValueInherit", "match", "other term");
     if (equals(other)) return null;
     return "value " + toString() + " is not instantiated by " + other.toString() + ".";
   }

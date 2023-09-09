@@ -58,6 +58,7 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
     _name = "X{" + COUNTER + "}";
     _index = COUNTER;
     COUNTER++;
+    setVariables(new ReplaceableList(this));
   }
 
   /** @return true */
@@ -81,8 +82,8 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
   /** @return true */
   public boolean isApplicative() { return true; }
 
-  /** @return true (all variables are theory terms, since no non-theory symbols occur in them */
-  public boolean isTheoryTerm() { return true; }
+  /** @return true if and only if the type is a theory type */
+  public boolean isTheoryTerm() { return queryType().isTheoryType(); }
 
   /** @return false */
   public boolean isValue() { return false; }

@@ -115,7 +115,7 @@ public class CoraInputReaderRestTest {
     assertTrue(data.lookupFunctionSymbol("g").queryType().toString().equals("a ⇒ b ⇒ d"));
     assertTrue(status.nextToken().isEof());
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:17: Expected a type (started by a constant or bracket) but got BRACKETCLOSE ()).\n"));
+      "1:17: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n"));
   }
 
   @Test
@@ -127,7 +127,7 @@ public class CoraInputReaderRestTest {
     assertTrue(data.lookupFunctionSymbol("g") == null);
     assertTrue(status.nextToken().toString().equals("1:6: { (BRACEOPEN)"));
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:6: Expected a type (started by a constant or bracket) but got BRACEOPEN ({).\n"));
+      "1:6: Expected a type (started by a sort identifier or bracket) but got BRACEOPEN ({).\n"));
   }
 
   @Test
@@ -139,7 +139,7 @@ public class CoraInputReaderRestTest {
     assertTrue(data.lookupFunctionSymbol("g") == null);
     assertTrue(status.nextToken().toString().equals("1:13: λ (LAMBDA)"));
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:6: Expected a type (started by a constant or bracket) but got DOT (.).\n"));
+      "1:6: Expected a type (started by a sort identifier or bracket) but got DOT (.).\n"));
   }
 
   @Test
@@ -151,7 +151,7 @@ public class CoraInputReaderRestTest {
     assertTrue(data.lookupFunctionSymbol("g") == null);
     assertTrue(status.nextToken().toString().equals("1:13: aq (IDENTIFIER)"));
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:6: Expected a type (started by a constant or bracket) but got BRACKETCLOSE ()).\n"));
+      "1:6: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n"));
   }
 
   @Test
@@ -322,7 +322,7 @@ public class CoraInputReaderRestTest {
     assertTrue(data.lookupMetaVariable("x") == null);
     assertTrue(collector.queryCollectedMessages().equals(
       "1:11: Expected comma or ] or ⟩ but got BRACKETOPEN (().\n" +
-      "1:12: Expected a type (started by a constant or bracket) but got BRACKETCLOSE ()).\n" +
+      "1:12: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n" +
       "1:17: Expected comma or ] or ⟩ but got DECLARE (::).\n"));
   }
 

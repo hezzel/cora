@@ -22,6 +22,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import cora.exceptions.*;
 import cora.types.Type;
+import cora.types.TypeFactory;
 
 public class VarTest extends TermTestFoundation {
   @Test(expected = NullInitialisationError.class)
@@ -107,6 +108,16 @@ public class VarTest extends TermTestFoundation {
     assertFalse(z.apply(x).isPattern());
     Variable y = new Binder("x", baseType("o"));
     assertTrue(x.compareTo(y) == -1);
+  }
+
+  @Test
+  public void testTheory() {
+    Variable x = new Var("x", baseType("aa"));
+    Variable y = new Var("y", arrowType(TypeFactory.intSort, TypeFactory.stringSort));
+    assertFalse(x.isTheoryTerm());
+    assertTrue(y.isTheoryTerm());
+    assertFalse(y.isValue());
+    assertTrue(y.toValue() == null);
   }
 
   @Test
