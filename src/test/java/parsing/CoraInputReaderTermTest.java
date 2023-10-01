@@ -1003,7 +1003,7 @@ public class CoraInputReaderTermTest {
   @Test
   public void testReadNegativeInteger() {
     Term t = readTerm("-  5", null, true, "");
-    assertTrue(t.equals(TermFactory.createValue(-5)));
+    assertTrue(t.equals(TheoryFactory.createValue(-5)));
   }
 
   @Test

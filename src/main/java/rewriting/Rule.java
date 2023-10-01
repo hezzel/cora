@@ -18,72 +18,74 @@ package cora.rewriting;
 import java.util.ArrayList;
 import java.util.Map;
 import cora.types.Type;
-import cora.terms.Term;
-import cora.terms.Replaceable;
-import cora.terms.Substitution;
+import cora.terms.*;
 
 /**
- * Rules are the core objects that define the reduction relation in a term rewriting system.
- * They have the form l → r, where l and r are closed terms of the same type, such that all
- * variables in r also occur in l.
- *
- * Note: Rules are all immutable.
+ * Rules are the core objects that define the reduction relation in a term rewriting system.  These
+ * can be first-order or higher-order, constrained or unconstrained.  They always have the form
+ * l → r : φ, although this is viewed as just l → r if there is no constraint.
  */
 public class Rule {
   private Term _left;
   private Term _right;
+  private Term _constraint;
 
   /**
-   * Creates a rule with the given left- and right-hand side.
+   * Creates a rule with the given left- and right-hand side and constraint.
    * No error handling is done for the same reason that the constructor is not public: all Rules
    * should be created through the factory, which is where the correctness checks take place.
    */
+  Rule(Term left, Term right, Term constraint) {
+    _left = left;
+    _right = right;
+    _constraint = constraint;
+  }
+
+  /** Creates an unconstrained rule with the given left- and right-hand side. */
   Rule(Term left, Term right) {
     _left = left;
     _right = right;
+    _constraint = TheoryFactory.createValue(true);
   }
 
-  /** For a rule l → r, this function returns l. */
   public Term queryLeftSide() {
     return _left;
   }
 
-  /** For a rule l → r, this function returns r. */
   public Term queryRightSide() {
     return _right;
   }
 
-  /** For a rule l → r, returns the type of l (which should also be the type of r). */
+  public Term queryConstraint() {
+    return _constraint;
+  }
+
   public Type queryType() {
     return _left.queryType();
   }
 
-  /** This returns whether the rule is fully first-order. */
   public boolean isFirstOrder() {
-    return _left.isFirstOrder() && _right.isFirstOrder();
+    return _left.isFirstOrder() && _right.isFirstOrder() && _constraint.isFirstOrder();
   }
 
-  /** This returns whether the rule is applicative. */
   public boolean isApplicative() {
-    return _left.isApplicative() && _right.isApplicative();
+    return _left.isApplicative() && _right.isApplicative() && _constraint.isApplicative();
   }
 
-  /**
-   * This returns whether the rule is a pattern rule (which means that the left-hand side is a
-   * pattern of the form f(...).
-   */
   public boolean isPatternRule() {
     return _left.isPattern() && _left.isFunctionalTerm();
   }
 
-  /** This returns whether the current rule can be applied to t at the head. */
-  boolean applicable(Term t) {
-    int n = t.numberArguments();
-    int k = findHeadAdditions(t);
-    if (k == -1 || n < k) return false;
-    Term head = t.queryImmediateHeadSubterm(n-k);
-    return _left.match(head) != null;
+  /**
+   * This returns whether the rule is a constrained rule -- which is the case if the constraint
+   * is anything other than the value true.
+   */
+  public boolean isConstrained() {
+    Value value = _constraint.toValue();
+    if (value == null) return false;
+    return !value.getBool();
   }
+
 
   /**
    * If left * X1 *** Xk has the same type as t, then this function returns k; if no such k exists
@@ -100,8 +102,21 @@ public class Rule {
   }
 
   /**
+   * This returns whether the current rule can be applied to t at the head.
+   * TODO: constraints are ignored for now.
+   */
+  public boolean applicable(Term t) {
+    int n = t.numberArguments();
+    int k = findHeadAdditions(t);
+    if (k == -1 || n < k) return false;
+    Term head = t.queryImmediateHeadSubterm(n-k);
+    return _left.match(head) != null;
+  }
+
+  /**
    * If the current rule can be applied to t at the head, this returns the result of a head-most
    * reduction; otherwise it returns null.
+   * TODO: constraints are ignored for now.
    */
   public Term apply(Term t) {
     int n = t.numberArguments();
@@ -123,6 +138,10 @@ public class Rule {
     _left.addToString(builder, renaming);
     builder.append(" → ");
     _right.addToString(builder, renaming);
+    if (isConstrained()) {
+      builder.append(" : ");
+      _constraint.addToString(builder, renaming);
+    }
     return builder.toString();
   }
 }

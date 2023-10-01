@@ -64,26 +64,6 @@ public class TermFactory {
     return new Constant(name, type);
   }
 
-  /** Creates an Integer Value */
-  public static Value createValue(int n) {
-    return new IntegerValue(n);
-  }
-
-  /** Creates a Boolean Value */
-  public static Value createValue(boolean b) {
-    return new BooleanValue(b);
-  }
-
-  /** Create a String Value */
-  public static Value createValue(String s) {
-    return new StringValue(s);
-  }
-
-  /** Create a String Value with a string in quotes, and potentially with escape characters in it */
-  public static Value createEscapedStringValue(String s) throws IncorrectStringException {
-    return StringValue.parseUserStringValue(s);
-  }
-
   /** Creates a functional term f(args) */
   public static Term createFunctionalTerm(FunctionSymbol f, List<Term> args) {
     if (args == null || args.size() == 0) return f;
@@ -169,56 +149,6 @@ public class TermFactory {
   /** Creates an empty substitution. */
   public static Substitution createEmptySubstitution() {
     return new Subst();
-  }
-
-  /** Creates the binary calculation symbol for addition. */
-  public static CalculationSymbol createPlus() {
-    return new PlusSymbol();
-  }
-
-  /** Creates the binary calculation symbol for multiplication. */
-  public static CalculationSymbol createTimes() {
-    return new TimesSymbol();
-  }
-  
-  /** Creates the unary minus symbol for negating an integer. */
-  public static CalculationSymbol createMinus() {
-    return new MinusSymbol();
-  }
-
-  /** Creates the binary calculation symbol for conjunction. */
-  public static CalculationSymbol createAnd() {
-    return new AndOrSymbol(false);
-  }
-
-  /** Creates the binary calculation symbol for disjunction. */
-  public static CalculationSymbol createOr() {
-    return new AndOrSymbol(true);
-  }
-
-  /** Creates the unary calculation symbol for boolean negation. */
-  public static CalculationSymbol createNot() {
-    return new NotSymbol();
-  }
-
-  /** Creates the binary calculation symbol for greater. */
-  public static CalculationSymbol createGreater() {
-    return new ComparisonSymbol(ComparisonSymbol.KIND_GRE);
-  }
-
-  /** Creates the binary calculation symbol for greater. */
-  public static CalculationSymbol createSmaller() {
-    return new ComparisonSymbol(ComparisonSymbol.KIND_SMA);
-  }
-
-  /** Creates the binary calculation symbol for greater. */
-  public static CalculationSymbol createGeq() {
-    return new ComparisonSymbol(ComparisonSymbol.KIND_GEQ);
-  }
-
-  /** Creates the binary calculation symbol for greater. */
-  public static CalculationSymbol createLeq() {
-    return new ComparisonSymbol(ComparisonSymbol.KIND_LEQ);
   }
 }
 

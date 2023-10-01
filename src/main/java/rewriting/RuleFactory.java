@@ -18,6 +18,8 @@ package cora.rewriting;
 import cora.exceptions.IllegalRuleError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
+import cora.types.Type;
+import cora.types.TypeFactory;
 import cora.terms.Term;
 import cora.terms.Replaceable;
 import cora.terms.ReplaceableList;
@@ -59,14 +61,68 @@ public class RuleFactory {
     }
   }
 
+  /** 
+   * Does the checks for the simple forms of constraints we currently support.
+   */
+  private static void doConstraintChecks(Term left, Term constraint) {
+    // constraints have type Bool
+    Type t = constraint.queryType();
+    if (!t.equals(TypeFactory.boolSort) || !t.isTheoryType()) {
+      throw new IllegalRuleError("Rule", "constraint [" + constraint.toString() + "] does not " +
+        "have the theory sort Bool (it has type " + t.toString() + ").");
+    }
+    // constraints are theory terms
+    if (!constraint.isTheoryTerm()) {
+      throw new IllegalRuleError("Rule", "constraint [" + constraint.toString() + "] is not a " +
+        "theory term.");
+    }
+    // all variables in the constraint are non-binder variables of a theory sort
+    ReplaceableList cvars = constraint.freeReplaceables();
+    for (Replaceable x : cvars) {
+      if (x.queryReplaceableKind() == Replaceable.KIND_BINDER) {
+        throw new IllegalRuleError("Rule", "constraint [" + constraint.toString() + "] contains " +
+          "a binder variable " + x.toString() + ".");
+      }
+      if (x.queryReplaceableKind() == Replaceable.KIND_METAVAR) {
+        throw new IllegalRuleError("Rule", "constraint [" + constraint.toString() + "] contains " +
+          "a meta-variable " + x.toString() + "; only properly first-order constraints are " +
+          "allowd.");
+      }
+      t = x.queryType();
+      if (!x.queryType().isBaseType() || !x.queryType().isTheoryType()) {
+        throw new IllegalRuleError("Rule", "constraint [" + constraint.toString() + "] contains " +
+          "a variable " + x.toString() + " of type " + t.toString() + "; only variables of " +
+          "theory sort are allowed to occur in a constraint.");
+      }
+    }
+    // constraints are first-order (we already covered most alternatives, but some still remain)
+    if (!constraint.isFirstOrder()) {
+      throw new IllegalRuleError("Rule", "constraint [" + constraint.toString() + "] is not " +
+        "first-order.");
+    }
+
+    // for now, we require that no variables or meta-variables occur in the constraint that do not
+    // also coccur on the left
+    ReplaceableList lvars = left.freeReplaceables();
+    for (Replaceable x : cvars) {
+      if (!lvars.contains(x)) {
+        throw new IllegalRuleError("Rule", "constraint [" + constraint + "] contains variable " +
+          x.toString() + " which does not occur in the rule's left-hand side.  This is not yet " +
+          "supported.");
+      }
+    }
+  }
+
   /**
-   * Create a first-order rule.
+   * Create a constrained first-order rule.
    * If the rule is poorly formed or not first-order, an IllegalRuleError is thrown.
    * (It is well-formed if: FV(r) ⊆ FV(l) and both sides have the same sort.)
    */
-  public static Rule createFirstOrderRule(Term left, Term right) {
+  public static Rule createFirstOrderRule(Term left, Term right, Term constraint) {
     // do the checks that apply to everything, not just first-order rules
     doBasicChecks(left, right);
+    // and the ones that should apply to the constraint
+    if (constraint != null) doConstraintChecks(left, constraint);
     // both sides need to be first-order
     if (!left.isFirstOrder() || !right.isFirstOrder()) {
       throw new IllegalRuleError("RuleFactory::createFirstOrderRule", "terms in rule [" +
@@ -77,7 +133,17 @@ public class RuleFactory {
         throw new IllegalRuleError("RuleFactory::createFirstOrderRule", "illegal rule [" +
           toString(left, right) + "] with a variable as the left-hand side.");
     }
-    return new Rule(left, right);
+    if (constraint == null) return new Rule(left, right);
+    else return new Rule(left, right, constraint);
+  }
+
+  /**
+   * Create a first-order rule.
+   * If the rule is poorly formed or not first-order, an IllegalRuleError is thrown.
+   * (It is well-formed if: FV(r) ⊆ FV(l) and both sides have the same sort.)
+   */
+  public static Rule createFirstOrderRule(Term left, Term right) {
+    return createFirstOrderRule(left, right, null);
   }
 
   /**

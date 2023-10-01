@@ -256,12 +256,12 @@ public class CoraInputReader {
     if (struct.kind == TermStructure.CONSTANT &&
         struct.symbol.isValue() &&
         struct.symbol.queryType().equals(TypeFactory.intSort)) {
-      struct.symbol = TermFactory.createValue(-struct.symbol.toValue().getInt());
+      struct.symbol = TheoryFactory.createValue(-struct.symbol.toValue().getInt());
       return struct;
     }
 
     TermStructure head = new TermStructure(minustoken, TermStructure.CONSTANT);
-    head.symbol = TermFactory.createMinus();
+    head.symbol = TheoryFactory.minusSymbol;
     TermStructure ret = new TermStructure(minustoken, TermStructure.APPLICATION);
     ret.head = head;
     ret.children = new ArrayList<TermStructure>();
@@ -301,14 +301,14 @@ public class CoraInputReader {
    */
   private TermStructure readMainTermStructure() {
     TermStructure ret;
+    Token token;
 
     // NOT mainterm
-    if (_status.nextTokenIs(CoraTokenData.NOT)) {
-      Token token = _status.nextToken();
+    if ((token =_status.readNextIf(CoraTokenData.NOT)) != null) {
       ret = new TermStructure(token, TermStructure.APPLICATION);
       ret.children = new ArrayList<TermStructure>();
       ret.head = new TermStructure(token, TermStructure.CONSTANT);
-      ret.head.symbol = TermFactory.createNot();
+      ret.head.symbol = TheoryFactory.notSymbol;
       TermStructure tmp = readMainTermStructure();
       if (tmp == null) ret.errored = true;
       else {
@@ -319,8 +319,7 @@ public class CoraInputReader {
     }
 
     // MINUS mainterm
-    if (_status.nextTokenIs(CoraTokenData.MINUS)) {
-      Token token = _status.nextToken();
+    if ((token = _status.readNextIf(CoraTokenData.MINUS)) != null) {
       TermStructure main = readMainTermStructure();
       return negate(main, token);
     }
@@ -343,7 +342,7 @@ public class CoraInputReader {
     }
     // IDENTIFIER
     else {
-      Token token = _status.expect(CoraTokenData.IDENTIFIER, "term, started by an identifier, " +
+      token = _status.expect(CoraTokenData.IDENTIFIER, "term, started by an identifier, " +
         "λ, string or (,");
       if (token == null) return null;
       Token next;
@@ -452,14 +451,14 @@ public class CoraInputReader {
     Token token = _status.nextToken();
     TermStructure ret = new TermStructure(token, TermStructure.CONSTANT);
 
-    if (token.getName().equals(CoraTokenData.TRUE)) ret.symbol = TermFactory.createValue(true);
+    if (token.getName().equals(CoraTokenData.TRUE)) ret.symbol = TheoryFactory.createValue(true);
     else if (token.getName().equals(CoraTokenData.FALSE)) {
-      ret.symbol = TermFactory.createValue(false);
+      ret.symbol = TheoryFactory.createValue(false);
     }
     else if (token.getName().equals(CoraTokenData.INTEGER)) {
       try {
         int number = Integer.parseInt(token.getText());
-        ret.symbol = TermFactory.createValue(number);
+        ret.symbol = TheoryFactory.createValue(number);
       }
       catch (NumberFormatException e) {
         _status.storeError(e.getMessage(), token);
@@ -478,7 +477,7 @@ public class CoraInputReader {
       // append a final quote to make sure the string is well-formed
       text.append("\"");
       try {
-        ret.symbol = TermFactory.createEscapedStringValue(text.toString());
+        ret.symbol = TheoryFactory.createEscapedStringValue(text.toString());
       }
       catch (IncorrectStringException e) {
         _status.storeError(e.getMessage(), token);
@@ -544,16 +543,16 @@ public class CoraInputReader {
    * The calling function should take care of this if the given token is a minus.
    */
   private CalculationSymbol tryReadInfixSymbol() {
-    if (_status.readNextIf(CoraTokenData.PLUS) != null) return TermFactory.createPlus();
-    if (_status.readNextIf(CoraTokenData.TIMES) != null) return TermFactory.createTimes();
-    if (_status.readNextIf(CoraTokenData.AND) != null) return TermFactory.createAnd();
-    if (_status.readNextIf(CoraTokenData.OR) != null) return TermFactory.createOr();
-    if (_status.readNextIf(CoraTokenData.GREATER) != null) return TermFactory.createGreater();
-    if (_status.readNextIf(CoraTokenData.SMALLER) != null) return TermFactory.createSmaller();
-    if (_status.readNextIf(CoraTokenData.GEQ) != null) return TermFactory.createGeq();
-    if (_status.readNextIf(CoraTokenData.LEQ) != null) return TermFactory.createLeq();
+    if (_status.readNextIf(CoraTokenData.PLUS) != null) return TheoryFactory.plusSymbol;
+    if (_status.readNextIf(CoraTokenData.TIMES) != null) return TheoryFactory.timesSymbol;
+    if (_status.readNextIf(CoraTokenData.AND) != null) return TheoryFactory.andSymbol;
+    if (_status.readNextIf(CoraTokenData.OR) != null) return TheoryFactory.orSymbol;
+    if (_status.readNextIf(CoraTokenData.GREATER) != null) return TheoryFactory.greaterSymbol;
+    if (_status.readNextIf(CoraTokenData.SMALLER) != null) return TheoryFactory.smallerSymbol;
+    if (_status.readNextIf(CoraTokenData.GEQ) != null) return TheoryFactory.geqSymbol;
+    if (_status.readNextIf(CoraTokenData.LEQ) != null) return TheoryFactory.leqSymbol;
     // a minus is treated as a plus
-    if (_status.readNextIf(CoraTokenData.MINUS) != null) return TermFactory.createPlus();
+    if (_status.readNextIf(CoraTokenData.MINUS) != null) return TheoryFactory.plusSymbol;
     return null;
   }
 
