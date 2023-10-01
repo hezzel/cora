@@ -242,47 +242,4 @@ public class PlusTimesMinusSymbolTest extends TermTestFoundation {
     assertFalse(fakeminus.equals(minus));
     assertTrue(minus.equals(minus));
   }
-
-  @Test
-  public void testPlusCalculate() {
-    ArrayList<Term> args = new ArrayList<Term>();
-    CalculationSymbol p = new PlusSymbol();
-    assertTrue(p.calculate(args) == null);  // +()
-    args.add(new IntegerValue(3));
-    assertTrue(p.calculate(args) == null);  // +(3)
-    args.add(new BooleanValue(true));
-    assertTrue(p.calculate(args) == null);  // 3 + true
-    args.set(1, new Application(p, new IntegerValue(0), new IntegerValue(0)));
-    assertTrue(p.calculate(args) == null);  // 3 + (0 + 0)
-    args.set(1, new IntegerValue(-7));
-    assertTrue(p.calculate(args).equals(new IntegerValue(-4))); // 3 + -7
-  }
-
-  @Test
-  public void testTimesCalculate() {
-    ArrayList<Term> args = new ArrayList<Term>();
-    CalculationSymbol t = new TimesSymbol();
-    assertTrue(t.calculate(args) == null);  // *()
-    args.add(new IntegerValue(3));
-    assertTrue(t.calculate(args) == null);  // *(3)
-    args.add(new BooleanValue(false));
-    assertTrue(t.calculate(args) == null);  // 3 * false
-    args.set(1, new Application(t, new IntegerValue(0), new IntegerValue(0)));
-    assertTrue(t.calculate(args) == null);  // 3 * (0 * 0)
-    args.set(1, new IntegerValue(-7));
-    assertTrue(t.calculate(args).equals(new IntegerValue(-21))); // 3 * -7
-  }
-
-  @Test
-  public void testMinusCalculate() {
-    ArrayList<Term> args = new ArrayList<Term>();
-    CalculationSymbol m = new MinusSymbol();
-    assertTrue(m.calculate(args) == null);  // -()
-    args.add(new BooleanValue(false));
-    assertTrue(m.calculate(args) == null);  // -false
-    args.set(0, new Application(new PlusSymbol(), new IntegerValue(0), new IntegerValue(0)));
-    assertTrue(m.calculate(args) == null);  // -(0+0)
-    args.set(0, new IntegerValue(-7));
-    assertTrue(m.calculate(args).equals(new IntegerValue(7))); // -(-7)
-  }
 }

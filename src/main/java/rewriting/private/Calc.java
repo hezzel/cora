@@ -16,9 +16,8 @@
 package cora.rewriting;
 
 import cora.terms.Term;
-import cora.terms.CalculationSymbol;
 import cora.terms.FunctionSymbol;
-import cora.terms.TermFactory;
+import cora.smt.TermAnalyser;
 
 /** This class implements the calculation rule scheme. */
 class Calc implements Scheme {
@@ -46,12 +45,9 @@ class Calc implements Scheme {
   }
 
   public Term apply(Term t) {
-    if (!t.isFunctionalTerm()) return null;
-    FunctionSymbol root = t.queryRoot();
-    if (root == null) return null;
-    CalculationSymbol calc = root.toCalculationSymbol();
-    if (calc == null) return null;
-    return calc.calculate(t.queryArguments());
+    if (!t.queryType().isBaseType() || !t.queryType().isTheoryType()) return null;
+    if (t.isValue() || !t.isGround() || !t.isTheoryTerm()) return null;
+    return TermAnalyser.calculate(t);
   }
 
   public String toString() {

@@ -44,16 +44,6 @@ class PlusSymbol extends CalculationInherit {
     return CalculationSymbol.INFIX_PLUS;
   }
 
-  public Value calculate(List<Term> args) {
-    if (args.size() != 2) return null;
-    if (!args.get(0).isValue() || !args.get(1).isValue()) return null;
-    if (!args.get(0).queryType().equals(TypeFactory.intSort) ||
-        !args.get(1).queryType().equals(TypeFactory.intSort)) return null;
-    int a = args.get(0).toValue().getInt();
-    int b = args.get(1).toValue().getInt();
-    return new IntegerValue(a + b);
-  }
-
   public boolean printInfix(StringBuilder builder, List<Term> args,
                             Map<Replaceable,String> renaming, Set<String> avoid) {
     if (args.size() != 2) return false; // let the standard printing procedure handle it

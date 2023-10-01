@@ -163,44 +163,4 @@ public class ConnectiveTest extends TermTestFoundation {
     assertFalse(n.equals(fakenot));
     assertFalse(fakenot.equals(n));
   }
-
-  @Test
-  public void testCalculate() {
-    CalculationSymbol a = new AndOrSymbol(false);
-    CalculationSymbol o = new AndOrSymbol(true);
-    CalculationSymbol n = new NotSymbol();
-    ArrayList<Term> args = new ArrayList<Term>();
-    assertTrue(a.calculate(args) == null);    // ∧()
-    assertTrue(o.calculate(args) == null);    // ∨()
-    assertTrue(o.calculate(args) == null);    // ¬()
-    args.add(new BooleanValue(false));
-    assertTrue(a.calculate(args) == null);    // ∧(false)
-    assertTrue(o.calculate(args) == null);    // ∨(false)
-    assertTrue(n.calculate(args).toString().equals("true"));    // ¬(false)
-    args.add(new Var("x", TypeFactory.boolSort));
-    assertTrue(a.calculate(args) == null);    // false ∧ x -- we do NOT reduce this to false
-    assertTrue(o.calculate(args) == null);    // false ∨ x -- we do NOT reduce this to x
-    args.set(1, new Application(a, new BooleanValue(true), new BooleanValue(false)));
-    assertTrue(a.calculate(args) == null);    // false ∧ (true ∧ false)
-    assertTrue(o.calculate(args) == null);    // false ∨ (true ∧ false)
-    args.set(1, new BooleanValue(true));
-    assertTrue(a.calculate(args).equals(new BooleanValue(false)));  // false ∧ true
-    assertTrue(o.calculate(args).equals(new BooleanValue(true)));  // false ∨ true
-    assertTrue(n.calculate(args) == null);    // ¬(false, true) -- not well-defined
-    args.set(0, new BooleanValue(true));
-    assertTrue(a.calculate(args).equals(new BooleanValue(true)));   // true ∧ true
-    assertTrue(o.calculate(args).equals(new BooleanValue(true)));   // true ∨ true
-    args.set(1, new BooleanValue(false));
-    assertTrue(a.calculate(args).equals(new BooleanValue(false)));  // true ∧ false
-    assertTrue(o.calculate(args).equals(new BooleanValue(true)));   // true ∨ false
-    args.set(0, new BooleanValue(false));
-    assertTrue(a.calculate(args).equals(new BooleanValue(false)));  // false ∧ false
-    assertTrue(o.calculate(args).equals(new BooleanValue(false)));  // false ∨ false
-    args.clear();
-    args.add(new Var("x", TypeFactory.boolSort));
-    assertTrue(n.calculate(args) == null);    // ¬x
-    args.add(new BooleanValue(true));
-    assertTrue(a.calculate(args) == null);    // x ∧ true -- we do NOT reduce this to x
-    assertTrue(o.calculate(args) == null);    // x ∨ true -- we do NOT reduce this to true
-  }
 }

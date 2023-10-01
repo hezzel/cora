@@ -42,13 +42,6 @@ class MinusSymbol extends CalculationInherit {
     return CalculationSymbol.INFIX_MINUS;
   }
 
-  public Value calculate(List<Term> args) {
-    if (args.size() != 1) return null;
-    if (!args.get(0).isValue()) return null;
-    if (!args.get(0).queryType().equals(TypeFactory.intSort)) return null;
-    return new IntegerValue(-args.get(0).toValue().getInt());
-  }
-
   public boolean printInfix(StringBuilder builder, List<Term> args,
                             Map<Replaceable,String> renaming, Set<String> avoid) {
     if (args.size() != 1) return false; // let the standard printing procedure handle it

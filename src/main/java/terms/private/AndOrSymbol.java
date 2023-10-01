@@ -49,15 +49,6 @@ class AndOrSymbol extends CalculationInherit {
     return CalculationSymbol.INFIX_ANDOR;
   }
 
-  public Value calculate(List<Term> args) {
-    if (args.size() != 2) return null;
-    if (!args.get(0).isValue() || !args.get(1).isValue()) return null;
-    if (!args.get(0).queryType().equals(TypeFactory.boolSort) ||
-        !args.get(1).queryType().equals(TypeFactory.boolSort)) return null;
-    if (args.get(0).toValue().getBool() == _disjunction) return new BooleanValue(_disjunction);
-    return new BooleanValue(args.get(1).toValue().getBool());
-  }
-
   public boolean printInfix(StringBuilder builder, List<Term> args,
                             Map<Replaceable,String> renaming, Set<String> avoid) {
     if (args.size() != 2) return false; // let the standard printing procedure handle it

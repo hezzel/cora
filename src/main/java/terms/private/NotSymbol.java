@@ -42,13 +42,6 @@ class NotSymbol extends CalculationInherit {
     return CalculationSymbol.INFIX_NOT;
   }
 
-  public Value calculate(List<Term> args) {
-    if (args.size() != 1) return null;
-    if (!args.get(0).isValue()) return null;
-    if (!args.get(0).queryType().equals(TypeFactory.boolSort)) return null;
-    return new BooleanValue(!args.get(0).toValue().getBool());
-  }
-
   public boolean printInfix(StringBuilder builder, List<Term> args,
                             Map<Replaceable,String> renaming, Set<String> avoid) {
     if (args.size() != 1) return false; // let the standard printing procedure handle it

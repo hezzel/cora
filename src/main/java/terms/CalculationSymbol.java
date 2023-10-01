@@ -30,13 +30,6 @@ public interface CalculationSymbol extends FunctionSymbol {
   public static int INFIX_NONE = 0;
 
   /**
-   * If all the arguments are values, they have the right types, and exactly queryArity() are given,
-   * this computes the result of applying the calculation symbol to them, and returns the result.
-   * If not, it returns null.
-   */
-  public Value calculate(List<Term> args);
-
-  /**
    * Used for printing: if symbols # and $ are printed infix (or otherwise in a special way), then
    * x # y $ z is meant as (x # y) $ z if # has higher infix priority, and as x # (y $ z) if $ has
    * higher priority.  If they have the same priority, this is not allowed unless # and $ are the
