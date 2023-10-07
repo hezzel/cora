@@ -53,11 +53,14 @@ public class CoraTokenData {
   public static String PLUS           = "PLUS";
   public static String MINUS          = "MINUS";
   public static String TIMES          = "TIMES";
+  public static String MID            = "MID";
   public static String DIV            = "DIV";
   public static String GEQ            = "GEQ";
   public static String GREATER        = "GREATER";
   public static String LEQ            = "LEQ";
   public static String SMALLER        = "SMALLER";
+  public static String EQUAL          = "EQUAL";
+  public static String UNEQUAL        = "UNEQUAL";
   public static String AND            = "AND";
   public static String OR             = "OR";
   public static String NOT            = "NOT";
@@ -86,11 +89,14 @@ public class CoraTokenData {
     "\\+"                                     , PLUS,
     "-"                                       , MINUS,
     "\\*"                                     , TIMES,
+    "\\|"                                     , MID,
     "/"                                       , DIV,
     ">"                                       , GREATER,
     "<"                                       , SMALLER,
     "≥|(>=)"                                  , GEQ,
     "≤|(<=)"                                  , LEQ,
+    "="                                       , EQUAL,
+    "≠"                                       , UNEQUAL,
     "∧|(/\\\\)"                               , AND,
     "∨|(\\\\/)"                               , OR,
     "(not)|¬"                                 , NOT,
@@ -98,9 +104,9 @@ public class CoraTokenData {
     "Int"                                     , INTTYPE,
     "Bool"                                    , BOOLTYPE,
     "String"                                  , STRINGTYPE,
-    "([^\\s()\\[\\]⟨⟩\\{\\}\"',:λ\\.\\*\\+\\\\\\.><=≥≤→⇒∧∨¬/-]|)+" , IDENTIFIER,
+    "([^\\s()\\[\\]⟨⟩\\{\\}\"',:λ\\.\\|\\*\\+\\\\\\.><=≥≤→⇒∧∨¬/-]|)+" , IDENTIFIER,
       // identifiers are now built from any characters other than whitespace, brackets (of any
-      // kind), braces, quotes, colons, lambda, dot, *, -, +, >, =, <, ≥, ≤, /, \, ¬
+      // kind), braces, quotes, colons, lambda, dot, mid, *, -, +, >, =, <, ≥, ≤, /, \, ¬
       // unicode arrows
   };
 

@@ -71,14 +71,15 @@ class TermStructure {
   }
 }
 
-/** This class reads text from string or file written in the internal .cora format. */
+/** This class reads text from string or file written in the internal cora format. */
 public class CoraInputReader {
   public static int MSTRS = 1;
   public static int STRS = 2;
   public static int CFS = 3;
   public static int AMS = 4;
   public static int LCTRS = 5;
-  public static int DEFAULT = 6;
+  public static int LCSTRS = 6;
+  public static int DEFAULT = 7;
 
   /**
    * The reader keeps track of the status of reading so far; all read functions have a (potential)
@@ -321,6 +322,7 @@ public class CoraInputReader {
     // MINUS mainterm
     if ((token = _status.readNextIf(CoraTokenData.MINUS)) != null) {
       TermStructure main = readMainTermStructure();
+      if (main == null) return null;
       return negate(main, token);
     }
 
@@ -551,6 +553,8 @@ public class CoraInputReader {
     if (_status.readNextIf(CoraTokenData.SMALLER) != null) return TheoryFactory.smallerSymbol;
     if (_status.readNextIf(CoraTokenData.GEQ) != null) return TheoryFactory.geqSymbol;
     if (_status.readNextIf(CoraTokenData.LEQ) != null) return TheoryFactory.leqSymbol;
+    if (_status.readNextIf(CoraTokenData.EQUAL) != null) return TheoryFactory.equalSymbol;
+    if (_status.readNextIf(CoraTokenData.UNEQUAL) != null) return TheoryFactory.distinctSymbol;
     // a minus is treated as a plus
     if (_status.readNextIf(CoraTokenData.MINUS) != null) return TheoryFactory.plusSymbol;
     return null;
@@ -987,6 +991,12 @@ public class CoraInputReader {
       // } <-- we're past the rule declaration part, but still at the start of a rule; we're just
       // probably going to run into typing trouble, but so be it
       if (curr.getName().equals(CoraTokenData.BRACECLOSE)) { _status.pushBack(curr); return; }
+      // | <-- we're at the constraint part of a rule, so we can continue after reading the
+      // constraint
+      if (curr.getName().equals(CoraTokenData.MID)) {
+        TermStructure str = readTermStructure();
+        if (str != null) return;
+      }
       // :: <-- we may be a token into a declaration; if it's not a function symbol declaration
       // but a variable declaration, tryReadDeclaration has recovery functionality built in so we
       // don't get illicit declarations
@@ -1010,6 +1020,9 @@ public class CoraInputReader {
       if (curr.getName().equals(CoraTokenData.RULEARROW) ||
           (curr.getName().equals(CoraTokenData.ARROW) && !intype)) {
         TermStructure str = readTermStructure();
+        if (str != null) {
+          if (_status.readNextIf(CoraTokenData.MID) != null) str = readTermStructure();
+        }
         if (str != null) return;
       }
     }
@@ -1072,7 +1085,7 @@ public class CoraInputReader {
   }
 
   /**
-   * rule ::= environment? term rulearrow term
+   * rule ::= environment? term rulearrow term (MID term)?
    *
    * When reading a rule, variables and meta-variables are refreshed because these differ for every
    * rule.  If reading a term structure fails, we immediately do error recovery, to return to a
@@ -1087,11 +1100,19 @@ public class CoraInputReader {
     TermStructure left = readTermStructure();
     boolean ok = readRuleArrow();
     TermStructure right = ok ? readTermStructure() : null;
+    TermStructure constraint = null;
+    if (_status.readNextIf(CoraTokenData.MID) != null) constraint = readTermStructure();
 
     if (left != null && right != null && !left.errored && !right.errored) {
       Term l = makeTerm(left, null, true);
       Term r = makeTerm(right, l.queryType(), false);
-      try { return RuleFactory.createRule(l, r); }
+      try {
+        if (constraint == null) return RuleFactory.createRule(l, r);
+        if (!constraint.errored) {
+          Term c = makeTerm(constraint, TypeFactory.boolSort, false);
+          return RuleFactory.createRule(l, r, c);
+        }
+      }
       catch (IllegalRuleError e) {
         _status.storeError(e.queryProblem(), start);
         return null;
@@ -1099,7 +1120,7 @@ public class CoraInputReader {
     }
 
     // error recovery: the structures aren't right
-    if (right != null && !right.errored) return null;
+    if (right != null && !right.errored && (constraint == null || !constraint.errored)) return null;
     recoverState();
     return null;
   }
@@ -1120,10 +1141,14 @@ public class CoraInputReader {
 
     Alphabet alf = _symbols.queryCurrentAlphabet();
     try {
+      // LCTRS, LCSTRS and DEFAULT are constrained, the rest is not
       if (kind == MSTRS) return TRSFactory.createMSTRS(alf, rules);
+      if (kind == LCTRS) return TRSFactory.createLCTRS(alf, rules);
       if (kind == STRS) return TRSFactory.createApplicativeTRS(alf, rules);
+      if (kind == LCSTRS) return TRSFactory.createLCSTRS(alf, rules);
       if (kind == CFS) return TRSFactory.createCFS(alf, rules, false);
-      return TRSFactory.createAMS(_symbols.queryCurrentAlphabet(), rules, false);
+      if (kind == AMS) return TRSFactory.createAMS(alf, rules, false);
+      return TRSFactory.createCoraTRS(_symbols.queryCurrentAlphabet(), rules, false);
     }
     catch (IllegalRuleError e) {
       _status.storeError(e.queryProblem(), null);
@@ -1215,7 +1240,7 @@ public class CoraInputReader {
    * Here "kind" should be the kind of TRS (one of the constants defined at the head of the class).
    */
   public static TRS readProgramFromString(String str, int kind) {
-    boolean constrained = kind == DEFAULT || kind == LCTRS;
+    boolean constrained = kind == DEFAULT || kind == LCTRS || kind == LCSTRS;
     TokenQueue tq = constrained ? CoraTokenData.getConstrainedStringLexer(str)
                                 : CoraTokenData.getUnconstrainedStringLexer(str);
     ParsingStatus status = new ParsingStatus(tq, 10);
@@ -1239,11 +1264,12 @@ public class CoraInputReader {
     String extension =
       filename.substring(filename.lastIndexOf(".") + 1, filename.length()).toLowerCase();
     if (extension.equals("trs") || extension.equals("mstrs")) kind = MSTRS;
-    if (extension.equals("lctrs")) kind = LCTRS;
+    else if (extension.equals("lctrs")) kind = LCTRS;
+    else if (extension.equals("lcstrs")) kind = LCSTRS;
     else if (extension.equals("atrs") || extension.equals("strs")) kind = STRS;
     else if (extension.equals("cfs") || extension.equals("afs")) kind = CFS;
     else if (extension.equals("ams") || extension.equals("afsm")) kind = AMS;
-    boolean constrained = kind == DEFAULT || kind == LCTRS;
+    boolean constrained = kind == DEFAULT || kind == LCTRS || kind == LCSTRS;
 
     TokenQueue tq = constrained ? CoraTokenData.getConstrainedFileLexer(filename)
                               : CoraTokenData.getUnconstrainedFileLexer(filename);

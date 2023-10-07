@@ -27,6 +27,8 @@ class ComparisonSymbol extends CalculationInherit {
   static String KIND_SMA = "<";
   static String KIND_GEQ = "≥";
   static String KIND_LEQ = "≤";
+  static String KIND_EQU = "=";
+  static String KIND_NEQ = "≠";
   private String _kind;
 
   ComparisonSymbol(String kind) {

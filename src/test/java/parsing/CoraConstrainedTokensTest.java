@@ -188,8 +188,18 @@ public class CoraConstrainedTokensTest {
   }
 
   @Test
+  public void testLexMid() throws LexerException {
+    Lexer lexer;
+
+    lexer = createLexer("|a");
+    verifyToken(lexer.nextToken(), CoraTokenData.MID, "|");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "a");
+    assertTrue(lexer.nextToken().isEof());
+  }
+
+  @Test
   public void testAllBasicTokens() throws LexerException {
-    Lexer lexer = createLexer("xx(y){,+#-\\a∀ \\/∃7*Q}():::a[b→b.⇒]>c-+-3λ12≥a≤b" +
+    Lexer lexer = createLexer("xx(y){,+#-\\a∀ \\/∃7*Q}():::a[b→b.⇒]>c-+-3|7λ12≥a≤b" +
       "bae/\\a∧b<=c>=d∨e<f/g");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "xx");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETOPEN, "(");
@@ -225,6 +235,8 @@ public class CoraConstrainedTokensTest {
     verifyToken(lexer.nextToken(), CoraTokenData.PLUS, "+");
     verifyToken(lexer.nextToken(), CoraTokenData.MINUS, "-");
     verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "3");
+    verifyToken(lexer.nextToken(), CoraTokenData.MID, "|");
+    verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "7");
     verifyToken(lexer.nextToken(), CoraTokenData.LAMBDA, "λ");
     verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "12");
     verifyToken(lexer.nextToken(), CoraTokenData.GEQ, "≥");

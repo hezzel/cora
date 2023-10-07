@@ -33,7 +33,7 @@ import cora.terms.Path;
  * To be able to analyse TRSs, we impose the limitation that the rules can be expressed as a finite
  * number of standard rules (which are allowed to be constrained), and a finite number of rule
  * schemes, where the latter essentially generates a countable number of rules.  For now, we limit
- * interest to beta and eta as rule schemes, so techniques know how to deal with this.
+ * interest to beta, eta and calc as rule schemes, so techniques know how to deal with this.
  *
  * To be able to deal with the constraints and calculation rules, the TRS internally tracks whether
  * or not it supports a theory.  For now, we do not keep track of *which* theories the TRS supports;
@@ -146,7 +146,6 @@ public class TRS {
 
     return null;
   }
-
 
   /** Gives a human-readable representation of the term rewriting system. */
   public String toString() {

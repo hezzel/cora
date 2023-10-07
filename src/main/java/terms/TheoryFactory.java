@@ -85,5 +85,11 @@ public class TheoryFactory {
 
   /** The binary calculation symbol for smaller-than-or-equal-to */
   public static CalculationSymbol leqSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_LEQ);
+
+  /** The binary calculation symbol for equality */
+  public static CalculationSymbol equalSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_EQU);
+
+  /** The binary calculation symbol for inequality */
+  public static CalculationSymbol distinctSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_NEQ);
 }
 

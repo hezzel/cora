@@ -22,6 +22,7 @@ import cora.exceptions.IllegalRuleError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.types.Type;
+import cora.types.TypeFactory;
 import cora.terms.*;
 import cora.parsing.CoraInputReader;
 
@@ -104,6 +105,66 @@ public class RuleTest {
     Term left = f.apply(TermFactory.createAbstraction(x, z.apply(x)));
     Term right = makeConstant("a", "o");
     Rule rule = RuleFactory.createPatternRule(left, right);
+  }
+
+  @Test(expected = IllegalRuleError.class)
+  public void testConstraintNotBool() {
+    // f(x) → x | x
+    Term f = TermFactory.createConstant("f", type("Int ⇒ Int"));
+    Variable x = TermFactory.createVar("x", type("Int"));
+    Rule rule = RuleFactory.createApplicativeRule(f.apply(x), x, x);
+  }
+
+  @Test(expected = IllegalRuleError.class)
+  public void testConstraintNotTheory() {
+    // f(x) → x | x > a
+    Term a = TermFactory.createConstant("a", type("Int"));
+    Term f = TermFactory.createConstant("f", type("Int ⇒ Int"));
+    Variable x = TermFactory.createVar("x", type("Int"));
+    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(a);
+    Rule rule = RuleFactory.createFirstOrderRule(f.apply(x), x, constraint);
+  }
+
+  @Test(expected = IllegalRuleError.class)
+  public void testConstraintWithNonTheoryVariable() {
+    // f(x) → x | x > 1 where x has type Int, but it is not marked as a theory sort
+    Term f = TermFactory.createConstant("f", type("Int ⇒ Int"));
+    Variable x = TermFactory.createVar("x", TypeFactory.createSort("Int"));
+    Term one = TheoryFactory.createValue(1);
+    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(one);
+    Rule rule = RuleFactory.createRule(f.apply(x), x, constraint);
+  }
+
+  @Test(expected = IllegalRuleError.class)
+  public void testConstraintWithBinder() {
+    // f(x) → x | x > 1 where x is a binder
+    Term f = TermFactory.createConstant("f", type("Int ⇒ Int"));
+    Variable x = TermFactory.createBinder("x", type("Int"));
+    Term one = TheoryFactory.createValue(1);
+    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(one);
+    Rule rule = RuleFactory.createRule(f.apply(x), x, constraint);
+  }
+
+  @Test(expected = IllegalRuleError.class)
+  public void testConstraintWithLambda() {
+    // f(x) → x | x > (λy.y)(1)
+    Term f = TermFactory.createConstant("f", type("Int ⇒ Int"));
+    Variable x = TermFactory.createVar("x", type("Int"));
+    Term one = TheoryFactory.createValue(1);
+    Variable y = TermFactory.createBinder("y", type("Int"));
+    Term abs = TermFactory.createAbstraction(y, y);
+    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(abs.apply(one));
+    Rule rule = RuleFactory.createRule(f.apply(x), x, constraint);
+  }
+
+  @Test(expected = IllegalRuleError.class)
+  public void testConstraintWithFreshVariable() {
+    // f(x) → x | x > y
+    Term f = TermFactory.createConstant("f", type("Int ⇒ Int"));
+    Variable x = TermFactory.createVar("x", type("Int"));
+    Variable y = TermFactory.createVar("y", type("Int"));
+    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(y);
+    Rule rule = RuleFactory.createApplicativeRule(f.apply(x), x, constraint);
   }
 
   @Test
@@ -252,6 +313,67 @@ public class RuleTest {
   
     assertFalse(rule.applicable(noninstance));
     assertTrue(rule.apply(noninstance) == null);
+  }
+
+  @Test
+  public void testConstraintNotSatisfied() {
+    // sum(x) → 0 [x ≤ 0] applied to sum(3)
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    FunctionSymbol sum = makeConstant("sum", "Int ⇒ Int");
+    Term zero = TheoryFactory.createValue(0);
+    Term constraint = TheoryFactory.leqSymbol.apply(x).apply(zero);
+    Rule rule = RuleFactory.createRule(sum.apply(x), zero, constraint);
+    Term term = sum.apply(TheoryFactory.createValue(3));
+    assertFalse(rule.applicable(term));
+    assertTrue(rule.apply(term) == null);
+  }
+
+  @Test
+  public void testConstraintVariableNotInstantiatedWithValue() {
+    // sum(x) → x + sum(x-1) [x > 0] applied to sum(2 + 1)
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Term nul = TheoryFactory.createValue(0);
+    Term one = TheoryFactory.createValue(1);
+    Term two = TheoryFactory.createValue(2);
+    Term neg = TheoryFactory.createValue(-1);
+    FunctionSymbol sum = makeConstant("sum", "Int ⇒ Int");
+    Term left = sum.apply(x);
+    Term right = TheoryFactory.plusSymbol.apply(x).apply(
+      sum.apply(TheoryFactory.plusSymbol.apply(x).apply(neg)));
+    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(nul);
+    Rule rule = RuleFactory.createFirstOrderRule(left, right, constraint);
+
+    Term addition = TheoryFactory.plusSymbol.apply(two).apply(one);
+    Term term = sum.apply(addition);
+    assertFalse(rule.applicable(term));
+    assertTrue(rule.apply(term) == null);
+  }
+
+  @Test
+  public void testConstraintApplicable() {
+    // sum(x) → x + sum(x-1) | x > 0 applied to sum(5)
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Term nul = TheoryFactory.createValue(0);
+    Term one = TheoryFactory.createValue(1);
+    Term neg = TheoryFactory.createValue(-1);
+    FunctionSymbol sum = makeConstant("sum", "Int ⇒ Int");
+    Term left = sum.apply(x);
+    Term right = TheoryFactory.plusSymbol.apply(x).apply(
+      sum.apply(TheoryFactory.plusSymbol.apply(x).apply(neg)));
+    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(nul);
+    Rule rule = RuleFactory.createFirstOrderRule(left, right, constraint);
+
+    Term term = sum.apply(TheoryFactory.createValue(5));
+    assertTrue(rule.applicable(term));
+    assertTrue(rule.apply(term).toString().equals("5 + sum(5 - 1)"));
+  }
+
+  @Test(expected = IllegalRuleError.class)
+  public void testLhsTheory() {
+    // x + 0 → x
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Term lhs = TheoryFactory.plusSymbol.apply(x).apply(TheoryFactory.createValue(0));
+    RuleFactory.createFirstOrderRule(lhs, x);
   }
 }
 

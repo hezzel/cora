@@ -30,7 +30,7 @@ public interface Scheme {
   /** Returns whether this is the eta-shortening rule scheme λx.s x → s with x ∉ FV(s) */
   boolean isEta();
 
-  /** Returns whether this is a calculation rule f(v1,...,vn) → w, with v1, ..., vn, w values. */
+  /** Returns whether this is a calculation scheme f(v1,...,vn) → w, with v1, ..., vn, w values. */
   boolean isCalc();
 
   /** This returns whether the current rule scheme can be applied to t at the head of the term. */

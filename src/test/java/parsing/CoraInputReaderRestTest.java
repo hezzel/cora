@@ -33,6 +33,10 @@ public class CoraInputReaderRestTest {
     return new ParsingStatus(CoraTokenData.getUnconstrainedStringLexer(text), collector);
   }
 
+  private ParsingStatus makeConstrainedStatus(String text, ErrorCollector collector) {
+    return new ParsingStatus(CoraTokenData.getConstrainedStringLexer(text), collector);
+  }
+
   private SymbolData makeBasicData() {
     SymbolData data = new SymbolData();
     data.addFunctionSymbol(
@@ -411,7 +415,65 @@ public class CoraInputReaderRestTest {
   }
 
   @Test
-  public void testRuleWithFreshVariableInRhs() {
+  public void testCreateFirstOrderConstrainedRule() {
+    ErrorCollector collector = new ErrorCollector(10);
+    ParsingStatus status = makeConstrainedStatus(
+      "sum(x) -> x + sum(x-1) | x > 0", collector);
+    SymbolData data = new SymbolData();
+    data.addFunctionSymbol(
+      TermFactory.createConstant("sum", CoraInputReader.readTypeFromString("Int ⇒ Int")));
+    Rule rule = CoraInputReader.readRuleForUnitTest(status, data);
+    assertTrue(rule.isConstrained());
+    assertTrue(rule.toString().equals("sum(x) → x + sum(x - 1) | x > 0"));
+    assertTrue(collector.queryErrorCount() == 0);
+  }
+
+  @Test
+  public void testCreateHigherOrderConstrainedRule() {
+    ErrorCollector collector = new ErrorCollector(10);
+    ParsingStatus status = makeConstrainedStatus(
+      "rec(F, x, y) → F(x, y, rec(F, x-1, y)) | x > 0", collector);
+    SymbolData data = new SymbolData();
+    data.addFunctionSymbol(TermFactory.createConstant("rec",
+      CoraInputReader.readTypeFromString("(Int ⇒ Int ⇒ Int ⇒ Int) ⇒ Int ⇒ Int ⇒ Int")));
+    Rule rule = CoraInputReader.readRuleForUnitTest(status, data);
+    assertTrue(rule.isConstrained());
+    assertTrue(rule.toString().equals("rec(F, x, y) → F(x, y, rec(F, x - 1, y)) | x > 0"));
+    assertTrue(collector.queryErrorCount() == 0);
+  }
+
+  @Test
+  public void testRuleWithComplexConstraint() {
+    ErrorCollector collector = new ErrorCollector(10);
+    ParsingStatus status = makeConstrainedStatus(
+      "app(F,x) -> F(x)|0 <= x ∧ (x < 10 ∨ x = 13)", collector);
+    SymbolData data = new SymbolData();
+    data.addFunctionSymbol(TermFactory.createConstant("app",
+      CoraInputReader.readTypeFromString("(Int ⇒ Int) ⇒ Int ⇒ Int")));
+    Rule rule = CoraInputReader.readRuleForUnitTest(status, data);
+    assertTrue(rule.toString().equals("app(F, x) → F(x) | 0 ≤ x ∧ (x < 10 ∨ x = 13)"));
+    assertTrue(collector.queryErrorCount() == 0);
+  }
+
+  @Test
+  public void testRuleWithHigherVariableInConstraint() {
+    ErrorCollector collector = new ErrorCollector(10);
+    ParsingStatus status = makeConstrainedStatus(
+      "filter(F,cons(H,T)) -> cons(H, filter(F, T)) | F(H)", collector);
+    SymbolData data = new SymbolData();
+    data.addFunctionSymbol(TermFactory.createConstant("cons",
+      CoraInputReader.readTypeFromString("Int ⇒ List ⇒ List")));
+    data.addFunctionSymbol(TermFactory.createConstant("filter",
+      CoraInputReader.readTypeFromString("(Int ⇒ Bool) ⇒ List ⇒ List")));
+    Rule rule = CoraInputReader.readRuleForUnitTest(status, data);
+    assertTrue(rule == null);
+    assertTrue(collector.queryCollectedMessages().equals(
+      "1:1: constraint [F(H)] contains a variable F of type Int ⇒ Bool; only " +
+      "variables of theory sort are allowed to occur in a constraint.\n"));
+  }
+
+  @Test
+  public void testUnconstrainedRuleWithFreshVariableInRhs() {
     ErrorCollector collector = new ErrorCollector(10);
     ParsingStatus status = makeStatus(" f(x) -> y", collector);
     SymbolData data = makeBasicData();
@@ -419,6 +481,23 @@ public class CoraInputReaderRestTest {
     assertTrue(rule == null);
     assertTrue(collector.queryCollectedMessages().equals("1:2: right-hand side of rule " +
       "[f(x) → y] contains variable y which does not occur on the left.\n"));
+  }
+
+  @Test
+  public void testRuleWithFreshVariableInConstraint() {
+    ErrorCollector collector = new ErrorCollector(10);
+    ParsingStatus status = makeConstrainedStatus("random(x) → y | 0 <= x ∧ y < x", collector);
+    SymbolData data = new SymbolData();
+    data.addFunctionSymbol(TermFactory.createConstant("random",
+      CoraInputReader.readTypeFromString("Int ⇒ Int")));
+    Rule rule = CoraInputReader.readRuleForUnitTest(status, data);
+    assertTrue(rule == null);
+    assertTrue(collector.queryCollectedMessages().equals(
+      "1:1: right-hand side of rule [random(x) → y] contains variable y which does " +
+      "not occur on the left.\n"));
+    // TODO: once this has been implemented to be allowed, also add tests for fresh variables in
+    // the right-hand side in a constrained system: it should be allowed for variables of theory
+    // type, but not for other variables
   }
 
   @Test
@@ -570,6 +649,31 @@ public class CoraInputReaderRestTest {
         "5:13: Expected term, started by an identifier, λ, string or (, but got ARROW (->).\n" +
         "6:1: right-hand side of rule [f(2) → 3] contains variable 3 which does not occur on " +
           "the left.\n"));
+      return;
+    }
+    assertTrue(false);
+  }
+
+  @Test
+  public void testMultipleErrorsWithConstrainedRules() {
+    try {
+      TRS trs = CoraInputReader.readProgramFromString(
+        "f :: Int -> Int\n" +
+        "f(x) -> f(x + 2 | x < 0 \n" +
+        "f(x) -> x | x > 0)\n" +
+        "f(2) -> 3\n" +
+        "- :: Int -> Int -> Int\n" +
+        "f(3) -> 4 | true \n" +
+        "-(x, y) -> x + -1 * y\n",
+        CoraInputReader.LCSTRS);
+    }
+    catch (ParseError e) {
+      assertTrue(e.getMessage().equals(
+        "2:17: Expected a comma or closing bracket ) but got MID (|).\n" +
+        "3:18: Expected term, started by an identifier, λ, string or (, but got " +
+          "BRACKETCLOSE ()).\n" +
+        "5:3: Expected term, started by an identifier, λ, string or (, but got DECLARE (::).\n" +
+        "7:4: Expected a closing bracket but got COMMA (,).\n"));
       return;
     }
     assertTrue(false);

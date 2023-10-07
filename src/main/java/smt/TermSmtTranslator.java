@@ -113,6 +113,14 @@ public class TermSmtTranslator {
       return new Geq(translateIntegerExpression(t.queryArgument(2)),
                      translateIntegerExpression(t.queryArgument(1)));
     }
+    if (calc.equals(TheoryFactory.equalSymbol)) {
+      return new Equal(translateIntegerExpression(t.queryArgument(2)),
+                       translateIntegerExpression(t.queryArgument(1)));
+    }
+    if (calc.equals(TheoryFactory.distinctSymbol)) {
+      return new Distinct(translateIntegerExpression(t.queryArgument(2)),
+                          translateIntegerExpression(t.queryArgument(1)));
+    }
     throw new UnsupportedTheoryError(t.toString(),
       "unfamiliar boolean calculation symbol: " + calc.queryName());
   }

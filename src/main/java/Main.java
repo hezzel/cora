@@ -24,6 +24,9 @@ import cora.parsing.TrsInputReader;
 
 /** Basic entry class: this reads a TRS and asks the user for a term, then reduces this term. */
 public class Main {
+  private static String _inputFile;
+  private static String _inputTerm;
+
   private static String getExtension(String filename) {
     int i = filename.lastIndexOf('.');
     if (i >= 0) return filename.substring(i+1);
@@ -32,25 +35,39 @@ public class Main {
 
   private static TRS readInput(String file) throws Exception {
     String extension = getExtension(file);
-    if (extension.equals("trs") || extension.equals("mstrs")) {
-      return TrsInputReader.readTrsFromFile(file);
-    }
-    if (extension.equals("cora") || extension.equals("strs") ||
-        extension.equals("cfs") || extension.equals("ams")) {
-      return CoraInputReader.readProgramFromFile(file);
-    }
-    throw new Exception("Unknown file extension: " + extension + ".");
+    if (extension.equals("trs")) return TrsInputReader.readTrsFromFile(file);
+    else return CoraInputReader.readProgramFromFile(file);
+  }
+
+  private static void readParameters(String[] args) {
+    _inputFile = null;
+    _inputTerm = null;
+    if (args.length > 0) _inputFile = args[0];
+    if (args.length > 1) _inputTerm = args[0];
   }
 
   public static void main(String[] args) {
     try {
-      TRS trs = args.length > 0 ? readInput(args[0]) : readInput("test.cora");
+      readParameters(args);
+
+      if (_inputFile == null) {
+        System.out.print("Input file: ");
+        System.out.flush();
+        _inputFile = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+      }
+      TRS trs = readInput(_inputFile);
       if (trs == null) return;
 
       System.out.print(trs.toString());
-      System.out.print("Input term: ");
-      String input = (new BufferedReader(new InputStreamReader(System.in))).readLine();
-      Term term = CoraInputReader.readTermFromString(input, trs);
+
+      if (_inputTerm == null) {
+        System.out.println("Input term: ");
+        System.out.flush();
+        _inputTerm = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+      }
+
+      Term term = CoraInputReader.readTermFromString(_inputTerm, trs);
+
       do {
         term = trs.leftmostInnermostReduce(term);
         if (term != null) System.out.println("⇒ " + term.toString());

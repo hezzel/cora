@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import cora.types.Type;
 import cora.terms.*;
+import cora.smt.TermAnalyser;
 
 /**
  * Rules are the core objects that define the reduction relation in a term rewriting system.  These
@@ -82,7 +83,7 @@ public class Rule {
    */
   public boolean isConstrained() {
     Value value = _constraint.toValue();
-    if (value == null) return false;
+    if (value == null) return true;
     return !value.getBool();
   }
 
@@ -101,22 +102,23 @@ public class Rule {
     return -1;
   }
 
-  /**
-   * This returns whether the current rule can be applied to t at the head.
-   * TODO: constraints are ignored for now.
-   */
+  /** This returns whether the current rule can be applied to t at the head. */
   public boolean applicable(Term t) {
     int n = t.numberArguments();
     int k = findHeadAdditions(t);
     if (k == -1 || n < k) return false;
     Term head = t.queryImmediateHeadSubterm(n-k);
-    return _left.match(head) != null;
+    Substitution subst = _left.match(head);
+    if (subst == null) return false;
+    for (Variable x : _constraint.vars()) {
+      if (!subst.getReplacement(x).isValue()) return false;
+    }
+    return TermAnalyser.evaluate(_constraint.substitute(subst)).getBool();
   }
 
   /**
    * If the current rule can be applied to t at the head, this returns the result of a head-most
    * reduction; otherwise it returns null.
-   * TODO: constraints are ignored for now.
    */
   public Term apply(Term t) {
     int n = t.numberArguments();
@@ -125,6 +127,10 @@ public class Rule {
     Term head = t.queryImmediateHeadSubterm(n-k);
     Substitution subst = _left.match(head);
     if (subst == null) return null;
+    for (Variable x : _constraint.vars()) {
+      if (!subst.getReplacement(x).isValue()) return null;
+    }
+    if (!TermAnalyser.evaluate(_constraint.substitute(subst)).getBool()) return null;
     ArrayList<Term> args = new ArrayList<Term>();
     for (int i = n-k+1; i <= n; i++) args.add(t.queryArgument(i));
     Term righthead = _right.substitute(subst);
@@ -139,7 +145,7 @@ public class Rule {
     builder.append(" → ");
     _right.addToString(builder, renaming);
     if (isConstrained()) {
-      builder.append(" : ");
+      builder.append(" | ");
       _constraint.addToString(builder, renaming);
     }
     return builder.toString();

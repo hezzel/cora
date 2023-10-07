@@ -1,0 +1,14 @@
+nil :: list
+cons :: Int -> list -> list
+
+sum :: Int -> Int
+sum(x) -> 0         | x ≤ 0
+sum(x) -> x + sum(x - 1) | x > 0
+
+map :: (Int -> Int) -> list -> list
+map(\x.F[x], nil) -> nil
+map(\x.F[x], cons(y, ys)) -> cons(F[y], map(\x.F[x], ys))
+
+examplelist :: list
+examplelist -> cons(1, cons(3, cons(0, nil)))
+

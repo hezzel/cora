@@ -116,7 +116,8 @@ public class RuleFactory {
   /**
    * Create a constrained first-order rule.
    * If the rule is poorly formed or not first-order, an IllegalRuleError is thrown.
-   * (It is well-formed if: FV(r) ⊆ FV(l) and both sides have the same sort.)
+   * (It is well-formed if: FV(r) ⊆ FV(l), both sides have the same sort, and the constraint is a
+   * base-type first-order theory term of type Bool with FV(constraint) ⊆ FV(l).)
    */
   public static Rule createFirstOrderRule(Term left, Term right, Term constraint) {
     // do the checks that apply to everything, not just first-order rules
@@ -132,6 +133,11 @@ public class RuleFactory {
     if (!left.isFunctionalTerm()) {
         throw new IllegalRuleError("RuleFactory::createFirstOrderRule", "illegal rule [" +
           toString(left, right) + "] with a variable as the left-hand side.");
+    }
+    // the left-hand side cannot be a theory term
+    if (left.isTheoryTerm()) {
+        throw new IllegalRuleError("RuleFactory::createFirstOrderRule", "illegal rule [" +
+          toString(left, right) + "] with a theory term as the left-hand side.");
     }
     if (constraint == null) return new Rule(left, right);
     else return new Rule(left, right, constraint);
@@ -149,17 +155,36 @@ public class RuleFactory {
   /**
    * Create an applicative higher-order rule.
    * If the rule is poorly formed or not applicative, an IllegalRuleError is thrown.
-   * (It is well-formed if: FV(r) ⊆ FV(l) and both sides have the same type.)
+   * (It is well-formed if: FV(r) ⊆ FV(l) and both sides have the same type.  Moreover,
+   * if constraint != null then the constraint should be a first-order theory term of
+   * Boolean type with only variables occurring in left.
    */
-  public static Rule createApplicativeRule(Term left, Term right) {
+  public static Rule createApplicativeRule(Term left, Term right, Term constraint) {
     // do the checks that apply to everything, not just applicative rules
     doBasicChecks(left, right);
+    // and the ones that should apply to the constraint
+    if (constraint != null) doConstraintChecks(left, constraint);
     // both sides need to be applicative
     if (!left.isApplicative() || !right.isApplicative()) {
       throw new IllegalRuleError("RuleFactory::createApplicativeRule", "terms in rule [" +
         toString(left, right) + " are not applicative.");
     }
-    return new Rule(left, right);
+    // the left-hand side cannot be a theory term (so also not a variable)
+    if (left.isTheoryTerm()) {
+        throw new IllegalRuleError("RuleFactory::createApplicativeOrderRule", "illegal rule [" +
+          toString(left, right) + "] with a theory term as the left-hand side.");
+    }
+    if (constraint == null) return new Rule(left, right);
+    else return new Rule(left, right, constraint);
+  }
+
+  /**
+   * Create an unconstrained applicative higher-order rule.
+   * If the rule is poorly formed or not applicative, an IllegalRuleError is thrown.
+   * (It is well-formed if: FV(r) ⊆ FV(l) and both sides have the same type.)
+   */
+  public static Rule createApplicativeRule(Term left, Term right) {
+    return createApplicativeRule(left, right, null);
   }
 
   /**
@@ -203,11 +228,24 @@ public class RuleFactory {
 
   /**
    * Creates an AMS rule without limitations other than well-formedness: FMV(r) ⊆ FMV(l), both
+   * sides should have the same sort, and both sides should be closed.  If a constraint is given
+   * (not null), then it should be a first-order theory term of type Bool, with FV(constraint) ⊆
+   * FV(l).
+   */
+  public static Rule createRule(Term left, Term right, Term constraint) {
+    doBasicChecks(left, right);
+    if (constraint == null) return new Rule(left, right);
+    doConstraintChecks(left, constraint);
+    // NOTE: here we do _not_ check if the lhs is a theory term, to be utterly general
+    return new Rule(left, right, constraint);
+  }
+
+  /**
+   * Creates an AMS rule without limitations other than well-formedness: FMV(r) ⊆ FMV(l), both
    * sides should have the same sort, and both sides should be closed.
    */
   public static Rule createRule(Term left, Term right) {
-    doBasicChecks(left, right);
-    return new Rule(left, right);
+    return createRule(left, right, null);
   }
 }
 

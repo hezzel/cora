@@ -40,16 +40,34 @@ public class TRSFactory {
     }
   }
 
+  /**
+   * If c is true, updates schemes by adding the calculation rules.
+   * If not, checks that all rules are indeed unconstrained, and throws an IllegalRuleError
+   * otherwise.
+   */
+  private static void doConstraintChecks(boolean c, List<Rule> rules, List<Scheme> schemes) {
+    if (c) schemes.add(new Calc());
+    else {
+      for (Rule rule : rules) {
+        if (rule.isConstrained()) {
+          throw new IllegalRuleError("TRS", "Rule " + rule.toString() + " is constrained, " +
+            "so cannot occur in an unconstrained TRS.");
+        }
+      }
+    }
+  }
+
   /** Helper function for createMSTRS and createLCTRS */
   private static TRS createFirstorderTRS(Alphabet alphabet, List<Rule> rules, boolean constrained) {
     ArrayList<Scheme> schemes = new ArrayList<Scheme>();
 
     doBasicChecks(alphabet, rules, schemes);
+    doConstraintChecks(constrained, rules, schemes);
     
     // assert that everything in the alphabet is first-order
     for (FunctionSymbol f : alphabet.getSymbols()) {
       if (f.queryType().queryTypeOrder() > 1) {
-        throw new IllegalSymbolError("MSTRS", f.toString(), "Symbol with a type " +
+        throw new IllegalSymbolError("MSTRS/LCTRS", f.toString(), "Symbol with a type " +
           f.queryType().toString() + " cannot occur in a many-sorted TRS.");
       }   
     }   
@@ -57,8 +75,8 @@ public class TRSFactory {
     // assert that all the rules are first-order
     for (Rule rule : rules) {
       if (!rule.isFirstOrder()) {
-        throw new IllegalRuleError("MSTRS", "Rule " + rule.toString() + " cannot occur in a " +
-          "many-sorted TRS, as it is not first-order.");
+        throw new IllegalRuleError("MSTRS/LCTRS", "Rule " + rule.toString() + " cannot occur in " +
+          "a many-sorted TRS, as it is not first-order.");
       }
     }
 
@@ -85,15 +103,12 @@ public class TRSFactory {
     return createFirstorderTRS(alphabet, rules, true);
   }
 
-  /**
-   * Creates an applicative higher-order term rewriting system with the given alpabet and rules.
-   * No rule schemes are included.  The rules are not required to be patterns, only applicative.
-   * If they are not, then an IllegalRuleError is thrown.
-   */
-  public static TRS createApplicativeTRS(Alphabet alphabet, List<Rule> rules) {
+  /** Helper function for createApplicativeTRS and createLCSTRS */
+  private static TRS createApplicativeTRS(Alphabet alphabet, List<Rule> rules, boolean constr) {
     ArrayList<Scheme> schemes = new ArrayList<Scheme>();
 
     doBasicChecks(alphabet, rules, schemes);
+    doConstraintChecks(constr, rules, schemes);
     
     // assert that all the rules are applicative
     for (Rule rule : rules) {
@@ -103,7 +118,25 @@ public class TRSFactory {
       }
     }
 
-    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, false);
+    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, constr);
+  }
+
+  /**
+   * Creates an applicative higher-order term rewriting system with the given alphabet and rules.
+   * No rule schemes are included, and rules are not constrained.  The rules are not required to be
+   * patterns, only applicative.  If they are not, then an IllegalRuleError is thrown.
+   */
+  public static TRS createApplicativeTRS(Alphabet alphabet, List<Rule> rules) {
+    return createApplicativeTRS(alphabet, rules, false);
+  }
+  
+  /**
+   * Creates an applicative higher-order term rewriting system with logical constraints, over the
+   * given alphabet and rules.  Note that the alphabet is the *non-theory* alphabet; theory symbols
+   * are automatically included.
+   */
+  public static TRS createLCSTRS(Alphabet alphabet, List<Rule> rules) {
+    return createApplicativeTRS(alphabet, rules, true);
   }
 
   /**
@@ -115,6 +148,7 @@ public class TRSFactory {
     schemes.add(new Beta());
     if (includeEta) schemes.add(new Eta());
     doBasicChecks(alphabet, rules, schemes);
+    doConstraintChecks(false, rules, schemes);
     for (Rule rule : rules) {
       if (!rule.queryLeftSide().isTrueTerm()) {
         throw new IllegalRuleError("Curried Functionsal System", "Rule " + rule.toString() +
@@ -133,6 +167,7 @@ public class TRSFactory {
     schemes.add(new Beta());
     if (includeEta) schemes.add(new Eta());
     doBasicChecks(alphabet, rules, schemes);
+    doConstraintChecks(false, rules, schemes);
     return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, false);
   }
 
@@ -144,6 +179,7 @@ public class TRSFactory {
     ArrayList<Scheme> schemes = new ArrayList<Scheme>();
     schemes.add(new Beta());
     if (includeEta) schemes.add(new Eta());
+    doConstraintChecks(true, rules, schemes);
     doBasicChecks(alphabet, rules, schemes);
     return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, true);
   }
