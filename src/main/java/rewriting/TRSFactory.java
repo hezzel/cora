@@ -38,6 +38,20 @@ public class TRSFactory {
     for (int i = 0; i < schemes.size(); i++) {
       if (schemes.get(i) == null) throw new NullInitialisationError("TRS", "rule scheme " + i); 
     }
+
+    // checks if our rules do not have variable or theory left-hand sides (this is permitted in
+    // some of the rules to support rules that were created by some method, but not in the basic
+    // TRSs)
+    for (Rule rule : rules) {
+      if (rule.queryLeftSide().isVariable()) {
+        throw new IllegalRuleError("TRS", "Rule " + rule.toString() + " has a variable as its " +
+          "left-hand side.");
+      }
+      if (rule.queryLeftSide().isTheoryTerm()) {
+        throw new IllegalRuleError("TRS", "Rule " + rule.toString() + " has a theory term as " +
+          "its left-hand side.");
+      }
+    }
   }
 
   /**
@@ -52,6 +66,10 @@ public class TRSFactory {
         if (rule.isConstrained()) {
           throw new IllegalRuleError("TRS", "Rule " + rule.toString() + " is constrained, " +
             "so cannot occur in an unconstrained TRS.");
+        }
+        if (rule.rightHasFreshVariables()) {
+          throw new IllegalRuleError("TRS", "Rule " + rule.toString() + " has fresh variables " +
+            "in the right-hand side, which is not allowed in an unconstrained TRS.");
         }
       }
     }

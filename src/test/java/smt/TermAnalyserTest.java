@@ -67,5 +67,19 @@ public class TermAnalyserTest {
     t = TermFactory.createApp(p, TheoryFactory.createValue(-7), TheoryFactory.createValue(3));
     assertTrue(TermAnalyser.calculate(t).equals(TheoryFactory.createValue(-4)));
   }
+
+  @Test
+  public void testSatisfy() {
+    CalculationSymbol p = TheoryFactory.plusSymbol;
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
+
+    // +(x, y) > 12
+    Term t = TheoryFactory.plusSymbol.apply(x).apply(y);
+    Term c = TheoryFactory.greaterSymbol.apply(t).apply(TheoryFactory.createValue(12));
+    Substitution subst = TermAnalyser.satisfy(c);
+    assertTrue(subst.get(x).toValue().getInt() +
+               subst.get(y).toValue().getInt() > 12);
+  }
 }
 

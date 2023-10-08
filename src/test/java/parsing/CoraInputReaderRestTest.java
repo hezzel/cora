@@ -480,7 +480,7 @@ public class CoraInputReaderRestTest {
     Rule rule = CoraInputReader.readRuleForUnitTest(status, data);
     assertTrue(rule == null);
     assertTrue(collector.queryCollectedMessages().equals("1:2: right-hand side of rule " +
-      "[f(x) → y] contains variable y which does not occur on the left.\n"));
+      "[f(x) → y] contains fresh variable y of type b, which is not a theory sort.\n"));
   }
 
   @Test
@@ -491,13 +491,32 @@ public class CoraInputReaderRestTest {
     data.addFunctionSymbol(TermFactory.createConstant("random",
       CoraInputReader.readTypeFromString("Int ⇒ Int")));
     Rule rule = CoraInputReader.readRuleForUnitTest(status, data);
+    assertTrue(rule.toString().equals("random(x) → y | 0 ≤ x ∧ y < x"));
+  }
+
+  @Test
+  public void testRuleWithFreshTheoryVariableInRhs() {
+    ErrorCollector collector = new ErrorCollector(10);
+    ParsingStatus status = makeConstrainedStatus("random → x", collector);
+    SymbolData data = new SymbolData();
+    data.addFunctionSymbol(TermFactory.createConstant("random",
+      CoraInputReader.readTypeFromString("Int")));
+    Rule rule = CoraInputReader.readRuleForUnitTest(status, data);
+    assertTrue(rule.toString().equals("random → x"));
+  }
+
+  @Test
+  public void testRuleWithFreshNonTheoryVariableInRhs() {
+    ErrorCollector collector = new ErrorCollector(10);
+    ParsingStatus status = makeConstrainedStatus("random → x", collector);
+    SymbolData data = new SymbolData();
+    data.addFunctionSymbol(TermFactory.createConstant("random",
+      CoraInputReader.readTypeFromString("Nat")));
+    Rule rule = CoraInputReader.readRuleForUnitTest(status, data);
     assertTrue(rule == null);
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:1: right-hand side of rule [random(x) → y] contains variable y which does " +
-      "not occur on the left.\n"));
-    // TODO: once this has been implemented to be allowed, also add tests for fresh variables in
-    // the right-hand side in a constrained system: it should be allowed for variables of theory
-    // type, but not for other variables
+      "1:1: right-hand side of rule [random → x] contains fresh variable x of type Nat, " +
+      "which is not a theory sort.\n"));
   }
 
   @Test
@@ -647,8 +666,8 @@ public class CoraInputReaderRestTest {
         "5:1: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
         "5:11: Expected term of type o, but got function symbol a which has type 3.\n" +
         "5:13: Expected term, started by an identifier, λ, string or (, but got ARROW (->).\n" +
-        "6:1: right-hand side of rule [f(2) → 3] contains variable 3 which does not occur on " +
-          "the left.\n"));
+        "6:1: right-hand side of rule [f(2) → 3] contains fresh variable 3 of type nat, which " +
+          "is not a theory sort.\n"));
       return;
     }
     assertTrue(false);

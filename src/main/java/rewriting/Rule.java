@@ -78,6 +78,18 @@ public class Rule {
   }
 
   /**
+   * Returns whether the right-hand side has variables (or meta-variables) not occuring in the left.
+   */
+  public boolean rightHasFreshVariables() {
+    ReplaceableList rlst = _right.freeReplaceables();
+    ReplaceableList llst = _left.freeReplaceables();
+    for (Replaceable x : rlst) {
+      if (!llst.contains(x)) return true;
+    }
+    return false;
+  }
+
+  /**
    * This returns whether the rule is a constrained rule -- which is the case if the constraint
    * is anything other than the value true.
    */
@@ -86,7 +98,6 @@ public class Rule {
     if (value == null) return true;
     return !value.getBool();
   }
-
 
   /**
    * If left * X1 *** Xk has the same type as t, then this function returns k; if no such k exists
@@ -111,9 +122,11 @@ public class Rule {
     Substitution subst = _left.match(head);
     if (subst == null) return false;
     for (Variable x : _constraint.vars()) {
-      if (!subst.getReplacement(x).isValue()) return false;
+      if (subst.get(x) != null && !subst.get(x).isValue()) return false;
     }
-    return TermAnalyser.evaluate(_constraint.substitute(subst)).getBool();
+    Term csub = _constraint.substitute(subst);
+    if (csub.isGround()) return TermAnalyser.evaluate(csub).getBool();
+    else return TermAnalyser.satisfy(csub) != null;
   }
 
   /**
@@ -123,14 +136,30 @@ public class Rule {
   public Term apply(Term t) {
     int n = t.numberArguments();
     int k = findHeadAdditions(t);
-    if (k == -1) return null;
+    if (k == -1 || n < k) return null;
     Term head = t.queryImmediateHeadSubterm(n-k);
     Substitution subst = _left.match(head);
     if (subst == null) return null;
+
+    // check the constraint and rhs variables
     for (Variable x : _constraint.vars()) {
-      if (!subst.getReplacement(x).isValue()) return null;
+      if (subst.get(x) != null && !subst.get(x).isValue()) return null;
     }
-    if (!TermAnalyser.evaluate(_constraint.substitute(subst)).getBool()) return null;
+    Term csub = _constraint.substitute(subst);
+    if (csub.isGround()) {
+      if (!TermAnalyser.evaluate(csub).getBool()) return null;
+    }
+    else {
+      Substitution result = TermAnalyser.satisfy(csub);
+      if (result == null) return null;
+      for (Variable x : csub.vars()) {
+        if (!subst.extend(x, result.get(x))) return null;
+      }
+    }
+    for (Variable x : _right.vars()) {
+      if (subst.get(x) == null) subst.extend(x, TermAnalyser.chooseRandomValue(x.queryType()));
+    }
+
     ArrayList<Term> args = new ArrayList<Term>();
     for (int i = n-k+1; i <= n; i++) args.add(t.queryArgument(i));
     Term righthead = _right.substitute(subst);

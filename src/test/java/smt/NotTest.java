@@ -24,31 +24,31 @@ public class NotTest {
   public void testToString() {
     IntegerExpression left = new Addition(new IValue(3), new IVar(7));
     IntegerExpression right = new IVar(4);
-    Constraint comp = SmtFactory.createGreater(left, right);
-    Constraint neg = SmtFactory.createNegation(comp);
+    Constraint comp = SmtProblem.createGreater(left, right);
+    Constraint neg = SmtProblem.createNegation(comp);
     assertTrue(neg.toString().equals("(not (> (+ 3 i7) i4))"));
   }
 
   @Test
   public void testEquality() {
-    Constraint comp = SmtFactory.createSmaller(new IVar(2), new IValue(2));
-    Constraint neg = SmtFactory.createNegation(comp);
-    assertTrue(neg.equals(SmtFactory.createNegation(comp)));
-    assertFalse(neg.equals(SmtFactory.createGeq(new IValue(2), new IVar(2))));
-    assertFalse(neg.equals(SmtFactory.createNegation(new BVar(3))));
+    Constraint comp = SmtProblem.createSmaller(new IVar(2), new IValue(2));
+    Constraint neg = SmtProblem.createNegation(comp);
+    assertTrue(neg.equals(SmtProblem.createNegation(comp)));
+    assertFalse(neg.equals(SmtProblem.createGeq(new IValue(2), new IVar(2))));
+    assertFalse(neg.equals(SmtProblem.createNegation(new BVar(3))));
   }
 
   @Test
   public void testLegalEvaluate() {
-    Constraint c = SmtFactory.createNegation(new Truth());
+    Constraint c = SmtProblem.createNegation(new Truth());
     assertFalse(c.evaluate());
-    c = new Not(SmtFactory.createGreater(new IValue(3), new IValue(3)));
+    c = new Not(SmtProblem.createGreater(new IValue(3), new IValue(3)));
     assertTrue(c.evaluate());
   }
 
   @Test
   public void testQueryChild() {
-    Not n = new Not(SmtFactory.createGeq(new IVar(1), new IValue(3)));
+    Not n = new Not(SmtProblem.createGeq(new IVar(1), new IValue(3)));
     assertTrue(n.queryChild().toString().equals("(>= i1 3)"));
   }
 }

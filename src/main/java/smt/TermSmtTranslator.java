@@ -47,25 +47,26 @@ public class TermSmtTranslator {
   /**
    * This takes a theory term of type Int, and returns the corresponding IntegerExpression, for use
    * in SMT analysis.
+   * The given SmtProblem is used for generating and storing variables.
    */
-  public static IntegerExpression translateIntegerExpression(Term t) {
+  static IntegerExpression translateIntegerExpression(Term t, SmtProblem problem) {
     if (!t.queryType().equals(TypeFactory.intSort)) {
       throw new UnsupportedTheoryError(t.toString(),
                                        "expected integer type, not " + t.queryType().toString());
     }
-    if (t.isVariable()) return new IVar(t.queryVariable().queryIndex());
-    if (t.isValue()) return new IValue(t.toValue().getInt());
+    if (t.isVariable()) return problem.createIntegerVariable(t.queryVariable().queryIndex());
+    if (t.isValue()) return problem.createValue(t.toValue().getInt());
     CalculationSymbol calc = getCalculationRoot(t);
     if (calc.equals(TheoryFactory.minusSymbol)) {
-      return new Minus(translateIntegerExpression(t.queryArgument(1)));
+      return problem.createNegation(translateIntegerExpression(t.queryArgument(1), problem));
     }
     if (calc.equals(TheoryFactory.plusSymbol)) {
-      return new Addition(translateIntegerExpression(t.queryArgument(1)),
-                          translateIntegerExpression(t.queryArgument(2)));
+      return problem.createAddition(translateIntegerExpression(t.queryArgument(1), problem),
+                                    translateIntegerExpression(t.queryArgument(2), problem));
     }
     if (calc.equals(TheoryFactory.timesSymbol)) {
-      return new Multiplication(translateIntegerExpression(t.queryArgument(1)),
-                                translateIntegerExpression(t.queryArgument(2)));
+      return problem.createMultiplication(translateIntegerExpression(t.queryArgument(1), problem),
+                                          translateIntegerExpression(t.queryArgument(2), problem));
     }
     throw new UnsupportedTheoryError(t.toString(),
       "unfamiliar integer calculation symbol: " + calc.queryName());
@@ -74,52 +75,53 @@ public class TermSmtTranslator {
   /**
    * This takes a theory term of type Bool, and returns the corresponding Constraint, for use in
    * SMT analysis.
+   * The given SmtProblem is used for generating and storing variables.
    */
-  public static Constraint translateConstraint(Term t) {
+  static Constraint translateConstraint(Term t, SmtProblem problem) {
     if (!t.queryType().equals(TypeFactory.boolSort)) {
       throw new UnsupportedTheoryError(t.toString(),
                                        "expected boolean type, not " + t.queryType().toString());
     }
-    if (t.isVariable()) return new BVar(t.queryVariable().queryIndex());
+    if (t.isVariable()) return problem.createBooleanVariable(t.queryVariable().queryIndex());
     if (t.isValue()) {
-      if (t.toValue().getBool()) return new Truth();
-      else return new Falsehood();
+      if (t.toValue().getBool()) return problem.createTrue();
+      else return problem.createFalse();
     }
     CalculationSymbol calc = getCalculationRoot(t);
     if (calc.equals(TheoryFactory.andSymbol)) {
-      return new Conjunction(translateConstraint(t.queryArgument(1)),
-                             translateConstraint(t.queryArgument(2)));
+      return problem.createConjunction(translateConstraint(t.queryArgument(1), problem),
+                                       translateConstraint(t.queryArgument(2), problem));
     }
     if (calc.equals(TheoryFactory.orSymbol)) {
-      return new Disjunction(translateConstraint(t.queryArgument(1)),
-                             translateConstraint(t.queryArgument(2)));
+      return problem.createDisjunction(translateConstraint(t.queryArgument(1), problem),
+                                       translateConstraint(t.queryArgument(2), problem));
     }
     if (calc.equals(TheoryFactory.notSymbol)) {
-      return new Not(translateConstraint(t.queryArgument(1)));
+      return problem.createNegation(translateConstraint(t.queryArgument(1), problem));
     }
     if (calc.equals(TheoryFactory.greaterSymbol)) {
-      return new Greater(translateIntegerExpression(t.queryArgument(1)),
-                         translateIntegerExpression(t.queryArgument(2)));
+      return problem.createGreater(translateIntegerExpression(t.queryArgument(1), problem),
+                                   translateIntegerExpression(t.queryArgument(2), problem));
     }
     if (calc.equals(TheoryFactory.smallerSymbol)) {
-      return new Greater(translateIntegerExpression(t.queryArgument(2)),
-                         translateIntegerExpression(t.queryArgument(1)));
+      return problem.createSmaller(translateIntegerExpression(t.queryArgument(1), problem),
+                                   translateIntegerExpression(t.queryArgument(2), problem));
     }
     if (calc.equals(TheoryFactory.geqSymbol)) {
-      return new Geq(translateIntegerExpression(t.queryArgument(1)),
-                     translateIntegerExpression(t.queryArgument(2)));
+      return problem.createGeq(translateIntegerExpression(t.queryArgument(1), problem),
+                               translateIntegerExpression(t.queryArgument(2), problem));
     }
     if (calc.equals(TheoryFactory.leqSymbol)) {
-      return new Geq(translateIntegerExpression(t.queryArgument(2)),
-                     translateIntegerExpression(t.queryArgument(1)));
+      return problem.createLeq(translateIntegerExpression(t.queryArgument(1), problem),
+                               translateIntegerExpression(t.queryArgument(2), problem));
     }
     if (calc.equals(TheoryFactory.equalSymbol)) {
-      return new Equal(translateIntegerExpression(t.queryArgument(2)),
-                       translateIntegerExpression(t.queryArgument(1)));
+      return problem.createEqual(translateIntegerExpression(t.queryArgument(1), problem),
+                                 translateIntegerExpression(t.queryArgument(2), problem));
     }
     if (calc.equals(TheoryFactory.distinctSymbol)) {
-      return new Distinct(translateIntegerExpression(t.queryArgument(2)),
-                          translateIntegerExpression(t.queryArgument(1)));
+      return problem.createUnequal(translateIntegerExpression(t.queryArgument(1), problem),
+                                   translateIntegerExpression(t.queryArgument(2), problem));
     }
     throw new UnsupportedTheoryError(t.toString(),
       "unfamiliar boolean calculation symbol: " + calc.queryName());

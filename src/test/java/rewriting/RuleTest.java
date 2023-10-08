@@ -54,7 +54,7 @@ public class RuleTest {
   }
 
   @Test(expected = IllegalRuleError.class)
-  public void testFreshVariableOnTheRight() {
+  public void testIllegalFreshVariableOnTheRight() {
     // f(λx.x, y) → g(y, z)
     Variable x = TermFactory.createBinder("x", type("o"));
     Variable y = TermFactory.createVar("y", type("o"));
@@ -64,6 +64,20 @@ public class RuleTest {
     Term left = TermFactory.createApp(f, TermFactory.createAbstraction(x, x), y);
     Term right = TermFactory.createApp(g, y, z);
     Rule rule = RuleFactory.createRule(left, right);
+  }
+
+  @Test
+  public void testLegalFreshVariableOnTheRight() {
+    // f(λx.x, y) → g(y, z)
+    Variable x = TermFactory.createBinder("x", type("Int"));
+    Variable y = TermFactory.createVar("y", type("Int"));
+    Variable z = TermFactory.createVar("z", type("Int"));
+    Term f = TermFactory.createConstant("f", type("(Int ⇒ Int) ⇒ Int ⇒ Int"));
+    Term g = TermFactory.createConstant("g", type("Int ⇒ Int ⇒ Int"));
+    Term left = TermFactory.createApp(f, TermFactory.createAbstraction(x, x), y);
+    Term right = TermFactory.createApp(g, y, z);
+    Rule rule = RuleFactory.createRule(left, right);
+    assertTrue(rule.rightHasFreshVariables());
   }
 
   @Test(expected = IllegalRuleError.class)
@@ -157,7 +171,7 @@ public class RuleTest {
     Rule rule = RuleFactory.createRule(f.apply(x), x, constraint);
   }
 
-  @Test(expected = IllegalRuleError.class)
+  @Test
   public void testConstraintWithFreshVariable() {
     // f(x) → x | x > y
     Term f = TermFactory.createConstant("f", type("Int ⇒ Int"));
@@ -165,6 +179,20 @@ public class RuleTest {
     Variable y = TermFactory.createVar("y", type("Int"));
     Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(y);
     Rule rule = RuleFactory.createApplicativeRule(f.apply(x), x, constraint);
+    assertTrue(rule.toString().equals("f(x) → x | x > y"));
+    assertFalse(rule.rightHasFreshVariables());
+  }
+
+  @Test
+  public void testConstraintWithFreshVariableAlsoInRight() {
+    // f(x) → y | x > y
+    Term f = TermFactory.createConstant("f", type("Int ⇒ Int"));
+    Variable x = TermFactory.createVar("x", type("Int"));
+    Variable y = TermFactory.createVar("y", type("Int"));
+    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(y);
+    Rule rule = RuleFactory.createApplicativeRule(f.apply(x), y, constraint);
+    assertTrue(rule.toString().equals("f(x) → y | x > y"));
+    assertTrue(rule.rightHasFreshVariables());
   }
 
   @Test
@@ -205,7 +233,7 @@ public class RuleTest {
   }
 
   @Test
-  public void testSuccessfulRootApplication() {
+  public void testSuccessfulUnconstrainedRootApplication() {
     // rule: f(g(x), λz.y(z)) → h(x, y(3)), λz.z) :: Int ⇒ Int
     Variable x = TermFactory.createVar("x", type("Int"));
     Variable y = TermFactory.createVar("y", type("Int ⇒ Bool"));
@@ -236,6 +264,31 @@ public class RuleTest {
   }
 
   @Test
+  public void testSuccessfulConstrainedRootApplication() {
+    // rule: f(H, x) → H(g(y), z) | 0 < y ∧ y < x
+    Variable x = TermFactory.createVar("x", type("Int"));
+    Variable y = TermFactory.createVar("y", type("Int"));
+    Variable z = TermFactory.createVar("z", type("Int"));
+    Variable h = TermFactory.createVar("H", type("o ⇒ Int ⇒ Int"));
+    Term f = makeConstant("f", "(o ⇒ Int ⇒ Int) ⇒ Int ⇒ Int");
+    Term g = makeConstant("g", "Int ⇒ o");
+    Term left = TermFactory.createApp(f, h, x);
+    Term right = TermFactory.createApp(h, g.apply(y), z);
+    Term constr = TermFactory.createApp(TheoryFactory.andSymbol,
+      TermFactory.createApp(TheoryFactory.smallerSymbol, TheoryFactory.createValue(0), y),
+      TermFactory.createApp(TheoryFactory.smallerSymbol, y, x));
+    Rule rule = RuleFactory.createApplicativeRule(left, right, constr);
+
+    // instance: f(q(false), 3)
+    Term qq = makeConstant("q", "(Bool ⇒ o ⇒ Int ⇒ Int)").apply(TheoryFactory.createValue(false));
+    Term instance = TermFactory.createApp(f, qq, TheoryFactory.createValue(3));
+
+    assertTrue(rule.applicable(instance));
+    assertTrue(rule.apply(instance) != null);
+    //System.out.println(rule.apply(instance).toString());
+  }
+
+  @Test
   public void testFailedRootApplication() {
     Variable x = TermFactory.createVar("x", type("Int"));
     FunctionSymbol f = makeConstant("f", "Int ⇒ Int ⇒ Int");
@@ -249,15 +302,34 @@ public class RuleTest {
   }
 
   @Test
+  public void testFailedSatisfiabilityCheck() {
+    // rule: f(x) → x | 0 < y ∧ y < x
+    Variable x = TermFactory.createVar("x", type("Int"));
+    Variable y = TermFactory.createVar("y", type("Int"));
+    Term f = makeConstant("f", "Int ⇒ Int");
+    Term constr = TermFactory.createApp(TheoryFactory.andSymbol,
+      TermFactory.createApp(TheoryFactory.smallerSymbol, TheoryFactory.createValue(0), y),
+      TermFactory.createApp(TheoryFactory.smallerSymbol, y, x));
+    Rule rule = RuleFactory.createApplicativeRule(f.apply(x), x, constr);
+
+    // instance: f(1)
+    Term instance = f.apply(TheoryFactory.createValue(1));
+    assertFalse(rule.applicable(instance));
+    assertTrue(rule.apply(instance) == null);
+  }
+
+  @Test
   public void testSuccessfulHeadApplication() {
-    // rule: f(x, x) → g(x(0))
+    // rule: f(x, x) → g(x(u)) | u = -3
     Variable x = TermFactory.createVar("x", type("Int ⇒ Int"));
+    Variable u = TermFactory.createVar("x", type("Int"));
     Term f = makeConstant("f", "(Int ⇒ Int) ⇒ (Int ⇒ Int) ⇒ Bool ⇒ Int ⇒ a");
     Term g = makeConstant("g", "Int ⇒ Bool ⇒ Int ⇒ a");
-    Term zero = makeConstant("0", "Int");
     Term left = TermFactory.createApp(f, x, x);
-    Term right = TermFactory.createApp(g, x.apply(zero));
-    Rule rule = RuleFactory.createRule(left, right);
+    Term right = TermFactory.createApp(g, x.apply(u));
+    Term constr = TermFactory.createApp(
+      TheoryFactory.equalSymbol, u, TheoryFactory.createValue(-3));
+    Rule rule = RuleFactory.createRule(left, right, constr);
 
     // instance: f(λy.h(y), λz.h(z), true, 7)
     Variable y = TermFactory.createBinder("y", type("Int"));
@@ -272,9 +344,9 @@ public class RuleTest {
     args.add(seven);
     Term instance = f.apply(args);
 
-    // target: g((λy.h(y))(0), true, 7)
+    // target: g((λy.h(y))(-3), true, 7)
     ArrayList<Term> targs = new ArrayList<Term>();
-    targs.add(args.get(0).apply(zero));
+    targs.add(args.get(0).apply(TheoryFactory.createValue(-3)));
     targs.add(top);
     targs.add(seven);
     Term target = g.apply(targs);
@@ -373,7 +445,7 @@ public class RuleTest {
     // x + 0 → x
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     Term lhs = TheoryFactory.plusSymbol.apply(x).apply(TheoryFactory.createValue(0));
-    RuleFactory.createFirstOrderRule(lhs, x);
+    RuleFactory.createFirstOrderRule(lhs, x, null);
   }
 }
 

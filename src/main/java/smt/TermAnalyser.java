@@ -15,24 +15,38 @@
 
 package cora.smt;
 
+import java.util.Random;
+import java.util.TreeSet;
 import cora.exceptions.UnsupportedTheoryError;
+import cora.types.Type;
 import cora.types.TypeFactory;
-import cora.terms.Term;
-import cora.terms.Value;
-import cora.terms.TheoryFactory;
+import cora.terms.*;
 
 /**
  * This class provides analysis functions on theory terms, by using a translation to SMT.
  */
 public class TermAnalyser {
+  private static Random _rnd = new Random();
+
+  /** Returns a randomly selected value of the given type */
+  public static Value chooseRandomValue(Type type) {
+    int r = _rnd.nextInt();
+    if (type.equals(TypeFactory.intSort)) return TheoryFactory.createValue(r);
+    if (type.equals(TypeFactory.boolSort)) return TheoryFactory.createValue((r % 2) == 0);
+    if (type.equals(TypeFactory.stringSort)) return TheoryFactory.createValue("" + r);
+    throw new UnsupportedTheoryError("variable", "Asked to choose random value of type " +
+      type.toString() + ", which is not a supported theory sort.");
+  }
+
   /** Given a ground theory term, this fully evaluates it to a Value. */
   public static Value evaluate(Term t) {
+    SmtProblem problem = new SmtProblem();
     if (t.queryType().equals(TypeFactory.intSort)) {
-      IntegerExpression e = TermSmtTranslator.translateIntegerExpression(t);
+      IntegerExpression e = TermSmtTranslator.translateIntegerExpression(t, problem);
       return TheoryFactory.createValue(e.evaluate());
     }
     if (t.queryType().equals(TypeFactory.boolSort)) {
-      Constraint c = TermSmtTranslator.translateConstraint(t);
+      Constraint c = TermSmtTranslator.translateConstraint(t, problem);
       return TheoryFactory.createValue(c.evaluate());
     }
     if (t.isValue()) return t.toValue();
@@ -52,6 +66,29 @@ public class TermAnalyser {
       if (!t.queryArgument(i).isValue()) return null;
     }
     return evaluate(t);
+  }
+
+  /**
+   * Given a theory term of type Bool, this function tries to find an assignment for the variables
+   * in it that makes the term evaluate to true.  If successful, this substitution is returned; if
+   * not, null is returned.
+   */
+  public static Substitution satisfy(Term t) {
+    SmtProblem problem = new SmtProblem();
+    Constraint c = TermSmtTranslator.translateConstraint(t, problem);
+    problem.require(c);
+    Valuation val = problem.satisfy();
+    if (val == null) return null;
+    Substitution ret = TermFactory.createEmptySubstitution();
+    for (Variable x : t.vars()) {
+      if (x.queryType().equals(TypeFactory.boolSort)) {
+        ret.extend(x, TheoryFactory.createValue(val.queryBoolAssignment(x.queryIndex())));
+      }
+      else if (x.queryType().equals(TypeFactory.intSort)) {
+        ret.extend(x, TheoryFactory.createValue(val.queryIntAssignment(x.queryIndex())));
+      }
+    }
+    return ret;
   }
 }
 

@@ -31,10 +31,11 @@ public class RuleFactory {
   }
 
   /**
-   * Does the checks needed for all kinds of rules, and throws an appropriate erorr if the checks
-   * are not satisfied.
+   * Does the checks needed for all kinds of rules, and throws an appropriate error if the checks
+   * are not satisfied.  Note that freshAllowed only indicates that fresh *base-type variables of
+   * theory type* are allowed; otherwise fresh variables on the right are not allowed regardless.
    */
-  private static void doBasicChecks(Term left, Term right) {
+  private static void doBasicChecks(Term left, Term right, boolean freshAllowed) {
     // neither term is null
     if (left == null) throw new NullInitialisationError("Rule", "left-hand side");
     if (right == null) throw new NullInitialisationError("Rule", "right-hand side");
@@ -43,14 +44,23 @@ public class RuleFactory {
       throw new TypingError("Rule", "constructor", "right-hand side", right.queryType().toString(),
                             left.queryType().toString());
     }
-    // no variables or meta-variables should occur on the right that don't also occur on the left
+    // no variables or meta-variables should occur on the right that don't also occur on the left,
+    // unless fresh is allowed, in which case they must be of theory type
     ReplaceableList lvars = left.freeReplaceables();
     ReplaceableList rvars = right.freeReplaceables();
     for (Replaceable x : rvars) {
       if (!lvars.contains(x)) {
-        String kind = (x.queryReplaceableKind() == Replaceable.KIND_METAVAR ? "meta-" : "");
-        throw new IllegalRuleError("Rule", "right-hand side of rule [" + toString(left, right) +
-          "] contains " + kind + "variable " + x.toString() + " which does not occur on the left.");
+        if (!freshAllowed || x.queryReplaceableKind() == Replaceable.KIND_METAVAR) {
+          String kind = (x.queryReplaceableKind() == Replaceable.KIND_METAVAR ? "meta-" : "");
+          throw new IllegalRuleError("Rule", "right-hand side of rule [" + toString(left, right) +
+            "] contains " + kind + "variable " + x.toString() +
+            " which does not occur on the left.");
+        }
+        else if (!x.queryType().isBaseType() || !x.queryType().isTheoryType()) {
+          throw new IllegalRuleError("Rule", "right-hand side of rule [" + toString(left, right) +
+            "] contains fresh variable " + x.toString() + " of type " + x.queryType().toString() +
+            ", which is not a theory sort.");
+        }
       }
     }
     // both sides should be closed; this is automatic if left is, since all variables occurring
@@ -100,28 +110,18 @@ public class RuleFactory {
       throw new IllegalRuleError("Rule", "constraint [" + constraint.toString() + "] is not " +
         "first-order.");
     }
-
-    // for now, we require that no variables or meta-variables occur in the constraint that do not
-    // also coccur on the left
-    ReplaceableList lvars = left.freeReplaceables();
-    for (Replaceable x : cvars) {
-      if (!lvars.contains(x)) {
-        throw new IllegalRuleError("Rule", "constraint [" + constraint + "] contains variable " +
-          x.toString() + " which does not occur in the rule's left-hand side.  This is not yet " +
-          "supported.");
-      }
-    }
   }
 
   /**
    * Create a constrained first-order rule.
    * If the rule is poorly formed or not first-order, an IllegalRuleError is thrown.
-   * (It is well-formed if: FV(r) ⊆ FV(l), both sides have the same sort, and the constraint is a
-   * base-type first-order theory term of type Bool with FV(constraint) ⊆ FV(l).)
+   * (It is well-formed if: both sides have the same sort, l has the form f(l1,...,lk), the
+   * constraint is a base-type first-order theory term of type Bool, and all variables in
+   * FV(r) \ FV(l) (if any) are base-type variables of theory sort.)
    */
   public static Rule createFirstOrderRule(Term left, Term right, Term constraint) {
     // do the checks that apply to everything, not just first-order rules
-    doBasicChecks(left, right);
+    doBasicChecks(left, right, true);
     // and the ones that should apply to the constraint
     if (constraint != null) doConstraintChecks(left, constraint);
     // both sides need to be first-order
@@ -147,21 +147,35 @@ public class RuleFactory {
    * Create a first-order rule.
    * If the rule is poorly formed or not first-order, an IllegalRuleError is thrown.
    * (It is well-formed if: FV(r) ⊆ FV(l) and both sides have the same sort.)
+   * NOTE: this does NOT allow free variables in right-hand sides, even if they have a theory
+   * sort! If you want that, then supply a constraint (for instance the truth value, or null).
    */
   public static Rule createFirstOrderRule(Term left, Term right) {
-    return createFirstOrderRule(left, right, null);
+    // do the checks that apply to everything, not just first-order rules
+    doBasicChecks(left, right, false);
+    // both sides need to be first-order
+    if (!left.isFirstOrder() || !right.isFirstOrder()) {
+      throw new IllegalRuleError("RuleFactory::createFirstOrderRule", "terms in rule [" +
+        toString(left, right) + "] are not first-order.");
+    }   
+    // the left-hand side should have the form f(...)
+    if (!left.isFunctionalTerm()) {
+        throw new IllegalRuleError("RuleFactory::createFirstOrderRule", "illegal rule [" +
+          toString(left, right) + "] with a variable as the left-hand side.");
+    }
+    return new Rule(left, right);
   }
 
   /**
    * Create an applicative higher-order rule.
    * If the rule is poorly formed or not applicative, an IllegalRuleError is thrown.
-   * (It is well-formed if: FV(r) ⊆ FV(l) and both sides have the same type.  Moreover,
-   * if constraint != null then the constraint should be a first-order theory term of
-   * Boolean type with only variables occurring in left.
+   * (It is well-formed if: l is not a theory term (so also not a variable), FV(r) \ FV(l) contains
+   * only variables of theory sorts, and both sides have the same type.  Moreover, if
+   * constraint != null then the constraint should be a first-order theory term of Boolean type.
    */
   public static Rule createApplicativeRule(Term left, Term right, Term constraint) {
     // do the checks that apply to everything, not just applicative rules
-    doBasicChecks(left, right);
+    doBasicChecks(left, right, true);
     // and the ones that should apply to the constraint
     if (constraint != null) doConstraintChecks(left, constraint);
     // both sides need to be applicative
@@ -181,10 +195,24 @@ public class RuleFactory {
   /**
    * Create an unconstrained applicative higher-order rule.
    * If the rule is poorly formed or not applicative, an IllegalRuleError is thrown.
-   * (It is well-formed if: FV(r) ⊆ FV(l) and both sides have the same type.)
+   * (It is well-formed if: FV(r) ⊆ FV(l), l is not a variable, and both sides have the same type.)
+   * NOTE: this does NOT allow free variables in right-hand sides, even if they have a theory
+   * sort! If you want that, then supply a constraint (for instance the truth value, or null).
    */
   public static Rule createApplicativeRule(Term left, Term right) {
-    return createApplicativeRule(left, right, null);
+    // do the checks that apply to everything, not just applicative rules
+    doBasicChecks(left, right, false);
+    // both sides need to be applicative
+    if (!left.isApplicative() || !right.isApplicative()) {
+      throw new IllegalRuleError("RuleFactory::createApplicativeRule", "terms in rule [" +
+        toString(left, right) + " are not applicative.");
+    }
+    // the left-hand side cannot be a variable
+    if (left.isVariable()) {
+        throw new IllegalRuleError("RuleFactory::createApplicativeOrderRule", "illegal rule [" +
+          toString(left, right) + "] with a variable as the left-hand side.");
+    }
+    return new Rule(left, right);
   }
 
   /**
@@ -194,7 +222,7 @@ public class RuleFactory {
    */
   public static Rule createCFSRule(Term left, Term right) {
     // do the checks that apply to everything
-    doBasicChecks(left, right);
+    doBasicChecks(left, right, false);
     // both sides need to be true terms
     if (!left.isTrueTerm() || !right.isTrueTerm()) {
       throw new IllegalRuleError("RuleFactory::createCFSRule", "meta-terms in rule [" +
@@ -211,7 +239,7 @@ public class RuleFactory {
    */
   public static Rule createPatternRule(Term left, Term right) {
     // do the checks that apply to everything
-    doBasicChecks(left, right);
+    doBasicChecks(left, right, false);
     // the left-hand side needs to be a pattern
     if (!left.isPattern()) {
       throw new IllegalRuleError("RuleFactory::createPatternRule", "left-hand side of rule [" +
@@ -227,13 +255,13 @@ public class RuleFactory {
   }
 
   /**
-   * Creates an AMS rule without limitations other than well-formedness: FMV(r) ⊆ FMV(l), both
-   * sides should have the same sort, and both sides should be closed.  If a constraint is given
-   * (not null), then it should be a first-order theory term of type Bool, with FV(constraint) ⊆
-   * FV(l).
+   * Creates an AMS rule without limitations other than well-formedness: FMV(r) \ FMV(l) at most
+   * contains some variables of theory type, both sides should have the same sort, and both sides
+   * should be closed.  If a constraint is given (not null), then it should be a first
+   * order theory term of type Bool.
    */
   public static Rule createRule(Term left, Term right, Term constraint) {
-    doBasicChecks(left, right);
+    doBasicChecks(left, right, true);
     if (constraint == null) return new Rule(left, right);
     doConstraintChecks(left, constraint);
     // NOTE: here we do _not_ check if the lhs is a theory term, to be utterly general
@@ -241,8 +269,9 @@ public class RuleFactory {
   }
 
   /**
-   * Creates an AMS rule without limitations other than well-formedness: FMV(r) ⊆ FMV(l), both
-   * sides should have the same sort, and both sides should be closed.
+   * Creates an AMS rule without limitations other than well-formedness: FMV(r) \ FMV(l) at most
+   * contains some variables of theory type, both sides have the same sort, and both sides must
+   * be closed.
    */
   public static Rule createRule(Term left, Term right) {
     return createRule(left, right, null);

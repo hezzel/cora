@@ -127,23 +127,23 @@ public class TRS {
    * If multiple rules or schemes match, an arbitrary one is chosen.
    */
   public Term leftmostInnermostReduce(Term s) {
-    Path pos = leftmostInnermostRedexPosition(s);
-    if (pos == null) return null;
-
     // get a shuffled list of all the rules and schemes
     ArrayList<RuleOrScheme> lst = new ArrayList<RuleOrScheme>();
     for (int i = 0; i < _rules.size(); i++) lst.add(new RuleOrScheme(true, i));
     for (int i = 0; i < _schemes.size(); i++) lst.add(new RuleOrScheme(false, i));
     Collections.shuffle(lst);
-    
-    Term subterm = pos.queryCorrespondingSubterm();
-    for (int i = 0; i < lst.size(); i++) {
-      Term result;
-      if (lst.get(i).rule) result = _rules.get(lst.get(i).index).apply(subterm);
-      else result = _schemes.get(lst.get(i).index).apply(subterm);
+
+    List<Path> positions = s.queryPositions();
+    for (int i = 0; i < positions.size(); i++) {
+      Path pos = positions.get(i);
+      Term sub = pos.queryCorrespondingSubterm();
+      Term result = null;
+      for (int j = 0; j < lst.size() && result == null; j++) {
+        if (lst.get(j).rule) result = _rules.get(lst.get(j).index).apply(sub);
+        else result = _schemes.get(lst.get(j).index).apply(sub);
+      }
       if (result != null) return s.replaceSubterm(pos, result);
     }
-
     return null;
   }
 
