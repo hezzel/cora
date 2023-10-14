@@ -62,6 +62,11 @@ public class TRS {
     return _rules.size();
   }
 
+  /** @return the alphabet for this TRS. */
+  public Alphabet queryAlphabet() {
+    return _alphabet.copy();
+  }
+
   /** For 0 <= index < queryRuleCount(), this returns one of the rules in the system. */
   public Rule queryRule(int index) {
     if (index < 0 || index >= queryRuleCount()) {
@@ -151,10 +156,10 @@ public class TRS {
   public String toString() {
     StringBuilder ret = new StringBuilder();
     ret.append(_alphabet.toString());
-    ret.append("\n");
     if (_theories) {
       ret.append("All the standard theory symbols are also included.\n");
     }
+    ret.append("\n");
     for (int i = 0; i < _rules.size(); i++) {
       ret.append(_rules.get(i).toString());
       ret.append("\n");

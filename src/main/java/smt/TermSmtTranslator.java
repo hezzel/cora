@@ -49,7 +49,7 @@ public class TermSmtTranslator {
    * in SMT analysis.
    * The given SmtProblem is used for generating and storing variables.
    */
-  static IntegerExpression translateIntegerExpression(Term t, SmtProblem problem) {
+  public static IntegerExpression translateIntegerExpression(Term t, SmtProblem problem) {
     if (!t.queryType().equals(TypeFactory.intSort)) {
       throw new UnsupportedTheoryError(t.toString(),
                                        "expected integer type, not " + t.queryType().toString());
@@ -77,7 +77,7 @@ public class TermSmtTranslator {
    * SMT analysis.
    * The given SmtProblem is used for generating and storing variables.
    */
-  static Constraint translateConstraint(Term t, SmtProblem problem) {
+  public static Constraint translateConstraint(Term t, SmtProblem problem) {
     if (!t.queryType().equals(TypeFactory.boolSort)) {
       throw new UnsupportedTheoryError(t.toString(),
                                        "expected boolean type, not " + t.queryType().toString());

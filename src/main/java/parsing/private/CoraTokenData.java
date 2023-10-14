@@ -97,6 +97,7 @@ public class CoraTokenData {
     "≤|(<=)"                                  , LEQ,
     "="                                       , EQUAL,
     "≠"                                       , UNEQUAL,
+    "!="                                      , UNEQUAL,
     "∧|(/\\\\)"                               , AND,
     "∨|(\\\\/)"                               , OR,
     "(not)|¬"                                 , NOT,

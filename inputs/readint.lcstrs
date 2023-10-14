@@ -1,0 +1,12 @@
+minus :: Int -> Int -> Int
+minus(x, y) → x - y
+
+readint :: (Int -> Int) -> Int
+readint(k) -> k(n)
+
+comp :: ((Int -> Int) -> Int) -> (Int -> (Int -> Int)) -> Int -> Int
+comp(f, g, x) → f(g(x))
+
+sub :: Int
+sub -> readint(comp(readint, minus))
+

@@ -2,6 +2,9 @@ rec :: (Int -> Int -> Int) -> Int -> Int -> Int
 rec(F, x, y) -> y | x ≤ 0
 rec(F, x, y) -> F(x, rec(F, x-1, y)) | x > 0
 
+readint :: Int
+readint → y
+
 myfun :: Int -> Int -> Int
 myfun(x, z) -> x + z
 

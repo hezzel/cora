@@ -27,20 +27,32 @@ public class SmtProblem {
   private TreeSet<Integer> _bvars;
   private TreeSet<Integer> _ivars;
   private ArrayList<Constraint> _constraints;
+  private int _lastBooleanIndex;
+  private int _lastIntegerIndex;
 
   public SmtProblem() {
     _bvars = new TreeSet<Integer>();
     _ivars = new TreeSet<Integer>();
     _constraints = new ArrayList<Constraint>();
+    _lastBooleanIndex = 0;
+    _lastIntegerIndex = 0;
   }
 
   public static IntegerExpression createValue(int v) {
     return new IValue(v);
   }
   
-  public IntegerExpression createIntegerVariable(int index) {
+  public IVar createIntegerVariable(int index) {
     _ivars.add(index);
+    if (index > _lastIntegerIndex) _lastIntegerIndex = index;
     return new IVar(index);
+  }
+
+  /** Creates an integer variable with an index that has not yet been used. */
+  public IVar createIntegerVariable() {
+    _lastIntegerIndex++;
+    _ivars.add(_lastIntegerIndex);
+    return new IVar(_lastIntegerIndex);
   }
 
   public static IntegerExpression createAddition(IntegerExpression arg1, IntegerExpression arg2) {
@@ -73,9 +85,17 @@ public class SmtProblem {
     return new Falsehood();
   }
 
-  public Constraint createBooleanVariable(int index) {
+  public BVar createBooleanVariable(int index) {
     _bvars.add(index);
+    if (index > _lastBooleanIndex) _lastBooleanIndex = index;
     return new BVar(index);
+  }
+
+  /** Creates a boolean variable with an index that has not yet been used. */
+  public BVar createBooleanVariable() {
+    _lastBooleanIndex++;
+    _bvars.add(_lastBooleanIndex);
+    return new BVar(_lastBooleanIndex);
   }
 
   public static Constraint createGreater(IntegerExpression left, IntegerExpression right) {
@@ -131,6 +151,18 @@ public class SmtProblem {
     return new Disjunction(a, b);
   }
 
+  public static Constraint createDisjunction(ArrayList<Constraint> args) {
+    if (args == null) throw new NullInitialisationError("Disjunction", "argument list");
+    for (int i = 0; i < args.size(); i++) {
+      if (args.get(i) == null) {
+        throw new NullInitialisationError("Disjunction", "argument " + (i+1));
+      }
+    }
+    if (args.size() == 0) return new Falsehood();
+    if (args.size() == 1) return args.get(0);
+    return new Disjunction(args);
+  }
+
   /**
    * This requires that the constraint holds.  Note that all variables in the constraint must have
    * been created through the createIntegerVariable or createBooleanVariable functions, since
@@ -147,6 +179,11 @@ public class SmtProblem {
    */
   public void requireImplication(Constraint premise, Constraint conclusion) {
     _constraints.add(new Disjunction(new Not(premise), conclusion));
+  }
+
+  /** This reomves all stored constraints, but not variables. */
+  public void clear() {
+    _constraints.clear();
   }
 
   /**
@@ -173,6 +210,29 @@ public class SmtProblem {
                    _constraints.size() == 1 ? _constraints.get(0) :
                    new Conjunction(_constraints);
     return SmtSolver.checkSatisfiability(_bvars, _ivars, c);
+  }
+
+  /** Returns a string representation of all constraints in the problem, for debugging purposes */
+  public String toString() {
+    StringBuilder ret = new StringBuilder();
+    for (int i = 0; i < _constraints.size(); i++) {
+      _constraints.get(i).addToSmtString(ret);
+      ret.append("\n");
+    }
+    return ret.toString();
+  }
+
+  /** Returns a string representation of the first n, or last -n constraints, for debugging. */
+  public String toString(int num) {
+    StringBuilder ret = new StringBuilder();
+    int start = 0, end = _constraints.size();
+    if (num > 0) { if (_constraints.size() > num) end = num; }
+    else { start = _constraints.size() + num; if (start < 0) start = 0; }
+    for (int i = start; i < end; i++) {
+      _constraints.get(i).addToSmtString(ret);
+      ret.append("\n");
+    }
+    return ret.toString();
   }
 }
 
