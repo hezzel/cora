@@ -108,7 +108,7 @@ public class Horpo {
       for (String symbol : _pred.keySet()) {
         ret.append("    " + symbol + " : " + _pred.get(symbol) + "\n");
       }
-      ret.append("  Status (all non-mentioned symbols have status Lex:\n");
+      ret.append("  Status (all non-mentioned symbols have status Lex):\n");
       for (String symbol : _stat.keySet()) {
         ret.append("    " + symbol + " : " +
           (_stat.get(symbol) <= 1 ? "Lex" : "Mul_" + _stat.get(symbol)) + "\n");
@@ -623,16 +623,16 @@ public class Horpo {
           // create constraint: index > i ⇒ l_i ≽ r_i
           BVar ligeqri = getVariableFor(req.rule, l.queryArgument(i), GEQ, r.queryArgument(i),
                                         req.constraint, null);
-          Constraint constraint =
-            _problem.createDisjunction(_problem.createLeq(index, _problem.createValue(i)), ligeqri);
+          Constraint constraint = _problem.createImplication(
+            _problem.createGreater(index, _problem.createValue(i)), ligeqri);
           _problem.requireImplication(req.variable, constraint);
         }
         for (int i = 1; i <= m; i++) {
           // create constraint: index = i ⇒ l_i ≻ r_i
           BVar ligreri = getVariableFor(req.rule, l.queryArgument(i), GREATER, r.queryArgument(i),
                                         req.constraint, null);
-          Constraint constraint = _problem.createDisjunction(
-            _problem.createNegation(_problem.createEqual(index, _problem.createValue(i))), ligreri);
+          Constraint constraint = _problem.createImplication(
+            _problem.createEqual(index, _problem.createValue(i)), ligreri);
           _problem.requireImplication(req.variable, constraint);
         }
       }
@@ -705,7 +705,7 @@ public class Horpo {
       oneof.add(strict_j);
       if (j > 2) {
         // [req] ⇒ ([strict_j] ⇒ k ≥ j)
-        Constraint constr = _problem.createDisjunction(_problem.createNegation(strict_j),
+        Constraint constr = _problem.createImplication(strict_j,
           _problem.createGeq(status, _problem.createValue(j)));
         _problem.requireImplication(reqvar, constr);
       }

@@ -1,3 +1,7 @@
+/*
+ * supplied as a separate function because - is a UNARY symbol in Cora's integer
+ * theory, so passing as an argument to [-] to comp would not work as desired
+ */
 minus :: Int -> Int -> Int
 minus(x, y) → x - y
 

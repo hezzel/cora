@@ -27,6 +27,10 @@ public class HorpoTest {
     return CoraInputReader.readProgramFromString(txt);
   }
 
+/**
+ * Outcommented because they are all pretty heavy tests, several of which actually invoke the
+ * external SMT solver.  Uncomment when you are actually fiddling with the Horpo module!
+
   @Test
   public void testComputeIntegerVariableBound() {
     TRS trs;
@@ -626,8 +630,8 @@ public class HorpoTest {
       "(or (not b40) (= i1 1))\n" +
       "(>= i2 1)\n" +
       "(>= 3 i2)\n" +
-      "(or (not b40) (>= 1 i2) b6)\n" +
-      "(or (not b40) (>= 2 i2) b8)\n" +
+      "(or (not b40) (not (> i2 1)) b6)\n" +
+      "(or (not b40) (not (> i2 2)) b8)\n" +
       "(or (not b40) (not (= i2 1)) b7)\n" +
       "(or (not b40) (not (= i2 2)) b9)\n" +
       "(or (not b40) (not (= i2 3)) b11)\n" +
@@ -699,5 +703,7 @@ public class HorpoTest {
     Horpo.HorpoAnswer answer = horpo.run(trs);
     assertTrue(answer == null);
   }
+
+  */
 }
 

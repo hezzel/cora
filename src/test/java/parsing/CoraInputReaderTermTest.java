@@ -1075,5 +1075,26 @@ public class CoraInputReaderTermTest {
     assertTrue(collector.queryCollectedMessages().equals(
       "1:4: Expected term, started by an identifier, λ, string or (, but got PLUS (+).\n"));
   }
+
+  @Test
+  public void testReadInfixMinus() {
+    Term t = readTerm("[-]", null, true, "");
+    assertTrue(t.equals(TheoryFactory.minusSymbol));
+    t = readTerm("[-](3)", null, true, "");
+    assertTrue(t.toString().equals("-3"));
+    assertTrue(t.isApplication());
+    t = readTerm("[-](3, 4)", null, true,
+      "1:2: Arity error: - has type Int ⇒ Int, but 2 arguments are given.\n");
+  }
+
+  @Test
+  public void testReadInfixPlus() {
+    Term t = readTerm("[+]", null, true, "");
+    assertTrue(t.equals(TheoryFactory.plusSymbol));
+    t = readTerm("[+](3)", null, true, "");
+    assertTrue(t.toString().equals("+(3)"));
+    t = readTerm("[+](3, 4)", null, true, "");
+    assertTrue(t.toString().equals("3 + 4"));
+  }
 }
 

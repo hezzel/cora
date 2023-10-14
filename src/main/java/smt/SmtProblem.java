@@ -163,6 +163,12 @@ public class SmtProblem {
     return new Disjunction(args);
   }
 
+  public static Constraint createImplication(Constraint a, Constraint b) {
+    if (a == null) throw new NullInitialisationError("Implication", "left argument");
+    if (b == null) throw new NullInitialisationError("Implication", "right argument");
+    return new Disjunction(new Not(a), b);
+  }
+
   /**
    * This requires that the constraint holds.  Note that all variables in the constraint must have
    * been created through the createIntegerVariable or createBooleanVariable functions, since

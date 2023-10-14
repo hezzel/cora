@@ -297,6 +297,7 @@ public class CoraInputReader {
    *          | IDENTIFIER METAOPEN termlist METACLOSE
    *          | mainterm BRACKETOPEN termlist BRACKETCLOSE
    *          | BRACKETOPEN term BRACKETCLOSE
+   *          | METAOPEN infixsymbol METACLOSE
    *          | NOT mainterm
    *          | MINUS mainterm
    */
@@ -338,6 +339,29 @@ public class CoraInputReader {
       ret = readTermStructure();
       if (ret == null) { _status.readNextIf(CoraTokenData.BRACKETCLOSE); return null; }
       if (_status.expect(CoraTokenData.BRACKETCLOSE, "a closing bracket") == null) {
+        ret.errored = true;
+        return ret;
+      }
+    }
+    // METAOPEN infixsymbol METACLOSE
+    else if (_status.readNextIf(CoraTokenData.METAOPEN) != null) {  
+      CalculationSymbol calc = null;
+      token = _status.peekNext();
+      if (_status.readNextIf(CoraTokenData.MINUS) != null) {
+        calc = TheoryFactory.minusSymbol;
+      }
+      else if (_status.readNextIf(CoraTokenData.NOT) != null) {
+        calc = TheoryFactory.notSymbol;
+      }
+      else calc = tryReadInfixSymbol();
+      if (calc == null) {
+        _status.storeError("Expected infix symbol but got " + token.getName() + " (" +
+          token.getText() + ")", token);
+        return null;
+      }
+      ret = new TermStructure(token, TermStructure.CONSTANT);
+      ret.symbol = calc;
+      if (_status.expect(CoraTokenData.METACLOSE, "infix closing bracket ]") == null) {
         ret.errored = true;
         return ret;
       }
@@ -502,6 +526,7 @@ public class CoraInputReader {
            _status.nextTokenIs(CoraTokenData.TRUE) ||
            _status.nextTokenIs(CoraTokenData.FALSE) ||
            _status.nextTokenIs(CoraTokenData.BRACKETOPEN) ||
+           _status.nextTokenIs(CoraTokenData.METAOPEN) ||
            _status.nextTokenIs(CoraTokenData.IDENTIFIER);
   }
 
