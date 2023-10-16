@@ -192,7 +192,7 @@ public class Horpo {
    * is bigger).
    */
   private void computeIntegerVariableBound(TRS trs) {
-    _M = 1000;
+    _M = 500;
     LinkedList<Term> parts = new LinkedList<Term>();
     for (int i = 0; i < trs.queryRuleCount(); i++) {
       Rule rule = trs.queryRule(i);
