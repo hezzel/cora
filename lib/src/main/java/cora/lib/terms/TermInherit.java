@@ -103,12 +103,12 @@ abstract class TermInherit implements Term {
   public ArrayList<HeadPosition> queryHeadPositions() {
     List<Path> posses = queryPositions();
     ArrayList<HeadPosition> ret = new ArrayList<HeadPosition>();
-    for (int i = 0; i < posses.size(); i++) {
-      Term t = posses.get(i).queryCorrespondingSubterm();
+    for (Path poss : posses) {
+      Term t = poss.queryCorrespondingSubterm();
       for (int j = t.numberArguments(); j > 0; j--) {
-        ret.add(new HeadPosition(posses.get(i), j));
+        ret.add(new HeadPosition(poss, j));
       }
-      ret.add(new HeadPosition(posses.get(i)));
+      ret.add(new HeadPosition(poss));
     }
     return ret;
   }
