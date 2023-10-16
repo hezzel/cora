@@ -1,11 +1,7 @@
 a :: o
 b :: o
-u :: o
-v :: o
 f :: o -> o -> o -> o
+g :: o -> o
 
-a -> b
-u -> v
-
-f(x, a, v) -> f(b, x, u)
+f(x, a, y) -> f(b, x, g(y))
 
