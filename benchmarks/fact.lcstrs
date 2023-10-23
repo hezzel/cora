@@ -1,0 +1,10 @@
+comp :: (Int ⇒ Int) ⇒ (Int ⇒ Int) ⇒ Int ⇒ Int
+comp(f, g, x) → f(g(x))
+
+fact :: Int ⇒ (Int ⇒ Int) ⇒ Int
+fact(n, k) → k(1)                         | n ≤ 0
+fact(n, k) → fact(n-1, comp(k, [*](n)))   | n > 0
+
+fact2 :: Int ⇒ Int
+fact2(n) → 1                              | n ≤ 0
+fact2(n) → n * fact2(n - 1)               | n > 0

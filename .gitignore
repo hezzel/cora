@@ -5,6 +5,10 @@
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
+# Ignoring smt files created in the root by the application
+*.smt2
+result
+
 # Ignoring PDFs from Documentation folder
 ams.pdf
 applicative.pdf

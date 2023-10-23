@@ -1,8 +1,0 @@
-(VAR x y)
-(RULES
-  +(x,0) -> x
-  +(x,s(y)) -> s(+(x,y))
-  fib(0) -> 0
-  fib(s(0)) -> s(0)
-  fib(s(s(x))) -> +( fib(s(x)) , fib(x) )
-)

@@ -1,0 +1,16 @@
+/* nat : natural numbers */
+0 :: nat
+s :: nat ⇒ nat
+
+/* list: lists of natural numbers */
+nil :: list
+cons :: nat ⇒ list ⇒ list
+
+map :: (nat ⇒ nat) ⇒ list ⇒ list
+map(F, nil) → nil
+map(F, cons(x, xs)) → cons(F(x), map(F, xs))
+
+double :: nat -> nat
+double(0) → 0
+double(s(x)) → s(s(double(x)))
+
