@@ -15,7 +15,6 @@
 
 package cora.terms;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import cora.exceptions.InappropriatePatternDataError;
@@ -23,7 +22,6 @@ import cora.exceptions.IndexingError;
 import cora.exceptions.NullCallError;
 import cora.exceptions.NullInitialisationError;
 import cora.types.Type;
-import cora.types.TypeFactory;
 
 /**
  * Non-binder variables are both used as parts of constraints, as generic expressions in terms, and

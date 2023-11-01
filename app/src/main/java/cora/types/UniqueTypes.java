@@ -1,4 +1,4 @@
-package cora.ADT;
+package cora.types;
 
 final class UniqueTypes {
 
@@ -14,11 +14,13 @@ final class UniqueTypes {
   /** */
   public static Base stringSort = new Base("String");
 
+  /** unitSort  */
+  public static Base unitSort = new Base("o");
+
   public static boolean isTheoryType(Type ty) {
     return
       ty == UniqueTypes.intSort  ||
       ty == UniqueTypes.boolSort ||
       ty == TypeFactory.stringSort;
   }
-
 }

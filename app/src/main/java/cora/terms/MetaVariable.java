@@ -15,7 +15,6 @@
 
 package cora.terms;
 
-import java.lang.Comparable;
 import cora.types.Type;
 
 /**

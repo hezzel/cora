@@ -1,7 +1,6 @@
-package cora.ADT;
+package cora.types;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Streams;
 import cora.exceptions.ProdTypeConstructionError;
 import org.jetbrains.annotations.NotNull;
 

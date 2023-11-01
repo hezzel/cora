@@ -15,7 +15,7 @@
 
 package cora.terms;
 
-import cora.types.BaseType;
+import cora.types.Base;
 
 /**
  * Values are constants of a theory sorts that cannot be rewritten; they are the representations of
@@ -23,7 +23,7 @@ import cora.types.BaseType;
  */
 public interface Value extends FunctionSymbol {
   /** All Values have base type; to be precise, this will return a theory sort. */
-  public abstract BaseType queryType();
+  public abstract Base queryType();
 
   /** @return whether this is an integer value (so its type is TypeFactory::intSort) */
   public boolean isIntegerValue();

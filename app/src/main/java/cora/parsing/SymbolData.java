@@ -17,7 +17,6 @@ package cora.parsing;
 
 import java.util.TreeMap;
 import cora.exceptions.NullStorageError;
-import cora.exceptions.TypingError;
 import cora.types.Type;
 import cora.terms.FunctionSymbol;
 import cora.terms.Variable;

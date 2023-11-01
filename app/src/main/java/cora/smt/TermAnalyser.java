@@ -16,7 +16,7 @@
 package cora.smt;
 
 import java.util.Random;
-import java.util.TreeSet;
+
 import cora.exceptions.UnsupportedTheoryError;
 import cora.types.Type;
 import cora.types.TypeFactory;

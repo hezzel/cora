@@ -15,8 +15,6 @@
 
 package cora.terms;
 
-import cora.types.Type;
-
 /**
  * Variables are both used as parts of constraints, as binders in an abstraction, as generic
  * expression in terms and as open spots for matching in rules.

@@ -15,14 +15,12 @@
 
 package cora.terms;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullCallError;
 import cora.exceptions.NullInitialisationError;
 import cora.types.Type;
-import cora.types.TypeFactory;
 
 /**
  * Binders are variables in Vbinder: variables that are only meant to be used as binders in an

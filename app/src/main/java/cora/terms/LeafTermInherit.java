@@ -15,7 +15,6 @@
 
 package cora.terms;
 
-import java.util.List;
 import java.util.ArrayList;
 import cora.exceptions.*;
 import cora.types.Type;

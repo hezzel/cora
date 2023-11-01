@@ -17,10 +17,8 @@ package cora.parsing;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.TreeMap;
+
 import cora.exceptions.IllegalRuleError;
-import cora.exceptions.ParseError;
 import cora.parsing.lib.Token;
 import cora.parsing.lib.ParsingStatus;
 import cora.types.*;
@@ -139,15 +137,15 @@ public class TrsInputReader {
    */
   private Type readSortDeclaration() {
     Token next;
-    ArrayList<BaseType> inputs = new ArrayList<BaseType>();
+    ArrayList<Base> inputs = new ArrayList<Base>();
     while ((next = _status.readNextIf(TrsTokenData.IDENTIFIER)) != null) {
       inputs.add(TypeFactory.createSort(next.getText()));
     }
     _status.expect(TrsTokenData.ARROW, "IDENTIFIER (a sort) or the sort declaration arrow (->)");
     next = _status.expect(TrsTokenData.IDENTIFIER, "output sort");
-    BaseType output;
+    Base output;
     if (next != null) output = TypeFactory.createSort(next.getText());
-    else if (inputs.size() == 0) output = TypeFactory.unitSort;
+    else if (inputs.isEmpty()) output = TypeFactory.unitSort;
     else {
       output = inputs.get(inputs.size()-1);
       inputs.remove(inputs.size()-1);
@@ -595,7 +593,7 @@ public class TrsInputReader {
    * The expectedSort is allowed to be null.  The signature is not (use "" if no functions are
    * declared).
    */
-  public static Term readSortedTermFromString(String str, String sig, BaseType expectedSort) {
+  public static Term readSortedTermFromString(String str, String sig, Base expectedSort) {
     str = "(SIG " + sig + ")\n" + str;
     ParsingStatus status = new ParsingStatus(TrsTokenData.getStringLexer(str), 10);
     TrsInputReader reader = new TrsInputReader(status);

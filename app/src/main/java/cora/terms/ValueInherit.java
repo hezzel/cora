@@ -18,7 +18,7 @@ package cora.terms;
 import java.util.Map;
 import cora.exceptions.InappropriatePatternDataError;
 import cora.exceptions.NullCallError;
-import cora.types.BaseType;
+import cora.types.Base;
 import cora.types.TypeFactory;
 
 /**
@@ -26,13 +26,13 @@ import cora.types.TypeFactory;
  * the elements of the underlying sets.
  */
 public abstract class ValueInherit extends LeafTermInherit implements Value {
-  protected ValueInherit(BaseType mysort) {
+  protected ValueInherit(Base mysort) {
     super(mysort);
     setVariables(ReplaceableList.EMPTY);
   }
 
   /** The type of a Value is always one of the theory sorts. */
-  public BaseType queryType() { return (BaseType)super.queryType(); }
+  public Base queryType() { return (Base)super.queryType(); }
 
   /** @return 0, since values cannot be applied. */
   public int queryArity() { return 0; }

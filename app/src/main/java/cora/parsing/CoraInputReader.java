@@ -17,9 +17,8 @@ package cora.parsing;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.Stack;
-import java.util.TreeMap;
+
 import cora.exceptions.*;
 import cora.parsing.lib.Token;
 import cora.parsing.lib.TokenQueue;
@@ -151,7 +150,7 @@ public class CoraInputReader {
    * This function attempts to read a sort, and returns it.  If there is no sort at the start of
    * the input, then nothing is read and null is returned.
    */
-  private BaseType tryReadSort() {
+  private Base tryReadSort() {
     if (_status.readNextIf(CoraTokenData.INTTYPE) != null) return TypeFactory.intSort;
     if (_status.readNextIf(CoraTokenData.BOOLTYPE) != null) return TypeFactory.boolSort;
     if (_status.readNextIf(CoraTokenData.STRINGTYPE) != null) return TypeFactory.stringSort;

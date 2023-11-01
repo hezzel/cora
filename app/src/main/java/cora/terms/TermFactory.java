@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.ArrayList;
 import cora.exceptions.ArityError;
 import cora.exceptions.IllegalArgumentError;
-import cora.exceptions.IncorrectStringException;
 import cora.types.Type;
 import cora.types.TypeFactory;
 

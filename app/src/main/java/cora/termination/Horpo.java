@@ -17,7 +17,6 @@ package cora.termination;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.Collection;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import cora.types.Type;

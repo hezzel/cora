@@ -24,13 +24,22 @@ import java.util.List;
  *
  * Note: all instances of Type must (and can be expected to) be immutable.
  */
-public interface Type {
-  /** Returns true for base types, false for arrow types. */
-  boolean isBaseType();
-  /** Return false for base types, true for arrow types. */
-  boolean isArrowType();
+public sealed interface Type permits
+  Base, Arrow, Product {
 
-  /** Returns true if the type is fully built from theory sorts. */
+  /** Returns true for base types, false for arrow types. */
+  default boolean isBaseType(){ return false; }
+
+  /** Return false for base types, true for arrow types. */
+  default boolean isArrowType(){ return false; }
+
+  /** */
+  default boolean isProdType(){ return false; }
+
+  /** Returns true if the type is fully built from theory sorts.
+   * A type is a theory type if it is physically equal to one of the types
+   * created by the TypeFactory class.
+   * */
   boolean isTheoryType();
   
   /** Returns a string representation of the current type. */
@@ -40,17 +49,27 @@ public interface Type {
   boolean equals(Type type);
 
   /** For σ1 → ,,, → σk → τ, returns k */
-  int queryArity();
+  default int queryArity(){ return 0; }
+
   /** For σ1 → ,,, → σk → τ, adds {σ1,,,σk} to the end of answer. */
-  void appendInputTypes(List<Type> answer);
+  @Deprecated
+  default void appendInputTypes(List<Type> answer) {};
+
   /** For σ1 → ,,, → σk → τ, returns τ */
-  BaseType queryOutputSort();
+  @Deprecated
+  default Base queryOutputSort() { return null; }
+
+  /** For σ1 → ,,, → σk → τ, returns τ */
+  Type queryOutputType();
+
   /** For σ1 → ,,, → σk → τ, returns max(order(σ1),,,order(σk))+1 */
   int queryTypeOrder();
 
   /** Throws an InappropriatePatternDataError if called on anything but ARROWTYPE */
-  Type queryArrowInputType();
-  /** Throws an InappropriatePatternDataError if called on anything but ARROWTYPE */
-  Type queryArrowOutputType();
-}
+  @Deprecated
+  default Type queryArrowInputType() { return null; }
 
+  /** Throws an InappropriatePatternDataError if called on anything but ARROWTYPE */
+  @Deprecated
+  default Type queryArrowOutputType(){ return null; }
+}

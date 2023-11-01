@@ -1,4 +1,4 @@
-package cora.ADT;
+package cora.types;
 
 import cora.exceptions.NullInitialisationError;
 import org.jetbrains.annotations.NotNull;

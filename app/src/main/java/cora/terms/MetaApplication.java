@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import cora.exceptions.*;
 import cora.types.Type;
-import cora.types.TypeFactory;
 
 /**
  * A MetaApplication is a term of the form Z⟨s1,...,sk⟩ where Z is a meta-variable with arity

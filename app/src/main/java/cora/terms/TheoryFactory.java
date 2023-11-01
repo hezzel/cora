@@ -17,7 +17,7 @@ package cora.terms;
 
 import cora.exceptions.IllegalArgumentError;
 import cora.exceptions.IncorrectStringException;
-import cora.types.BaseType;
+import cora.types.Base;
 
 /**
  * A factory only to create logical terms and symbols
@@ -28,10 +28,10 @@ import cora.types.BaseType;
  */
 public class TheoryFactory {
   /** Create a non-binder variable with the given name and base sort. */
-  public static Variable createVar(String name, BaseType type) {
-    if (!type.isTheorySort()) {
+  public static Variable createVar(String name, Base type) {
+    if (!type.isTheoryType()) {
       throw new IllegalArgumentError("TheoryFactory", "createVar", "given type " +
-        type.toString() + " is not a theory sort.");
+        type + " is not a theory sort.");
     }
     return new Var(name, type);
   }

@@ -1,9 +1,7 @@
-package cora.ADT;
+package cora.types;
 
 import cora.utils.Pair;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public record Arrow(Type left, Type right) implements Type {
 
@@ -21,7 +19,7 @@ public record Arrow(Type left, Type right) implements Type {
     switch (new Pair<Type, Type>(this.left, this.right)){
       case Pair(Base(_), _) ->
         outLeft.append(leftStr);
-      case Pair(Arrow(_,_), _), Pair(Product(_), _) ->
+      case Pair(Arrow(_, _), _), Pair(Product(_), _) ->
         outLeft.append("(").append(leftStr).append(")");
     }
     return outLeft.append(" ⇒ ").append(rightStr).toString();
