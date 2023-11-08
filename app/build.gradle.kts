@@ -1,3 +1,4 @@
+import org.apache.tools.ant.taskdefs.Java
 
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
@@ -32,17 +33,20 @@ application {
     mainClass.set("cora.App")
 }
 
-tasks.compileJava{
-    options.compilerArgs = listOf("--enable-preview", "-Xlint:preview", "-Xlint:deprecation")
-}
+tasks{
+    val COMPILER_OPTIONS = listOf("--enable-preview", "-Xlint:preview", "-Xlint:deprecation")
 
-tasks.named<Test>("test") {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
-    jvmArgs = listOf("--enable-preview")
-}
+    withType<JavaCompile>() {
+        options.compilerArgs = COMPILER_OPTIONS
+    }
 
-tasks.named<JavaExec>("run"){
-//    jvmArgs?.add(0, "--enable-preview")
-    jvmArgs = listOf("--enable-preview")
+    named<Test>("test") {
+        // Use JUnit Platform for unit tests.
+        useJUnitPlatform()
+        jvmArgs = listOf("--enable-preview")
+    }
+
+    named<JavaExec>("run") {
+        jvmArgs = listOf("--enable-preview")
+    }
 }

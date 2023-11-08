@@ -1,9 +1,16 @@
 package cora.types;
 
+import cora.exceptions.NullInitialisationError;
 import cora.utils.Pair;
 import org.jetbrains.annotations.NotNull;
 
 public record Arrow(Type left, Type right) implements Type {
+
+  public Arrow(Type left, Type right) {
+    if(left == null || right == null) throw new NullInitialisationError("Arrow", "type");
+    this.left = left;
+    this.right = right;
+  }
 
   @Override
   public boolean isArrowType() { return true; }

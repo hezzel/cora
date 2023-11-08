@@ -83,7 +83,7 @@ public interface Term {
  
   /**
    * If 1 <= i <= numberArguments, this returns the thus indexed argument.
-   * Otherwise, this results in an IndexingError.
+   * @throws cora.exceptions.IndexingError if i is negative or > numberArguments.
    */
   Term queryArgument(int i);
 
@@ -311,4 +311,3 @@ public interface Term {
   /** Determines the =_α^{μ,ξ,k} relation as described in the documentation. */
   boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k);
 }
-

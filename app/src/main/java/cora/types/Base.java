@@ -7,16 +7,18 @@ import java.util.Objects;
 
 public record Base(String name) implements Type {
   public Base {
-    if(name == null){
+    if (name == null) {
       throw new NullInitialisationError("Base", "name");
     }
   }
 
   /**
-   * Returns true only if this object is an instance of {@link cora.ADT.Base}.
+   * Returns true only if this object is an instance of {@link cora.types.Base}.
    */
   @Override
-  public boolean isBaseType(){ return true; }
+  public boolean isBaseType() {
+    return true;
+  }
 
   /**
    * Returns true if the type is fully built from theory sorts.
@@ -27,7 +29,9 @@ public record Base(String name) implements Type {
   }
 
   @Override
-  public @NotNull String toString(){ return this.name; }
+  public @NotNull String toString() {
+    return this.name;
+  }
 
   /**
    * Returns whether the given Type is equal to us.
@@ -36,9 +40,8 @@ public record Base(String name) implements Type {
    */
   @Override
   public boolean equals(Type type) {
-    return switch (type){
-      case Base(String x) ->
-        Objects.equals(this.name, x);
+    return switch (type) {
+      case Base(String x) -> Objects.equals(this.name, x);
       default -> false;
     };
   }
@@ -47,11 +50,15 @@ public record Base(String name) implements Type {
    * For σ1 → ,,, → σk → τ, returns τ
    */
   @Override
-  public Type queryOutputType() { return this; }
+  public Type queryOutputType() {
+    return this;
+  }
 
   /**
    * For σ1 → ,,, → σk → τ, returns max(order(σ1),,,order(σk))+1
    */
   @Override
-  public int queryTypeOrder() { return 0; }
+  public int queryTypeOrder() {
+    return 0;
+  }
 }

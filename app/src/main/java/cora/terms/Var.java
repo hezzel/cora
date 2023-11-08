@@ -116,7 +116,7 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
     return queryType();
   }
 
-  /** @throws an IndexingError, since there are no arguments */
+  /** @throws IndexingError, since there are no arguments */
   public Type queryInputType(int index) {
     throw new IndexingError("Var", "queryInputType", index);
   }
@@ -200,4 +200,3 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
     return queryType().toString().compareTo(other.queryType().toString());
   }
 }
-

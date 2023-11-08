@@ -15,6 +15,8 @@
 
 package cora.types;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 
 /**
@@ -50,4 +52,8 @@ public class TypeFactory {
 
   /** Creates a type of the form left ⇒ right */
   public static Type createArrow(Type left, Type right) { return new Arrow(left, right); }
+
+  public static Type createProduct(ImmutableList<Type> types) {
+    return new Product(types);
+  }
 }
