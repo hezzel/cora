@@ -31,13 +31,13 @@ public record Product(ImmutableList<Type> types) implements Type {
   @Override
   public @NotNull String toString(){
     StringBuilder string = new StringBuilder();
-    for(int i = 0; i < types.size(); i++){
-      if (i == 0) string.append(types.get(i).toString());
-      String stringOfi = switch (types.get(i)){
-        case Base(_)                 -> types.get(i).toString();
+    for(int i = 0; i < types.size(); i++) {
+      String stringOfi = switch (types.get(i)) {
+        case Base(_) -> types.get(i).toString();
         case Arrow(_, _), Product(_) -> "(" + types.get(i).toString() + ")";
       };
-      string.append(" x ").append(stringOfi);
+      if (i == 0) string.append(stringOfi);
+      else string.append(" x ").append(stringOfi);
     }
     return string.toString();
   }
