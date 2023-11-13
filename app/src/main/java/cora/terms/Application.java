@@ -29,6 +29,7 @@ class Application extends TermInherit {
   public List<Term> _args;
   public Type _outputType;
 
+//  Construction Phase --------------------------------------------------------
   /**
    * Sets up the lists of free, bound and meta-variables used in this term.
    * Meant for use in the constructors, so it cannot use the freeReplaceables() function, but
@@ -122,66 +123,50 @@ class Application extends TermInherit {
     construct(head, new ArrayList<Term>(args));
   }
 
+
   /** This method returns the output type of the term. */
+  @Override
   public Type queryType() {
     return _outputType;
   }
 
-  /** @return false, since an application is not a constant. */
-  public boolean isConstant() {
-    return false;
-  }
-
-  /** @return false, since an application is not a variable. */
-  public boolean isVariable() {
-    return false;
-  }
-
-  /** @return false, since an application is not an abstraction. */
-  public boolean isAbstraction() {
-    return false;
-  }
-
   /** @return true, since the current term is an application. */
+  @Override
   public boolean isApplication() {
     return true;
   }
 
-  /** Returns whether or not the head of this application is a function symbol. */
+  /** Returns whether the head of this application is a function symbol. */
+  @Override
   public boolean isFunctionalTerm() {
     return _head.isConstant();
   }
 
-  /** Returns whether or not the head of this application is a variable. */
+  /** Returns whether the head of this application is a variable. */
+  @Override
   public boolean isVarTerm() {
     return _head.isVariable();
   }
 
-  /** @return false, since an application is not a meta-variable application. */
-  public boolean isMetaApplication() {
-    return false;
-  }
-
-  /** Returns whether or not the head of this application is an abstraction. */
+  /** Returns whether the head of this application is an abstraction. */
+  @Override
   public boolean isBetaRedex() {
     return _head.isAbstraction();
   }
 
   /** Returns whether the head and all arguments are logical terms. */
+  @Override
   public boolean isTheoryTerm() {
-    if (!_head.isTheoryTerm()) return false;
-    for (int i = 0; i < _args.size(); i++) {
-      if (!_args.get(i).isTheoryTerm()) return false;
-    }
-    return true;
+    return _head.isTheoryTerm() && _args.stream().allMatch(Term::isTheoryTerm);
   }
   
   /** Returns false, since an application cannot be a value. */
+  @Override
   public boolean isValue() {
     return false;
   }
 
-  /** @return null, since an application is not a value. */
+  /** @return null since an application is not a value. */
   public Value toValue() {
     return null;
   }
@@ -255,34 +240,26 @@ class Application extends TermInherit {
    * terms, and the output type is a base type.
    */
   public boolean isFirstOrder() {
-    if (!_head.isConstant()) return false;
-    if (!_outputType.isBaseType()) return false;
-    for (int i = 0; i < _args.size(); i++) {
-      if (!_args.get(i).isFirstOrder()) return false;
-    }
-    return true;
+    return _head.isConstant() &&
+      _outputType.isBaseType() &&
+      _args.stream().allMatch(Term::isFirstOrder);
   }
 
   /**
-   * Returns true if this application is a functional term or varterm whose variable is a binder,
+   * Returns true if this application is a functional or variable term whose variable
+   * is a binder,
    * and the arguments are all patterns.
    */
   public boolean isPattern() {
     if (!_head.isConstant() && !_head.isVariable()) return false;
     if (_head.isVariable() && !_head.queryVariable().isBinderVariable()) return false;
-    for (int i = 0; i < _args.size(); i++) {
-      if (!_args.get(i).isPattern()) return false;
-    }
-    return true;
+    return _args.stream().allMatch(Term::isPattern);
   }
 
   /** Returns true if all strict subterms are applicative. */
   public boolean isApplicative() {
     if (!_head.isApplicative()) return false;
-    for (int i = 0; i < _args.size(); i++) {
-      if (!_args.get(i).isApplicative()) return false;
-    }
-    return true;
+    return _args.stream().allMatch(Term::isApplicative);
   }
 
   /**
@@ -407,7 +384,7 @@ class Application extends TermInherit {
   /**
    * This method either extends gamma so that <this term> gamma = other and returns null, or
    * returns a string describing why other is not an instance of gamma.
-   * Whether or not null is returned, gamma is likely to be extended (although without overriding)
+   * Whether null is returned, gamma is likely to be extended (although without overriding)
    * by this function.
    */
   public String match(Term other, Substitution gamma) {
@@ -461,4 +438,3 @@ class Application extends TermInherit {
     return true;
   }
 }
-

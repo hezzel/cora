@@ -29,7 +29,7 @@ public class ReplaceableList implements Iterable<Replaceable> {
   public static ReplaceableList EMPTY = new ReplaceableList();
 
   /** Constructs the empty list */
-  private ReplaceableList() {
+  ReplaceableList() {
     _elements = new TreeSet<Replaceable>();
   }
 
@@ -130,4 +130,3 @@ public class ReplaceableList implements Iterable<Replaceable> {
     return renaming;
   }
 }
-

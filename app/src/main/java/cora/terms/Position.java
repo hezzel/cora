@@ -15,56 +15,70 @@
 
 package cora.terms;
 
+import cora.exceptions.InappropriatePatternDataError;
+
 /**
  * A position indicates a location in a term, which has one of the following shapes:
- * - ε, which refers to the current term
- * - [index] tail, where the term is h(s1,...,sn), index ∈ {1..n}, and tail a position in s_index
- * - [0] tail, where the term is λx.s or (λx.s)(t1,...,tn)  and tail a position in s
- * - ![index] tail, where the term is Z[s1,...,sk], index ∈ {1..k}, and tail a position in s_index
- * So this does NOT include head positions.
- *
+ * <p><ul>
+ *  <li> ε, which refers to the current term
+ *  <li> [index] tail, where the term is h(s1,...,sn), index ∈ {1..n}, and tail a position in
+ *  s_index
+ *  <li> [0] tail, where the term is λx.s or (λx.s)(t1,...,tn)  and tail a position in s
+ *  <li> ![index] tail, where the term is Z[s1,...,sk], index ∈ {1..k}, and tail a position in
+ *  s_index.
+ *  So this does NOT include head positions.
+ *  </ul></p>
+ * <p>
  * A Position can be used to find (and possibly replace) the subterm at that position.
- * Note: all instances of Position must (and can be expected to) be immutable.
+ * <b>Note:</b> all instances of Position must (and can be expected to) be immutable.
+ * </p>
  */
 
 public interface Position {
-  /** Returns whether or not this is the empty position. */
-  public boolean isEmpty();
+  /** Returns whether this is the empty position. */
+  default boolean isEmpty() { return false; }
 
-  /** Returns whether or not this is an argument position. */
-  public boolean isArgument();
+  /** Returns whether this is an argument position. */
+  default boolean isArgument() { return false; };
 
-  /** Returns whether or not this is a lambda position. */
-  public boolean isLambda();
+  /** Returns whether this is a lambda position. */
+  default boolean isLambda() { return false; }
 
-  /** Returns whether or not this is a meta position. */
-  public boolean isMeta();
+  /** Returns whether this is a meta position. */
+  default boolean isMeta() { return false; }
+
+  /** Returns whether this is a tuple position. */
+  default boolean isTuple() {return false; }
+
+  default int queryComponentPosition() {
+    throw new InappropriatePatternDataError("Position", "queryComponentPosition", "calling this " +
+      "method from a path that is not tuple path.");
+  }
 
   /**
    * If the position is in a subterm of argument si of an application h(s1,...,sn), this function
    * returns the index i of the relevant argument (1..n); otherwise it throws an
    * InappropriatePatternDataError.
    */
-  public int queryArgumentPosition();
+  int queryArgumentPosition();
 
   /**
    * If the position is in a subterm of argument si of a meta-application Z⟨s1,...,sk⟩, this
    * function returns the index i of the relevant argument (1..k); otherwise it throws an
    * InappropriatePatternDataError.
    */
-  public int queryMetaPosition();
+  int queryMetaPosition();
 
   /**
    * If the position is in a subterm of some argument t, this function returns the position of
    * the relevant subterm in t; otherwise it throws an
    * InappropriatePatternDataError.
    */
-  public Position queryTail();
+  Position queryTail();
 
   /** Returns whether this position and other represent the same location in a term. */
-  public boolean equals(Position other);
+  boolean equals(Position other);
 
   /** Represents the Position as a sequence of integers. */
-  public String toString();
+  String toString();
 }
-

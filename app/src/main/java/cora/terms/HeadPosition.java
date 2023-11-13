@@ -33,7 +33,7 @@ public class HeadPosition {
     if (pos == null) throw new NullInitialisationError("HeadPosition", "pos");
   }
 
-  /** Creates the headposition pos.☆k. */
+  /** Creates the head position pos.☆k. */
   HeadPosition(Position pos, int k) {
     _pos = pos;
     _chop = k;
@@ -52,22 +52,25 @@ public class HeadPosition {
     return _chop;
   }
 
-  /** Returns whether or not this is a head position of the form ☆k, so not in a subterm. */
+  /** Returns whether this is a head position of the form ☆k, so not in a subterm. */
   public boolean isEnd() {
     return _pos.isEmpty();
   }
 
-  /** Returns whether or not this is a head position of the form i.tail with i ≥ 1. */
+  /** Returns whether this is a product position. */
+  public boolean isTuple() { return _pos.isTuple(); }
+
+  /** Returns whether this is a head position of the form i.tail with i ≥ 1. */
   public boolean isArgument() {
     return _pos.isArgument();
   }
 
-  /** Returns whether or not this is a head position of the form 0.tail. */
+  /** Returns whether this is a head position of the form 0.tail. */
   public boolean isLambda() {
     return _pos.isLambda();
   }
 
-  /** Returns whether or not this is a head position of the form !i.tail with i ≥ 1. */
+  /** Returns whether this is a head position of the form !i.tail with i ≥ 1. */
   public boolean isMeta() {
     return _pos.isMeta();
   }
@@ -115,4 +118,3 @@ public class HeadPosition {
     return _pos.toString().replace("ε", "☆" + _chop);
   }
 }
-

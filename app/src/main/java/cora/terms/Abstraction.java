@@ -50,106 +50,94 @@ class Abstraction extends TermInherit {
     setVariables(frees, bounds);
   }
 
-  /** @return <type of bindre> → <type of subterm> */
+  /** @return <type of binder> → <type of subterm> */
+  @Override
   public Type queryType() {
     return _type;
   }
 
-  /** @return false, since an abstraction is not a variable */
-  public boolean isVariable() {
-    return false;
-  }
-
-  /** @return false, since an abstraction is not a constant */
-  public boolean isConstant() {
-    return false;
-  }
-
-  /** @return false, since an abstraction is not a functional term */
-  public boolean isFunctionalTerm() {
-    return false;
-  }
-
-  /** @return false, since an abstraction is not a varterm */
-  public boolean isVarTerm() {
-    return false;
-  }
-
-  /** @return false, since an abstraction is not an application */
-  public boolean isApplication() {
-    return false;
-  }
-
-  /** @return false, since an abstraction is not a meta-application */
-  public boolean isMetaApplication() {
-    return false;
-  }
-
   /** @return true, since this is indeed an abstraction */
+  @Override
   public boolean isAbstraction() {
     return true;
   }
 
   /** @return false, since an abstraction is not a beta-redex */
+  @Override
   public boolean isBetaRedex() {
     return false;
   }
 
   /** @return whether the immediate subterm is a logical term */
+  @Override
   public boolean isTheoryTerm() {
     return _binder.queryType().isTheoryType() && _subterm.isTheoryTerm();
   }
 
   /** @return false, since an abstraction cannot be a value */
+  @Override
   public boolean isValue() {
     return false;
   }
 
   /** @return null, since an abstraction is not a value. */
+  @Override
   public Value toValue() {
     return null;
   }
 
   /** @return 0, since the subterm is not an argument */
+  @Override
   public int numberArguments() {
     return 0;
   }
 
   /** @return 0, since the subterm is not a meta-argument */
+  @Override
   public int numberMetaArguments() {
     return 0;
   }
 
   /** @return the empty list, since the subterm is not an argument */
+  @Override
   public ArrayList<Term> queryArguments() {
     return new ArrayList<Term>();
   }
 
-  /** @throws IndexingError, since the subterm is not an argument */
+  /** @throws IndexingError since the subterm is not an argument */
+  @Override
   public Term queryArgument(int i) {
     throw new IndexingError("Abstraction", "queryArgument", i);
   }
 
-  /** @throws IndexingError, since the subterm is not an meta-argument */
+  /** @throws IndexingError since the subterm is not a meta-argument */
+  @Override
   public Term queryMetaArgument(int i) {
     throw new IndexingError("Abstraction", "queryMetaArgument", i);
   }
 
-  /** Either returns this (if i == 0) or throws an IndexingError. */
+  /** Returns this if i == 0, otherwise throws IndexingError.
+   * @throws IndexingError if i > 0.
+   */
+  @Override
   public Term queryImmediateHeadSubterm(int i) {
     if (i == 0) return this;
     throw new IndexingError("Abstraction", "queryImmediateHeadSubterm", i);
   }
 
+  /** @return this, since this is not an application */
+  @Override
+  public Term queryHead() {
+    return this;
+  }
+
   /** @return the subterm s for an abstraction λx.s */
+  @Override
   public Term queryAbstractionSubterm() {
     return _subterm;
   }
 
-  /** @return this, since this is not an application */
-  public Term queryHead() {
-    return this;
-  }
+
 
   /**
    * @throws InappropriatePatternDataError, as an abstraction does not have a function symbol root
@@ -346,4 +334,3 @@ class Abstraction extends TermInherit {
     return retval;
   }
 }
-

@@ -15,9 +15,12 @@
 
 package cora.terms;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.common.collect.ImmutableList;
 import cora.types.Type;
 
 /**
@@ -33,29 +36,32 @@ public interface Term {
   /** Returns the type of the term. */
   Type queryType();
 
-  /** Returns whether or not the current term is an unapplied variable. */
-  boolean isVariable();
+  /** Returns whether the current term is an unapplied variable. */
+  default boolean isVariable() { return false; }
 
-  /** Returns whether or not the current term is an unapplied function symbol. */
-  boolean isConstant();
+  /** Returns whether the current term is an unapplied function symbol. */
+  default boolean isConstant() { return false; }
 
-  /** Returns whether or not the current term has the form f(s1,...,sn) with n ≥ 0. */
-  boolean isFunctionalTerm();
+  /** Returns whether the current term has the form f(s1,...,sn) with n ≥ 0. */
+  default boolean isFunctionalTerm() { return false; }
 
-  /** Returns whether or not the current term has the form x(s1,...,sn) with n ≥ 0. */
-  boolean isVarTerm();
+  /** Returns whether the current term has the form x(s1,...,sn) with n ≥ 0. */
+  default boolean isVarTerm() { return false; }
 
-  /** Returns whether or not the current term has the form h(s1,...,sn) with n > 0. */
-  boolean isApplication();
+  /** Returns whether the current term has the form h(s1,...,sn) with n > 0. */
+  default boolean isApplication() { return false; }
 
-  /** Returns whether or not the current term is a lambda-abstraction λx.s. */
-  boolean isAbstraction();
+  /** Returns whether the current term is a lambda-abstraction λx.s. */
+  default boolean isAbstraction() { return false; }
 
-  /** Returns whether or not the current term is a meta-variable application Z⟨s1,...,sk⟩. */
-  boolean isMetaApplication();
+  /** Returns whether the current term is a meta-variable application Z⟨s1,...,sk⟩. */
+  default boolean isMetaApplication() { return false; }
 
-  /** Returns whether or not the current term has the form (λx.t)(s1,...sn) with n > 0. */
-  boolean isBetaRedex();
+  /** Returns whether the current term is a tuple (s1,...,sk) with k >= 2. */
+  default boolean isTuple() { return false; }
+
+  /** Returns whether the current term has the form (λx.t)(s1,...sn) with n > 0. */
+  default boolean isBetaRedex() { return false; }
 
   /** Returns whether the sets of variables and meta-variables are empty. */
   boolean isGround();
@@ -78,9 +84,18 @@ public interface Term {
   /** Returns the number of meta-arguments; that is, k for a term Z⟨t1,...,tk⟩(s1,...,sn). */
   int numberMetaArguments();
 
+  /** Returns the lis of components in a tuple term.
+   * Notice that tuple terms that are valid have at least two components.
+   * If the current term is not a tuple, the list returned is empty.
+   */
+  default ImmutableList<Term> queryComponents() {
+    return ImmutableList.of();
+  }
+
   /** Returns the list of arguments; that is, [s1,...,sn] for a term f(s1,...,sn). */
   List<Term> queryArguments();
- 
+
+
   /**
    * If 1 <= i <= numberArguments, this returns the thus indexed argument.
    * @throws cora.exceptions.IndexingError if i is negative or > numberArguments.

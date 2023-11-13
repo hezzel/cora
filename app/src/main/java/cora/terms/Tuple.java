@@ -1,30 +1,29 @@
 package cora.terms;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import cora.exceptions.IllegalArgumentError;
-import cora.exceptions.InappropriatePatternDataError;
+import cora.exceptions.*;
 import cora.types.Type;
 import cora.types.TypeFactory;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * A tuple term is a term of the form (t1, ..., tn).
- * In a tuple term, n >= 2 always since they are of product type.
+ * A tuple term is a term of the form (|t1,..., tk|), with k >= 2.
  */
 public class Tuple extends TermInherit {
-  public ImmutableList<Term> _components;
-  public Type _tupleType;
+  private ImmutableList<Term> _components;
+  private Type _tupleType;
 
-  public void buildTuple(ImmutableList<Term> tms){
+  // This private method do checking
+  private void buildTuple(ImmutableList<Term> tms){
     if (tms.size() < 2) throw new IllegalArgumentError(
       "Tuple",
       "constructor",
       "the provided list of terms has " + tms.size() + " elements." +
-        "However, tuples can only be created with at least two terms.");
+        "However, tuples can only be created with at least two terms."
+    );
 
     ImmutableList<Type> tmsTy =
       tms.stream().map(Term::queryType).collect(ImmutableList.toImmutableList());
@@ -36,66 +35,26 @@ public class Tuple extends TermInherit {
   // Constructors ----------------------------------------------------------------------------------
 
   Tuple(ImmutableList<Term> tms) {
+    // configure the set of free variables for this term
+    ReplaceableList fvars = new ReplaceableList();
+    for (Term t : tms) {
+      fvars.combine(t.freeReplaceables());
+    }
+    this.setVariables(fvars);
+    // check if it is okay to build the new tuple term
     buildTuple(tms);
   }
-
   //------------------------------------------------------------------------------------------------
 
   /**
    * Returns the type of the term.
    */
   @Override
-  public Type queryType() {
-    return _tupleType;
-  }
+  public Type queryType() { return _tupleType; }
 
-  /**
-   * Returns whether the current term is an unapplied variable.
-   */
-  @Override
-  public boolean isVariable() { return false; }
 
-  /**
-   * Returns whether the current term is an unapplied function symbol.
-   */
   @Override
-  public boolean isConstant() { return false; }
-
-  /**
-   * Returns whether the current term has the form f(s1,...,sn) with n ≥ 0.
-   */
-  @Override
-  public boolean isFunctionalTerm() { return false; }
-
-  /**
-   * Returns whether the current term has the form x(s1,...,sn) with n ≥ 0.
-   */
-  @Override
-  public boolean isVarTerm() { return false; }
-
-  /**
-   * Returns whether the current term has the form h(s1,...,sn) with n > 0.
-   */
-  @Override
-  public boolean isApplication() { return false; }
-
-  /**
-   * Returns whether the current term is a lambda-abstraction λx.s.
-   */
-  @Override
-  public boolean isAbstraction() { return false; }
-
-  /**
-   * Returns whether the current term is a meta-variable application Z⟨s1,...,sk⟩.
-   */
-  @Override
-  public boolean isMetaApplication() { return false; }
-
-  /**
-   * Returns whether the current term has the form (λx.t)(s1,...sn) with n > 0.
-   */
-  @Override
-  public boolean isBetaRedex() { return false; }
+  public boolean isTuple() { return true; }
 
   /**
    * Returns whether the current term is a logical term.
@@ -125,21 +84,26 @@ public class Tuple extends TermInherit {
   @Override
   public int numberMetaArguments() { return 0; }
 
+  @Override
+  public ImmutableList<Term> queryComponents() { return _components; }
+
   /**
    * Returns the list of arguments; that is, [s1,...,sn] for a term f(s1,...,sn).
+   *
+   * @return returns the empty list, since the tuple is not argument.
    */
   @Override
-  public List<Term> queryArguments() { return null; }
+  public List<Term> queryArguments() { return new ArrayList<Term>(); }
 
   /**
    * If 1 <= i <= numberArguments, this returns the thus indexed argument.
    * Otherwise, this results in an IndexingError.
    *
-   * @param i
+   * @throws cora.exceptions.IndexingError since a tuple is not an argument.
    */
   @Override
   public Term queryArgument(int i) {
-    return null;
+    throw new IndexingError("Tuple", "queryArgument", i);
   }
 
   /**
@@ -154,10 +118,10 @@ public class Tuple extends TermInherit {
    */
   @Override
   public Term queryMetaArgument(int i) {
-    throw new InappropriatePatternDataError(
+    throw new IndexingError(
       "Tuple",
       "queryMetaArgument",
-      "trying to query a meta argument from a tuple term."
+      i
     );
   }
 
@@ -174,21 +138,13 @@ public class Tuple extends TermInherit {
   }
 
   /**
-   * For an applicative term a(s1,...,sn) (where a itself is not an application), the immediate
-   * subterms are s1,...,sn.  There are also n+1 head subterms: a, a(s1), a(s1,s2), ...,
-   * a(s1,...,sn).  Here, queryImmediateHeadSubterm(i) returns a(s1,...,si).
-   * (Note that this should not be used in analysis of first-order term rewriting, since all
-   * non-trivial head subterms have a higher type).
-   *
-   * @param i
+   * Returns this if i = 0, otherwise throws indexing error.
+   * @throws IndexingError if i > 0
    */
   @Override
   public Term queryImmediateHeadSubterm(int i) {
-    throw new InappropriatePatternDataError(
-      "Tuple",
-      "queryImmediateHeadSubterm",
-      "this function is only applicable to applicative terms a(s1,...,sn)."
-    );
+    if (i == 0) return this;
+    throw new IndexingError("Tuple", "queryImmediateHeadSubterm", i);
   }
 
   /**
@@ -217,6 +173,7 @@ public class Tuple extends TermInherit {
   /**
    * If the head of this term is a variable x or abstraction λx.s, this returns x.
    * Otherwise, an InappropriatePatternDataError is thrown.
+   * @throws InappropriatePatternDataError since tuples are abstractions
    */
   @Override
   public Variable queryVariable() {
@@ -244,9 +201,7 @@ public class Tuple extends TermInherit {
    * If the current term is a value, returns it; if not returns null.
    */
   @Override
-  public Value toValue() {
-    return null;
-  }
+  public Value toValue() { return null; }
 
   /**
    * Returns true if this term is first-order (so: the subterms at all positions have base type,
@@ -254,7 +209,7 @@ public class Tuple extends TermInherit {
    */
   @Override
   public boolean isFirstOrder() {
-    return false;
+    return  _components.stream().allMatch(Term::isFirstOrder);
   }
 
   /**
@@ -262,16 +217,14 @@ public class Tuple extends TermInherit {
    * meta-variables
    */
   @Override
-  public boolean isPattern() {
-    return false;
-  }
+  public boolean isPattern() { return false; }
 
   /**
    * Returns true if this term is applicative (so: without binder variables or meta-application)
    */
   @Override
   public boolean isApplicative() {
-    return false;
+    return _components.stream().allMatch(Term::isApplicative);
   }
 
   /**
@@ -283,7 +236,15 @@ public class Tuple extends TermInherit {
    */
   @Override
   public List<Path> queryPositions() {
-    return null;
+    List<Path> pos = new ArrayList<Path>();
+    for(int i = 0; i < _components.size(); i++){
+      List<Path> compPaths = _components.get(i).queryPositions();
+      for (Path compPath : compPaths) {
+        pos.add(new TuplePath(this, i + 1, compPath));
+      }
+    }
+    pos.add(new EmptyPath(this));
+    return pos;
   }
 
   /**
@@ -295,9 +256,7 @@ public class Tuple extends TermInherit {
    * @param top
    */
   @Override
-  public List<Path> queryPositionsForHead(Term top) {
-    return null;
-  }
+  public List<Path> queryPositionsForHead(Term top) { return null; }
 
   /**
    * Returns the subterm at the given position, assuming that this is indeed a position of the
@@ -308,7 +267,41 @@ public class Tuple extends TermInherit {
    */
   @Override
   public Term querySubterm(Position pos) {
-    return null;
+    if (pos.isEmpty()) return this;
+    return _components
+      .get(pos.queryComponentPosition() - 1)
+      .querySubterm(pos.queryTail());
+  }
+
+  // Auxiliary replacement method for both pos and head pos cases.
+  private Term replaceAux(Position pos, Term replacement) {
+    int replacementPos = pos.queryComponentPosition();
+    if(replacementPos < 1 || replacementPos > _components.size())
+      throw new IndexingError(
+        "Tuple",
+        "replaceSubterm",
+        this.toString(),
+        pos.toString()
+      );
+    // First, we instantiate a new builder object, to build the immutable lists
+    ImmutableList.Builder<Term> newTupleComponents = ImmutableList.builder();
+    // Then we add to this builder the exact terms from 1...(compPos - 1).
+    for (int i = 0; i < replacementPos - 1; i ++) {
+      newTupleComponents.add(_components.get(i));
+    }
+    // Next, the exact term at position replacementPos is used to replace, which we add directly
+    // into the builder
+    newTupleComponents.add(
+      _components.get(replacementPos - 1).replaceSubterm(pos.queryTail(), replacement)
+    );
+    // The last steps is add to the builder the rest of the terms from (repPos + 1)...n
+    for(int i = replacementPos; i < _components.size(); i++){
+      newTupleComponents.add(_components.get(i));
+    }
+
+    // Now, all components of the new tuple term are in the builder.
+    // We then create a new tuple term and return it.
+    return new Tuple(newTupleComponents.build());
   }
 
   /**
@@ -319,7 +312,18 @@ public class Tuple extends TermInherit {
    */
   @Override
   public Term replaceSubterm(Position pos, Term replacement) {
-    return null;
+    if(pos.isEmpty()){
+      if (!this.queryType().equals(replacement.queryType()))
+        throw new TypingError(
+          "Application",
+          "replaceSubterm",
+          "replacement term " + replacement.toString(),
+          "" + replacement.queryType().toString(),
+          "" + this.queryType().toString()
+        );
+      else return replacement;
+    }
+    return replaceAux(pos, replacement);
   }
 
   /**
@@ -330,7 +334,28 @@ public class Tuple extends TermInherit {
    */
   @Override
   public Term replaceSubterm(HeadPosition pos, Term replacement) {
-    return null;
+    if(pos.isEnd()){
+      if(pos.queryChopCount() == 0){
+        if (!this.queryType().equals(replacement.queryType()))
+          throw new TypingError(
+            "Application",
+            "replaceSubterm",
+            "replacement term " + replacement.toString(),
+            replacement.queryType().toString(),
+            this.queryType().toString()
+          );
+        else return replacement;
+      }
+      if(pos.queryChopCount() > 0){
+        throw new IndexingError(
+          "Application",
+          "replaceSubterm(HeadPosition)",
+          toString(),
+          pos.toString()
+          );
+      }
+    }
+    return replaceAux(pos.queryPosition(), replacement);
   }
 
   /**
@@ -346,13 +371,18 @@ public class Tuple extends TermInherit {
    */
   @Override
   public Term substitute(Substitution gamma) {
-    return null;
+    ImmutableList<Term> subImage =
+      _components
+        .stream()
+        .map(t -> t.substitute(gamma))
+        .collect(ImmutableList.toImmutableList());
+    return new Tuple(subImage);
   }
 
   /**
    * This method either extends gamma so that <this term> gamma = other and returns null, or
    * returns a string describing why other is not an instance of gamma.
-   * Whether or not null is returned, gamma is likely to be extended (although without overriding)
+   * Whether null is returned, gamma is likely to be extended (although without overriding)
    * by this function.
    *
    * @param other
@@ -360,6 +390,19 @@ public class Tuple extends TermInherit {
    */
   @Override
   public String match(Term other, Substitution gamma) {
+    if (other == null) throw new
+      NullCallError("Application", "match", "argument term (other)");
+    if (!other.isTuple()) {
+      return other.toString() + " does not instantiate " + toString() + " (not a tuple term).";
+    }
+    if(_components.size() != other.queryComponents().size()){
+      return other.toString() + " does not instantiate " + this.toString() + "(mismatch on the " +
+        "tuple sizes or both terms are not tuple terms.)";
+    }
+    for(int i = 0; i < _components.size(); i++){
+      String warning = _components.get(i).match(other.queryComponents().get(i), gamma);
+      if(warning != null) return warning;
+    }
     return null;
   }
 
@@ -378,7 +421,12 @@ public class Tuple extends TermInherit {
    */
   @Override
   public void addToString(StringBuilder builder, Map<Replaceable, String> renaming, Set<String> avoid) {
-
+    builder.append("(|");
+    for(int i = 0; i < _components.size(); i++){
+      if (i == _components.size() - 1) _components.get(i).addToString(builder, renaming, avoid);
+      else { _components.get(i).addToString(builder, renaming, avoid); builder.append(", ");}
+    }
+    builder.append("|)");
   }
 
   /**
@@ -391,6 +439,16 @@ public class Tuple extends TermInherit {
    */
   @Override
   public boolean alphaEquals(Term term, Map<Variable, Integer> mu, Map<Variable, Integer> xi, int k) {
-    return false;
+    if(!term.isTuple() || !_tupleType.equals(term.queryType())) {
+      return false;
+    }
+    ImmutableList<Term> argComponents = term.queryComponents();
+    if(_components.size() == term.queryComponents().size()){
+      for(int i = 0; i < _components.size(); i++) {
+        if(!_components.get(i).alphaEquals(argComponents.get(i), mu, xi, k)) return false;
+      }
+      return true;
+    } else
+      return false;
   }
 }

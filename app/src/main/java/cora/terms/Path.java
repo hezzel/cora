@@ -36,20 +36,19 @@ public interface Path extends Position {
    * To find the path from this term to the corresponding subterm, take this term, the associated
    * subterm of its tail, and so on, until you reach the empty position.
    */
-  public Term queryAssociatedTerm();
+  Term queryAssociatedTerm();
 
   /**
    * This returns the subterm inside the associated term that is associated to the position.
    * Note that for every non-empty path p, p.queryCorrespondingSubterm() is the same as
    * p.tail().queryCorrespondingSubterm().
    */
-  public Term queryCorrespondingSubterm();
+  Term queryCorrespondingSubterm();
 
   /** 
    * If the position is in a subterm of some argument t, this function returns the position of
    * the relevant subterm in t; otherwise it throws an
    * InappropriatePatternDataError.
    */
-  public Path queryTail();
+  Path queryTail();
 }
-

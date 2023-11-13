@@ -92,7 +92,6 @@ class ArgumentPath implements Path {
   }
 
   public String toString() {
-    return "" + _argPos + "." + _tail.toString();
+    return _argPos + "." + _tail.toString();
   }
 }
-
