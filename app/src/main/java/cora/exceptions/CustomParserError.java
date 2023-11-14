@@ -17,7 +17,7 @@ package cora.exceptions;
 
 /** A CustomParserError may arise during parsing of specific expressions outside the parser. */
 public class CustomParserError extends Error {
-  private String _text;
+  private final String _text;
 
   public CustomParserError(int line, int pos, String text, String message) {
     super(line + ":" + pos + ": Parser exception on input [" + text + "]: " + message);
@@ -28,4 +28,3 @@ public class CustomParserError extends Error {
     return _text;
   }
 }
-

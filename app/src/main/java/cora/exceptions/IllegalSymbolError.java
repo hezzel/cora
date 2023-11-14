@@ -21,7 +21,7 @@ package cora.exceptions;
  * symbol in a term that should be fully functional.
  */
 public class IllegalSymbolError extends Error {
-  private String _problem;
+  private final String _problem;
 
   public IllegalSymbolError(String classname, String symbol, String problem) {
     super("Illegal symbol occurrence " + symbol + " in " + classname + ": " + problem);
@@ -32,4 +32,3 @@ public class IllegalSymbolError extends Error {
     return _problem;
   }
 }
-

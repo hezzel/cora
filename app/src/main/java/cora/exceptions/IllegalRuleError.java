@@ -21,7 +21,7 @@ package cora.exceptions;
  * side is not a pattern).
  */
 public class IllegalRuleError extends Error {
-  private String _problem;
+  private final String _problem;
 
   public IllegalRuleError(String classname, String problem) {
     super("Illegal rule creation for " + classname + ": " + problem);
@@ -32,4 +32,3 @@ public class IllegalRuleError extends Error {
     return _problem;
   }
 }
-

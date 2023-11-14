@@ -21,7 +21,7 @@ package cora.exceptions;
  * binder-variale).
  */
 public class IllegalTermError extends Error {
-  private String _problem;
+  private final String _problem;
 
   public IllegalTermError(String classname, String problem) {
     super("Illegal rule creation for " + classname + ": " + problem);
@@ -32,4 +32,3 @@ public class IllegalTermError extends Error {
     return _problem;
   }
 }
-
