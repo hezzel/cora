@@ -40,10 +40,10 @@ import cora.terms.Path;
  * any TRS that supports theories is expected to support all the theories implemented in Cora.
  */
 public class TRS {
-  private Alphabet _alphabet;
-  private List<Rule> _rules;
-  private List<Scheme> _schemes;
-  private boolean _theories;
+  private final Alphabet _alphabet;
+  private final List<Rule> _rules;
+  private final List<Scheme> _schemes;
+  private final boolean _theories;
 
   /**
    * Create a TRS with the given alphabet, rules and rule schemes.  Default because this should
@@ -121,8 +121,8 @@ public class TRS {
   }
 
   private class RuleOrScheme {
-    boolean rule;
-    int index;
+    final boolean rule;
+    final int index;
     public RuleOrScheme(boolean r, int i) { rule = r; index = i; }
   }
 
@@ -171,4 +171,3 @@ public class TRS {
     return ret.toString();
   }
 }
-

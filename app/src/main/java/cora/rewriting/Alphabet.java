@@ -23,7 +23,7 @@ import cora.terms.FunctionSymbol;
 
 /** A finite set of user-defined symbols, with no duplicate names. */
 public class Alphabet {
-  private TreeMap<String,FunctionSymbol> _symbols;
+  private final TreeMap<String,FunctionSymbol> _symbols;
 
   /**
    * Create an alphabet with the given symbols.
@@ -79,4 +79,3 @@ public class Alphabet {
     return ret.toString();
   }
 }
-

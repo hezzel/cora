@@ -27,9 +27,9 @@ import cora.smt.TermAnalyser;
  * l → r : φ, although this is viewed as just l → r if there is no constraint.
  */
 public class Rule {
-  private Term _left;
-  private Term _right;
-  private Term _constraint;
+  private final Term _left;
+  private final Term _right;
+  private final Term _constraint;
 
   /**
    * Creates a rule with the given left- and right-hand side and constraint.
@@ -180,4 +180,3 @@ public class Rule {
     return builder.toString();
   }
 }
-
