@@ -75,4 +75,11 @@ public record Arrow(Type left, Type right) implements Type {
       this.right.queryTypeOrder()
     );
   }
+
+  @Override @Deprecated
+  public Type queryArrowInputType() { return this.left; }
+
+  @Override @Deprecated
+  public Type queryArrowOutputType() { return this.right; }
+
 }
