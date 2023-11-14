@@ -15,8 +15,8 @@ import java.util.List;
 
 class TupleTest {
 
-  Term _s = TermFactory.createVar(TypeFactory.intSort);
-  Term _t = TermFactory.createVar(TypeFactory.intSort);
+  final Term _s = TermFactory.createVar(TypeFactory.intSort);
+  final Term _t = TermFactory.createVar(TypeFactory.intSort);
 
 
   @Test
