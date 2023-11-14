@@ -25,16 +25,16 @@ import java.util.List;
  */
 public class TypeFactory {
   /** The theory sort Int, representing the set of integer numbers. */
-  public static Base intSort = UniqueTypes.intSort;
+  public static final Base intSort = UniqueTypes.intSort;
 
   /** The theory sort Bool, representing the set of boolean values {true, false}. */
-  public static Base boolSort = UniqueTypes.boolSort;
+  public static final Base boolSort = UniqueTypes.boolSort;
 
   /** The theory sort String, representing the set of Strings. */
-  public static Base stringSort = UniqueTypes.stringSort;
+  public static final Base stringSort = UniqueTypes.stringSort;
 
   /** The unit sort is the unique sort that is used for "unsorted" term rewriting. */
-  public static Base unitSort = UniqueTypes.unitSort;
+  public static final Base unitSort = UniqueTypes.unitSort;
 
 //  A function to say if a sort is a default theory sort.
 //  This will test for physical equality with the int, bool,
