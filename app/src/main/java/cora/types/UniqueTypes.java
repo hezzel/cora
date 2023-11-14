@@ -6,16 +6,16 @@ final class UniqueTypes {
   private UniqueTypes() {}
 
   /**  */
-  public static Base intSort = new Base("Int");
+  public static final Base intSort = new Base("Int");
 
   /** */
-   public static Base boolSort = new Base("Bool");
+   public static final Base boolSort = new Base("Bool");
 
   /** */
-  public static Base stringSort = new Base("String");
+  public static final Base stringSort = new Base("String");
 
   /** unitSort  */
-  public static Base unitSort = new Base("o");
+  public static final Base unitSort = new Base("o");
 
   public static boolean isTheoryType(Type ty) {
     return
