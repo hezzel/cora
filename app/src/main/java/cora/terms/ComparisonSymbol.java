@@ -23,13 +23,13 @@ import cora.types.TypeFactory;
 
 /** One of the binary relations <, >, ≤, ≥. */
 class ComparisonSymbol extends CalculationInherit {
-  static String KIND_GRE = ">";
-  static String KIND_SMA = "<";
-  static String KIND_GEQ = "≥";
-  static String KIND_LEQ = "≤";
-  static String KIND_EQU = "=";
-  static String KIND_NEQ = "≠";
-  private String _kind;
+  static final String KIND_GRE = ">";
+  static final String KIND_SMA = "<";
+  static final String KIND_GEQ = "≥";
+  static final String KIND_LEQ = "≤";
+  static final String KIND_EQU = "=";
+  static final String KIND_NEQ = "≠";
+  private final String _kind;
 
   ComparisonSymbol(String kind) {
     // Int ⇒ Int ⇒ Bool
@@ -63,4 +63,3 @@ class ComparisonSymbol extends CalculationInherit {
     return true;
   }
 }
-

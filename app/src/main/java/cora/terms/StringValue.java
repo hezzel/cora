@@ -26,8 +26,8 @@ import cora.types.TypeFactory;
  * TRS as a kind of proramming language.
  */
 class StringValue extends ValueInherit {
-  private String _value;
-  private String _escapedValue;
+  private final String _value;
+  private final String _escapedValue;
 
   private static String makePrintable(String str) {
     return "\"" + str.replace("\\", "\\\\")
@@ -110,4 +110,3 @@ class StringValue extends ValueInherit {
     throw new InappropriatePatternDataError("StringValue", "getBool", "boolean values");
   }
 }
-

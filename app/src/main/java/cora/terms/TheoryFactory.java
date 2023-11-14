@@ -57,39 +57,38 @@ public class TheoryFactory {
   }
 
   /** The binary symbol for addition */
-  public static CalculationSymbol plusSymbol = new PlusSymbol();
+  public static final CalculationSymbol plusSymbol = new PlusSymbol();
 
   /** The binary symbol for multiplication */
-  public static CalculationSymbol timesSymbol = new TimesSymbol();
+  public static final CalculationSymbol timesSymbol = new TimesSymbol();
   
   /** The unary(!) symbol for integer negation */
-  public static CalculationSymbol minusSymbol = new MinusSymbol();
+  public static final CalculationSymbol minusSymbol = new MinusSymbol();
 
   /** The binary calculation symbol for conjunction */
-  public static CalculationSymbol andSymbol = new AndOrSymbol(false);
+  public static final CalculationSymbol andSymbol = new AndOrSymbol(false);
 
   /** The binary calculation symbol for disjunction */
-  public static CalculationSymbol orSymbol = new AndOrSymbol(true);
+  public static final CalculationSymbol orSymbol = new AndOrSymbol(true);
 
   /** The unary calculation symbol for boolean negation */
-  public static CalculationSymbol notSymbol = new NotSymbol();
+  public static final CalculationSymbol notSymbol = new NotSymbol();
 
   /** The binary calculation symbol for greater */
-  public static CalculationSymbol greaterSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_GRE);
+  public static final CalculationSymbol greaterSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_GRE);
 
   /** The binary calculation symbol for smaller. */
-  public static CalculationSymbol smallerSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_SMA);
+  public static final CalculationSymbol smallerSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_SMA);
 
   /** The binary calculation symbol for greater-than-or-equal-to */
-  public static CalculationSymbol geqSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_GEQ);
+  public static final CalculationSymbol geqSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_GEQ);
 
   /** The binary calculation symbol for smaller-than-or-equal-to */
-  public static CalculationSymbol leqSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_LEQ);
+  public static final CalculationSymbol leqSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_LEQ);
 
   /** The binary calculation symbol for equality */
-  public static CalculationSymbol equalSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_EQU);
+  public static final CalculationSymbol equalSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_EQU);
 
   /** The binary calculation symbol for inequality */
-  public static CalculationSymbol distinctSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_NEQ);
+  public static final CalculationSymbol distinctSymbol = new ComparisonSymbol(ComparisonSymbol.KIND_NEQ);
 }
-

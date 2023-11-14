@@ -25,7 +25,7 @@ import java.util.NoSuchElementException;
  * essentially lists the Variables occurring in that list.
  */
 class VariableEnvironment implements Environment<Variable> {
-  private ReplaceableList _lst;
+  private final ReplaceableList _lst;
 
   /** Constructs an environment for the given list. */
   VariableEnvironment(ReplaceableList lst) {
@@ -47,7 +47,7 @@ class VariableEnvironment implements Environment<Variable> {
   /** Returns an iterator over all variables in the environment. */
   public Iterator<Variable> iterator() {
     return new Iterator<Variable>() {
-      private Iterator<Replaceable> lstIterator = _lst.iterator();
+      private final Iterator<Replaceable> lstIterator = _lst.iterator();
       private Variable nxt = null;
 
       private void loadNext() {
@@ -79,4 +79,3 @@ class VariableEnvironment implements Environment<Variable> {
     };
   }
 }
-

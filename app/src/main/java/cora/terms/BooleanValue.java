@@ -22,7 +22,7 @@ import cora.types.TypeFactory;
 
 /** BooleanValues are the function symbols true and false (which are both theory symbols). */
 class BooleanValue extends ValueInherit {
-  private boolean _value;
+  private final boolean _value;
 
   BooleanValue(boolean b) {
     super(TypeFactory.boolSort);
@@ -61,4 +61,3 @@ class BooleanValue extends ValueInherit {
     throw new InappropriatePatternDataError("BooleanValue", "getInt", "integer values");
   }
 }
-

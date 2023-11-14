@@ -25,8 +25,8 @@ import java.util.TreeMap;
  * allowed to be included) with not-necessarily-unique names.
  */
 public class ReplaceableList implements Iterable<Replaceable> {
-  private TreeSet<Replaceable> _elements;
-  public static ReplaceableList EMPTY = new ReplaceableList();
+  private final TreeSet<Replaceable> _elements;
+  public static final ReplaceableList EMPTY = new ReplaceableList();
 
   /** Constructs the empty list */
   ReplaceableList() {

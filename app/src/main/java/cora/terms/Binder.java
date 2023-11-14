@@ -34,8 +34,8 @@ import cora.types.Type;
  */
 class Binder extends LeafTermInherit implements Variable {
   private static int COUNTER = 0;
-  private String _name;
-  private int _index;
+  private final String _name;
+  private final int _index;
 
   /** Create a binder variable with the given name and type. */
   Binder(String name, Type type) {
@@ -194,4 +194,3 @@ class Binder extends LeafTermInherit implements Variable {
     return other == this;
   }
 }
-

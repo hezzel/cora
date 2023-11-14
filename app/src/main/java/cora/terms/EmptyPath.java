@@ -18,7 +18,7 @@ package cora.terms;
 import cora.exceptions.InappropriatePatternDataError;
 
 class EmptyPath extends EmptyPosition implements Path {
-  private Term _term;
+  private final Term _term;
 
   /** The constructor may only be called by Terms. */
   EmptyPath(Term myterm) {
@@ -38,4 +38,3 @@ class EmptyPath extends EmptyPosition implements Path {
       "positions of the form i.tail");
   }
 }
-

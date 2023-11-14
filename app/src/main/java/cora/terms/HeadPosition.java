@@ -23,8 +23,8 @@ import cora.exceptions.NullInitialisationError;
  * Every position is also a head position.
  */
 public class HeadPosition {
-  private Position _pos;
-  private int _chop;
+  private final Position _pos;
+  private final int _chop;
 
   /** Convert a Position to a HeadPosition. */
   HeadPosition(Position pos) {

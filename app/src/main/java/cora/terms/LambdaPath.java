@@ -23,7 +23,7 @@ import cora.exceptions.*;
  * term to the referenced subterm.
  */
 class LambdaPath implements Path {
-  private Path _tail;
+  private final Path _tail;
   private Term _topterm;
   private Term _subterm;
 
@@ -92,4 +92,3 @@ class LambdaPath implements Path {
     return "0." + _tail.toString();
   }
 }
-

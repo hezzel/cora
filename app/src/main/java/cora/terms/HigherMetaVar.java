@@ -27,10 +27,10 @@ import cora.types.TypeFactory;
  */
 class HigherMetaVar implements MetaVariable {
   private static int _COUNTER = 0;
-  private String _name;
-  private ArrayList<Type> _inputs;
-  private Type _output;
-  private int _index;
+  private final String _name;
+  private final ArrayList<Type> _inputs;
+  private final Type _output;
+  private final int _index;
 
   HigherMetaVar(String name, ArrayList<Type> inputs, Type output) {
     _name = name;
@@ -106,4 +106,3 @@ class HigherMetaVar implements MetaVariable {
     return _name;
   }
 }
-

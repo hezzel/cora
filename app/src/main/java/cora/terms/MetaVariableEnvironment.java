@@ -25,7 +25,7 @@ import java.util.NoSuchElementException;
  * and essentially lists the MetaVariables occurring in that list.
  */
 class MetaVariableEnvironment implements Environment<MetaVariable> {
-  private ReplaceableList _lst;
+  private final ReplaceableList _lst;
 
   /** Constructs an environment for the given list. */
   MetaVariableEnvironment(ReplaceableList lst) {
@@ -47,7 +47,7 @@ class MetaVariableEnvironment implements Environment<MetaVariable> {
   /** Returns an iterator over all variables in the environment. */
   public Iterator<MetaVariable> iterator() {
     return new Iterator<MetaVariable>() {
-      private Iterator<Replaceable> lstIterator = _lst.iterator();
+      private final Iterator<Replaceable> lstIterator = _lst.iterator();
       private MetaVariable nxt = null;
 
       private void loadNext() {
@@ -79,4 +79,3 @@ class MetaVariableEnvironment implements Environment<MetaVariable> {
     };
   }
 }
-

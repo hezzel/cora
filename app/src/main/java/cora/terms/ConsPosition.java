@@ -24,8 +24,8 @@ import cora.exceptions.NullInitialisationError;
  * (currently only an integer ≥ 1).
  */
 class ConsPosition implements Position {
-  private int _argPos;
-  private Position _tail;
+  private final int _argPos;
+  private final Position _tail;
 
   /** Default because it should only be created through the position factory. */
   ConsPosition(int argumentIndex, Position tail) {
@@ -91,4 +91,3 @@ class ConsPosition implements Position {
     return "" + _argPos + "." + _tail.toString();
   }
 }
-

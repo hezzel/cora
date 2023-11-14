@@ -27,7 +27,7 @@ import cora.types.Type;
  * They are called Constants because they can also be seen as constant terms.
  */
 class Constant extends LeafTermInherit implements FunctionSymbol {
-  private String _name;
+  private final String _name;
 
   /**
    * A constant is always identified by the combination of its name and its type.
@@ -158,4 +158,3 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     return equals(term.queryRoot());
   }
 }
-

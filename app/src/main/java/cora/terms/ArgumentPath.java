@@ -23,8 +23,8 @@ import cora.exceptions.*;
  * keeps track of the terms on the way from the top of the term to the referenced subterm.
  */
 class ArgumentPath implements Path {
-  private int _argPos;
-  private Path _tail;
+  private final int _argPos;
+  private final Path _tail;
   private Term _topterm;
   private Term _subterm;
 

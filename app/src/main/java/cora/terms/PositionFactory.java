@@ -23,7 +23,7 @@ public final class PositionFactory {
 //  Factories shouldn't be instantiated as objects
   private PositionFactory() { }
 
-  public static Position empty = new EmptyPosition();
+  public static final Position empty = new EmptyPosition();
 
   public static Position createArg(int index, Position tail) {
     if (index <= 0) {

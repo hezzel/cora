@@ -26,7 +26,7 @@ import cora.types.TypeFactory;
  * Z of integer numbers.
  */
 class IntegerValue extends ValueInherit {
-  private int _value;
+  private final int _value;
 
   IntegerValue(int i) {
     super(TypeFactory.intSort);
@@ -64,4 +64,3 @@ class IntegerValue extends ValueInherit {
     throw new InappropriatePatternDataError("IntegerValue", "getBool", "boolean values");
   }
 }
-

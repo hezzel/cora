@@ -37,8 +37,8 @@ import cora.types.Type;
  */
 class Var extends LeafTermInherit implements Variable, MetaVariable {
   private static int COUNTER = 0;
-  private String _name;
-  private int _index;
+  private final String _name;
+  private final int _index;
 
   /** Create a non-binder variable with the given name and type. */
   Var(String name, Type type) {

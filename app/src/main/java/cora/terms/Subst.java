@@ -26,7 +26,7 @@ import cora.exceptions.TypingError;
  * to terms of the same type.
  */
 class Subst implements Substitution {
-  private HashMap<Replaceable,Term> _mapping;
+  private final HashMap<Replaceable,Term> _mapping;
 
   /** Creates an empty substitution, with empty domain. */
   Subst() {
@@ -105,4 +105,3 @@ class Subst implements Substitution {
     _mapping.remove(key);
   }
 }
-

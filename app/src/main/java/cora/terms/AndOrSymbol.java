@@ -22,7 +22,7 @@ import cora.types.TypeFactory;
 
 /** The binary conjunction operator ∧ or ∨. */
 class AndOrSymbol extends CalculationInherit {
-  private boolean _disjunction; // true if we are ∨, false if we are ∧
+  private final boolean _disjunction; // true if we are ∨, false if we are ∧
 
   AndOrSymbol(boolean isOr) {
     // Bool ⇒ Bool ⇒ Bool
@@ -66,4 +66,3 @@ class AndOrSymbol extends CalculationInherit {
     return true;
   }
 }
-
