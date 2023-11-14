@@ -7,7 +7,8 @@ import org.jetbrains.annotations.NotNull;
 public record Arrow(Type left, Type right) implements Type {
 
   public Arrow(Type left, Type right) {
-    if(left == null || right == null) throw new NullInitialisationError("Arrow", "type");
+    if(left == null || right == null)
+      throw new NullInitialisationError("Arrow", "type");
     this.left = left;
     this.right = right;
   }

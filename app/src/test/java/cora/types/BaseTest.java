@@ -36,17 +36,14 @@ class BaseTest {
 
   @Test
   void testConstructionWithNullGivesError(){
-    Assertions.assertThrows(NullInitialisationError.class, () -> {
-      new Base(null);
-    });
+    Assertions.assertThrows(NullInitialisationError.class,
+      () -> new Base(null)
+    );
   }
 
   @Test
-  void testToStringIsJustTheName() {
-    String name = java.util.UUID
-      .randomUUID()
-      .toString()
-      .replace("-", "");
+  void testToStringIsJustTheName(){
+    String name = java.util.UUID.randomUUID().toString();
 
     Type ty = new Base(name);
     assertEquals(name, ty.toString());
@@ -63,6 +60,4 @@ class BaseTest {
   void testTypeOrder() {
     assertEquals(0, (new Base("")).queryTypeOrder());
   }
-
-
 }
