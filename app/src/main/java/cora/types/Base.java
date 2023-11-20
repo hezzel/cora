@@ -21,7 +21,7 @@ public record Base(String name) implements Type {
   }
 
   /**
-   * Returns true if the type is fully built from theory sorts.
+   * Returns true if the type is one of the internally-registered theory sorts.
    */
   @Override
   public boolean isTheoryType() {

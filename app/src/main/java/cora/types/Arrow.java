@@ -7,8 +7,9 @@ import org.jetbrains.annotations.NotNull;
 public record Arrow(Type left, Type right) implements Type {
 
   public Arrow(Type left, Type right) {
-    if(left == null || right == null)
+    if (left == null || right == null) {
       throw new NullInitialisationError("Arrow", "type");
+    }
     this.left = left;
     this.right = right;
   }
@@ -33,9 +34,7 @@ public record Arrow(Type left, Type right) implements Type {
     return outLeft.append(" ⇒ ").append(rightStr).toString();
   }
 
-  /**
-   * Returns true if the type is fully built from theory sorts.
-   */
+  /** Returns true if all sorts in the type are theory sorts. */
   @Override
   public boolean isTheoryType() { return this.left.isTheoryType() && this.right.isTheoryType(); }
 
@@ -54,20 +53,18 @@ public record Arrow(Type left, Type right) implements Type {
   }
 
   /**
-   * For σ1 → ,,, → σk → τ, returns k
+   * For σ1 → ,,, → σm → τ, returns m.
    */
   @Override
   public int queryArity() { return 1 + this.right.queryArity(); }
 
   /**
-   * For σ1 → ,,, → σk → τ, returns τ
+   * For σ1 → ,,, → σm → τ, returns τ
    */
   @Override
   public Type queryOutputType() { return right.queryOutputType(); }
 
-  /**
-   * For σ1 → ,,, → σk → τ, returns max(order(σ1),,,order(σk))+1
-   */
+  /** Returns the type order for the current type. */
   @Override
   public int queryTypeOrder() {
     return Math.max(
