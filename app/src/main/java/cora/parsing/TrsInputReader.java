@@ -403,7 +403,7 @@ public class TrsInputReader {
     // error: we have a function symbol of the right arity, but the wrong output type
     if (root != null && root.queryArity() == structure.children.size()) {
       _status.storeError("Expected term of type " + expectedType.toString() + ", but got term " +
-        ret.toString() + " of type " + root.queryType().queryOutputSort().toString() + ".", err,
+        ret.toString() + " of type " + root.queryType().queryOutputType().toString() + ".", err,
         pos);
     }
 
