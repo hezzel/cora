@@ -19,15 +19,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import com.google.common.collect.ImmutableList;
 import cora.types.Type;
 
 /**
  * Terms are the main object to be rewritten, or used to construct rules.  There are various kinds
- * of terms: functional terms f(s1,...,sn), var terms x(s1,...,xn), abstractions λx.s and
- * meta-applications Z⟨s1,...,sk⟩.  (The latter would traditionally be considered a _meta_term
- * rather than a term, but it is convenient to use the same interface for it.)
+ * of terms: functional terms f(s1,...,sn), var terms x(s1,...,xn), tuples ⦅s1,...,sn⦆,
+ * abstractions λx.s and meta-applications Z⟨s1,...,sk⟩.  (The latter would traditionally be
+ * considered a _meta_term rather than a term, but it is convenient to use the same interface for
+ * it.)
  *
  * Note: all instances of Term must (and can be expected to) be immutable.
  */
@@ -57,7 +57,7 @@ public interface Term {
   /** Returns whether the current term is a meta-variable application Z⟨s1,...,sk⟩. */
   default boolean isMetaApplication() { return false; }
 
-  /** Returns whether the current term is a tuple (s1,...,sk) with k >= 2. */
+  /** Returns whether the current term is a tuple ⦅s1,...,sk⦆ with k ≥ 2. */
   default boolean isTuple() { return false; }
 
   /** Returns whether the current term has the form (λx.t)(s1,...sn) with n > 0. */
@@ -69,22 +69,25 @@ public interface Term {
   /** Returns whether the set of variables contains only non-binder variables. */
   boolean isClosed();
 
-  /** Returns whether the set of meta-variables is emtpy. */
+  /** Returns whether the set of meta-variables is empty. */
   boolean isTrueTerm();
 
-  /** Returns whether the current term is a logical term. */
+  /** Returns whether the current term is a theory term (also known as logical term). */
   boolean isTheoryTerm();
   
-  /** Returns whether the current term is a value (which implies that it is a logical term). */
+  /** Returns whether the current term is a value (which implies that it is a theory term). */
   boolean isValue();
 
- /** Returns the number of arguments; that is, n for a term f(s1,...,sn). */
+ /**
+  * Returns the number of arguments; that is, n for a term h(s1,...,sn) where h is not an
+  * application.
+  */
   int numberArguments();
 
   /** Returns the number of meta-arguments; that is, k for a term Z⟨t1,...,tk⟩(s1,...,sn). */
   int numberMetaArguments();
 
-  /** Returns the lis of components in a tuple term.
+  /** Returns the list of components in a tuple term.
    * Notice that tuple terms that are valid have at least two components.
    * If the current term is not a tuple, the list returned is empty.
    */

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2022 Cynthia Kop
+ Copyright 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,12 +16,11 @@
 package cora.types;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 
 /**
- * This static class generates basic types and arrow types, which are otherwise not directly
- * accessible outside the types package.
+ * This static class generates basic types, product types and arrow types, and can be used to
+ * access the unique theory types which are tracked by the program.
  */
 public class TypeFactory {
   /** The theory sort Int, representing the set of integer numbers. */
@@ -36,12 +35,38 @@ public class TypeFactory {
   /** The unit sort is the unique sort that is used for "unsorted" term rewriting. */
   public static final Base unitSort = UniqueTypes.unitSort;
 
-//  A function to say if a sort is a default theory sort.
-//  This will test for physical equality with the int, bool,
-//  and string sort the factory creates.
-
   /** Creates a basic (non-theory) type by the given name. */
   public static Base createSort(String name) { return new Base(name); }
+
+  /** Creates a type of the form left ⇒ right */
+  public static Type createArrow(Type left, Type right) { return new Arrow(left, right); }
+  
+  /** Creates a product type from the given list. */
+  public static Type createProduct(ImmutableList<Type> types) {
+    return new Product(types);
+  }
+
+  /** Creates a product type using a copy of the given list. */
+  public static Type createProduct(List<Type> types) {
+    return new Product(ImmutableList.copyOf(types));
+  }
+
+  /** Creates a product type arg1 x arg2 */
+  public static Type createProduct(Type arg1, Type arg2) {
+    ImmutableList.Builder builder = ImmutableList.builder();
+    builder.add(arg1);
+    builder.add(arg2);
+    return new Product(builder.build());
+  }
+
+  /** Creates a product type arg1 x arg2 x arg3 */
+  public static Type createProduct(Type arg1, Type arg2, Type arg3) {
+    ImmutableList.Builder builder = ImmutableList.builder();
+    builder.add(arg1);
+    builder.add(arg2);
+    builder.add(arg3);
+    return new Product(builder.build());
+  }
 
   /** Creates a type of the form inp_1 ⇒...⇒ inp_n → output */
   public static Type createSortDeclaration(List<Base> inputs, Base output) {
@@ -50,10 +75,4 @@ public class TypeFactory {
     return ret;
   }
 
-  /** Creates a type of the form left ⇒ right */
-  public static Type createArrow(Type left, Type right) { return new Arrow(left, right); }
-
-  public static Type createProduct(ImmutableList<Type> types) {
-    return new Product(types);
-  }
 }

@@ -895,7 +895,7 @@ public class CoraInputReader {
         args.add(makeTerm(structure.children.get(i), null, false));
       }
       // make type that head _should_ have
-      Type type = (expectedType == null) ? head.queryType().queryOutputSort() : expectedType;
+      Type type = (expectedType == null) ? head.queryType().queryOutputType() : expectedType;
       for (int i = args.size()-1; i >= 0; i--) {
         type = TypeFactory.createArrow(args.get(i).queryType(), type);
       }

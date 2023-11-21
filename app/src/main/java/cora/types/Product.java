@@ -1,24 +1,28 @@
 package cora.types;
 
 import com.google.common.collect.ImmutableList;
+import cora.exceptions.NullInitialisationError;
 import cora.exceptions.ProdTypeConstructionError;
 import org.jetbrains.annotations.NotNull;
 
 public record Product(ImmutableList<Type> types) implements Type {
   public Product {
+    if (types == null) throw new NullInitialisationError("Product", "product list");
     if (types.size() < 2) throw new ProdTypeConstructionError();
+    for (int i = 0; i < types.size(); i++) {
+      if (types.get(i) == null) throw new NullInitialisationError("Product", "element " + (i + 1));
+    }
   }
 
   /**
-   *
+   * Returns true only if this object is an instance of {@link cora.types.Product}.
    */
   @Override
   public boolean isProdType() { return true; }
 
-  /**
-   * Returns true if the type is fully built from theory sorts.
-   * A type is a theory type if it is physically equal to one of the types
-   * created by the TypeFactory class.
+  /** 
+   * Returns true if the only base types sorts occurring in this type are theory sorts --
+   * that is, the sorts specifically created as theory sorts by the UniqueTypes class.
    */
   @Override
   public boolean isTheoryType() {
@@ -51,9 +55,9 @@ public record Product(ImmutableList<Type> types) implements Type {
   public boolean equals(Type type) {
     return switch (type) {
       case Product(ImmutableList<Type> componentTypes) -> {
-        if(this.types.size() == componentTypes.size()){
+        if (this.types.size() == componentTypes.size()) {
           boolean isEqual = true;
-          for(int i = 0; i < this.types.size(); i++){
+          for (int i = 0; i < this.types.size(); i++) {
             isEqual = isEqual && this.types.get(i).equals(componentTypes.get(i));
           }
           yield isEqual;
@@ -65,17 +69,13 @@ public record Product(ImmutableList<Type> types) implements Type {
     };
   }
 
-  /**
-   * For σ1 → ,,, → σk → τ, returns τ
-   */
+  /** For σ1 → ,,, → σm → τ, returns τ; so this returns itself. */
   @Override
   public Type queryOutputType() {
     return this;
   }
 
-  /**
-   * For σ1 → ,,, → σk → τ, returns max(order(σ1),,,order(σk))+1
-   */
+  /** Returns the type order of the current type. */
   @Override
   public int queryTypeOrder() {
     return types

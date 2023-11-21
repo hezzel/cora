@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 class BaseTest {
   @Contract(" -> new")
   private @NotNull Base intType() {
@@ -42,6 +43,18 @@ class BaseTest {
   }
 
   @Test
+  void testBasics() {
+    Type t = intType();
+    assertTrue(t.isBaseType());
+    assertFalse(t.isArrowType());
+    assertFalse(t.isProdType());
+    assertTrue(t.equals(t));
+    assertTrue(t.equals(intType()));
+    assertFalse(t.equals(boolType()));
+    assertTrue(t.queryArity() == 0);
+  }
+
+  @Test
   void testToStringIsJustTheName(){
     String name = java.util.UUID.randomUUID().toString();
 
@@ -50,14 +63,18 @@ class BaseTest {
   }
 
   @Test
-  void testUniqueTypes(){
+  void testTheoryType(){
     assertTrue(UniqueTypes.isTheoryType(TypeFactory.intSort));
     assertTrue(TypeFactory.boolSort.isTheoryType());
     assertTrue(TypeFactory.stringSort.isTheoryType());
+    assertFalse(TypeFactory.unitSort.isTheoryType());
+    // despite the name, Int is only a theory type if it was created as such!
+    assertFalse(intType().isTheoryType());
   }
 
   @Test
   void testTypeOrder() {
-    assertEquals(0, (new Base("")).queryTypeOrder());
+    assertEquals(0, (new Base("b")).queryTypeOrder());
   }
 }
+
