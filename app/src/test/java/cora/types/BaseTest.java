@@ -43,6 +43,18 @@ class BaseTest {
   }
 
   @Test
+  void testBasics() {
+    Type t = intType();
+    assertTrue(t.isBaseType());
+    assertFalse(t.isArrowType());
+    assertFalse(t.isProdType());
+    assertTrue(t.equals(t));
+    assertTrue(t.equals(intType()));
+    assertFalse(t.equals(boolType()));
+    assertTrue(t.queryArity() == 0);
+  }
+
+  @Test
   void testToStringIsJustTheName(){
     String name = java.util.UUID.randomUUID().toString();
 
@@ -51,11 +63,13 @@ class BaseTest {
   }
 
   @Test
-  void testUniqueTypes(){
+  void testTheoryType(){
     assertTrue(UniqueTypes.isTheoryType(TypeFactory.intSort));
     assertTrue(TypeFactory.boolSort.isTheoryType());
     assertTrue(TypeFactory.stringSort.isTheoryType());
     assertFalse(TypeFactory.unitSort.isTheoryType());
+    // despite the name, Int is only a theory type if it was created as such!
+    assertFalse(intType().isTheoryType());
   }
 
   @Test

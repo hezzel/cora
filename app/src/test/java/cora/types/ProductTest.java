@@ -42,60 +42,82 @@ class ProductTest {
     });
   }
 
-/*
   @Test
-  void tesMethodTypeReturn(){
-    Type arrType = TypeFactory.createArrow(intType(), boolType());
-    assertFalse(arrType.isTheoryType());
-    assertTrue(arrType.isArrowType());
-  }
-
-  @Test
-  public void testEquality() {
-    Type inttype = intType();
-    Type booltype = boolType();
-    Arrow ib = new Arrow(inttype, booltype);
-    Arrow bb = new Arrow(booltype, booltype);
-    Arrow ibb1 = new Arrow(ib, booltype);
-    Arrow ibb2 = new Arrow(inttype, bb);
-
-    assertFalse(inttype.equals(ib));
-    assertFalse(ib.equals(inttype));
-    assertTrue(ib.equals(ib));
-    assertTrue(ib.equals(new Arrow(intType(), booltype)));
-    assertFalse(ib.equals(bb));
-    assertFalse(ibb1.equals(ibb2));
-  }
-
-  @Test
-  public void testToString() {
-    Arrow at1 = new Arrow(boolType(), intType());
-    Arrow at2 = new Arrow(at1, new Base("Array"));
-    Arrow at3 = new Arrow(at1, at1);
-    assertTrue(at1.toString().equals("Bool ⇒ Int"));
-    assertTrue(at2.toString().equals("(Bool ⇒ Int) ⇒ Array"));
-    assertTrue(at3.toString().equals("(Bool ⇒ Int) ⇒ Bool ⇒ Int"));
+  public void testBasics() {
+    Type prod = TypeFactory.createProduct(new Base("a"), new Arrow(new Base("b"), new Base("c")));
+    Type prod2 = TypeFactory.createProduct(new Base("a"), new Base("b"), new Base("c"));
+    assertTrue(prod.isProdType());
+    assertFalse(prod.isBaseType());
+    assertFalse(prod2.isBaseType());
+    assertFalse(prod.isArrowType());
+    assertTrue(prod.queryArity() == 0);
+    assertTrue(prod.queryOutputType() == prod);
   }
 
   @Test
   public void testTheory() {
-    Arrow abc =
-      new Arrow(new Arrow(new Base("a"), new Base("b")), new Base("c"));
-    assertFalse(abc.isTheoryType());
-    Arrow ib = new Arrow(UniqueTypes.boolSort, UniqueTypes.intSort);
-    assertTrue(ib.isTheoryType());
+    Type prod = TypeFactory.createProduct(TypeFactory.intSort,
+      new Arrow(TypeFactory.stringSort, TypeFactory.boolSort), TypeFactory.boolSort);
+    assertTrue(prod.isTheoryType());
+    prod = TypeFactory.createProduct(TypeFactory.intSort, TypeFactory.unitSort);
+    assertFalse(prod.isTheoryType());
+  }
+
+  @Test
+  public void testEquality() {
+    Type a = new Base("a");
+    Type b = new Base("b");
+    Type c = new Base("c");
+    // a x b x c
+    Type plain = TypeFactory.createProduct(a, b, c);
+    // (a x b) x c
+    Type left = TypeFactory.createProduct(TypeFactory.createProduct(a, b), c);
+    // a x (b x c)
+    Type right = TypeFactory.createProduct(a, TypeFactory.createProduct(b, c));
+    // c x b x a
+    Type plain2 = TypeFactory.createProduct(c, b, a);
+
+    assertTrue(plain.equals(TypeFactory.createProduct(a, b, c)));
+    assertFalse(plain.equals(left));
+    assertFalse(plain.equals(right));
+    assertFalse(plain.equals(plain2));
+    assertFalse(left.equals(right));
+  }
+
+  @Test
+  public void testToString() {
+    Type a = new Base("a");
+    Type b = new Base("b");
+    Type c = new Base("c");
+    Type d = new Base("d");
+    // a x b x c
+    Type abc = TypeFactory.createProduct(a, b, c);
+    // (a x b) x (c x d)
+    Type abcd = TypeFactory.createProduct(TypeFactory.createProduct(a, b),
+                                          TypeFactory.createProduct(c, d));
+    // (a -> b) x c
+    Type aarrbc = TypeFactory.createProduct(new Arrow(a, b), c);
+    // (a x b) -> c
+    Type atimesbc = new Arrow(TypeFactory.createProduct(a, b), c);
+
+    assertTrue(abc.toString().equals("a x b x c"));
+    assertTrue(abcd.toString().equals("(a x b) x (c x d)"));
+    assertTrue(aarrbc.toString().equals("(a ⇒ b) x c"));
+    assertTrue(atimesbc.toString().equals("(a x b) ⇒ c"));
   }
 
   @Test
   public void testTypeOrder() {
-    Type inttype  = intType();
-    Base booltype = boolType();
-    Type intbooltype    = new Arrow(inttype, booltype);        // int -> bool
-    Type intintbooltype = new Arrow(inttype, intbooltype);     // int -> int -> bool
-    Type intboolinttype = new Arrow(intbooltype, inttype);     // (int -> bool) -> int
+    Type a = new Base("a");
+    Type b = new Base("b");
+    Type c = new Base("c");
+    Type d = new Base("d");
+    // a x b
+    Type simple = TypeFactory.createProduct(a, b);
+    // a x (b -> c) x d
+    Type complex = TypeFactory.createProduct(a, new Arrow(b, c), d);
 
-    assertEquals(1, intintbooltype.queryTypeOrder());
-    assertEquals(2, intboolinttype.queryTypeOrder());
+    assertEquals(0, simple.queryTypeOrder());
+    assertEquals(1, complex.queryTypeOrder());
   }
-*/
 }
