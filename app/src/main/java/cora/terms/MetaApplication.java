@@ -15,6 +15,7 @@
 
 package cora.terms;
 
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -112,23 +113,14 @@ class MetaApplication extends TermInherit {
     return true;
   }
 
-  public Value toValue() {
-    return null;
-  }
-
   /** @return the number of meta-arguments */
   public int numberMetaArguments() {
     return _args.size();
   }
 
-  /** Returns the empty list. */
-  public List<Term> queryArguments() {
-    return new ArrayList<Term>();
-  }
-
-  /** @throws IndexingError, as a meta-application does not have arguments. */
-  public Term queryArgument(int i) {
-    throw new IndexingError("MetaApplication", "queryArgument", i);
+  /** @return the list of meta-arguments */
+  public ImmutableList<Term> queryMetaArguments() {
+    return ImmutableList.copyOf(_args);
   }
 
   /** If this term is Z⟨s1,...,sk⟩, returns si. */
@@ -137,29 +129,6 @@ class MetaApplication extends TermInherit {
       throw new IndexingError("MetaApplication", "queryMetaArgument", i, 1, _args.size());
     }
     return _args.get(i-1);
-  }
-
-  /** Either returns this (if i == 0) or throws an IndexingError. */
-  public Term queryImmediateHeadSubterm(int i) {
-    if (i == 0) return this;
-    throw new IndexingError("MetaApplication", "queryImmediateHeadSubterm", i);
-  }
-
-  /** @throws InappropriatePatternDataError */
-  public Term queryAbstractionSubterm() {
-    throw new InappropriatePatternDataError("MetaApplication", "queryAbstractionSubterm",
-      "abstractions or beta-redexes");
-  }
-
-  /** @return this */
-  public Term queryHead() {
-    return this;
-  }
-
-  /** @throws InappropriatePatternDataError */
-  public FunctionSymbol queryRoot() {
-    throw new InappropriatePatternDataError("MetaApplication", "queryRoot",
-      "functional terms");
   }
 
   /** @throws InappropriatePatternDataError */

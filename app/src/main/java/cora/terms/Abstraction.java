@@ -68,58 +68,10 @@ class Abstraction extends TermInherit {
     return _binder.queryType().isTheoryType() && _subterm.isTheoryTerm();
   }
 
-  /** @return null, since an abstraction is not a value. */
-  @Override
-  public Value toValue() {
-    return null;
-  }
-
-  /** @return the empty list, since the subterm is not an argument */
-  @Override
-  public ArrayList<Term> queryArguments() {
-    return new ArrayList<Term>();
-  }
-
-  /** @throws IndexingError since the subterm is not an argument */
-  @Override
-  public Term queryArgument(int i) {
-    throw new IndexingError("Abstraction", "queryArgument", i);
-  }
-
-  /** @throws IndexingError since the subterm is not a meta-argument */
-  @Override
-  public Term queryMetaArgument(int i) {
-    throw new IndexingError("Abstraction", "queryMetaArgument", i);
-  }
-
-  /** Returns this if i == 0, otherwise throws IndexingError.
-   * @throws IndexingError if i > 0.
-   */
-  @Override
-  public Term queryImmediateHeadSubterm(int i) {
-    if (i == 0) return this;
-    throw new IndexingError("Abstraction", "queryImmediateHeadSubterm", i);
-  }
-
-  /** @return this, since this is not an application */
-  @Override
-  public Term queryHead() {
-    return this;
-  }
-
   /** @return the subterm s for an abstraction λx.s */
   @Override
   public Term queryAbstractionSubterm() {
     return _subterm;
-  }
-
-
-
-  /**
-   * @throws InappropriatePatternDataError, as an abstraction does not have a function symbol root
-   */
-  public FunctionSymbol queryRoot() {
-    throw new InappropriatePatternDataError("Abstraction", "queryRoot", "functional terms");
   }
 
   /** @throws InappropriatePatternDataError, as an abstraction is not a meta-application */

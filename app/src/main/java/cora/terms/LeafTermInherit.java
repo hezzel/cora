@@ -45,37 +45,6 @@ abstract class LeafTermInherit extends TermInherit {
     return true;
   }
 
-  public Term queryHead() {
-    return this;
-  }
-
-  /** @return the empty list, since leaf terms do not have arguments */
-  public ArrayList<Term> queryArguments() {
-    return new ArrayList<Term>();
-  }
-  
-  /** @throws IndexingError, as a leaf term does not have arguments */
-  public Term queryArgument(int i) {
-    throw new IndexingError(queryMyClassName(), "queryArgument", i); 
-  }
-
-  /** @throws IndexingError, as a leaf term does not have meta-arguments */
-  public Term queryMetaArgument(int i) {
-    throw new IndexingError(queryMyClassName(), "queryMetaArgument", i); 
-  }
-
-  /** Either returns this (if i == 0) or throws an IndexingError. */
-  public Term queryImmediateHeadSubterm(int i) {
-    if (i == 0) return this;
-    throw new IndexingError(queryMyClassName(), "queryImmediateHeadSubterm", i);
-  }
-
-  /** @throws InappropriatePatternDataError, as a leaf term is not an abstraction */
-  public Term queryAbstractionSubterm() {
-    throw new InappropriatePatternDataError(queryMyClassName(), "queryAbstractionSubterm",
-                                            "lambda-abstractions");
-  }
-
   /** @return a list containing only the empty Position. */
   public ArrayList<Path> queryPositions() {
     ArrayList<Path> ret = new ArrayList<Path>();

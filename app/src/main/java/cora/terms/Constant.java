@@ -104,11 +104,6 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     return false;
   }
 
-  /** @return null, since this is not a value */
-  public Value toValue() {
-    return null;
-  }
-
   /** @return null, since this is not a calculation symbol */
   public CalculationSymbol toCalculationSymbol() {
     return null;

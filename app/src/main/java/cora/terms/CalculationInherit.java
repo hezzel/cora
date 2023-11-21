@@ -52,9 +52,6 @@ public abstract class CalculationInherit extends LeafTermInherit implements Calc
   /** @return this */
   public FunctionSymbol queryRoot() { return this; }
 
-  /** @return null, since this is not a value */
-  public Value toValue() { return null; }
-
   /** @return this */
   public CalculationSymbol toCalculationSymbol() { return this; }
 

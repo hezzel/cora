@@ -20,7 +20,7 @@ public class TuplePath implements Path {
       "TuplePath",
       "Tuple paths must be created only for tuple terms."
     );
-    if (componentIndex <= 0 || componentIndex > tm.queryComponents().size())
+    if (componentIndex <= 0 || componentIndex > tm.numberTupleArguments())
       throw new IndexingError("TuplePath", "constructor", componentIndex);
 
     _componentIndex = componentIndex;

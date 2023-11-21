@@ -91,17 +91,21 @@ public interface Term {
   /** Returns the number of tuple arguments; that is, k for a term ⦅s1,...,sn⦆. */
   int numberTupleArguments();
 
-  /** Returns the list of components in a tuple term.
+  /**
+   * Returns the list of arguments; that is, [s1,...,sn] for a term h(s1,...,sn) with h not an
+   * application.  Note that this is the empty list for any term that is not an application.
+   */
+  ImmutableList<Term> queryArguments();
+
+  /**
+   * Returns the list of components in a tuple term.
    * Notice that tuple terms that are valid have at least two components.
    * If the current term is not a tuple, the list returned is empty.
    */
-  default ImmutableList<Term> queryComponents() {
-    return ImmutableList.of();
-  }
+  ImmutableList<Term> queryTupleArguments();
 
-  /** Returns the list of arguments; that is, [s1,...,sn] for a term f(s1,...,sn). */
-  List<Term> queryArguments();
-
+  /** For a term of the form Z⟨t1,...,tk⟩(s1,...,sn), returns the list [t1,...,tk.] */
+  ImmutableList<Term> queryMetaArguments();
 
   /**
    * If 1 <= i <= numberArguments, this returns the thus indexed argument.
@@ -110,11 +114,17 @@ public interface Term {
   Term queryArgument(int i);
 
   /**
-   * If the current term is a meta-variable application, and its variable has arity k, and
-   * 1 ≤ i ≤ k, this returns the thus indexed argument to the meta-variable application.
-   * Otherwise, this results in an IndexingError.
+   * If the current term or its head is a meta-variable application, and its meta-variable has
+   * arity k, and 1 ≤ i ≤ k, this returns the thus indexed argument to the meta-variable
+   * application.  Otherwise, this results in an IndexingError.
    */
   Term queryMetaArgument(int i);
+
+  /**
+   * If the current term is a tuple of length k, and 1 ≤ i ≤ k, this returns the thus indexed tuple
+   * component.  Otherwise, this results in an IndexingError.
+   */
+  Term queryTupleArgument(int i);
 
   /**
    * If the present term is an abstraction λx.s or a beta-redex (λx.s)(t1,...,tn), this returns s.
@@ -125,7 +135,8 @@ public interface Term {
   /**
    * For an applicative term a(s1,...,sn) (where a itself is not an application), the immediate
    * subterms are s1,...,sn.  There are also n+1 head subterms: a, a(s1), a(s1,s2), ...,
-   * a(s1,...,sn).  Here, queryImmediateHeadSubterm(i) returns a(s1,...,si).
+   * a(s1,...,sn).  Here, queryImmediateHeadSubterm(i) returns a(s1,...,si) if 0 ≤ i ≤ n, and
+   * throws an IndexingError otherwise.
    * (Note that this should not be used in analysis of first-order term rewriting, since all
    * non-trivial head subterms have a higher type).
    */
@@ -141,7 +152,8 @@ public interface Term {
   FunctionSymbol queryRoot();
 
   /**
-   * If the head of this term is a variable x or abstraction λx.s, this returns x.
+   * If the head of this term is a variable x, abstraction λx.s or application with a variable or
+   * abstraction at the head, this returns x.
    * Otherwise, an InappropriatePatternDataError is thrown.
    */
   Variable queryVariable();
@@ -162,8 +174,9 @@ public interface Term {
   boolean isFirstOrder();
 
   /**
-   * Returns true if this term is a pattern (so: non-binder variables are not applied at all, and
-   * meta-variables 
+   * Returns true if this term is a pattern (so: non-binder variables are not applied at all,
+   * meta-variables only take distinct bound variables as arguments, and meta-applications are not
+   * applied to anything).
    */
   boolean isPattern();
 
@@ -319,7 +332,7 @@ public interface Term {
    * For names of bound variables, none of the names in the "avoid" set are allowed to be used.
    * The renaming and avoid set may not be null.
    * (This function is primarily intended for the recursive definition of terms; for functions
-    *outside the terms package, it is recommended to use the other addToString function instead.)
+   * outside the terms package, it is recommended to use the other addToString function instead.)
    */
   void addToString(StringBuilder builder, Map<Replaceable,String> renaming, Set<String> avoid);
 
@@ -333,3 +346,4 @@ public interface Term {
   /** Determines the =_α^{μ,ξ,k} relation as described in the documentation. */
   boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k);
 }
+

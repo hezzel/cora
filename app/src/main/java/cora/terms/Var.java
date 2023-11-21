@@ -77,9 +77,6 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
   /** @return true if and only if the type is a theory type */
   public boolean isTheoryTerm() { return queryType().isTheoryType(); }
 
-  /** @return null, since this is not a value */
-  public Value toValue() { return null; }
-
   /** @return 0 */
   public int queryArity() { return 0; }
 
@@ -127,11 +124,6 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
   /** @return this */
   public MetaVariable queryMetaVariable() {
     return this;
-  }
-
-  /** @throws InappropriatePatternDataError, as a variable does not have a function symbol root */
-  public FunctionSymbol queryRoot() {
-    throw new InappropriatePatternDataError("Var", "queryRoot", "functional terms");
   }
 
   /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */

@@ -75,89 +75,14 @@ public class Tuple extends TermInherit {
   }
 
   @Override
-  public ImmutableList<Term> queryComponents() { return _components; }
+  public ImmutableList<Term> queryTupleArguments() { return _components; }
 
-  /**
-   * Returns the list of arguments; that is, [s1,...,sn] for a term f(s1,...,sn).
-   *
-   * @return returns the empty list, since the tuple is not argument.
-   */
   @Override
-  public List<Term> queryArguments() { return new ArrayList<Term>(); }
-
-  /**
-   * If 1 <= i <= numberArguments, this returns the thus indexed argument.
-   * Otherwise, this results in an IndexingError.
-   *
-   * @throws cora.exceptions.IndexingError since a tuple is not an argument.
-   */
-  @Override
-  public Term queryArgument(int i) {
-    throw new IndexingError("Tuple", "queryArgument", i);
-  }
-
-  /**
-   * If the current term is a meta-variable application, and its variable has arity k, and
-   * 1 ≤ i ≤ k, this returns the thus indexed argument to the meta-variable application.
-   * Otherwise, this results in an IndexingError.
-   *
-   * @param i
-   *
-   * @throws cora.exceptions.IndexingError
-   *
-   */
-  @Override
-  public Term queryMetaArgument(int i) {
-    throw new IndexingError(
-      "Tuple",
-      "queryMetaArgument",
-      i
-    );
-  }
-
-  /**
-   * If the present term is an abstraction λx.s or a beta-redex (λx.s)(t1,...,tn), this returns s.
-   * Otherwise, an InappropriatePatternDataError is thrown.
-   */
-  @Override
-  public Term queryAbstractionSubterm() {
-    throw new InappropriatePatternDataError(
-      "Tuple",
-      "queryAbstractionSubterm",
-      "abstraction");
-  }
-
-  /**
-   * Returns this if i = 0, otherwise throws indexing error.
-   * @throws IndexingError if i > 0
-   */
-  @Override
-  public Term queryImmediateHeadSubterm(int i) {
-    if (i == 0) return this;
-    throw new IndexingError("Tuple", "queryImmediateHeadSubterm", i);
-  }
-
-  /**
-   * If the term is of application form, so written as h(s1,...,sn) such that h is not an
-   * application, this method returns h.
-   * In the cases of abstraction or tuple, this method return the term itself.
-   * returns h.
-   */
-  @Override
-  public Term queryHead() { return this; }
-
-  /**
-   * If this is a functional term f(s1,...,sn) or constant f, this returns the root symbol f.
-   *
-   * @throws InappropriatePatternDataError if this term is not of the form f(s1,...,sn)
-   */
-  @Override
-  public FunctionSymbol queryRoot() {
-    throw new InappropriatePatternDataError(
-      "Tuple",
-      "queryRoot",
-      "a functional term of the form f(s1, ..., sn)."
-    );
+  public Term queryTupleArgument(int i) {
+    if (i <= 0 || i > _components.size()) {
+      throw new IndexingError("Tuple", "queryTupleArgument", i, 1, _components.size());
+    }
+    return _components.get(i-1);
   }
 
   /**
@@ -186,12 +111,6 @@ public class Tuple extends TermInherit {
       "a functional term of the form f(s1, ..., sn)."
     );
   }
-
-  /**
-   * If the current term is a value, returns it; if not returns null.
-   */
-  @Override
-  public Value toValue() { return null; }
 
   /**
    * Returns true if this term is first-order (so: the subterms at all positions have base type,
@@ -385,13 +304,13 @@ public class Tuple extends TermInherit {
     if (!other.isTuple()) {
       return other.toString() + " does not instantiate " + toString() + " (not a tuple term).";
     }
-    if(_components.size() != other.queryComponents().size()){
+    if (_components.size() != other.numberTupleArguments()) {
       return other.toString() + " does not instantiate " + this.toString() + "(mismatch on the " +
-        "tuple sizes or both terms are not tuple terms.)";
+        "tuple sizes.)";
     }
-    for(int i = 0; i < _components.size(); i++){
-      String warning = _components.get(i).match(other.queryComponents().get(i), gamma);
-      if(warning != null) return warning;
+    for (int i = 0; i < _components.size(); i++) {
+      String warning = _components.get(i).match(other.queryTupleArgument(i+1), gamma);
+      if (warning != null) return warning;
     }
     return null;
   }
@@ -429,16 +348,13 @@ public class Tuple extends TermInherit {
    */
   @Override
   public boolean alphaEquals(Term term, Map<Variable, Integer> mu, Map<Variable, Integer> xi, int k) {
-    if(!term.isTuple() || !_tupleType.equals(term.queryType())) {
+    if (!term.isTuple() || !_tupleType.equals(term.queryType())) {
       return false;
     }
-    ImmutableList<Term> argComponents = term.queryComponents();
-    if(_components.size() == term.queryComponents().size()){
-      for(int i = 0; i < _components.size(); i++) {
-        if(!_components.get(i).alphaEquals(argComponents.get(i), mu, xi, k)) return false;
-      }
-      return true;
-    } else
-      return false;
+    if (_components.size() != term.numberTupleArguments()) return false;
+    for (int i = 0; i < _components.size(); i++) {
+      if (!_components.get(i).alphaEquals(term.queryTupleArgument(i+1), mu, xi, k)) return false;
+    }
+    return true;
   }
 }

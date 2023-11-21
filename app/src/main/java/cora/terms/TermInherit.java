@@ -15,12 +15,14 @@
 
 package cora.terms;
 
+import com.google.common.collect.ImmutableList;
+import cora.exceptions.InappropriatePatternDataError;
+import cora.exceptions.IndexingError;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import cora.exceptions.IndexingError;
 
 /**
  * A TermInherit supplies default functionality for all instances of Term.
@@ -244,6 +246,11 @@ abstract class TermInherit implements Term {
     return _freeReplaceables.getUniqueNaming();
   }
 
+  /** Helper function to return the current classname for use in Errors. */
+  private String queryMyClassName() {
+    return this.getClass().getSimpleName();
+  }
+
   // the following functions are all default implementations of interface functions, to be
   // overwritten only in one or two of the inheriting classes
 
@@ -257,8 +264,33 @@ abstract class TermInherit implements Term {
   public boolean isTuple() { return false; }
   public boolean isBetaRedex() { return false; }
   public boolean isValue() { return false; }
+  public Value toValue() { return null; }
   public int numberArguments() { return 0; }
   public int numberMetaArguments() { return 0; }
   public int numberTupleArguments() { return 0; }
+  public ImmutableList<Term> queryArguments() { return ImmutableList.of(); }
+  public ImmutableList<Term> queryTupleArguments() { return ImmutableList.of(); }
+  public ImmutableList<Term> queryMetaArguments() { return ImmutableList.of(); }
+  public Term queryHead() { return this; }
+  public Term queryArgument(int i) {
+    throw new IndexingError(queryMyClassName(), "queryArgument", i);
+  }
+  public Term queryMetaArgument(int i) {
+    throw new IndexingError(queryMyClassName(), "queryMetaArgument", i);
+  }
+  public Term queryTupleArgument(int i) {
+    throw new IndexingError(queryMyClassName(), "queryTupleArgument", i);
+  }
+  public Term queryAbstractionSubterm() {
+    throw new InappropriatePatternDataError(queryMyClassName(), "queryAbstractionSubterm",
+                                            "lambda-abstractions");
+  }
+  public Term queryImmediateHeadSubterm(int i) {
+    if (i == 0) return this;
+    throw new IndexingError(queryMyClassName(), "queryImmediateHeadSubterm", i);
+  }
+  public FunctionSymbol queryRoot() {
+    throw new InappropriatePatternDataError(queryMyClassName(), "queryRoot", "functional terms");
+  }
 }
 

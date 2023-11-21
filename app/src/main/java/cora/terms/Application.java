@@ -15,13 +15,14 @@
 
 package cora.terms;
 
+import com.google.common.collect.ImmutableList;
+import cora.exceptions.*;
+import cora.types.Type;
+import cora.types.TypeFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import cora.exceptions.*;
-import cora.types.Type;
-import cora.types.TypeFactory;
 
 /** An Application is a term of the form h(s1,...,sn) where h is not an application. */
 class Application extends TermInherit {
@@ -160,11 +161,6 @@ class Application extends TermInherit {
     return _head.isTheoryTerm() && _args.stream().allMatch(Term::isTheoryTerm);
   }
   
-  /** @return null since an application is not a value. */
-  public Value toValue() {
-    return null;
-  }
-
   /** For a term h(s1,...,sn), this returns n. */
   public int numberArguments() {
     return _args.size();
@@ -176,8 +172,12 @@ class Application extends TermInherit {
   }
 
   /** Returns the list of all arguments, so [s1,...,sn] for h(s1,...,sn). */
-  public List<Term> queryArguments() {
-    return new ArrayList<Term>(_args);
+  public ImmutableList<Term> queryArguments() {
+    return ImmutableList.copyOf(_args);
+  }
+
+  public ImmutableList<Term> queryMetaArguments() {
+    return _head.queryMetaArguments();
   }
 
   /** For a term head(s1,...,sn), this returns si if 1 <= i <= n, and throws an error otherwise. */

@@ -76,9 +76,6 @@ class Binder extends LeafTermInherit implements Variable {
   /** @return true if and only if the type is a theory type */
   public boolean isTheoryTerm() { return queryType().isTheoryType(); }
 
-  /** @return null, since this is not a value */
-  public Value toValue() { return null; }
-
   /** Returns the name this variable was set up with. */
   public String queryName() {
     return _name;
@@ -109,11 +106,6 @@ class Binder extends LeafTermInherit implements Variable {
   /** @return this */
   public Variable queryVariable() {
     return this;
-  }
-
-  /** @throws InappropriatePatternDataError, as a variable does not have a function symbol root */
-  public FunctionSymbol queryRoot() {
-    throw new InappropriatePatternDataError("Binder", "queryRoot", "functional terms");
   }
 
   /** @throws InappropriatePatternDataError, as a binder variable cannot be a meta-variable */
