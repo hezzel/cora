@@ -62,7 +62,7 @@ public record Arrow(Type left, Type right) implements Type {
    * For σ1 → ,,, → σm → τ, returns τ
    */
   @Override
-  public Type queryOutputType() { return right.queryOutputType(); }
+  public Type queryOutputType() { return this.right.queryOutputType(); }
 
   /** Returns the type order for the current type. */
   @Override

@@ -3,8 +3,6 @@ package cora.types;
 import cora.exceptions.NullInitialisationError;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
-
 public record Base(String name) implements Type {
   public Base {
     if (name == null) {
@@ -41,7 +39,7 @@ public record Base(String name) implements Type {
   @Override
   public boolean equals(Type type) {
     return switch (type) {
-      case Base(String x) -> Objects.equals(this.name, x);
+      case Base(String x) -> this.name.equals(x);
       default -> false;
     };
   }
