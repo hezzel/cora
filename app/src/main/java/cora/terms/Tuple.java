@@ -421,12 +421,12 @@ public class Tuple extends TermInherit {
    */
   @Override
   public void addToString(StringBuilder builder, Map<Replaceable, String> renaming, Set<String> avoid) {
-    builder.append("(|");
+    builder.append("⦅");
     for(int i = 0; i < _components.size(); i++){
       if (i == _components.size() - 1) _components.get(i).addToString(builder, renaming, avoid);
       else { _components.get(i).addToString(builder, renaming, avoid); builder.append(", ");}
     }
-    builder.append("|)");
+    builder.append("⦆");
   }
 
   /**
