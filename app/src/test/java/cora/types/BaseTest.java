@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022 Cynthia Kop
+ Copyright 2019, 2022, 2023 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 class BaseTest {
   @Contract(" -> new")
   private @NotNull Base intType() {
@@ -54,10 +55,12 @@ class BaseTest {
     assertTrue(UniqueTypes.isTheoryType(TypeFactory.intSort));
     assertTrue(TypeFactory.boolSort.isTheoryType());
     assertTrue(TypeFactory.stringSort.isTheoryType());
+    assertFalse(TypeFactory.unitSort.isTheoryType());
   }
 
   @Test
   void testTypeOrder() {
-    assertEquals(0, (new Base("")).queryTypeOrder());
+    assertEquals(0, (new Base("b")).queryTypeOrder());
   }
 }
+

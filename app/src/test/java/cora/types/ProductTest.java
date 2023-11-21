@@ -1,6 +1,8 @@
 package cora.types;
 
+import com.google.common.collect.ImmutableList;
 import cora.exceptions.NullInitialisationError;
+import cora.exceptions.ProdTypeConstructionError;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
@@ -10,25 +12,37 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ArrowTest {
-  @Contract(" -> new")
-  private @NotNull Base intType() {
-    return new Base("Int");
-  }
-
-  @Contract(" -> new")
-  private @NotNull Base boolType() {
-    return new Base("Bool");
-  }
-
+class ProductTest {
   @Test
   void testConstructedWithNull() {
+    ArrayList<Type> args = new ArrayList<Type>();
+    args.add(new Base("x"));
+    args.add(new Base("y"));
+    ImmutableList<Type> lst = null;
     Assertions.assertThrows(NullInitialisationError.class, () -> {
-      new Arrow(null, new Base(""));
-      new Arrow(new Base(""), null);
+      new Product(lst);
+      TypeFactory.createProduct(args);
+      new Product(ImmutableList.copyOf(args));
+      TypeFactory.createProduct(ImmutableList.copyOf(args));
+      TypeFactory.createProduct(null, new Base("z"));
+      TypeFactory.createProduct(new Base("z"), new Base("q"), null);
     });
   }
 
+  @Test
+  public void testConstructedTooShort() {
+    ImmutableList.Builder builder = ImmutableList.builder();
+    ImmutableList<Type> l0 = builder.build();
+    builder = ImmutableList.builder();
+    builder.add(new Arrow(new Base("a"), new Base("b")));
+    ImmutableList<Type> l1 = builder.build();
+    Assertions.assertThrows(ProdTypeConstructionError.class, () -> {
+      new Product(l0);
+      new Product(l1);
+    });
+  }
+
+/*
   @Test
   void tesMethodTypeReturn(){
     Type arrType = TypeFactory.createArrow(intType(), boolType());
@@ -83,4 +97,5 @@ class ArrowTest {
     assertEquals(1, intintbooltype.queryTypeOrder());
     assertEquals(2, intboolinttype.queryTypeOrder());
   }
+*/
 }
