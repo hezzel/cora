@@ -31,8 +31,8 @@ import cora.rewriting.*;
  */
 public class TrsInputReader {
   private static class TermStructure {
-    Token root;
-    ArrayList<TermStructure> children;
+    final Token root;
+    final ArrayList<TermStructure> children;
     boolean errored;
     TermStructure(Token t) {
       root = t;
@@ -45,7 +45,7 @@ public class TrsInputReader {
    * The reader keeps track of the status of reading so far; all read functions have a (potential)
    * side effect of advancing the parsing status.
    */
-  private ParsingStatus _status;
+  private final ParsingStatus _status;
   /**
    * The reader keeps track of the declared variables, and the function symbols encountered so far.
    */
@@ -657,4 +657,3 @@ public class TrsInputReader {
     return ret;
   }
 }
-

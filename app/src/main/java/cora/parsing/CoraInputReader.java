@@ -28,14 +28,14 @@ import cora.terms.*;
 import cora.rewriting.*;
 
 class TermStructure {
-  static int CONSTANT = 1;
-  static int VARIABLE = 2;
-  static int META = 3;
-  static int ABSTRACTION = 4;
-  static int APPLICATION = 5;
+  static final int CONSTANT = 1;
+  static final int VARIABLE = 2;
+  static final int META = 3;
+  static final int ABSTRACTION = 4;
+  static final int APPLICATION = 5;
 
-  Token token;                        // the token starting this term
-  int kind;                           // one of the five kinds above
+  final Token token;                        // the token starting this term
+  final int kind;                           // one of the five kinds above
   FunctionSymbol symbol;              // for constant (a declared symbol)
   String str;                         // for string or meta
   TermStructure head;                 // for application
@@ -72,19 +72,19 @@ class TermStructure {
 
 /** This class reads text from string or file written in the internal cora format. */
 public class CoraInputReader {
-  public static int MSTRS = 1;
-  public static int STRS = 2;
-  public static int CFS = 3;
-  public static int AMS = 4;
-  public static int LCTRS = 5;
-  public static int LCSTRS = 6;
-  public static int DEFAULT = 7;
+  public static final int MSTRS = 1;
+  public static final int STRS = 2;
+  public static final int CFS = 3;
+  public static final int AMS = 4;
+  public static final int LCTRS = 5;
+  public static final int LCSTRS = 6;
+  public static final int DEFAULT = 7;
 
   /**
    * The reader keeps track of the status of reading so far; all read functions have a (potential)
    * side effect of advancing the parsing status.
    */
-  private ParsingStatus _status;
+  private final ParsingStatus _status;
   /**
    * The reader keeps track of the declared variables, and the function symbols encountered so far.
    */
@@ -1304,4 +1304,3 @@ public class CoraInputReader {
     return ret;
   }
 }
-
