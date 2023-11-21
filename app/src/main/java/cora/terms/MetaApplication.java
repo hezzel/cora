@@ -76,15 +76,7 @@ class MetaApplication extends TermInherit {
     return _metavar.queryOutputType();
   }
 
-  public boolean isConstant() {
-    return false;
-  }
-
   public boolean isVariable() {
-    return false;
-  }
-
-  public boolean isAbstraction() {
     return false;
   }
 
@@ -112,10 +104,6 @@ class MetaApplication extends TermInherit {
     return false;
   }
 
-  public boolean isBetaRedex() {
-    return false;
-  }
-
   public boolean isTheoryTerm() {
     if (!_metavar.queryType().isTheoryType()) return false;
     for (int i = 0; i < _args.size(); i++) {
@@ -124,17 +112,8 @@ class MetaApplication extends TermInherit {
     return true;
   }
 
-  public boolean isValue() {
-    return false;
-  }
-
   public Value toValue() {
     return null;
-  }
-
-  /** @return 0, since a meta-application does not have arguments */
-  public int numberArguments() {
-    return 0;
   }
 
   /** @return the number of meta-arguments */

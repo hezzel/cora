@@ -65,12 +65,6 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
   /** @return true */
   public boolean isVarTerm() { return true; }
 
-  /** @return false */
-  public boolean isConstant() { return false; }
-
-  /** @return false */
-  public boolean isFunctionalTerm() { return false; }
-
   /** @return true */
   public boolean isMetaApplication() { return true; }
 
@@ -82,9 +76,6 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
 
   /** @return true if and only if the type is a theory type */
   public boolean isTheoryTerm() { return queryType().isTheoryType(); }
-
-  /** @return false */
-  public boolean isValue() { return false; }
 
   /** @return null, since this is not a value */
   public Value toValue() { return null; }

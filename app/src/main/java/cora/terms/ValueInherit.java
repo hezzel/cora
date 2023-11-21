@@ -46,20 +46,11 @@ public abstract class ValueInherit extends LeafTermInherit implements Value {
   /** @return true */
   public boolean isValue() { return true; }
 
-  /** @return false */
-  public boolean isVariable() { return false; }
-
-  /** @return false */
-  public boolean isVarTerm() { return false; }
-
   /** @return true */
   public boolean isConstant() { return true; }
 
   /** @return true */
   public boolean isFunctionalTerm() { return true; }
-
-  /** @return false */
-  public boolean isMetaApplication() { return false; }
 
   /** @return true */
   public boolean isApplicative() { return true; }

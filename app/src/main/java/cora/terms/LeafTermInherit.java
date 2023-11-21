@@ -45,30 +45,8 @@ abstract class LeafTermInherit extends TermInherit {
     return true;
   }
 
-  public boolean isApplication() {
-    return false;
-  }
-
-  public boolean isAbstraction() {
-    return false;
-  }
-
-  public boolean isBetaRedex() {
-    return false;
-  }
-
   public Term queryHead() {
     return this;
-  }
-
-  /** @return 0, since leaf terms do not have immediate subterms */
-  public int numberArguments() {
-    return 0;
-  }
-
-  /** @return 0, since leaf terms do not have meta subterms */
-  public int numberMetaArguments() {
-    return 0;
   }
 
   /** @return the empty list, since leaf terms do not have arguments */

@@ -48,7 +48,7 @@ public interface Position {
   default boolean isMeta() { return false; }
 
   /** Returns whether this is a tuple position. */
-  default boolean isTuple() {return false; }
+  default boolean isTuple() { return false; }
 
   default int queryComponentPosition() {
     throw new InappropriatePatternDataError("Position", "queryComponentPosition", "calling this " +

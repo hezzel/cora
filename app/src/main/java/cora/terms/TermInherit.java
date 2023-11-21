@@ -141,7 +141,7 @@ abstract class TermInherit implements Term {
     return null;
   }
 
-  /** Returns true if there are no free variables (meta-variables are allowed). */
+  /** Returns true if there are no free variables or meta-variables. */
   public boolean isGround() {
     return _freeReplaceables.size() == 0;
   }
@@ -243,5 +243,22 @@ abstract class TermInherit implements Term {
   public TreeMap<Replaceable,String> getUniqueNaming() {
     return _freeReplaceables.getUniqueNaming();
   }
+
+  // the following functions are all default implementations of interface functions, to be
+  // overwritten only in one or two of the inheriting classes
+
+  public boolean isVariable() { return false; }
+  public boolean isConstant() { return false; }
+  public boolean isFunctionalTerm() { return false; }
+  public boolean isVarTerm() { return false; }
+  public boolean isApplication() { return false; }
+  public boolean isAbstraction() { return false; }
+  public boolean isMetaApplication() { return false; }
+  public boolean isTuple() { return false; }
+  public boolean isBetaRedex() { return false; }
+  public boolean isValue() { return false; }
+  public int numberArguments() { return 0; }
+  public int numberMetaArguments() { return 0; }
+  public int numberTupleArguments() { return 0; }
 }
 

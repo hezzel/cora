@@ -37,20 +37,11 @@ public abstract class CalculationInherit extends LeafTermInherit implements Calc
   /** @return false */
   public boolean isValue() { return false; }
 
-  /** @return false */
-  public boolean isVariable() { return false; }
-
-  /** @return false */
-  public boolean isVarTerm() { return false; }
-
   /** @return true */
   public boolean isConstant() { return true; }
 
   /** @return true */
   public boolean isFunctionalTerm() { return true; }
-
-  /** @return false */
-  public boolean isMetaApplication() { return false; }
 
   /** @return true */
   public boolean isApplicative() { return true; }

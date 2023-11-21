@@ -37,31 +37,31 @@ public interface Term {
   Type queryType();
 
   /** Returns whether the current term is an unapplied variable. */
-  default boolean isVariable() { return false; }
+  boolean isVariable();
 
   /** Returns whether the current term is an unapplied function symbol. */
-  default boolean isConstant() { return false; }
+  boolean isConstant();
 
-  /** Returns whether the current term has the form f(s1,...,sn) with n ≥ 0. */
-  default boolean isFunctionalTerm() { return false; }
+  /** Returns whether the current term has the form f(s1,...,sn) with n ≥ 0 and f a constant. */
+  boolean isFunctionalTerm();
 
   /** Returns whether the current term has the form x(s1,...,sn) with n ≥ 0. */
-  default boolean isVarTerm() { return false; }
+  boolean isVarTerm();
 
-  /** Returns whether the current term has the form h(s1,...,sn) with n > 0. */
-  default boolean isApplication() { return false; }
+  /** Returns whether the current term has the form h(s1,...,sn) with n > 0 (any kind of h). */
+  boolean isApplication();
 
   /** Returns whether the current term is a lambda-abstraction λx.s. */
-  default boolean isAbstraction() { return false; }
+  boolean isAbstraction();
 
   /** Returns whether the current term is a meta-variable application Z⟨s1,...,sk⟩. */
-  default boolean isMetaApplication() { return false; }
+  boolean isMetaApplication();
 
   /** Returns whether the current term is a tuple ⦅s1,...,sk⦆ with k ≥ 2. */
-  default boolean isTuple() { return false; }
+  boolean isTuple();
 
   /** Returns whether the current term has the form (λx.t)(s1,...sn) with n > 0. */
-  default boolean isBetaRedex() { return false; }
+  boolean isBetaRedex();
 
   /** Returns whether the sets of variables and meta-variables are empty. */
   boolean isGround();
@@ -80,12 +80,16 @@ public interface Term {
 
  /**
   * Returns the number of arguments; that is, n for a term h(s1,...,sn) where h is not an
-  * application.
+  * application.  Note that this returns 0 both for abstractions λx.t and for meta-applications
+  * Z⟨t1,...,tk⟩.
   */
   int numberArguments();
 
   /** Returns the number of meta-arguments; that is, k for a term Z⟨t1,...,tk⟩(s1,...,sn). */
   int numberMetaArguments();
+
+  /** Returns the number of tuple arguments; that is, k for a term ⦅s1,...,sn⦆. */
+  int numberTupleArguments();
 
   /** Returns the list of components in a tuple term.
    * Notice that tuple terms that are valid have at least two components.

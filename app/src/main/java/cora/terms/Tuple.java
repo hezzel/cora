@@ -67,22 +67,12 @@ public class Tuple extends TermInherit {
   }
 
   /**
-   * Returns whether the current term is a value (which implies that it is a logical term).
+   * Returns the number of components in the tuple.
    */
   @Override
-  public boolean isValue() { return false; }
-
-  /**
-   * Returns the number of arguments; that is, n for a term f(s1,...,sn).
-   */
-  @Override
-  public int numberArguments() { return 0; }
-
-  /**
-   * Returns the number of meta-arguments; that is, k for a term Z⟨t1,...,tk⟩(s1,...,sn).
-   */
-  @Override
-  public int numberMetaArguments() { return 0; }
+  public int numberTupleArguments() {
+    return _components.size();
+  }
 
   @Override
   public ImmutableList<Term> queryComponents() { return _components; }

@@ -160,12 +160,6 @@ class Application extends TermInherit {
     return _head.isTheoryTerm() && _args.stream().allMatch(Term::isTheoryTerm);
   }
   
-  /** Returns false, since an application cannot be a value. */
-  @Override
-  public boolean isValue() {
-    return false;
-  }
-
   /** @return null since an application is not a value. */
   public Value toValue() {
     return null;

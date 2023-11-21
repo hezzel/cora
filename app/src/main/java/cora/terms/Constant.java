@@ -72,12 +72,6 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     return queryType().equals(symbol.queryType());
   }
 
-  /** @return false */
-  public boolean isVariable() { return false; }
-
-  /** @return false */
-  public boolean isVarTerm() { return false; }
-
   /** @return true */
   public boolean isConstant() { return true; }
 

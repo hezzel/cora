@@ -62,40 +62,16 @@ class Abstraction extends TermInherit {
     return true;
   }
 
-  /** @return false, since an abstraction is not a beta-redex */
-  @Override
-  public boolean isBetaRedex() {
-    return false;
-  }
-
   /** @return whether the immediate subterm is a logical term */
   @Override
   public boolean isTheoryTerm() {
     return _binder.queryType().isTheoryType() && _subterm.isTheoryTerm();
   }
 
-  /** @return false, since an abstraction cannot be a value */
-  @Override
-  public boolean isValue() {
-    return false;
-  }
-
   /** @return null, since an abstraction is not a value. */
   @Override
   public Value toValue() {
     return null;
-  }
-
-  /** @return 0, since the subterm is not an argument */
-  @Override
-  public int numberArguments() {
-    return 0;
-  }
-
-  /** @return 0, since the subterm is not a meta-argument */
-  @Override
-  public int numberMetaArguments() {
-    return 0;
   }
 
   /** @return the empty list, since the subterm is not an argument */
