@@ -51,21 +51,9 @@ public class TypeFactory {
     return new Product(ImmutableList.copyOf(types));
   }
 
-  /** Creates a product type arg1 x arg2 */
-  public static Type createProduct(Type arg1, Type arg2) {
-    ImmutableList.Builder builder = ImmutableList.builder();
-    builder.add(arg1);
-    builder.add(arg2);
-    return new Product(builder.build());
-  }
-
-  /** Creates a product type arg1 x arg2 x arg3 */
-  public static Type createProduct(Type arg1, Type arg2, Type arg3) {
-    ImmutableList.Builder builder = ImmutableList.builder();
-    builder.add(arg1);
-    builder.add(arg2);
-    builder.add(arg3);
-    return new Product(builder.build());
+  /** Creates a product type arg1 x ... x argm */
+  public static Type createProduct(Type ...args) {
+    return new Product(ImmutableList.copyOf(args));
   }
 
   /** Creates a type of the form inp_1 ⇒...⇒ inp_n → output */
