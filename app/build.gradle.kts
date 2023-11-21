@@ -14,6 +14,8 @@ dependencies {
     implementation("org.jetbrains:annotations:24.0.0")
     // Use JUnit Jupiter for testing.
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
+    // Use JUnit4 for old tests
+    testImplementation("junit:junit:4.13.1")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
