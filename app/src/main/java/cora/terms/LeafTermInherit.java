@@ -23,14 +23,8 @@ import cora.types.Type;
  * A "leaf term" is any term that does not have strict subterms, such as variables or constants.
  * This inherit provides default functionality for such terms.
  */
-
 abstract class LeafTermInherit extends TermInherit {
   private Type _type;
-
-  /** Helper function to return the current classname for use in Errors. */
-  private String queryMyClassName() {
-    return "LeafTermInherit (" + this.getClass().getSimpleName() + ")";
-  }
 
   protected LeafTermInherit(Type type) {
     if (type == null) throw new NullInitialisationError(queryMyClassName(), "type");

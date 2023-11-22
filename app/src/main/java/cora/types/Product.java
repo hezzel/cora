@@ -22,7 +22,7 @@ public record Product(ImmutableList<Type> types) implements Type {
 
   /** 
    * Returns true if the only base types sorts occurring in this type are theory sorts --
-   * that is, the sorts specifically created as theory sorts by the UniqueTypes class.
+   * that is, the sorts specifically created as theory sorts by the TypeFactory.
    */
   @Override
   public boolean isTheoryType() {

@@ -15,19 +15,21 @@
 
 package cora.terms;
 
-import com.google.common.collect.ImmutableList;
-import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.IndexingError;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import com.google.common.collect.ImmutableList;
+import cora.exceptions.InappropriatePatternDataError;
+import cora.exceptions.IndexingError;
 
 /**
  * A TermInherit supplies default functionality for all instances of Term.
  * This is the functionality that calls other functions in Term to for instance build up a
- * substitution or environment.
+ * substitution or environment.  It also includes some functionality that is meant to be
+ * overwritten in only specific kinds of subterms, e.g., providing a default value false for
+ * the function isConstant().
  * All inheriting classes should make sure to call setVariables in their constructor, to set up
  * the set of variables and meta-variables occurring in the term.
  */
@@ -129,20 +131,6 @@ abstract class TermInherit implements Term {
     return _boundVariables;
   }
 
-  /** Applies the current term (with functional type) to other. */
-  public Term apply(Term other) {
-    ArrayList<Term> args = new ArrayList<Term>();
-    args.add(other);
-    return apply(args);
-  }
-
-  /** Same as match(other, subst), but it creates a fresh substitution and returns the result. */
-  public Substitution match(Term other) {
-    Substitution gamma = new Subst();
-    if (match(other, gamma) == null) return gamma;
-    return null;
-  }
-
   /** Returns true if there are no free variables or meta-variables. */
   public boolean isGround() {
     return _freeReplaceables.size() == 0;
@@ -164,6 +152,13 @@ abstract class TermInherit implements Term {
       if (x.queryReplaceableKind() == Replaceable.KIND_METAVAR) return false;
     }
     return true;
+  }
+
+  /** Same as match(other, subst), but it creates a fresh substitution and returns the result. */
+  public Substitution match(Term other) {
+    Substitution gamma = new Subst();
+    if (match(other, gamma) == null) return gamma;
+    return null;
   }
 
   /** Returns the set of all head positions for this term, in leftmost innermost order. */
@@ -197,6 +192,13 @@ abstract class TermInherit implements Term {
   /** Returns the present term with all binder-variables replaced by fresh ones. */
   public Term refreshBinders() {
     return substitute(new Subst());
+  }
+
+  /** Applies the current term (with functional type) to other. */
+  public Term apply(Term other) {
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(other);
+    return apply(args);
   }
 
   /** 
@@ -247,7 +249,7 @@ abstract class TermInherit implements Term {
   }
 
   /** Helper function to return the current classname for use in Errors. */
-  private String queryMyClassName() {
+  protected String queryMyClassName() {
     return this.getClass().getSimpleName();
   }
 

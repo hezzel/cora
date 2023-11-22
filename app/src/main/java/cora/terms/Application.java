@@ -17,6 +17,7 @@ package cora.terms;
 
 import com.google.common.collect.ImmutableList;
 import cora.exceptions.*;
+import cora.types.Arrow;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import java.util.ArrayList;
@@ -30,7 +31,8 @@ class Application extends TermInherit {
   public List<Term> _args;
   public Type _outputType;
 
-//  Construction Phase --------------------------------------------------------
+  //  Construction Phase ------------------------------------------------------
+
   /**
    * Sets up the lists of free, bound and meta-variables used in this term.
    * Meant for use in the constructors, so it cannot use the freeReplaceables() function, but
@@ -77,17 +79,19 @@ class Application extends TermInherit {
         throw new NullInitialisationError("Application", "passing a null argument to " +
           head.toString() + ".");
       }
-      if (!type.isArrowType()) {
-        throw new ArityError("Application", "constructor", "head term " + _head.toString() +
-          " has maximum arity " + i + " and is given " + _args.size() + " arguments.");
+      switch (type) {
+        case Arrow(Type inp, Type out):
+          if (!inp.equals(arg.queryType())) {
+            throw new TypingError("Application", "constructor", "arg " + (i+1) + " of " +
+              _head.toString(), arg.queryType() == null ? "null" : arg.queryType().toString(),
+              inp.toString());
+          }
+          type = out;
+          break;
+        default:
+          throw new ArityError("Application", "constructor", "head term " + _head.toString() +
+            " has maximum arity " + i + " and is given " + _args.size() + " arguments.");
       }
-      Type input = type.queryArrowInputType();
-      if (!input.equals(arg.queryType())) {
-        throw new TypingError("Application", "constructor", "arg " + (i+1) + " of " +
-          _head.toString(), arg.queryType() == null ? "null" : arg.queryType().toString(),
-          input.toString());
-      }
-      type = type.queryArrowOutputType();
     }
     _outputType = type;
     setupReplaceables();
@@ -115,7 +119,7 @@ class Application extends TermInherit {
   }
 
   /**
-   * This constructor is used to create a term head(s1,...,sn) with n >= 0.
+   * This constructor is used to create a term head(s1,...,sn) with n > 0.
    * Throws an error if n does not match the arity of the head, if args is empty or or if the
    * types of the arguments are not the expected input types of the head.
    */
@@ -124,6 +128,7 @@ class Application extends TermInherit {
     construct(head, new ArrayList<Term>(args));
   }
 
+  //  Main functionality ------------------------------------------------------
 
   /** This method returns the output type of the term. */
   @Override
@@ -155,7 +160,7 @@ class Application extends TermInherit {
     return _head.isAbstraction();
   }
 
-  /** Returns whether the head and all arguments are logical terms. */
+  /** Returns whether the head and all arguments are theory terms. */
   @Override
   public boolean isTheoryTerm() {
     return _head.isTheoryTerm() && _args.stream().allMatch(Term::isTheoryTerm);

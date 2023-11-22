@@ -64,3 +64,4 @@ class IntegerValue extends ValueInherit {
     throw new InappropriatePatternDataError("IntegerValue", "getBool", "boolean values");
   }
 }
+

@@ -62,7 +62,9 @@ class Abstraction extends TermInherit {
     return true;
   }
 
-  /** @return whether the immediate subterm is a logical term */
+  /**
+   * @return whether the immediate subterm is a theory term, and the variable has a theory type.
+   */
   @Override
   public boolean isTheoryTerm() {
     return _binder.queryType().isTheoryType() && _subterm.isTheoryTerm();
@@ -262,3 +264,4 @@ class Abstraction extends TermInherit {
     return retval;
   }
 }
+

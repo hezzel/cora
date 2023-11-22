@@ -102,7 +102,9 @@ public abstract class CalculationInherit extends LeafTermInherit implements Calc
   /** Adds the term to a string. */
   public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
                           Set<String> avoid) {
+    builder.append("[");
     builder.append(queryName());
+    builder.append("]");
   }
 
   /**
