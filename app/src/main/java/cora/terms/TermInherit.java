@@ -31,7 +31,10 @@ import cora.exceptions.IndexingError;
  * overwritten in only specific kinds of subterms, e.g., providing a default value false for
  * the function isConstant().
  * All inheriting classes should make sure to call setVariables in their constructor, to set up
- * the set of variables and meta-variables occurring in the term.
+ * the set of variables (both free and bound!) and meta-variables occurring in the term.  Moreover,
+ * they should make sure that the term is well-behaved; that is, that the same variable does not
+ * occur both free and bound in the term.  The function calculateBoundVariablesAndRefreshSubs can
+ * be used for this purpose.
  */
 abstract class TermInherit implements Term {
   private ReplaceableList _freeReplaceables;
@@ -83,22 +86,26 @@ abstract class TermInherit implements Term {
 
   /**
    * Refreshes bound variables in the given list if necessary to ensure that they do not overlap
-   * with the variables in the given "avoid" set (to ensure well-behavedness of terms), and
-   * returns the resulting combined set of bound variables, including all those in "include".
+   * with the variables in the given "avoid" set (to ensure well-behavedness of terms), and stores
+   * the resulting terms (or original terms if they already do not overlap) in the given builder.
+   * Note that subs itself is not changed.  The function returns the resulting combined set of
+   * bound variables, including all those in "include".
    */
   protected static ReplaceableList calculateBoundVariablesAndRefreshSubs(List<Term> subs,
-                                                                         ReplaceableList include,
-                                                                         ReplaceableList avoid) {
+                                        ReplaceableList include, ReplaceableList avoid,
+                                        ImmutableList.Builder<Term> builder) {
     for (int i = 0; i < subs.size(); i++) {
-      ReplaceableList vs = subs.get(i).boundVars();
+      Term sub = subs.get(i);
+      ReplaceableList vs = sub.boundVars();
       if (vs.size() > 0) {
         if (!vs.getOverlap(avoid).isEmpty()) {
-          subs.set(i, subs.get(i).refreshBinders());
-          vs = subs.get(i).boundVars();
+          sub = sub.refreshBinders();
+          vs = sub.boundVars();
         }
         if (include.size() == 0) include = vs;
         else include = include.combine(vs);
-      }   
+      }
+      builder.add(sub);
     }
     return include;
   }

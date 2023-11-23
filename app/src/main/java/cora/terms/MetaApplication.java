@@ -31,7 +31,7 @@ import cora.types.Type;
  */
 class MetaApplication extends TermInherit {
   public MetaVariable _metavar;
-  public List<Term> _args;
+  public ImmutableList<Term> _args;
 
   /**
    * This constructor is used to create a term mvar⟨s1,...,sk⟩ with k ≥ 1.
@@ -52,7 +52,6 @@ class MetaApplication extends TermInherit {
       throw new ArityError("MetaApplication", "constructor", "meta-variable " + mvar.queryName() +
         " has arity " + mvar.queryArity() + " but " + args.size() + " arguments are given.");
     }
-    _args = new ArrayList<Term>(args);
 
     for (int i = 0; i < args.size(); i++) {
       Term arg = args.get(i);
@@ -65,10 +64,12 @@ class MetaApplication extends TermInherit {
           mvar.toString(), arg.queryType().toString(), mvar.queryInputType(i+1).toString());
       }
     }
+    ImmutableList.Builder<Term> builder = ImmutableList.<Term>builder();
     ReplaceableList empty = ReplaceableList.EMPTY;
     ReplaceableList start = new ReplaceableList(_metavar);
-    ReplaceableList frees = calculateFreeReplaceablesForSubterms(_args, start);
-    ReplaceableList bounds = calculateBoundVariablesAndRefreshSubs(_args, empty, frees);
+    ReplaceableList frees = calculateFreeReplaceablesForSubterms(args, start);
+    ReplaceableList bounds = calculateBoundVariablesAndRefreshSubs(args, empty, frees, builder);
+    _args = builder.build();
     setVariables(frees, bounds);
   }
 
@@ -77,16 +78,8 @@ class MetaApplication extends TermInherit {
     return _metavar.queryOutputType();
   }
 
-  public boolean isVariable() {
-    return false;
-  }
-
   public boolean isMetaApplication() {
     return true;
-  }
-
-  public boolean isApplication() {
-    return false;
   }
 
   public boolean isApplicative() {
@@ -94,10 +87,6 @@ class MetaApplication extends TermInherit {
   }
 
   public boolean isFirstOrder() {
-    return false;
-  }
-
-  public boolean isFunctionalTerm() {
     return false;
   }
 
@@ -120,7 +109,7 @@ class MetaApplication extends TermInherit {
 
   /** @return the list of meta-arguments */
   public ImmutableList<Term> queryMetaArguments() {
-    return ImmutableList.copyOf(_args);
+    return _args;
   }
 
   /** If this term is Z⟨s1,...,sk⟩, returns si. */
@@ -222,11 +211,9 @@ class MetaApplication extends TermInherit {
     if (index < 1 || index > _args.size()) {
       throw new IndexingError("MetaApplication", "replaceSubterm", toString(), pos.toString());
     }   
-    Term tmp = _args.get(index-1);
-    _args.set(index-1, tmp.replaceSubterm(pos.queryTail(), replacement));
-    Term ret = new MetaApplication(_metavar, _args);
-    _args.set(index-1, tmp);
-    return ret;
+    ArrayList<Term> newArguments = new ArrayList<Term>(_args);
+    newArguments.set(index-1, _args.get(index-1).replaceSubterm(pos.queryTail(), replacement));
+    return new MetaApplication(_metavar, newArguments);
   }
 
   /**
@@ -264,8 +251,8 @@ class MetaApplication extends TermInherit {
    * is thrown.
    */
   public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullCallError("Application", "match", "argument term (other)");
-    if (gamma == null) throw new NullCallError("Application", "match", "substitution (gamma)");
+    if (other == null) throw new NullCallError("MetaApplication", "match", "argument term (other)");
+    if (gamma == null) throw new NullCallError("MetaApplication", "match", "substitution (gamma)");
     // get all the substituted arguments, and make sure they are distinct bound variables
     ArrayList<Variable> substitutedArgs = new ArrayList<Variable>();
     TreeSet<Variable> set = new TreeSet<Variable>();

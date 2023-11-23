@@ -1,22 +1,63 @@
 package cora.terms;
 
-import com.google.common.collect.ImmutableList;
-import cora.exceptions.IllegalArgumentError;
-import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.TypingError;
+import cora.exceptions.*;
 import cora.types.Product;
 import cora.types.Type;
 import cora.types.TypeFactory;
+import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
-
-import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
 
 class TupleTest {
-
   final Term _s = TermFactory.createVar(TypeFactory.intSort);
   final Term _t = TermFactory.createVar(TypeFactory.intSort);
+
+  @Test
+  public void testConstructWithNullListArgument() {
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(null);
+    args.add(_s);
+    Assertions.assertThrows(NullInitialisationError.class, () -> {
+      new Tuple(null);
+      new Tuple(args);
+      new Tuple(_s, _t, null);
+    });
+  }
+
+  @Test
+  public void testConstructWithTooShortArgument() {
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(_t);
+    Assertions.assertThrows(IllegalArgumentError.class, () -> {
+      new Tuple(args);
+      new Tuple(new ArrayList<Term>());
+    });
+  }
+
+  @Test
+  public void testWellbehaved() {
+    Variable x = TermFactory.createBinder("x", TypeFactory.createSort("a"));
+    Term abs = TermFactory.createAbstraction(x, x);
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(abs);
+    args.add(x);
+    Tuple tuple = new Tuple(args);
+    Assertions.assertTrue(args.get(0) == abs);
+    assertTrue(args.get(1) == x);
+    Variable y = tuple.queryTupleArgument(1).queryVariable();
+    assertTrue(y != null);
+    assertTrue(y != x);
+    System.out.println(tuple.toString());
+    ReplaceableList fr = tuple.freeReplaceables();
+    assertTrue(tuple.vars().contains(x));
+    assertTrue(tuple.boundVars().contains(y));
+    assertTrue(tuple.toString().equals("⦅λx1.x1, x⦆"));
+  }
+
 
 
   @Test

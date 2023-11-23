@@ -1,49 +1,79 @@
 package cora.terms;
 
 import com.google.common.collect.ImmutableList;
-import cora.exceptions.*;
-import cora.types.Type;
-import cora.types.TypeFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import cora.exceptions.*;
+import cora.types.Type;
+import cora.types.TypeFactory;
 
 /**
- * A tuple term is a term of the form (|t1,..., tk|), with k >= 2.
+ * A tuple term is a term of the form ⦅t1,..., tk⦆, with k ≥ 2.
  */
 public class Tuple extends TermInherit {
   private ImmutableList<Term> _components;
   private Type _tupleType;
 
-  // This private method do checking
-  private void buildTuple(ImmutableList<Term> tms){
-    if (tms.size() < 2) throw new IllegalArgumentError(
-      "Tuple",
-      "constructor",
-      "the provided list of terms has " + tms.size() + " elements." +
-        "However, tuples can only be created with at least two terms."
-    );
+  /** This private method does correctness checks and sets up the variables. */
+  private void buildTuple(List<Term> tms) {
+    // check for null arguments
+    for (int i = 0; i < tms.size(); i++) {
+      if (tms.get(i) == null) {
+        throw new NullInitialisationError("Tuple", "passing a null argument to Tuple " +
+          "constructor.");
+      }
+    }
 
+    // configure the set of free variables for this term
+    ImmutableList.Builder<Term> builder = ImmutableList.<Term>builder();
+    ReplaceableList empty = ReplaceableList.EMPTY;
+    ReplaceableList frees = calculateFreeReplaceablesForSubterms(tms, empty);
+    ReplaceableList bounds = calculateBoundVariablesAndRefreshSubs(tms, empty, frees, builder);
+    _components = builder.build();
+    setVariables(frees, bounds);
+
+    // set the type
     ImmutableList<Type> tmsTy =
       tms.stream().map(Term::queryType).collect(ImmutableList.toImmutableList());
-
     _tupleType = TypeFactory.createProduct(tmsTy);
-    _components = tms;
   }
 
   // Constructors ----------------------------------------------------------------------------------
 
-  Tuple(ImmutableList<Term> tms) {
-    // configure the set of free variables for this term
-    ReplaceableList fvars = new ReplaceableList();
-    for (Term t : tms) {
-      fvars.combine(t.freeReplaceables());
+  /**
+   * Construct a tuple.  This throws an error if some of the given arguments are null, or there are
+   * not at least two arguments.
+   */
+  Tuple(List<Term> tms) {
+    if (tms == null) {
+      throw new NullInitialisationError("Tuple", "components list");
     }
-    this.setVariables(fvars);
-    // check if it is okay to build the new tuple term
+    if (tms.size() < 2) throw new IllegalArgumentError("Tuple", "constructor",
+      "the provided list of terms has " + tms.size() + " elements." +
+        "However, tuples can only be created with at least two terms."
+    );
     buildTuple(tms);
   }
+
+  /** Short-hand constructor for unit testing. */
+  Tuple(Term a, Term b) {
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(a);
+    args.add(b);
+    buildTuple(args);
+  }
+
+  /** Short-hand constructor for unit testing. */
+  Tuple(Term a, Term b, Term c) {
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(a);
+    args.add(b);
+    args.add(c);
+    buildTuple(args);
+  }
+
   //------------------------------------------------------------------------------------------------
 
   /**
@@ -86,16 +116,14 @@ public class Tuple extends TermInherit {
   }
 
   /**
-   * If the head of this term is a variable x or abstraction λx.s, this returns x.
-   * Otherwise, an InappropriatePatternDataError is thrown.
-   * @throws InappropriatePatternDataError since tuples are abstractions
+   * @throws InappropriatePatternDataError since tuples do not have a primary variable
    */
   @Override
   public Variable queryVariable() {
     throw new InappropriatePatternDataError(
       "Tuple",
       "queryRoot",
-      "a functional term of the form f(s1, ..., sn)."
+      "a varterm, abstraction or beta-redex."
     );
   }
 
@@ -146,7 +174,7 @@ public class Tuple extends TermInherit {
   @Override
   public List<Path> queryPositions() {
     List<Path> pos = new ArrayList<Path>();
-    for(int i = 0; i < _components.size(); i++){
+    for (int i = 0; i < _components.size(); i++){
       List<Path> compPaths = _components.get(i).queryPositions();
       for (Path compPath : compPaths) {
         pos.add(new TuplePath(this, i + 1, compPath));
@@ -156,16 +184,9 @@ public class Tuple extends TermInherit {
     return pos;
   }
 
-  /**
-   * Returns the set of all non-head non-root positions in the current term, in leftmost innermost
-   * order, except that the associated term of each path is set to the given term rather than the
-   * current term; the current term is expected to be the head term of top.
-   * This is not meant to be called by classes outside the current package.
-   *
-   * @param top
-   */
+  /** @return an empty list */
   @Override
-  public List<Path> queryPositionsForHead(Term top) { return null; }
+  public List<Path> queryPositionsForHead(Term top) { return new ArrayList<Path>(); }
 
   /**
    * Returns the subterm at the given position, assuming that this is indeed a position of the
@@ -177,40 +198,30 @@ public class Tuple extends TermInherit {
   @Override
   public Term querySubterm(Position pos) {
     if (pos.isEmpty()) return this;
+    int index = pos.queryComponentPosition();
+    if (index < 1 || index > _components.size()) {
+      throw new IndexingError("Tuple", "querySubterm", toString(), pos.toString());
+    }
     return _components
-      .get(pos.queryComponentPosition() - 1)
+      .get(index - 1)
       .querySubterm(pos.queryTail());
   }
 
   // Auxiliary replacement method for both pos and head pos cases.
   private Term replaceAux(Position pos, Term replacement) {
     int replacementPos = pos.queryComponentPosition();
-    if(replacementPos < 1 || replacementPos > _components.size())
+    if (replacementPos < 1 || replacementPos > _components.size()) {
       throw new IndexingError(
         "Tuple",
         "replaceSubterm",
         this.toString(),
         pos.toString()
       );
-    // First, we instantiate a new builder object, to build the immutable lists
-    ImmutableList.Builder<Term> newTupleComponents = ImmutableList.builder();
-    // Then we add to this builder the exact terms from 1...(compPos - 1).
-    for (int i = 0; i < replacementPos - 1; i ++) {
-      newTupleComponents.add(_components.get(i));
     }
-    // Next, the exact term at position replacementPos is used to replace, which we add directly
-    // into the builder
-    newTupleComponents.add(
-      _components.get(replacementPos - 1).replaceSubterm(pos.queryTail(), replacement)
-    );
-    // The last steps is add to the builder the rest of the terms from (repPos + 1)...n
-    for(int i = replacementPos; i < _components.size(); i++){
-      newTupleComponents.add(_components.get(i));
-    }
-
-    // Now, all components of the new tuple term are in the builder.
-    // We then create a new tuple term and return it.
-    return new Tuple(newTupleComponents.build());
+    ArrayList<Term> newTupleComponents = new ArrayList<Term>(_components);
+    newTupleComponents.set(replacementPos - 1,
+      newTupleComponents.get(replacementPos - 1).replaceSubterm(pos.queryTail(), replacement));
+    return new Tuple(newTupleComponents);
   }
 
   /**
@@ -221,8 +232,8 @@ public class Tuple extends TermInherit {
    */
   @Override
   public Term replaceSubterm(Position pos, Term replacement) {
-    if(pos.isEmpty()){
-      if (!this.queryType().equals(replacement.queryType()))
+    if (pos.isEmpty()) {
+      if (!_tupleType.equals(replacement.queryType()))
         throw new TypingError(
           "Application",
           "replaceSubterm",

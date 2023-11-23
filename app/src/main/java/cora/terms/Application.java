@@ -16,65 +16,57 @@
 package cora.terms;
 
 import com.google.common.collect.ImmutableList;
-import cora.exceptions.*;
-import cora.types.Arrow;
-import cora.types.Type;
-import cora.types.TypeFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
+import cora.exceptions.*;
+import cora.types.Arrow;
+import cora.types.Type;
+import cora.types.TypeFactory;
 
 /** An Application is a term of the form h(s1,...,sn) where h is not an application. */
 class Application extends TermInherit {
   public Term _head;
-  public List<Term> _args;
+  public ImmutableList<Term> _args;
   public Type _outputType;
 
   //  Construction Phase ------------------------------------------------------
 
   /**
-   * Sets up the lists of free, bound and meta-variables used in this term.
+   * Sets up the lists of free, bound and meta-variables used in this term, and builds _args from
+   * the given set args (perhaps renaming bound variables in some of them).
    * Meant for use in the constructors, so it cannot use the freeReplaceables() function, but
    * rather, sets up the result of that function.
    */
-  private void setupReplaceables() {
-    ReplaceableList frees = calculateFreeReplaceablesForSubterms(_args, _head.freeReplaceables());
+  private void setupReplaceables(List<Term> args) {
+    ReplaceableList frees = calculateFreeReplaceablesForSubterms(args, _head.freeReplaceables());
     ReplaceableList bounds = _head.boundVars();
     if (bounds.size() > 0 && !bounds.getOverlap(frees).isEmpty()) {
       _head = _head.refreshBinders();
       bounds = _head.boundVars();
     }
-    bounds = calculateBoundVariablesAndRefreshSubs(_args, bounds, frees);
+    ImmutableList.Builder<Term> builder = ImmutableList.<Term>builder();
+    bounds = calculateBoundVariablesAndRefreshSubs(args, bounds, frees, builder);
+    _args = builder.build();
     setVariables(frees, bounds);
   }
 
   /**
    * This helper function handles the functionality for the constructors to set up _head, _args
-   * and _outputType, and store the variables and meta-variables.
+   * and _outputType, and store the variables and meta-variables.  The given set args is not
+   * assumed to be our property, so will not be changed.
    * If there are any problems -- such as the head or an argument being null, or the types not
    * checking out -- an appropriate Error is thrown. However, it *is* assumed that args is not
    * null.
    */
   private void construct(Term head, List<Term> args) {
     if (head == null) throw new NullInitialisationError("Application", "head");
-    _head = head;
-    
-    if (_head.isApplication()) {
-      _args = new ArrayList<Term>(head.queryArguments());
-      _args.addAll(args);
-      _head = _head.queryHead();
-    }
-    else _args = args;
 
-    if (_args.size() == 0) {
-      throw new IllegalArgumentError("Application", "constructor", "creating an Application " +
-        "with no arguments.");
-    }
-
-    Type type = _head.queryType();
-    for (int i = 0; i < _args.size(); i++) {
-      Term arg = _args.get(i);
+    Type type = head.queryType();
+    for (int i = 0; i < args.size(); i++) {
+      Term arg = args.get(i);
       if (arg == null) {
         throw new NullInitialisationError("Application", "passing a null argument to " +
           head.toString() + ".");
@@ -83,18 +75,24 @@ class Application extends TermInherit {
         case Arrow(Type inp, Type out):
           if (!inp.equals(arg.queryType())) {
             throw new TypingError("Application", "constructor", "arg " + (i+1) + " of " +
-              _head.toString(), arg.queryType() == null ? "null" : arg.queryType().toString(),
+              head.toString(), arg.queryType() == null ? "null" : arg.queryType().toString(),
               inp.toString());
           }
           type = out;
           break;
         default:
-          throw new ArityError("Application", "constructor", "head term " + _head.toString() +
-            " has maximum arity " + i + " and is given " + _args.size() + " arguments.");
+          throw new ArityError("Application", "constructor", "head term " + head.toString() +
+            " has maximum arity " + i + " and is given " + args.size() + " arguments.");
       }
     }
+
     _outputType = type;
-    setupReplaceables();
+    _head = head;
+    if (_head.isApplication()) {
+      _head = head.queryHead();
+      args = Stream.concat(head.queryArguments().stream(), args.stream()).toList();
+    }
+    setupReplaceables(args);
   }
 
   /**
@@ -102,7 +100,7 @@ class Application extends TermInherit {
    * Throws an error if the head is null or does not have arity ≥ 1, or the argument is null.
    */
   Application(Term head, Term arg) {
-    List<Term> args = new ArrayList<Term>();
+    ArrayList<Term> args = new ArrayList<Term>();
     args.add(arg);
     construct(head, args);
   }
@@ -112,7 +110,7 @@ class Application extends TermInherit {
    * Throws an error if the head does not have arity ≥ 2, or one of the arguments is null.
    */
   Application(Term head, Term arg1, Term arg2) {
-    List<Term> args = new ArrayList<Term>();
+    ArrayList<Term> args = new ArrayList<Term>();
     args.add(arg1);
     args.add(arg2);
     construct(head, args);
@@ -125,7 +123,11 @@ class Application extends TermInherit {
    */
   Application(Term head, List<Term> args) {
     if (args == null) throw new NullInitialisationError("Application", "argument list");
-    construct(head, new ArrayList<Term>(args));
+    if (args.size() == 0) {
+      throw new IllegalArgumentError("Application", "constructor", "creating an Application " +
+        "with no arguments.");
+    }
+    construct(head, args);
   }
 
   //  Main functionality ------------------------------------------------------
@@ -178,7 +180,7 @@ class Application extends TermInherit {
 
   /** Returns the list of all arguments, so [s1,...,sn] for h(s1,...,sn). */
   public ImmutableList<Term> queryArguments() {
-    return ImmutableList.copyOf(_args);
+    return _args;
   }
 
   public ImmutableList<Term> queryMetaArguments() {
@@ -204,9 +206,7 @@ class Application extends TermInherit {
       throw new IndexingError("Application", "queryImmediateHeadSubterm", i, 0, _args.size());
     }   
     if (i == 0) return _head;
-    List<Term> newargs = new ArrayList<Term>();
-    for (int j = 0; j < i; j++) newargs.add(_args.get(j));
-    return new Application(_head, newargs);
+    return new Application(_head, _args.subList(0, i));
   }
 
   /** Returns the abstraction-subterm of the head (if head is an abstraction) */
@@ -315,11 +315,9 @@ class Application extends TermInherit {
     if (index < 1 || index > _args.size()) {
       throw new IndexingError("Application", "replaceSubterm", toString(), pos.toString());
     }
-    Term tmp = _args.get(index-1);
-    _args.set(index-1, tmp.replaceSubterm(pos.queryTail(), replacement));
-    Term ret = new Application(_head, _args);
-    _args.set(index-1, tmp);
-    return ret;
+    ArrayList<Term> lst = new ArrayList<Term>(_args);
+    lst.set(index-1, _args.get(index-1).replaceSubterm(pos.queryTail(), replacement));
+    return new Application(_head, lst);
   }
 
   /**
@@ -353,11 +351,9 @@ class Application extends TermInherit {
       throw new IndexingError("Application", "replaceSubterm(HeadPosition)", toString(),
         pos.toString());
     }
-    Term tmp = _args.get(index-1);
-    _args.set(index-1, tmp.replaceSubterm(pos.queryTail(), replacement));
-    Term ret = new Application(_head, _args);
-    _args.set(index-1, tmp);
-    return ret;
+    ArrayList<Term> lst = new ArrayList<Term>(_args);
+    lst.set(index-1, _args.get(index-1).replaceSubterm(pos.queryTail(), replacement));
+    return new Application(_head, lst);
   }
 
   /**
@@ -408,7 +404,7 @@ class Application extends TermInherit {
   /** This method gives a string representation of the term. */
   public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
                           Set<String> avoid) {
-    // special case for a theory term
+    // special case for theory symbols that might be infix
     if (_head.isConstant()) {
       CalculationSymbol f = _head.queryRoot().toCalculationSymbol();
       if (f != null && f.printInfix(builder, _args, renaming, avoid)) return;
