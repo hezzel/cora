@@ -18,15 +18,22 @@ class ProductTest {
     ArrayList<Type> args = new ArrayList<Type>();
     args.add(new Base("x"));
     args.add(new Base("y"));
+    args.add(null);
     ImmutableList<Type> lst = null;
-    Assertions.assertThrows(NullInitialisationError.class, () -> {
-      new Product(lst);
-      TypeFactory.createProduct(args);
-      new Product(ImmutableList.copyOf(args));
-      TypeFactory.createProduct(ImmutableList.copyOf(args));
-      TypeFactory.createProduct(null, new Base("z"));
-      TypeFactory.createProduct(new Base("z"), new Base("q"), null);
-    });
+
+    Assertions.assertThrows(NullInitialisationError.class, () -> new Product(lst));
+    // NullPointerException instead of NullInitialisationError due to ImmutableList
+    // blocking null elements
+    Assertions.assertThrows(java.lang.NullPointerException.class,
+      () -> TypeFactory.createProduct(args));
+    Assertions.assertThrows(java.lang.NullPointerException.class,
+      () -> new Product(ImmutableList.copyOf(args)));
+    Assertions.assertThrows(java.lang.NullPointerException.class,
+      () -> TypeFactory.createProduct(ImmutableList.copyOf(args)));
+    Assertions.assertThrows(java.lang.NullPointerException.class,
+      () -> TypeFactory.createProduct(null, new Base("z")));
+    Assertions.assertThrows(java.lang.NullPointerException.class,
+      () -> TypeFactory.createProduct(new Base("z"), new Base("q"), null));
   }
 
   @Test
@@ -36,10 +43,8 @@ class ProductTest {
     builder = ImmutableList.builder();
     builder.add(new Arrow(new Base("a"), new Base("b")));
     ImmutableList<Type> l1 = builder.build();
-    Assertions.assertThrows(ProdTypeConstructionError.class, () -> {
-      new Product(l0);
-      new Product(l1);
-    });
+    Assertions.assertThrows(ProdTypeConstructionError.class, () -> new Product(l0));
+    Assertions.assertThrows(ProdTypeConstructionError.class, () -> new Product(l1));
   }
 
   @Test

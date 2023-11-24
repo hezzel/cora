@@ -17,27 +17,29 @@ class AbstractionTest extends TermTestFoundation {
 
   @Test
   void testConstructorsNullInitialization() {
-    Assertions.assertThrows(NullInitialisationError.class, () -> {
-      // Abstractions with null binders should throw NullInitializationError
+    // Abstractions with null binders should throw NullInitializationError
+    Assertions.assertThrows(NullInitialisationError.class, () ->
       new Abstraction(null,
         TermFactory.createConstant("a", TypeFactory.createSort("A"))
-      );
-      // Abstractions with null body should throw NullInitializationError
+      )
+    );
+    // Abstractions with null body should throw NullInitializationError
+    Assertions.assertThrows(NullInitialisationError.class, () ->
       new Abstraction(
         TermFactory.createVar("x", TypeFactory.createSort("o")),
         null
-      );
-    });
+      )
+    );
   }
 
   @Test
   void testConstructorWithIlligalBinder() {
-    Assertions.assertThrows(IllegalTermError.class, () -> {
+    Assertions.assertThrows(IllegalTermError.class, () ->
       new Abstraction(
         TermFactory.createVar("x", TypeFactory.createSort("o")),
         TermFactory.createConstant("a", TypeFactory.createSort("A"))
-      );
-    });
+      )
+    );
   }
 
   @Test
