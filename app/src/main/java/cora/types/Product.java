@@ -1,17 +1,14 @@
 package cora.types;
 
 import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.NotNull;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.ProdTypeConstructionError;
-import org.jetbrains.annotations.NotNull;
 
 public record Product(ImmutableList<Type> types) implements Type {
   public Product {
     if (types == null) throw new NullInitialisationError("Product", "product list");
     if (types.size() < 2) throw new ProdTypeConstructionError();
-    for (int i = 0; i < types.size(); i++) {
-      if (types.get(i) == null) throw new NullInitialisationError("Product", "element " + (i + 1));
-    }
   }
 
   /**
