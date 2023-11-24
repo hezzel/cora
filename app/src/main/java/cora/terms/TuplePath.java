@@ -1,31 +1,41 @@
 package cora.terms;
 
-import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.IndexingError;
 import org.jetbrains.annotations.NotNull;
+import cora.exceptions.*;
 
 /**
  * A tuple path is a position of the form i.pos where i indicates the index of the ith component
  * of a tuple and pos is a subposition in that component.
  */
 public class TuplePath implements Path {
-
   private int _componentIndex;
-  private Path _pos;
+  private Path _tail;
   private Term _tm;
 
   TuplePath(@NotNull Term tm,@NotNull int componentIndex, @NotNull Path tail) {
-    if(!tm.isTuple()) throw new InappropriatePatternDataError(
-        "TuplePath",
-      "TuplePath",
-      "Tuple paths must be created only for tuple terms."
-    );
-    if (componentIndex <= 0 || componentIndex > tm.numberTupleArguments())
-      throw new IndexingError("TuplePath", "constructor", componentIndex);
-
     _componentIndex = componentIndex;
-    _pos = tail;
+    _tail = tail;
     _tm = tm;
+
+    if (tail == null) throw new NullInitialisationError("TuplePath", "tail");
+    if (tm == null) throw new NullInitialisationError("TuplePath", "tm");
+
+    if (!tm.isTuple()) {
+      throw new InappropriatePatternDataError(
+        "TuplePath",
+        "TuplePath",
+        "Tuple paths must be created only for tuple terms.");
+    }
+    if (componentIndex <= 0 || componentIndex > tm.numberTupleArguments()) {
+      throw new IndexingError("TuplePath", "constructor", componentIndex, 1,
+        tm.numberTupleArguments());
+    }
+    if (tm.queryTupleArgument(componentIndex) != tail.queryAssociatedTerm()) {
+      throw new IllegalArgumentError("TuplePath", "constructor",
+        "subterm " + componentIndex + " of " + tm + " is " +
+        tm.queryArgument(componentIndex) + ", while tail refers to " +
+        tail.queryAssociatedTerm() + ".");
+    }
   }
 
   /**
@@ -48,7 +58,7 @@ public class TuplePath implements Path {
    */
   @Override
   public Term queryCorrespondingSubterm() {
-    return _pos.queryCorrespondingSubterm();
+    return _tail.queryCorrespondingSubterm();
   }
 
   /**
@@ -56,6 +66,11 @@ public class TuplePath implements Path {
    */
   @Override
   public boolean isTuple() { return true; }
+
+  public boolean isMeta() { return false; }
+  public boolean isArgument() { return false; }
+  public boolean isLambda() { return false; }
+  public boolean isEmpty() { return false; }
 
   /**
    * If the position is in a subterm of argument si of an application h(s1,...,sn), this function
@@ -93,7 +108,7 @@ public class TuplePath implements Path {
    */
   @Override
   public Path queryTail() {
-    return _pos;
+    return _tail;
   }
 
   /**
@@ -105,10 +120,9 @@ public class TuplePath implements Path {
   public boolean equals(Position other) {
     return other.isTuple() &&
            other.queryArgumentPosition() == _componentIndex &&
-           _pos.equals(other.queryTail());
+           _tail.equals(other.queryTail());
   }
 
   @Override
-  public String toString() { return _componentIndex + "." + _pos.toString(); }
-
+  public String toString() { return _componentIndex + "." + _tail.toString(); }
 }

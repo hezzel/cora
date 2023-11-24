@@ -30,6 +30,10 @@ class EmptyPosition implements Position {
     return false;
   }
 
+  public boolean isTuple() {
+    return false;
+  }
+
   public boolean isMeta() {
     return false;
   }
@@ -40,6 +44,11 @@ class EmptyPosition implements Position {
 
   public int queryArgumentPosition() {
     throw new InappropriatePatternDataError("EmptyPosition", "queryArgumentPosition",
+      "positions of the form i.tail with i > 0");
+  }
+
+  public int queryComponentPosition() {
+    throw new InappropriatePatternDataError("EmptyPosition", "queryTuplePosition",
       "positions of the form i.tail with i > 0");
   }
 

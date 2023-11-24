@@ -154,7 +154,7 @@ public class Tuple extends TermInherit {
    * meta-variables
    */
   @Override
-  public boolean isPattern() { return false; }
+  public boolean isPattern() { return _components.stream().allMatch(Term::isPattern); }
 
   /**
    * Returns true if this term is applicative (so: without binder variables or meta-application)
@@ -207,8 +207,35 @@ public class Tuple extends TermInherit {
       .querySubterm(pos.queryTail());
   }
 
-  // Auxiliary replacement method for both pos and head pos cases.
-  private Term replaceAux(Position pos, Term replacement) {
+  /** Returns the term obtained by replacing the subterm at the given position by replacement. */
+  @Override
+  public Term replaceSubterm(Position pos, Term replacement) {
+    return replaceSubterm(new HeadPosition(pos), replacement);
+  }
+
+  /**
+   * Returns the term obtained by replacing the subterm at the given head position by replacement.
+   */
+  @Override
+  public Term replaceSubterm(HeadPosition pos, Term replacement) {
+    if (pos.isEnd()){
+      if (pos.queryChopCount() > 0) {
+        throw new IndexingError("Tuple", "replaceSubterm", toString(), pos.toString());
+      }
+      if (!_tupleType.equals(replacement.queryType())) {
+        throw new TypingError(
+          "Tuple",
+          "replaceSubterm",
+          "replacement term " + replacement.toString(),
+          replacement.queryType().toString(),
+          _tupleType.toString()
+        );
+      }
+      return replacement;
+    }
+    if (!pos.isTuple()) {
+      throw new IndexingError("Tuple", "replaceSubterm", toString(), pos.toString());
+    }
     int replacementPos = pos.queryComponentPosition();
     if (replacementPos < 1 || replacementPos > _components.size()) {
       throw new IndexingError(
@@ -225,60 +252,6 @@ public class Tuple extends TermInherit {
   }
 
   /**
-   * Returns the term obtained by replacing the subterm at the given position by replacement.
-   *
-   * @param pos
-   * @param replacement
-   */
-  @Override
-  public Term replaceSubterm(Position pos, Term replacement) {
-    if (pos.isEmpty()) {
-      if (!_tupleType.equals(replacement.queryType()))
-        throw new TypingError(
-          "Application",
-          "replaceSubterm",
-          "replacement term " + replacement.toString(),
-          "" + replacement.queryType().toString(),
-          "" + this.queryType().toString()
-        );
-      else return replacement;
-    }
-    return replaceAux(pos, replacement);
-  }
-
-  /**
-   * Returns the term obtained by replacing the subterm at the given head position by replacement.
-   *
-   * @param pos
-   * @param replacement
-   */
-  @Override
-  public Term replaceSubterm(HeadPosition pos, Term replacement) {
-    if(pos.isEnd()){
-      if(pos.queryChopCount() == 0){
-        if (!this.queryType().equals(replacement.queryType()))
-          throw new TypingError(
-            "Application",
-            "replaceSubterm",
-            "replacement term " + replacement.toString(),
-            replacement.queryType().toString(),
-            this.queryType().toString()
-          );
-        else return replacement;
-      }
-      if(pos.queryChopCount() > 0){
-        throw new IndexingError(
-          "Application",
-          "replaceSubterm(HeadPosition)",
-          toString(),
-          pos.toString()
-          );
-      }
-    }
-    return replaceAux(pos.queryPosition(), replacement);
-  }
-
-  /**
    * This method replaces each variable x in the term by gamma(x) (or leaves x alone if x is not
    * in the domain of gamma), and similarly replaces Z⟨s1,...,sk⟩ with gamma(Z) = λx1...xk.t by
    * t[x1:=s1 gamma,...,xk:=sk gamma]; the result is returned.
@@ -291,12 +264,7 @@ public class Tuple extends TermInherit {
    */
   @Override
   public Term substitute(Substitution gamma) {
-    ImmutableList<Term> subImage =
-      _components
-        .stream()
-        .map(t -> t.substitute(gamma))
-        .collect(ImmutableList.toImmutableList());
-    return new Tuple(subImage);
+    return new Tuple(_components.stream().map(t -> t.substitute(gamma)).toList());
   }
 
   /**
@@ -316,8 +284,8 @@ public class Tuple extends TermInherit {
       return other.toString() + " does not instantiate " + toString() + " (not a tuple term).";
     }
     if (_components.size() != other.numberTupleArguments()) {
-      return other.toString() + " does not instantiate " + this.toString() + "(mismatch on the " +
-        "tuple sizes.)";
+      return other.toString() + " does not instantiate " + this.toString() + " (mismatch on the " +
+        "tuple sizes).";
     }
     for (int i = 0; i < _components.size(); i++) {
       String warning = _components.get(i).match(other.queryTupleArgument(i+1), gamma);
@@ -340,11 +308,12 @@ public class Tuple extends TermInherit {
    * @param avoid
    */
   @Override
-  public void addToString(StringBuilder builder, Map<Replaceable, String> renaming, Set<String> avoid) {
+  public void addToString(StringBuilder builder, Map<Replaceable, String> renaming,
+                          Set<String> avoid) {
     builder.append("⦅");
     for(int i = 0; i < _components.size(); i++){
-      if (i == _components.size() - 1) _components.get(i).addToString(builder, renaming, avoid);
-      else { _components.get(i).addToString(builder, renaming, avoid); builder.append(", ");}
+      if (i > 0) builder.append(", ");
+      _components.get(i).addToString(builder, renaming, avoid);
     }
     builder.append("⦆");
   }

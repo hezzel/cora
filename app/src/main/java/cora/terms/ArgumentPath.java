@@ -56,6 +56,10 @@ class ArgumentPath implements Path {
     return true;
   }
 
+  public boolean isTuple() {
+    return false;
+  }
+
   public boolean isLambda() {
     return false;
   }
@@ -74,6 +78,11 @@ class ArgumentPath implements Path {
 
   public int queryArgumentPosition() {
     return _argPos;
+  }
+
+  public int queryComponentPosition() {
+    throw new InappropriatePatternDataError("ArgumentPath", "queryTuplePosition",
+      "positions of the form i.tail that are marked as tuple positions");
   }
 
   public int queryMetaPosition() {

@@ -57,6 +57,10 @@ class MetaPath implements Path {
     return false;
   }
 
+  public boolean isTuple() {
+    return false;
+  }
+
   public boolean isLambda() {
     return false;
   }
@@ -75,6 +79,11 @@ class MetaPath implements Path {
 
   public int queryArgumentPosition() {
     throw new InappropriatePatternDataError("MetaPath", "queryArgumentPosition",
+      "positions of the form i.tail with i > 0");
+  }
+
+  public int queryComponentPosition() {
+    throw new InappropriatePatternDataError("MetaPath", "queryComponentPosition",
       "positions of the form i.tail with i > 0");
   }
 

@@ -57,12 +57,14 @@ public class HeadPosition {
     return _pos.isEmpty();
   }
 
-  /** Returns whether this is a product position. */
-  public boolean isTuple() { return _pos.isTuple(); }
-
   /** Returns whether this is a head position of the form i.tail with i ≥ 1. */
   public boolean isArgument() {
     return _pos.isArgument();
+  }
+
+  /** Returns whether this is a product position. */
+  public boolean isTuple() {
+    return _pos.isTuple();
   }
 
   /** Returns whether this is a head position of the form 0.tail. */
@@ -87,6 +89,15 @@ public class HeadPosition {
    */
   public int queryArgumentPosition() {
     return _pos.queryArgumentPosition();
+  }
+
+  /**
+   * If the head position is in a subterm of argument si of a tuple ⦅s1,..., sn⦆, this
+   * function returns the index i of the relevant argument (1..n); otherwise it throws an
+   * InappropriatePatternDataError.
+   */
+  public int queryComponentPosition() {
+    return _pos.queryComponentPosition();
   }
 
   /**

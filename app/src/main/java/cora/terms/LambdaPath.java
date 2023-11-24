@@ -53,6 +53,10 @@ class LambdaPath implements Path {
     return false;
   }
 
+  public boolean isTuple() {
+    return false;
+  }
+
   public boolean isLambda() {
     return true;
   }
@@ -71,6 +75,11 @@ class LambdaPath implements Path {
 
   public int queryArgumentPosition() {
     throw new InappropriatePatternDataError("LambdaPath", "queryArgumentPosition",
+      "positions of the form i.tail with i > 0");
+  }
+
+  public int queryComponentPosition() {
+    throw new InappropriatePatternDataError("LambdaPath", "queryTuplePosition",
       "positions of the form i.tail with i > 0");
   }
 

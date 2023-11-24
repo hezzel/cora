@@ -19,8 +19,7 @@ import cora.exceptions.IllegalArgumentError;
 import cora.exceptions.CustomParserError;
 
 public final class PositionFactory {
-
-//  Factories shouldn't be instantiated as objects
+  //  Factories shouldn't be instantiated as objects
   private PositionFactory() { }
 
   public static final Position empty = new EmptyPosition();
@@ -28,6 +27,13 @@ public final class PositionFactory {
   public static Position createArg(int index, Position tail) {
     if (index <= 0) {
       throw new IllegalArgumentError("PositionFactory", "createArg", "given index is not positive");
+    }
+    return new ConsPosition(index, tail);
+  }
+
+  public static Position createTuple(int index, Position tail) {
+    if (index <= 0) {
+      throw new IllegalArgumentError("PositionFactory", "createTuple", "index is not positive");
     }
     return new ConsPosition(index, tail);
   }

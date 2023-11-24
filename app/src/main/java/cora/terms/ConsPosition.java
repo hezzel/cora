@@ -42,6 +42,10 @@ class ConsPosition implements Position {
     return _argPos > 0;
   }
 
+  public boolean isTuple() {
+    return _argPos > 0;
+  }
+
   public boolean isLambda() {
     return _argPos == 0;
   }
@@ -58,10 +62,18 @@ class ConsPosition implements Position {
     return _argPos;
   }
 
+  public int queryComponentPosition() {
+    if (_argPos == 0) throw new InappropriatePatternDataError("consPosition for λ",
+      "queryTuplePosition", "consPosition for tuple positions");
+    if (_argPos < 0) throw new InappropriatePatternDataError("ConsPosition for meta-application",
+      "queryTuplePosition", "consPosition for tuple positions");
+    return _argPos;
+  }
+
   public int queryMetaPosition() {
     if (_argPos == 0) throw new InappropriatePatternDataError("ConsPosition for λ",
       "queryMetaPosition", "ConsPosition for meta-application positions");
-    if (_argPos > 0) throw new InappropriatePatternDataError("ConsPosition for meta-application",
+    if (_argPos > 0) throw new InappropriatePatternDataError("ConsPosition for application/tuple",
       "queryMetaPosition", "ConsPosition for meta-application positions");
     return -_argPos;
   }
