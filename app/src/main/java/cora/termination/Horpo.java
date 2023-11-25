@@ -19,8 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;
 import cora.rewriting.*;
@@ -29,7 +28,11 @@ import cora.rewriting.*;
  * This is an implementation of a basic version of Horpo for LCSTRSs (so with constraints).
  */
 public class Horpo {
-  /** This function returns whether this termination analyser can be applied to the given TRS. */
+  /**
+   * This function returns whether this termination analyser can be applied to the given TRS.
+   * This is the case if it's an LCSTRS: an applicative constrained system where left-hand sides
+   * are not theory terms.
+   */
   public static boolean applicable(TRS trs) {
     for (int i = 0; i < trs.queryRuleCount(); i++) {
       Rule rule = trs.queryRule(i);
@@ -294,12 +297,28 @@ public class Horpo {
     return ret;
   }
 
-  /** Returns whether or not a and b are equal modulo renaming of base types. */
+  /**
+   * Returns whether or not a and b are equal modulo renaming of base types.
+   * Here, we treat product types as unequal to anything, even themselves, as the theory has not
+   * yet been defined for product types.
+   */
   private boolean sameTypeStructure(Type a, Type b) {
-    if (a.isBaseType() && b.isBaseType()) return true;
-    if (a.isBaseType() || b.isBaseType()) return false;
-    return sameTypeStructure(a.queryArrowInputType(), b.queryArrowInputType()) &&
-           sameTypeStructure(a.queryArrowOutputType(), b.queryArrowOutputType());
+    switch(a) {
+      case Base _:
+        switch(b) {
+          case Base _: return true;
+          case Arrow _: return false;
+          case Product _: return false;
+        }
+      case Arrow (Type in1, Type out1):
+        switch(b) {
+          case Base _: return false;
+          case Arrow (Type in2, Type out2):
+            return sameTypeStructure(in1, in2) && sameTypeStructure(out1, out2);
+          case Product _: return false;
+        }
+      case Product _: return false;
+    }
   }
 
   /**
