@@ -78,9 +78,6 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   /** @return true */
   public boolean isFunctionalTerm() { return true; }
 
-  /** @return false */
-  public boolean isMetaApplication() { return false; }
-
   /** @return true */
   public boolean isApplicative() { return true; }
 
@@ -114,7 +111,7 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     return this;
   }
 
-  /** Throws an error, because a constant is not a variale (or associated with one). */
+  /** Throws an error, because a constant is not a variable (or associated with one). */
   public Variable queryVariable() {
     throw new InappropriatePatternDataError("Constant", "queryVariable",
                                             "variables or lambda-expressions");

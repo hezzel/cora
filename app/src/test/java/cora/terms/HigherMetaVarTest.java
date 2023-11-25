@@ -17,18 +17,25 @@ package cora.terms;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
+
 import cora.exceptions.*;
 import cora.types.Type;
 import cora.types.TypeFactory;
 
 public class HigherMetaVarTest {
+  private ImmutableList<Type> muli(Type type1, Type type2) {
+    ImmutableList.Builder<Type> builder = ImmutableList.<Type>builder();
+    if (type1 != null) builder.add(type1);
+    if (type2 != null) builder.add(type2);
+    return builder.build();
+  }
+
   @Test(expected = NullInitialisationError.class)
   public void testCreateWithNullName() {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(TypeFactory.createSort("a"));
-    inputs.add(TypeFactory.createSort("b"));
-    MetaVariable z = new HigherMetaVar(null, inputs, TypeFactory.createSort("c"));
+    Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
+    MetaVariable z = new HigherMetaVar(null, muli(a, b), TypeFactory.createSort("c"));
   }
 
   @Test(expected = NullInitialisationError.class)
@@ -38,32 +45,25 @@ public class HigherMetaVarTest {
 
   @Test(expected = NullInitialisationError.class)
   public void testCreateWithSingleNullInput() {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(TypeFactory.createSort("a"));
-    inputs.add(TypeFactory.createSort(null));
-    MetaVariable z = new HigherMetaVar("z", inputs, TypeFactory.createSort("c"));
+    MetaVariable z = TermFactory.createMetaVar("z", TypeFactory.createSort("a"), null,
+                                               TypeFactory.createSort("c"));
   }
 
   @Test(expected = NullInitialisationError.class)
   public void testCreateWithNullOutput() {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(TypeFactory.createSort("a"));
-    inputs.add(TypeFactory.createSort("b"));
-    MetaVariable z = new HigherMetaVar("z", inputs, null);
+    Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
+    MetaVariable z = new HigherMetaVar("z", muli(a, b), null);
   }
 
   @Test(expected = IllegalArgumentError.class)
   public void testCreateWithEmptyInputs() {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    MetaVariable z = new HigherMetaVar("z", inputs, TypeFactory.createSort("c"));
+    MetaVariable z = new HigherMetaVar("z", muli(null, null), TypeFactory.createSort("c"));
   }
 
   @Test
   public void testCorrectCreation() {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(TypeFactory.createSort("a"));
-    inputs.add(TypeFactory.createSort("b"));
-    MetaVariable z = new HigherMetaVar("z", inputs, TypeFactory.createSort("c"));
+    Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
+    MetaVariable z = TermFactory.createMetaVar("z", muli(a, b), TypeFactory.createSort("c"));
     assertTrue(z.queryName().equals("z"));
     assertTrue(z.queryArity() == 2);
     assertTrue(z.queryInputType(1).equals(TypeFactory.createSort("a")));
@@ -71,7 +71,7 @@ public class HigherMetaVarTest {
     assertTrue(z.queryOutputType().equals(TypeFactory.createSort("c")));
     assertTrue(z.queryType().toString().equals("a ⇒ b ⇒ c"));
     assertTrue(z.equals(z));
-    MetaVariable z2 = new HigherMetaVar("z", inputs, TypeFactory.createSort("c"));
+    MetaVariable z2 = TermFactory.createMetaVar("z", a, b, TypeFactory.createSort("c"));
     assertFalse(z.equals(z2));
     assertTrue(z.toString().equals("z"));
   }
@@ -96,11 +96,9 @@ public class HigherMetaVarTest {
 
   @Test
   public void testMetavarIndexes() {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(TypeFactory.createSort("a"));
-    inputs.add(TypeFactory.createSort("b"));
-    MetaVariable z1 = new HigherMetaVar("z", inputs, TypeFactory.createSort("c"));
-    MetaVariable z2 = new HigherMetaVar("z", inputs, TypeFactory.createSort("c"));
+    Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
+    MetaVariable z1 = TermFactory.createMetaVar("z", muli(a,b), TypeFactory.createSort("c"));
+    MetaVariable z2 = TermFactory.createMetaVar("z", muli(a,b), TypeFactory.createSort("c"));
     assertTrue(z1.queryIndex() < z2.queryIndex());
     assertTrue(z1.compareTo(z2) == -1);
     assertTrue(z2.compareTo(z1) == 1);
@@ -108,10 +106,8 @@ public class HigherMetaVarTest {
 
   @Test
   public void testMetavarComparison() {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(TypeFactory.createSort("a"));
-    inputs.add(TypeFactory.createSort("b"));
-    Replaceable z = new HigherMetaVar("z", inputs, TypeFactory.createSort("c"));
+    Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
+    Replaceable z = TermFactory.createMetaVar("z", muli(a,b), TypeFactory.createSort("c"));
     Replaceable x = new Var("z", z.queryType());
     Replaceable y = new Binder("z", x.queryType());
     assertTrue(z.compareTo(z) == 0);
@@ -121,3 +117,4 @@ public class HigherMetaVarTest {
     assertTrue(y.compareTo(z) > 0);
   }
 }
+

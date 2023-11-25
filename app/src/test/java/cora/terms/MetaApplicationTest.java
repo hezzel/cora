@@ -15,12 +15,13 @@
 
 package cora.terms;
 
-import cora.types.Type;
-import cora.types.TypeFactory;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import cora.types.Type;
+import cora.types.TypeFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,17 +35,13 @@ class MetaApplicationTest extends TermTestFoundation {
   }
 
   private Term makeMeta(String name, Term arg, Type output) {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(arg.queryType());
+    ImmutableList<Type> inputs = ImmutableList.<Type>builder().add(arg.queryType()).build();
     MetaVariable z = new HigherMetaVar(name, inputs, output);
     return TermFactory.createMeta(z, arg);
   }
 
   private Term makeMeta(String name, Term arg1, Term arg2, Type output) {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(arg1.queryType());
-    inputs.add(arg2.queryType());
-    MetaVariable z = new HigherMetaVar(name, inputs, output);
+    MetaVariable z = TermFactory.createMetaVar(name, arg1.queryType(), arg2.queryType(), output);
     return TermFactory.createMeta(z, arg1, arg2);
   }
 
@@ -117,10 +114,7 @@ class MetaApplicationTest extends TermTestFoundation {
     Term abs = TermFactory.createAbstraction(u, u);
     Term fabs = TermFactory.createApp(f, x, abs);
     Term gy = unaryTerm("g", baseType("A"), y);
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(baseType("B"));
-    inputs.add(baseType("A"));
-    MetaVariable m = new HigherMetaVar("Z", inputs, baseType("A"));
+    MetaVariable m = TermFactory.createMetaVar("Z", baseType("B"), baseType("A"), baseType("A"));
     Term sub1 = TermFactory.createMeta(m, fabs, gy);
     Term sub2 = TermFactory.createMeta(m, x, sub1);
     Term sub3 = TermFactory.createApp(f, z, abs);
@@ -205,7 +199,7 @@ class MetaApplicationTest extends TermTestFoundation {
     args.add(TermFactory.createBinder("x", baseType("A")));
     args.add(TermFactory.createBinder("y", baseType("A")));
     args.add(TermFactory.createBinder("z", baseType("A")));
-    MetaVariable z = new HigherMetaVar("mvar", inputs, baseType("B"));
+    MetaVariable z = TermFactory.createMetaVar("mvar", inputs, baseType("B"));
     Term t = TermFactory.createMeta(z, args);
     assertTrue(t.isPattern());
     assertFalse(t.isFirstOrder());

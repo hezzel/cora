@@ -15,7 +15,7 @@
 
 package cora.terms;
 
-import java.util.ArrayList;
+import com.google.common.collect.ImmutableList;
 import cora.exceptions.IndexingError;
 import cora.exceptions.IllegalArgumentError;
 import cora.exceptions.NullInitialisationError;
@@ -28,11 +28,12 @@ import cora.types.TypeFactory;
 class HigherMetaVar implements MetaVariable {
   private static int _COUNTER = 0;
   private final String _name;
-  private final ArrayList<Type> _inputs;
+  private final ImmutableList<Type> _inputs;
   private final Type _output;
   private final int _index;
+  private Type _mytype;
 
-  HigherMetaVar(String name, ArrayList<Type> inputs, Type output) {
+  HigherMetaVar(String name, ImmutableList<Type> inputs, Type output) {
     _name = name;
     _inputs = inputs;
     _output = output;
@@ -41,15 +42,14 @@ class HigherMetaVar implements MetaVariable {
     if (name == null) throw new NullInitialisationError("HigherMetaVar", "name");
     if (inputs == null) throw new NullInitialisationError("HigherMetaVar", "inputs");
     if (output == null) throw new NullInitialisationError("HigherMetaVar", "output");
-    for (int i = 0; i < inputs.size(); i++) {
-      if (inputs.get(i) == null) {
-        throw new NullInitialisationError("HigherMetaVar", "inputs[" + i + "]");
-      }
-    }
     if (inputs.size() == 0) {
       throw new IllegalArgumentError("HigherMetaVar", "constructor",
         "empty inputs list given: a meta-variable without arguments should be constructed as " +
         "a Var instead.");
+    }
+    _mytype = _output;
+    for (int i = _inputs.size()-1; i >= 0; i--) {
+      _mytype = TypeFactory.createArrow(_inputs.get(i), _mytype);
     }
   }
 
@@ -80,9 +80,7 @@ class HigherMetaVar implements MetaVariable {
   }
 
   public Type queryType() {
-    Type ret = _output;
-    for (int i = _inputs.size()-1; i >= 0; i--) ret = TypeFactory.createArrow(_inputs.get(i), ret);
-    return ret;
+    return _mytype;
   }
 
   public int compareTo(Replaceable other) {
@@ -94,7 +92,7 @@ class HigherMetaVar implements MetaVariable {
     d = _inputs.size() - other.queryArity();
     if (d != 0) return d;
     // we really shouldn't get here, but just in case...
-    return queryType().toString().compareTo(other.queryType().toString());
+    return _mytype.toString().compareTo(other.queryType().toString());
   }
 
   /** Two replaceables are equal if and only if they are the same object. */

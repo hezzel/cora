@@ -17,8 +17,10 @@ package cora.terms;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
+
 import cora.exceptions.*;
 import cora.types.Type;
 import cora.types.TypeFactory;
@@ -26,9 +28,7 @@ import cora.types.TypeFactory;
 public class MetaApplicationTestOld extends TermTestFoundation {
   @Test(expected = NullInitialisationError.class)
   public void testUnaryWithNullArg() {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(baseType("a"));
-    MetaVariable z = new HigherMetaVar("z", inputs, baseType("b"));
+    MetaVariable z = TermFactory.createMetaVar("z", baseType("a"), baseType("b"));
     Term arg = null;
     Term t = TermFactory.createMeta(z, arg);
   }
@@ -41,9 +41,7 @@ public class MetaApplicationTestOld extends TermTestFoundation {
 
   @Test(expected = NullInitialisationError.class)
   public void testNullArgs() {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(baseType("a"));
-    MetaVariable z = new HigherMetaVar("z", inputs, baseType("b"));
+    MetaVariable z = TermFactory.createMetaVar("z", baseType("a"), baseType("b"));
     ArrayList<Term> args = null;
     TermFactory.createMeta(z, args);
   }
@@ -54,7 +52,7 @@ public class MetaApplicationTestOld extends TermTestFoundation {
     inputs.add(baseType("a"));
     inputs.add(baseType("a"));
     inputs.add(baseType("a"));
-    MetaVariable z = new HigherMetaVar("z", inputs, baseType("a"));
+    MetaVariable z = TermFactory.createMetaVar("z", inputs, baseType("a"));
     Term s = constantTerm("s", baseType("a"));
     TermFactory.createMeta(z, s, s);
   }
@@ -64,7 +62,7 @@ public class MetaApplicationTestOld extends TermTestFoundation {
     ArrayList<Type> inputs = new ArrayList<Type>();
     inputs.add(baseType("a"));
     inputs.add(baseType("a"));
-    MetaVariable z = new HigherMetaVar("z", inputs, arrowType("a", "a"));
+    MetaVariable z = TermFactory.createMetaVar("z", inputs, arrowType("a", "a"));
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(constantTerm("a", baseType("a")));
     args.add(constantTerm("a", baseType("a")));
@@ -84,7 +82,7 @@ public class MetaApplicationTestOld extends TermTestFoundation {
     ArrayList<Type> inputs = new ArrayList<Type>();
     inputs.add(baseType("a"));
     inputs.add(baseType("a"));
-    MetaVariable z = new HigherMetaVar("z", inputs, arrowType("a", "a"));
+    MetaVariable z = TermFactory.createMetaVar("z", inputs, arrowType("a", "a"));
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(constantTerm("a", baseType("a")));
     args.add(constantTerm("b", baseType("b")));
@@ -92,17 +90,12 @@ public class MetaApplicationTestOld extends TermTestFoundation {
   }
 
   private Term makeMeta(String name, Term arg, Type output) {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(arg.queryType());
-    MetaVariable z = new HigherMetaVar(name, inputs, output);
+    MetaVariable z = TermFactory.createMetaVar(name, arg.queryType(), output);
     return TermFactory.createMeta(z, arg);
   }
 
   private Term makeMeta(String name, Term arg1, Term arg2, Type output) {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(arg1.queryType());
-    inputs.add(arg2.queryType());
-    MetaVariable z = new HigherMetaVar(name, inputs, output);
+    MetaVariable z = TermFactory.createMetaVar(name, arg1.queryType(), arg2.queryType(), output);
     return TermFactory.createMeta(z, arg1, arg2);
   }
 
@@ -144,10 +137,8 @@ public class MetaApplicationTestOld extends TermTestFoundation {
     Variable x = TermFactory.createBinder("x", baseType("o"));
     Variable y = TermFactory.createBinder("x", baseType("a"));
     Variable z = TermFactory.createBinder("z", baseType("a"));
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(baseType("o"));
     Type output = arrowType(baseType("a"), arrowType("a", "b"));
-    MetaVariable m = new HigherMetaVar("Z", inputs, output);
+    MetaVariable m = TermFactory.createMetaVar("Z", baseType("o"), output);
     Term zx = TermFactory.createMeta(m, x);
     Term total = TermFactory.createApp(zx, y, z);
     assertTrue(total.toString().equals("Z⟨x__1⟩(x__2, z)"));
@@ -166,7 +157,7 @@ public class MetaApplicationTestOld extends TermTestFoundation {
     inputs.add(arrowType("o", "o"));
     inputs.add(arrowType("o", "o"));
     inputs.add(baseType("o"));
-    MetaVariable m = new HigherMetaVar("M", inputs, baseType("o"));
+    MetaVariable m = TermFactory.createMetaVar("M", inputs, baseType("o"));
     ArrayList<Term> args1 = new ArrayList<Term>();
     args1.add(TermFactory.createAbstraction(x, x));
     args1.add(TermFactory.createAbstraction(x, unaryTerm("f", o, x)));

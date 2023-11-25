@@ -15,10 +15,11 @@
 
 package cora.terms;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.ArrayList;
 import cora.exceptions.ArityError;
 import cora.exceptions.IllegalArgumentError;
+import cora.types.Arrow;
 import cora.types.Type;
 import cora.types.TypeFactory;
 
@@ -74,21 +75,42 @@ public class TermFactory {
     if (arity == 0) return new Var(name, type);
     if (arity < 0) throw new IllegalArgumentError("TermFactory", "createMetaVar",
       "received negative arity " + arity + ".");
-    ArrayList<Type> inputs = new ArrayList<Type>();
+    ImmutableList.Builder<Type> builder = ImmutableList.<Type>builder();
+    Type tmp = type;
     for (int i = 0; i < arity; i++) {
-      if (!type.isArrowType()) throw new ArityError("TermFactory", "createMetaVar",
-        "trying to create a meta-variable with arity " + arity + " while the given type (" +
-        type.toString() + ") only has arity " + i);
-      inputs.add(type.queryArrowInputType());
-      type = type.queryArrowOutputType();
+      switch (tmp) {
+        case Arrow(Type inp, Type out):
+          builder.add(inp);
+          tmp = out;
+          break;
+        default: throw new ArityError("TermFactory", "createMetaVar",
+          "trying to create a meta-variable with arity " + arity + " while the given type (" +
+          type.toString() + ") only has arity " + i);
+      }
     }
-    return new HigherMetaVar(name, inputs, type);
+    return new HigherMetaVar(name, builder.build(), tmp);
   }
 
   /** Creates a meta-variable X with arity k */
-  public static MetaVariable createMetaVar(String name, ArrayList<Type> inputs, Type output) {
+  public static MetaVariable createMetaVar(String name, ImmutableList<Type> inputs, Type output) {
     if (inputs.size() == 0) return new Var(name, output);
     return new HigherMetaVar(name, inputs, output);
+  }
+
+  /** Creates a meta-variable X with arity k */
+  public static MetaVariable createMetaVar(String name, List<Type> inputs, Type output) {
+    if (inputs.size() == 0) return new Var(name, output);
+    return new HigherMetaVar(name, ImmutableList.copyOf(inputs), output);
+  }
+
+  /** Creates a meta-variable X with arity 1. */
+  public static MetaVariable createMetaVar(String name, Type input, Type output) {
+    return new HigherMetaVar(name, ImmutableList.<Type>builder().add(input).build(), output);
+  }
+
+  /** Creates a meta-variable X with arity 2. */
+  public static MetaVariable createMetaVar(String name, Type in1, Type in2, Type output) {
+    return new HigherMetaVar(name, ImmutableList.<Type>builder().add(in1).add(in2).build(), output);
   }
 
   /**
@@ -104,10 +126,7 @@ public class TermFactory {
    * including another application.
    */
   public static Term createApp(Term head, Term arg1, Term arg2) {
-    ArrayList<Term> args = new ArrayList<Term>();
-    args.add(arg1);
-    args.add(arg2);
-    return head.apply(args);
+    return head.apply(ImmutableList.<Term>builder().add(arg1).add(arg2).build());
   }
 
   /**
@@ -130,19 +149,14 @@ public class TermFactory {
     return new MetaApplication(mv, args);
   }
 
-  /** Create a meta-application Z[arg1] */
-  public static Term createMeta(MetaVariable mv, Term arg1) {
-    ArrayList<Term> args = new ArrayList<Term>();
-    args.add(arg1);
-    return new MetaApplication(mv, args);
+  /** Create a meta-application Z[arg] */
+  public static Term createMeta(MetaVariable mv, Term arg) {
+    return new MetaApplication(mv, ImmutableList.<Term>builder().add(arg).build());
   }
 
   /** Create a meta-application Z[arg2] */
   public static Term createMeta(MetaVariable mv, Term arg1, Term arg2) {
-    ArrayList<Term> args = new ArrayList<Term>();
-    args.add(arg1);
-    args.add(arg2);
-    return new MetaApplication(mv, args);
+    return new MetaApplication(mv, ImmutableList.<Term>builder().add(arg1).add(arg2).build());
   }
 
   /** Creates an empty substitution. */

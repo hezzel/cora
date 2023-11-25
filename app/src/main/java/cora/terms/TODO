@@ -1,9 +1,0 @@
-Tuple.java
-Variable.java
-
-Environment.java
-ComparisonSymbol.java                       TheoryFactory.java   VariableEnvironment.java
-Substitution.java
-Binder.java        Constant.java            HigherMetaVar.java   MetaVariableEnvironment.java  Subst.java                                Var.java
-MetaVariable.java  TermFactory.java
-
