@@ -16,14 +16,10 @@
 package cora.terms.position;
 
 import cora.exceptions.CustomParserError;
-import cora.exceptions.IndexingError;
+import cora.exceptions.IllegalArgumentError;
 import cora.exceptions.NullInitialisationError;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PositionTest {
@@ -99,10 +95,10 @@ public class PositionTest {
 
   @Test
   public void testCreateWithIllegalindex() {
-    assertThrows(IndexingError.class, () -> new ArgumentPos(0, new EmptyPos()));
-    assertThrows(IndexingError.class, () -> new ArgumentPos(-1, new EmptyPos()));
-    assertThrows(IndexingError.class, () -> new MetaPos(0, new EmptyPos()));
-    assertThrows(IndexingError.class, () -> new MetaPos(-1, new EmptyPos()));
+    assertThrows(IllegalArgumentError.class, () -> new ArgumentPos(0, new EmptyPos()));
+    assertThrows(IllegalArgumentError.class, () -> new ArgumentPos(-1, new EmptyPos()));
+    assertThrows(IllegalArgumentError.class, () -> new MetaPos(0, new EmptyPos()));
+    assertThrows(IllegalArgumentError.class, () -> new MetaPos(-1, new EmptyPos()));
     new MetaPos(1000000, new EmptyPos()); // no error here
   }
 

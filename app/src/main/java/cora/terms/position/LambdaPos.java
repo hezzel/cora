@@ -1,6 +1,5 @@
 package cora.terms.position;
 
-import cora.exceptions.IndexingError;
 import cora.exceptions.NullInitialisationError;
 
 public record LambdaPos(Position tail) implements Position {

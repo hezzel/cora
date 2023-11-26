@@ -1,12 +1,12 @@
 package cora.terms.position;
 
-import cora.exceptions.IndexingError;
+import cora.exceptions.IllegalArgumentError;
 import cora.exceptions.NullInitialisationError;
 
 public record MetaPos(int index, Position tail) implements Position {
   public MetaPos(int index, Position tail) {
     if (index <= 0) {
-      throw new IndexingError("MetaPos", "constructor", index, 1, 9999999);
+      throw new IllegalArgumentError("MetaPos", "constructor", "given index ≤ 0");
     }
     if (tail == null) {
       throw new NullInitialisationError("MetaPos", "tail");

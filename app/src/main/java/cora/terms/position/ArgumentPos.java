@@ -1,12 +1,12 @@
 package cora.terms.position;
 
-import cora.exceptions.IndexingError;
+import cora.exceptions.IllegalArgumentError;
 import cora.exceptions.NullInitialisationError;
 
 public record ArgumentPos(int index, Position tail) implements Position {
   public ArgumentPos(int index, Position tail) {
     if (index <= 0) {
-      throw new IndexingError("ArgumentPos", "constructor", index, 1, 9999999);
+      throw new IllegalArgumentError("ArgumentPos", "constructor", "given index ≤ 0");
     }
     if (tail == null) {
       throw new NullInitialisationError("ArgumentPos", "tail");
