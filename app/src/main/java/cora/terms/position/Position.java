@@ -21,10 +21,10 @@ import cora.exceptions.CustomParserError;
  * A position indicates a location in a term, which has one of the following shapes:
  * <p><ul>
  *  <li> ε, which refers to the current term
- *  <li> [index] tail, where the term is h(s1,...,sn) or ⦅s1,..., sn⦆, index ∈ {1..n}, and tail a
+ *  <li> [index].tail, where the term is h(s1,...,sn) or ⦅s1,..., sn⦆, index ∈ {1..n}, and tail a
  *  position in s_index
- *  <li> [0] tail, where the term is λx.s or (λx.s)(t1,...,tn)  and tail a position in s
- *  <li> ![index] tail, where the term is Z[s1,...,sk] or Z[s1,...,sk](t1,...,tn), index
+ *  <li> 0.tail, where the term is λx.s or (λx.s)(t1,...,tn)  and tail a position in s
+ *  <li> ![index].tail, where the term is Z[s1,...,sk] or Z[s1,...,sk](t1,...,tn), index
  *  ∈ {1..k}, and tail a position in s_index.
  *  So this does NOT include head positions.
  *  </ul></p>
@@ -43,7 +43,27 @@ public sealed interface Position permits
   /** Gives a unique string representation for the position. */
   String toString();
 
-  /** Access function: reads a position from string. */
+  /** Returns whether this is the empty position or not. */
+  default boolean isEmpty() { return false; }
+
+  /**
+   * For a position x.tail, returns x, where x can either be positive (for an argument position),
+   * 0 (for a position inside a λ argument), or negative (for a position !i inside a
+   * meta-application).  For an empty position, this throws an InappropriatePatternDataError.
+   */
+  int queryHead();
+
+  /**
+   * For a position x.tail, with x a position number, 0, or !i, this returns the tail.
+   * For an empty position, this throws an InappropriatePatternDataError.
+   */
+  Position queryTail();
+
+  /**
+   * Access function: reads a position from string.  Positions are strings of non-negative numbers,
+   * possibly ending in .ε.  In addition, for positions in meta-applications, either an index
+   * !i with i a ositive number should be used, or -i (which is exactly the head of the position).
+   */
   public static Position parse(String text) {
     if (text.equals("")) return new EmptyPos();
     // give the right error message if the input is a head position rather than a position
@@ -73,7 +93,11 @@ public sealed interface Position permits
         throw new CustomParserError(1, dot+1, part, "position index should be an integer");
       }
       if (num < 0) {
-        throw new CustomParserError(1, dot+1, part, "position index should be at least 0");
+        if (!meta) {
+          meta = true;
+          num = -num;
+        }
+        else throw new CustomParserError(1, dot+1, part, "position index should be at least 0");
       }
       if (meta) ret = new MetaPos(num, ret);
       else if (num == 0) ret = new LambdaPos(ret);

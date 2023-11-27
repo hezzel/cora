@@ -15,9 +15,7 @@
 
 package cora.terms.position;
 
-import cora.exceptions.CustomParserError;
-import cora.exceptions.IllegalArgumentError;
-import cora.exceptions.NullInitialisationError;
+import cora.exceptions.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,6 +27,10 @@ public class PositionTest {
     assertTrue(pos.toString().equals("ε"));
     assertTrue(pos.equals(new EmptyPos()));
     assertFalse(pos.equals(new ArgumentPos(1, new EmptyPos())));
+    assertTrue(pos.isEmpty());
+    assertThrows(InappropriatePatternDataError.class, () -> pos.queryHead());
+    assertThrows(InappropriatePatternDataError.class, () -> pos.queryTail());
+    
     boolean ok = false;
     switch (pos) {
       case ArgumentPos(int i, Position tail): break;
@@ -47,6 +49,10 @@ public class PositionTest {
     assertFalse(pos.equals(new ArgumentPos(17, new ArgumentPos(2, new EmptyPos()))));
     assertFalse(pos.equals(new MetaPos(17, new MetaPos(2, new EmptyPos()))));
     assertFalse(pos.equals(new ArgumentPos(18, new MetaPos(2, new EmptyPos()))));
+    assertFalse(pos.isEmpty());
+    assertTrue(pos.queryHead() == 17);
+    assertTrue(pos.queryTail().equals(new MetaPos(2, new EmptyPos())));
+    
     boolean ok = false;
     switch (pos) {
       case EmptyPos(): break;
@@ -66,6 +72,10 @@ public class PositionTest {
     assertFalse(pos.equals(new MetaPos(2, new MetaPos(1, new EmptyPos()))));
     assertFalse(pos.equals(new ArgumentPos(2, new LambdaPos(new EmptyPos()))));
     assertFalse(pos.equals(new MetaPos(1, new LambdaPos(new EmptyPos()))));
+    assertFalse(pos.isEmpty());
+    assertTrue(pos.queryHead() == -2);
+    assertTrue(pos.queryTail().equals(new LambdaPos(new EmptyPos())));
+
     boolean ok = false;
     switch (pos) {
       case EmptyPos(): break;
@@ -83,6 +93,9 @@ public class PositionTest {
     assertTrue(pos.toString().equals("0.1.ε"));
     assertTrue(pos.equals(new LambdaPos(new ArgumentPos(1, new EmptyPos()))));
     assertFalse(pos.equals(new ArgumentPos(1, new EmptyPos())));
+    assertTrue(pos.queryHead() == 0);
+    assertTrue(pos.queryTail().equals(new ArgumentPos(1, new EmptyPos())));
+
     boolean ok = false;
     switch (pos) {
       case EmptyPos(): break;
@@ -119,6 +132,8 @@ public class PositionTest {
     assertTrue(pos.toString().equals("!2.1.ε"));
     pos = Position.parse("0.19.12.ε");
     assertTrue(pos.toString().equals("0.19.12.ε"));
+    pos = Position.parse("19.-1.12.ε");
+    assertTrue(pos.toString().equals("19.!1.12.ε"));
   }
 
   @Test
@@ -131,7 +146,6 @@ public class PositionTest {
   public void testIllegalParsing() {
     assertThrows(CustomParserError.class, () -> Position.parse("1..254"));
     assertThrows(CustomParserError.class, () -> Position.parse("1.254.3.."));
-    assertThrows(CustomParserError.class, () -> Position.parse("19.-1.12.ε"));
     assertThrows(CustomParserError.class, () -> Position.parse("5.1@.3"));
   }
 }

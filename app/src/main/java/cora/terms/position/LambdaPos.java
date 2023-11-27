@@ -20,4 +20,12 @@ public record LambdaPos(Position tail) implements Position {
       default: return false;
     }
   }
+
+  public int queryHead() {
+    return 0;
+  }
+
+  public Position queryTail() {
+    return tail;
+  }
 }

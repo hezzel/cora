@@ -25,4 +25,12 @@ public record ArgumentPos(int index, Position tail) implements Position {
       default: return false;
     }
   }
+
+  public int queryHead() {
+    return index;
+  }
+
+  public Position queryTail() {
+    return tail;
+  }
 }

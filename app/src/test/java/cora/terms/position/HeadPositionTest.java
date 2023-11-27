@@ -81,7 +81,6 @@ public class HeadPositionTest {
     assertThrows(CustomParserError.class, () -> HeadPosition.parse("1.254.*3.☆15"));
     assertThrows(CustomParserError.class, () -> HeadPosition.parse("1..254.*3"));
     assertThrows(CustomParserError.class, () -> HeadPosition.parse("1.254.3.."));
-    assertThrows(CustomParserError.class, () -> HeadPosition.parse("19.-1.12.ε"));
     assertThrows(CustomParserError.class, () -> HeadPosition.parse("5.1@.3.ε"));
   }
 }
