@@ -23,7 +23,7 @@ ARCHITECTURE
 * packages should be usable by outsiders with no understanding of how they are implemented beyond the public classes
 * only make those classes public that genuinely serve a purpose to be public; favour the use of interfaces and factories over exposing details that users have no need to understand
 * packages should not be too large: an average programmer should be able to fully understand a package in one week
-  (note that for instance termination and termination.dp are different packages -- and should interact with each other like any distinct packages)
+  (note that for instance termination and termination.dps are different packages -- and should interact with each other like any distinct packages)
 * code (and dependencies) should generally be structured following the advice in the handouts
 
 PROGRAMMING CONVENTIONS

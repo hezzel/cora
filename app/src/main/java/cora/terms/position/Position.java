@@ -16,28 +16,45 @@
 package cora.terms.position;
 
 import cora.exceptions.CustomParserError;
+import cora.exceptions.InappropriatePatternDataError;
 
 /**
- * A position indicates a location in a term, which has one of the following shapes:
+ * Positions are a tool to refer to a specific location in a term.
+ *
+ * Inherently, a Position is nothing more than a sequence that has one of two forms:
  * <p><ul>
- *  <li> ε, which refers to the current term
- *  <li> [index].tail, where the term is h(s1,...,sn) or ⦅s1,..., sn⦆, index ∈ {1..n}, and tail a
- *  position in s_index
- *  <li> 0.tail, where the term is λx.s or (λx.s)(t1,...,tn)  and tail a position in s
- *  <li> ![index].tail, where the term is Z[s1,...,sk] or Z[s1,...,sk](t1,...,tn), index
- *  ∈ {1..k}, and tail a position in s_index.
- *  So this does NOT include head positions.
+ *   <li> [item_1].[item_2]...[item_n].ε (called a full position)
+ *   <li> [item_1].[item_2]...[item_n].☆k with k > 0 (called a partial position)
+ * </ul></p>
+ * where each item [item_i] is an integer.  Negative integers are denoted !i instead of -i in
+ * printing and parsing.
+ *
+ * Positions are implemented essentially as a list, meaning a Position has one of the following
+ * shapes:
+ * <p><ul>
+ *  <li> ε or ☆k with k > 0 (final positions); we say that ε is the empty position
+ *  <li> i.p; we refer to i as the head and to p as the tail
  *  </ul></p>
  * <p>
- * A Position can be used to find (and possibly replace) the subterm at that position.
+ *
+ * Positions gain their meaning in the context of terms: for a given term, certain positions refer
+ * to specific subterms (and not all positions refer to a subterm)!  Specifically:
+ * <p><ul>
+ *   <li> for a term h(s1,...,sn), i.p refers ro the subterm at position p in si if 0 < i ≤ n
+ *   <li> for a term λx.t or (λx.t)(s1,...,sn), 0.p refers to the subterm at position p in t
+ *   <li> for a term Z⟨t1,...,tk⟩(s1,...,sn), !i.p refers to the subterm at position p in ti if
+ *     0 < i ≤ k
+ *   <li> for any term s, ε refers to s itself
+ *   <li> for a term h(s{1},...,s{n}), ☆k refers to h(s{1},...,s{n-k})
+ * </ul></p>
+ *
  * <b>Note:</b> all instances of Position must (and can be expected to) be immutable.
- * </p>
  */
 
 public sealed interface Position permits
-  EmptyPos, ArgumentPos, LambdaPos, MetaPos {
+  FinalPos, ArgumentPos, LambdaPos, MetaPos {
 
-  /** Returns whether this position and other represent the same location in a term. */
+  /** Returns whether this position and other are the same list. */
   boolean equals(Position other);
 
   /** Gives a unique string representation for the position. */
@@ -46,38 +63,60 @@ public sealed interface Position permits
   /** Returns whether this is the empty position or not. */
   default boolean isEmpty() { return false; }
 
+  /** Returns whether this is a final position (so ε or ☆k). */
+  default boolean isFinal() { return false; }
+
   /**
-   * For a position x.tail, returns x, where x can either be positive (for an argument position),
-   * 0 (for a position inside a λ argument), or negative (for a position !i inside a
-   * meta-application).  For an empty position, this throws an InappropriatePatternDataError.
+   * If the current Position is a partial position of the form ☆k, this returns k; if it is an
+   * empty position ε it returns 0.  If it is not a final position, this instead throws an
+   * InappropriatePatternDataError.
+   */
+  default int queryChopCount() {
+    throw new InappropriatePatternDataError("Position", "queryChopCount", "final positions");
+  }
+
+  /**
+   * For a position x.tail, returns x (returning -i for a meta-position !i).
+   * For a final position, this throws an InappropriatePatternDataError.
    */
   int queryHead();
 
   /**
-   * For a position x.tail, with x a position number, 0, or !i, this returns the tail.
-   * For an empty position, this throws an InappropriatePatternDataError.
+   * For a position x.tail, returns tail.
+   * For a final position, this throws an InappropriatePatternDataError.
    */
   Position queryTail();
 
+  /** Stores a cached version of the empty position for convenient reuse. */
+  public static final Position empty = new FinalPos(0);
+
   /**
-   * Access function: reads a position from string.  Positions are strings of non-negative numbers,
-   * possibly ending in .ε.  In addition, for positions in meta-applications, either an index
-   * !i with i a ositive number should be used, or -i (which is exactly the head of the position).
+   * Access function: reads a position from string. 
+   * Positions are strings of integers, separated by periods, and possibly ending in .ε (for a
+   * full position), or .☆k with k > 0 (for a partial position).  If omitted, the ending .ε is
+   * assumed.  Instead of supplying a negative number, also !i with i > 0 may be used.
    */
   public static Position parse(String text) {
-    if (text.equals("")) return new EmptyPos();
-    // give the right error message if the input is a head position rather than a position
-    int n = text.lastIndexOf('*');
-    if (n < 0) n = text.lastIndexOf('☆');
-    if (n > 0) {
-      throw new CustomParserError(1, n + 1, text, "stars should only occur in head positions");
+    if (text.equals("")) return empty;
+
+    // find chop count, if any, and remove that part from the text
+    int chp = 0, n;
+    int star = text.indexOf('☆');
+    if (star == -1) star = text.indexOf('*');
+    if (star != -1) {
+      try { chp = Integer.parseInt(text.substring(star+1)); }
+      catch (NumberFormatException ex) {
+        throw new CustomParserError(1, star + 1, text.substring(star+1),
+          "chop count should be an integer");
+      }
+      n = star;
     }
-    // find point where the interesting part of the position ends
-    if (text.charAt(text.length()-1) == 'ε') n = text.length()-1;
+    else if (text.charAt(text.length()-1) == 'ε') n = text.length()-1;
     else n = text.length();
     if (n > 0 && text.charAt(n-1) == '.') n--;
+
     // read parts from right to left, building a position as we go
-    Position ret = new EmptyPos();
+    Position ret = chp == 0 ? empty : new FinalPos(chp);
     while (n > 0) {
       int dot = text.lastIndexOf('.', n-1);
       if (dot == n-1) throw new CustomParserError(1, dot+1, text, "empty position index");
@@ -93,17 +132,15 @@ public sealed interface Position permits
         throw new CustomParserError(1, dot+1, part, "position index should be an integer");
       }
       if (num < 0) {
-        if (!meta) {
-          meta = true;
-          num = -num;
-        }
-        else throw new CustomParserError(1, dot+1, part, "position index should be at least 0");
+        meta = true;
+        num = -num;
       }
       if (meta) ret = new MetaPos(num, ret);
       else if (num == 0) ret = new LambdaPos(ret);
       else ret = new ArgumentPos(num, ret);
       n = dot;
     }
+
     return ret;
   }
 }
