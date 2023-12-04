@@ -1,17 +1,17 @@
 package cora.terms;
 
-import cora.exceptions.*;
-import cora.types.Type;
-import cora.types.TypeFactory;
-import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import cora.exceptions.*;
+import cora.utils.Pair;
+import cora.types.Type;
+import cora.types.TypeFactory;
+import cora.terms.position.Position;
 
 class AbstractionTest extends TermTestFoundation {
 
@@ -263,50 +263,33 @@ class AbstractionTest extends TermTestFoundation {
   }
 
   @Test
-  public void testPositions() {
+  public void testQuerySubterms() {
     // λx.f(x, λy.y)
     Variable x = new Binder("x", arrowType("a", "b"));
     Term term = makeTerm(x);
-    List<Path> posses = term.queryPositions();
+    List<Pair<Term,Position>> subs = term.querySubterms();
 
-    assertEquals(5, posses.size());
-    assertEquals("0.1.ε", posses.get(0).toString());
-    assertSame(posses.get(0).queryCorrespondingSubterm(), x);
-    assertSame(posses.get(0).queryAssociatedTerm(), term);
-    assertEquals("0.2.0.ε", posses.get(1).toString());
-    assertSame(posses.get(1).queryAssociatedTerm(), term);
-    assertEquals("0.2.ε", posses.get(2).toString());
-    assertSame(posses.get(1).queryCorrespondingSubterm(), posses.get(2).queryCorrespondingSubterm().queryVariable());
-    assertEquals("0.ε", posses.get(3).toString());
-    assertTrue(posses.get(4).isEmpty());
-
-    // (λx.f(x, λy.y))(A)
-    Term a = constantTerm("A", arrowType("a", "b"));
-    Term s = new Application(term, a);
-    List<Path> subposses = term.queryPositionsForHead(s);
-
-    assertEquals(4, subposses.size());
-    assertEquals("0.1.ε", subposses.get(0).toString());
-    assertSame(subposses.get(0).queryCorrespondingSubterm(), x);
-    assertSame(subposses.get(0).queryAssociatedTerm(), s);
-    assertEquals("0.2.ε", subposses.get(2).toString());
-    assertSame(subposses.get(3).queryAssociatedTerm(), s);
+    assertEquals(5, subs.size());
+    assertEquals("0.1.ε", subs.get(0).snd().toString());
+    assertSame(subs.get(0).fst(), x);
+    assertEquals("0.2.0.ε", subs.get(1).snd().toString());
+    assertEquals("0.2.ε", subs.get(2).snd().toString());
+    assertSame(subs.get(1).fst(), subs.get(2).fst().queryVariable());
+    assertEquals("0.ε", subs.get(3).snd().toString());
+    assertTrue(subs.get(4).snd().isEmpty());
   }
 
   @Test
-  public void testHeadPositions() {
+  public void testQueryPositions() {
     // λx.f(x, λy.y)
     Variable x = new Binder("x", arrowType("a", "b"));
     Term term = makeTerm(x);
-    List<HeadPosition> posses = term.queryHeadPositions();
-    assertEquals(7, posses.size());
-    assertEquals("0.1.ε", posses.get(0).toString());
-    assertEquals("0.2.0.ε", posses.get(1).toString());
-    assertEquals("0.2.ε", posses.get(2).toString());
-    assertEquals("0.☆2", posses.get(3).toString());
-    assertEquals("0.☆1", posses.get(4).toString());
-    assertEquals("0.ε", posses.get(5).toString());
-    assertTrue(posses.get(6).isEnd() && posses.get(6).queryChopCount() == 0);
+
+    List<Position> pos1 = term.queryPositions(false);
+    List<Position> pos2 = term.queryPositions(true);
+    
+    assertTrue(pos1.toString().equals("[0.1.ε, 0.2.0.ε, 0.2.ε, 0.ε, ε]"));
+    assertTrue(pos2.toString().equals("[0.1.ε, 0.2.0.ε, 0.2.ε, 0.☆2, 0.☆1, 0.ε, ε]"));
   }
 
   @Test
@@ -314,31 +297,31 @@ class AbstractionTest extends TermTestFoundation {
     // λx.f(x, λy.y)
     Variable x = new Binder("x", baseType("o"));
     Term term = makeTerm(x);
-    assertTrue(term.querySubterm(PositionFactory.parsePos("0.1")) == x);
-    assertTrue(term.querySubterm(PositionFactory.parsePos("0.2")).toString().equals("λy.y"));
+    assertTrue(term.querySubterm(Position.parse("0.1")) == x);
+    assertTrue(term.querySubterm(Position.parse("0.2")).toString().equals("λy.y"));
   }
 
   @Test
-  public void testQueryHeadSubtermGood() {
+  public void testQueryPartialSubtermGood() {
     Variable x = new Binder("x", baseType("o"));
     Term term = makeTerm(x);
-    HeadPosition pos = PositionFactory.parseHPos("0.☆1");
+    Position pos = Position.parse("0.☆1");
     assertTrue(term.querySubterm(pos).toString().equals("f(x)"));
   }
 
   @Test
-  void testArgumentPositionRequest() {
+  void testBadArgumentPositionRequest() {
     Assertions.assertThrows(IndexingError.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
-      term.querySubterm(PositionFactory.parsePos("1.ε"));
+      term.querySubterm(Position.parse("1.ε"));
     });
   }
 
   @Test
-  void testHeadPositionRequest() {
+  void testBadPartialPositionRequest() {
     Assertions.assertThrows(IndexingError.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
-      term.querySubterm(PositionFactory.parseHPos("1.2.☆1"));
+      term.querySubterm(Position.parse("1.2.☆1"));
     });
   }
 
@@ -348,9 +331,9 @@ class AbstractionTest extends TermTestFoundation {
     Variable x = new Binder("x", baseType("b"));
     Variable y = new Binder("y", baseType("b"));
     Term term = makeTerm(x);
-    Term term1 = term.replaceSubterm(PositionFactory.parsePos("0.2"), h);
-    Term term2 = term.replaceSubterm(PositionFactory.parsePos("0.1"), y);
-    Term term3 = term.replaceSubterm(PositionFactory.parsePos("0"), x);
+    Term term1 = term.replaceSubterm(Position.parse("0.2"), h);
+    Term term2 = term.replaceSubterm(Position.parse("0.1"), y);
+    Term term3 = term.replaceSubterm(Position.parse("0"), x);
     assertTrue(term1.toString().equals("λx.f(x, h)"));
     assertTrue(term2.toString().equals("λx.f(y, λy1.y1)"));
     assertTrue(term3.equals(new Abstraction(x, x)));
@@ -360,7 +343,7 @@ class AbstractionTest extends TermTestFoundation {
   void testBadPositionReplacement() {
     Assertions.assertThrows(IndexingError.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
-      term.replaceSubterm(PositionFactory.parsePos("1"), constantTerm("a", baseType("o")));
+      term.replaceSubterm(Position.parse("1"), constantTerm("a", baseType("o")));
     });
   }
 
@@ -368,17 +351,17 @@ class AbstractionTest extends TermTestFoundation {
   void testBadTypeReplacement() {
     Assertions.assertThrows(TypingError.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
-      term.replaceSubterm(PositionFactory.parsePos("0.2"), constantTerm("a", baseType("o")));
+      term.replaceSubterm(Position.parse("0.2"), constantTerm("a", baseType("o")));
     });
   }
 
   @Test
-  public void testReplaceHeadSubtermGood() {
+  public void testReplacePartialSubtermGood() {
     Term term = makeTerm(new Binder("x", baseType("o")));
     Term h = constantTerm("h", arrowType(arrowType("a", "a"), baseType("b")));
     Term a = constantTerm("A", arrowType("o", "b"));
-    Term term1 = term.replaceSubterm(PositionFactory.parseHPos("0.*1"), h);
-    Term term2 = term.replaceSubterm(PositionFactory.parseHPos("ε"), a);
+    Term term1 = term.replaceSubterm(Position.parse("0.*1"), h);
+    Term term2 = term.replaceSubterm(Position.parse("ε"), a);
     assertEquals("λx.h(λy.y)", term1.toString());
     assertTrue(term2.equals(a));
   }
@@ -387,23 +370,23 @@ class AbstractionTest extends TermTestFoundation {
   void testReplaceHeadOfAbstraction() {
     Assertions.assertThrows(IndexingError.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
-      term.replaceSubterm(PositionFactory.parseHPos("*1"), constantTerm("a", baseType("o")));
+      term.replaceSubterm(Position.parse("*1"), constantTerm("a", baseType("o")));
     });
   }
 
   @Test
-  void testNonExistentInternalHeadPosition() {
+  void testNonExistentInternalPartialPosition() {
     Assertions.assertThrows(IndexingError.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
-      term.replaceSubterm(PositionFactory.parseHPos("0.0"), constantTerm("a", baseType("o")));
+      term.replaceSubterm(Position.parse("0.0"), constantTerm("a", baseType("o")));
     });
   }
 
   @Test
-  void testNonExistingHeadPosition() {
+  void testNonExistingPartialPosition() {
     Assertions.assertThrows(IndexingError.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
-      term.replaceSubterm(PositionFactory.parseHPos("1"), constantTerm("a", baseType("b")));
+      term.replaceSubterm(Position.parse("1"), constantTerm("a", baseType("b")));
     });
   }
 
@@ -411,7 +394,7 @@ class AbstractionTest extends TermTestFoundation {
   void testReplaceHeadWithIllTyped() {
     Assertions.assertThrows(TypingError.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
-      term.replaceSubterm(PositionFactory.parseHPos("ε"), constantTerm("a", baseType("b")));
+      term.replaceSubterm(Position.parse("ε"), constantTerm("a", baseType("b")));
     });
   }
 

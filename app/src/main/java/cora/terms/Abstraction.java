@@ -21,8 +21,11 @@ import java.util.Map;
 import java.util.Set;
 
 import cora.exceptions.*;
+import cora.utils.Pair;
 import cora.types.Type;
 import cora.types.TypeFactory;
+import cora.terms.position.Position;
+import cora.terms.position.LambdaPos;
 
 /** Abstractions are terms of the form λx.s where x is a variable and s a term. */
 class Abstraction extends TermInherit {
@@ -102,63 +105,37 @@ class Abstraction extends TermInherit {
     return false;
   }
 
-  /** @return the list of all positions in this term, in innermost-left order */
-  public List<Path> queryPositions() {
-    List<Path> ret = _subterm.queryPositions();
-    for (int i = 0; i < ret.size(); i++) {
-      ret.set(i, new LambdaPath(this, ret.get(i)));
-    }
-    ret.add(new EmptyPath(this));
-    return ret;
-  }
-
   /**
-   * @return the list of all non-root positions in this term, in innermost-left order; however,
-   *   the associated term is set to top rather than the current term
+   * @return the list of all (full) subterms in this term along with their positions, in
+   * innermost-left order
    */
-  public List<Path> queryPositionsForHead(Term top) {
-    if (top.queryHead() != this) {
-      throw new Error("queryPositionsForHead called with top term whose head is not the " +
-        "current term! (current = " + toString() + " and top = " + top.toString() + ").");
-    }
-    List<Path> ret = _subterm.queryPositions();
+  public List<Pair<Term,Position>> querySubterms() {
+    List<Pair<Term,Position>> ret = _subterm.querySubterms();
     for (int i = 0; i < ret.size(); i++) {
-      ret.set(i, new LambdaPath(top, ret.get(i)));
+      ret.set(i, new Pair<Term,Position>(ret.get(i).fst(), new LambdaPos(ret.get(i).snd())));
     }
+    ret.add(new Pair<Term,Position>(this, Position.empty));
     return ret;
   }
 
-  /** @return the subterm at the given position */
-  public Term querySubterm(Position pos) {
-    if (pos.isEmpty()) return this;
-    if (!pos.isLambda()) throw new IndexingError("Abstraction", "querySubterm", toString(),
-      pos.toString());
-    return _subterm.querySubterm(pos.queryTail());
+  /** @return the subterm at the given (non-empty) position */
+  public Term querySubtermMain(Position pos) {
+    switch (pos) {
+      case LambdaPos(Position tail):
+        return _subterm.querySubterm(tail);
+      default:
+        throw new IndexingError("Abstraction", "querySubterm", toString(), pos.toString());
+    }
   }
 
-  /** @return the current term with the subterm at pos replaced by replacement */
-  public Term replaceSubterm(Position pos, Term replacement) {
-    if (pos.isEmpty()) {
-      if (!queryType().equals(replacement.queryType())) {
-        throw new TypingError("Abstraction", "replaceSubterm", "replacement term " +
-                    replacement.toString(), replacement.queryType().toString(),
-                    queryType().toString());
-      }   
-      return replacement;
+  /** @return the current term with the subterm at pos replaced by replacement (pos is non-empty) */
+  public Term replaceSubtermMain(Position pos, Term replacement) {
+    switch (pos) {
+      case LambdaPos(Position tail):
+        return new Abstraction(_binder, _subterm.replaceSubterm(pos.queryTail(), replacement));
+      default:  
+        throw new IndexingError("Abstraction", "replaceSubterm", toString(), pos.toString());
     }
-    if (!pos.isLambda()) throw new IndexingError("Abstraction", "replaceSubterm",
-      toString(), pos.toString());
-    return new Abstraction(_binder, _subterm.replaceSubterm(pos.queryTail(), replacement));
-  }
-
-  /** @return the current term with the head subterm at pos replaced by replacement */
-  public Term replaceSubterm(HeadPosition pos, Term replacement) {
-    if (pos.isEnd() && pos.queryChopCount() != 0) {
-      throw new IndexingError("Abstraction", "replaceSubterm(HeadPosition)",
-        toString(), pos.toString());
-    }
-    if (!pos.isLambda()) return replaceSubterm(pos.queryPosition(), replacement);
-    return new Abstraction(_binder, _subterm.replaceSubterm(pos.queryTail(), replacement));
   }
 
   /** (λx.s).substitute(γ) returns λz.(s.substitute(γ)), where z is fully fresh */

@@ -20,7 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import com.google.common.collect.ImmutableList;
+import cora.utils.Pair;
 import cora.types.Type;
+import cora.terms.position.Position;
 
 /**
  * Terms are the main object to be rewritten, or used to construct rules.  There are various kinds
@@ -184,27 +186,19 @@ public interface Term {
   boolean isApplicative();
 
   /**
-   * Returns the set of all non-head positions in the current Term, in leftmost innermost order.
+   * Returns the set of all full positions in the current Term, in leftmost innermost order.
    * Note that this set is non-empty as it always contains the empty position (representing the
-   * current term).
-   * The positions are all Paths, which means they contain the information of the referenced
-   * subterm (and the complete path to it).
+   * current term), and does not contain partial positions (e.g., the position for f(x) in a term
+   * f(x,y)).
    */
-  List<Path> queryPositions();
+  List<Pair<Term,Position>> querySubterms();
 
   /**
-   * Returns the set of all non-head non-root positions in the current term, in leftmost innermost
-   * order, except that the associated term of each path is set to the given term rather than the
-   * current term; the current term is expected to be the head term of top.
-   * This is not meant to be called by classes outside the current package.
+   * Returns either the list of full positions (if partial == false), or partial and full
+   * positions (if partial == true) in this term.  Note that this is a non-empty function as it
+   * always contains at least the empty position.
    */
-  List<Path> queryPositionsForHead(Term top);
-
-  /**
-   * Returns the set of all head-positions in the current Term, in leftmost innermost order.
-   * Note that this includes all positions (as these are head positions with 0 chop).
-   */
-  List<HeadPosition> queryHeadPositions();
+  List<Position> queryPositions(boolean partial);
 
   /**
    * Returns the set of all variables occurring freely in the current term.  This may be both binder
@@ -236,19 +230,8 @@ public interface Term {
    */
   Term querySubterm(Position pos);
 
-  /**
-   * Returns the subterm at the given head position, assuming that this is indeed a head position
-   * of the current term.  If not, an IndexingError is thrown.
-   */
-  Term querySubterm(HeadPosition pos);
-
   /** Returns the term obtained by replacing the subterm at the given position by replacement. */
   Term replaceSubterm(Position pos, Term replacement);
-
-  /**
-   * Returns the term obtained by replacing the subterm at the given head position by replacement.
-   */
-  Term replaceSubterm(HeadPosition pos, Term replacement);
 
   /**
    * If the current term has a type σ1 →...→ σn → τ and args = [s1,...,sn] with each si : σi, then

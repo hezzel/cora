@@ -22,7 +22,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import cora.exceptions.*;
+import cora.utils.Pair;
 import cora.types.Type;
+import cora.terms.position.Position;
+import cora.terms.position.MetaPos;
 
 /**
  * A MetaApplication is a term of the form Z⟨s1,...,sk⟩ where Z is a meta-variable with arity
@@ -142,78 +145,46 @@ class MetaApplication extends TermInherit {
   }
 
   /**
-   * Returns the non-head positions in all subterms, from left to right, followed by the empty
-   * position.
+   * Returns all full subterms and their respective positions, from from left to right, with the
+   * current term and empty position in the end.
    */
-  public List<Path> queryPositions() {
-    List<Path> ret = queryPositionsForHead(this);
-    ret.add(new EmptyPath(this));
-    return ret;
-  }
-
-  /** 
-   * @return the list of all non-root positions in this term, in innermost-left order; however,
-   *   the associated term is set to top rather than the current term
-   */
-  public List<Path> queryPositionsForHead(Term top) {
-    ArrayList<Path> ret = new ArrayList<Path>();
+  public List<Pair<Term,Position>> querySubterms() {
+    List<Pair<Term,Position>> ret = new ArrayList<Pair<Term,Position>>();
     for (int i = 0; i < _args.size(); i++) {
-      List<Path> subposses = _args.get(i).queryPositions();
-      for (int j = 0; j < subposses.size(); j++) {
-        ret.add(new MetaPath(top, i+1, subposses.get(j)));
-      }   
-    }   
+      List<Pair<Term,Position>> subs = _args.get(i).querySubterms();
+      for (int j = 0; j < subs.size(); j++) {
+        ret.add(new Pair<Term,Position>(subs.get(j).fst(), new MetaPos(i+1, subs.get(j).snd())));
+      }
+    }
+    ret.add(new Pair<Term,Position>(this, Position.empty));
     return ret;
   }
 
-  /** @return this if the position is empty; otherwise the position in the given subterm */
-  public Term querySubterm(Position pos) {
-    if (pos.isEmpty()) return this;
-    if (!pos.isMeta()) throw new IndexingError("MetaApplication", "querySubterm", toString(),
-      pos.toString());
-    int index = pos.queryMetaPosition();
-    if (index < 1 || index > _args.size()) {
-      throw new IndexingError("MetaApplication", "querySubterm", toString(), pos.toString());
+  /** @return the subterm at the given (non-empty) position */
+  public Term querySubtermMain(Position pos) {
+    switch (pos) {
+      case MetaPos(int index, Position tail):
+        if (index <= _args.size()) return _args.get(index-1).querySubterm(tail);
+      default:
+        throw new IndexingError("MetaApplication", "querySubterm", toString(), pos.toString());
     }
-    return _args.get(index-1).querySubterm(pos.queryTail());
   }
 
   /**
-   * @return a copy of the term with the subterm at the given position replaced by replacement, if
-   * such a position exists; otherwise throws an IndexingError.
-   */
-  public Term replaceSubterm(Position pos, Term replacement) {
-    return replaceSubterm(new HeadPosition(pos), replacement);
-  }
-
-  /**
-   * @return a copy of the term with the subterm at the given head position replaced by
+   * @return a copy of the term with the subterm at the given (non-empty) position replaced by
    * replacement, if such a position exists; otherwise throws an IndexingError.
    */
-  public Term replaceSubterm(HeadPosition pos, Term replacement) {
-    if (pos.isEnd()) {
-      if (pos.queryChopCount() != 0) {
+  public Term replaceSubtermMain(Position pos, Term replacement) {
+    switch (pos) {
+      case MetaPos(int index, Position tail):
+        if (index <= _args.size()) {
+          ArrayList<Term> newargs = new ArrayList<Term>(_args);
+          newargs.set(index-1, _args.get(index-1).replaceSubterm(tail, replacement));
+          return new MetaApplication(_metavar, newargs);
+        }
+      default:
         throw new IndexingError("MetaApplication", "replaceSubterm", toString(), pos.toString());
-      }
-      else if (!queryType().equals(replacement.queryType())) {
-        throw new TypingError("MetaApplication", "replaceSubterm", "replacement term " +
-                    replacement.toString(), replacement.queryType().toString(),
-                    queryType().toString());
-      }
-      else return replacement;
     }
-
-    if (!pos.isMeta()) {
-      throw new IndexingError("MetaApplication", "replaceSubterm", toString(), pos.toString());
-    }
-
-    int index = pos.queryMetaPosition();
-    if (index < 1 || index > _args.size()) {
-      throw new IndexingError("MetaApplication", "replaceSubterm", toString(), pos.toString());
-    }   
-    ArrayList<Term> newArguments = new ArrayList<Term>(_args);
-    newArguments.set(index-1, _args.get(index-1).replaceSubterm(pos.queryTail(), replacement));
-    return new MetaApplication(_metavar, newArguments);
   }
 
   /**

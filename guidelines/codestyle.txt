@@ -1,0 +1,36 @@
+CODESTYLE
+---------
+* two space indents
+* at most 100 characters per line
+* the cora imports are listed below the library imports
+* space after if, cond, while
+* space before opening brace
+* opening brace on the same line as if / else / for / while statement
+* either
+    if (cond) statement
+  or
+    if (cond) {
+      statement
+    }
+  but never
+    if (cond)
+      statement
+* the names of global variables in a class start with an underscore, except in record types
+
+ARCHITECTURE
+------------
+* any dependency outside the standard library is only used in ONE class which serves as a facade (so replacing it can be done just by editing that one class)
+* packages should be usable by outsiders with no understanding of how they are implemented beyond the public classes
+* only make those classes public that genuinely serve a purpose to be public; favour the use of interfaces and factories over exposing details that users have no need to understand
+* packages should not be too large: an average programmer should be able to fully understand a package in one week
+  (note that for instance termination and termination.dps are different packages -- and should interact with each other like any distinct packages)
+* code (and dependencies) should generally be structured following the advice in the handouts
+
+PROGRAMMING CONVENTIONS
+-----------------------
+* we roughly use XP as a development method
+* when you edit a package, you should either fully understand that package or discuss closely / pair program with someone who does
+* everything should be tested; tests should be written alongside the code
+* don't leave prints in unit tests (since this will spam the output of build --info)
+* follow the development guidelines in the handouts (especially section 6 in handout1 and section 2 in handout2)
+

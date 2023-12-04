@@ -17,7 +17,9 @@ package cora.terms;
 
 import java.util.ArrayList;
 import cora.exceptions.*;
+import cora.utils.Pair;
 import cora.types.Type;
+import cora.terms.position.Position;
 
 /**
  * A "leaf term" is any term that does not have strict subterms, such as variables or constants.
@@ -39,46 +41,20 @@ abstract class LeafTermInherit extends TermInherit {
     return true;
   }
 
-  /** @return a list containing only the empty Position. */
-  public ArrayList<Path> queryPositions() {
-    ArrayList<Path> ret = new ArrayList<Path>();
-    ret.add(new EmptyPath(this));
+  /** @return a list containing only the current term with the empty Position. */
+  public ArrayList<Pair<Term,Position>> querySubterms() {
+    ArrayList<Pair<Term,Position>> ret = new ArrayList<Pair<Term,Position>>();
+    ret.add(new Pair<Term,Position>(this, Position.empty));
     return ret;
   }
 
-  /** @return an empty list. */
-  public ArrayList<Path> queryPositionsForHead(Term top) {
-    ArrayList<Path> ret = new ArrayList<Path>();
-    return ret;
-  }
-
-  /** @return this if the position is empty; otherwise throws an IndexingError */
-  public Term querySubterm(Position pos) {
-    if (pos.isEmpty()) return this;
+  /** Throws an error, since there are no non-empty positions in a leaf term */
+  public Term querySubtermMain(Position pos) {
     throw new IndexingError(queryMyClassName(), "querySubterm", toString(), pos.toString());
   }
 
-  /** @return the replacement if pos is the empty position; otherwise throws an IndexingError */
-  public Term replaceSubterm(Position pos, Term replacement) {
-    if (pos.isEmpty()) {
-      if (!queryType().equals(replacement.queryType())) {
-        throw new TypingError(queryMyClassName(), "replaceSubterm", "replacement term " +
-          replacement.toString(), replacement.queryType().toString(), queryType().toString());
-      }
-      return replacement;
-    }
-    throw new IndexingError(queryMyClassName(), "replaceSubterm", toString(), pos.toString());
-  }
-
-  /** @return the replacement if pos is the empty head position; otherwise throws an IndexingError */
-  public Term replaceSubterm(HeadPosition pos, Term replacement) {
-    if (pos.isEnd() && pos.queryChopCount() == 0) {
-      if (!queryType().equals(replacement.queryType())) {
-        throw new TypingError(queryMyClassName(), "replaceSubterm", "replacement term " +
-          replacement.toString(), replacement.queryType().toString(), queryType().toString());
-      }
-      return replacement;
-    }
+  /** Throws an error, since there are no non-empty positions in a leaf term */
+  public Term replaceSubtermMain(Position pos, Term replacement) {
     throw new IndexingError(queryMyClassName(), "replaceSubterm", toString(), pos.toString());
   }
 }

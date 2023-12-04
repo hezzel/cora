@@ -21,8 +21,10 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import com.google.common.collect.ImmutableList;
-import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.IndexingError;
+import cora.exceptions.*;
+import cora.utils.Pair;
+import cora.terms.position.Position;
+import cora.terms.position.FinalPos;
 
 /**
  * A TermInherit supplies default functionality for all instances of Term.
@@ -168,32 +170,66 @@ abstract class TermInherit implements Term {
     return null;
   }
 
-  /** Returns the set of all head positions for this term, in leftmost innermost order. */
-  public ArrayList<HeadPosition> queryHeadPositions() {
-    List<Path> posses = queryPositions();
-    ArrayList<HeadPosition> ret = new ArrayList<HeadPosition>();
-    for (int i = 0; i < posses.size(); i++) {
-      Term t = posses.get(i).queryCorrespondingSubterm();
-      for (int j = t.numberArguments(); j > 0; j--) {
-        ret.add(new HeadPosition(posses.get(i), j));
+  /** Helper function to return the current classname for use in Errors. */
+  protected String queryMyClassName() {
+    return this.getClass().getSimpleName();
+  }
+
+  /**
+   * Returns the set of all positions for this term (including partial positions if and only if
+   * the "partial" argument is true).
+   */
+  public ArrayList<Position> queryPositions(boolean partial) {
+    List<Pair<Term,Position>> subs = querySubterms();
+    ArrayList<Position> ret = new ArrayList<Position>();
+    for (Pair<Term,Position> pair : subs) {
+      Position p = pair.snd();
+      if (partial) {
+        for (int j = pair.fst().numberArguments(); j > 0; j--) ret.add(p.append(new FinalPos(j)));
       }
-      ret.add(new HeadPosition(posses.get(i)));
+      ret.add(p);
     }
     return ret;
   }
 
-  /** Returns the subterm at the given head position. */
-  public Term querySubterm(HeadPosition hpos) {
-    Term sub = querySubterm(hpos.queryPosition());
-    int chop = hpos.queryChopCount();
-    if (chop == 0) return sub;
-    List<Term> args = sub.queryArguments();
-    Term head = sub.queryHead();
-    if (args.size() < chop) {
-      throw new IndexingError("TermInherit", "querySubTerm(HeadPosition)", chop,
-        0, args.size());
+  /** This function should handle querySubterm(pos), but may skip the case for an empty position. */
+  protected abstract Term querySubtermMain(Position pos);
+
+  /**
+   * This function returns the subterm at position pos if pos is an empty position, and if not,
+   * delegates the work to queryNonEmptySubterm(pos).
+   */
+  public Term querySubterm(Position pos) {
+    switch (pos) {
+      case FinalPos(int k):
+        if (k == 0) return this;
+        // deliberately skipping to default for final non-empty positions
+      default:
+        return querySubtermMain(pos);
     }
-    return head.apply(args.subList(0, args.size()-chop));
+  }
+
+  /**
+   * This function should handle replaceSubterm(pos, replacement), but may skip the case for an
+   * empty position.
+   */
+  protected abstract Term replaceSubtermMain(Position pos, Term replacement);
+
+  public Term replaceSubterm(Position pos, Term replacement) {
+    switch (pos) {
+      case FinalPos(int k):
+        if (k == 0) {
+          if (!queryType().equals(replacement.queryType())) {
+            throw new TypingError(queryMyClassName(), "replaceSubterm", "replacement term " +
+                        replacement.toString(), replacement.queryType().toString(),
+                        queryType().toString());
+          }
+          return replacement;
+        }
+        // deliberately skipping to default for final non-empty positions
+      default:
+        return replaceSubtermMain(pos, replacement);
+    }
   }
 
   /** Returns the present term with all binder-variables replaced by fresh ones. */
@@ -253,11 +289,6 @@ abstract class TermInherit implements Term {
   /** This function returns the default unique naming scheme for this term. */
   public TreeMap<Replaceable,String> getUniqueNaming() {
     return _freeReplaceables.getUniqueNaming();
-  }
-
-  /** Helper function to return the current classname for use in Errors. */
-  protected String queryMyClassName() {
-    return this.getClass().getSimpleName();
   }
 
   // the following functions are all default implementations of interface functions, to be

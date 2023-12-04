@@ -23,6 +23,7 @@ import java.util.TreeMap;
 import cora.exceptions.*;
 import cora.types.Type;
 import cora.types.TypeFactory;
+import cora.terms.position.*;
 
 public class ConstantTest extends TermTestFoundation {
   @Test(expected = NullInitialisationError.class)
@@ -123,16 +124,16 @@ public class ConstantTest extends TermTestFoundation {
     Type b = baseType("b");
     Type combi = arrowType(a, b);
     Constant f = new Constant("f", combi);
-    Term tmp = f.querySubterm(PositionFactory.createArg(1, PositionFactory.empty));
+    Term tmp = f.querySubterm(new ArgumentPos(1, Position.empty));
   }
 
   @Test(expected = IndexingError.class)
-  public void testHeadPositionRequest() {
+  public void testPartialPositionRequest() {
     Type a = baseType("a");
     Type b = baseType("b");
     Type combi = arrowType(a, b);
     Constant f = new Constant("f", combi);
-    Term tmp = f.querySubterm(new HeadPosition(PositionFactory.empty, 1));
+    Term tmp = f.querySubterm(new FinalPos(1));
   }
 
   @Test(expected = IndexingError.class)
@@ -141,16 +142,13 @@ public class ConstantTest extends TermTestFoundation {
     Type b = baseType("b");
     Type combi = arrowType(a, b);
     Constant f = new Constant("f", combi);
-    Term tmp = f.replaceSubterm(PositionFactory.createArg(1, PositionFactory.empty),
-                                new Constant("a", a));
+    Term tmp = f.replaceSubterm(new LambdaPos(Position.empty), new Constant("a", a));
   }
 
   @Test(expected = IndexingError.class)
-  public void testBadHeadPositionReplacement() {
+  public void testBadPartialPositionReplacement() {
     Constant f = new Constant("f", baseType("a"));
-    Term tmp = f.replaceSubterm(
-      new HeadPosition(PositionFactory.createArg(1, PositionFactory.empty)),
-      new Constant("a", baseType("a")));
+    Term tmp = f.replaceSubterm(new FinalPos(1), new Constant("a", baseType("a")));
   }
 
   @Test
@@ -195,19 +193,14 @@ public class ConstantTest extends TermTestFoundation {
     Term f = new Constant("ff", combi);
     Variable x = new Var("ff", combi);
 
-    assertTrue(f.queryPositions().size() == 1);
-    assertTrue(f.queryPositions().get(0).isEmpty());
-    assertTrue(f.queryPositions().get(0).queryCorrespondingSubterm() == f);
-    assertTrue(f.queryHeadPositions().size() == 1);
-    assertTrue(f.queryHeadPositions().get(0).isEnd());
-    assertTrue(f.queryHeadPositions().get(0).isPosition());
-    assertTrue(f.queryPositionsForHead(f.apply(new Constant("A", baseType("a")))).size() == 0);
+    assertTrue(f.querySubterms().size() == 1);
+    assertTrue(f.querySubterms().get(0).fst() == f);
+    assertTrue(f.querySubterms().get(0).snd().isEmpty());
+    assertTrue(f.queryPositions(true).size() == 1);
+    assertTrue(f.queryPositions(false).size() == 1);
 
-    assertTrue(f.querySubterm(PositionFactory.empty).equals(f));
-    assertTrue(f.replaceSubterm(PositionFactory.empty, x).equals(x));
-
-    assertTrue(f.querySubterm(new HeadPosition(PositionFactory.empty)).equals(f));
-    assertTrue(f.replaceSubterm(new HeadPosition(PositionFactory.empty), x).equals(x));
+    assertTrue(f.querySubterm(Position.empty).equals(f));
+    assertTrue(f.replaceSubterm(Position.empty, x).equals(x));
   }
 
   @Test

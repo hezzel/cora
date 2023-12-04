@@ -21,8 +21,10 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import cora.exceptions.*;
+import cora.utils.Pair;
 import cora.types.Type;
 import cora.types.TypeFactory;
+import cora.terms.position.*;
 
 public class BinderTest extends TermTestFoundation {
   @Test(expected = NullInitialisationError.class)
@@ -185,40 +187,41 @@ public class BinderTest extends TermTestFoundation {
   }
 
   @Test
-  public void testPositions() {
+  public void testSubterms() {
     Term s = new Binder("x", baseType("o"));
-    List<Path> lst = s.queryPositions();
+    List<Pair<Term,Position>> lst = s.querySubterms();
     assertTrue(lst.size() == 1);
-    assertTrue(lst.get(0).toString().equals("ε"));
-    assertTrue(lst.get(0).queryAssociatedTerm() == s);
-    assertTrue(lst.get(0).queryCorrespondingSubterm() == s);
-    lst = s.queryPositionsForHead((new Binder("y", arrowType("o", "o"))).apply(s));
-    assertTrue(lst.size() == 0);
-    List<HeadPosition> posses = s.queryHeadPositions();
-    assertTrue(posses.size() == 1);
-    assertTrue(posses.get(0).isPosition());
+    assertTrue(lst.get(0).fst() == s);
+    assertTrue(lst.get(0).snd().toString().equals("ε"));
+  }
+
+  @Test
+  public void testPositions() {
+    Term s = new Binder("x", arrowType("a", "b"));
+    assertTrue(s.queryPositions(true).size() == 1);
+    assertTrue(s.queryPositions(false).size() == 1);
+    assertTrue(s.queryPositions(false).get(0).toString().equals("ε"));
   }
 
   @Test
   public void testSubtermGood() {
     Term s = new Binder("x", baseType("o"));
-    Position p = PositionFactory.empty;
+    Position p = Position.empty;
     assertTrue(s.querySubterm(p).equals(s));
-    assertTrue(s.querySubterm(new HeadPosition(p)).equals(s));
   }
 
   @Test(expected = IndexingError.class)
   public void testSubtermBad() {
     Term s = new Binder("x", baseType("o"));
-    Position p = PositionFactory.createArg(1, PositionFactory.empty);
+    Position p = new ArgumentPos(1, Position.empty);
     Term t = s.querySubterm(p);
   }
 
   @Test(expected = IndexingError.class)
   public void testHeadSubtermBad() {
     Term s = new Binder("x", baseType("o"));
-    Position p = PositionFactory.createArg(1, PositionFactory.empty);
-    Term t = s.querySubterm(new HeadPosition(p));
+    Position p = new FinalPos(1);
+    Term t = s.querySubterm(p);
   }
 
   @Test(expected = InappropriatePatternDataError.class)
@@ -231,23 +234,22 @@ public class BinderTest extends TermTestFoundation {
   public void testSubtermReplacementGood() {
     Term s = new Binder("x", baseType("a"));
     Term t = twoArgVarTerm();
-    Position p = PositionFactory.empty;
+    Position p = Position.empty;
     assertTrue(s.replaceSubterm(p, t).equals(t));
-    assertTrue(s.replaceSubterm(new HeadPosition(p), t).equals(t));
     assertTrue(s.toString().equals("x"));
   }
 
   @Test(expected = IndexingError.class)
   public void testSubtermReplacementBad() {
     Term s = new Binder("x", baseType("o"));
-    Position p = PositionFactory.createArg(1, PositionFactory.empty);
+    Position p = new ArgumentPos(1, Position.empty);
     Term t = s.replaceSubterm(p, twoArgVarTerm());
   }
 
   @Test(expected = IndexingError.class)
   public void testHeadSubtermReplacementBad() {
     Term s = new Binder("x", baseType("o"));
-    HeadPosition p = new HeadPosition(PositionFactory.empty, 1);
+    Position p = new FinalPos(3);
     Term t = s.replaceSubterm(p, twoArgVarTerm());
   }
 

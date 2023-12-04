@@ -22,6 +22,7 @@ import cora.exceptions.IllegalRuleError;
 import cora.exceptions.NullInitialisationError;
 import cora.types.*;
 import cora.terms.*;
+import cora.terms.position.Position;
 import cora.parsing.CoraInputReader;
 
 public class CFSTest {
