@@ -21,6 +21,7 @@ import java.util.TreeMap;
 import java.util.Collections;
 import cora.exceptions.IndexingError;
 import cora.exceptions.NullInitialisationError;
+import cora.utils.Pair;
 import cora.terms.FunctionSymbol;
 import cora.terms.Term;
 import cora.terms.position.Position;
@@ -106,11 +107,10 @@ public class TRS {
    * such position exists.
    */
   public Position leftmostInnermostRedexPosition(Term s) {
-  /* TODO
-    List<Path> positions = s.queryPositions();
-    for (int i = 0; i < positions.size(); i++) {
-      Path pos = positions.get(i);
-      Term sub = pos.queryCorrespondingSubterm();
+    List<Pair<Term,Position>> subterms = s.querySubterms();
+    for (int i = 0; i < subterms.size(); i++) {
+      Term sub = subterms.get(i).fst();
+      Position pos = subterms.get(i).snd();
       for (int j = 0; j < _rules.size(); j++) {
         if (_rules.get(j).applicable(sub)) return pos;
       }
@@ -118,7 +118,6 @@ public class TRS {
         if (_schemes.get(j).applicable(sub)) return pos;
       }
     }
-  */
     return null;
   }
 
@@ -134,17 +133,16 @@ public class TRS {
    * If multiple rules or schemes match, an arbitrary one is chosen.
    */
   public Term leftmostInnermostReduce(Term s) {
-    /* TODO
     // get a shuffled list of all the rules and schemes
     ArrayList<RuleOrScheme> lst = new ArrayList<RuleOrScheme>();
     for (int i = 0; i < _rules.size(); i++) lst.add(new RuleOrScheme(true, i));
     for (int i = 0; i < _schemes.size(); i++) lst.add(new RuleOrScheme(false, i));
     Collections.shuffle(lst);
 
-    List<Path> positions = s.queryPositions();
-    for (int i = 0; i < positions.size(); i++) {
-      Path pos = positions.get(i);
-      Term sub = pos.queryCorrespondingSubterm();
+    List<Pair<Term,Position>> subterms = s.querySubterms();
+    for (int i = 0; i < subterms.size(); i++) {
+      Term sub = subterms.get(i).fst();
+      Position pos = subterms.get(i).snd();
       Term result = null;
       for (int j = 0; j < lst.size() && result == null; j++) {
         if (lst.get(j).rule) result = _rules.get(lst.get(j).index).apply(sub);
@@ -152,7 +150,6 @@ public class TRS {
       }
       if (result != null) return s.replaceSubterm(pos, result);
     }
-    */
     return null;
   }
 

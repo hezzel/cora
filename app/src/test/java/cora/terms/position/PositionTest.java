@@ -27,7 +27,9 @@ public class PositionTest {
     assertTrue(pos.toString().equals("ε"));
     assertTrue(pos.equals(new FinalPos(0)));
     assertFalse(pos.equals(new FinalPos(1)));
-    assertFalse(pos.equals(new ArgumentPos(1, new FinalPos(0))));
+    Position pos2 = new ArgumentPos(1, new FinalPos(2));
+    assertFalse(pos.equals(pos2));
+    assertTrue(pos.append(pos2) == pos2);
     assertTrue(pos.isEmpty());
     assertTrue(pos.isFinal());
     assertTrue(pos.queryChopCount() == 0);
@@ -51,6 +53,8 @@ public class PositionTest {
     assertTrue(pos.equals(new FinalPos(3)));
     assertFalse(pos.equals(new FinalPos(2)));
     assertFalse(pos.equals(new LambdaPos(new FinalPos(3))));
+    Position pos2 = new ArgumentPos(1, new FinalPos(0));
+    assertTrue(pos.append(pos2) == pos2);
     assertFalse(pos.isEmpty());
     assertTrue(pos.isFinal());
     assertTrue(pos.queryChopCount() == 3);
@@ -75,6 +79,8 @@ public class PositionTest {
     assertFalse(pos.equals(new ArgumentPos(17, new ArgumentPos(2, new FinalPos(0)))));
     assertFalse(pos.equals(new MetaPos(17, new MetaPos(2, Position.empty))));
     assertFalse(pos.equals(new ArgumentPos(18, new MetaPos(2, Position.empty))));
+    Position pos2 = new LambdaPos(new FinalPos(1));
+    assertTrue(pos.append(pos2).toString().equals("17.!2.0.☆1"));
     assertFalse(pos.isEmpty());
     assertFalse(pos.isFinal());
     assertTrue(pos.queryHead() == 17);
@@ -100,6 +106,8 @@ public class PositionTest {
     assertFalse(pos.equals(new MetaPos(2, new LambdaPos(new FinalPos(8)))));
     assertFalse(pos.equals(new ArgumentPos(2, new LambdaPos(new FinalPos(9)))));
     assertFalse(pos.equals(new MetaPos(1, new LambdaPos(new FinalPos(9)))));
+    Position pos2 = new ArgumentPos(12, new FinalPos(0));
+    assertTrue(pos.append(pos2).toString().equals("!2.0.12.ε"));
     assertFalse(pos.isEmpty());
     assertFalse(pos.isFinal());
     assertTrue(pos.queryHead() == -2);
@@ -122,6 +130,10 @@ public class PositionTest {
     assertTrue(pos.toString().equals("0.1.ε"));
     assertTrue(pos.equals(new LambdaPos(new ArgumentPos(1, Position.empty))));
     assertFalse(pos.equals(new ArgumentPos(1, Position.empty)));
+    Position pos2 = new FinalPos(2);
+    assertTrue(pos.append(pos2).toString().equals("0.1.☆2"));
+    assertFalse(pos.isEmpty());
+    assertFalse(pos.isFinal());
     assertTrue(pos.queryHead() == 0);
     assertTrue(pos.queryTail().equals(new ArgumentPos(1, Position.empty)));
 

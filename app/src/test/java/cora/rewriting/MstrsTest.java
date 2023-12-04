@@ -5,7 +5,7 @@
  in compliance with the License.
  You may obtain a copy of the License at
 
-     http://www.apache.org/licenses/LICENSE-2.0
+ http://www.apache.org/licenses/LICENSE-2.0
 
  Unless required by applicable law or agreed to in writing, software distributed under the
  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
@@ -15,15 +15,18 @@
 
 package cora.rewriting;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
 import java.util.ArrayList;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.junit.jupiter.api.Assertions.*;
+
 import cora.types.*;
 import cora.terms.*;
 import cora.terms.position.Position;
 import cora.parsing.CoraInputReader;
 
-public class MstrsTest {
+class MstrsTest {
   private Type type(String str) {
     try { return CoraInputReader.readTypeFromString(str); }
     catch (Exception e) { System.out.println(e); return null; }
@@ -82,7 +85,7 @@ public class MstrsTest {
     assertTrue(trs.lookupSymbol("f").equals(f()));
     assertTrue(trs.lookupSymbol("ff") == null);
   }
-
+  
   @Test
   public void testLeftmostInnermostRedex() {
     TRS trs = createTermRewritingSystem();
@@ -109,7 +112,7 @@ public class MstrsTest {
     assertTrue(trs.leftmostInnermostReduce(term) == null);
   }
 
-  @Test(expected = cora.exceptions.IllegalSymbolError.class)
+  @Test
   public void testCreateMSTRSWithIllegalSymbol() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     symbols.add(a());
@@ -121,10 +124,11 @@ public class MstrsTest {
     Variable x = TermFactory.createVar("x");
     rules.add(RuleFactory.createFirstOrderRule(TermFactory.createApp(f(), x, a()), x));
 
-    TRSFactory.createMSTRS(alf, rules);
+    assertThrows(cora.exceptions.IllegalSymbolError.class,
+      () -> TRSFactory.createMSTRS(alf, rules));
   }
 
-  @Test(expected = cora.exceptions.IllegalRuleError.class)
+  @Test
   public void testCreateMSTRSWithIllegalRule() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     symbols.add(f());
@@ -135,7 +139,8 @@ public class MstrsTest {
     Variable x = TermFactory.createVar("x");
     rules.add(RuleFactory.createApplicativeRule(f().apply(x), g.apply(x)));
 
-    TRSFactory.createMSTRS(alf, rules);
+    assertThrows(cora.exceptions.IllegalRuleError.class,
+      () -> TRSFactory.createMSTRS(alf, rules));
   }
 
   @Test
