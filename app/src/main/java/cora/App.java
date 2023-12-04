@@ -16,6 +16,7 @@
 package cora;
 
 import com.google.common.collect.ImmutableList;
+import cora.config.Config;
 import cora.rewriting.TRS;
 import cora.parsing.CoraInputReader;
 import cora.parsing.TrsInputReader;
@@ -26,10 +27,6 @@ import cora.types.*;
 public class App {
     private static String _inputFile;
     private static String _inputTerm;
-
-    private static void bTest(){
-        System.out.println("teste");
-    }
 
     private static String getExtension(String filename) {
         int i = filename.lastIndexOf('.');
@@ -50,19 +47,6 @@ public class App {
         if (args.length > 1) _inputTerm = args[0];
     }
 
-    public static void main(String[] args) {
-        // Creation of some basic types for testing
-        Base A = new Base("baseA");
-        Base B = new Base("baseB");
-        Base C = new Base("baseC");
-        ImmutableList<Type> l = ImmutableList.of(A, B);
-        Product prod = new Product(l);
-        Product prod2 = new Product(ImmutableList.of(A,C));
-        Arrow arr = new Arrow(TypeFactory.boolSort, TypeFactory.boolSort);
-        Arrow arr1 = new Arrow(arr, prod);
-        // Printing the result of calling some methods
-        System.out.println(new Product(ImmutableList.of(A, arr1)).queryOutputType());
-    }
 
 //    }
 //        try {
