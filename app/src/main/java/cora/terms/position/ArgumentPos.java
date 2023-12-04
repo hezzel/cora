@@ -26,6 +26,10 @@ public record ArgumentPos(int index, Position tail) implements Position {
     }
   }
 
+  public Position append(Position p) {
+    return new ArgumentPos(this.index, this.tail.append(p));
+  }
+
   public int queryHead() {
     return index;
   }

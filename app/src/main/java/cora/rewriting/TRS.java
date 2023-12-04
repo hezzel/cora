@@ -23,7 +23,7 @@ import cora.exceptions.IndexingError;
 import cora.exceptions.NullInitialisationError;
 import cora.terms.FunctionSymbol;
 import cora.terms.Term;
-import cora.terms.Path;
+import cora.terms.position.Position;
 
 /**
  * A TRS (term rewriting system) is an abstract rewriting system based on a (possibly infinite)
@@ -105,7 +105,8 @@ public class TRS {
    * Returns the leftmost, innermost position where a rule or scheme may be applied, or null if no
    * such position exists.
    */
-  public Path leftmostInnermostRedexPosition(Term s) {
+  public Position leftmostInnermostRedexPosition(Term s) {
+  /* TODO
     List<Path> positions = s.queryPositions();
     for (int i = 0; i < positions.size(); i++) {
       Path pos = positions.get(i);
@@ -117,6 +118,7 @@ public class TRS {
         if (_schemes.get(j).applicable(sub)) return pos;
       }
     }
+  */
     return null;
   }
 
@@ -132,6 +134,7 @@ public class TRS {
    * If multiple rules or schemes match, an arbitrary one is chosen.
    */
   public Term leftmostInnermostReduce(Term s) {
+    /* TODO
     // get a shuffled list of all the rules and schemes
     ArrayList<RuleOrScheme> lst = new ArrayList<RuleOrScheme>();
     for (int i = 0; i < _rules.size(); i++) lst.add(new RuleOrScheme(true, i));
@@ -149,6 +152,7 @@ public class TRS {
       }
       if (result != null) return s.replaceSubterm(pos, result);
     }
+    */
     return null;
   }
 

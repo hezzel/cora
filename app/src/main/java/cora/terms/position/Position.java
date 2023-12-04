@@ -60,6 +60,9 @@ public sealed interface Position permits
   /** Gives a unique string representation for the position. */
   String toString();
 
+  /** Returns a copy of the current position with p appended to the end. */
+  Position append(Position p);
+
   /** Returns whether this is the empty position or not. */
   default boolean isEmpty() { return false; }
 

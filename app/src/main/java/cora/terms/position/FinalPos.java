@@ -20,6 +20,10 @@ public record FinalPos(int chopcount) implements Position {
       default: return false;
     }
   }
+
+  public Position append(Position p) {
+    return p;
+  }
   
   public boolean isEmpty() {
     return chopcount == 0;

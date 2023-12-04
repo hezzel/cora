@@ -1,9 +1,5 @@
 package cora.terms;
 
-import cora.exceptions.*;
-import cora.types.Product;
-import cora.types.Type;
-import cora.types.TypeFactory;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +7,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import static org.junit.jupiter.api.Assertions.*;
+import cora.exceptions.*;
+import cora.utils.Pair;
+import cora.types.Product;
+import cora.types.Type;
+import cora.types.TypeFactory;
+import cora.terms.position.*;
 
 class TupleTest extends TermTestFoundation {
   final Term _s = TermFactory.createVar(TypeFactory.intSort);
@@ -175,35 +177,36 @@ class TupleTest extends TermTestFoundation {
     assertTrue(tp.queryImmediateHeadSubterm(0) == tp);
     Assertions.assertThrows(IndexingError.class,
       () -> tp.queryImmediateHeadSubterm(1));
-    List<Path> positions = tp.queryPositions();
+    List<Position> positions = tp.queryPositions(false);
     assertTrue(positions.toString().equals(
       "[1.ε, 2.0.1.ε, 2.0.ε, 2.ε, 3.1.1.ε, 3.1.ε, 3.2.ε, 3.ε, ε]"));
-    assertTrue(tp.querySubterm(PositionFactory.parsePos("3.1")).toString().equals("f(a)"));
-    assertTrue(tp.querySubterm(PositionFactory.parseHPos("2.0*1")).toString().equals("f"));
+    assertTrue(tp.querySubterm(Position.parse("3.1")).toString().equals("f(a)"));
+    assertTrue(tp.querySubterm(Position.parse("2.0*1")).toString().equals("f"));
     Term t = tp.replaceSubterm(positions.get(0), constantTerm("b", baseType("N")));
     assertTrue(t.toString().equals("⦅b, λx.f(x), ⦅f(a), y⦆⦆"));
     assertTrue(tp.toString().equals("⦅a, λx.f(x), ⦅f(a), y⦆⦆"));
-    t = tp.replaceSubterm(PositionFactory.parseHPos("3.1*1"), new Var("Z", arrowType("N", "M")));
+    t = tp.replaceSubterm(Position.parse("3.1*1"), new Var("Z", arrowType("N", "M")));
     assertTrue(t.toString().equals("⦅a, λx.f(x), ⦅Z(a), y⦆⦆"));
     assertThrows(TypingError.class,
       () -> tp.replaceSubterm(positions.get(0), constantTerm("b", baseType("A"))));
     assertThrows(TypingError.class, () ->
-      tp.replaceSubterm(PositionFactory.parseHPos("3.1*1"), new Var("Z", arrowType("N", "A"))));
+      tp.replaceSubterm(Position.parse("3.1*1"), new Var("Z", arrowType("N", "A"))));
   }
 
   @Test
   public void testBadPositions() {
     Term tup = exampleTuple();
-    assertThrows(IndexingError.class, () -> tup.querySubterm(PositionFactory.parsePos("4")));
-    assertThrows(IndexingError.class, () -> tup.querySubterm(PositionFactory.parsePos("3.3")));
-    assertThrows(IndexingError.class, () -> tup.querySubterm(PositionFactory.parseHPos("3*1")));
+    assertThrows(IndexingError.class, () -> tup.querySubterm(Position.parse("4")));
+    assertThrows(IndexingError.class, () -> tup.querySubterm(Position.parse("3.3")));
+    assertThrows(IndexingError.class, () -> tup.querySubterm(Position.parse("3*1")));
+    assertThrows(IndexingError.class, () -> tup.querySubterm(Position.parse("*1")));
     Term replacement = constantTerm("a", baseType("N"));
     assertThrows(IndexingError.class,
-      () -> tup.replaceSubterm(PositionFactory.parsePos("4"), replacement));
+      () -> tup.replaceSubterm(Position.parse("4"), replacement));
     assertThrows(IndexingError.class,
-      () -> tup.replaceSubterm(PositionFactory.parsePos("3.3"), replacement));
+      () -> tup.replaceSubterm(Position.parse("3.3"), replacement));
     assertThrows(IndexingError.class,
-      () -> tup.replaceSubterm(PositionFactory.parseHPos("3*1"), replacement));
+      () -> tup.replaceSubterm(Position.parse("3*1"), replacement));
   }
 
   @Test
@@ -254,7 +257,7 @@ class TupleTest extends TermTestFoundation {
     Term b = exampleTuple();
     // note that creating a variable twice gives different variables
     assertFalse(a.equals(b));
-    Position pos = PositionFactory.parsePos("3.2");
+    Position pos = Position.parse("3.2");
     Term c = b.replaceSubterm(pos, a.querySubterm(pos));
     assertTrue(a.equals(c));
   }

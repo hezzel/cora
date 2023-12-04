@@ -22,9 +22,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import cora.exceptions.*;
+import cora.utils.Pair;
 import cora.types.Arrow;
 import cora.types.Type;
 import cora.types.TypeFactory;
+import cora.terms.position.*;
 
 /** An Application is a term of the form h(s1,...,sn) where h is not an application. */
 class Application extends TermInherit {
@@ -262,98 +264,71 @@ class Application extends TermInherit {
   }
 
   /**
-   * Returns the non-head positions in all subterms, from left to right, followed by the empty
-   * position.
+   * Returns the full subterms and their positions of this term, from left to right, followed by
+   * the empty position.
    */
-  public List<Path> queryPositions() {
-    List<Path> ret = _head.queryPositionsForHead(this);
+  public List<Pair<Term,Position>> querySubterms() {
+    List<Pair<Term,Position>> ret = _head.querySubterms();
+    ret.remove(ret.size()-1); // remove the empty position
     for (int i = 0; i < _args.size(); i++) {
-      List<Path> subposses = _args.get(i).queryPositions();
+      List<Pair<Term,Position>> subposses = _args.get(i).querySubterms();
       for (int j = 0; j < subposses.size(); j++) {
-        ret.add(new ArgumentPath(this, i+1, subposses.get(j)));
+        ret.add(new Pair<Term,Position>(subposses.get(j).fst(),
+                                        new ArgumentPos(i+1, subposses.get(j).snd())));
       }
     }
-    ret.add(new EmptyPath(this));
+    ret.add(new Pair<Term,Position>(this, Position.empty));
     return ret;
   }
 
-  /** Throws an error, since this should only be called on the head of top. */
-  public List<Path> queryPositionsForHead(Term top) {
-    throw new InappropriatePatternDataError("Application", "queryPositionsForHead",
-      "head terms (which cannot be applications)");
-  }
-
-  /** @return this if the position is empty; otherwise the position in the given subterm */
-  public Term querySubterm(Position pos) {
-    if (pos.isEmpty()) return this;
-    if (!pos.isArgument()) return _head.querySubterm(pos);
-    int index = pos.queryArgumentPosition();
-    if (index < 1 || index > _args.size()) {
-      throw new IndexingError("Application", "querySubterm", toString(), pos.toString());
+  /** @return the subterm at the given (non-empty) position */
+  public Term querySubtermMain(Position pos) {
+    switch (pos) {
+      case FinalPos(int k):
+        if (k > _args.size()) {
+          throw new IndexingError("Application", "querySubterm", toString(), pos.toString());
+        }
+        return _head.apply(_args.subList(0, _args.size() - k));
+      case ArgumentPos(int index, Position tail):
+        if (index > _args.size()) {
+          throw new IndexingError("Application", "querySubterm", toString(), pos.toString());
+        }
+        return _args.get(index-1).querySubterm(tail);
+      default:
+        return _head.querySubterm(pos);
     }
-    return _args.get(index-1).querySubterm(pos.queryTail());
-  }
-
-  /**
-   * @return a copy of the term with the subterm at the given position replaced by replacement, if
-   * such a position exists; otherwise throws an IndexingError.
-   */
-  public Term replaceSubterm(Position pos, Term replacement) {
-    if (pos.isEmpty()) {
-      if (!queryType().equals(replacement.queryType())) {
-        throw new TypingError("Application", "replaceSubterm", "replacement term " +
-                    replacement.toString(), replacement.queryType().toString(),
-                    queryType().toString());
-      }
-      return replacement;
-    }
-    if (!pos.isArgument()) {
-      Term newhead = _head.replaceSubterm(pos, replacement);
-      return new Application(newhead, _args);
-    }
-    int index = pos.queryArgumentPosition();
-    if (index < 1 || index > _args.size()) {
-      throw new IndexingError("Application", "replaceSubterm", toString(), pos.toString());
-    }
-    ArrayList<Term> lst = new ArrayList<Term>(_args);
-    lst.set(index-1, _args.get(index-1).replaceSubterm(pos.queryTail(), replacement));
-    return new Application(_head, lst);
   }
 
   /**
-   * @return a copy of the term with the subterm at the given head position replaced by
+   * @return a copy of the term with the subterm at the given (non-empty) position replaced by
    * replacement, if such a position exists; otherwise throws an IndexingError.
    */
-  public Term replaceSubterm(HeadPosition pos, Term replacement) {
-    if (pos.isEnd()) {
-      int chopcount = pos.queryChopCount();
-      if (chopcount > _args.size()) {
-        throw new IndexingError("Application", "replaceSubterm(HeadPosition)",
-          toString(), pos.toString());
-      }
-      Type type = queryType();
-      for (int i = 1; i <= chopcount; i++) {
-        type = TypeFactory.createArrow(_args.get(_args.size()-i).queryType(), type);
-      }
-      if (!type.equals(replacement.queryType())) {
-        throw new TypingError("Application", "replaceSubterm(HeadPosition)",
-                    "replacement term " + replacement.toString(),
-                    replacement.queryType().toString(), type.toString());
-      }
-      return replacement.apply(_args.subList(_args.size()-chopcount, _args.size()));
+  public Term replaceSubtermMain(Position pos, Term replacement) {
+    switch (pos) {
+      case FinalPos(int k):
+        if (k > _args.size()) {
+          throw new IndexingError("Application", "replaceSubterm", toString(), pos.toString());
+        }
+        Type type = queryType();
+        for (int i = 1; i <= k; i++) {
+          type = TypeFactory.createArrow(_args.get(_args.size()-i).queryType(), type);
+          if (!type.equals(replacement.queryType())) {
+            throw new TypingError("Application", "replaceSubterm", "replacement term " +
+              replacement.toString(), replacement.queryType().toString(), type.toString());
+          }
+        }
+        return replacement.apply(_args.subList(_args.size()-k, _args.size()));
+      case ArgumentPos(int index, Position tail):
+        if (index > _args.size()) {
+          throw new IndexingError("Application", "replaceSubterm", toString(), pos.toString());
+        }
+        ArrayList<Term> lst = new ArrayList<Term>(_args);
+        lst.set(index-1, _args.get(index-1).replaceSubterm(tail, replacement));
+        return new Application(_head, lst);
+      default:
+        Term newhead = _head.replaceSubterm(pos, replacement);
+        return new Application(newhead, _args);
     }
-    if (!pos.isArgument()) {
-      Term newhead = _head.replaceSubterm(pos, replacement);
-      return new Application(newhead, _args);
-    }
-    int index = pos.queryArgumentPosition();
-    if (index < 1 || index > _args.size()) {
-      throw new IndexingError("Application", "replaceSubterm(HeadPosition)", toString(),
-        pos.toString());
-    }
-    ArrayList<Term> lst = new ArrayList<Term>(_args);
-    lst.set(index-1, _args.get(index-1).replaceSubterm(pos.queryTail(), replacement));
-    return new Application(_head, lst);
   }
 
   /**

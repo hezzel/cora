@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import cora.types.*;
 import cora.terms.*;
+import cora.terms.position.Position;
 import cora.parsing.CoraInputReader;
 
 public class MstrsTest {

@@ -21,6 +21,10 @@ public record LambdaPos(Position tail) implements Position {
     }
   }
 
+  public Position append(Position p) {
+    return new LambdaPos(this.tail.append(p));
+  }
+
   public int queryHead() {
     return 0;
   }

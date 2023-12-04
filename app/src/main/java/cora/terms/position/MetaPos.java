@@ -26,6 +26,10 @@ public record MetaPos(int index, Position tail) implements Position {
     }
   }
 
+  public Position append(Position p) {
+    return new MetaPos(this.index, this.tail.append(p));
+  }
+
   public int queryHead() {
     return - index;
   }

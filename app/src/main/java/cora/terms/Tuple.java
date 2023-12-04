@@ -6,8 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import cora.exceptions.*;
+import cora.utils.Pair;
 import cora.types.Type;
 import cora.types.TypeFactory;
+import cora.terms.position.Position;
+import cora.terms.position.ArgumentPos;
 
 /**
  * A tuple term is a term of the form ⦅t1,..., tk⦆, with k ≥ 2.
@@ -165,90 +168,55 @@ public class Tuple extends TermInherit {
   }
 
   /**
-   * Returns the set of all non-head positions in the current Term, in leftmost innermost order.
-   * Note that this set is non-empty as it always contains the empty position (representing the
-   * current term).
-   * The positions are all Paths, which means they contain the information of the referenced
-   * subterm (and the complete path to it).
+   * Returns the set of all full subterms of the current Term, along with their positions,
+   * in leftmost innermost order.  Note that this set is non-empty as it always contains the
+   * current term / empty position as the last element.
    */
   @Override
-  public List<Path> queryPositions() {
-    List<Path> pos = new ArrayList<Path>();
+  public List<Pair<Term,Position>> querySubterms() {
+    List<Pair<Term,Position>> ret = new ArrayList<Pair<Term,Position>>();
     for (int i = 0; i < _components.size(); i++){
-      List<Path> compPaths = _components.get(i).queryPositions();
-      for (Path compPath : compPaths) {
-        pos.add(new TuplePath(this, i + 1, compPath));
+      List<Pair<Term,Position>> subs = _components.get(i).querySubterms();
+      for (Pair<Term,Position> pair : subs) {
+        ret.add(new Pair<Term,Position>(pair.fst(), new ArgumentPos(i + 1, pair.snd())));
       }
     }
-    pos.add(new EmptyPath(this));
-    return pos;
+    ret.add(new Pair<Term,Position>(this, Position.empty));
+    return ret;
   }
 
-  /** @return an empty list */
-  @Override
-  public List<Path> queryPositionsForHead(Term top) { return new ArrayList<Path>(); }
-
   /**
-   * Returns the subterm at the given position, assuming that this is indeed a position of the
-   * current term.
-   * If not, an IndexingError is thrown.
-   *
-   * @param pos
+   * Returns the subterm at the given (non-empty) position, assuming that this is indeed a position
+   * of the current term.  If not, an IndexingError is thrown.
    */
   @Override
-  public Term querySubterm(Position pos) {
-    if (pos.isEmpty()) return this;
-    int index = pos.queryComponentPosition();
-    if (index < 1 || index > _components.size()) {
-      throw new IndexingError("Tuple", "querySubterm", toString(), pos.toString());
+  public Term querySubtermMain(Position pos) {
+    switch (pos) {
+      case ArgumentPos(int index, Position tail):
+        if (index <= _components.size()) {
+          return _components.get(index-1).querySubterm(tail);
+        }
+      default:
+        throw new IndexingError("Tuple", "querySubterm", toString(), pos.toString());
     }
-    return _components
-      .get(index - 1)
-      .querySubterm(pos.queryTail());
-  }
-
-  /** Returns the term obtained by replacing the subterm at the given position by replacement. */
-  @Override
-  public Term replaceSubterm(Position pos, Term replacement) {
-    return replaceSubterm(new HeadPosition(pos), replacement);
   }
 
   /**
-   * Returns the term obtained by replacing the subterm at the given head position by replacement.
+   * Returns the term obtained by replacing the subterm at the given (non-empty) position by the
+   * given replacement.
    */
   @Override
-  public Term replaceSubterm(HeadPosition pos, Term replacement) {
-    if (pos.isEnd()){
-      if (pos.queryChopCount() > 0) {
+  public Term replaceSubtermMain(Position pos, Term replacement) {
+    switch (pos) {
+      case ArgumentPos(int index, Position tail):
+        if (index <= _components.size()) {
+          ArrayList<Term> newcomps = new ArrayList<Term>(_components);
+          newcomps.set(index - 1, newcomps.get(index - 1).replaceSubterm(tail, replacement));
+          return new Tuple(newcomps);
+        }
+      default:
         throw new IndexingError("Tuple", "replaceSubterm", toString(), pos.toString());
-      }
-      if (!_tupleType.equals(replacement.queryType())) {
-        throw new TypingError(
-          "Tuple",
-          "replaceSubterm",
-          "replacement term " + replacement.toString(),
-          replacement.queryType().toString(),
-          _tupleType.toString()
-        );
-      }
-      return replacement;
     }
-    if (!pos.isTuple()) {
-      throw new IndexingError("Tuple", "replaceSubterm", toString(), pos.toString());
-    }
-    int replacementPos = pos.queryComponentPosition();
-    if (replacementPos < 1 || replacementPos > _components.size()) {
-      throw new IndexingError(
-        "Tuple",
-        "replaceSubterm",
-        this.toString(),
-        pos.toString()
-      );
-    }
-    ArrayList<Term> newTupleComponents = new ArrayList<Term>(_components);
-    newTupleComponents.set(replacementPos - 1,
-      newTupleComponents.get(replacementPos - 1).replaceSubterm(pos.queryTail(), replacement));
-    return new Tuple(newTupleComponents);
   }
 
   /**

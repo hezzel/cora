@@ -17,11 +17,16 @@ package cora.terms;
 
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import cora.exceptions.IndexingError;
+import cora.exceptions.TypingError;
+import cora.utils.Pair;
 import cora.types.Type;
 import cora.types.TypeFactory;
+import cora.terms.position.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -207,6 +212,143 @@ class MetaApplicationTest extends TermTestFoundation {
     assertTrue(t.isPattern());
     Term s = TermFactory.createMeta(z, args);
     assertFalse(s.isPattern());
+  }
+
+  /** @return Z⟨g(x),c⟩ :: a ⇒ b */
+  private Term createTestTerm() {
+    Type type = arrowType(baseType("a"), arrowType(baseType("b"), arrowType("a", "b")));
+    MetaVariable z = TermFactory.createMetaVar("Z", type, 2);
+    Term arg1 = unaryTerm("g", baseType("a"), new Var("x", baseType("b")));
+    Term arg2 = constantTerm("c", baseType("b"));
+    return TermFactory.createMeta(z, arg1, arg2);
+  }
+
+  @Test
+  public void testSubterms() {
+    Term term = createTestTerm();
+    List<Pair<Term,Position>> lst = term.querySubterms();
+    assertTrue(lst.size() == 4);
+    assertTrue(lst.get(0).snd().toString().equals("!1.1.ε"));
+    assertTrue(lst.get(1).snd().toString().equals("!1.ε"));
+    assertTrue(lst.get(2).fst() == term.queryMetaArgument(2));
+    assertTrue(lst.get(2).snd().toString().equals("!2.ε"));
+    assertTrue(lst.get(3).fst() == term);
+    assertTrue(lst.get(3).snd().toString().equals("ε"));
+  }
+
+  @Test
+  public void testSubtermsInApplication() {
+    Term term = createTestTerm().apply(constantTerm("a", baseType("a")));
+    List<Pair<Term,Position>> lst = term.querySubterms();
+    assertTrue(lst.size() == 5);
+    assertTrue(lst.get(0).snd().toString().equals("!1.1.ε"));
+    assertTrue(lst.get(1).snd().toString().equals("!1.ε"));
+    assertTrue(lst.get(2).fst() == term.queryMetaArgument(2));
+    assertTrue(lst.get(2).snd().toString().equals("!2.ε"));
+    assertTrue(lst.get(3).snd().toString().equals("1.ε"));
+    assertTrue(lst.get(4).snd().toString().equals("ε"));
+  }
+
+  @Test
+  public void testPartialPositions() {
+    Term term = createTestTerm().apply(constantTerm("a", baseType("a")));
+    List<Position> lst = term.queryPositions(true);
+    assertTrue(lst.size() == 7);
+    assertTrue(lst.get(0).toString().equals("!1.1.ε"));   // x
+    assertTrue(lst.get(1).toString().equals("!1.☆1"));    // g
+    assertTrue(lst.get(2).toString().equals("!1.ε"));     // g(x)
+    assertTrue(lst.get(3).toString().equals("!2.ε"));     // c
+    assertTrue(lst.get(4).toString().equals("1.ε"));      // a
+    assertTrue(lst.get(5).toString().equals("☆1"));       // Z⟨g(x),c⟩
+    assertTrue(lst.get(6).toString().equals("ε"));        // Z⟨g(x),c⟩(a)
+  }
+
+  @Test
+  public void testSubtermGood() {
+    // term Z⟨g(x),c⟩(a)
+    Term term = createTestTerm().apply(constantTerm("a", baseType("a")));
+    // position !1.1
+    Position pos = new MetaPos(1, new ArgumentPos(1, new FinalPos(0)));
+    assertTrue(term.querySubterm(pos) instanceof Var);
+  }
+
+  @Test
+  public void testHeadSubtermGood() {
+    // term Z⟨g(x),c⟩
+    Term term = createTestTerm();
+    // position !1.☆1
+    Position pos = new MetaPos(1, new FinalPos(1));
+    assertTrue(term.querySubterm(pos).toString().equals("g"));
+  }
+
+  @Test
+  public void testSubtermBad() {
+    Term term = createTestTerm();
+    Position pos = new ArgumentPos(1, Position.empty);
+    assertThrows(IndexingError.class, () -> term.querySubterm(pos));
+  }
+
+  @Test
+  public void testHeadSubtermBad() {
+    Term term = createTestTerm();
+    Position pos = new FinalPos(1);
+    assertThrows(IndexingError.class, () -> term.querySubterm(pos));
+  }
+
+  @Test
+  public void testSubtermReplacementGood() {
+    Term term = createTestTerm();
+    Position pos = Position.parse("!1.1");
+    Term replacement = constantTerm("42", baseType("b"));
+    Term s = term.replaceSubterm(pos, replacement);
+    assertTrue(s.toString().equals("Z⟨g(42), c⟩"));
+    assertTrue(term.toString().equals("Z⟨g(x), c⟩"));
+  }
+
+  @Test
+  public void testHeadSubtermReplacementGood() {
+    // term Z⟨g(x),c⟩(a)
+    Term term = createTestTerm().apply(constantTerm("a", baseType("a")));
+    // replacement λx.a
+    Variable x = new Binder("x", baseType("b"));
+    Term replacement = new Abstraction(x, constantTerm("a", baseType("a")));
+    // position !1.☆1
+    Position pos = new MetaPos(1, new FinalPos(1));
+    // replacement Z⟨(λx1.a)(x),c⟩(a)
+    Term s = term.replaceSubterm(pos, replacement);
+    assertTrue(s.toString().equals("Z⟨(λx1.a)(x), c⟩(a)"));
+  }
+
+  @Test
+  public void testSubtermReplacementBadPositionKind() {
+    Term term = createTestTerm();
+    Position pos = Position.parse("2.ε");
+    Term replacement = constantTerm("uu", baseType("b"));
+    assertThrows(IndexingError.class, () -> term.replaceSubterm(pos, replacement));
+  }
+
+  @Test
+  public void testSubtermReplacementBadPositionRange() {
+    Term term = createTestTerm();
+    Position pos = Position.parse("!3.ε");
+    Term replacement = constantTerm("uu", baseType("b"));
+    assertThrows(IndexingError.class, () -> term.replaceSubterm(pos, replacement));
+  }
+
+  @Test
+  public void testSubtermReplacementBadHeadPosition() {
+    Term term = createTestTerm();
+    Position pos = Position.parse("☆1");
+    Term replacement = constantTerm("uu", arrowType("a", "b"));
+    assertThrows(IndexingError.class, () -> term.replaceSubterm(pos, replacement));
+  }
+
+  @Test
+  public void testSubtermReplacementBadType() {
+    Term term = createTestTerm();
+    Position pos = Position.empty;
+    Term replacement = constantTerm("uu", baseType("x"));
+    assertThrows(TypingError.class, () -> term.replaceSubterm(pos, replacement));
   }
 }
 

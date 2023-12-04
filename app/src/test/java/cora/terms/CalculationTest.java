@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import cora.exceptions.*;
 import cora.types.TypeFactory;
 import cora.types.Type;
+import cora.terms.position.*;
 
 public class CalculationTest extends TermTestFoundation {
   @Test
@@ -53,8 +54,8 @@ public class CalculationTest extends TermTestFoundation {
     assertTrue(t.isFirstOrder());
     assertTrue(a.isPattern());
     assertTrue(o.isApplicative());
-    assertTrue(p.queryPositions().size() == 1);
-    assertTrue(t.queryPositionsForHead(t).size() == 0);
+    assertTrue(p.queryPositions(false).size() == 1);
+    assertTrue(t.queryPositions(true).size() == 0);
     assertTrue(a.vars().size() == 0);
     assertTrue(o.mvars().size() == 0);
     assertTrue(p.freeReplaceables().size() == 0);
@@ -75,19 +76,18 @@ public class CalculationTest extends TermTestFoundation {
   @Test(expected = IndexingError.class)
   public void testArgumentPositionRequest() {
     FunctionSymbol a = new AndOrSymbol(false);
-    a.querySubterm(PositionFactory.createArg(1, PositionFactory.empty));
+    a.querySubterm(new ArgumentPos(1, Position.empty));
   }
 
   @Test(expected = IndexingError.class)
   public void testHeadPositionRequest() {
     FunctionSymbol o = new AndOrSymbol(true);
-    o.querySubterm(new HeadPosition(PositionFactory.empty, 1));
+    o.querySubterm(new FinalPos(1));
   }
 
   @Test(expected = IndexingError.class)
   public void testBadPositionReplacement() {
     FunctionSymbol plus = new PlusSymbol();
-    plus.replaceSubterm(PositionFactory.createArg(1, PositionFactory.empty),
-                        new Constant("a", baseType("a")));
+    plus.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a")));
   }
 }

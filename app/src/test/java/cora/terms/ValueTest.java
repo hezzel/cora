@@ -19,7 +19,9 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.ArrayList;
 import cora.exceptions.*;
+import cora.utils.Pair;
 import cora.types.TypeFactory;
+import cora.terms.position.*;
 
 public class ValueTest extends TermTestFoundation {
   @Test
@@ -52,14 +54,15 @@ public class ValueTest extends TermTestFoundation {
     assertTrue(b.isFirstOrder());
     assertTrue(s.isPattern());
     assertTrue(v.isApplicative());
-    assertTrue(b.queryPositions().size() == 1);
-    assertTrue(s.queryHeadPositions().size() == 1);
+    assertTrue(b.querySubterms().size() == 1);
+    assertTrue(b.queryPositions(true).size() == 1);
+    assertTrue(s.queryPositions(false).size() == 1);
     assertTrue(v.vars().size() == 0);
     assertTrue(b.mvars().size() == 0);
     assertTrue(s.freeReplaceables().size() == 0);
     assertTrue(b.boundVars().size() == 0);
-    assertTrue(v.replaceSubterm(new EmptyPosition(), new IntegerValue(20)).toString().equals("20"));
-    assertTrue(s.querySubterm(new EmptyPosition()) == s);
+    assertTrue(v.replaceSubterm(Position.empty, new IntegerValue(20)).toString().equals("20"));
+    assertTrue(s.querySubterm(Position.empty) == s);
     assertTrue(v.toString().equals("-37"));
     assertTrue(b.toString().equals("true"));
     assertTrue(s.toString().equals("\"Hello\\nworld\""));
@@ -120,19 +123,18 @@ public class ValueTest extends TermTestFoundation {
   @Test(expected = IndexingError.class)
   public void testArgumentPositionRequest() {
     Term v = new StringValue("333");
-    v.querySubterm(PositionFactory.createArg(1, PositionFactory.empty));
+    v.querySubterm(new ArgumentPos(1, Position.empty));
   }
 
   @Test(expected = IndexingError.class)
   public void testHeadPositionRequest() {
     Term v = new IntegerValue(31);
-    v.querySubterm(new HeadPosition(PositionFactory.empty, 1));
+    v.querySubterm(new FinalPos(1));
   }
 
   @Test(expected = IndexingError.class)
   public void testBadPositionReplacement() {
     Term v = new BooleanValue(true);
-    v.replaceSubterm(PositionFactory.createArg(1, PositionFactory.empty),
-                     new Constant("a", baseType("a")));
+    v.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a")));
   }
 }
