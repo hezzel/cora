@@ -13,7 +13,7 @@ import cora.terms.position.Position;
 import cora.terms.position.ArgumentPos;
 
 /**
- * A tuple term is a term of the form ⦅t1,..., tk⦆, with k ≥ 2.
+ * A tuple term is a term of the form ⦇t1,..., tk⦈, with k ≥ 2.
  */
 public class Tuple extends TermInherit {
   private ImmutableList<Term> _components;
@@ -278,12 +278,12 @@ public class Tuple extends TermInherit {
   @Override
   public void addToString(StringBuilder builder, Map<Replaceable, String> renaming,
                           Set<String> avoid) {
-    builder.append("⦅");
+    builder.append("⦇");
     for(int i = 0; i < _components.size(); i++){
       if (i > 0) builder.append(", ");
       _components.get(i).addToString(builder, renaming, avoid);
     }
-    builder.append("⦆");
+    builder.append("⦈");
   }
 
   /**

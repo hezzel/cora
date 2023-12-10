@@ -1,7 +1,8 @@
-package cora.parsing.lib;
+package cora.parser.lib;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ErrorLexerTest {
 

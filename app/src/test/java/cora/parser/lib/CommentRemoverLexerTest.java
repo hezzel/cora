@@ -1,7 +1,8 @@
-package cora.parsing.lib;
+package cora.parser.lib;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CommentRemoverLexerTest {
   private Lexer makeLexer(String str, boolean nested) {
@@ -67,7 +68,7 @@ public class CommentRemoverLexerTest {
     assertTrue(token.isEof());
   }
 
-  @Test(expected = LexerException.class)
+  @Test
   public void testCannotUseEofAsComentClose() throws LexerException {
     TokenFinder tf = new TokenFinder(new String[] {
                                        "\\w*", "IDENTIFIER",
@@ -81,7 +82,7 @@ public class CommentRemoverLexerTest {
     assertTrue(token.toString().equals("1:1: hello (IDENTIFIER)"));
     token = lexer.nextToken();
     assertTrue(token.toString().equals("1:6:   (WHITESPACE)"));
-    token = lexer.nextToken();
+    assertThrows(LexerException.class, () -> lexer.nextToken());
   }
 
   @Test

@@ -55,6 +55,7 @@ public class CoraTokenData {
   public static String TIMES          = "TIMES";
   public static String MID            = "MID";
   public static String DIV            = "DIV";
+  public static String MOD            = "MOD";
   public static String GEQ            = "GEQ";
   public static String GREATER        = "GREATER";
   public static String LEQ            = "LEQ";
@@ -91,6 +92,7 @@ public class CoraTokenData {
     "\\*"                                     , TIMES,
     "\\|"                                     , MID,
     "/"                                       , DIV,
+    "%"                                       , MOD,
     ">"                                       , GREATER,
     "<"                                       , SMALLER,
     "≥|(>=)"                                  , GEQ,

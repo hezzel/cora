@@ -68,6 +68,14 @@ public class TermSmtTranslator {
       return problem.createMultiplication(translateIntegerExpression(t.queryArgument(1), problem),
                                           translateIntegerExpression(t.queryArgument(2), problem));
     }
+    if (calc.equals(TheoryFactory.divSymbol)) {
+      return problem.createDivision(translateIntegerExpression(t.queryArgument(1), problem),
+                                    translateIntegerExpression(t.queryArgument(2), problem));
+    }
+    if (calc.equals(TheoryFactory.modSymbol)) {
+      return problem.createModulo(translateIntegerExpression(t.queryArgument(1), problem),
+                                  translateIntegerExpression(t.queryArgument(2), problem));
+    }
     throw new UnsupportedTheoryError(t.toString(),
       "unfamiliar integer calculation symbol: " + calc.queryName());
   }

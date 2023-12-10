@@ -40,7 +40,7 @@ public class TypeFactory {
 
   /** Creates a type of the form left ⇒ right */
   public static Type createArrow(Type left, Type right) { return new Arrow(left, right); }
-  
+
   /** Creates a product type from the given list. */
   public static Type createProduct(ImmutableList<Type> types) {
     return new Product(types);
@@ -63,4 +63,10 @@ public class TypeFactory {
     return ret;
   }
 
+  /** Creates a type o ⇒ ... ⇒ o ⇒ o, with in total k+1 os. */
+  public static Type createUnitArrow(int arity) {
+    Type ret = unitSort;
+    for (int i = 0; i < arity; i++) ret = new Arrow(unitSort, ret);
+    return ret;
+  }
 }

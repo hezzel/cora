@@ -26,7 +26,7 @@ import cora.terms.position.Position;
 
 /**
  * Terms are the main object to be rewritten, or used to construct rules.  There are various kinds
- * of terms: functional terms f(s1,...,sn), var terms x(s1,...,xn), tuples ⦅s1,...,sn⦆,
+ * of terms: functional terms f(s1,...,sn), var terms x(s1,...,xn), tuples ⦇s1,...,sn⦈,
  * abstractions λx.s and meta-applications Z⟨s1,...,sk⟩.  (The latter would traditionally be
  * considered a _meta_term rather than a term, but it is convenient to use the same interface for
  * it.)
@@ -59,7 +59,7 @@ public interface Term {
   /** Returns whether the current term is a meta-variable application Z⟨s1,...,sk⟩. */
   boolean isMetaApplication();
 
-  /** Returns whether the current term is a tuple ⦅s1,...,sk⦆ with k ≥ 2. */
+  /** Returns whether the current term is a tuple ⦇s1,...,sk⦈ with k ≥ 2. */
   boolean isTuple();
 
   /** Returns whether the current term has the form (λx.t)(s1,...sn) with n > 0. */
@@ -90,7 +90,7 @@ public interface Term {
   /** Returns the number of meta-arguments; that is, k for a term Z⟨t1,...,tk⟩(s1,...,sn). */
   int numberMetaArguments();
 
-  /** Returns the number of tuple arguments; that is, k for a term ⦅s1,...,sn⦆. */
+  /** Returns the number of tuple arguments; that is, k for a term ⦇s1,...,sn⦈. */
   int numberTupleArguments();
 
   /**

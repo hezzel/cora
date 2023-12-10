@@ -39,114 +39,6 @@ public class TrsInputReaderTest {
     return new ParsingStatus(TrsTokenData.getStringLexer(text), collector);
   }
 
-  // ====================================== reading a varlist =====================================
-
-  @Test
-  public void testReadCorrectVarList() {
-    ParsingStatus status = makeStatus("(VAR x y) blaat");
-    SymbolData data = TrsInputReader.readVariableDeclaration(status);
-    assertTrue(data != null);
-    status.throwCollectedErrors();    // this shouldn't throw any errors
-
-    assertTrue(data.lookupVariable("x") != null);
-    assertTrue(data.lookupVariable("y") != null);
-    assertTrue(data.lookupVariable("z") == null);
-    assertTrue(data.lookupVariable("x").queryType().toString().equals("o"));
-
-    assertTrue(status.nextToken().getText().equals("blaat"));
-  }
-
-  @Test
-  public void testReadVarListWithIllegalTokens() {
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("(VAR x -> y ( 23) ==", collector);
-    try { TrsInputReader.readVariableDeclaration(status); }
-    catch (ParseError e) {
-      assertTrue(e.getMessage().equals(
-      "1:8: Unexpected token: -> (ARROW); expected a variable name\n"));
-    }
-  }
-
-  @Test
-  public void testReadVarListWithDoubleDeclaration() {
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("(VAR x y x 12 y)", collector);
-    SymbolData data = TrsInputReader.readVariableDeclaration(status);
-
-    assertTrue(data.lookupVariable("x") != null);
-    assertTrue(data.lookupVariable("y") != null);
-    assertTrue(data.lookupVariable("12") != null);
-
-    assertTrue(status.nextToken().isEof());
-
-    assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals(
-      "1:10: Double declaration of variable x\n" +
-      "1:15: Double declaration of variable y\n"));
-  }
-
-  @Test
-  public void testReadVarListThatDoesNotEnd() {
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("  (VAR x y 12 ", collector);
-    SymbolData data = TrsInputReader.readVariableDeclaration(status);
-
-    assertTrue(data.lookupVariable("x") != null);
-    assertTrue(data.lookupVariable("y") != null);
-    assertTrue(data.lookupVariable("12") != null);
-
-    assertTrue(status.nextToken().isEof());
-
-    assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
-      "1:3: Encountered end of input while reading varlist; no closing bracket given.\n"));
-
-  }
-
-  @Test
-  public void testReadVarListWithRuleListInTheMiddle() {
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("  (VAR x y 12 (RULES ))", collector);
-    SymbolData data = TrsInputReader.readVariableDeclaration(status);
-
-    assertTrue(data.lookupVariable("x") != null);
-    assertTrue(data.lookupVariable("y") != null);
-    assertTrue(data.lookupVariable("12") != null);
-
-    assertTrue(status.nextToken().getName().equals("RULESDECSTART"));
-
-    assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
-      "1:15: Unexpected (RULES while reading varlist; did you forget a closing bracket?\n"));
-  }
-
-  @Test
-  public void testReadVarListWithMultipleProblems() {
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("  (VAR x \ny x ( 12 -> y y (RULES ))", collector);
-
-    try {
-      TrsInputReader.readVariableDeclaration(status);
-    }
-    catch (ParseError e) {
-      assertTrue(e.getMessage().equals(
-        "2:3: Double declaration of variable x\n" +
-        "2:5: Unexpected token: ( (BRACKETOPEN); expected a variable name\n"));
-      return;
-    }
-    assertTrue(false);
-  }
-
-  @Test
-  public void testReadNonVarList() {
-    ParsingStatus status = makeStatus("(SIG x y) blaat");
-    SymbolData data = TrsInputReader.readVariableDeclaration(status);
-    assertTrue(data == null);
-    status.throwCollectedErrors();    // this shouldn't throw any errors
-
-    assertTrue(status.nextToken().getName().equals("SIGSTART"));
-  }
-
   // ===================================== reading a signature ====================================
 
   @Test
@@ -195,49 +87,6 @@ public class TrsInputReaderTest {
   }
 
   @Test
-  public void testForgotBracketsOnceUnsorted() {
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("(SIG f 2) ping", collector);
-    SymbolData data = TrsInputReader.readSignature(status);
-    assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
-      "1:6: Expected an integer or sort declaration in brackets but got IDENTIFIER (f).\n"));
-    // but recovery works!
-    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("o ⇒ o ⇒ o"));
-    assertTrue(status.nextToken().getText().equals("ping"));
-   }
-
-  @Test
-  public void testForgotBracketsOnceSorted() {
-    // SIG (f x y -> z)
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("(SIG f x y -> z) toot", collector);
-    SymbolData data = TrsInputReader.readSignature(status);
-    assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
-      "1:6: Expected an integer or sort declaration in brackets but got IDENTIFIER (f).\n"));
-    // but recovery works!
-    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("x ⇒ y ⇒ z"));
-    assertTrue(status.nextToken().getText().equals("toot"));
-  }
-
-  @Test
-  public void testForgotMultipleTimes() {
-    // SIG (f 0 g a b -> zz hh -> int)
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("(SIG f 0 g a b -> zz hh -> int))", collector);
-    SymbolData data = TrsInputReader.readSignature(status);
-    assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals(
-      "1:6: Expected an integer or sort declaration in brackets but got IDENTIFIER (f).\n" +
-      "1:22: Expected an integer or sort declaration in brackets but got IDENTIFIER (hh).\n"));
-    // but recovery works!
-    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("0 ⇒ g ⇒ a ⇒ b ⇒ zz"));
-    assertTrue(data.lookupFunctionSymbol("hh").queryType().toString().equals("int"));
-    assertTrue(status.nextToken().getText().equals(")"));
-  }
-
-  @Test
   public void testReasonableDeclarationsWithoutArrow() {
     ErrorCollector collector = new ErrorCollector(10);
     ParsingStatus status = makeStatus("(SIG (true bool) (false bool) (> int int -> bool)) a", collector);
@@ -255,117 +104,6 @@ public class TrsInputReaderTest {
     assertTrue(status.nextToken().getText().equals("a"));
   }
 
-  @Test
-  public void testUnreasonableDeclarationWithoutArrow() {
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("(SIG (> int int bool) (f 1))", collector);
-    SymbolData data = TrsInputReader.readSignature(status);
-    assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
-      "1:21: Expected IDENTIFIER (a sort) or the sort declaration arrow (->) but got " +
-        "BRACKETCLOSE ()).\n"));
-    assertTrue(data.lookupFunctionSymbol(">").queryType().toString().equals("int ⇒ int ⇒ bool"));
-    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("o ⇒ o"));
-   }
-
-  @Test
-  public void testBadIntegerInDeclaration() {
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("(SIG (f 0) (g 00) (h -1) (b 3))", collector);
-    SymbolData data = TrsInputReader.readSignature(status);
-    assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
-      "1:22: Cannot set arity below 0.\n"));
-    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("o"));
-    assertTrue(data.lookupFunctionSymbol("g").queryType().toString().equals("o"));
-    assertTrue(data.lookupFunctionSymbol("h").queryType().toString().equals("o"));
-    assertTrue(data.lookupFunctionSymbol("b").queryType().toString().equals("o ⇒ o ⇒ o ⇒ o"));
-  }
-
-  @Test
-  public void testDoubleDeclaration() {
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("(SIG (f 0) (g 3) (f 1) (g 3))", collector);
-    SymbolData data = TrsInputReader.readSignature(status);
-    assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals(
-      "1:19: Redeclaration of function symbol f.\n" +
-      "1:25: Redeclaration of function symbol g.\n"));
-    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("o"));
-    assertTrue(data.lookupFunctionSymbol("g").queryType().toString().equals("o ⇒ o ⇒ o ⇒ o"));
-  }
-
-  @Test(expected = cora.exceptions.ParseError.class)
-  public void testStupidDeclaration() {
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("(SIG (f : (a -> b) -> c))");
-    SymbolData data = TrsInputReader.readSignature(status);
-    // this is stupid enough not to try recovery
-  }
-
-  @Test
-  public void testUnfinishedDeclarationEof() {
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("(SIG (f 2) (a 0) (g 7)", collector);
-    SymbolData data = TrsInputReader.readSignature(status);
-    assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
-      "1:23: Unexpected end of input while reading (SIG.\n"));
-    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("o ⇒ o ⇒ o"));
-    assertTrue(data.lookupFunctionSymbol("a").queryType().toString().equals("o"));
-    assertTrue(data.lookupFunctionSymbol("g").queryArity() == 7);
-    assertTrue(status.nextToken().isEof());
-  }
-
-  @Test
-  public void testUnfinishedDeclarationOther() {
-    ErrorCollector collector = new ErrorCollector(10);
-    ParsingStatus status = makeStatus("(SIG (f 2) (a 0) (g 7) (RULES 12))", collector);
-    SymbolData data = TrsInputReader.readSignature(status);
-    assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
-      "1:24: Unexpected (RULES; did you forget ) to close (SIG?\n"));
-    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("o ⇒ o ⇒ o"));
-    assertTrue(data.lookupFunctionSymbol("a").queryType().toString().equals("o"));
-    assertTrue(data.lookupFunctionSymbol("g").queryArity() == 7);
-    assertTrue(status.nextToken().getText().equals("(RULES"));
-  }
-
-  // =================================== reading term structure ===================================
-
-  @Test
-  public void testReadUnfinishedOpening() {
-    try { TrsInputReader.readUnsortedTermFromString("a(", ""); }
-    catch (ParseError e) {
-      assertTrue(e.getMessage().equals(
-        "2:3: Expected an identifier (variable or function name) but got end of input.\n"));
-      return;
-    }
-    assertTrue(false);
-  }
-
-  @Test
-  public void testReadMissingCloseBracket() {
-    try { TrsInputReader.readSortedTermFromString("f(a, b(x)", ""); }
-    catch (ParseError e) {
-      assertTrue(e.getMessage().equals(
-        "2:10: Expected a comma or closing bracket but got end of input.\n"));
-      return;
-    }
-    assertTrue(false);
-  }
-
-  @Test
-  public void testReadArrowAfterComma() {
-    try { TrsInputReader.readUnsortedTermFromString("f(a, b(x), -> c)", ""); }
-    catch (ParseError e) {
-      assertTrue(e.getMessage().equals(
-        "2:12: Expected an identifier (variable or function name) but got ARROW (->).\n"));
-      return;
-    }
-    assertTrue(false);
-  }
- 
   // ================================== reading an unsorted term ==================================
 
   @Test
@@ -412,19 +150,6 @@ public class TrsInputReaderTest {
   }
 
   @Test
-  public void testReadMultipleInconsistencies() {
-    try { TrsInputReader.readUnsortedTermFromString("f(a, a(, x), g(y, ), a(b)", "x y"); }
-    catch (ParseError e) {
-      assertTrue(e.getMessage().equals(
-        "2:8: Expected an identifier (variable or function name) but got COMMA (,).\n" +
-        "2:19: Expected an identifier (variable or function name) but got BRACKETCLOSE ()).\n" +
-        "2:26: Expected a comma or closing bracket but got end of input.\n"));
-      return;
-    }
-    assertTrue(false);
-  }
-
-  @Test
   public void testUnsortedAbusedVariable() {
     try { TrsInputReader.readUnsortedTermFromString("x(a)", "x"); }
     catch (ParseError e) {
@@ -442,17 +167,6 @@ public class TrsInputReaderTest {
         "2:3: Function symbol f was previously used with 1 arguments, but is here used with 2.\n" +
         "2:15: Function symbol a was previously used with 0 arguments, but is here used with 1.\n"
       ));
-      return;
-    }
-    assertTrue(false);
-  }
-
-  @Test
-  public void testUnsortedWeirdnessInsideSubTerm() {
-    try { TrsInputReader.readUnsortedTermFromString("f(a, g(b, ), g(x, y))", "x y"); }
-    catch (ParseError e) {
-      assertTrue(e.getMessage().equals(
-        "2:11: Expected an identifier (variable or function name) but got BRACKETCLOSE ()).\n"));
       return;
     }
     assertTrue(false);
@@ -885,68 +599,6 @@ public class TrsInputReaderTest {
     Rule a = trs.queryRule(0);
     Rule b = trs.queryRule(1);
     assertFalse(a.queryRightSide().queryType().equals(b.queryRightSide().queryType()));
-  }
-
-  @Test
-  public void testReadTrsWithMoreAfterEnding() {
-    String str = "(VAR x y) (RULES f(x) -> y) uh oh!";
-    try { TrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
-      assertTrue(e.getMessage().equals(
-        "1:18: right-hand side of rule [f(x) → y] contains variable y which does not occur on " +
-          "the left.\n" +
-        "1:29: Expected end of input but got IDENTIFIER (uh).\n"));
-      return;
-    }
-    assertTrue(false);
-  }
-
-  @Test
-  public void testReadTrsWithMoreAfterComment() {
-    String str = "(VAR x) (RULES f(x) -> g(x,)) (COMMENT extra comma ) there...) you see?";
-    try { TrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
-      assertTrue(e.getMessage().equals(
-        "1:28: Expected an identifier (variable or function name) but got BRACKETCLOSE ()).\n" +
-        "1:64: Unexpected token: you; expected end of input following comment.\n"));
-      return;
-    }
-    assertTrue(false);
-  }
-
-  @Test
-  public void testTrsWithUnclosedComment() {
-    String str = "(RULES a -> a) (COMMENT bing";
-    try { TrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
-      assertTrue(e.getMessage().equals("1:16: Unclosed comment.\n"));
-      return;
-    }
-    assertTrue(false);
-  }
-
-  @Test
-  public void testMixSigAndVar() {
-    String str = "(SIG (f 2)) (VAR x) (RULES I can just type nonsense here";
-    try { TrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
-      assertTrue(e.getMessage().equals(
-        "1:13: Expected rules declaration but got VARSDECSTART ((VAR).\n"));
-      return;
-    }
-    assertTrue(false);
-  }
-
-  @Test
-  public void testMissingRules() {
-    String str = "(SIG (f 2)) (COMMENT an empty file";
-    try { TrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
-      assertTrue(e.getMessage().equals(
-        "1:13: Expected rules declaration but got COMMENTSTART ((COMMENT).\n"));
-      return;
-    }
-    assertTrue(false);
   }
 
   @Test

@@ -15,8 +15,9 @@
 
 package cora.smt;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import cora.exceptions.UnsupportedTheoryError;
 import cora.types.Type;
@@ -84,6 +85,20 @@ public class TermSmtTranslatorTest {
   }
 
   @Test
+  public void testTranslateDivMod() {
+    // 3 / (x - 4 % y)
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
+    Term t = TheoryFactory.divSymbol.apply(TheoryFactory.createValue(3))
+      .apply(TheoryFactory.plusSymbol.apply(x).apply(TheoryFactory.minusSymbol.apply(
+      TheoryFactory.modSymbol.apply(TheoryFactory.createValue(4)).apply(y))));
+    IntegerExpression e = TermSmtTranslator.translateIntegerExpression(t, _problem);
+    assertTrue(e instanceof Division);
+    assertTrue(e.toString().equals(
+      "(div 3 (+ i" + x.queryIndex() +" (- (mod 4 i" + y.queryIndex() +"))))"));
+  }
+
+  @Test
   public void testTranslateComplexIntegerExpression() {
     // x - (-1 - y)
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
@@ -96,19 +111,21 @@ public class TermSmtTranslatorTest {
       "(- i" + y.queryIndex() + "))))"));
   }
 
-  @Test(expected = UnsupportedTheoryError.class)
+  @Test
   public void testNonIntTranslateInteger() {
-    TermSmtTranslator.translateIntegerExpression(TheoryFactory.createVar("x", TypeFactory.boolSort),
-                                                 _problem);
+    assertThrows(UnsupportedTheoryError.class,
+      () -> TermSmtTranslator.translateIntegerExpression(TheoryFactory.createVar("x",
+                                                         TypeFactory.boolSort), _problem));
   }
 
-  @Test(expected = UnsupportedTheoryError.class)
+  @Test
   public void testNonCalcTranslateInteger() {
     Type is = TypeFactory.intSort;
     Term f = TermFactory.createConstant("+",
       TypeFactory.createArrow(is, TypeFactory.createArrow(is, is)));
     Term t = f.apply(TheoryFactory.createValue(7)).apply(TheoryFactory.createValue(8));
-    TermSmtTranslator.translateIntegerExpression(t, _problem);
+    assertThrows(UnsupportedTheoryError.class,
+      () -> TermSmtTranslator.translateIntegerExpression(t, _problem));
   }
 
   @Test
@@ -190,18 +207,20 @@ public class TermSmtTranslatorTest {
       y.queryIndex() + ") true)"));
   }
 
-  @Test(expected = UnsupportedTheoryError.class)
+  @Test
   public void testNonBoolTranslateConstraint() {
-    TermSmtTranslator.translateIntegerExpression(TheoryFactory.createValue("true"), _problem);
+    assertThrows(UnsupportedTheoryError.class, () ->
+      TermSmtTranslator.translateIntegerExpression(TheoryFactory.createValue("true"), _problem));
   }
 
-  @Test(expected = UnsupportedTheoryError.class)
+  @Test
   public void testNonCalcTranslateConstraint() {
     Type bs = TypeFactory.boolSort;
     Term f = TermFactory.createConstant("∧",
       TypeFactory.createArrow(bs, TypeFactory.createArrow(bs, bs)));
     Term t = f.apply(TheoryFactory.createValue(true)).apply(TheoryFactory.createValue(false));
-    TermSmtTranslator.translateConstraint(t, _problem);
+    assertThrows(UnsupportedTheoryError.class, () ->
+      TermSmtTranslator.translateConstraint(t, _problem));
   }
 }
 
