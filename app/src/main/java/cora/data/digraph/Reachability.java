@@ -1,5 +1,7 @@
 package cora.data.digraph;
 
+import cora.exceptions.IllegalArgumentError;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,25 +41,46 @@ public class Reachability {
   private final boolean[] _isReachable;
 
 
+  /**
+   * TODO: add docs
+   * @param graph
+   * @param source
+   */
   public Reachability(Digraph graph, int source){
     _isReachable = new boolean[graph.getNumberOfVertices()];
     reachabilitySearch(graph, source);
   }
 
+  /**
+   * TODO: add docs
+   * @param graph
+   * @param sources
+   */
   public Reachability(Digraph graph, Iterable<Integer> sources) {
     _isReachable = new boolean[graph.getNumberOfVertices()];
     for(int s : sources)
       if (!_isReachable[s]) reachabilitySearch(graph, s);
   }
 
+  /**
+   * Implements a depth-first search for the reachable vertices starting from source.
+   */
   private void reachabilitySearch(Digraph graph, int source) {
     _isReachable[source] = true;
     for(int v : graph.getNeighbors(source))
       if (!_isReachable[v]) reachabilitySearch(graph,v);
   }
 
+  /**
+   * Returns whether the parameter {@code destination} is reachable from the <i>source</i>.
+   * @param destination
+   */
   public boolean isReachable(int destination) { return _isReachable[destination]; }
 
+  /**
+   * Returns the list of all vertices that are reachable from <i>source</i>.
+   * @return
+   */
   public List<Integer> getReachableVertices() {
     List<Integer> ret = new ArrayList<>();
     for(int i = 0; i < _isReachable.length; i++){

@@ -69,12 +69,20 @@ public class Digraph {
   public int getNumberOfEdges() { return _numberOfEdges; }
 
   /**
-   * This method check for the bounds of a given vertex.
+   * This method check for the bounds of a given integer and test whether it is in range for
+   * vertices in the graph.
+   *
+   * @param vertex the integer parameter to be checked as vertex
+   * @param classname the classname calling this method
+   * @param method the method in the class name
+   *
+   * @throws IllegalArgumentError if the {@code vertex} parameter is out of bounds for this
+   * graph, that is, {@code vertex < 0 || vertex > this.getNumberOfVertices() - 1}.
    */
-  private void checkVerticesBounds(int vertex, String method) {
+  public void validadeVertex(int vertex, String classname, String method) {
     if (vertex < 0 || vertex > this.getNumberOfVertices() - 1) {
       throw new IllegalArgumentError(
-        "Digraph",
+        classname,
         method,
         STR."vertex with value \{vertex} out of bound, it should be in the range 0 - \{this.getNumberOfVertices() - 1}"
       );
@@ -135,8 +143,8 @@ public class Digraph {
    * @throws IllegalArgumentError if either {@code origin} or {@code destination} are out of bound
    */
   public boolean isAdjacent(int origin, int destination) {
-    checkVerticesBounds(origin,"isAdjacent");
-    checkVerticesBounds(destination, "isAdjacent");
+    validadeVertex(origin,"Digraph", "isAdjacent");
+    validadeVertex(destination, "Digraph", "isAdjacent");
 
     Stream<Integer> test = _adjacencyList
       .get(origin)
@@ -152,7 +160,7 @@ public class Digraph {
    * @param originVertex the origin vertex
    */
   public List<Integer> getNeighbors(int originVertex) {
-    checkVerticesBounds(originVertex, "Digraph");
+    validadeVertex(originVertex, "Digraph", "getNeighbors");
     return _adjacencyList.get(originVertex);
   }
 
