@@ -1,5 +1,6 @@
 package cora.termination.dependency_pairs;
 
+import cora.parsing.CoraInputReader;
 import cora.terms.TermFactory;
 import cora.terms.Variable;
 import cora.types.Type;
@@ -9,9 +10,11 @@ import cora.terms.Term;
 
 import cora.termination.dependency_pairs.DependencyPairs;
 
+import java.beans.DefaultPersistenceDelegate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumingThat;
 
 class DependencyPairsTest {
 
@@ -55,40 +58,77 @@ class DependencyPairsTest {
   }
 
   @Test
+  void testToDependencyPairType() {
+    Type ty =
+      CoraInputReader.readTypeFromString("Bool");
+    Type depTy = DependencyPairs.toDependencyPairType(ty);
+
+    assumingThat(ty.isBaseType() || ty.isProdType(),  () -> {
+      assertTrue(DependencyPairs.dpSort.equals(depTy));
+    });
+
+    assumingThat(ty.isArrowType(), () -> {
+      System.out.println("do more tests here");
+    });
+
+  }
+
+  @Test
   void testGenerateSharpFn() {
     Term x = TermFactory.createVar(TypeFactory.boolSort);
-    Term f = TermFactory.createConstant("f", TypeFactory.createArrow(TypeFactory.boolSort,
-      TypeFactory.intSort));
+    Term f = TermFactory.
+      createConstant("f",
+        CoraInputReader.readTypeFromString("Bool -> Int")
+      );
     Term fx = f.apply(x);
 
-    System.out.println(fx.queryHead());
+    System.out.println(
+      fx.queryHead() + ":" + f.queryType()
+    );
 
     DependencyPairs dp = new DependencyPairs();
 
-    System.out.println(dp.generateSharpFn(f));
+    Term fSharp = dp.generateSharpFn(f);
+
+    System.out.println(fSharp + ":" + fSharp.queryType());
 
   }
 
   @Test
   void testFakeEta(){
-    Type arr = TypeFactory.createArrow(
-      TypeFactory.stringSort,
-      TypeFactory.createArrow(
-        TypeFactory.intSort,
-        TypeFactory.createArrow(
-          TypeFactory.createArrow(
-            TypeFactory.intSort,
-            TypeFactory.intSort
-          ),
-          TypeFactory.intSort
-        )
-      )
-    );
+    Type arr =
+      CoraInputReader.readTypeFromString(
+        "Bool -> b -> c -> d -> e"
+      );
     Term f = TermFactory.createConstant("f",arr);
     Term x = TermFactory.createVar(TypeFactory.boolSort);
 
-    System.out.println(DependencyPairs.fakeEta(x));
+    System.out.println(f + ":" + f.queryType());
 
+    System.out.println("fake eta result");
+
+    System.out.println(DependencyPairs.fakeEta(f.apply(x)));
+  }
+
+  @Test
+  void testGenLeftSharpRule() {
+    Type arr =
+      CoraInputReader.readTypeFromString(
+        "Bool -> b -> c -> d -> e"
+      );
+    Term f = TermFactory.createConstant("f",arr);
+    System.out.println("Normal lhs: " + f + ":" + f.queryType());
+    System.out.println("DP lhs: " + DependencyPairs.genLeftSharpRule(f));
+    System.out.println("With f : " + DependencyPairs.genLeftSharpRule(f).queryRoot().queryType());
+  }
+
+  @Test
+  void testGenRightCandidates() {
+    Term f = TermFactory.createConstant("f",
+      CoraInputReader.readTypeFromString("a -> b"));
+    Term etaF = DependencyPairs.fakeEta(f);
+//    System.out.println(etaF);
+    System.out.println(DependencyPairs.genRightCandidates(etaF));
 
   }
 

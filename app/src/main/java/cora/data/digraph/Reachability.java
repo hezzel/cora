@@ -1,0 +1,68 @@
+package cora.data.digraph;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ *  This class holds the data for the reachability problem on digraphs.
+ *  It provides two constructors:
+ *  <ul>
+ *    <li>{@code Reachability(Digraph graph, int source)}</li>
+ *    <li>{@code Reachability(Digraph graph, Iterable<Integer> sources)}</li>
+ *  </ul>
+ *  <p>
+ *  In the first case, given a {@code Digraph graph} and a vertex {@code int source}.
+ *  This object holds all vertices {@code v} from {@code graph} such that there exists a path from
+ *  {@code source} to {@code v}.
+ *  </p>
+ *
+ *  <p>
+ *  In the second case, given a {@code Digraph graph} and a collection of vertices
+ *  {@code Iterable<Integer> sources}.
+ *  This object holds all vertices {@code v} such that there exists a path from any vertex in
+ *  {@code sources} to {@code v}.
+ *  </p>
+ *
+ *  <p>
+ *    Notice that instantiating an object of this class computes the solution to the reachability
+ *    problem and save the result as data in the object.
+ *    This
+ *  </p>
+ *
+ */
+public class Reachability {
+
+  /**
+   * This vector is a bookkeeper for the reachability status of all vertices in the input grpah
+   * that is reachable from either the vertex source or the list of vertex source.
+   */
+  private final boolean[] _isReachable;
+
+
+  public Reachability(Digraph graph, int source){
+    _isReachable = new boolean[graph.getNumberOfVertices()];
+    reachabilitySearch(graph, source);
+  }
+
+  public Reachability(Digraph graph, Iterable<Integer> sources) {
+    _isReachable = new boolean[graph.getNumberOfVertices()];
+    for(int s : sources)
+      if (!_isReachable[s]) reachabilitySearch(graph, s);
+  }
+
+  private void reachabilitySearch(Digraph graph, int source) {
+    _isReachable[source] = true;
+    for(int v : graph.getNeighbors(source))
+      if (!_isReachable[v]) reachabilitySearch(graph,v);
+  }
+
+  public boolean isReachable(int destination) { return _isReachable[destination]; }
+
+  public List<Integer> getReachableVertices() {
+    List<Integer> ret = new ArrayList<>();
+    for(int i = 0; i < _isReachable.length; i++){
+      if (_isReachable[i]) ret.add(i);
+    }
+    return ret;
+  }
+}
