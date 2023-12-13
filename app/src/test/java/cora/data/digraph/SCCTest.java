@@ -1,9 +1,9 @@
 package cora.data.digraph;
 
+import cora.data.digraph.Digraph;
+import cora.data.digraph.SCC;
+import cora.data.digraph.TransitiveClosure;
 import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 class SCCTest {
 
