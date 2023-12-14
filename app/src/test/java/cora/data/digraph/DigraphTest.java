@@ -1,9 +1,11 @@
 package cora.data.digraph;
 
-import cora.data.digraph.Digraph;
 import cora.exceptions.IllegalArgumentError;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.util.Comparator;
+import java.util.List;
 
 class DigraphTest {
 
@@ -12,11 +14,14 @@ class DigraphTest {
     Digraph g = new Digraph(3);
     g.addEdge(0, 1);
     g.addEdge(0,1);
-//    g.addEdge(0, 2);
+    g.addEdge(0, 2);
     g.addEdge(1, 0);
-//    g.addEdge(1, 2);
-//    g.addEdge(2, 1);
+    g.addEdge(1, 2);
+    g.addEdge(2, 1);
     System.out.println(g);
+
+    Digraph sub = g.getSubgraph(List.of(1,0));
+    System.out.println(sub);
   }
 
   @Test
@@ -56,6 +61,16 @@ class DigraphTest {
       Digraph g = new Digraph(3);
       g.addEdge(0, 3);
     });
+  }
+
+  @Test
+  void testRemovalOfEdges() {
+    Digraph g = new Digraph(3);
+    g.addEdge(0,1);
+    Assertions.assertEquals(1, g.getNumberOfEdges());
+    g.removeEdge(0,1);
+    Assertions.assertEquals(0, g.getNumberOfEdges());
+
   }
 
   @Test

@@ -1,9 +1,11 @@
 package cora.data.digraph;
 
 import cora.exceptions.IllegalArgumentError;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
 //TODO: complete this documentation with more information about the implementation of digraphs.
 /**
@@ -97,6 +99,16 @@ public class Digraph {
     _adjacencyList.add(new ArrayList<>());
   }
 
+  // I am keeping this private since I am not sure if this method is really needed.
+  private void removeVertex(int vertex) {
+    validadeVertex(vertex, "Digraph", "removeVertex");
+    int deletedEdges = _adjacencyList.get(vertex).size();
+    _adjacencyList.remove(vertex);
+
+    _numberOfVertices--;
+    _numberOfEdges = _numberOfEdges - deletedEdges;
+  }
+
   /**
    * Adds a directed edge connecting {@code originVertex} to {@code destinationVertex}.
    * Notice that if such an edge is already present nothing is done.
@@ -132,37 +144,50 @@ public class Digraph {
     }
     // Lastly we only add the edge originVertex -> destinationVertex if it is not there already.
     // The reason is that we don't allow for parallel edges in our applications.
-    Stream<Integer> lookUp = _adjacencyList
+    int lookUpIndex = _adjacencyList
       .get(originVertex)
-      .stream()
-      .filter( i -> i == destinationVertex);
+      .indexOf(destinationVertex);
 
-    if (lookUp.findAny().isEmpty()){
+    if (lookUpIndex < 0){
       _adjacencyList.get(originVertex).add(destinationVertex);
       _numberOfEdges++;
     }
   }
 
+  /**
+   * Removes (if present) the edge with origin in {@code originVertex} and destination in
+   * {@code destinationVertex}.
+   * @param originVertex the origing vertex
+   * @param destinationVertex the destination vertex
+   * @throws IllegalArgumentError if either the first or second parameter is out of bound related
+   * to the number of vertices in the graph
+   */
   public void removeEdge(int originVertex, int destinationVertex) {
+    validadeVertex(originVertex, "Digraph","removeEdge");
+    validadeVertex(destinationVertex, "Digraph", "removeEdge");
 
+    int lookUpIndex = _adjacencyList.get(originVertex).indexOf(destinationVertex);
+
+    if(lookUpIndex >= 0) {
+      _adjacencyList.get(originVertex).remove(lookUpIndex);
+      _numberOfEdges--;
+    }
   }
 
   /**
    * Returns whether two vertices {@code origin} and {@code destination} are adjacent,
    * that is, if there is an edge from {@code origin} to {@code destination}.
-   * @param origin the origin vertex
-   * @param destination the destination vertex
+   * @param originVertex the origin vertex
+   * @param destinationVertex the destination vertex
    * @throws IllegalArgumentError if either {@code origin} or {@code destination} are out of bound
    */
-  public boolean isAdjacent(int origin, int destination) {
-    validadeVertex(origin,"Digraph", "isAdjacent");
-    validadeVertex(destination, "Digraph", "isAdjacent");
+  public boolean isAdjacent(int originVertex, int destinationVertex) {
+    validadeVertex(originVertex,"Digraph", "isAdjacent");
+    validadeVertex(destinationVertex, "Digraph", "isAdjacent");
 
-    Stream<Integer> test = _adjacencyList
-      .get(origin)
-      .stream()
-      .filter(i -> i == destination);
-    return test.findAny().isPresent();
+    Integer lookUpIndex = _adjacencyList.get(originVertex).indexOf(destinationVertex);
+
+    return (lookUpIndex >= 0);
   }
 
   /**
@@ -174,6 +199,51 @@ public class Digraph {
   public List<Integer> getNeighbors(int originVertex) {
     validadeVertex(originVertex, "Digraph", "getNeighbors");
     return _adjacencyList.get(originVertex);
+  }
+
+
+  /**
+   * Given a list of vertices in this graph, this method returns the subgraph that has this list
+   * as the set of vertices. Edges are preserved as in the original graph. Except those that
+   * points to a vertex that is not in the list.
+   * @param vertices a list of vertices
+   * @return the subgraph that has {@code vertices} as the set of vertex
+   * @throws IllegalArgumentError if any of the integers in the {@code vertices} list is
+   * out-of-bound
+   */
+  public Digraph getSubgraph(@NotNull List<Integer> vertices) {
+    // Note: the comments below are a bit unnecessary, but I guess someone reading this code years
+    // from now may get confused with the indexes. So I wrote this in case you need.
+    // If not, feel free to ignore it.
+    // Recall that the argument list contains the indexes names from the original graph,
+    // let us call it G, and we want to construct the subgraph H of G using those indexes.
+    // When the new graph is created, of vertex-size vertices.size(),
+    // we have that in the subgraph new indexes are created from 0 to vertices.size() - 1.
+
+    Digraph subGraph = new Digraph(vertices.size());
+
+    // Now, we have to correctly add the edges back, even though the names changed in the subgraph.
+    // That is, the subgraph we will create rename its vertices by position.
+    // This isn't a problem.
+    // What we need to guarantee is that the {@code subGraph} is isomorphic to H.
+
+    // Hence, in the code below, the variables v and n refer to an index in the graph G.
+    // While in the subgraph, named "subGraph" in the code, each v is mapped to its index
+    // in the argument list "vertices".
+    for(int v : vertices) {
+      // First we validate that each v in vertices is a valid index of G.
+      this.validadeVertex(v, "Digraph", "getSubgraph");
+      // Then we get all neighbors, in G, of this vertex v.
+      List<Integer> neighbors = this.getNeighbors(v);
+      // Remove from the set of neighbors those indexes that doesn't occur in 'vertices'.
+      neighbors.removeIf(x -> !vertices.contains(x));
+        for(int n : neighbors) {
+          // Now we add back those edges that are in G and should also be in the subgraph.
+          // Here's where we get the indexOf v and n, since that's their new names in the subgraph.
+          subGraph.addEdge(vertices.indexOf(v), vertices.indexOf(n));
+        }
+    }
+    return subGraph;
   }
 
   public String toString() {
