@@ -98,8 +98,8 @@ public class Digraph {
   }
 
   /**
-   * Adds an edge connecting {@code originVertex} to {@code destinationVertex}.
-   *
+   * Adds a directed edge connecting {@code originVertex} to {@code destinationVertex}.
+   * Notice that if such an edge is already present nothing is done.
    * @param originVertex the origin vertex
    * @param destinationVertex the destination vertex
    * @throws IllegalArgumentError if {@code originVertex < 0} or {@code originVertex >
@@ -130,9 +130,21 @@ public class Digraph {
         STR."the vertex argument destinationVertex is out of bounds, it should be in the range 0 - \{getNumberOfEdges() - 1}"
       );
     }
-    //If all checking above pass, then we finally add the edge in the adjacency list.
-    _adjacencyList.get(originVertex).add(destinationVertex);
-    _numberOfEdges++;
+    // Lastly we only add the edge originVertex -> destinationVertex if it is not there already.
+    // The reason is that we don't allow for parallel edges in our applications.
+    Stream<Integer> lookUp = _adjacencyList
+      .get(originVertex)
+      .stream()
+      .filter( i -> i == destinationVertex);
+
+    if (lookUp.findAny().isEmpty()){
+      _adjacencyList.get(originVertex).add(destinationVertex);
+      _numberOfEdges++;
+    }
+  }
+
+  public void removeEdge(int originVertex, int destinationVertex) {
+
   }
 
   /**

@@ -11,10 +11,11 @@ class DigraphTest {
   public void testBasicGraphs() {
     Digraph g = new Digraph(3);
     g.addEdge(0, 1);
-    g.addEdge(0, 2);
+    g.addEdge(0,1);
+//    g.addEdge(0, 2);
     g.addEdge(1, 0);
-    g.addEdge(1, 2);
-    g.addEdge(2, 1);
+//    g.addEdge(1, 2);
+//    g.addEdge(2, 1);
     System.out.println(g);
   }
 
@@ -31,6 +32,14 @@ class DigraphTest {
       Digraph g = new Digraph(0);
       g.addEdge(0,0);
     });
+  }
+
+  @Test
+  void testAddDuplicatedEdge() {
+    Digraph g = new Digraph(3);
+    g.addEdge(0, 1);
+    g.addEdge(0,1);
+    Assertions.assertEquals(g.getNumberOfEdges(), 1);
   }
 
   @Test
