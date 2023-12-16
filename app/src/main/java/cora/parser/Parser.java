@@ -56,9 +56,10 @@ public interface Parser {
    *              | Lambda(token, varname, type, arg)
    *              | Meta(token, name, args)           -- where args may be empty
    *              | Application(token, head, args)    -- where args may be empty
-   *              | Tuple(token, head, name, args)    -- where args has length ≥ 1
+   *              | Tuple(token, args)                -- where args has length ≥ 1
    *              | PErr(ParserTerm)                  -- to indicate an error has occurred
-   * This is a data type without dedicated functionality; only a toString() function for debugging.
+   * This is a data type without dedicated functionality; only a toString() function for debugging,
+   * and a function to check if there's an error anywhere inside the term.
    */
   public sealed interface ParserTerm permits Identifier, Lambda, Meta, Application, Tuple, PErr {
     /** Indicates whether any errors occurred while parser this term (e.g., missing commas) */
@@ -107,6 +108,7 @@ public interface Parser {
    */
   public sealed interface ParserRule permits BasicRule, ConstrainedRule {
     boolean hasErrors();
+    Token token();
     LookupMap<ParserDeclaration> vars();
     ParserTerm left();
     ParserTerm right();

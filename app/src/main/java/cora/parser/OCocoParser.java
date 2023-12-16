@@ -393,14 +393,14 @@ public class OCocoParser implements Parser {
   public static ParserRule readRule(String str) { return readRule(str, null); }
 
   /**
-   * Reads a function declaration from the given string (variables are not declared in the same
-   * way in the TRS/MSTRS format).
+   * Reads either the signature, or a set of variable declaration from the given string
    * @throws cora.exceptions.ParseError
    */
   public static LookupMap<ParserDeclaration> readDeclarations(String str, ErrorCollector collect) {
     ParsingStatus status = makeStatus(str, collect);
     OCocoParser parser = new OCocoParser(status);
     LookupMap<ParserDeclaration> decl = parser.readSignature();
+    if (decl == null) decl = parser.readVarList();
     status.expect(Token.EOF, "end of input");
     if (collect == null || decl == null) status.throwCollectedErrors();
     return decl;

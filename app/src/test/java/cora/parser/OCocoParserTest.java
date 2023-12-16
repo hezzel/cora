@@ -52,18 +52,14 @@ public class OCocoParserTest {
 
   @Test
   public void testReadVarListWithDoubleDeclaration() {
-    ErrorCollector collector = new ErrorCollector();
-    ParserProgram result =
-      OCocoParser.readProgramFromString("(VAR x y x 12 y) (RULES a -> a)", collector);
-
-    assertTrue(result.fundecs().size() == 0);
-    LookupMap<ParserDeclaration> vardecs = result.rules().get(0).vars();
+    ErrorCollector col = new ErrorCollector();
+    LookupMap<ParserDeclaration> vardecs = OCocoParser.readDeclarations("(VAR x y x 12 y)", col);
     assertTrue(vardecs.get("x") != null);
     assertTrue(vardecs.get("y") != null);
     assertTrue(vardecs.get("12") != null);
 
-    assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(col.queryErrorCount() == 2);
+    assertTrue(col.queryCollectedMessages().equals(
       "1:10: Double declaration of variable x\n" +
       "1:15: Double declaration of variable y\n"));
   }
@@ -472,7 +468,6 @@ public class OCocoParserTest {
     assertTrue(trs.fundecs().get("0").type().toString().equals("o"));
     assertTrue(trs.fundecs().get("append").type().toString().equals("o ⇒ o ⇒ o"));
     assertTrue(trs.rules().size() == 2);
-    System.out.println(trs.rules().get(0));
     assertTrue(trs.rules().get(0).toString().equals("{ [x, xs, ys] } @(append, [nil, zs]) → zs"));
   }
 
