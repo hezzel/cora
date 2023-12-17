@@ -18,7 +18,7 @@ package cora;
 import com.google.common.collect.ImmutableList;
 import cora.rewriting.TRS;
 import cora.parsing.CoraInputReader;
-import cora.parsing.TrsInputReader;
+import cora.reader.OCocoInputReader;
 import cora.types.*;
 //import cora.ADT.* ;
 
@@ -39,7 +39,7 @@ public class App {
 
     private static TRS readInput(String file) throws Exception {
         String extension = getExtension(file);
-        if (extension.equals("trs")) return TrsInputReader.readTrsFromFile(file);
+        if (extension.equals("trs")) return OCocoInputReader.readTrsFromFile(file);
         else return CoraInputReader.readProgramFromFile(file);
     }
 

@@ -197,5 +197,48 @@ public class OCocoUnsortedInputReaderTest {
     }
     assertTrue(false);
   }
+
+  @Test
+  public void testReadRuleWhereLeftHasStructureProblems() {
+    String str = "(VAR x y z) (SIG (f 2) (g 1)) (RULES f(x y) -> g(z,x) g(x) -> f(z))";
+    // no errors are given about the right-hand side of the first-rule, but they are about the
+    // second rule
+    try { OCocoUnsortedInputReader.readTrsFromString(str); }
+    catch (ParseError e) {
+      assertTrue(e.getMessage().equals(
+        "1:42: Expected a comma or closing bracket but got IDENTIFIER (y).\n" +
+        "1:63: Function symbol f was previously used with 2 arguments, but is here used with 1.\n" +
+        "1:60: right-hand side of rule [g(x) → f(z)] contains variable z which does not occur on " +
+          "the left.\n"));
+      return;
+    }
+    assertTrue(false);
+  }
+
+  @Test
+  public void testReadRuleWhereRightHasStructureProblems() {
+    String str = "(VAR x y) (RULES f(x) -> f(x, x) f(x, s(y)) -> f(g(x),,y))";
+    try { OCocoUnsortedInputReader.readTrsFromString(str); }
+    catch (ParseError e) {
+      assertTrue(e.getMessage().equals(
+        "1:55: Expected an identifier (variable or function name) but got COMMA (,).\n" +
+        "1:26: Function symbol f was previously used with 1 arguments, but is here used with 2.\n" +
+        "1:34: Function symbol f was previously used with 1 arguments, but is here used with 2.\n"));
+      return;
+    }
+    assertTrue(false);
+  }
+
+  @Test
+  public void testReadRuleWithLeftVariable() {
+    String str = "(VAR x) (RULES x -> f(x, x))";
+    try { OCocoUnsortedInputReader.readTrsFromString(str); }
+    catch (ParseError e) {
+      assertTrue(e.getMessage().equals(
+        "1:18: illegal rule [x → f(x, x)] with a variable as the left-hand side.\n"));
+      return;
+    }
+    assertTrue(false);
+  }
 }
 

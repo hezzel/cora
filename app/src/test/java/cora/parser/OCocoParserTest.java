@@ -552,5 +552,25 @@ public class OCocoParserTest {
     }
     assertTrue(false);
   }
+
+  @Test
+  public void testRulesWithMissingBracketOnRight() {
+    String str = "(SIG ) (RULES\n" +
+      "f(x, s(y)) -> f(g(x),y\n" +
+      "f(x,0) -> g(x)\n" +
+      "0 -> 0)";
+    ErrorCollector collector = new ErrorCollector();
+    ParserProgram trs = OCocoParser.readProgramFromString(str, collector);
+    assertTrue(collector.queryCollectedMessages().equals(
+      "3:1: Expected a comma or closing bracket but got IDENTIFIER (f).\n" +
+      "3:8: Expected a comma or closing bracket but got ARROW (->).\n"));
+    assertTrue(trs.rules().size() == 2);
+    assertTrue(trs.rules().get(0).left().toString().equals("@(f, [x, @(s, [y])])"));
+    assertFalse(trs.rules().get(0).left().hasErrors());
+    assertTrue(trs.rules().get(0).right().hasErrors());
+    assertTrue(trs.rules().get(1).left().toString().equals("0"));
+    assertFalse(trs.rules().get(1).left().hasErrors());
+    assertFalse(trs.rules().get(1).right().hasErrors());
+  }
 }
 

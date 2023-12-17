@@ -180,7 +180,7 @@ public class OCocoUnsortedInputReader {
                    decl.get(name).token());
         problems = true;
       }
-      _symbols.addFunctionSymbol(TermFactory.createConstant(name, decl.get(name).type()));
+      _symbols.addFunctionSymbol(TermFactory.createConstant(name, t));
     }
     if (problems) return null;
 
@@ -223,12 +223,10 @@ public class OCocoUnsortedInputReader {
   }
 
   /**
-   * Parses the given program, and returns the unsorted TRS that it defines.
-   * If the string is not correctly formed, this may throw a ParseError.
+   * Helper function for readTrsFromString and readTrsFromFile, and for the same functions in
+   * OCocoInputReader.
    */
-  public static TRS readTrsFromString(String str) {
-    ErrorCollector collector = new ErrorCollector();
-    ParserProgram trs = OCocoParser.readProgramFromString(str, collector);
+  static TRS readParserProgram(ParserProgram trs, ErrorCollector collector) {
     OCocoUnsortedInputReader rd = new OCocoUnsortedInputReader(new SymbolData(), collector);
     TRS ret = rd.makeTRS(trs);
     if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
@@ -236,17 +234,22 @@ public class OCocoUnsortedInputReader {
   }
 
   /**
+   * Parses the given program, and returns the unsorted TRS that it defines.
+   * If the string is not correctly formed, this may throw a ParseError.
+   */
+  public static TRS readTrsFromString(String str) {
+    ErrorCollector collector = new ErrorCollector();
+    ParserProgram trs = OCocoParser.readProgramFromString(str, collector);
+    return readParserProgram(trs, collector);
+  }
+
+  /**
    * Parses the given file, which should be a .trs or .mstrs file, into a many-sorted TRS.
    * This may throw a ParseError, or an IOException if something goes wrong with the file reading.
    */
   public static TRS readTrsFromFile(String filename) throws IOException {
-  /*
-    ParsingStatus status = new ParsingStatus(TrsTokenData.getFileLexer(filename), 10);
-    OCocoUnsortedInputReader reader = new OCocoUnsortedInputReader(status);
-    TRS ret = reader.readTRS();
-    status.throwCollectedErrors();
-    return ret;
-  */
-    return null;
+    ErrorCollector collector = new ErrorCollector();
+    ParserProgram trs = OCocoParser.readProgramFromFile(filename, collector);
+    return readParserProgram(trs, collector);
   }
 }
