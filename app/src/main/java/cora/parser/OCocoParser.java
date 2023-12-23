@@ -30,26 +30,22 @@ import cora.parser.lib.ParsingStatus;
  * 2023 was used by the international confluence competition; this is a simplification of the old
  * human-readable format of the international termination competition.
  */
-public class OCocoParser implements Parser {
-  /**
-   * The parser keeps track of the status of parser so far; all read functions have a (potential)
-   * side effect of advancing the parsing status.
-   */
-  private final ParsingStatus _status;
-
+public class OCocoParser extends FirstOrderParser implements Parser {
   /**
    * Stores the parsing status for use by methods of the OCocoParser class.
    * Private because it should only be called by the static methods that use an OCocoParser.
    */
   private OCocoParser(ParsingStatus status) {
-    _status = status;
+    super(status, OCocoTokenData.IDENTIFIER, OCocoTokenData.BRACKETOPEN,
+          OCocoTokenData.BRACKETCLOSE, OCocoTokenData.COMMA, OCocoTokenData.ARROW,
+          OCocoTokenData.RULESDECSTART, OCocoTokenData.VARSDECSTART, OCocoTokenData.COMMENTSTART);
   }
 
   /**
    * Used for error recovery: returns if the given token is the start of a "section" in the trs or
    * mstr file.
    */
-  private boolean isSectionStart(Token token) {
+  protected boolean isSectionStart(Token token) {
     return token.getName().equals(OCocoTokenData.VARSDECSTART) ||
            token.getName().equals(OCocoTokenData.SIGSTART) ||
            token.getName().equals(OCocoTokenData.RULESDECSTART) ||
@@ -66,82 +62,8 @@ public class OCocoParser implements Parser {
    * If an error is encountered, error recovery is done if possible (for example, missing brackets
    * may be filled in).  In this case, the term will be marked as containing Errors.
    */
-  private  ParserTerm readTerm() {
-    // first we should have an IDENTIFIER
-    Token start = _status.expect(OCocoTokenData.IDENTIFIER,
-                                 "an identifier (variable or function name)");
-    if (start == null) return null;
-    ParserTerm head = new Identifier(start, start.getText());
-    // if we don't follow up with a BRACKETOPEN, then that's enough
-    if (_status.readNextIf(OCocoTokenData.BRACKETOPEN) == null) return head;
-    // if we follow the BRACKETOPEN with a BRACKETCLOSE, then that's enough
-    if (_status.readNextIf(OCocoTokenData.BRACKETCLOSE) != null) {
-      return new Application(start, head, ImmutableList.of());
-    }
-    // otherwise, start reading recursively
-    ImmutableList.Builder<ParserTerm> builder = ImmutableList.<ParserTerm>builder();
-    ArrayList<ParserTerm> args = new ArrayList<ParserTerm>();
-    boolean errored = false;
-    while (true) {
-      ParserTerm child = readTerm();
-      if (child == null) errored = true;
-      else builder.add(child);
-      // if we encounter BRACKETCLOSE, we have finished this term
-      if (_status.readNextIf(OCocoTokenData.BRACKETCLOSE) != null) break;
-      // otherwise we must encounter COMMA followed by at least one more term
-      if (_status.expect(OCocoTokenData.COMMA, "a comma or closing bracket") == null) {
-        // error situation: if they may have just forgotten a comma, pretend we saw one and
-        // continue, but otherwise return what we already have
-        errored = true;
-        if (!_status.nextTokenIs(OCocoTokenData.IDENTIFIER)) break;
-      }
-    }
-    ParserTerm ret = new Application(start, head, builder.build());
-    if (errored) return new PErr(ret);
-    else return ret;
-  }
-
-  // ======================================== READING RULES =======================================
-
-  /**
-   * rule ::= term ARROW term
-   *
-   * If this returns null, reading the rule failed, but at least one character (the arrow) has been
-   * read, and error recovery may still be doable; with the right approach it might still be
-   * possible to read the next rule.
-   * Otherwise, it will either throw a ParseError or return an actual rule.  (If a rule is returned
-   * it is not guaranteed that parsing was entirely successful, however; it is possible that some
-   * errors have been stored in the status.)
-   */
-  private ParserRule readRule(LookupMap<ParserDeclaration> vars) {
-    ParserTerm left = readTerm();
-    Token tok = _status.peekNext();
-    if (_status.expect(OCocoTokenData.ARROW, "ARROW (->)") == null) _status.throwCollectedErrors();
-    ParserTerm right = readTerm();
-    if (left == null || right == null) return null;
-    return new BasicRule(tok, vars, left, right);
-  }
-
-  /**
-   * rules ::= RULESDECSTART rule* BRACKETCLOSE
-   *
-   * The current status is expected to start with RULESDECSTART (if not, we store an error and
-   * return the empty list).  We read and return the rules, or throw a ParseError if the rules list
-   * is poorly shaped.
-   *
-   * If any variables have already been declared, these are passed in the argument list, to be
-   * stored as part of the rule.  (This map is allowed to be empty, but not null.)
-   */
-  private ImmutableList<ParserRule> readRules(LookupMap<ParserDeclaration> declaredVars) {
-    ImmutableList.Builder<ParserRule> ret = ImmutableList.<ParserRule>builder();
-    if (_status.expect(OCocoTokenData.RULESDECSTART, "rules declaration") == null) {
-      return ret.build();
-    }
-    while (_status.readNextIf(OCocoTokenData.BRACKETCLOSE) == null) {
-      ParserRule r = readRule(declaredVars);
-      if (r != null) ret.add(r);
-    }
-    return ret.build();
+  protected  ParserTerm readTerm() {
+    return readFirstOrderTerm();
   }
 
   // ================================ READING FUNCTION DECLARATIONS ===============================
@@ -271,72 +193,25 @@ public class OCocoParser implements Parser {
     }
   }
 
-  // ====================================== READING FULL TRSs =====================================
+  // ========================================= READING TRSs =======================================
 
   /**
-   * varlist ::= VARSDECSTART IDENTIFIER* BRACKETCLOSE
+   * rule ::= term ARROW term
    *
-   * When presented with a varlist, this function saves all the variables into the returned
-   * mapping, with the unit sort as their type (since varlists can only occur in UNSORTED TRSs).
-   * When presented with anything else, it returns null (and does not read anything).
+   * If this returns null, reading the rule failed, but at least one character (the arrow) has been
+   * read, and error recovery may still be doable; with the right approach it might still be
+   * possible to read the next rule.
+   * Otherwise, it will either throw a ParseError or return an actual rule.  (If a rule is returned
+   * it is not guaranteed that parsing was entirely successful, however; it is possible that some
+   * errors have been stored in the status.)
    */
-  private LookupMap<ParserDeclaration> readVarList() {
-    Token start = _status.readNextIf(OCocoTokenData.VARSDECSTART);
-    if (start == null) return null;
-    LookupMap.Builder<ParserDeclaration> ret = new LookupMap.Builder<ParserDeclaration>();
-    while (true) {
-      Token next = _status.nextToken();
-      if (next.getName().equals(OCocoTokenData.BRACKETCLOSE)) return ret.build();
-      if (next.getName().equals(OCocoTokenData.IDENTIFIER)) {
-        String name = next.getText();
-        if (ret.containsKey(name)) {
-          _status.storeError("Double declaration of variable " + name, next);
-        }
-        else ret.put(name, new ParserDeclaration(next, name, TypeFactory.unitSort));
-      }
-      else {
-        // error handling for incorrect tokens
-        if (next.isEof()) {
-          _status.storeError("Encountered end of input while reading varlist; no closing bracket " +
-                             "given.", start);
-          return ret.build();
-        }
-        if (isSectionStart(next)) {
-          _status.storeError("Unexpected " + next.getText() + " while reading varlist; did you " +
-            "forget a closing bracket?", next);
-          _status.pushBack(next);
-          return ret.build();
-        }
-        // if we encounter something else, it's unclear what the programmer did, so let's just
-        // abort the parsing process
-        _status.abort("Unexpected token: " + next.getText() + " (" + next.getName() +
-          "); expected a variable name", next);
-      }
-    }
-  }
-
-  /**
-   * comment ::= COMMENTOPEN string BRACKETCLOSE EOF
-   * If the current status starts with COMMENTOPEN, we read until the end of the file and store an
-   * error if the last bracket is not right before it; in this case we return true.
-   * If it starts with something else, we return false and read nothing.
-   */
-  private boolean readComment() {
-    Token start = _status.readNextIf(OCocoTokenData.COMMENTSTART);
-    if (start == null) return false;
-    Token token = _status.nextToken();
-    Token lastFollow = null;
-    while (!token.isEof()) {
-      if (token.getName().equals(OCocoTokenData.BRACKETCLOSE)) {
-        lastFollow = _status.nextToken();
-        if (lastFollow.isEof()) return true;
-      }
-      token = _status.nextToken();
-    }
-    if (lastFollow == null) _status.storeError("Unclosed comment.", start);
-    else _status.storeError("Unexpected token: " + lastFollow.getText() + "; expected end of " +
-      "input following comment.", lastFollow);
-    return true;
+  protected ParserRule readRule(LookupMap<ParserDeclaration> vars) {
+    ParserTerm left = readTerm();
+    Token tok = _status.peekNext();
+    if (_status.expect(OCocoTokenData.ARROW, "ARROW (->)") == null) _status.throwCollectedErrors();
+    ParserTerm right = readTerm();
+    if (left == null || right == null) return null;
+    return new BasicRule(tok, vars, left, right);
   }
 
   /**
