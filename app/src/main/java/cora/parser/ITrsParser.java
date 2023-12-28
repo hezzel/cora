@@ -45,7 +45,8 @@ public class ITrsParser extends FirstOrderParser implements Parser {
           ITrsTokenData.BRACKETCLOSE, ITrsTokenData.COMMA, ITrsTokenData.ARROW,
           ITrsTokenData.RULESDECSTART, ITrsTokenData.VARSDECSTART, ITrsTokenData.COMMENTSTART);
     _manager = new InfixManager();
-    _manager.addGroup(InfixManager.ASSOC_NONE, 1, "∧", "∨");
+    _manager.addGroup(InfixManager.ASSOC_LEFT, 1, "∧");
+    _manager.addGroup(InfixManager.ASSOC_LEFT, 1, "∨");
     _manager.addGroup(InfixManager.ASSOC_NONE, 2, "=", "≠", ">", "<", "≥", "≤");
     _manager.addGroup(InfixManager.ASSOC_LEFT, 3, "+", "-");
     _manager.addGroup(InfixManager.ASSOC_LEFT, 4, "*", "/", "%");
@@ -91,36 +92,6 @@ public class ITrsParser extends FirstOrderParser implements Parser {
     ret = _manager.convertChain(parts, ops, _status);
     if (errored) ret = new PErr(ret);
     return ret;
-  }
-
-  private InfixManager.OperatorData tryReadOperator() {
-    Token token = _status.readNextIf(ITrsTokenData.PLUS);
-    if (token != null) return new OperatorData(token, "+");
-    token = _status.readNextIf(ITrsTokenData.MINUS);
-    if (token != null) return new OperatorData(token, "-");
-    token = _status.readNextIf(ITrsTokenData.TIMES);
-    if (token != null) return new OperatorData(token, "*");
-    token = _status.readNextIf(ITrsTokenData.DIV);
-    if (token != null) return new OperatorData(token, "/");
-    token = _status.readNextIf(ITrsTokenData.MOD);
-    if (token != null) return new OperatorData(token, "%");
-    token = _status.readNextIf(ITrsTokenData.EQUAL);
-    if (token != null) return new OperatorData(token, "=");
-    token = _status.readNextIf(ITrsTokenData.UNEQUAL);
-    if (token != null) return new OperatorData(token, "≠");
-    token = _status.readNextIf(ITrsTokenData.GREATER);
-    if (token != null) return new OperatorData(token, ">");
-    token = _status.readNextIf(ITrsTokenData.SMALLER);
-    if (token != null) return new OperatorData(token, "<");
-    token = _status.readNextIf(ITrsTokenData.GEQ);
-    if (token != null) return new OperatorData(token, "≥");
-    token = _status.readNextIf(ITrsTokenData.LEQ);
-    if (token != null) return new OperatorData(token, "≤");
-    token = _status.readNextIf(ITrsTokenData.AND);
-    if (token != null) return new OperatorData(token, "∧");
-    token = _status.readNextIf(ITrsTokenData.OR);
-    if (token != null) return new OperatorData(token, "∨");
-    return null;
   }
 
   /**
@@ -187,8 +158,38 @@ public class ITrsParser extends FirstOrderParser implements Parser {
     Token token = _status.readNextIf(ITrsTokenData.BRACKETOPEN);
     if (token == null) return null;
     ParserTerm ret = readTerm();
-    _status.expect(ITrsTokenData.BRACKETCLOSE, "closing bracket '('");
+    _status.expect(ITrsTokenData.BRACKETCLOSE, "closing bracket ')'");
     return ret;
+  }
+
+  private InfixManager.OperatorData tryReadOperator() {
+    Token token = _status.readNextIf(ITrsTokenData.PLUS);
+    if (token != null) return new OperatorData(token, "+");
+    token = _status.readNextIf(ITrsTokenData.MINUS);
+    if (token != null) return new OperatorData(token, "-");
+    token = _status.readNextIf(ITrsTokenData.TIMES);
+    if (token != null) return new OperatorData(token, "*");
+    token = _status.readNextIf(ITrsTokenData.DIV);
+    if (token != null) return new OperatorData(token, "/");
+    token = _status.readNextIf(ITrsTokenData.MOD);
+    if (token != null) return new OperatorData(token, "%");
+    token = _status.readNextIf(ITrsTokenData.EQUAL);
+    if (token != null) return new OperatorData(token, "=");
+    token = _status.readNextIf(ITrsTokenData.UNEQUAL);
+    if (token != null) return new OperatorData(token, "≠");
+    token = _status.readNextIf(ITrsTokenData.GREATER);
+    if (token != null) return new OperatorData(token, ">");
+    token = _status.readNextIf(ITrsTokenData.SMALLER);
+    if (token != null) return new OperatorData(token, "<");
+    token = _status.readNextIf(ITrsTokenData.GEQ);
+    if (token != null) return new OperatorData(token, "≥");
+    token = _status.readNextIf(ITrsTokenData.LEQ);
+    if (token != null) return new OperatorData(token, "≤");
+    token = _status.readNextIf(ITrsTokenData.AND);
+    if (token != null) return new OperatorData(token, "∧");
+    token = _status.readNextIf(ITrsTokenData.OR);
+    if (token != null) return new OperatorData(token, "∨");
+    return null;
   }
 
   // ====================================== READING FULL TRSs =====================================

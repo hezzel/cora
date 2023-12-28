@@ -154,6 +154,17 @@ public class ITrsParserTest {
   }
 
   @Test
+  public void testReadAmbiguousTerm() {
+    ErrorCollector collector = new ErrorCollector();
+    ParserTerm term = ITrsParser.readTerm("x && y || z", collector);
+    assertTrue(collector.queryCollectedMessages().equals(
+      "1:8: Ambiguous infix sequence: operators && (at position 1:3) and || " +
+      "have the same precedence, but are not in the same group.  Please use " +
+      "brackets to disambiguate.\n"));
+    assertTrue(term.toString().equals("@(∨, [ERR(@(∧, [x, y])), z])"));
+  }
+
+  @Test
   public void testReadConstrainedCorrectRule() {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = ITrsParser.readRule("f(x,y) -> g(x / y) :|: y > 0", collector);

@@ -83,7 +83,7 @@ class InfixManager {
     for (int i = 0; i < operators.size(); i++) {
       if (!_symbols.containsKey(operators.get(i).name)) {
         throw new IllegalArgumentError("InfixManager", "convertChain", "unexpected operator: " +
-          operators.get(i).name);
+          operators.get(i).token.getText());
       }
     }
 
@@ -104,17 +104,17 @@ class InfixManager {
             if (_groups.get(mygroup).associativity() == ASSOC_RIGHT) break;
             if (_groups.get(mygroup).associativity() == ASSOC_NONE) {
               err = true;
-              status.storeError("Illegal infix sequence: operator " + oi.name() + " is not " +
-                "associative, so cannot be used after " + last.name() + " (at position " +
-                last.token().getPosition() + ").", oi.token());
+              status.storeError("Illegal infix sequence: operator " + oi.token.getText() +
+                " is not associative, so cannot be used after " + last.token.getText() +
+                " (at position " +  last.token.getPosition() + ").", oi.token());
             }
           }
           else {
             err = true;
-            status.storeError("Ambiguous infix sequence: operators " + last.name() + " (at " +
-              "position " + last.token().getPosition() + ") and " + oi.name() + " have the same " +
-              "precedence, but are not in the same group.  Please use brackets to disambiguate.", 
-              oi.token());
+            status.storeError("Ambiguous infix sequence: operators " + last.token.getText() +
+              " (at position " + last.token.getPosition() + ") and " + oi.token.getText() +
+              " have the same precedence, but are not in the same group.  Please use brackets " +
+              "to disambiguate.",  oi.token());
           }
         }
         applyTop(tstack, ostack);
@@ -136,7 +136,7 @@ class InfixManager {
     OperatorData o = ostack.pop();
     ParserTerm b = tstack.pop();
     ParserTerm a = tstack.pop();
-    ParserTerm head = new Parser.Identifier(o.token(), o.name());
+    ParserTerm head = new Parser.CalcSymbol(o.token(), o.name());
     ParserTerm result = new Parser.Application(a.token(), head, ImmutableList.of(a, b));
     tstack.push(result);
   }

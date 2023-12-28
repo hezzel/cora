@@ -84,6 +84,17 @@ public class ITrsTokensTest {
   }
 
   @Test
+  public void testLexComments() throws LexerException {
+    Lexer lexer = createLexer("a b\n c # d e \n f g");
+    verifyToken(lexer.nextToken(), ITrsTokenData.IDENTIFIER, "a");
+    verifyToken(lexer.nextToken(), ITrsTokenData.IDENTIFIER, "b");
+    verifyToken(lexer.nextToken(), ITrsTokenData.IDENTIFIER, "c");
+    verifyToken(lexer.nextToken(), ITrsTokenData.IDENTIFIER, "f");
+    verifyToken(lexer.nextToken(), ITrsTokenData.IDENTIFIER, "g");
+    assertTrue(lexer.nextToken().isEof());
+  }
+
+  @Test
   public void testTextWithArrows() throws LexerException {
     Lexer lexer = createLexer("ab->c-d>->->3f");
     verifyToken(lexer.nextToken(), ITrsTokenData.IDENTIFIER, "ab");

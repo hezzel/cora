@@ -63,7 +63,7 @@ class ITrsTokenData {
     "FALSE"                                   , FALSEHOOD,
     "[0-9]+"                                  , INTEGER,
 
-    "[^\\s()\",|\\-\\+\\*/%><=!&:\\\\]+"      , IDENTIFIER,
+    "[^\\s()\",|\\-\\+\\*/%><=!&#:\\\\]+"     , IDENTIFIER,
         // I could not find a description of the formalism, so this is just a
         // guess as to what is allowed: anything that's not (part of) one of
         // the special symbols
@@ -94,6 +94,7 @@ class ITrsTokenData {
     "\\(RULES"                                , RULESDECSTART,
     "\\(COMMENT"                              , COMMENTSTART,
     "\\s"                                     , Token.SKIP,
+    "#.*$"                                    , Token.SKIP,
   };
 
   /** Returns a TokenQueue that goes through the given file. */
