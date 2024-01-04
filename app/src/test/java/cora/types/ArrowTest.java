@@ -41,7 +41,7 @@ class ArrowTest {
     Type t = new Arrow(intType(), boolType());
     assertTrue(t.isArrowType());
     assertFalse(t.isBaseType());
-    assertFalse(t.isProdType());
+    assertFalse(t.isProductType());
   }
 
   @Test

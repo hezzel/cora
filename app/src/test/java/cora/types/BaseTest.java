@@ -47,7 +47,7 @@ class BaseTest {
     Type t = intType();
     assertTrue(t.isBaseType());
     assertFalse(t.isArrowType());
-    assertFalse(t.isProdType());
+    assertFalse(t.isProductType());
     assertTrue(t.equals(t));
     assertTrue(t.equals(intType()));
     assertFalse(t.equals(boolType()));

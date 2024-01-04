@@ -51,7 +51,7 @@ class ProductTest {
   public void testBasics() {
     Type prod = TypeFactory.createProduct(new Base("a"), new Arrow(new Base("b"), new Base("c")));
     Type prod2 = TypeFactory.createProduct(new Base("a"), new Base("b"), new Base("c"));
-    assertTrue(prod.isProdType());
+    assertTrue(prod.isProductType());
     assertFalse(prod.isBaseType());
     assertFalse(prod2.isBaseType());
     assertFalse(prod.isArrowType());
@@ -73,13 +73,13 @@ class ProductTest {
     Type a = new Base("a");
     Type b = new Base("b");
     Type c = new Base("c");
-    // a x b x c
+    // a × b × c
     Type plain = TypeFactory.createProduct(a, b, c);
-    // (a x b) x c
+    // (a × b) × c
     Type left = TypeFactory.createProduct(TypeFactory.createProduct(a, b), c);
-    // a x (b x c)
+    // a × (b × c)
     Type right = TypeFactory.createProduct(a, TypeFactory.createProduct(b, c));
-    // c x b x a
+    // c × b × a
     Type plain2 = TypeFactory.createProduct(c, b, a);
 
     assertTrue(plain.equals(TypeFactory.createProduct(a, b, c)));
@@ -95,20 +95,20 @@ class ProductTest {
     Type b = new Base("b");
     Type c = new Base("c");
     Type d = new Base("d");
-    // a x b x c
+    // a × b × c
     Type abc = TypeFactory.createProduct(a, b, c);
-    // (a x b) x (c x d)
+    // (a × b) × (c × d)
     Type abcd = TypeFactory.createProduct(TypeFactory.createProduct(a, b),
                                           TypeFactory.createProduct(c, d));
-    // (a -> b) x c
+    // (a -> b) × c
     Type aarrbc = TypeFactory.createProduct(new Arrow(a, b), c);
-    // (a x b) -> c
+    // (a × b) -> c
     Type atimesbc = new Arrow(TypeFactory.createProduct(a, b), c);
 
-    assertTrue(abc.toString().equals("a x b x c"));
-    assertTrue(abcd.toString().equals("(a x b) x (c x d)"));
-    assertTrue(aarrbc.toString().equals("(a ⇒ b) x c"));
-    assertTrue(atimesbc.toString().equals("(a x b) ⇒ c"));
+    assertTrue(abc.toString().equals("a × b × c"));
+    assertTrue(abcd.toString().equals("(a × b) × (c × d)"));
+    assertTrue(aarrbc.toString().equals("(a ⇒ b) × c"));
+    assertTrue(atimesbc.toString().equals("(a × b) ⇒ c"));
   }
 
   @Test
