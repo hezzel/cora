@@ -45,12 +45,12 @@ public class SCC {
       return;
     }
 
-    int temp = 0;
-    while(temp != source){
+    int temp;
+    do {
       temp = stack.pop();
       _sccId[temp] = _numberOfSCCs;
       _low[temp] = graph.getNumberOfVertices();
-    }
+    } while (temp != source);
     _numberOfSCCs++;
   }
 

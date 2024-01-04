@@ -21,10 +21,5 @@ class SCCTest {
 
     System.out.println(scc);
 
-    TransitiveClosure tc = new TransitiveClosure(g);
-
   }
-
-
-
 }
