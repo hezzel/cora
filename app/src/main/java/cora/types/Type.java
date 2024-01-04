@@ -36,7 +36,7 @@ public sealed interface Type permits
   default boolean isArrowType() { return false; }
 
   /** Returns true for product types, false for base types and arrow types. */
-  default boolean isProdType() { return false; }
+  default boolean isProductType() { return false; }
 
   /**
    * Returns true if the only base types sorts occurring in this type are theory sorts --
@@ -63,6 +63,19 @@ public sealed interface Type permits
    * And for σ1 → ... → σm → τ, it is max(order(σ1)+1,...,order(σk)+1,order(τ)).
    */
   int queryTypeOrder();
+
+  /**
+   * Returns the number of immediate subtypes.
+   * For an arrow tpye, this is 2.  For a product tpye A_1 x ... x A_n, this is n.
+   * For a base type, this is 0.
+   */
+  int numberSubtypes();
+
+  /**
+   * If i is between 1 and numberSubtypes(), this returns the corresponding subtype (from left to
+   * right) of the type.  Otherwise, an IndexingError is thrown.
+   */
+  Type subtype(int i);
 
   /** Should not be called on anything but Arrow. */
   @Deprecated

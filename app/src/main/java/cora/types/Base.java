@@ -1,7 +1,9 @@
 package cora.types;
 
-import cora.exceptions.NullInitialisationError;
 import org.jetbrains.annotations.NotNull;
+
+import cora.exceptions.IndexingError;
+import cora.exceptions.NullInitialisationError;
 
 public record Base(String name) implements Type {
   public Base {
@@ -29,6 +31,16 @@ public record Base(String name) implements Type {
   @Override
   public @NotNull String toString() {
     return this.name;
+  }
+
+  @Override
+  public int numberSubtypes() {
+    return 0;
+  }
+
+  @Override
+  public Type subtype(int index) {
+    throw new IndexingError("Base", "subtype", index);
   }
 
   /**

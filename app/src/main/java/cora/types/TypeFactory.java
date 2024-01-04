@@ -43,11 +43,13 @@ public class TypeFactory {
 
   /** Creates a product type from the given list. */
   public static Type createProduct(ImmutableList<Type> types) {
+    if (types.size() == 1) return types.get(0);
     return new Product(types);
   }
 
   /** Creates a product type using a copy of the given list. */
   public static Type createProduct(List<Type> types) {
+    if (types.size() == 1) return types.get(0);
     return new Product(ImmutableList.copyOf(types));
   }
 
