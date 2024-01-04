@@ -1,3 +1,0 @@
-#!/bin/bash
-yices-smt2 $1 > $2
-

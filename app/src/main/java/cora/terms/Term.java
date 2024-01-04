@@ -234,10 +234,21 @@ public interface Term {
   Term replaceSubterm(Position pos, Term replacement);
 
   /**
-   * If the current term has a type σ1 →...→ σn → τ and args = [s1,...,sn] with each si : σi, then
-   * this function returns the application of the current term to [s1,...,sn].
-   * For example, if the current term is f(3), then the result is f(3,s1,...,sn).
-   * If the resulting term cannot be constructed for type reasons, this will throw a TypingError.
+   * <p>
+   * If the current term has a type <code>σ1 →...→ σn → τ</code> and <code>args = [s1,...,
+   * sn]</code> with
+   * each
+   * <code>si : σi</code>,
+   * then this method returns the application of the current term to [s1,...,sn].
+   * </p>
+   * <p> <b>Example:</b>
+   *  if the current term is f(t), then the result is f(t,s1,...,sn).
+   * </p>
+   *
+   * @param args a possibly empty list of terms, if <code>args</code> is an empty list then this
+   *             method returns the calling object back
+   * @throws cora.exceptions.TypingError if the term cannot be constructed for typing reasons.
+   *
    */
   Term apply(List<Term> args);
 
@@ -329,4 +340,3 @@ public interface Term {
   /** Determines the =_α^{μ,ξ,k} relation as described in the documentation. */
   boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k);
 }
-

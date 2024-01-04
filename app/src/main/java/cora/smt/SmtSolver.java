@@ -69,11 +69,17 @@ class SmtSolver {
   /**
    * This extends the given solution by the next model assignment in the SMT output file that is
    * read by reader.  Returns null if everything went well, and a failure message if not.
+   *
+   * We expect one of the following formats:
+   * - (= varname value)
+   * - (define-fun varname () type value)
    */
   private static String addModelAssignment(Valuation val, Scanner reader) {
-    String eq = reader.next();
-    if (!eq.equals("=")) return "Unexpected token in result file: " + eq;
-    if (!reader.hasNext()) return "Result file ended unexpectedly after =.";
+    String style = reader.next();
+    if (!style.equals("=") && !style.equals("define-fun")) {
+      return "Unexpected token in result file: " + style;
+    }
+    if (!reader.hasNext()) return "Result file ended unexpectedly after " + style;
     String varname = reader.next();
     int kind = 0;
     if (varname.substring(0,1).equals("b")) kind = 1;
@@ -83,6 +89,9 @@ class SmtSolver {
     try { index = Integer.parseInt(varname.substring(1)); }
     catch (NumberFormatException e) { return "Unexpected variable: " + varname + "."; }
     if (!reader.hasNext()) return "Result file ended unexpectedly after " + varname + ".";
+
+    if (style.equals("define-fun")) reader.next();  // skip over the type
+
     int multiplier = 1;
     String value = reader.next();
     if (value.equals("-")) { multiplier *= -1; value = reader.next(); }
@@ -185,5 +194,3 @@ class SmtSolver {
     return readAnswer().equals("unsat");
   }
 }
-
-
