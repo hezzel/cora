@@ -140,12 +140,12 @@ public class ITrsInputReader {
    * a calculation symbol.
    */
   private void checkTheoryArities(Token token, String fname, ImmutableList<ParserTerm> args) {
-    if (fname.equals("not")) {
+    if (fname.equals(ITrsParser.NOT)) {
       if (args.size() != 1) {
         storeError("Encountered negation with " + args.size() + " arguments (expected: 1).", token);
       }
     }
-    else if (fname.equals("-")) {
+    else if (fname.equals(ITrsParser.MINUS)) {
       if (args.size() != 1 && args.size() != 2) {
         storeError("Encountered minus with " + args.size() + " arguments (expected: 1 or 2).",
           token);
@@ -211,8 +211,9 @@ public class ITrsInputReader {
       case Application(Token t1, Identifier(Token t2, String name), ImmutableList<ParserTerm> a):
         return funOutNode(name);
       case Application(Token t1, CalcSymbol(Token t2, String name), ImmutableList<ParserTerm> a):
-        if (name.equals("+") || name.equals("-") || name.equals("*") ||
-            name.equals("/") || name.equals("%")) return intNode();
+        if (name.equals(ITrsParser.PLUS) || name.equals(ITrsParser.MINUS) ||
+            name.equals(ITrsParser.TIMES) || name.equals(ITrsParser.DIV) ||
+            name.equals(ITrsParser.MOD)) return intNode();
         else return boolNode();
       case PErr(ParserTerm t):
         return getTermOutputNode(t, rule, vars);
@@ -246,7 +247,8 @@ public class ITrsInputReader {
         for (ParserTerm u : a) todo.push(u);
         String base = null;
         if (h instanceof CalcSymbol(Token y, String name)) {
-          if (name.equals("∧") || name.equals("∨") || name.equals("not")) base = boolNode();
+          if (name.equals(ITrsParser.AND) || name.equals(ITrsParser.OR) ||
+              name.equals(ITrsParser.NOT)) base = boolNode();
           else base = intNode();
         }
         for (int i = 1; i <= a.size(); i++) {
@@ -372,20 +374,20 @@ public class ITrsInputReader {
         if (f == null) throw new Error("Somehow function symbol " + name + " is not declared.");
         return f;
       case CalcSymbol(Token t, String name):
-        if (name.equals("+")) return TheoryFactory.plusSymbol;
-        if (name.equals("*")) return TheoryFactory.timesSymbol;
-        if (name.equals("-")) return TheoryFactory.minusSymbol;
-        if (name.equals("/")) return TheoryFactory.divSymbol;
-        if (name.equals("%")) return TheoryFactory.modSymbol;
-        if (name.equals(">")) return TheoryFactory.greaterSymbol;
-        if (name.equals("<")) return TheoryFactory.smallerSymbol;
-        if (name.equals("≥")) return TheoryFactory.geqSymbol;
-        if (name.equals("≤")) return TheoryFactory.leqSymbol;
-        if (name.equals("=")) return TheoryFactory.equalSymbol;
-        if (name.equals("≠")) return TheoryFactory.distinctSymbol;
-        if (name.equals("∧")) return TheoryFactory.andSymbol;
-        if (name.equals("∨")) return TheoryFactory.orSymbol;
-        if (name.equals("not")) return TheoryFactory.notSymbol;
+        if (name.equals(ITrsParser.PLUS)) return TheoryFactory.plusSymbol;
+        if (name.equals(ITrsParser.TIMES)) return TheoryFactory.timesSymbol;
+        if (name.equals(ITrsParser.MINUS)) return TheoryFactory.minusSymbol;
+        if (name.equals(ITrsParser.DIV)) return TheoryFactory.divSymbol;
+        if (name.equals(ITrsParser.MOD)) return TheoryFactory.modSymbol;
+        if (name.equals(ITrsParser.GREATER)) return TheoryFactory.greaterSymbol;
+        if (name.equals(ITrsParser.SMALLER)) return TheoryFactory.smallerSymbol;
+        if (name.equals(ITrsParser.GEQ)) return TheoryFactory.geqSymbol;
+        if (name.equals(ITrsParser.LEQ)) return TheoryFactory.leqSymbol;
+        if (name.equals(ITrsParser.EQUALS)) return TheoryFactory.equalSymbol;
+        if (name.equals(ITrsParser.NEQ)) return TheoryFactory.distinctSymbol;
+        if (name.equals(ITrsParser.AND)) return TheoryFactory.andSymbol;
+        if (name.equals(ITrsParser.OR)) return TheoryFactory.orSymbol;
+        if (name.equals(ITrsParser.NOT)) return TheoryFactory.notSymbol;
       default:
         throw new UnexpectedPatternError("ITrsInputReader", "readSymbol", "a declared identifier " +
           "or known calculation symbol", "parser term " + term.toString());

@@ -211,7 +211,7 @@ public class OCocoParser extends FirstOrderParser implements Parser {
     if (_status.expect(OCocoTokenData.ARROW, "ARROW (->)") == null) _status.throwCollectedErrors();
     ParserTerm right = readTerm();
     if (left == null || right == null) return null;
-    return new BasicRule(tok, vars, left, right);
+    return new ParserRule(tok, vars, left, right);
   }
 
   /**

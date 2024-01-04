@@ -72,9 +72,9 @@ public class ParserTermTest {
     ParserTerm e2 = new Application(t, h, badlst1);
     ParserTerm e3 = new Application(t, h, badlst2);
     ParserTerm e4 = new Application(t, new PErr(h), goodlst);
-    ParserTerm f1 = new Tuple(t, goodlst);
-    ParserTerm f2 = new Tuple(t, badlst1);
-    ParserTerm f3 = new Tuple(t, badlst2);
+    ParserTerm f1 = new Tup(t, goodlst);
+    ParserTerm f2 = new Tup(t, badlst1);
+    ParserTerm f3 = new Tup(t, badlst2);
     assertFalse(d1.hasErrors());
     assertTrue(d2.hasErrors());
     assertTrue(d3.hasErrors());

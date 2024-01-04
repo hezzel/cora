@@ -34,6 +34,21 @@ import cora.parser.InfixManager.OperatorData;
  * https://github.com/TermCOMP/TPDB/tree/master/Integer_TRS_Innermost/Mixed_ITRS_2014
  */
 public class ITrsParser extends FirstOrderParser implements Parser {
+  public static String PLUS = "+";
+  public static String MINUS = "-";
+  public static String TIMES = "*";
+  public static String DIV = "/";
+  public static String MOD = "%";
+  public static String GREATER = ">";
+  public static String SMALLER = "<";
+  public static String GEQ = "≥";
+  public static String LEQ = "≤";
+  public static String EQUALS = "=";
+  public static String NEQ = "≠";
+  public static String AND = "∧";
+  public static String OR = "∨";
+  public static String NOT = "not";
+
   private InfixManager _manager;
 
   /**
@@ -45,11 +60,11 @@ public class ITrsParser extends FirstOrderParser implements Parser {
           ITrsTokenData.BRACKETCLOSE, ITrsTokenData.COMMA, ITrsTokenData.ARROW,
           ITrsTokenData.RULESDECSTART, ITrsTokenData.VARSDECSTART, ITrsTokenData.COMMENTSTART);
     _manager = new InfixManager();
-    _manager.addGroup(InfixManager.ASSOC_LEFT, 1, "∧");
-    _manager.addGroup(InfixManager.ASSOC_LEFT, 1, "∨");
-    _manager.addGroup(InfixManager.ASSOC_NONE, 2, "=", "≠", ">", "<", "≥", "≤");
-    _manager.addGroup(InfixManager.ASSOC_LEFT, 3, "+", "-");
-    _manager.addGroup(InfixManager.ASSOC_LEFT, 4, "*", "/", "%");
+    _manager.addGroup(InfixManager.ASSOC_LEFT, 1, AND);
+    _manager.addGroup(InfixManager.ASSOC_LEFT, 1, OR);
+    _manager.addGroup(InfixManager.ASSOC_NONE, 2, EQUALS, NEQ, GREATER, SMALLER, GEQ, LEQ);
+    _manager.addGroup(InfixManager.ASSOC_LEFT, 3, PLUS, MINUS);
+    _manager.addGroup(InfixManager.ASSOC_LEFT, 4, TIMES, DIV, MOD);
   }
 
   /**
@@ -142,10 +157,10 @@ public class ITrsParser extends FirstOrderParser implements Parser {
   private ParserTerm tryReadPrefix() {
     ParserTerm head = null;
     Token token = _status.readNextIf(ITrsTokenData.MINUS);
-    if (token != null) head = new CalcSymbol(token, "-");
+    if (token != null) head = new CalcSymbol(token, MINUS);
     else {
       token = _status.readNextIf(ITrsTokenData.NOT);
-      if (token != null) head = new CalcSymbol(token, "not");
+      if (token != null) head = new CalcSymbol(token, NOT);
     }
     if (head == null) return null;
     ParserTerm ret = readMainTerm();
@@ -164,31 +179,31 @@ public class ITrsParser extends FirstOrderParser implements Parser {
 
   private InfixManager.OperatorData tryReadOperator() {
     Token token = _status.readNextIf(ITrsTokenData.PLUS);
-    if (token != null) return new OperatorData(token, "+");
+    if (token != null) return new OperatorData(token, PLUS);
     token = _status.readNextIf(ITrsTokenData.MINUS);
-    if (token != null) return new OperatorData(token, "-");
+    if (token != null) return new OperatorData(token, MINUS);
     token = _status.readNextIf(ITrsTokenData.TIMES);
-    if (token != null) return new OperatorData(token, "*");
+    if (token != null) return new OperatorData(token, TIMES);
     token = _status.readNextIf(ITrsTokenData.DIV);
-    if (token != null) return new OperatorData(token, "/");
+    if (token != null) return new OperatorData(token, DIV);
     token = _status.readNextIf(ITrsTokenData.MOD);
-    if (token != null) return new OperatorData(token, "%");
+    if (token != null) return new OperatorData(token, MOD);
     token = _status.readNextIf(ITrsTokenData.EQUAL);
-    if (token != null) return new OperatorData(token, "=");
+    if (token != null) return new OperatorData(token, EQUALS);
     token = _status.readNextIf(ITrsTokenData.UNEQUAL);
-    if (token != null) return new OperatorData(token, "≠");
+    if (token != null) return new OperatorData(token, NEQ);
     token = _status.readNextIf(ITrsTokenData.GREATER);
-    if (token != null) return new OperatorData(token, ">");
+    if (token != null) return new OperatorData(token, GREATER);
     token = _status.readNextIf(ITrsTokenData.SMALLER);
-    if (token != null) return new OperatorData(token, "<");
+    if (token != null) return new OperatorData(token, SMALLER);
     token = _status.readNextIf(ITrsTokenData.GEQ);
-    if (token != null) return new OperatorData(token, "≥");
+    if (token != null) return new OperatorData(token, GEQ);
     token = _status.readNextIf(ITrsTokenData.LEQ);
-    if (token != null) return new OperatorData(token, "≤");
+    if (token != null) return new OperatorData(token, LEQ);
     token = _status.readNextIf(ITrsTokenData.AND);
-    if (token != null) return new OperatorData(token, "∧");
+    if (token != null) return new OperatorData(token, AND);
     token = _status.readNextIf(ITrsTokenData.OR);
-    if (token != null) return new OperatorData(token, "∨");
+    if (token != null) return new OperatorData(token, OR);
     return null;
   }
 
@@ -213,8 +228,7 @@ public class ITrsParser extends FirstOrderParser implements Parser {
     ParserTerm constraint = null;
     if (_status.readNextIf(ITrsTokenData.MID) != null) constraint = readTerm();
     if (left == null || right == null) return null;
-    if (constraint == null) return new BasicRule(tok, vars, left, right);
-    else return new ConstrainedRule(tok, vars, left, right, constraint);
+    return new ParserRule(tok, vars, left, right, constraint);
   }
 
   /**

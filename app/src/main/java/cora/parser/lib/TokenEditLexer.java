@@ -21,7 +21,7 @@ import java.util.LinkedList;
  * A TokenEditLexer can be used to generate custom lexer-adapters, which look for specific kinds of
  * tokens to manipulate.
  */
-abstract class TokenEditLexer implements Lexer {
+public abstract class TokenEditLexer implements Lexer {
   private Lexer _mylexer;
   private String _tokenName;
   private LinkedList<Token> _storedTokens;
