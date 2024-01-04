@@ -20,7 +20,11 @@ import cora.config.Config;
 import cora.rewriting.TRS;
 import cora.parsing.CoraInputReader;
 import cora.parsing.TrsInputReader;
+import cora.termination.Horpo;
 import cora.types.*;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 //import cora.ADT.* ;
 
 /** Basic entry class: this reads a TRS and asks the user for a term, then reduces this term. */
@@ -47,18 +51,17 @@ public class App {
         if (args.length > 1) _inputTerm = args[0];
     }
 
+    public static void main(String[] args) {
+        try {
+            readParameters(args);
 
-//    }
-//        try {
-//            readParameters(args);
-
-//            if (_inputFile == null) {
-//                System.out.print("Input file: ");
-//                System.out.flush();
-//                _inputFile = (new BufferedReader(new InputStreamReader(System.in))).readLine();
-//            }
-//            TRS trs = readInput(_inputFile);
-//            if (trs == null) return;
+            if (_inputFile == null) {
+                System.out.print("Input file: ");
+                System.out.flush();
+                _inputFile = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+            }
+            TRS trs = readInput(_inputFile);
+            if (trs == null) return;
 
       /*
       System.out.print(trs.toString());
@@ -76,18 +79,18 @@ public class App {
         if (term != null) System.out.println("⇒ " + term.toString());
       } while (term != null);
       */
-//            if (Horpo.applicable(trs)) {
-//                Horpo.HorpoAnswer answer = Horpo.run(trs);
-//                if (answer == null) System.out.println("MAYBE");
-//                else System.out.println("YES\n\n" + trs.toString() + "\n" + answer.toString());
-//            }
-//            else System.out.println("Input is not an LCSTRS; no termination module is available.\n");
-//        }
-//        catch (Exception e) {
-//            System.out.println("Encountered an exception:\n" + e.getMessage());
-//        }
-//        catch (Error e) {
-//            System.out.println("Encountered an error:\n" + e.getMessage());
-//        }
-//    }
+            if (Horpo.applicable(trs)) {
+                Horpo.HorpoAnswer answer = Horpo.run(trs);
+                if (answer == null) System.out.println("MAYBE");
+                else System.out.println("YES\n\n" + trs.toString() + "\n" + answer.toString());
+            }
+            else System.out.println("Input is not an LCSTRS; no termination module is available.\n");
+        }
+        catch (Exception e) {
+            System.out.println("Encountered an exception:\n" + e.getMessage());
+        }
+        catch (Error e) {
+            System.out.println("Encountered an error:\n" + e.getMessage());
+        }
+    }
 }
