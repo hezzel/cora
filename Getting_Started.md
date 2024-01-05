@@ -1,7 +1,5 @@
 # Getting Started Guide - Artifact Evaluation
 
-<description of cora and how it works?>
-
 ## Running from docker container
 Please use either linux or macOS (Intel/ARM).
 
