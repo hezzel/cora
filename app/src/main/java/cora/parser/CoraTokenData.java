@@ -106,9 +106,9 @@ class CoraTokenData {
     "Int"                                     , INTTYPE,
     "Bool"                                    , BOOLTYPE,
     "String"                                  , STRINGTYPE,
-    "([^\\s()\\[\\]⟨⟩\\{\\}⦇⦈\"',:λ×\\.\\|\\*\\+\\\\\\.><=≥≤→∧∨¬/-]|)+" , IDENTIFIER,
+    "([^\\s()\\[\\]⟨⟩\\{\\}⦇⦈\"',:λ×%\\.\\|\\*\\+\\\\\\.><=≥≤→∧∨¬/-]|)+" , IDENTIFIER,
       // identifiers are now built from any characters other than whitespace, brackets (of any
-      // kind), braces, quotes, colons, lambda, dot, mid, ×, *, -, +, >, =, <, ≥, ≤, /, \, ¬, →
+      // kind), braces, quotes, colons, lambda, dot, mid, ×, *, %, -, +, >, =, <, ≥, ≤, /, \, ¬, →
   };
 
   /** Both constrained and unconstrained TRSs share the tokens below. */

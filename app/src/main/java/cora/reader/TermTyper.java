@@ -199,18 +199,15 @@ class TermTyper {
     if (mvar != null) return makeKnownMetaTerm(token, mvar, args, expected);
 
     // eror option: we know it as something else
-    boolean declare = expected != null;
     if (_symbols.lookupFunctionSymbol(name) != null) {
       storeError("Unexpected meta-application with meta-variable " + name + ", which was " +
         "previously declared as a function symbol.", token);
-      declare = false;
     }
     else if (_symbols.lookupVariable(name) != null) {
       String kind = "variable without meta-arguments";
       if (_symbols.lookupVariable(name).isBinderVariable()) kind = "binder variable";
       storeError("Unexpected meta-application with meta-variable " + name + ", which was " +
         "previously used (or declared) as a " + kind +".", token);
-      declare = false;
     }
     // error option: we don't know what type it should be
     if (expected == null && typeShouldBeDerivable) {
@@ -227,7 +224,7 @@ class TermTyper {
     }
     mvar = TermFactory.createMetaVar(name, types,
                                      expected == null ? TypeFactory.unitSort : expected);
-    if (declare) _symbols.addMetaVariable(mvar);
+    if (expected != null) _symbols.addMetaVariable(mvar);
     return TermFactory.createMeta(mvar, targs);
   }
 
@@ -252,7 +249,7 @@ class TermTyper {
     if (_symbols.lookupMetaVariable(name) != null) {
       storeError("Meta-application for meta-variable " + name + " has no arguments, when it " +
         "previously occurred (or was declared) with arity " +
-        _symbols.lookupMetaVariable(name).queryArity(), token);
+        _symbols.lookupMetaVariable(name).queryArity() + ".", token);
       if (expected == null) expected = _symbols.lookupMetaVariable(name).queryType();
       declare = false;
     }
@@ -357,9 +354,7 @@ class TermTyper {
     ArrayList<Term> parts = new ArrayList<Term>();
     for (int i = 0; i < elems.size(); i++) parts.add(makeTerm(elems.get(i), null, false));
     Term ret = TermFactory.createTuple(parts);
-    Type helper = TypeFactory.createArrow(ret.queryType(), expected);
-    Term wrapper = TermFactory.createConstant("tuple", helper);
-    return wrapper.apply(ret);
+    return TermFactory.createConstant(ret.toString(), expected);
   }
 
   /**
@@ -436,6 +431,9 @@ class TermTyper {
   private Term makeApplication(Token token, ParserTerm apphead, ImmutableList<ParserTerm> args,
                                Type expected, boolean typeShouldBeDerivable) {
     Term head = makeTerm(apphead, null, true);
+    if (head.equals(TheoryFactory.minusSymbol)) {
+      return makeMinusApplication(token, args, expected);
+    }
     if (head.queryType().queryArity() >= args.size()) {
       for (int i = 0; i < args.size(); i++) {
         Term arg = makeTerm(args.get(i), head.queryType().subtype(1), true);
@@ -465,6 +463,42 @@ class TermTyper {
     storeError("Type error: expected term of type " + expected.toString() + ", but got " +
       head.toString() + " of type " + head.queryType() + ".", token);
     return TermFactory.createConstant(head.toString(), expected);
+  }
+
+  /**
+   * Turn a parserterm [-](args) into the corresponding term, and check that it matches the
+   * expected type.  This is a bit of a special case, because the minus can both be used in binary
+   * and unary form, and sometimes even to construct an integer.
+   * Here, args.size() 
+   */
+  private Term makeMinusApplication(Token token, ImmutableList<ParserTerm> args, Type expected) {
+    if (args.size() == 0) return makeCalculationSymbol(token, CoraParser.MINUS, expected);
+    ArrayList<Term> targs = new ArrayList<Term>();
+    for (int i = 0; i < args.size(); i++) {
+      targs.add(makeTerm(args.get(i), TypeFactory.intSort, true));
+    }
+    if (args.size() == 1) {
+      Term child = targs.get(0);
+      if (child.isValue()) {
+        return confirmType(token, TheoryFactory.createValue(-child.toValue().getInt()), expected);
+      }
+      return confirmType(token, TheoryFactory.minusSymbol.apply(targs.get(0)), expected);
+    }
+    if (args.size() == 2) {
+      Term a = targs.get(0);
+      Term b = targs.get(1);
+      if (b.isValue()) b = TheoryFactory.createValue(-b.toValue().getInt());
+      else b = TheoryFactory.minusSymbol.apply(b);
+      return confirmType(token, TermFactory.createApp(TheoryFactory.plusSymbol, a, b), expected);
+    }
+    storeError("Arity error: [-] can be used either with 1 or 2 arguments, but here it occurs " +
+      "with " + args.size() + ".", token);
+    Type type = expected == null ? TypeFactory.intSort : expected;
+    for (int i = targs.size()-1; i >= 0; i--) {
+      type = TypeFactory.createArrow(targs.get(i).queryType(), type);
+    }
+    Term fakehead = TermFactory.createConstant("[-]", type);
+    return TermFactory.createApp(fakehead,targs);
   }
 
   // ============================== ACCESS FUNCTIONS FOR UNIT TESTING =============================

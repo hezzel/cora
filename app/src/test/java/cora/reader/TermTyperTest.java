@@ -24,10 +24,7 @@ import cora.types.Type;
 import cora.parser.lib.ErrorCollector;
 import cora.parser.CoraParser;
 import cora.types.TypeFactory;
-import cora.terms.Term;
-import cora.terms.Variable;
-import cora.terms.FunctionSymbol;
-import cora.terms.TermFactory;
+import cora.terms.*;
 
 public class TermTyperTest {
   private Type type(String str) {
@@ -464,11 +461,60 @@ public class TermTyperTest {
 
   @Test
   public void testReadAbstractionWithMissingType() {
-    ErrorCollector collector = new ErrorCollector(10);
     Term t = readTerm("λx :: .x y", "o → o", false, null,
       "1:7: Expected a type (started by a sort identifier or bracket) but got DOT (.).\n" +
       "1:10: Expected end of input but got IDENTIFIER (y).\n");
     assertTrue(t == null);
+  }
+
+  @Test
+  public void testGoodTupleWithoutType() {
+    Term t = readTerm("(| aa, f(x), 4 |)", null, true, null, "");
+    assertTrue(t.isTuple());
+    assertTrue(t.queryType().toString().equals("a × (b ⇒ c ⇒ d) × Int"));
+    assertTrue(t.toString().equals("⦇aa, f(x), 4⦈"));
+  }
+
+  @Test
+  public void testGoodTupleWithCorrectType() {
+    Term t = readTerm("⦇ x, true, 4 |)", "(a → b) * Bool * Int", true, null, "");
+    assertTrue(t.isTuple());
+  }
+
+  @Test
+  public void testTupleWithIncorrectType() {
+    Term t = readTerm("⦇ aa, true ⦈", "(a → b) * Bool", true, null,
+      "1:3: Expected term of type a ⇒ b, but got function symbol aa which has type a.\n");
+    assertTrue(t.isTuple());
+  }
+
+  @Test
+  public void testTupleWithIncorrectLength() {
+    Term t = readTerm("⦇ aa, true ⦈", "(a → b) * Bool * Int", true, null,
+      "1:1: Type error: expected a term of type (a ⇒ b) × Bool × Int but got a tuple " +
+      "of length 2.\n");
+    assertFalse(t.isTuple());
+    assertTrue(t.toString().equals("⦇aa, true⦈"));
+    assertTrue(t.queryType().toString().equals("(a ⇒ b) × Bool × Int"));
+  }
+
+  @Test
+  public void testTupleWithNonTupleType() {
+    Term t = readTerm("⦇ aa, true ⦈", "a → b", false, null,
+      "1:1: Type error: expected a term of type a ⇒ b but got a tuple, which necessarily has " +
+      "a product type.\n");
+    assertFalse(t.isTuple());
+    assertTrue(t.toString().equals("⦇aa, true⦈"));
+    assertTrue(t.queryType().toString().equals("a ⇒ b"));
+  }
+
+  @Test
+  public void testTooShortTuples() {
+    Term t = readTerm("(| |)", null, false, null, "1:1: Empty tuples are not allowed.\n");
+    assertTrue(t == null);
+    t = readTerm("(| 12 |)", null, true, null, "1:1: Tuples of length 1 are not allowed.\n");
+    assertTrue(t.isValue());
+    assertTrue(t.toValue().getInt() == 12);
   }
 
   @Test
@@ -477,6 +523,394 @@ public class TermTyperTest {
       "1:9: Expected a comma or dot but got IDENTIFIER (y).\n");
     assertTrue(t.toString().equals("λx.λy.f(x, y, cc)"));
     assertTrue(t.queryType().toString().equals("a ⇒ b ⇒ d"));
+  }
+
+  @Test
+  public void testUndeclaredMetaVariableWithEmptyArgumentsListTypeGiven() {
+    Term t = readTerm("Z[]", "a → b", false, null, "");
+    assertTrue(t.isVariable());
+    assertTrue(t.queryType().equals(type("a → b")));
+    assertTrue(t.toString().equals("Z"));
+  }
+
+  @Test
+  public void testUndeclaredMetaVariableWithEmptyArgumentsListTypeNotGiven() {
+    Term t = readTerm("Z⟨⟩", null, true, null,
+      "1:1: Undeclared (meta-)variable: Z.  Type cannot easily be deduced from context.\n");
+    assertTrue(t.isVariable());
+    assertTrue(t.queryType().toString().equals("o"));
+    assertTrue(t.toString().equals("Z"));
+  }
+
+  @Test
+  public void testDeclaredMetaVariableWithEmptyArgumentsListCorrectTypeGiven() {
+    SymbolData data = generateSignature();
+    data.addVariable(TermFactory.createVar("Z", type("b")));
+    Term t = readTerm("Z[⟩", "b", false, data, "");
+    assertTrue(t.isVariable());
+    assertTrue(t.toString().equals("Z"));
+    assertTrue(t.queryType().equals(type("b")));
+  }
+
+  @Test
+  public void testDeclaredMetaVariableWithEmptyArgumentsListIncorrectTypeGiven() {
+    SymbolData data = generateSignature();
+    data.addVariable(TermFactory.createVar("Z", type("b → a")));
+    Term t = readTerm("Z⟨⟩", "a → b", true, data, "1:1: Expected term of type a ⇒ b, " +
+      "but got Z, which was previously used as a variable of type b ⇒ a.\n");
+    assertTrue(t.isVariable());
+    assertTrue(t.toString().equals("Z"));
+    assertTrue(t.queryType().equals(type("a → b")));
+    assertTrue(data.lookupVariable("Z").queryType().equals(type("b → a")));
+  }
+
+  @Test
+  public void testDeclaredMetaVariableWithEmptyArgumentsListTypeNotGiven() {
+    SymbolData data = generateSignature();
+    // declared as higher type
+    data.addVariable(TermFactory.createVar("Z", type("b → a")));
+    Term t = readTerm("Z⟨]", null, true, data, "");
+    assertTrue(t.isVariable());
+    assertTrue(t.toString().equals("Z"));
+    assertTrue(t.queryType().equals(type("b → a")));
+  }
+
+  @Test
+  public void testMetaVariableWithEmptyArgumentsListDeclaredAsFunctionSymbol() {
+    Term t = readTerm("aa[]", null, false, null, "1:1: Meta-application for meta-variable aa, " +
+      "which was previously declared as a function symbol.\n");
+    assertTrue(t.toString().equals("aa"));
+    assertTrue(t.isVariable());
+    assertTrue(t.queryType().toString().equals("a"));
+  }
+
+  @Test
+  public void testMetaVariableWithEmptyArgumentsListDeclaredAsBinder() {
+    SymbolData data = generateSignature();
+    data.addVariable(TermFactory.createBinder("Z", type("b → a")));
+    Term t = readTerm("Z[]", "x", true, data, "1:1: Binder variable Z used as meta-variable.\n");
+    assertTrue(t.isVariable());
+    assertTrue(t.toString().equals("Z"));
+    assertTrue(t.queryType().equals(type("x")));
+  }
+
+  @Test
+  public void testMetaVariableWithEmptyArgumentsListDeclaredAsHigherMetaVar() {
+    SymbolData data = generateSignature();
+    data.addMetaVariable(TermFactory.createMetaVar("Z", type("b → a"), 1));
+    Term t = readTerm("Z⟨⟩", null, false, data,
+      "1:1: Meta-application for meta-variable Z has no arguments, when it previously occurred " +
+      "(or was declared) with arity 1.\n");
+    assertTrue(t.isVariable());
+    assertTrue(t.toString().equals("Z"));
+    assertTrue(t.queryType().equals(type("b → a")));
+  }
+
+  @Test
+  public void testMetaApplicationWithUndeclaredMetaButDeclaredArgsTypeKnown() {
+    SymbolData data = generateSignature();
+    data.addVariable(TermFactory.createBinder("x", type("a")));
+    Term t = readTerm("Z⟨x⟩", "b -> c", false, data, "");
+    assertTrue(t.isMetaApplication());
+    assertTrue(t.toString().equals("Z⟨x⟩"));
+    assertTrue(t.queryType().toString().equals("b ⇒ c"));
+    MetaVariable z = data.lookupMetaVariable("Z");
+    assertTrue(z.queryArity() == 1);
+    assertTrue(z.queryType().toString().equals("a ⇒ b ⇒ c"));
+  }
+
+  @Test
+  public void testMetaApplicationWithUndeclaredMetaButDeclaredArgsTypeUnknown() {
+    SymbolData data = generateSignature();
+    data.addVariable(TermFactory.createBinder("x", type("a")));
+    Term t = readTerm("Z[x]", null, false, data,
+      "1:1: Cannot derive output type of meta-variable Z from context.\n");
+    assertTrue(t.isMetaApplication());
+    assertTrue(t.toString().equals("Z⟨x⟩"));
+    assertTrue(t.queryType().toString().equals("o"));
+    assertTrue(data.lookupMetaVariable("Z") == null);
+  }
+
+  @Test
+  public void testMetaApplicationWithDeclaredMetaButUndeclaredArg() {
+    SymbolData data = generateSignature();
+    data.addMetaVariable(TermFactory.createMetaVar("Z", type("a → a"), 1));
+    Term t = readTerm("Z[x]", null, true, data, "");
+    assertTrue(t.isMetaApplication());
+    assertTrue(t.toString().equals("Z⟨x⟩"));
+    assertTrue(t.queryType().toString().equals("a"));
+    assertTrue(data.lookupVariable("x").queryType().toString().equals("a"));
+  }
+
+  @Test
+  public void testMetaApplicationWithEverythingDeclaredButIncorrectType() {
+    SymbolData data = generateSignature();
+    data.addMetaVariable(TermFactory.createMetaVar("Z", type("a → a"), 1));
+    Term t = readTerm("Z[x⟩", "b", true, data,
+      "1:1: Meta-variable Z has output type a while a term of type b was expected.\n");
+    assertTrue(t.isMetaApplication());
+    assertTrue(t.toString().equals("Z⟨x⟩"));
+    assertTrue(t.queryType().toString().equals("b"));
+    assertTrue(data.lookupVariable("x").queryType().toString().equals("a"));
+  }
+
+  @Test
+  public void testMetaApplicationWithNothingDeclared() {
+    Term t = readTerm("Z[x,aa,y]", null, false, null,
+      "1:1: Cannot derive output type of meta-variable Z from context.\n" +
+      "1:3: Undeclared symbol: x.  Type cannot easily be deduced from context.\n" +
+      "1:8: Undeclared symbol: y.  Type cannot easily be deduced from context.\n");
+    assertTrue(t.toString().equals("Z⟨x, aa, y⟩"));
+    assertTrue(t.queryType().toString().equals("o"));
+  }
+
+  @Test
+  public void testMetaApplicationWithJustOnePartMissing() {
+    Term t = readTerm("Z[x,aa]", "u", true, null,
+      "1:3: Undeclared symbol: x.  Type cannot easily be deduced from context.\n");
+    assertTrue(t.toString().equals("Z⟨x, aa⟩"));
+    assertTrue(t.queryType().toString().equals("u"));
+  }
+
+  @Test
+  public void testMetaVariableAlreadyDeclaredAsFunctionSymbolWithTypeExpected() {
+    Term t = readTerm("f⟨aa,y]", "c → e", true, null,
+      "1:1: Unexpected meta-application with meta-variable f, which was previously declared as a function symbol.\n" +
+      "1:6: Undeclared symbol: y.  Type cannot easily be deduced from context.\n");
+    assertTrue(t.queryType().toString().equals("c ⇒ e"));
+    assertTrue(t.toString().equals("f⟨aa, y⟩"));
+  }
+
+  @Test
+  public void testMetaVariableAlreadyDeclaredAsFunctionSymbolWithoutTypeExpected() {
+    Term t = readTerm("f⟨aa⟩", null, false, null, "1:1: Unexpected meta-application with " +
+      "meta-variable f, which was previously declared as a function symbol.\n");
+    assertTrue(t.queryType().toString().equals("o"));
+    assertTrue(t.toString().equals("f⟨aa⟩"));
+  }
+
+  @Test
+  public void testMetaVariableAlreadyDeclaredAsVariable() {
+    SymbolData data = generateSignature();
+    data.addVariable(TermFactory.createVar("Z", type("a → a")));
+    data.addVariable(TermFactory.createVar("x", type("b")));
+    Term t = readTerm("Z[x]", "b", false, data,
+      "1:1: Unexpected meta-application with meta-variable Z, which was previously used " +
+      "(or declared) as a variable without meta-arguments.\n");
+    assertTrue(t.isMetaApplication());
+    assertTrue(t.toString().equals("Z⟨x⟩"));
+    assertTrue(t.queryType().toString().equals("b"));
+    assertTrue(data.lookupVariable("Z").queryType().toString().equals("a ⇒ a"));
+    assertTrue(data.lookupMetaVariable("Z").queryType().toString().equals("b ⇒ b"));
+  }
+
+  @Test
+  public void testMetaVariableDeclaredWithGreaterArity() {
+    SymbolData data = generateSignature();
+    data.addMetaVariable(TermFactory.createMetaVar("Z", type("a → a → a"), 2));
+    Term t = readTerm("Z[x]", "zot", true, data,
+      "1:1: Meta-variable Z was previously used (or declared) with arity 2, but is here used " +
+      "with 1 arguments.\n");
+    assertTrue(t.isMetaApplication());
+    assertTrue(t.toString().equals("Z⟨x⟩"));
+    assertTrue(t.queryType().toString().equals("zot"));
+    assertTrue(data.lookupVariable("x") == null);
+    assertTrue(t.queryMetaVariable().queryType().toString().equals("o ⇒ zot"));
+  }
+
+  @Test
+  public void testMetaVariableDeclaredWithSmallerArity() {
+    SymbolData data = generateSignature();
+    data.addMetaVariable(TermFactory.createMetaVar("Z", type("a → a → a"), 1));
+    Term t = readTerm("Z⟨aa,y⟩", null, true, data,
+      "1:1: Meta-variable Z was previously used (or declared) with arity 1, but is here used " +
+      "with 2 arguments.\n");
+    assertTrue(t.isMetaApplication());
+    assertTrue(t.toString().equals("Z⟨aa, y⟩"));
+    assertTrue(t.queryType().toString().equals("a ⇒ a"));
+    assertTrue(t.queryMetaVariable().queryType().toString().equals("a ⇒ o ⇒ a ⇒ a"));
+  }
+
+  @Test
+  public void testCorrectMultiApplicationWithMetaVariableDeclared() {
+    SymbolData data = generateSignature();
+    data.addMetaVariable(TermFactory.createMetaVar("Z", type("a → a → a"), 2));
+    Term t = readTerm("Z⟨x,y⟩", "a", false, data, "");
+    assertTrue(t.isMetaApplication());
+    assertTrue(t.toString().equals("Z⟨x, y⟩"));
+    assertTrue(data.lookupVariable("x").queryType().toString().equals("a"));
+    assertTrue(data.lookupVariable("y").queryType().toString().equals("a"));
+  }
+
+  @Test
+  public void testReadNestedMeta() {
+    SymbolData data = generateSignature();
+    data.addMetaVariable(TermFactory.createMetaVar("Y", type("a → b"), 1));
+    Term t = readTerm("Z⟨aa,Y[x⟩,cc]", "d", true, data, "");
+    assertTrue(t.isMetaApplication());
+    assertTrue(t.toString().equals("Z⟨aa, Y⟨x⟩, cc⟩"));
+    assertTrue(data.lookupVariable("x").queryType().toString().equals("a"));
+    assertTrue(data.lookupMetaVariable("Z").queryType().toString().equals("a ⇒ b ⇒ c ⇒ d"));
+  }
+
+  @Test
+  public void testAppliedMetaApplication() {
+    SymbolData data = generateSignature();
+    data.addMetaVariable(TermFactory.createMetaVar("Z", type("a → b → c → d"), 1));
+    Term t = readTerm("Z⟨aa⟩(bb,cc)", "d", true, data, "");
+    assertFalse(t.isMetaApplication());
+    assertTrue(t.toString().equals("Z⟨aa⟩(bb, cc)"));
+  }
+
+  @Test
+  public void testReadSimpleNot() {
+    Term t = readTerm("¬x", null, true, null, "");
+    assertTrue(t.isFunctionalTerm());
+    assertTrue(t.queryRoot().isTheorySymbol());
+    assertTrue(t.vars().size() == 1);
+    assertTrue(t.toString().equals("¬x"));
+  }
+
+  @Test
+  public void testMostlySimpleMinus() {
+    Term t = readTerm("- (3+x)", null, true, null, "");
+    assertTrue(t.toString().equals("-(3 + x)"));
+    assertTrue(t.queryType().toString().equals("Int"));
+  }
+
+  @Test
+  public void testDuplicateNot() {
+    Term t = readTerm("¬¬ ( x > 0)", null, true, null, "");
+    assertTrue(t.toString().equals("¬(¬(x > 0))"));
+  }
+
+  @Test
+  public void testBadBracketOmission() {
+    Term t = readTerm("¬ x > 0", "Bool", true, null,
+      "1:1: Type error: expected term of type Int, but got ¬x of type Bool.\n");
+    assertTrue(t.toString().equals("¬x > 0"));
+  }
+
+  @Test
+  public void testReadSimpleInfix() {
+    Term t = readTerm("1+2", null, true, null, "");
+    assertTrue(t.toString().equals("1 + 2"));
+    assertTrue(t.queryType().toString().equals("Int"));
+  }
+
+  @Test
+  public void testReadInfixWithLeftToRightPriority() {
+    Term t = readTerm("1/2+3  > x", null, true, null, "");
+    assertTrue(t.toString().equals("1 / 2 + 3 > x"));
+    assertTrue(t.vars().size() == 1);
+    assertTrue(t.queryType().toString().equals("Bool"));
+  }
+
+  @Test
+  public void testReadInfixWithRightToLeftPriority() {
+    Term t = readTerm("x >= 3 + y * 2", null, true, null, "");
+    assertTrue(t.toString().equals("x ≥ 3 + y * 2"));
+    assertTrue(t.vars().size() == 2);
+    assertTrue(t.queryType().toString().equals("Bool"));
+  }
+
+  @Test
+  public void testReadNegativeInteger() {
+    Term t = readTerm("-  5", null, true, null, "");
+    assertTrue(t.equals(TheoryFactory.createValue(-5)));
+  }
+
+  @Test
+  public void testMinusBeforeAddition() {
+    Term t = readTerm("- x + y", "Int", true, null, "");
+    assertTrue(t.toString().equals("-x + y"));
+    assertTrue(t.queryRoot().toString().equals("[+]"));
+    assertTrue(t.queryArgument(1).queryRoot().toString().equals("[-]"));
+  }
+
+  @Test
+  public void testNegativeIntegerInModulo() {
+    Term t = readTerm("-2%1", null, true, null, "");
+    assertTrue(t.toString().equals("-2 % 1"));
+    assertTrue(t.queryRoot().toString().equals("[%]"));
+    assertTrue(t.queryArgument(1).queryRoot().toString().equals("-2"));
+  }
+
+  @Test
+  public void testReadSimpleMinusWithNegation() {
+    Term t = readTerm("x - y", null, true, null, "");
+    // this becomes: x + -y
+    assertTrue(t.toString().equals("x - y"));
+    assertTrue(t.queryRoot().toString().equals("[+]"));
+    assertTrue(t.queryArgument(2).queryRoot().toString().equals("[-]"));
+  }
+
+  @Test
+  public void testReadSimpleMinusWithConstant() {
+    Term t = readTerm("x - 3", null, true, null, "");
+    assertTrue(t.toString().equals("x - 3"));
+    assertTrue(t.queryRoot().toString().equals("[+]"));
+    assertTrue(t.queryArgument(2).queryRoot().toString().equals("-3"));
+  }
+
+  @Test
+  public void testReadComplexMinuses() {
+    Term t = readTerm("x -3 * 5 + 1 < -1-y", null, true, null, "");
+    assertTrue(t.toString().equals("x - 3 * 5 + 1 < -1 - y"));
+    assertTrue(t.vars().size() == 2);
+    assertTrue(t.queryArgument(1).queryArgument(1).toString().equals("x - 3 * 5"));
+    assertTrue(t.queryArgument(1).queryArgument(1).queryArgument(2).toString().equals("-(3 * 5)"));
+  }
+
+  @Test
+  public void testMixedInfixPriorities() {
+    SymbolData data = generateSignature();
+    data.addFunctionSymbol(TermFactory.createConstant("q", type("b → Int")));
+    data.addMetaVariable(TermFactory.createMetaVar("Z", type("a → Int"), 1));
+    Term t = readTerm("q(x) < y /\\ y > Z[aa] + -13 * z +9", "Bool", true, data, "");
+    assertTrue(t.isFunctionalTerm());
+    assertFalse(t.isTheoryTerm());
+    assertTrue(t.toString().equals("q(x) < y ∧ y > Z⟨aa⟩ + -13 * z + 9"));
+    assertTrue(data.lookupVariable("x").queryType().toString().equals("b"));
+    assertTrue(data.lookupVariable("z").queryType().toString().equals("Int"));
+  }
+
+  @Test
+  public void testDoublePlus() {
+    SymbolData data = generateSignature();
+    Term t = readTerm("1 ++2", null, true, data,
+      "1:4: Expected term, started by an identifier, λ, string or (, but got PLUS (+).\n");
+    assertTrue(t == null);
+  }
+
+  @Test
+  public void testReadPrefixMinus() {
+    Term t = readTerm("[-]", null, true, null, "");
+    assertTrue(t.equals(TheoryFactory.minusSymbol));
+    t = readTerm("[-]", "Int → Bool → Int", true, null,
+      "1:2: Use of unary calculation symbol [-] with binary type: while a - b is allowed to " +
+      "occur in terms, this is considered syntactic sugar for a + (-b); it cannot be done in " +
+      "a partially applied way.  If you want to use binary subtraction, please encode it using " +
+      "a helper function symbol.\n");
+    assertTrue(t.queryType().toString().equals("Int ⇒ Bool ⇒ Int"));
+    t = readTerm("[-](3)", null, true, null, "");
+    assertTrue(t.toString().equals("-3"));
+    assertFalse(t.isApplication());
+    t = readTerm("[-](3, 4)", null, true, null, "");
+    assertTrue(t.toString().equals("3 - 4"));
+    t = readTerm("[-](3, 4, 5)", null, true, null,
+      "1:2: Arity error: [-] can be used either with 1 or 2 arguments, but here it occurs " +
+      "with 3.\n");
+  }
+
+  @Test
+  public void testReadInfixDiv() {
+    Term t = readTerm("[/]", null, true, null, "");
+    assertTrue(t.equals(TheoryFactory.divSymbol));
+    t = readTerm("[/](3)", null, true, null, "");
+    assertTrue(t.toString().equals("[/](3)"));
+    t = readTerm("[/](3, 4)", null, true, null, "");
+    assertTrue(t.toString().equals("3 / 4"));
   }
 }
 
