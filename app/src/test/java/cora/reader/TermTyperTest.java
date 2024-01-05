@@ -394,6 +394,15 @@ public class TermTyperTest {
   }
 
   @Test
+  public void testAbstractionWithNonArrowTypeExpected() {
+    Term t = readTerm("λx::a.x", "b * b", false, null,
+      "1:2: Type error: expected subterm of type b × b, but got abstraction, which " +
+      "necessarily has an arrow type.\n");
+    assertTrue(t.toString().equals("abs(λx.x)"));
+    assertFalse(t.isAbstraction());
+  }
+
+  @Test
   public void testReadAbstractionTypeOfVariableGivenInTheWrongWay() {
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createVar("x", type("a")));

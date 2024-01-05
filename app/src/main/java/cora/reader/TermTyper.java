@@ -56,7 +56,7 @@ class TermTyper {
     _lastStored = null;
   }
 
-  private void storeError(String message, Token token) {
+  protected void storeError(String message, Token token) {
     if (token == _lastStored) return;
     _errors.addError(token.getPosition() + ": " + message);
     _lastStored = token;
