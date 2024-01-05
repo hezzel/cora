@@ -63,12 +63,12 @@ class DependencyPairsTest {
       CoraInputReader.readTypeFromString("Bool");
     Type depTy = DependencyPairs.toDependencyPairType(ty);
 
-    assumingThat(ty.isBaseType() || ty.isProdType(),  () -> {
+    assumingThat(ty.isBaseType() || ty.isProductType(),  () -> {
       assertTrue(DependencyPairs.dpSort.equals(depTy));
     });
 
     assumingThat(ty.isArrowType(), () -> {
-      System.out.println("do more tests here");
+//      System.out.println("do more tests here");
     });
 
   }
@@ -82,15 +82,15 @@ class DependencyPairsTest {
       );
     Term fx = f.apply(x);
 
-    System.out.println(
-      fx.queryHead() + ":" + f.queryType()
-    );
+//    System.out.println(
+//      fx.queryHead() + ":" + f.queryType()
+//    );
 
     DependencyPairs dp = new DependencyPairs();
 
     Term fSharp = dp.generateSharpFn(f);
 
-    System.out.println(fSharp + ":" + fSharp.queryType());
+//    System.out.println(fSharp + ":" + fSharp.queryType());
 
   }
 
@@ -103,11 +103,11 @@ class DependencyPairsTest {
     Term f = TermFactory.createConstant("f",arr);
     Term x = TermFactory.createVar(TypeFactory.boolSort);
 
-    System.out.println(f + ":" + f.queryType());
+//    System.out.println(f + ":" + f.queryType());
 
-    System.out.println("fake eta result");
+//    System.out.println("fake eta result");
 
-    System.out.println(DependencyPairs.fakeEta(f.apply(x)));
+//    System.out.println(DependencyPairs.fakeEta(f.apply(x)));
   }
 
   @Test
@@ -117,9 +117,9 @@ class DependencyPairsTest {
         "Bool -> b -> c -> d -> e"
       );
     Term f = TermFactory.createConstant("f",arr);
-    System.out.println("Normal lhs: " + f + ":" + f.queryType());
-    System.out.println("DP lhs: " + DependencyPairs.genLeftSharpRule(f));
-    System.out.println("With f : " + DependencyPairs.genLeftSharpRule(f).queryRoot().queryType());
+//    System.out.println("Normal lhs: " + f + ":" + f.queryType());
+//    System.out.println("DP lhs: " + DependencyPairs.genLeftSharpRule(f));
+//    System.out.println("With f : " + DependencyPairs.genLeftSharpRule(f).queryRoot().queryType());
   }
 
   @Test
@@ -128,7 +128,7 @@ class DependencyPairsTest {
       CoraInputReader.readTypeFromString("a -> b"));
     Term etaF = DependencyPairs.fakeEta(f);
 //    System.out.println(etaF);
-    System.out.println(DependencyPairs.genRightCandidates(etaF));
+//    System.out.println(DependencyPairs.genRightCandidates(etaF));
 
   }
 

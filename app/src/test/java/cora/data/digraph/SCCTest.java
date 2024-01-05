@@ -17,9 +17,9 @@ class SCCTest {
 
     SCC scc = new SCC(g);
 
-    System.out.println(g);
+//    System.out.println(g);
 
-    System.out.println(scc);
+//    System.out.println(scc);
 
   }
 }
