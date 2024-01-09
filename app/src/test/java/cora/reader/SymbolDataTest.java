@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022, 2023 Cynthia Kop
+ Copyright 2019, 2022, 2023, 2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,10 +13,12 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.parsing;
+package cora.reader;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.util.ArrayList;
 import cora.types.TypeFactory;
 import cora.terms.*;
@@ -135,19 +137,21 @@ public class SymbolDataTest {
     data.addVariable(TermFactory.createVar("bing", TypeFactory.createSort("q"))); // no error
   }
 
-  @Test(expected = java.lang.Error.class)
+  @Test
   public void testFunctionSymbolIllegalOverride() {
     SymbolData data = new SymbolData();
     data.addFunctionSymbol(TermFactory.createConstant("bing", TypeFactory.createSort("a")));
-    data.addFunctionSymbol(TermFactory.createConstant("bing", TypeFactory.createSort("b")));
+    assertThrows(java.lang.Error.class, () ->
+      data.addFunctionSymbol(TermFactory.createConstant("bing", TypeFactory.createSort("b"))));
   }
 
-  @Test(expected = java.lang.Error.class)
+  @Test
   public void testVariableIllegalOverride() {
     SymbolData data = new SymbolData();
     //  variables with the same name and type are not equal if they are different objects
     data.addVariable(TermFactory.createVar("bing", TypeFactory.createSort("a")));
-    data.addVariable(TermFactory.createVar("bing", TypeFactory.createSort("a")));
+    assertThrows(java.lang.Error.class, () ->
+      data.addVariable(TermFactory.createVar("bing", TypeFactory.createSort("a"))));
   }
 
   @Test
@@ -159,12 +163,13 @@ public class SymbolDataTest {
     assertTrue(data.lookupMetaVariable("bing") == x);
   }
 
-  @Test(expected = java.lang.Error.class)
+  @Test
   public void testMetaVariableIllegalOverride() {
     SymbolData data = new SymbolData();
     // meta-variables with the same name, type and arity are not equal if they are different objects
     data.addMetaVariable(TermFactory.createMetaVar("bing", TypeFactory.createSort("a"), 0));
-    data.addMetaVariable(TermFactory.createMetaVar("bing", TypeFactory.createSort("a"), 0));
+    assertThrows(java.lang.Error.class, () ->
+      data.addMetaVariable(TermFactory.createMetaVar("bing", TypeFactory.createSort("a"), 0)));
   }
 
   @Test
@@ -205,7 +210,7 @@ public class SymbolDataTest {
     assertTrue(data.lookupFunctionSymbol("bong").equals(bong));
   }
 
-  @Test(expected =  java.lang.Error.class)
+  @Test
   public void testVariableIllegalOverrideInAlphabet() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     FunctionSymbol bing = TermFactory.createConstant("bing", TypeFactory.createSort("a"));
@@ -215,7 +220,7 @@ public class SymbolDataTest {
     SymbolData data = new SymbolData(trs);
 
     FunctionSymbol bong = TermFactory.createConstant("bing", TypeFactory.createSort("b"));
-    data.addFunctionSymbol(bong);
+    assertThrows(java.lang.Error.class, () -> data.addFunctionSymbol(bong));
   }
 }
 

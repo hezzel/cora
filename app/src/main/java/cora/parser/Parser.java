@@ -100,12 +100,16 @@ public interface Parser {
   }
 
   /**
-   * ParserDeclaration ::= (token, name, type, isprivate).
-   * This record is used for a function or variable declaration.
+   * ParserDeclaration ::= (token, name, type, extra).
+   * This record is used for a function or variable declaration.  The extra field can be used in
+   * two ways:
+   * - for META-VARIABLE declarations, it is the arity; hence, for VARIABLE declarations it is
+   *   necessarily 0
+   * - for FUNCTION SYMBOL declarations, it indicates private status: 0 for public, 1 for private
    */
-  public record ParserDeclaration(Token token, String name, Type type, boolean isprivate) {
+  public record ParserDeclaration(Token token, String name, Type type, int extra) {
     public ParserDeclaration(Token token, String name, Type type) {
-      this(token, name, type, false);
+      this(token, name, type, 0);
     }
   }
 
@@ -135,10 +139,6 @@ public interface Parser {
    * are public).
    */
   public record ParserProgram(LookupMap<ParserDeclaration> fundecs,
-                              ImmutableList<ParserRule> rules, TreeSet<String> privateSymbols) {
-    public ParserProgram(LookupMap<ParserDeclaration> fundecs, ImmutableList<ParserRule> rules) {
-      this(fundecs, rules, new TreeSet<String>());
-    }
-  }
+                              ImmutableList<ParserRule> rules) {}
 }
 

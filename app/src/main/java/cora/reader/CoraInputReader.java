@@ -43,6 +43,65 @@ public class CoraInputReader extends TermTyper {
     super(data, collector);
   }
 
+  // ==================================== READING DECLARATIONS ====================================
+
+  /** takes a parser declaration and stores it as a function symbol declaration */
+  private void handleFunctionDeclaration(ParserDeclaration decl) {
+    if (decl == null || decl.type() == null) return;
+    String name = decl.name();
+    if (_symbols.lookupFunctionSymbol(name) != null) {
+      storeError("Redeclaration of previously declared function symbol " + name + ".",
+                 decl.token());
+    }
+    else _symbols.addFunctionSymbol(TermFactory.createConstant(name, decl.type()));
+  }
+
+  /** takes a set of parser declarations and stores them as variable declarations */
+  private void readEnvironment(LookupMap<ParserDeclaration> vars) {
+    // TODO
+  }
+
+  // ======================================= READING FULL TRSS ====================================
+
+  /**
+   * Either returns a valid rule, or returns null and potentially stores an erorr if the given
+   * parser rule does not define a valid rule.
+   */
+  private Rule makeRule(ParserRule rule) {
+    _symbols.clearEnvironment();
+    readEnvironment(rule.vars());
+    Term l = null, r = null, c = null;
+    if (!rule.left().hasErrors()) l = makeTerm(rule.left(), null, true);
+    if (!rule.right().hasErrors()) {
+      Type expected = null;
+      if (l != null) expected = l.queryType();
+      r = makeTerm(rule.right(), expected, false);
+    }
+    if (rule.constraint() != null && !rule.constraint().hasErrors()) {
+      c = makeTerm(rule.constraint(), TypeFactory.boolSort, true);
+    }
+    if (l == null || r == null) return null;
+    
+    try {
+      if (c == null) return RuleFactory.createRule(l, r);
+      else return RuleFactory.createRule(l, r, c);
+    }
+    catch (IllegalRuleError e) {
+      storeError(e.queryProblem(), rule.token());
+      return null;
+    }
+  }
+
+  // =============================== ACCESS FUNCTIONS FOR UNIT TESTS ==============================
+
+  /** Symbol declaration */
+  static void readDeclarationForUnitTest(String str, SymbolData data, boolean constrained,
+                                         ErrorCollector collector) {
+    ParserDeclaration decl = CoraParser.readDeclaration(str, constrained, collector);
+    CoraInputReader reader = new CoraInputReader(data, collector);
+    reader.handleFunctionDeclaration(decl);
+  }
+
   // ==================================== PUBLIC FUNCTIONALITY ====================================
 
   /**
@@ -79,4 +138,20 @@ public class CoraInputReader extends TermTyper {
     if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
     return ret;
   }
+
+  /**
+   * Reads the given term from string.
+   * The TRS is used for its alphabet (function symbols are automatically recognised), and to
+   * know whether or not we should include theories.  The rules and rule schemes are ignored.
+   */
+  public static Rule readRule(String str, TRS trs) {
+    ErrorCollector collector = new ErrorCollector();
+    ParserRule rule = CoraParser.readRule(str, trs.isConstrained(), collector);
+    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    SymbolData data = new SymbolData(trs);
+    CoraInputReader reader = new CoraInputReader(data, collector);
+    Rule ret = reader.makeRule(rule);
+    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    return ret;
+  } 
 }

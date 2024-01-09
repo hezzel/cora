@@ -23,13 +23,14 @@ import cora.types.*;
 import cora.utils.LookupMap;
 import cora.parser.lib.*;
 import cora.parser.InfixManager.OperatorData;
+import cora.parser.Parser.*;
 
 /**
  * The CoraParser parses the main Cora input format -- both for the unconstrained basic formalisms
  * (which do not have any theory symbols), and the constrained ones (which currently include all
  * the standard formalisms).
  */
-public class CoraParser implements Parser {
+public class CoraParser {
   public static final String PLUS = "+";
   public static final String MINUS = "-";
   public static final String TIMES = "*";
@@ -474,27 +475,258 @@ public class CoraParser implements Parser {
 
   // ======================================== READING RULES =======================================
 
-  private ParserRule readRule(LookupMap<ParserDeclaration> vars) {
-    return null;
-    // TODO
-  }
-  
-  private ImmutableList<ParserRule> readRules() {
-    ImmutableList.Builder<ParserRule> ret = ImmutableList.<ParserRule>builder();
-    // TODO
-    return ret.build();
+  /** 
+   * environment ::= BRACEOPEN BRACECLOSE
+   *               | BRACEOPEN mdeclaration (COMMA mdeclaration)* BRACECLOSE
+   *
+   * This always returns a lookup map, even if errors occur (although it may be empty).
+   */
+  private LookupMap<ParserDeclaration> readEnvironment() {
+    LookupMap.Builder<ParserDeclaration> ret = new LookupMap.Builder<ParserDeclaration>();
+    if (_status.expect(CoraTokenData.BRACEOPEN, "environment opening brace {") == null) {
+      return ret.build();
+    }
+    if (_status.readNextIf(CoraTokenData.BRACECLOSE) != null) return ret.build();  // { }
+    while (true) {
+      ParserDeclaration decl = readMetaVariableDeclaration();
+      if (decl != null) {
+        String name = decl.name();
+        if (ret.containsKey(name)) {
+          String kind = decl.extra() == 0 ? "variable" : "meta-variable";
+          _status.storeError("Redeclaration of " + (decl.extra() == 0 ? "variable " :
+           "meta-variable ") + name + " in the same environment.", decl.token());
+        }
+        else ret.put(decl.name(), decl);
+      }
+      if (_status.readNextIf(CoraTokenData.BRACECLOSE) != null) return ret.build();
+      if (_status.expect(CoraTokenData.COMMA, "comma or }") == null) {
+        if (!readRecoverEnvironment().getName().equals(CoraTokenData.COMMA)) return ret.build();
+      }
+    }
   }
 
+  /**
+   * mdeclaration ::= IDENTIFIER DECLARE type
+   *                | IDENTIFIER DECLARE METAOPEN METACLOSE typearrow type
+   *                | IDENTIFIER DECLARE METAOPEN type (COMMA type)* METACLOSE typearrow type
+   *
+   * This may return null if no valid declaration was given (in which case an error is stored).
+   */
+  private ParserDeclaration readMetaVariableDeclaration() {
+    Token token = _status.expect(CoraTokenData.IDENTIFIER, "a variable or meta-variable name");
+    Token decl = _status.expect(CoraTokenData.DECLARE, "declare symbol (::)");
+    if (token == null && decl == null) return null;
+
+    // METAOPEN METACLOSE typearrow or
+    // METAOPEN type (COMMA type)* METACLOSE typearrow
+    ArrayList<Type> args = new ArrayList<Type>();
+    if (_status.readNextIf(CoraTokenData.METAOPEN) != null) {
+      if (_status.readNextIf(CoraTokenData.METACLOSE) == null) {
+        while (true) {
+          Type type = readType();
+          if (type != null) args.add(type);
+          if (_status.readNextIf(CoraTokenData.METACLOSE) != null) break;
+          if (_status.expect(CoraTokenData.COMMA, "comma or ] or ⟩") == null) {
+            if (type == null) return null; // no idea where we are now, probably try recovery
+          }
+        }
+      }
+      _status.expect(CoraTokenData.ARROW, "arrow operator →");
+    }
+    else _status.readNextIf(CoraTokenData.ARROW);
+
+    Type type = readType();
+    if (type == null) return null;
+    
+    for (int i = args.size()-1; i >= 0; i--) {
+      type = TypeFactory.createArrow(args.get(i), type);
+    }
+    return new ParserDeclaration(token, token.getText(), type, args.size());
+  }
+
+  /**
+   * We have encountered an error in an environment, and will now continue reading until the next
+   * token is a COMMA, BRACEOPEN, BRACECLOSE, or the end of a file.
+   *
+   * If it is BRACEOPEN or EOF, then the token is not read; if it is COMMA or BRACECLOSE, it is.
+   * The final token is returned.
+   */
+  private Token readRecoverEnvironment() {
+    Token next = _status.nextToken();
+    while (!next.isEof() && !next.getName().equals(CoraTokenData.COMMA) &&
+           !next.getName().equals(CoraTokenData.BRACEOPEN) &&
+           !next.getName().equals(CoraTokenData.BRACECLOSE)) next = _status.nextToken();
+    if (!next.getName().equals(CoraTokenData.COMMA) &&
+        !next.getName().equals(CoraTokenData.BRACECLOSE)) _status.pushBack(next);
+    return next;
+  }
+
+  /**  
+   * rule ::= environment? term ARROW term (MID term)?
+   *
+   * If reading a ParserRule fails, we immediately do error recovery, to return to a state where
+   * the next rule or declaraiton can be read.
+   */
+  private ParserRule readRule() {
+    Token start = _status.peekNext();
+    LookupMap<ParserDeclaration> vars = null;
+    if (_status.nextTokenIs(CoraTokenData.BRACEOPEN)) vars = readEnvironment();
+    else vars = LookupMap.<ParserDeclaration>empty();
+    // this could happen due to error recovery, but means we should stop trying to read this rule
+    if (_status.nextTokenIs(CoraTokenData.BRACEOPEN)) return null;
+    ParserTerm left = readTerm();
+    boolean ok = _status.expect(CoraTokenData.ARROW, "an arrow (→ or ->)") != null;
+    ParserTerm right = ok ? readTerm() : null;
+    ParserTerm constraint = null;
+    if (_status.readNextIf(CoraTokenData.MID) != null) constraint = readTerm();
+    if (left != null && right != null) return new ParserRule(start, vars, left, right, constraint);
+    // error recovery: something went wrong reading the terms
+    if (right == null || right.hasErrors() || (constraint != null && constraint.hasErrors())) {
+      recoverState();
+    }
+    return null;
+  }
+ 
   // ====================================== READING FULL TRSs =====================================
 
-  private LookupMap<ParserDeclaration> readDeclarations() {
-    return null;
-    // TODO
+  /**
+   * This function recovers from a broken state, by reading until we come to something that is
+   * likely to be the start of a program line again.
+   */
+  private void recoverState() {
+    Token prev = null, curr = null;
+    boolean intype = true;    // set if there's any possibility we're inside a type
+    while (true) {
+      prev = curr;
+      curr = _status.nextToken();
+      if (curr.isEof()) return;
+      // { <-- we're at the start of a rule
+      if (curr.getName().equals(CoraTokenData.BRACEOPEN)) { _status.pushBack(curr); return; }
+      // } <-- we're past the rule declaration part, but still at the start of a rule; we're
+      // probably going to run into typing trouble, but so be it
+      if (curr.getName().equals(CoraTokenData.BRACECLOSE)) { _status.pushBack(curr); return; }
+      // public / private <-- we're at the start of a function symbol declaration
+      if (curr.getName().equals(CoraTokenData.PUBLIC) ||
+          curr.getName().equals(CoraTokenData.PRIVATE)) { _status.pushBack(curr); return; }
+      // | <-- we're at the constraint part of a rule, so we can continue after reading the
+      // constraint
+      if (curr.getName().equals(CoraTokenData.MID)) {
+        ParserTerm term = readTerm();
+        if (term != null && !term.hasErrors()) return;
+      }
+      // :: <-- we may be a token into a declaration; it is also possible that we are inside an
+      // environment or abstraction (although unlikely as we try to account for that possiblity)
+      // but if the next step is to read a function symbol, this step will fail anyway if it is
+      // actually a variable or meta-variable declaration
+      if (curr.getName().equals(CoraTokenData.DECLARE) && prev != null &&
+          prev.getName().equals(CoraTokenData.IDENTIFIER)) {
+        _status.pushBack(curr);
+        _status.pushBack(prev);
+        return;
+      }
+      // we're following a declare, so we can definitely be inside a type, no matter what came
+      // before!
+      if (curr.getName().equals(CoraTokenData.DECLARE)) intype = true;
+      // ( or [ <-- if this comes directly after an identifier, we are not in a type
+      if ((curr.getName().equals(CoraTokenData.BRACKETOPEN) ||
+           curr.getName().equals(CoraTokenData.METAOPEN)) &&
+          prev != null && prev.getName().equals(CoraTokenData.IDENTIFIER)) {
+        intype = false;
+      }
+      // . <-- we're after a lambda declaration, so no longer in a type at least
+      if (curr.getName().equals(CoraTokenData.DOT)) intype = false;
+      // → when we're not in a type <-- we're before the right-hand side of a rule
+      if (curr.getName().equals(CoraTokenData.ARROW) && !intype) {
+        ParserTerm t = readTerm();
+        if (t != null) {
+          if (_status.readNextIf(CoraTokenData.MID) != null) t = readTerm();
+        }
+        if (t != null && !t.hasErrors()) return;
+      }
+    }
+  }
+
+  /**
+   * fundec ::= (PUBLIC|PRIVATE)? IDENTIFIER DECLARE type
+   * fundecs are never followed by DOT or COMMA.
+   *
+   * There are three possible return values:
+   * - null: nothing was read; this is not a declaration
+   *   (this occurs if the upcoming token is neither PUBLIC nor PRIVATE, nor are the upcoming two
+   *   tokens IDENTIFIER DECLARE)
+   * - a ParserDeclaration with type() null: this is not a valid declaration, and an error was
+   *   stored, but at least one token has been read; in this case, error recovery is immediately
+   *   done to ensure that the status is back to a program line.
+   * - a valid ParserDeclaration
+   */
+  private ParserDeclaration tryReadDeclaration() {
+    Token publ, priv, constant;
+
+    publ = _status.readNextIf(CoraTokenData.PUBLIC);
+    priv = (publ != null) ? null : _status.readNextIf(CoraTokenData.PRIVATE);
+
+    // PUBLIC / PRIVATE: this *has* to be a parser declaration!
+    if (publ != null || priv != null) {
+      constant = _status.expect(CoraTokenData.IDENTIFIER,
+        "an identifier (for a function symbol name to be declared)");
+      Token declaresymb = _status.expect(CoraTokenData.DECLARE, "::");
+      if (constant == null || declaresymb == null) {
+        recoverState();
+        return new ParserDeclaration(publ == null ? priv : publ, "public/private", null);
+      }
+    }
+    else {
+      constant = _status.readNextIf(CoraTokenData.IDENTIFIER);
+      if (constant == null) return null;
+      if (_status.readNextIf(CoraTokenData.DECLARE) == null) {
+        _status.pushBack(constant);
+        return null;
+      }
+    }
+    Type type = readType();
+    String name = constant.getText();
+
+    // error cases: this is actually a variable / meta-variable declaration!
+    if (_status.nextTokenIs(CoraTokenData.BRACECLOSE)) {
+      if (publ != null || priv != null) {
+        _status.storeError("Function symbol declartion cannot be followed by }!",
+                           _status.peekNext());
+      }
+      return new ParserDeclaration(constant, name, null);
+    }
+    if (_status.nextTokenIs(CoraTokenData.COMMA) || _status.nextTokenIs(CoraTokenData.DOT) ||
+        type == null) {
+      if (publ != null || priv != null) {
+        Token tok = _status.peekNext();
+        _status.storeError("Function symbol declartion cannot be followed by " +
+                           (tok.getName().equals(CoraTokenData.COMMA) ? "comma" : "dot") + "!",
+                           _status.peekNext());
+      }
+      recoverState();
+      return new ParserDeclaration(constant, name, null);
+    }
+
+    return new ParserDeclaration(constant, name, type, priv == null ? 0 : 1);
   }
 
   private ParserProgram readTRS() {
-    return null;
-    // TODO
+    LookupMap.Builder<ParserDeclaration> symbols = new LookupMap.Builder<ParserDeclaration>();
+    ImmutableList.Builder<ParserRule> rules = ImmutableList.<ParserRule>builder();
+    while (!_status.peekNext().isEof()) {
+      ParserDeclaration decl = tryReadDeclaration();
+      if (decl == null) {
+        ParserRule rule = readRule();
+        if (rule != null) rules.add(rule);
+      }
+      else if (decl.type() != null) {
+        if (symbols.containsKey(decl.name())) {
+          _status.storeError("Redeclaration of previously declared function symbol " + decl.name() +
+            ".", decl.token());
+        }
+        else symbols.put(decl.name(), decl);
+      }
+    }
+    return new ParserProgram(symbols.build(), rules.build());
   }
 
   // ====================================== PUBLIC FUNCTIONS ======================================
@@ -566,26 +798,29 @@ public class CoraParser implements Parser {
   public static ParserRule readRule(String str, boolean constrained, ErrorCollector collector) {
     ParsingStatus status = makeStatus(str, constrained, collector);
     CoraParser parser = new CoraParser(status);
-    ParserRule rule = parser.readRule(LookupMap.<ParserDeclaration>empty());
+    ParserRule rule = parser.readRule();
     finish(status, collector == null || rule == null);
     return rule;
   }
   public static ParserRule readRule(String str) { return readRule(str, true, null); }
 
   /**
-   * Reads zero or more function or variable declarations from the given string.
+   * Reads a function declaration from the given string.
+   * Since this is primarily meant for use in unit testing, the output can be one of the following
+   * options:
+   * - null: if nothing was read
+   * - a ParserDeclaration with type() null: if something was read, but an error occurred
+   * - a valid ParserDeclaration: if the declaration was read
+   *   if the declaration is private, moreover the extra() field is 1; otherwise it is 0.
    * @throws cora.exceptions.ParseError
    */
-  public static LookupMap<ParserDeclaration> readDeclarations(String str, boolean constrained,
-                                                              ErrorCollector collector) {
+  public static ParserDeclaration readDeclaration(String str, boolean constrained,
+                                                  ErrorCollector collector) {
     ParsingStatus status = makeStatus(str, constrained, collector);
     CoraParser parser = new CoraParser(status);
-    LookupMap<ParserDeclaration> decl = parser.readDeclarations();
-    finish(status, collector == null || decl == null);
+    ParserDeclaration decl = parser.tryReadDeclaration();
+    status.expect(Token.EOF, "end of input");
     return decl;
-  }
-  public static LookupMap<ParserDeclaration> readDeclarations(String str) {
-    return readDeclarations(str, true, null);
   }
 
   /**
