@@ -20,8 +20,8 @@ public class SCC {
     stack = new Stack<>();
     _sccId = new int[graph.getNumberOfVertices()];
     _low = new int[graph.getNumberOfVertices()];
-    for(int i = 0; i < graph.getNumberOfVertices(); i++){
-      if (!_visided[i]) sccSearch(graph,i);
+    for (int i = 0; i < graph.getNumberOfVertices(); i++) {
+      if (!_visided[i]) sccSearch(graph, i);
     }
   }
 
@@ -31,16 +31,16 @@ public class SCC {
     int minValue = _low[source];
     stack.push(source);
 
-    for(int neighbor : graph.getNeighbors(source)){
-      if(!_visided[neighbor]) {
+    for (int neighbor : graph.getNeighbors(source)) {
+      if (!_visided[neighbor]) {
         sccSearch(graph, neighbor);
       }
-      if(_low[neighbor] < minValue) {
+      if (_low[neighbor] < minValue) {
         minValue = _low[neighbor];
       }
     }
 
-    if(minValue < _low[source]) {
+    if (minValue < _low[source]) {
       _low[source] = minValue;
       return;
     }
@@ -60,9 +60,9 @@ public class SCC {
     int bound = _visided.length;
     if (vertex < 0 || vertex > bound - 1) {
       throw new IllegalArgumentError(
-        "SCC",
-        method,
-        STR."vertex with value \{vertex} out of bound, it should be in the range 0 - \{bound - 1}"
+          "SCC",
+          method,
+          STR."vertex with value \{vertex} out of bound, it should be in the range 0 - \{bound - 1}"
       );
     }
   }
@@ -70,7 +70,9 @@ public class SCC {
   /**
    * Returns the number of strongly connected components the graph has.
    */
-  public int getNumberOfSCCs(){ return _numberOfSCCs; }
+  public int getNumberOfSCCs() {
+    return _numberOfSCCs;
+  }
 
   /**
    * Check whether {@code source} is strongly connected with {@code destination}.
@@ -80,7 +82,7 @@ public class SCC {
    * return whether {@code source} and {@code destination} belong to the same strongly connected
    * component.
    */
-  public boolean isStronglyConnected(int source, int destination){
+  public boolean isStronglyConnected(int source, int destination) {
     validateVertex(source, "isStronglyConnected");
     validateVertex(destination, "isStronglyConnected");
 
@@ -101,14 +103,15 @@ public class SCC {
    * The return data is of type {@code List< List<Integer> >} in which the outermost list stores
    * the data of each scc component in the graph. So the lenght of this list is equal to
    * {@code this.getNumberOfSccs}. Each component is identified by their index in this list.
+   *
    * @return
    */
   public List<List<Integer>> getSccData() {
-    List< List<Integer> > components = new ArrayList<>(this.getNumberOfSCCs());
-    for(int i = 0; i < this.getNumberOfSCCs(); i++){
+    List<List<Integer>> components = new ArrayList<>(this.getNumberOfSCCs());
+    for (int i = 0; i < this.getNumberOfSCCs(); i++) {
       components.add(new ArrayList<>());
     }
-    for(int v = 0; v < _visided.length; v++){
+    for (int v = 0; v < _visided.length; v++) {
       components.get(this.getSccId(v)).add(v);
     }
     return components;
@@ -117,8 +120,8 @@ public class SCC {
   @Override
   public String toString() {
     StringBuilder ret = new StringBuilder();
-    List< List<Integer> > components = this.getSccData();
-    for(int i = 0; i < this.getNumberOfSCCs(); i++){
+    List<List<Integer>> components = this.getSccData();
+    for (int i = 0; i < this.getNumberOfSCCs(); i++) {
       ret.append("Component ").append(i).append(": ").append(components.get(i)).append("\n");
     }
     return ret.toString();
