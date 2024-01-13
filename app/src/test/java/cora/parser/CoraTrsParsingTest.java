@@ -41,7 +41,7 @@ public class CoraTrsParsingTest {
     assertTrue(x.type().equals(TypeFactory.intSort));
     assertTrue(x.extra() == 0);
     assertTrue(y.name().equals("y"));
-    assertTrue(y.type().toString().equals("b ⇒ c"));
+    assertTrue(y.type().toString().equals("b → c"));
     assertTrue(y.extra() == 0);
   }
 
@@ -52,9 +52,9 @@ public class CoraTrsParsingTest {
     ParserDeclaration x = rule.vars().get("x");
     ParserDeclaration y = rule.vars().get("y");
     ParserDeclaration z = rule.vars().get("Z");
-    assertTrue(x.type().toString().equals("a ⇒ b ⇒ c"));
+    assertTrue(x.type().toString().equals("a → b → c"));
     assertTrue(x.extra() == 2);
-    assertTrue(y.type().toString().equals("b ⇒ c"));
+    assertTrue(y.type().toString().equals("b → c"));
     assertTrue(y.extra() == 1);
     assertTrue(z.type().toString().equals("a"));
     assertTrue(z.extra() == 0);
@@ -69,7 +69,7 @@ public class CoraTrsParsingTest {
     ParserDeclaration z = rule.vars().get("Z");
     assertTrue(x.type().toString().equals("a"));
     assertTrue(x.extra() == 0);
-    assertTrue(y.type().toString().equals("(b ⇒ b) ⇒ c ⇒ d ⇒ e"));
+    assertTrue(y.type().toString().equals("(b → b) → c → d → e"));
     assertTrue(y.extra() == 2);
     assertTrue(z == null);
   }
@@ -118,7 +118,7 @@ public class CoraTrsParsingTest {
     assertTrue(rule != null);
     assertTrue(rule.vars().get("x").type().toString().equals("a"));
     assertTrue(rule.vars().get("x").extra() == 0);
-    assertTrue(rule.vars().get("y").type().toString().equals("b ⇒ c"));
+    assertTrue(rule.vars().get("y").type().toString().equals("b → c"));
     assertTrue(rule.vars().get("y").extra() == 0);
     assertTrue(rule.vars().get("z").type().toString().equals("d"));
     assertTrue(rule.vars().get("z").extra() == 0);
@@ -132,7 +132,7 @@ public class CoraTrsParsingTest {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = CoraParser.readRule("{ x :: a, f(aa) -> aa } bb -> bb", true, collector);
     assertTrue(rule.vars().size() == 2);
-    assertTrue(rule.vars().get("f").type().toString().equals("aa ⇒ aa"));
+    assertTrue(rule.vars().get("f").type().toString().equals("aa → aa"));
     assertTrue(rule.vars().get("f").extra() == 0);
     assertTrue(collector.queryCollectedMessages().equals(
       "1:12: Expected declare symbol (::) but got BRACKETOPEN (().\n"));
@@ -144,7 +144,7 @@ public class CoraTrsParsingTest {
     ParserRule rule = CoraParser.readRule("{ x :: a, y :: b -> c, } aa → aa", false, collector);
     assertTrue(rule.vars().size() == 2);
     assertTrue(rule.vars().get("x").type().toString().equals("a"));
-    assertTrue(rule.vars().get("y").type().toString().equals("b ⇒ c"));
+    assertTrue(rule.vars().get("y").type().toString().equals("b → c"));
     assertTrue(collector.queryCollectedMessages().equals(
       "1:24: Expected a variable or meta-variable name but got BRACECLOSE (}).\n"));
   }
@@ -187,7 +187,7 @@ public class CoraTrsParsingTest {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = CoraParser.readRule("{ x :: [a b] -> c } aa -> aa", true, collector);
     assertTrue(rule.vars().size() == 1);
-    assertTrue(rule.vars().get("x").type().toString().equals("a ⇒ b ⇒ c"));
+    assertTrue(rule.vars().get("x").type().toString().equals("a → b → c"));
     assertTrue(rule.vars().get("x").extra() == 2);
     assertTrue(collector.queryCollectedMessages().equals(
       "1:11: Expected comma or ] or ⟩ but got IDENTIFIER (b).\n"));
@@ -224,7 +224,7 @@ public class CoraTrsParsingTest {
   public void testApplicativeRuleWithHeadVariable() {
     ParserRule rule = CoraParser.readRule("{ F :: a -> a } h(F(aa), bb) -> f(F(i(bb)))");
     assertTrue(rule.vars().size() == 1);
-    assertTrue(rule.vars().get("F").type().toString().equals("a ⇒ a"));
+    assertTrue(rule.vars().get("F").type().toString().equals("a → a"));
     assertTrue(rule.vars().get("F").extra() == 0);
     assertTrue(rule.toString().equals(
       "{ [F] } @(h, [@(F, [aa]), bb]) → @(f, [@(F, [@(i, [bb])])])"));
@@ -318,7 +318,7 @@ public class CoraTrsParsingTest {
     ParserDeclaration decl =
       CoraParser.readDeclaration("public g :: a -> (b -> c) -> d\nx", false, collector);
     assertTrue(decl.name().equals("g"));
-    assertTrue(decl.type().toString().equals("a ⇒ (b ⇒ c) ⇒ d"));
+    assertTrue(decl.type().toString().equals("a → (b → c) → d"));
     assertTrue(decl.extra() == 0);
     // we stop readint at the right point
     assertTrue(collector.queryCollectedMessages().equals(
@@ -331,7 +331,7 @@ public class CoraTrsParsingTest {
     ParserDeclaration decl =
       CoraParser.readDeclaration("private g :: a -> (b -> c) -> d\nx", false, collector);
     assertTrue(decl.name().equals("g"));
-    assertTrue(decl.type().toString().equals("a ⇒ (b ⇒ c) ⇒ d"));
+    assertTrue(decl.type().toString().equals("a → (b → c) → d"));
     assertTrue(decl.extra() == 1);
     // we stop readint at the right point
     assertTrue(collector.queryCollectedMessages().equals(
@@ -344,7 +344,7 @@ public class CoraTrsParsingTest {
     ParserDeclaration decl =
       CoraParser.readDeclaration("g :: a -> (b -> c) -> d\nx", false, collector);
     assertTrue(decl.name().equals("g"));
-    assertTrue(decl.type().toString().equals("a ⇒ (b ⇒ c) ⇒ d"));
+    assertTrue(decl.type().toString().equals("a → (b → c) → d"));
     assertTrue(decl.extra() == 0);
     // we stop readint at the right point
     assertTrue(collector.queryCollectedMessages().equals(
@@ -458,8 +458,8 @@ public class CoraTrsParsingTest {
       false, collector);
     assertTrue(trs.fundecs().size() == 3);
     assertTrue(trs.fundecs().get("0").type().toString().equals("N"));
-    assertTrue(trs.fundecs().get("s").type().toString().equals("N ⇒ N"));
-    assertTrue(trs.fundecs().get("add").type().toString().equals("N ⇒ N ⇒ N"));
+    assertTrue(trs.fundecs().get("s").type().toString().equals("N → N"));
+    assertTrue(trs.fundecs().get("add").type().toString().equals("N → N → N"));
     assertTrue(trs.rules().get(0).toString().equals("{ [] } @(add, [0, y]) → y"));
     assertTrue(trs.rules().get(1).toString().equals(
       "{ [] } @(add, [@(s, [x]), y]) → @(s, [@(add, [x, y])])"));
@@ -470,7 +470,7 @@ public class CoraTrsParsingTest {
   public void testWeirdProgram() {
     ParserProgram trs =
       CoraParser.readProgramFromString("f(x,x) -> x f :: a -> a -> a b :: b b -> b c :: a");
-    assertTrue(trs.fundecs().get("f").type().toString().equals("a ⇒ a ⇒ a"));
+    assertTrue(trs.fundecs().get("f").type().toString().equals("a → a → a"));
     assertTrue(trs.fundecs().get("b").type().toString().equals("b"));
     assertTrue(trs.fundecs().get("c").type().toString().equals("a"));
     assertTrue(trs.rules().get(0).toString().equals("{ [] } @(f, [x, x]) → x"));

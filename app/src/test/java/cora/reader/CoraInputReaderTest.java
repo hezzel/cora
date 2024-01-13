@@ -59,7 +59,7 @@ public class CoraInputReaderTest {
     SymbolData data = makeBasicData();
     String str = "g :: a -> (b -> c) -> d\ng(x,y) -> h";
     CoraInputReader.readDeclarationForUnitTest(str, data, false, collector);
-    assertTrue(data.lookupFunctionSymbol("g").queryType().toString().equals("a ⇒ (b ⇒ c) ⇒ d"));
+    assertTrue(data.lookupFunctionSymbol("g").queryType().toString().equals("a → (b → c) → d"));
     assertTrue(collector.queryCollectedMessages().equals(
       "2:1: Expected end of input but got IDENTIFIER (g).\n"));
   }
@@ -70,7 +70,7 @@ public class CoraInputReaderTest {
     SymbolData data = makeBasicData();
     String str = "f :: a -> (b -> c)";
     CoraInputReader.readDeclarationForUnitTest(str, data, true, collector);
-    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("a ⇒ Int"));
+    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("a → Int"));
     assertTrue(collector.queryCollectedMessages().equals(
       "1:1: Redeclaration of previously declared function symbol f.\n"));
   }
@@ -82,7 +82,7 @@ public class CoraInputReaderTest {
     Rule rule = CoraInputReader.readRule("{ F :: a -> a } f(F(x)) → y", generateTRS());
     assertTrue(rule.toString().equals("f(F(x)) → y"));
     Variable f = rule.queryLeftSide().queryArgument(1).queryHead().queryVariable();
-    assertTrue(f.queryType().toString().equals("a ⇒ a"));
+    assertTrue(f.queryType().toString().equals("a → a"));
     Variable x = rule.queryLeftSide().queryArgument(1).queryArgument(1).queryVariable();
     assertTrue(x.queryType().toString().equals("a"));
     assertTrue(rule.queryRightSide().queryVariable().queryType().toString().equals("Int"));
@@ -93,7 +93,7 @@ public class CoraInputReaderTest {
     Rule rule = CoraInputReader.readRule("{ F :: [a] -> a } f(F[x]) → y", generateTRS());
     assertTrue(rule.toString().equals("f(F⟨x⟩) → y"));
     MetaVariable f = rule.queryLeftSide().queryArgument(1).queryHead().queryMetaVariable();
-    assertTrue(f.queryType().toString().equals("a ⇒ a"));
+    assertTrue(f.queryType().toString().equals("a → a"));
     Variable x = rule.queryLeftSide().queryArgument(1).queryMetaArgument(1).queryVariable();
     assertTrue(x.queryType().toString().equals("a"));
   }
@@ -243,7 +243,7 @@ public class CoraInputReaderTest {
     try { CoraInputReader.readRule("filter(F,cons(H,T)) -> cons(H, filter(F, T)) | F(H)", trs); }
     catch (ParseError e) {
       assertTrue(e.getMessage().equals(
-        "1:1: constraint [F(H)] contains a variable F of type Int ⇒ Bool; only " +
+        "1:1: constraint [F(H)] contains a variable F of type Int → Bool; only " +
         "variables of theory sort are allowed to occur in a constraint.\n"));
       return;
     }
@@ -294,8 +294,8 @@ public class CoraInputReaderTest {
       "0 :: N s :: N -> N add :: N -> N -> N add(0,y) -> y add(s(x),y) -> s(add(x,y))",
       CoraInputReader.MSTRS);
     assertTrue(trs.lookupSymbol("0").queryType().toString().equals("N"));
-    assertTrue(trs.lookupSymbol("s").queryType().toString().equals("N ⇒ N"));
-    assertTrue(trs.lookupSymbol("add").queryType().toString().equals("N ⇒ N ⇒ N"));
+    assertTrue(trs.lookupSymbol("s").queryType().toString().equals("N → N"));
+    assertTrue(trs.lookupSymbol("add").queryType().toString().equals("N → N → N"));
     assertTrue(trs.queryRule(0).toString().equals("add(0, y) → y"));
     assertTrue(trs.queryRule(1).toString().equals("add(s(x), y) → s(add(x, y))"));
   }
@@ -305,7 +305,7 @@ public class CoraInputReaderTest {
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: a -> a -> a b :: b f(x,x) -> x b -> b c :: a",
       CoraInputReader.MSTRS);
-    assertTrue(trs.lookupSymbol("f").queryType().toString().equals("a ⇒ a ⇒ a"));
+    assertTrue(trs.lookupSymbol("f").queryType().toString().equals("a → a → a"));
     assertTrue(trs.lookupSymbol("b").queryType().toString().equals("b"));
     assertTrue(trs.lookupSymbol("c").queryType().toString().equals("a"));
     assertTrue(trs.queryRule(0).toString().equals("f(x, x) → x"));
@@ -320,7 +320,7 @@ public class CoraInputReaderTest {
       CoraInputReader.STRS);
     assertTrue(trs.lookupSymbol("3").queryType().toString().equals("Int"));
     assertTrue(trs.lookupSymbol("7").queryType().toString().equals("Int"));
-    assertTrue(trs.lookupSymbol("f").queryType().toString().equals("Bool ⇒ Int ⇒ Bool"));
+    assertTrue(trs.lookupSymbol("f").queryType().toString().equals("Bool → Int → Bool"));
     assertTrue(trs.queryRule(0).toString().equals("f(X(3, y, 7), y) → X(7, 3, y)"));
     assertFalse(trs.queryRule(0).isPatternRule());
   }
@@ -418,7 +418,7 @@ public class CoraInputReaderTest {
     }
     catch (ParseError e) {
       assertTrue(e.getMessage().equals(
-        "Symbol with a type (nat ⇒ nat) ⇒ nat cannot occur in a many-sorted TRS.\n"));
+        "Symbol with a type (nat → nat) → nat cannot occur in a many-sorted TRS.\n"));
       return;
     }
     assertTrue(false);

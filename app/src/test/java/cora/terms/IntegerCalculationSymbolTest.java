@@ -27,7 +27,7 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
   @Test
   public void testPlusBasics() {
     CalculationSymbol p = new PlusSymbol();
-    assertTrue(p.queryType().toString().equals("Int ⇒ Int ⇒ Int"));
+    assertTrue(p.queryType().toString().equals("Int → Int → Int"));
     assertTrue(p.queryInfixPriority() == CalculationSymbol.INFIX_PLUS);
     assertTrue(p.queryName().equals("+"));
     assertTrue(p.toString().equals("[+]"));
@@ -38,7 +38,7 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
   @Test
   public void testTimesBasics() {
     CalculationSymbol t = new TimesSymbol();
-    assertTrue(t.queryType().toString().equals("Int ⇒ Int ⇒ Int"));
+    assertTrue(t.queryType().toString().equals("Int → Int → Int"));
     assertTrue(t.queryInfixPriority() == CalculationSymbol.INFIX_TIMES);
     assertTrue(t.queryName().equals("*"));
     assertTrue(t.toString().equals("[*]"));
@@ -49,7 +49,7 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
   @Test
   public void testMinusBasics() {
     CalculationSymbol m = new MinusSymbol();
-    assertTrue(m.queryType().toString().equals("Int ⇒ Int"));
+    assertTrue(m.queryType().toString().equals("Int → Int"));
     assertTrue(m.queryInfixPriority() == CalculationSymbol.INFIX_MINUS);
     assertTrue(m.queryName().equals("-"));
     assertTrue(m.toString().equals("[-]"));
@@ -60,7 +60,7 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
   @Test
   public void testDivBasics() {
     CalculationSymbol p = new DivModSymbol(true);
-    assertTrue(p.queryType().toString().equals("Int ⇒ Int ⇒ Int"));
+    assertTrue(p.queryType().toString().equals("Int → Int → Int"));
     assertTrue(p.queryInfixPriority() == CalculationSymbol.INFIX_DIVMOD);
     assertTrue(p.queryName().equals("/"));
     assertTrue(p.toString().equals("[/]"));
@@ -71,7 +71,7 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
   @Test
   public void testModBasics() {
     CalculationSymbol p = new DivModSymbol(false);
-    assertTrue(p.queryType().toString().equals("Int ⇒ Int ⇒ Int"));
+    assertTrue(p.queryType().toString().equals("Int → Int → Int"));
     assertTrue(p.queryInfixPriority() == CalculationSymbol.INFIX_DIVMOD);
     assertTrue(p.queryName().equals("%"));
     assertTrue(p.toString().equals("[%]"));

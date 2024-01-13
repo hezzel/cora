@@ -33,18 +33,18 @@ public class ApplicativeTrsTest {
   private TRS createTermRewritingSystem() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     ArrayList<Rule> rules = new ArrayList<Rule>();
-    FunctionSymbol f = TermFactory.createConstant("f", type("(A ⇒ A ⇒ B) ⇒ A ⇒ A ⇒ B"));
-    FunctionSymbol g = TermFactory.createConstant("g", type("A ⇒ A ⇒ A ⇒ B"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("(A → A → B) → A → A → B"));
+    FunctionSymbol g = TermFactory.createConstant("g", type("A → A → A → B"));
     FunctionSymbol a = TermFactory.createConstant("a", type("A"));
     Variable x = TermFactory.createVar("x", type("A"));
-    Variable y = TermFactory.createVar("y", type("A ⇒ A"));
+    Variable y = TermFactory.createVar("y", type("A → A"));
     Variable z = TermFactory.createVar("z", type("A"));
     symbols.add(f);
     symbols.add(g);
     symbols.add(a);
     symbols.add(TermFactory.createConstant("b", type("A")));
-    symbols.add(TermFactory.createConstant("i", type("B ⇒ A")));
-    symbols.add(TermFactory.createConstant("j", type("A ⇒ A ⇒ A")));
+    symbols.add(TermFactory.createConstant("i", type("B → A")));
+    symbols.add(TermFactory.createConstant("j", type("A → A → A")));
     rules.add(RuleFactory.createApplicativeRule(
       TermFactory.createApp(f, g.apply(x), a), TermFactory.createApp(g, a, x)));
       // f(g(x), a) -> g(a, x) with g :: A -> B -> A -> B
@@ -63,7 +63,7 @@ public class ApplicativeTrsTest {
     assertTrue(trs.queryRule(1).toString().equals("g(y(x), x, z) → g(z, x, y(a))"));
     assertTrue(trs.querySchemeCount() == 0);
     assertTrue(trs.lookupSymbol("f").equals(
-      TermFactory.createConstant("f", type("(A ⇒ A ⇒ B) ⇒ A ⇒ A ⇒ B"))));
+      TermFactory.createConstant("f", type("(A → A → B) → A → A → B"))));
     assertTrue(trs.lookupSymbol("h") == null);
   }
 
@@ -74,7 +74,7 @@ public class ApplicativeTrsTest {
     ArrayList<Rule> rules = new ArrayList<Rule>();
     Variable x = TermFactory.createBinder("x", type("a"));
     Variable y = TermFactory.createVar("y", type("b"));
-    FunctionSymbol f = TermFactory.createConstant("f", type("a ⇒ b ⇒ b"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
     TRSFactory.createApplicativeTRS(new Alphabet(symbols), rules);
@@ -85,7 +85,7 @@ public class ApplicativeTrsTest {
     ArrayList<Rule> rules = new ArrayList<Rule>();
     Variable x = TermFactory.createVar("x", type("a"));
     Variable y = TermFactory.createVar("y", type("b"));
-    FunctionSymbol f = TermFactory.createConstant("f", type("a ⇒ b ⇒ b"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
     TRSFactory.createApplicativeTRS(null, rules);
   }
@@ -93,7 +93,7 @@ public class ApplicativeTrsTest {
   @Test(expected = NullInitialisationError.class)
   public void testCreateApplicativeTRSWithNullRules() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
-    FunctionSymbol f = TermFactory.createConstant("f", type("a ⇒ b ⇒ b"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
     TRSFactory.createApplicativeTRS(new Alphabet(symbols), null);
   }
@@ -104,7 +104,7 @@ public class ApplicativeTrsTest {
     ArrayList<Rule> rules = new ArrayList<Rule>();
     Variable x = TermFactory.createVar("x", type("a"));
     Variable y = TermFactory.createVar("y", type("b"));
-    FunctionSymbol f = TermFactory.createConstant("f", type("a ⇒ b ⇒ b"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
     rules.add(null);
@@ -117,7 +117,7 @@ public class ApplicativeTrsTest {
     ArrayList<Rule> rules = new ArrayList<Rule>();
     Variable x = TermFactory.createVar("x", type("a"));
     Variable y = TermFactory.createVar("y", type("b"));
-    FunctionSymbol f = TermFactory.createConstant("f", type("a ⇒ b ⇒ b"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
     TRS trs = TRSFactory.createApplicativeTRS(new Alphabet(symbols), rules);

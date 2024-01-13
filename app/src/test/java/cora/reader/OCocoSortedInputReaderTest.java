@@ -307,7 +307,7 @@ public class OCocoSortedInputReaderTest {
                  ") (COMMENT this is :) a comment) ";
     TRS trs = OCocoSortedInputReader.readTrsFromString(str);
     FunctionSymbol app = trs.lookupSymbol("app");
-    assertTrue(app.queryType().toString().equals("List ⇒ List ⇒ List"));
+    assertTrue(app.queryType().toString().equals("List → List → List"));
     assertTrue(trs.queryRuleCount() == 4);
     Rule appbase = trs.queryRule(0);
     Rule lenadvanced = trs.queryRule(3);

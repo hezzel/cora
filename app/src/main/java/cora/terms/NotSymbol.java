@@ -23,7 +23,7 @@ import cora.types.TypeFactory;
 /** The unary negation operator ¬. */
 class NotSymbol extends CalculationInherit {
   NotSymbol() {
-    super(TypeFactory.createArrow(TypeFactory.boolSort, TypeFactory.boolSort)); // Bool ⇒ Bool
+    super(TypeFactory.createArrow(TypeFactory.boolSort, TypeFactory.boolSort)); // Bool → Bool
   }
 
   public String queryName() {

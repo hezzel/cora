@@ -118,7 +118,7 @@ public class OCocoParserTest {
   public void testReadUnsortedSignature() {
     ParserProgram result =
       OCocoParser.readProgramFromString("(SIG (f 2) (a 0) (g 7)) (RULES )");
-    assertTrue(result.fundecs().get("f").type().toString().equals("o ⇒ o ⇒ o"));
+    assertTrue(result.fundecs().get("f").type().toString().equals("o → o → o"));
     assertTrue(result.fundecs().get("a").type().toString().equals("o"));
     assertTrue(result.fundecs().get("g").type().queryArity() == 7);
     assertTrue(result.rules().size() == 0);
@@ -137,7 +137,7 @@ public class OCocoParserTest {
   public void testReadSortedSignatureWithOneBinaryConstant() {
     LookupMap<ParserDeclaration> sig =
       OCocoParser.readDeclarations("(SIG (* int int -> int))");
-    assertTrue(sig.get("*").type().toString().equals("int ⇒ int ⇒ int"));
+    assertTrue(sig.get("*").type().toString().equals("int → int → int"));
     assertTrue(sig.size() == 1);
   }
 
@@ -146,8 +146,8 @@ public class OCocoParserTest {
     LookupMap<ParserDeclaration> sig = OCocoParser.readDeclarations(
       "(SIG (* int int -> int)(f int -> bool)\n(true -> 9))");
     assertTrue(sig.size() == 3);
-    assertTrue(sig.get("*").type().toString().equals("int ⇒ int ⇒ int"));
-    assertTrue(sig.get("f").type().toString().equals("int ⇒ bool"));
+    assertTrue(sig.get("*").type().toString().equals("int → int → int"));
+    assertTrue(sig.get("f").type().toString().equals("int → bool"));
     assertTrue(sig.get("true").type().toString().equals("9"));
   }
 
@@ -158,10 +158,10 @@ public class OCocoParserTest {
       "(SIG (f 2) (g int int -> int) (a 0) (hh 3 -> 4)) (RULES )", collector);
 
     assertTrue(sig.size() == 4);
-    assertTrue(sig.get("f").type().toString().equals("o ⇒ o ⇒ o"));
-    assertTrue(sig.get("g").type().toString().equals("int ⇒ int ⇒ int"));
+    assertTrue(sig.get("f").type().toString().equals("o → o → o"));
+    assertTrue(sig.get("g").type().toString().equals("int → int → int"));
     assertTrue(sig.get("a").type().toString().equals("o"));
-    assertTrue(sig.get("hh").type().toString().equals("3 ⇒ 4"));
+    assertTrue(sig.get("hh").type().toString().equals("3 → 4"));
     
     assertTrue(collector.queryErrorCount() == 1);
     assertTrue(collector.queryCollectedMessages().equals(
@@ -177,7 +177,7 @@ public class OCocoParserTest {
     assertTrue(collector.queryCollectedMessages().equals(
       "1:6: Expected an integer or sort declaration in brackets but got IDENTIFIER (f).\n"));
     // but recovery works!
-    assertTrue(result.fundecs().get("f").type().toString().equals("o ⇒ o ⇒ o"));
+    assertTrue(result.fundecs().get("f").type().toString().equals("o → o → o"));
     assertTrue(result.rules().size() == 1);
   }
 
@@ -191,7 +191,7 @@ public class OCocoParserTest {
       "1:6: Expected an integer or sort declaration in brackets but got IDENTIFIER (f).\n" +
       "1:18: Expected end of input but got IDENTIFIER (toot).\n"));
     // but recovery works!
-    assertTrue(sig.get("f").type().toString().equals("x ⇒ y ⇒ z"));
+    assertTrue(sig.get("f").type().toString().equals("x → y → z"));
   }
 
   @Test
@@ -204,7 +204,7 @@ public class OCocoParserTest {
       "1:6: Expected an integer or sort declaration in brackets but got IDENTIFIER (f).\n" +
       "1:22: Expected an integer or sort declaration in brackets but got IDENTIFIER (hh).\n"));
     // but recovery works!
-    assertTrue(sig.get("f").type().toString().equals("0 ⇒ g ⇒ a ⇒ b ⇒ zz"));
+    assertTrue(sig.get("f").type().toString().equals("0 → g → a → b → zz"));
     assertTrue(sig.get("hh").type().toString().equals("int"));
   }
 
@@ -222,7 +222,7 @@ public class OCocoParserTest {
     // but recovery works!
     assertTrue(sig.get("false").type().toString().equals("bool"));
     assertTrue(sig.get("true").type().toString().equals("bool"));
-    assertTrue(sig.get(">").type().toString().equals("int ⇒ int ⇒ bool"));
+    assertTrue(sig.get(">").type().toString().equals("int → int → bool"));
   }
 
   @Test
@@ -234,8 +234,8 @@ public class OCocoParserTest {
     assertTrue(collector.queryCollectedMessages().equals(
       "1:21: Expected IDENTIFIER (a sort) or the sort declaration arrow (->) but got " +
         "BRACKETCLOSE ()).\n"));
-    assertTrue(sig.get(">").type().toString().equals("int ⇒ int ⇒ bool"));
-    assertTrue(sig.get("f").type().toString().equals("o ⇒ o"));
+    assertTrue(sig.get(">").type().toString().equals("int → int → bool"));
+    assertTrue(sig.get("f").type().toString().equals("o → o"));
   }
 
   @Test
@@ -249,7 +249,7 @@ public class OCocoParserTest {
     assertTrue(sig.get("f").type().toString().equals("o"));
     assertTrue(sig.get("g").type().toString().equals("o"));
     assertTrue(sig.get("h").type().toString().equals("o"));
-    assertTrue(sig.get("b").type().toString().equals("o ⇒ o ⇒ o ⇒ o"));
+    assertTrue(sig.get("b").type().toString().equals("o → o → o → o"));
   }
 
   @Test
@@ -262,7 +262,7 @@ public class OCocoParserTest {
       "1:19: Redeclaration of function symbol f.\n" +
       "1:25: Redeclaration of function symbol g.\n"));
     assertTrue(sig.get("f").type().toString().equals("o"));
-    assertTrue(sig.get("g").type().toString().equals("o ⇒ o ⇒ o ⇒ o"));
+    assertTrue(sig.get("g").type().toString().equals("o → o → o → o"));
     assertTrue(sig.size() == 2);
   }
 
@@ -281,7 +281,7 @@ public class OCocoParserTest {
     assertTrue(collector.queryErrorCount() == 1);
     assertTrue(collector.queryCollectedMessages().equals(
       "1:23: Unexpected end of input while reading (SIG.\n"));
-    assertTrue(sig.get("f").type().toString().equals("o ⇒ o ⇒ o"));
+    assertTrue(sig.get("f").type().toString().equals("o → o → o"));
     assertTrue(sig.get("a").type().toString().equals("o"));
     assertTrue(sig.get("g").type().queryArity() == 7);
   }
@@ -294,7 +294,7 @@ public class OCocoParserTest {
     assertTrue(collector.queryErrorCount() == 1);
     assertTrue(collector.queryCollectedMessages().equals(
       "1:24: Unexpected (RULES; did you forget ) to close (SIG?\n"));
-    assertTrue(result.fundecs().get("f").type().toString().equals("o ⇒ o ⇒ o"));
+    assertTrue(result.fundecs().get("f").type().toString().equals("o → o → o"));
     assertTrue(result.fundecs().get("a").type().toString().equals("o"));
     assertTrue(result.fundecs().get("g").type().queryArity() == 7);
     assertTrue(result.rules().size() == 1);
@@ -466,7 +466,7 @@ public class OCocoParserTest {
     ParserProgram trs = OCocoParser.readProgramFromString(str);
     assertTrue(trs.fundecs().size() == 5);
     assertTrue(trs.fundecs().get("0").type().toString().equals("o"));
-    assertTrue(trs.fundecs().get("append").type().toString().equals("o ⇒ o ⇒ o"));
+    assertTrue(trs.fundecs().get("append").type().toString().equals("o → o → o"));
     assertTrue(trs.rules().size() == 2);
     assertTrue(trs.rules().get(0).toString().equals("{ [x, xs, ys] } @(append, [nil, zs]) → zs"));
   }

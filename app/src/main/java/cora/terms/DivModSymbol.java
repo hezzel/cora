@@ -25,7 +25,7 @@ class DivModSymbol extends CalculationInherit {
   private final boolean _division; // true if we are ∨, false if we are ∧
 
   DivModSymbol(boolean isDiv) {
-    // Int ⇒ Int ⇒ Int
+    // Int → Int → Int
     super(TypeFactory.createArrow(TypeFactory.intSort, TypeFactory.createArrow(
       TypeFactory.intSort, TypeFactory.intSort)));
     _division = isDiv;

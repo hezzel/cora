@@ -23,7 +23,7 @@ import cora.types.TypeFactory;
 /** The unary minus operator -. */
 class MinusSymbol extends CalculationInherit {
   MinusSymbol() {
-    super(TypeFactory.createArrow(TypeFactory.intSort, TypeFactory.intSort)); // Int ⇒ Int
+    super(TypeFactory.createArrow(TypeFactory.intSort, TypeFactory.intSort)); // Int → Int
   }
 
   public String queryName() {

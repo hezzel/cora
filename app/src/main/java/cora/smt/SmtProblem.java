@@ -191,7 +191,7 @@ public class SmtProblem {
   }
 
   /**
-   * This requires that premise ⇒ conclusion holds.  Note that all variables in both premise and
+   * This requires that premise → conclusion holds.  Note that all variables in both premise and
    * conclusion must have been created through the createIntegerVariable or createBooleanVariable
    * functions, since this guarantees that they are stored in the SmtProblem.
    */

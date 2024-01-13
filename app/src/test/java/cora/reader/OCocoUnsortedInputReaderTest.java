@@ -114,8 +114,8 @@ public class OCocoUnsortedInputReaderTest {
                                                  "  +(x, s(y)) -> s(+(x,y))\n" +
                                                  ")");
     assertTrue(trs.lookupSymbol("0").queryType().equals(TypeFactory.createSort("o")));
-    assertTrue(trs.lookupSymbol("s").queryType().toString().equals("o ⇒ o"));
-    assertTrue(trs.lookupSymbol("+").queryType().toString().equals("o ⇒ o ⇒ o"));
+    assertTrue(trs.lookupSymbol("s").queryType().toString().equals("o → o"));
+    assertTrue(trs.lookupSymbol("+").queryType().toString().equals("o → o → o"));
     assertTrue(trs.lookupSymbol("x") == null);
     assertTrue(trs.lookupSymbol("y") == null);
     assertTrue(trs.queryRuleCount() == 2);

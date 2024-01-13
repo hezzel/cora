@@ -23,7 +23,7 @@ import cora.types.TypeFactory;
 /** The binary multiplication symbol +. */
 class TimesSymbol extends CalculationInherit {
   TimesSymbol() {
-    // Int ⇒ Int ⇒ Int
+    // Int → Int → Int
     super(TypeFactory.createArrow(TypeFactory.intSort, TypeFactory.createArrow(
       TypeFactory.intSort, TypeFactory.intSort)));
   }

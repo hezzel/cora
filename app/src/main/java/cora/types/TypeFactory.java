@@ -38,7 +38,7 @@ public class TypeFactory {
   /** Creates a basic (non-theory) type by the given name. */
   public static Base createSort(String name) { return new Base(name); }
 
-  /** Creates a type of the form left ⇒ right */
+  /** Creates a type of the form left → right */
   public static Type createArrow(Type left, Type right) { return new Arrow(left, right); }
 
   /** Creates a product type from the given list. */
@@ -58,14 +58,14 @@ public class TypeFactory {
     return new Product(ImmutableList.copyOf(args));
   }
 
-  /** Creates a type of the form inp_1 ⇒...⇒ inp_n → output */
+  /** Creates a type of the form inp_1 →...→ inp_n → output */
   public static Type createSortDeclaration(List<Base> inputs, Base output) {
     Type ret = output;
     for (int i = inputs.size()-1; i >= 0; i--) ret = new Arrow(inputs.get(i), ret);
     return ret;
   }
 
-  /** Creates a type o ⇒ ... ⇒ o ⇒ o, with in total k+1 os. */
+  /** Creates a type o → ... → o → o, with in total k+1 os. */
   public static Type createUnitArrow(int arity) {
     Type ret = unitSort;
     for (int i = 0; i < arity; i++) ret = new Arrow(unitSort, ret);

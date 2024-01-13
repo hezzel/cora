@@ -107,8 +107,8 @@ class ProductTest {
 
     assertTrue(abc.toString().equals("a × b × c"));
     assertTrue(abcd.toString().equals("(a × b) × (c × d)"));
-    assertTrue(aarrbc.toString().equals("(a ⇒ b) × c"));
-    assertTrue(atimesbc.toString().equals("(a × b) ⇒ c"));
+    assertTrue(aarrbc.toString().equals("(a → b) × c"));
+    assertTrue(atimesbc.toString().equals("(a × b) → c"));
   }
 
   @Test

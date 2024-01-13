@@ -94,7 +94,7 @@ public class CoraTypesParsingTest {
     assertTrue(t.isArrowType());
     assertTrue(t.subtype(1).toString().equals("xx"));
     assertTrue(t.subtype(2).isArrowType());
-    assertTrue(t.subtype(2).toString().equals("yy ⇒ zz"));
+    assertTrue(t.subtype(2).toString().equals("yy → zz"));
   }
 
   @Test
@@ -112,7 +112,7 @@ public class CoraTypesParsingTest {
     Type t = CoraParser.readType("(xx -> yy × xx) -> zz");
     assertTrue(t.isArrowType());
     assertTrue(t.subtype(1).isArrowType());
-    assertTrue(t.subtype(1).toString().equals("xx ⇒ yy × xx"));
+    assertTrue(t.subtype(1).toString().equals("xx → yy × xx"));
     assertTrue(t.subtype(2).toString().equals("zz"));
   }
 
@@ -121,7 +121,7 @@ public class CoraTypesParsingTest {
     Type t = CoraParser.readType("(xx -> yy × xx) * zz");
     assertTrue(t.isProductType());
     assertTrue(t.subtype(1).isArrowType());
-    assertTrue(t.subtype(1).toString().equals("xx ⇒ yy × xx"));
+    assertTrue(t.subtype(1).toString().equals("xx → yy × xx"));
     assertTrue(t.subtype(2).toString().equals("zz"));
   }
 
@@ -137,7 +137,7 @@ public class CoraTypesParsingTest {
   public void testReadTypeWithBracketsInTheMiddle() {
     Type t = CoraParser.readType("a -> (b -> cd) -> e");
     assertTrue(t.isArrowType());
-    assertTrue(t.toString().equals("a ⇒ (b ⇒ cd) ⇒ e"));
+    assertTrue(t.toString().equals("a → (b → cd) → e"));
   }
 
   @Test
@@ -145,13 +145,13 @@ public class CoraTypesParsingTest {
     Type t = CoraParser.readType("(a * b) → (c -> d → e)");
     assertTrue(t.isArrowType());
     assertTrue(t.subtype(1).toString().equals("a × b"));
-    assertTrue(t.subtype(2).toString().equals("c ⇒ d ⇒ e"));
+    assertTrue(t.subtype(2).toString().equals("c → d → e"));
   }
 
   @Test
   public void testReadTheoryArrowType() {
     Type t = CoraParser.readType("Int -> (Bool -> Int) → String");
-    assertTrue(t.toString().equals("Int ⇒ (Bool ⇒ Int) ⇒ String"));
+    assertTrue(t.toString().equals("Int → (Bool → Int) → String"));
     assertTrue(t.isTheoryType());
   }
 
@@ -159,7 +159,7 @@ public class CoraTypesParsingTest {
   public void testReadTypeWithDoubleArrowRecovery() {
     ErrorCollector collector = new ErrorCollector();
     Type t = CoraParser.readType("a -> b -> -> c", false, collector);
-    assertTrue(t.toString().equals("a ⇒ b ⇒ c"));
+    assertTrue(t.toString().equals("a → b → c"));
     assertTrue(collector.queryCollectedMessages().equals(
       "1:11: Expected a type (started by a sort identifier or bracket) but got ARROW (->).\n"));
   }
@@ -192,7 +192,7 @@ public class CoraTypesParsingTest {
   public void testTypeInputEmptyBracketsRecovery() {
     ErrorCollector collector = new ErrorCollector();
     Type t = CoraParser.readType("() →  b -> c", false, collector);
-    assertTrue(t.toString().equals("b ⇒ c"));
+    assertTrue(t.toString().equals("b → c"));
     assertTrue(collector.queryCollectedMessages().equals(
       "1:2: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n"));
   }
@@ -201,7 +201,7 @@ public class CoraTypesParsingTest {
   public void testTypeMissingOutputRecovery() {
     ErrorCollector collector = new ErrorCollector();
     Type t = CoraParser.readType("b -> c →", true, collector);
-    assertTrue(t.toString().equals("b ⇒ c"));
+    assertTrue(t.toString().equals("b → c"));
     assertTrue(collector.queryCollectedMessages().equals(
       "1:9: Expected a type (started by a sort identifier or bracket) but got end of input.\n"));
   }
@@ -230,7 +230,7 @@ public class CoraTypesParsingTest {
   public void testMissingClosingbracket() {
     ErrorCollector collector = new ErrorCollector();
     Type t = CoraParser.readType("a -> (b → c \"", true, collector);
-    assertTrue(t.toString().equals("a ⇒ b ⇒ c"));
+    assertTrue(t.toString().equals("a → b → c"));
     assertTrue(collector.queryCollectedMessages().equals(
       "1:13: Incomplete string constant (ended by end of line).\n" +
       "1:13: Expected closing bracket but got STRING (\"\").\n"));
@@ -240,7 +240,7 @@ public class CoraTypesParsingTest {
   public void testMultipleTypeErrors() {
     ErrorCollector collector = new ErrorCollector(10);
     Type t = CoraParser.readType("x -> ((a -> b c) *) ->", false, collector);
-    assertTrue(t.toString().equals("x ⇒ a ⇒ b"));
+    assertTrue(t.toString().equals("x → a → b"));
     assertTrue(collector.queryCollectedMessages().equals(
       "1:15: Expected closing bracket but got IDENTIFIER (c).\n"));
   }

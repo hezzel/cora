@@ -94,7 +94,7 @@ public class ITrsInputReaderTest {
       "  eval(x) -> eval(x / 2) :|: x > 0 && !(x = 0) && (x % 2) = 0\n" +
       ")\n";
     TRS trs = ITrsInputReader.readTrsFromString(str);
-    assertTrue(trs.lookupSymbol("eval").queryType().toString().equals("Int ⇒ o"));
+    assertTrue(trs.lookupSymbol("eval").queryType().toString().equals("Int → o"));
     assertTrue(trs.lookupSymbol("/") == null);
     assertTrue(trs.queryRuleCount() == 2);
     assertTrue(trs.queryRule(0).toString().equals(
@@ -115,10 +115,10 @@ public class ITrsInputReaderTest {
       "  if(FALSE, u, v) -> v\n" +
       ")";
     TRS trs = ITrsInputReader.readTrsFromString(str);
-    assertTrue(trs.lookupSymbol("f").queryType().toString().equals("Bool ⇒ Int ⇒ Int ⇒ o"));
-    assertTrue(trs.lookupSymbol("fNat").queryType().toString().equals("Bool ⇒ Int ⇒ Int ⇒ o"));
-    assertTrue(trs.lookupSymbol("round").queryType().toString().equals("Int ⇒ Int"));
-    assertTrue(trs.lookupSymbol("if").queryType().toString().equals("Bool ⇒ Int ⇒ Int ⇒ Int"));
+    assertTrue(trs.lookupSymbol("f").queryType().toString().equals("Bool → Int → Int → o"));
+    assertTrue(trs.lookupSymbol("fNat").queryType().toString().equals("Bool → Int → Int → o"));
+    assertTrue(trs.lookupSymbol("round").queryType().toString().equals("Int → Int"));
+    assertTrue(trs.lookupSymbol("if").queryType().toString().equals("Bool → Int → Int → Int"));
   }
 
   @Test
@@ -146,7 +146,7 @@ public class ITrsInputReaderTest {
       "(VAR x)\n" +
       "(RULES f(x) -> 5 :|: x)\n";
     TRS trs = ITrsInputReader.readTrsFromString(str);
-    assertTrue(trs.lookupSymbol("f").queryType().toString().equals("Bool ⇒ Int"));
+    assertTrue(trs.lookupSymbol("f").queryType().toString().equals("Bool → Int"));
     assertTrue(trs.queryRuleCount() == 1);
     assertTrue(trs.queryRule(0).toString().equals("f(x) → 5 | x"));
   }

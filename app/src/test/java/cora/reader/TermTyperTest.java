@@ -98,7 +98,7 @@ public class TermTyperTest {
     Term t = readTerm("xx_yy", "a -> b", false, null, "");
     assertTrue(t.isVariable());
     assertFalse(t.queryVariable().isBinderVariable());
-    assertTrue(t.queryType().toString().equals("a ⇒ b"));
+    assertTrue(t.queryType().toString().equals("a → b"));
   }
 
   @Test
@@ -125,7 +125,7 @@ public class TermTyperTest {
     Variable x = TermFactory.createVar("x", type("(a -> b) -> b"));
     data.addVariable(x);
     Term t = readTerm("x", "(a -> b)", true, data,
-      "1:1: Expected term of type a ⇒ b, but got variable x which has type (a ⇒ b) ⇒ b.\n");
+      "1:1: Expected term of type a → b, but got variable x which has type (a → b) → b.\n");
   }
 
   @Test
@@ -192,7 +192,7 @@ public class TermTyperTest {
   @Test
   public void testReadEmptyApplicationWithIncorrectType() {
     Term t = readTerm("f()", "b", false, null, "1:1: Type error: expected term of " +
-      "type b, but got f of type a ⇒ b ⇒ c ⇒ d.\n");
+      "type b, but got f of type a → b → c → d.\n");
     assertTrue(t.equals(TermFactory.createConstant("f", type("b"))));
   }
 
@@ -209,13 +209,13 @@ public class TermTyperTest {
     Term t = readTerm("f(aa,x)", null, false, null, "");
     assertTrue(t.vars().size() == 1);
     assertTrue(t.toString().equals("f(aa, x)"));
-    assertTrue(t.queryType().toString().equals("c ⇒ d"));
+    assertTrue(t.queryType().toString().equals("c → d"));
   }
 
   @Test
   public void testReadApplicationWithTooManyArgsNoTypeGiven() {
     Term t = readTerm("h(aa, bb)", null, false, null,
-      "1:1: Arity error: h has type (c ⇒ d) ⇒ b, but 2 arguments are given.\n");
+      "1:1: Arity error: h has type (c → d) → b, but 2 arguments are given.\n");
     assertTrue(t.vars().size() == 0);
     assertTrue(t.toString().equals("h(aa, bb)"));
     assertTrue(t.queryHead().equals(TermFactory.createConstant("h", type("a → b → b"))));
@@ -224,7 +224,7 @@ public class TermTyperTest {
   @Test
   public void testReadApplicationWithTooManyArgsOutputTypeGiven() {
     Term t = readTerm("h(aa, bb)", "x", false, null,
-      "1:1: Arity error: h has type (c ⇒ d) ⇒ b, but 2 arguments are given.\n");
+      "1:1: Arity error: h has type (c → d) → b, but 2 arguments are given.\n");
     assertTrue(t.toString().equals("h(aa, bb)"));
     assertTrue(t.queryHead().equals(TermFactory.createConstant("h", type("a → b → x"))));
   }
@@ -329,7 +329,7 @@ public class TermTyperTest {
     Term t = readTerm("λx :: a. f(x, bb, y)", null, false, null, "");
     assertTrue(t.toString().equals("λx.f(x, bb, y)"));
     assertTrue(t.vars().size() == 1);
-    assertTrue(t.queryType().toString().equals("a ⇒ d"));
+    assertTrue(t.queryType().toString().equals("a → d"));
   }
 
   @Test
@@ -337,7 +337,7 @@ public class TermTyperTest {
     Term t = readTerm("λx :: a, y ::c. f(x, bb, y)", null, false, null, "");
     assertTrue(t.toString().equals("λx.λy.f(x, bb, y)"));
     assertTrue(t.vars().size() == 0);
-    assertTrue(t.queryType().toString().equals("a ⇒ c ⇒ d"));
+    assertTrue(t.queryType().toString().equals("a → c → d"));
   }
 
   @Test
@@ -352,7 +352,7 @@ public class TermTyperTest {
     Term t = readTerm("\\x::a.f(x,bb, cc)", "a -> d", true, null, "");
     assertTrue(t.toString().equals("λx.f(x, bb, cc)"));
     assertTrue(t.vars().size() == 0);
-    assertTrue(t.queryType().toString().equals("a ⇒ d"));
+    assertTrue(t.queryType().toString().equals("a → d"));
   }
 
   @Test
@@ -360,18 +360,18 @@ public class TermTyperTest {
     Term t = readTerm("λx.f(x,bb, cc)", "a -> d", true, null, "");
     assertTrue(t.toString().equals("λx.f(x, bb, cc)"));
     assertTrue(t.vars().size() == 0);
-    assertTrue(t.queryType().toString().equals("a ⇒ d"));
+    assertTrue(t.queryType().toString().equals("a → d"));
   }
 
   @Test
   public void testReadAbstractionWithTypeExpectationGivenThatDoesNotMatchInput() {
     Term t = readTerm("\\x::a.f(x,bb, cc)", "b -> d", false, null,
-      "1:2: Type error: expected subterm of type b ⇒ d, but got abstraction with variable of type a.\n" +
+      "1:2: Type error: expected subterm of type b → d, but got abstraction with variable of type a.\n" +
       "1:9: Expected term of type a, but got variable x which has type b.\n");
     assertTrue(t.toString().equals("λx.f(x, bb, cc)"));
     assertTrue(t.vars().size() == 0);
     assertTrue(t.queryAbstractionSubterm().vars().size() == 0);
-    assertTrue(t.queryType().toString().equals("b ⇒ d"));
+    assertTrue(t.queryType().toString().equals("b → d"));
   }
 
   @Test
@@ -380,7 +380,7 @@ public class TermTyperTest {
       "1:7: Type error: expected term of type c, but got f(x, bb, cc) of type d.\n");
     assertTrue(t.toString().equals("λx.f(x, bb, cc)"));
     assertTrue(t.vars().size() == 0);
-    assertTrue(t.queryType().toString().equals("a ⇒ c"));
+    assertTrue(t.queryType().toString().equals("a → c"));
   }
 
   @Test
@@ -390,7 +390,7 @@ public class TermTyperTest {
         "abstraction.\n");
     assertTrue(t.toString().equals("λx.λy1.λz.f(x, y, z)"));
     assertTrue(t.vars().size() == 1);
-    assertTrue(t.queryType().toString().equals("a ⇒ o ⇒ c ⇒ d"));
+    assertTrue(t.queryType().toString().equals("a → o → c → d"));
   }
 
   @Test
@@ -410,7 +410,7 @@ public class TermTyperTest {
       "1:2: Cannot derive type of binder x from context; it should be denoted directly " +
       "in the abstraction.\n");
     assertTrue(t.toString().equals("λx1.x"));
-    assertTrue(t.queryType().toString().equals("o ⇒ a"));
+    assertTrue(t.queryType().toString().equals("o → a"));
   }
 
   @Test
@@ -419,7 +419,7 @@ public class TermTyperTest {
     data.addVariable(TermFactory.createBinder("x", type("a")));
     Term t = readTerm("λx::b.x", null, false, data, "");
     assertTrue(t.toString().equals("λx.x"));
-    assertTrue(t.queryType().toString().equals("b ⇒ b"));
+    assertTrue(t.queryType().toString().equals("b → b"));
     assertTrue(data.lookupVariable("x").queryType().toString().equals("a"));
   }
 
@@ -429,7 +429,7 @@ public class TermTyperTest {
     data.addVariable(TermFactory.createVar("x", type("a")));
     Term t = readTerm("λx::b.x", null, false, data, "");
     assertTrue(t.toString().equals("λx.x"));
-    assertTrue(t.queryType().toString().equals("b ⇒ b"));
+    assertTrue(t.queryType().toString().equals("b → b"));
     assertTrue(data.lookupVariable("x").queryType().toString().equals("a"));
   }
 
@@ -438,7 +438,7 @@ public class TermTyperTest {
     Term t = readTerm("λaa::b.aa", null, true, null,
       "1:2: Ambiguous binder: this name has already been declared as a function symbol.\n");
     assertTrue(t.toString().equals("λaa.aa"));
-    assertTrue(t.queryType().toString().equals("b ⇒ a"));
+    assertTrue(t.queryType().toString().equals("b → a"));
   }
 
   @Test
@@ -448,8 +448,8 @@ public class TermTyperTest {
     Term t = readTerm("λx::a.x[ x ]", null, true, data,
       "1:2: Ambiguous binder: this name has already been declared as a meta-variable.\n");
     assertTrue(t.toString().equals("λx1.x⟨x1⟩"));
-    assertTrue(t.queryType().toString().equals("a ⇒ b"));
-    assertTrue(data.lookupMetaVariable("x").queryType().toString().equals("a ⇒ b"));
+    assertTrue(t.queryType().toString().equals("a → b"));
+    assertTrue(data.lookupMetaVariable("x").queryType().toString().equals("a → b"));
   }
 
   @Test
@@ -457,7 +457,7 @@ public class TermTyperTest {
     SymbolData data = generateSignature();
     Term t = readTerm("λx::a, y :: b, x :: c.x", null, false, data, "");
     assertTrue(t.toString().equals("λx.λy.λx1.x1"));
-    assertTrue(t.queryType().toString().equals("a ⇒ b ⇒ c ⇒ c"));
+    assertTrue(t.queryType().toString().equals("a → b → c → c"));
     assertTrue(data.lookupVariable("x") == null);
   }
 
@@ -480,7 +480,7 @@ public class TermTyperTest {
   public void testGoodTupleWithoutType() {
     Term t = readTerm("(| aa, f(x), 4 |)", null, true, null, "");
     assertTrue(t.isTuple());
-    assertTrue(t.queryType().toString().equals("a × (b ⇒ c ⇒ d) × Int"));
+    assertTrue(t.queryType().toString().equals("a × (b → c → d) × Int"));
     assertTrue(t.toString().equals("⦇aa, f(x), 4⦈"));
   }
 
@@ -493,28 +493,28 @@ public class TermTyperTest {
   @Test
   public void testTupleWithIncorrectType() {
     Term t = readTerm("⦇ aa, true ⦈", "(a → b) * Bool", true, null,
-      "1:3: Expected term of type a ⇒ b, but got function symbol aa which has type a.\n");
+      "1:3: Expected term of type a → b, but got function symbol aa which has type a.\n");
     assertTrue(t.isTuple());
   }
 
   @Test
   public void testTupleWithIncorrectLength() {
     Term t = readTerm("⦇ aa, true ⦈", "(a → b) * Bool * Int", true, null,
-      "1:1: Type error: expected a term of type (a ⇒ b) × Bool × Int but got a tuple " +
+      "1:1: Type error: expected a term of type (a → b) × Bool × Int but got a tuple " +
       "of length 2.\n");
     assertFalse(t.isTuple());
     assertTrue(t.toString().equals("⦇aa, true⦈"));
-    assertTrue(t.queryType().toString().equals("(a ⇒ b) × Bool × Int"));
+    assertTrue(t.queryType().toString().equals("(a → b) × Bool × Int"));
   }
 
   @Test
   public void testTupleWithNonTupleType() {
     Term t = readTerm("⦇ aa, true ⦈", "a → b", false, null,
-      "1:1: Type error: expected a term of type a ⇒ b but got a tuple, which necessarily has " +
+      "1:1: Type error: expected a term of type a → b but got a tuple, which necessarily has " +
       "a product type.\n");
     assertFalse(t.isTuple());
     assertTrue(t.toString().equals("⦇aa, true⦈"));
-    assertTrue(t.queryType().toString().equals("a ⇒ b"));
+    assertTrue(t.queryType().toString().equals("a → b"));
   }
 
   @Test
@@ -531,7 +531,7 @@ public class TermTyperTest {
     Term t = readTerm("\\x :: a y.f(x,y,cc)", "a -> b -> d", false, null,
       "1:9: Expected a comma or dot but got IDENTIFIER (y).\n");
     assertTrue(t.toString().equals("λx.λy.f(x, y, cc)"));
-    assertTrue(t.queryType().toString().equals("a ⇒ b ⇒ d"));
+    assertTrue(t.queryType().toString().equals("a → b → d"));
   }
 
   @Test
@@ -565,8 +565,8 @@ public class TermTyperTest {
   public void testDeclaredMetaVariableWithEmptyArgumentsListIncorrectTypeGiven() {
     SymbolData data = generateSignature();
     data.addVariable(TermFactory.createVar("Z", type("b → a")));
-    Term t = readTerm("Z⟨⟩", "a → b", true, data, "1:1: Expected term of type a ⇒ b, " +
-      "but got Z, which was previously used as a variable of type b ⇒ a.\n");
+    Term t = readTerm("Z⟨⟩", "a → b", true, data, "1:1: Expected term of type a → b, " +
+      "but got Z, which was previously used as a variable of type b → a.\n");
     assertTrue(t.isVariable());
     assertTrue(t.toString().equals("Z"));
     assertTrue(t.queryType().equals(type("a → b")));
@@ -622,10 +622,10 @@ public class TermTyperTest {
     Term t = readTerm("Z⟨x⟩", "b -> c", false, data, "");
     assertTrue(t.isMetaApplication());
     assertTrue(t.toString().equals("Z⟨x⟩"));
-    assertTrue(t.queryType().toString().equals("b ⇒ c"));
+    assertTrue(t.queryType().toString().equals("b → c"));
     MetaVariable z = data.lookupMetaVariable("Z");
     assertTrue(z.queryArity() == 1);
-    assertTrue(z.queryType().toString().equals("a ⇒ b ⇒ c"));
+    assertTrue(z.queryType().toString().equals("a → b → c"));
   }
 
   @Test
@@ -687,7 +687,7 @@ public class TermTyperTest {
       "1:1: Unexpected meta-application with meta-variable f, which was previously declared " +
         "as a function symbol.\n" +
       "1:6: Undeclared symbol: y.  Type cannot easily be deduced from context.\n");
-    assertTrue(t.queryType().toString().equals("c ⇒ e"));
+    assertTrue(t.queryType().toString().equals("c → e"));
     assertTrue(t.toString().equals("f⟨aa, y⟩"));
   }
 
@@ -710,8 +710,8 @@ public class TermTyperTest {
     assertTrue(t.isMetaApplication());
     assertTrue(t.toString().equals("Z⟨x⟩"));
     assertTrue(t.queryType().toString().equals("b"));
-    assertTrue(data.lookupVariable("Z").queryType().toString().equals("a ⇒ a"));
-    assertTrue(data.lookupMetaVariable("Z").queryType().toString().equals("b ⇒ b"));
+    assertTrue(data.lookupVariable("Z").queryType().toString().equals("a → a"));
+    assertTrue(data.lookupMetaVariable("Z").queryType().toString().equals("b → b"));
   }
 
   @Test
@@ -725,7 +725,7 @@ public class TermTyperTest {
     assertTrue(t.toString().equals("Z⟨x⟩"));
     assertTrue(t.queryType().toString().equals("zot"));
     assertTrue(data.lookupVariable("x") == null);
-    assertTrue(t.queryMetaVariable().queryType().toString().equals("o ⇒ zot"));
+    assertTrue(t.queryMetaVariable().queryType().toString().equals("o → zot"));
   }
 
   @Test
@@ -737,8 +737,8 @@ public class TermTyperTest {
       "with 2 arguments.\n");
     assertTrue(t.isMetaApplication());
     assertTrue(t.toString().equals("Z⟨aa, y⟩"));
-    assertTrue(t.queryType().toString().equals("a ⇒ a"));
-    assertTrue(t.queryMetaVariable().queryType().toString().equals("a ⇒ o ⇒ a ⇒ a"));
+    assertTrue(t.queryType().toString().equals("a → a"));
+    assertTrue(t.queryMetaVariable().queryType().toString().equals("a → o → a → a"));
   }
 
   @Test
@@ -760,7 +760,7 @@ public class TermTyperTest {
     assertTrue(t.isMetaApplication());
     assertTrue(t.toString().equals("Z⟨aa, Y⟨x⟩, cc⟩"));
     assertTrue(data.lookupVariable("x").queryType().toString().equals("a"));
-    assertTrue(data.lookupMetaVariable("Z").queryType().toString().equals("a ⇒ b ⇒ c ⇒ d"));
+    assertTrue(data.lookupMetaVariable("Z").queryType().toString().equals("a → b → c → d"));
   }
 
   @Test
@@ -902,7 +902,7 @@ public class TermTyperTest {
       "occur in terms, this is considered syntactic sugar for a + (-b); it cannot be done in " +
       "a partially applied way.  If you want to use binary subtraction, please encode it using " +
       "a helper function symbol.\n");
-    assertTrue(t.queryType().toString().equals("Int ⇒ Bool ⇒ Int"));
+    assertTrue(t.queryType().toString().equals("Int → Bool → Int"));
     t = readTerm("[-](3)", null, true, null, "");
     assertTrue(t.toString().equals("-3"));
     assertFalse(t.isApplication());

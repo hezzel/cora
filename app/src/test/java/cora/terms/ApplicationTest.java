@@ -118,7 +118,7 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.isApplication());
     assertTrue(t.queryRoot().equals(new Constant("f", type)));
     assertTrue(t.queryHead().equals(t.queryRoot()));
-    assertTrue(t.queryHead().queryType().toString().equals("a ⇒ b ⇒ a"));
+    assertTrue(t.queryHead().queryType().toString().equals("a → b → a"));
     assertTrue(t.queryType().equals(baseType("a")));
     assertTrue(t.isClosed());
     assertTrue(t.isGround());
@@ -142,7 +142,7 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.isApplication());
     assertTrue(t.queryVariable().toString().equals("x"));
     assertTrue(t.queryHead().equals(t.queryVariable()));
-    assertTrue(t.queryHead().queryType().toString().equals("a ⇒ b ⇒ a"));
+    assertTrue(t.queryHead().queryType().toString().equals("a → b → a"));
     assertTrue(t.queryType().equals(baseType("a")));
     assertTrue(t.toString().equals("x(c, g(y))"));
     assertTrue(t.isClosed());
@@ -161,7 +161,7 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.isTheoryTerm());
     assertFalse(t.isValue());
     assertTrue(t.toValue() == null);
-    // z(0) with z :: Int ⇒ a
+    // z(0) with z :: Int → a
     Var z = new Var("z", arrowType(i, baseType("a")));
     t = z.apply(zero);
     assertFalse(t.isTheoryTerm());

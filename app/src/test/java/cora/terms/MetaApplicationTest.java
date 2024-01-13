@@ -161,19 +161,19 @@ class MetaApplicationTest extends TermTestFoundation {
 
   @Test
   public void testTheory() {
-    // X[0] with X :: Int ⇒ a
+    // X[0] with X :: Int → a
     Term zero = new IntegerValue(0);
     Term s = makeMeta("X", zero, baseType("a"));
     assertFalse(s.isTheoryTerm());
     assertFalse(s.isValue());
 
-    // Y[o] with Y :: Int ⇒ Int but o not a theory term
+    // Y[o] with Y :: Int → Int but o not a theory term
     Type i = zero.queryType();
     s = makeMeta("Y", new Constant("o", i), i);
     assertFalse(s.isTheoryTerm());
     assertTrue(s.toValue() == null);
 
-    // Z[λx.x,y] with Z :: (Int ⇒ Int) ⇒ String ⇒ Bool
+    // Z[λx.x,y] with Z :: (Int → Int) → String → Bool
     Variable x = new Binder("x", i);
     Variable y = new Var("y", TypeFactory.stringSort);
     Term abs = new Abstraction(x, x);
@@ -214,7 +214,7 @@ class MetaApplicationTest extends TermTestFoundation {
     assertFalse(s.isPattern());
   }
 
-  /** @return Z⟨g(x),c⟩ :: a ⇒ b */
+  /** @return Z⟨g(x),c⟩ :: a → b */
   private Term createTestTerm() {
     Type type = arrowType(baseType("a"), arrowType(baseType("b"), arrowType("a", "b")));
     MetaVariable z = TermFactory.createMetaVar("Z", type, 2);

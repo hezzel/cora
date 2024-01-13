@@ -186,7 +186,7 @@ class AbstractionTest extends TermTestFoundation {
     Variable x = new Binder("x", arrowType("o", "o"));
     Term abs = makeTerm(x);
 
-    assertEquals("(o ⇒ o) ⇒ b", abs.queryType().toString());
+    assertEquals("(o → o) → b", abs.queryType().toString());
     assertFalse(abs.isVariable());
     assertFalse(abs.isConstant());
     assertFalse(abs.isFunctionalTerm());

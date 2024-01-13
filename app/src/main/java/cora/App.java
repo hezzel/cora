@@ -77,7 +77,7 @@ public class App {
 
       do {
         term = trs.leftmostInnermostReduce(term);
-        if (term != null) System.out.println("⇒ " + term.toString());
+        if (term != null) System.out.println("→ " + term.toString());
       } while (term != null);
       */
             if (Horpo.applicable(trs)) {

@@ -33,7 +33,7 @@ public record Arrow(Type left, Type right) implements Type {
       case Pair(Arrow(_, _), _), Pair(Product(_), _) ->
         outLeft.append("(").append(leftStr).append(")");
     }
-    return outLeft.append(" ⇒ ").append(rightStr).toString();
+    return outLeft.append(" → ").append(rightStr).toString();
   }
 
   /** Returns true if all sorts in the type are theory sorts. */

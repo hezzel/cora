@@ -42,15 +42,15 @@ public interface MetaVariable extends Replaceable {
   int queryArity();
 
   /**
-   * @return σ_i if the current meta-variable has a type [σ_1 x ... x σ_k] ⇒ τ
+   * @return σ_i if the current meta-variable has a type [σ_1 x ... x σ_k] → τ
    * (and 1 ≤ i ≤ k = queryArity())
    */
   Type queryInputType(int i);
 
-  /** @return τ if the current meta-variable has a type [σ_1 x ... x σ_k] ⇒ τ */
+  /** @return τ if the current meta-variable has a type [σ_1 x ... x σ_k] → τ */
   Type queryOutputType();
 
-  /** @return σ_1 ⇒ ... ⇒ σ_k ⇒ τ if the current meta-variable has a type [σ_1 x ... x σ_k] ⇒ τ */
+  /** @return σ_1 → ... → σ_k → τ if the current meta-variable has a type [σ_1 x ... x σ_k] → τ */
   Type queryType();
 }
 

@@ -76,7 +76,7 @@ class TupleTest extends TermTestFoundation {
     Term tuple4 = new Tuple(new IntegerValue(3), new BooleanValue(false));
 
     assertTrue(tuple.toString().equals("⦇a, λx.f(x), ⦇f(a), y⦈⦈"));
-    assertTrue(tuple.queryType().toString().equals("N × (N ⇒ M) × (M × P)"));
+    assertTrue(tuple.queryType().toString().equals("N × (N → M) × (M × P)"));
     assertFalse(tuple.isVariable());
     assertFalse(tuple2.isVariable());
     assertFalse(tuple.isConstant());
