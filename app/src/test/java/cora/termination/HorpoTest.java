@@ -24,7 +24,7 @@ import cora.reader.CoraInputReader;
 
 public class HorpoTest {
   private TRS makeTrs(String txt) {
-    return CoraInputReader.readProgramFromString(txt);
+    return CoraInputReader.readTrsFromString(txt);
   }
 
 /**

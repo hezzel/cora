@@ -42,7 +42,7 @@ public class App {
     private static TRS readInput(String file) throws Exception {
         String extension = getExtension(file);
         if (extension.equals("trs")) return OCocoInputReader.readTrsFromFile(file);
-        else return CoraInputReader.readProgramFromFile(file);
+        else return CoraInputReader.readTrsFromFile(file);
     }
 
     private static void readParameters(String[] args) {

@@ -232,7 +232,7 @@ public class CoraInputReader extends TermTyper {
    * Parses the given program, and returns the TRS that it defines.
    * Here "kind" should be the kind of TRS (one of the constants defined at the head of the class).
    */
-  public static TRS readProgramFromString(String str, int kind) {
+  public static TRS readTrsFromString(String str, int kind) {
     boolean constrained = kind == CORA || kind == LCTRS || kind == LCSTRS;
     ErrorCollector collector = new ErrorCollector();
     ParserProgram trs = CoraParser.readProgramFromString(str, constrained, collector);
@@ -246,12 +246,12 @@ public class CoraInputReader extends TermTyper {
    * Parses the given program, and returns the TRS that it defines.  This assumes the input is
    * the most permissive format currently supported.
    */
-  public static TRS readProgramFromString(String str) {
-    return readProgramFromString(str, CORA);
+  public static TRS readTrsFromString(String str) {
+    return readTrsFromString(str, CORA);
   }
 
   /** Reads the given file, parses the program in it, and returns the TRS that it defines. */
-  public static TRS readProgramFromFile(String filename) throws IOException {
+  public static TRS readTrsFromFile(String filename) throws IOException {
     ErrorCollector collector = new ErrorCollector();
     int kind = CORA;
     String extension =

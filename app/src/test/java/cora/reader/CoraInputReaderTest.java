@@ -290,7 +290,7 @@ public class CoraInputReaderTest {
 
   @Test
   public void testShortFirstOrderProgram() {
-    TRS trs = CoraInputReader.readProgramFromString(
+    TRS trs = CoraInputReader.readTrsFromString(
       "0 :: N s :: N -> N add :: N -> N -> N add(0,y) -> y add(s(x),y) -> s(add(x,y))",
       CoraInputReader.MSTRS);
     assertTrue(trs.lookupSymbol("0").queryType().toString().equals("N"));
@@ -302,7 +302,7 @@ public class CoraInputReaderTest {
 
   @Test
   public void testWeirdProgram() {
-    TRS trs = CoraInputReader.readProgramFromString(
+    TRS trs = CoraInputReader.readTrsFromString(
       "f :: a -> a -> a b :: b f(x,x) -> x b -> b c :: a",
       CoraInputReader.MSTRS);
     assertTrue(trs.lookupSymbol("f").queryType().toString().equals("a ⇒ a ⇒ a"));
@@ -314,7 +314,7 @@ public class CoraInputReaderTest {
 
   @Test
   public void testApplicativeNonPatternTRS() {
-    TRS trs = CoraInputReader.readProgramFromString(
+    TRS trs = CoraInputReader.readTrsFromString(
       "3 :: Int 7 :: Int f :: Bool -> Int -> Bool\n" +
       "{X :: Int -> Int -> Int -> Bool} f(X(3,y,7), y) -> X(7,3,y)",
       CoraInputReader.STRS);
@@ -327,7 +327,7 @@ public class CoraInputReaderTest {
 
   @Test
   public void testNoVariableConflictsBetweenRules() {
-    TRS trs = CoraInputReader.readProgramFromString(
+    TRS trs = CoraInputReader.readTrsFromString(
         "f :: a -> a  g :: b -> b f(x) -> x  g(x) -> x");
     assertTrue(!trs.queryRule(0).queryRightSide().equals(trs.queryRule(1).queryRightSide()));
   }
@@ -335,7 +335,7 @@ public class CoraInputReaderTest {
   @Test
   public void testSTRSWithUndeclaredVariable() {
     try {
-      TRS trs = CoraInputReader.readProgramFromString(
+      TRS trs = CoraInputReader.readTrsFromString(
         "3 :: Int 7 :: Int f :: Bool -> Int -> Bool\n" +
         "f(X(3,y,7), y) -> X(7,3,y)", CoraInputReader.AMS);
     }
@@ -351,7 +351,7 @@ public class CoraInputReaderTest {
   @Test
   public void testReadRuleWithInconsistentTypes() {
     try {
-      TRS trs = CoraInputReader.readProgramFromString("a :: type1 b :: type2 a -> b");
+      TRS trs = CoraInputReader.readTrsFromString("a :: type1 b :: type2 a -> b");
     }
     catch (ParseError e) {
       assertTrue(e.getMessage().equals("1:28: Expected term of type type1, but got function " +
@@ -364,7 +364,7 @@ public class CoraInputReaderTest {
   @Test
   public void testMultipleErrorsWithRules() {
     try {
-      TRS trs = CoraInputReader.readProgramFromString(
+      TRS trs = CoraInputReader.readTrsFromString(
         "f :: nat -> nat\n" +
         "2 :: nat\n" +
         "f(x) -> g(2,x)\n" +
@@ -388,7 +388,7 @@ public class CoraInputReaderTest {
   @Test
   public void testMultipleErrorsWithConstrainedRules() {
     try {
-      TRS trs = CoraInputReader.readProgramFromString(
+      TRS trs = CoraInputReader.readTrsFromString(
         "f :: Int -> Int\n" +
         "f(x) -> f(x + 2 | x < 0 \n" +
         "f(x) -> x | x > 0)\n" +
@@ -413,7 +413,7 @@ public class CoraInputReaderTest {
   @Test
   public void testNotFirstOrderDueToSymbol() {
     try {
-      TRS trs = CoraInputReader.readProgramFromString(
+      TRS trs = CoraInputReader.readTrsFromString(
         "f :: nat -> nat g :: (nat -> nat) -> nat f(x) → x", CoraInputReader.MSTRS);
     }
     catch (ParseError e) {
@@ -427,7 +427,7 @@ public class CoraInputReaderTest {
   @Test
   public void testNotFirstOrderDueToRule() {
     try {
-      TRS trs = CoraInputReader.readProgramFromString(
+      TRS trs = CoraInputReader.readTrsFromString(
         "f :: nat -> nat { F :: nat -> nat } f(F(x)) → x", CoraInputReader.MSTRS);
     }
     catch (ParseError e) {
@@ -441,7 +441,7 @@ public class CoraInputReaderTest {
   @Test
   public void testNotApplicative() {
     try {
-      TRS trs = CoraInputReader.readProgramFromString(
+      TRS trs = CoraInputReader.readTrsFromString(
         "f :: (nat -> nat) -> nat f(F) → f(λx.F(x))", CoraInputReader.STRS);
     }
     catch (ParseError e) {
@@ -455,7 +455,7 @@ public class CoraInputReaderTest {
   @Test
   public void testNotCFS() {
     try {
-      TRS trs = CoraInputReader.readProgramFromString(
+      TRS trs = CoraInputReader.readTrsFromString(
         "map :: (nat -> nat) -> list -> list nil :: list map(λx.Z[x], nil) → nil",
         CoraInputReader.CFS);
     }
@@ -469,7 +469,7 @@ public class CoraInputReaderTest {
 
   @Test
   public void testReadAMS() {
-    TRS trs = CoraInputReader.readProgramFromString(
+    TRS trs = CoraInputReader.readTrsFromString(
       "map :: (nat -> nat) -> list -> list nil :: list map(λx.Z[x], nil) → nil",
       CoraInputReader.AMS);
     assertTrue(trs.queryRule(0).queryLeftSide().isPattern());
