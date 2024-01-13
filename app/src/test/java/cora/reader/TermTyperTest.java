@@ -684,7 +684,8 @@ public class TermTyperTest {
   @Test
   public void testMetaVariableAlreadyDeclaredAsFunctionSymbolWithTypeExpected() {
     Term t = readTerm("f⟨aa,y]", "c → e", true, null,
-      "1:1: Unexpected meta-application with meta-variable f, which was previously declared as a function symbol.\n" +
+      "1:1: Unexpected meta-application with meta-variable f, which was previously declared " +
+        "as a function symbol.\n" +
       "1:6: Undeclared symbol: y.  Type cannot easily be deduced from context.\n");
     assertTrue(t.queryType().toString().equals("c ⇒ e"));
     assertTrue(t.toString().equals("f⟨aa, y⟩"));

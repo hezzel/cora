@@ -59,7 +59,7 @@ public class Token {
   }
 
   /**
-   * Returns true if the position of the current token is before the position of the given toekn.
+   * Returns true if the position of the current token is before the position of the given token.
    * Note that not all positions are comparable.
    */
   public boolean before(Token other) {
