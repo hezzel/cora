@@ -23,11 +23,11 @@ import cora.exceptions.NullInitialisationError;
 import cora.types.*;
 import cora.terms.*;
 import cora.terms.position.Position;
-import cora.parsing.CoraInputReader;
+import cora.reader.CoraInputReader;
 
 public class ApplicativeTrsTest {
   private Type type(String str) {
-    return CoraInputReader.readTypeFromString(str);
+    return CoraInputReader.readType(str);
   }
 
   private TRS createTermRewritingSystem() {
@@ -138,7 +138,7 @@ public class ApplicativeTrsTest {
     // subterms, so the innermost redex takes precedence
     TRS trs = createTermRewritingSystem();
     String str = "f(g(a), a, i(g(j(a,b), b, a)))";
-    Term term = CoraInputReader.readTermFromString(str, trs);
+    Term term = CoraInputReader.readTerm(str, trs);
     Position pos = trs.leftmostInnermostRedexPosition(term);
     assertTrue(pos.toString().equals("3.1.ε"));
   }
@@ -147,7 +147,7 @@ public class ApplicativeTrsTest {
   public void testLeftmostInnermostReduction() {
     TRS trs = createTermRewritingSystem();
     String str = "f(g(a), a, i(g(j(a,b), b, a)))";
-    Term term = CoraInputReader.readTermFromString(str, trs);
+    Term term = CoraInputReader.readTerm(str, trs);
     term = trs.leftmostInnermostReduce(term);
     assertTrue(term.toString().equals("f(g(a), a, i(g(a, b, j(a, a))))"));
     term = trs.leftmostInnermostReduce(term);

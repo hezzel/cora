@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 import cora.terms.FunctionSymbol;
 import cora.terms.TheoryFactory;
 import cora.rewriting.TRS;
-import cora.parsing.CoraInputReader;
+import cora.reader.CoraInputReader;
 
 public class HorpoTest {
   private TRS makeTrs(String txt) {

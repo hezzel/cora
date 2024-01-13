@@ -24,11 +24,11 @@ import cora.exceptions.TypingError;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;
-import cora.parsing.CoraInputReader;
+import cora.reader.CoraInputReader;
 
 public class RuleTest {
   private Type type(String txt) {
-    try { return CoraInputReader.readTypeFromString(txt); }
+    try { return CoraInputReader.readType(txt); }
     catch (Exception e) { System.out.println(e); return null; }
   }
 

@@ -19,8 +19,8 @@ import com.google.common.collect.ImmutableList;
 import cora.config.Config;
 import cora.reader.OCocoInputReader;
 import cora.rewriting.TRS;
-import cora.parsing.CoraInputReader;
-import cora.parsing.TrsInputReader;
+import cora.reader.CoraInputReader;
+import cora.reader.OCocoInputReader;
 import cora.termination.Horpo;
 import cora.types.*;
 

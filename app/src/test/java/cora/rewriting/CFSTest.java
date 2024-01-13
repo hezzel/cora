@@ -23,11 +23,11 @@ import cora.exceptions.NullInitialisationError;
 import cora.types.*;
 import cora.terms.*;
 import cora.terms.position.Position;
-import cora.parsing.CoraInputReader;
+import cora.reader.CoraInputReader;
 
 public class CFSTest {
   private Type type(String str) {
-    return CoraInputReader.readTypeFromString(str);
+    return CoraInputReader.readType(str);
   }
 
   private TRS createTermRewritingSystem(boolean includeEta) {
@@ -151,7 +151,7 @@ public class CFSTest {
   public void testLeftmostInnermostRedexIsRuleRedex() {
     TRS trs = createTermRewritingSystem(true);
     String str = "f(g(a, b, a), λz.a)";
-    Term term = CoraInputReader.readTermFromString(str, trs);
+    Term term = CoraInputReader.readTerm(str, trs);
     Position pos = trs.leftmostInnermostRedexPosition(term);
     assertTrue(pos.toString().equals("1.ε"));
   }
@@ -160,7 +160,7 @@ public class CFSTest {
   public void testLeftmostInnermostRedexIsBetaRedex() {
     TRS trs = createTermRewritingSystem(false);
     String str = "f(g(a, (λx::A.x)(b), a), λz.a)";
-    Term term = CoraInputReader.readTermFromString(str, trs);
+    Term term = CoraInputReader.readTerm(str, trs);
     Position pos = trs.leftmostInnermostRedexPosition(term);
     assertTrue(pos.toString().equals("1.2.ε"));
   }
@@ -200,7 +200,7 @@ public class CFSTest {
   public void testLeftmostInnermostReduction() {
     TRS trs = createTermRewritingSystem(true);
     String str = "f(g(a, (λx::A.x)(b), a), λz.a)";
-    Term term = CoraInputReader.readTermFromString(str, trs);
+    Term term = CoraInputReader.readTerm(str, trs);
     term = trs.leftmostInnermostReduce(term);
     assertTrue(term.toString().equals("f(g(a, b, a), λz.a)"));
     term = trs.leftmostInnermostReduce(term);

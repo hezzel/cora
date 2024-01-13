@@ -1,6 +1,6 @@
 package cora.termination.dependency_pairs;
 
-import cora.parsing.CoraInputReader;
+import cora.reader.CoraInputReader;
 import cora.terms.TermFactory;
 import cora.terms.Variable;
 import cora.types.Type;
@@ -59,8 +59,7 @@ class DependencyPairsTest {
 
   @Test
   void testToDependencyPairType() {
-    Type ty =
-      CoraInputReader.readTypeFromString("Bool");
+    Type ty = CoraInputReader.readType("Bool");
     Type depTy = DependencyPairs.toDependencyPairType(ty);
 
     assumingThat(ty.isBaseType() || ty.isProductType(),  () -> {
@@ -77,8 +76,7 @@ class DependencyPairsTest {
   void testGenerateSharpFn() {
     Term x = TermFactory.createVar(TypeFactory.boolSort);
     Term f = TermFactory.
-      createConstant("f",
-        CoraInputReader.readTypeFromString("Bool -> Int")
+      createConstant("f", CoraInputReader.readType("Bool -> Int")
       );
     Term fx = f.apply(x);
 
@@ -96,10 +94,7 @@ class DependencyPairsTest {
 
   @Test
   void testFakeEta(){
-    Type arr =
-      CoraInputReader.readTypeFromString(
-        "Bool -> b -> c -> d -> e"
-      );
+    Type arr = CoraInputReader.readType("Bool -> b -> c -> d -> e");
     Term f = TermFactory.createConstant("f",arr);
     Term x = TermFactory.createVar(TypeFactory.boolSort);
 
@@ -112,8 +107,7 @@ class DependencyPairsTest {
 
   @Test
   void testGenLeftSharpRule() {
-    Type arr =
-      CoraInputReader.readTypeFromString(
+    Type arr = CoraInputReader.readType(
         "Bool -> b -> c -> d -> e"
       );
     Term f = TermFactory.createConstant("f",arr);
@@ -125,7 +119,7 @@ class DependencyPairsTest {
   @Test
   void testGenRightCandidates() {
     Term f = TermFactory.createConstant("f",
-      CoraInputReader.readTypeFromString("a -> b"));
+      CoraInputReader.readType("a -> b"));
     Term etaF = DependencyPairs.fakeEta(f);
 //    System.out.println(etaF);
 //    System.out.println(DependencyPairs.genRightCandidates(etaF));
