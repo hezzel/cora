@@ -111,26 +111,27 @@ public class DependencyPairs {
   static @NotNull boolean isConstructor(Term tm) {
     return false;
   }
-  static @NotNull boolean isDefined(FunctionSymbol tm) { return  false; }
+  static @NotNull boolean isDefined(FunctionSymbol tm) { return  true; }
 
   static @NotNull List<Term> genRightCandidates(Term rhs) {
-    // In all cases below we will have to recursively compute the
-    // U_{i = 1}^k genRightCandidates(si), so we compute it beforehand.
+    // In each case below we will have to recursively compute the
+    // U_{i = 1}^k genRightCandidates(si), for the arguments si, of the rhs,
+    // so we compute it beforehand.
       List<Term> argsCandidateApp = rhs.queryArguments()
       .stream()
       .map(t -> DependencyPairs.genRightCandidates(t).stream())
       .reduce(Stream.empty(), Stream::concat)
       .toList();
 
-    // Case for: x (s1 ... sn)
+    // Case x (s1 ... sn), we return the candidates of each argument
     if (rhs.isApplication() && rhs.queryHead().isVariable()){
       return argsCandidateApp;
     }
-    // Case for: c (s1, ..., sn)
+    // Case c (s1, ..., sn), we return the candidates of each argument
     else if (rhs.isApplication() && isConstructor(rhs.queryHead())) {
       return argsCandidateApp;
     }
-    // Case for: (| s1, ..., sn |)
+    // Case for: (| s1, ..., sn |), we return the candidates of each argument
     else if (rhs.isTuple()) {
       List<Term> argsTuple = rhs.queryTupleArguments()
         .stream()
@@ -150,5 +151,8 @@ public class DependencyPairs {
     // If none of the cases above is true, we return an empty list.
     return List.of();
   }
+
+
+
 
 }

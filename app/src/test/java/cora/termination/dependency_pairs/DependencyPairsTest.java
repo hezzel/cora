@@ -70,7 +70,6 @@ class DependencyPairsTest {
     assumingThat(ty.isArrowType(), () -> {
       System.out.println("do more tests here");
     });
-
   }
 
   @Test
@@ -97,9 +96,7 @@ class DependencyPairsTest {
   @Test
   void testFakeEta(){
     Type arr =
-      CoraInputReader.readTypeFromString(
-        "Bool -> b -> c -> d -> e"
-      );
+      CoraInputReader.readTypeFromString("Bool -> b -> c -> d -> e");
     Term f = TermFactory.createConstant("f",arr);
     Term x = TermFactory.createVar(TypeFactory.boolSort);
 
@@ -124,11 +121,17 @@ class DependencyPairsTest {
 
   @Test
   void testGenRightCandidates() {
-    Term f = TermFactory.createConstant("f",
-      CoraInputReader.readTypeFromString("a -> b"));
+    Term f = TermFactory.createConstant("f", CoraInputReader.readTypeFromString("a -> b -> c"));
     Term etaF = DependencyPairs.fakeEta(f);
+    Type a = CoraInputReader.readTypeFromString("a");
+//    Term gx = TermFactory.createApp()
+    Term c = TermFactory.createConstant("c", a);
 //    System.out.println(etaF);
-    System.out.println(DependencyPairs.genRightCandidates(etaF));
+    Term rhs = TermFactory.createApp(f, c);
+    System.out.println(rhs + " : " + rhs.queryType());
+    Term eta = DependencyPairs.fakeEta(rhs);
+    System.out.println(eta);
+    System.out.println(DependencyPairs.genRightCandidates(eta));
 
   }
 
