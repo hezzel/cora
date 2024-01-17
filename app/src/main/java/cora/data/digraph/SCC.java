@@ -101,8 +101,11 @@ public class SCC {
   /**
    * Returns the data stored in this SCC object.
    * The return data is of type {@code List< List<Integer> >} in which the outermost list stores
-   * the data of each scc component in the graph. So the lenght of this list is equal to
-   * {@code this.getNumberOfSccs}. Each component is identified by their index in this list.
+   * the data of each scc component in the graph. So the length of this list is equal to
+   * {@code this.getNumberOfSccs}.
+   * Each component is identified by their index in this list.
+   * <p>Notice that the innermost list, {@code List<Integer>}
+   * holds integers that are vertices in the original graph.</p>
    *
    * @return
    */
