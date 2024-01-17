@@ -3,9 +3,10 @@ package cora.utils;
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeMap;
+import cora.exceptions.NullStorageError;
 
 /**
- * This class provides a read-only mapping from strings to a given type.
+ * This class provides a read-only mapping from strings to a given type, with no null entries.
  * Functionality is much like java.util.Map, but only read functionality is provided, as write
  * functionality should not be used.
  * (Thus, unlike Guava's ImmutableMap type, it cannot be confused for a mutable Map.)
@@ -37,7 +38,12 @@ public class LookupMap<T> {
 
     public boolean containsKey(String key) { return _internal.containsKey(key); }
     public T get(String key) { return _internal.get(key); }
-    public void put(String key, T value) { _internal.put(key, value); }
+    public void put(String key, T value) {
+      _internal.put(key, value);
+      if (value == null) {
+        throw new NullStorageError("LookupMap", "canont store a null value in a LookupMap");
+      }
+    }
 
     /** Builds the created lookup map. Afterwards, this builder cannot be used anymore! */
     public LookupMap<T> build() {

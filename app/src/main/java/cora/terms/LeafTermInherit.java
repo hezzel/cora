@@ -16,6 +16,7 @@
 package cora.terms;
 
 import java.util.ArrayList;
+import java.util.Set;
 import cora.exceptions.*;
 import cora.utils.Pair;
 import cora.types.Type;
@@ -39,6 +40,11 @@ abstract class LeafTermInherit extends TermInherit {
 
   public boolean isPattern() {
     return true;
+  }
+
+  /** if the current term is a function symbol, it is added to storage; otherwise nothing is done */
+  public void storeFunctionSymbols(Set<FunctionSymbol> storage) {
+    if (isFunctionalTerm()) storage.add(queryRoot());
   }
 
   /** @return a list containing only the current term with the empty Position. */

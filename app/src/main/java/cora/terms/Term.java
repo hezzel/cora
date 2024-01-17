@@ -224,6 +224,12 @@ public interface Term {
   ReplaceableList freeReplaceables();
 
   /**
+   * This adds all function symbols in the current term to the given set.
+   * This is not particularly efficient: it requires traversing the full term.
+   */
+  void storeFunctionSymbols(Set<FunctionSymbol> storage);
+
+  /**
    * Returns the subterm at the given position, assuming that this is indeed a position of the
    * current term.
    * If not, an IndexingError is thrown.

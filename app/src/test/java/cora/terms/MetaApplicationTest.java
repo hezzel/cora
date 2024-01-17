@@ -18,11 +18,11 @@ package cora.terms;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import cora.exceptions.IndexingError;
-import cora.exceptions.TypingError;
+import cora.exceptions.*;
 import cora.utils.Pair;
 import cora.types.Type;
 import cora.types.TypeFactory;
@@ -31,6 +31,63 @@ import cora.terms.position.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MetaApplicationTest extends TermTestFoundation {
+  @Test
+  public void testUnaryWithNullArg() {
+    MetaVariable z = TermFactory.createMetaVar("z", baseType("a"), baseType("b"));
+    Term arg = null;
+    assertThrows(java.lang.NullPointerException.class, () -> TermFactory.createMeta(z, arg));
+  }
+
+  @Test
+  public void testBinaryWithNullHead() {
+    assertThrows(NullInitialisationError.class, () ->
+      TermFactory.createMeta(null, constantTerm("a", baseType("b")),
+                                   constantTerm("a", baseType("c"))));
+  }
+
+  @Test
+  public void testNullArgs() {
+    MetaVariable z = TermFactory.createMetaVar("z", baseType("a"), baseType("b"));
+    ArrayList<Term> args = null;
+    assertThrows(NullInitialisationError.class, () -> TermFactory.createMeta(z, args));
+  }
+
+  @Test
+  public void testIncorrectArgsCount() {
+    ArrayList<Type> inputs = new ArrayList<Type>();
+    inputs.add(baseType("a"));
+    inputs.add(baseType("a"));
+    inputs.add(baseType("a"));
+    MetaVariable z = TermFactory.createMetaVar("z", inputs, baseType("a"));
+    Term s = constantTerm("s", baseType("a"));
+    assertThrows(ArityError.class, () -> TermFactory.createMeta(z, s, s));
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(constantTerm("a", baseType("a")));
+    args.add(constantTerm("a", baseType("a")));
+    args.add(constantTerm("a", baseType("a")));
+    args.add(constantTerm("a", baseType("a")));
+    assertThrows(ArityError.class, () -> TermFactory.createMeta(z, args));
+  }
+
+  @Test
+  public void testNoArgs() {
+    MetaVariable z = new Var("z", arrowType("a", "a"));
+    ArrayList<Term> args = new ArrayList<Term>();
+    assertThrows(IllegalTermError.class, () -> new MetaApplication(z, args));
+  }
+
+  @Test
+  public void testBadArgumentType() {
+    ArrayList<Type> inputs = new ArrayList<Type>();
+    inputs.add(baseType("a"));
+    inputs.add(baseType("a"));
+    MetaVariable z = TermFactory.createMetaVar("z", inputs, arrowType("a", "a"));
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(constantTerm("a", baseType("a")));
+    args.add(constantTerm("b", baseType("b")));
+    assertThrows(TypingError.class, () -> TermFactory.createMeta(z, args));
+  }
+
   @Test
   public void testNoArgsBecomesVar() {
     MetaVariable z = new Var("z", arrowType("a", "a"));
@@ -88,6 +145,15 @@ class MetaApplicationTest extends TermTestFoundation {
     assertTrue(t.queryMetaVariable().toString().equals("Z"));
     Term q = null;
     assertFalse(t.equals(q));
+  }
+
+  @Test
+  public void testStore() {
+    TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
+    Term t = makeSample();
+    t.storeFunctionSymbols(set);
+    assertTrue(set.size() == 1);
+    assertTrue(set.toString().equals("[f]"));
   }
 
   @Test

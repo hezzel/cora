@@ -15,8 +15,9 @@
 
 package cora.terms;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -27,58 +28,58 @@ import cora.types.TypeFactory;
 import cora.terms.position.*;
 
 public class BinderTest extends TermTestFoundation {
-  @Test(expected = NullInitialisationError.class)
+  @Test
   public void testNullName() {
-    Variable x = new Binder(null, baseType("o"));
+    assertThrows(NullInitialisationError.class, () -> new Binder(null, baseType("o")));
   }
 
-  @Test(expected = NullInitialisationError.class)
+  @Test
   public void testNullType() {
-    Variable x = new Binder("x", null);
+    assertThrows(NullInitialisationError.class, () -> new Binder("x", null));
   }
 
-  @Test(expected = InappropriatePatternDataError.class)
+  @Test
   public void testRootRequest() {
     Variable x = new Binder("x", baseType("o"));
-    x.queryRoot();
+    assertThrows(InappropriatePatternDataError.class, () -> x.queryRoot());
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testSubtermRequest() {
     Variable x = new Binder("x", baseType("o"));
-    x.queryArgument(1);
+    assertThrows(IndexingError.class, () -> x.queryArgument(1));
   }
 
-  @Test(expected = NullCallError.class)
+  @Test
   public void testNullSubstitution() {
     Term t = new Binder("x", baseType("Int"));
-    t.substitute(null);
+    assertThrows(NullCallError.class, () -> t.substitute(null));
   }
 
-  @Test(expected = NullCallError.class)
+  @Test
   public void testNullMatch1() {
     Term t = new Binder("x", baseType("Int"));
-    t.match(constantTerm("37", baseType("Int")), null);
+    assertThrows(NullCallError.class, () -> t.match(constantTerm("37", baseType("Int")), null));
   }
 
-  @Test(expected = NullCallError.class)
+  @Test
   public void testNullMatch2() {
     Term t = new Binder("x", baseType("Int"));
     Substitution subst = new Subst();
-    t.match(null, subst);
+    assertThrows(NullCallError.class, () -> t.match(null, subst));
   }
 
-  @Test(expected = ArityError.class)
+  @Test
   public void testBaseVariableApplication() {
     Term t = new Binder("x", baseType("Int"));
-    t.apply(t);
+    assertThrows(ArityError.class, () -> t.apply(t));
   }
 
-  @Test(expected = TypingError.class)
+  @Test
   public void testIllegalTypeApplication() {
     Term t = new Binder("x", arrowType("a", "b"));
     Term q = constantTerm("c", baseType("b"));
-    t.apply(q);
+    assertThrows(TypingError.class, () -> t.apply(q));
   }
 
   @Test
@@ -113,6 +114,19 @@ public class BinderTest extends TermTestFoundation {
     assertTrue(x.compareTo(x) == 0);
     assertTrue(x.compareTo(z) == -1);
     assertTrue(x.compareTo(new Var("y", baseType("o"))) == 1);
+  }
+
+  @Test
+  public void testFunctions() {
+    FunctionSymbol a = new Constant("a", baseType("aa"));
+    TreeSet<FunctionSymbol> symbols = new TreeSet<FunctionSymbol>();
+    Variable x = new Binder("x", baseType("bb"));
+    x.storeFunctionSymbols(symbols);
+    assertTrue(symbols.size() == 0);
+    symbols.add(a);
+    x.storeFunctionSymbols(symbols);
+    assertTrue(symbols.size() == 1);
+    assertTrue(symbols.contains(a));
   }
 
   @Test
@@ -210,24 +224,24 @@ public class BinderTest extends TermTestFoundation {
     assertTrue(s.querySubterm(p).equals(s));
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testSubtermBad() {
     Term s = new Binder("x", baseType("o"));
     Position p = new ArgumentPos(1, Position.empty);
-    Term t = s.querySubterm(p);
+    assertThrows(IndexingError.class, () -> s.querySubterm(p));
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testHeadSubtermBad() {
     Term s = new Binder("x", baseType("o"));
     Position p = new FinalPos(1);
-    Term t = s.querySubterm(p);
+    assertThrows(IndexingError.class, () -> s.querySubterm(p));
   }
 
-  @Test(expected = InappropriatePatternDataError.class)
+  @Test
   public void testAbstractionSubtermRequest() {
     Term s = new Binder("x", arrowType("o", "O"));
-    s.queryAbstractionSubterm();
+    assertThrows(InappropriatePatternDataError.class, () -> s.queryAbstractionSubterm());
   }
 
   @Test
@@ -239,18 +253,18 @@ public class BinderTest extends TermTestFoundation {
     assertTrue(s.toString().equals("x"));
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testSubtermReplacementBad() {
     Term s = new Binder("x", baseType("o"));
     Position p = new ArgumentPos(1, Position.empty);
-    Term t = s.replaceSubterm(p, twoArgVarTerm());
+    assertThrows(IndexingError.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testHeadSubtermReplacementBad() {
     Term s = new Binder("x", baseType("o"));
     Position p = new FinalPos(3);
-    Term t = s.replaceSubterm(p, twoArgVarTerm());
+    assertThrows(IndexingError.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
   }
 
   @Test

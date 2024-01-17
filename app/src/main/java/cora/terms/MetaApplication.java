@@ -105,6 +105,11 @@ class MetaApplication extends TermInherit {
     return true;
   }
 
+  /** Adds all function symbols in the present term to storage. */
+  public void storeFunctionSymbols(Set<FunctionSymbol> storage) {
+    for (Term t : _args) t.storeFunctionSymbols(storage);
+  }
+
   /** @return the number of meta-arguments */
   public int numberMetaArguments() {
     return _args.size();

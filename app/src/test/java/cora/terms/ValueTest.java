@@ -15,9 +15,11 @@
 
 package cora.terms;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
+import java.util.TreeSet;
 import cora.exceptions.*;
 import cora.utils.Pair;
 import cora.types.TypeFactory;
@@ -71,10 +73,19 @@ public class ValueTest extends TermTestFoundation {
     assertTrue(v.apply(new ArrayList<Term>()) == v);
   }
 
-  @Test(expected = ArityError.class)
+  @Test
+  public void testStore() {
+    TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
+    Value v = new StringValue("test");
+    v.storeFunctionSymbols(set);
+    assertTrue(set.size() == 1);
+    assertTrue(set.contains(v));
+  }
+
+  @Test
   public void testValueApply() {
     Value v = new IntegerValue(13);
-    v.apply(new Constant("a", baseType("o")));
+    assertThrows(ArityError.class, () -> v.apply(new Constant("a", baseType("o"))));
   }
 
   @Test
@@ -108,33 +119,34 @@ public class ValueTest extends TermTestFoundation {
     assertTrue(v.getString().equals("this\\is\nokay\"!"));
   }
 
-  @Test(expected = InappropriatePatternDataError.class)
+  @Test
   public void testVariableRequest() {
     Term v = new IntegerValue(-12);
-    Term x = v.queryVariable();
+    assertThrows(InappropriatePatternDataError.class, () -> v.queryVariable());
   }
 
-  @Test(expected = InappropriatePatternDataError.class)
+  @Test
   public void testAbstractionSubtermRequest() {
     Term v = new BooleanValue(true);
-    v.queryAbstractionSubterm();
+    assertThrows(InappropriatePatternDataError.class, () -> v.queryAbstractionSubterm());
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testArgumentPositionRequest() {
     Term v = new StringValue("333");
-    v.querySubterm(new ArgumentPos(1, Position.empty));
+    assertThrows(IndexingError.class, () -> v.querySubterm(new ArgumentPos(1, Position.empty)));
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testHeadPositionRequest() {
     Term v = new IntegerValue(31);
-    v.querySubterm(new FinalPos(1));
+    assertThrows(IndexingError.class, () -> v.querySubterm(new FinalPos(1)));
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testBadPositionReplacement() {
     Term v = new BooleanValue(true);
-    v.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a")));
+    assertThrows(IndexingError.class, () ->
+      v.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a"))));
   }
 }

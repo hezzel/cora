@@ -100,6 +100,13 @@ public class Tuple extends TermInherit {
   }
 
   /**
+   * adds all function symbols in the current term to storage
+   */
+  public void storeFunctionSymbols(Set<FunctionSymbol> storage) {
+    for (Term t : _components) t.storeFunctionSymbols(storage);
+  }
+
+  /**
    * Returns the number of components in the tuple.
    */
   @Override

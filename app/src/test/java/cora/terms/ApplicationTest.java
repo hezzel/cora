@@ -15,38 +15,42 @@
 
 package cora.terms;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.TreeMap;
+import java.util.TreeSet;
+
 import cora.exceptions.*;
 import cora.utils.Pair;
 import cora.types.Type;
 import cora.terms.position.*;
 
 public class ApplicationTest extends TermTestFoundation {
-  @Test(expected = NullInitialisationError.class)
+  @Test
   public void testUnaryWithNullArg() {
     Variable head = new Binder("x", arrowType("a", "b"));
     Term arg = null;
-    Term t = new Application(head, arg);
+    assertThrows(NullInitialisationError.class, () ->new Application(head, arg));
   }
 
-  @Test(expected = NullInitialisationError.class)
+  @Test
   public void testBinaryWithNullHead() {
-    Term t = new Application(null, constantTerm("a", baseType("b")),
-                                   constantTerm("a", baseType("c")));
+    assertThrows(NullInitialisationError.class, () ->
+      new Application(null, constantTerm("a", baseType("b")),
+                            constantTerm("a", baseType("c"))));
   }
 
-  @Test(expected = NullInitialisationError.class)
+  @Test
   public void testNullArgs() {
     Constant f = new Constant("f", arrowType("a", "b"));
     List<Term> args = null;
-    Term t = new Application(f, args);
+    assertThrows(NullInitialisationError.class, () -> new Application(f, args));
   }
 
-  @Test(expected = ArityError.class)
+  @Test
   public void testTooManyArgs() {
     Type type = arrowType(baseType("a"), arrowType("b", "a"));
     Variable x = new Binder("x", type);
@@ -54,10 +58,10 @@ public class ApplicationTest extends TermTestFoundation {
     args.add(constantTerm("c", baseType("a")));
     args.add(constantTerm("d", baseType("b")));
     args.add(constantTerm("e", baseType("a")));
-    Term t = new Application(x, args);
+    assertThrows(ArityError.class, () -> new Application(x, args));
   }
 
-  @Test(expected = ArityError.class)
+  @Test
   public void testTooManyArgsToApplication() {
     Type type = arrowType(baseType("a"), arrowType("b", "a"));
     Variable x = new Binder("x", type);
@@ -65,31 +69,32 @@ public class ApplicationTest extends TermTestFoundation {
     List<Term> args = new ArrayList<Term>();
     args.add(constantTerm("d", baseType("b")));
     args.add(constantTerm("e", baseType("a")));
-    Term t = new Application(head, args);
+    assertThrows(ArityError.class, () -> new Application(head, args));
   }
 
-  @Test(expected = TypingError.class)
+  @Test
   public void testConstructorBadArgType() {
     Type type = arrowType(baseType("a"), arrowType("b", "a"));
     Term head = constantTerm("f", type);
     List<Term> args = new ArrayList<Term>();
     args.add(constantTerm("c", baseType("a")));
     args.add(constantTerm("d", baseType("a")));
-    Term t = new Application(head, args);
+    assertThrows(TypingError.class, () -> new Application(head, args));
   }
 
-  @Test(expected = TypingError.class)
+  @Test
   public void testConstructorBadArgTypeToApplication() {
     Type type = arrowType(baseType("a"), arrowType("b", "a"));
     Term head = constantTerm("f", type).apply(constantTerm("c", baseType("a")));
-    Term t = new Application(head, constantTerm("d", baseType("a")));
+    assertThrows(TypingError.class, () ->
+      new Application(head, constantTerm("d", baseType("a"))));
   }
 
-  @Test(expected = IllegalArgumentError.class)
+  @Test
   public void testCreateEmptyApplication() {
     Term head = new Var("x", arrowType(baseType("a"), arrowType("b", "a")));
     List<Term> args = new ArrayList<Term>();
-    Application appl = new Application(head, args);
+    assertThrows(IllegalArgumentError.class, () -> new Application(head, args));
   }
 
   @Test
@@ -100,7 +105,7 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.toString().equals("f(c, d)"));
     assertTrue(t.queryType().equals(baseType("a")));
 
-    Term s = new Application(t, new ArrayList<Term>());
+    Term s = TermFactory.createApp(t, new ArrayList<Term>());
     assertTrue(s.equals(t));
   }
 
@@ -148,6 +153,17 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.isClosed());
     assertFalse(t.isGround());
     assertTrue(t.isTrueTerm());
+  }
+
+  @Test
+  public void testStoreFunctionSymbols() {
+    Term t = twoArgFuncTerm();
+    TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
+    set.add(new Constant("c", baseType("a")));
+    set.add(new Constant("f", baseType("b")));
+    t.storeFunctionSymbols(set);
+    assertTrue(set.size() == 5);
+    assertTrue(set.toString().equals("[c, d, f, f, g]"));
   }
 
   @Test
@@ -211,16 +227,11 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.toString().equals("x(y, λz.f(z))"));
   }
 
-  @Test(expected = IndexingError.class)
-  public void testTooSmallSubterm() {
+  @Test
+  public void testIncorrectSubterm() {
     Term t = twoArgVarTerm();
-    Term sub = t.queryArgument(0);
-  }
-
-  @Test(expected = IndexingError.class)
-  public void testTooLargeSubterm() {
-    Term t = twoArgFuncTerm();
-    Term sub = t.queryArgument(3);
+    assertThrows(IndexingError.class, () -> t.queryArgument(0));
+    assertThrows(IndexingError.class, () -> t.queryArgument(3));
   }
 
   @Test
@@ -259,22 +270,22 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.queryImmediateHeadSubterm(2).toString().equals("x(c, g(y))"));
   }
 
-  @Test(expected = InappropriatePatternDataError.class)
+  @Test
   public void testInappropriateRootRequest() {
     Term t = twoArgVarTerm();
-    Term f = t.queryRoot();
+    assertThrows(InappropriatePatternDataError.class, () -> t.queryRoot());
   }
 
-  @Test(expected = InappropriatePatternDataError.class)
+  @Test
   public void testInappropriateVariableRequest() {
     Term t = twoArgFuncTerm();
-    Term f = t.queryVariable();
+    assertThrows(InappropriatePatternDataError.class, () -> t.queryVariable());
   }
 
-  @Test(expected = InappropriatePatternDataError.class)
+  @Test
   public void testInappropriateAbstractionSubtermRequest() {
     Term t = twoArgFuncTerm();
-    Term f = t.queryAbstractionSubterm();
+    assertThrows(InappropriatePatternDataError.class, () -> t.queryAbstractionSubterm());
   }
 
   @Test
@@ -339,7 +350,7 @@ public class ApplicationTest extends TermTestFoundation {
     List<Pair<Term,Position>> lst = term.querySubterms();
     assertTrue(lst.size() == 4);
     assertTrue(lst.get(0).snd().toString().equals("1.1.ε"));
-    assertTrue(lst.get(1).fst().toString().equals("x"));
+    assertTrue(lst.get(0).fst().toString().equals("x"));
     assertTrue(lst.get(1).snd().toString().equals("1.ε"));
     assertTrue(lst.get(1).fst() == arg1);
     assertTrue(lst.get(2).snd().toString().equals("2.ε"));
@@ -538,18 +549,18 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(s.querySubterm(new LambdaPos(new ArgumentPos(1, Position.empty))) == x);
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testSubtermBad() {
     Term s = twoArgVarTerm();
     Position pos = new ArgumentPos(1, new ArgumentPos(2, Position.empty));
-    Term t = s.querySubterm(pos);
+    assertThrows(IndexingError.class, () -> s.querySubterm(pos));
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testHeadSubtermBad() {
     Term s = twoArgFuncTerm();
     Position pos = new ArgumentPos(2, new FinalPos(2));
-    Term t = s.querySubterm(pos);
+    assertThrows(IndexingError.class, () -> s.querySubterm(pos));
   }
 
   @Test
@@ -598,57 +609,63 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(s.toString().equals("f(c, g(d))"));
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testSubtermReplacementBadPosition() {
     Variable z = new Var("Z", arrowType("Int", "Int"));
     Term s = new Application(z, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new ArgumentPos(2, Position.empty), s);
+    assertThrows(IndexingError.class, () ->
+      s.replaceSubterm(new ArgumentPos(2, Position.empty), s));
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testSubtermHeadReplacementBadPosition() {
     Variable z = new Var("Z", arrowType("Int", "Int"));
     Term s = new Application(z, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new ArgumentPos(2, new FinalPos(1)), s);
+    assertThrows(IndexingError.class, () ->
+      s.replaceSubterm(new ArgumentPos(2, new FinalPos(1)), s));
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testSubtermHeadReplacementBadHeadPosition() {
     Constant f = new Constant("f", arrowType("Int", "Int"));
     Term s = new Application(f, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new FinalPos(2), constantTerm("a", baseType("B")));
+    assertThrows(IndexingError.class, () ->
+      s.replaceSubterm(new FinalPos(2), constantTerm("a", baseType("B"))));
   }
 
-  @Test(expected = TypingError.class)
+  @Test
   public void testSubtermReplacementBadTypeSub() {
     Constant f = new Constant("f", arrowType("Int", "Bool"));
     Term s = new Application(f, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(new ArgumentPos(1, Position.empty), s);
+    assertThrows(TypingError.class, () ->
+      s.replaceSubterm(new ArgumentPos(1, Position.empty), s));
   }
 
-  @Test(expected = TypingError.class)
+  @Test
   public void testSubtermReplacementBadTypeTop() {
     Variable z = new Binder("Z", arrowType("Int", "Bool"));
     Term s = new Application(z, constantTerm("37", baseType("Int")));
-    Term t = s.replaceSubterm(Position.empty, constantTerm("42", baseType("Int")));
+    assertThrows(TypingError.class, () ->
+      s.replaceSubterm(Position.empty, constantTerm("42", baseType("Int"))));
   }
 
-  @Test(expected = TypingError.class)
+  @Test
   public void testSubtermHeadReplacementBadType() {
     Variable z = new Binder("Z", arrowType("Int", "Bool"));
     Term s = new Application(z, constantTerm("37", baseType("Int")));
     Term replacement = constantTerm("f", arrowType("Int", "Int"));
-    s.replaceSubterm(new FinalPos(1), replacement);
+    assertThrows(TypingError.class, () ->
+      s.replaceSubterm(new FinalPos(1), replacement));
   }
 
-  @Test(expected = ArityError.class)
+  @Test
   public void testApplyingBaseTerm() {
     Term s = twoArgVarTerm();
     Term t = constantTerm("37", baseType("Int"));
-    s.apply(t);
+    assertThrows(ArityError.class, () -> s.apply(t));
   }
 
-  @Test(expected = TypingError.class)
+  @Test
   public void testApplyingBadType() {
     Type o = baseType("o");
     Type a = baseType("a");
@@ -656,7 +673,7 @@ public class ApplicationTest extends TermTestFoundation {
     Term c = constantTerm("c", a);
     FunctionSymbol f = new Constant("f", type);
     Term fc = new Application(f, c);
-    fc.apply(c);
+    assertThrows(TypingError.class, () -> fc.apply(c));
   }
 
   @Test
@@ -779,11 +796,11 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(s.queryArgument(5).queryVariable() == y);
   }
 
-  @Test(expected = NullCallError.class)
+  @Test
   public void testNullMatch() {
     Term t = twoArgFuncTerm();
     Substitution subst = new Subst();
-    t.match(null, subst);
+    assertThrows(NullCallError.class, () -> t.match(null, subst));
   }
 
   @Test
