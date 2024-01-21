@@ -28,6 +28,12 @@ public record Base(String name) implements Type {
     return UniqueTypes.isTheoryType(this);
   }
 
+  /** @return false */
+  @Override
+  public boolean hasProducts() {
+    return false;
+  }
+
   @Override
   public @NotNull String toString() {
     return this.name;

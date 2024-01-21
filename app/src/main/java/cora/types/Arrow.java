@@ -40,6 +40,10 @@ public record Arrow(Type left, Type right) implements Type {
   @Override
   public boolean isTheoryType() { return this.left.isTheoryType() && this.right.isTheoryType(); }
 
+  /** Returns true if some product type occurs as a subtype of this type. */
+  @Override
+  public boolean hasProducts() { return this.left.hasProducts() || this.right.hasProducts(); }
+
   /**
    * Returns whether the given Type is equal to us.
    *

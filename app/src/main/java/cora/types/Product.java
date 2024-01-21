@@ -31,6 +31,12 @@ public record Product(ImmutableList<Type> types) implements Type {
       .reduce(true, (x, y) -> x && y);
   }
 
+  /** @return true */
+  @Override
+  public boolean hasProducts() {
+    return true;
+  }
+
   @Override
   public @NotNull String toString(){
     StringBuilder string = new StringBuilder();

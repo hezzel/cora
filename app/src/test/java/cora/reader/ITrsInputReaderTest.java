@@ -211,8 +211,8 @@ public class ITrsInputReaderTest {
       ")";
     try { ITrsInputReader.readTrsFromString(str); }
     catch (ParseError e) {
-      assertTrue(e.getMessage().equals("Illegal rule creation for TRS: Rule ¬y → " +
-        "if(y, false, true) has a theory term as its left-hand side.\n"));
+      assertTrue(e.getMessage().equals("Illegal rule creation: Rule ¬y → if(y, false, true) " +
+        "has a theory term as its left-hand side.\n"));
       return;
     }
     assertTrue(false);

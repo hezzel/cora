@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022, 2023 Cynthia Kop
+ Copyright 2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,15 +15,14 @@
 
 package cora.trs;
 
-import java.util.ArrayList;
 import java.util.Map;
-import cora.exceptions.NullInitialisationError;
+import java.util.TreeSet;
 import cora.exceptions.IllegalRuleError;
+import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;
-import cora.smt.TermAnalyser;
 
 /**
  * Rules are the core objects that define the reduction relation in a term rewriting system.  These
@@ -34,27 +33,35 @@ public class Rule {
   private final Term _left;
   private final Term _right;
   private final Term _constraint;
+  private TreeSet<Variable> _lvars;
+  private RuleRestrictions _properties;
 
   /**
    * Creates a rule with the given left- and right-hand side and constraint.
-   * To support error checking, a TrsKind is given which the Rule must support.
+   * The constructor verifies that the rule is set up correctly, and stores its properties for
+   * later querying.
    */
-  Rule(Term left, Term right, Term constraint, TrsKind restriction) {
+  Rule(Term left, Term right, Term constraint) {
     _left = left;
     _right = right;
     _constraint = constraint;
-    checkRestrictions(restriction);
+    checkCorrectness(); // this goes first, because the null check is in checkCorrectness
+    calculateLVars();
+    _properties = new RuleRestrictions(_left, _right, _constraint, _lvars);
   }
 
   /**
-   * Creates an unconstrained rule with the given left- and right-hand side.
-   * To support error checking, a TrsKind is given which the Rule must support.
+   * Creates an unconstrained rule with the given left- and right-hand side, but no constraint.
+   * The constructor verifies that the rule is set up correctly, and stores its properties for
+   * later querying.
    */
-  Rule(Term left, Term right, TrsKind restriction) {
+  Rule(Term left, Term right) {
     _left = left;
     _right = right;
     _constraint = TheoryFactory.createValue(true);
-    checkRestrictions(restriction);
+    checkCorrectness();
+    calculateLVars();
+    _properties = new RuleRestrictions(_left, _right, _constraint, _lvars);
   }
 
   public Term queryLeftSide() {
@@ -65,6 +72,7 @@ public class Rule {
     return _right;
   }
 
+  /** Returns the constraint.  In an unconstrained rule, this is just TRUE. */
   public Term queryConstraint() {
     return _constraint;
   }
@@ -80,30 +88,6 @@ public class Rule {
 
   public Type queryType() {
     return _left.queryType();
-  }
-
-  public boolean isFirstOrder() {
-    return _left.isFirstOrder() && _right.isFirstOrder();
-  }
-
-  public boolean isApplicative() {
-    return _left.isApplicative() && _right.isApplicative();
-  }
-
-  public boolean isPatternRule() {
-    return _left.isPattern() && _left.isFunctionalTerm();
-  }
-
-  /**
-   * Returns whether the right-hand side has variables or meta-variables not occuring in the left.
-   */
-  public boolean rightHasFresh() {
-    ReplaceableList rlst = _right.freeReplaceables();
-    ReplaceableList llst = _left.freeReplaceables();
-    for (Replaceable x : rlst) {
-      if (!llst.contains(x)) return true;
-    }
-    return false;
   }
 
   /**
@@ -130,57 +114,20 @@ public class Rule {
     return builder.toString();
   }
 
-  // ==============================================================================================
-  // below here: verifying that the rule satisfies the restrictions it was set up with, and both
-  // storing and allowing TRSs to check, the actual restrictions satisfied by the rules
+  // ============================== correctness checking starts here ==============================
 
-  private boolean _isConstrained; // true if this rule uses theory symbols, a fresh variable in the
-                                  // right-hand side, or has a constraint
-  private int _constraintLevel;   // the level of the constraint: CONSTRAINTS_FO, CONSTRAINTS_LAMBDA
-                                  // or CONSTRAINTS_TRUE
-
-  /**
-   * Helper function for the constructor: makes sure that the current rule may occur in a TRS with
-   * the given TRS kind, and stores properties about the restrictions that the rule does satisfy.
+   /**
+   * Helper function for the constructor: this checks that the rule is properly set up, e.g., no
+   * null components, left- and right-hand side have the same type, and both sides are closed.
+   * The checks that MVars(r) ⊆ MVars(l) and MVars(φ) = ø are postponed to calculateLVars, where
+   * they are combined with checks on the free variables of non-theory type.
    */
-  private void checkRestrictions(TrsKind restriction) {
-    // core requirements that all kinds of TRSs should satisfy; perhaps some parts of these
-    // requirements will become optional in the future, but for now, we assume that all rules must
-    // satisfy them
+  private void checkCorrectness() {
     checkNothingNull();
     checkTypesCorrect();
-    checkClosed();
-    checkLhsFunctional();
-
-    // The checks for the remaining properties differ based on the restrictions from the TrsKind:
-    // in some settings restrictions disappear entirely, in others they merely change.  Each of the
-    // calls may also cause the properties below to be updated.
-    _isConstrained = false;
-    _constraintLevel = TrsKind.CONSTRAINTS_FO;
-    checkNoFreshCreation(!restriction.rulesUnconstrained());
-    if (!checkConstraintEmpty(restriction.rulesUnconstrained())) {
-      checkConstraintTheory();
-      checkConstraintVariables();
-      checkConstraintLevel(restriction.constraintsFirstOrder(),
-                           restriction.higherVarsInConstraints());
-    }
-
-
-
-    // set _isConstrained to true if it wasn't set yet, and any theory symbols are used, and throw
-    // an error accordingly if we were supposed to be unconstrained
-
-    // ensure that left-hand side has a non-theory symbol at the root if required
-    // otherwise, still ensure that left-hand side is not a theory term
-
-    // check level, if given
-
-    // check that left-hand side is a functional term, if required
-    // otherwise, check that left-hand side is not a variable, if required
-
-    // check that no meta-variables are used, unless allowed
-    // check that left-hand sides are patterns, unless allowed
-    // check that terms are product-free unless allowed
+    checkLeftClosed();    // we'll check the right and the constraint separately
+    checkConstraintTheory();
+    checkConstraintFirstOrder();
   }
 
   /** Checks that no parts of a rule are null. */
@@ -198,128 +145,76 @@ public class Rule {
     }
     Type t = _constraint.queryType();
     if (!t.equals(TypeFactory.boolSort) || !t.isTheoryType()) {
-      throw new IllegalRuleError("Rule", "constraint [" + _constraint.toString() + "] does not " +
+      throw new IllegalRuleError("constraint [" + _constraint.toString() + "] does not " +
         "have the theory sort Bool (it has type " + t.toString() + ").");
     }
   }
 
   /** Checks that both sides are closed: no binder variables occur. */
-  private void checkClosed() {
-    String problem = null;
-    if (!_left.isClosed()) problem = "_left";
-    else if (!_right.isClosed()) problem = "_right";
-    if (problem != null) {
-      throw new IllegalRuleError("Rule", problem + "-hand side of rule [" + toString() + "] is " +
-        "not closed (that is, freely contains a binder-variable).");
+  private void checkLeftClosed() {
+    if (!_left.isClosed()) { 
+      throw new IllegalRuleError("left-hand side of rule [" + toString() + "] is not closed " +
+        "(that is, freely contains a binder-variable).");
     }
-  }
-  
-  /** Checks that the left-hand side of the rule is a functional term. */
-  private void checkLhsFunctional() {
-    if (!_left.isFunctionalTerm()) {
-      throw new IllegalRuleError("Rule", "rule [" + toString() + "] has a left-hand side that " +
-        "is not a functional term.");
-    }
-  }
-
-  /**
-   * Checks that no variables or meta-variables occur on the right-hand side of a rule that don't
-   * occur on the left.
-   * If theories is true, then one exception is allowed: variables of a theory sort are allowed to
-   * occur fresh.  In this case, we do store that the current rule is a constrained rule.
-   */
-  private void checkNoFreshCreation(boolean theories) {
-    ReplaceableList lvars = _left.freeReplaceables();
-    ReplaceableList rvars = _right.freeReplaceables();
-    for (Replaceable x : rvars) {
-      if (!lvars.contains(x)) {
-        if (!theories || x.queryReplaceableKind() == Replaceable.KIND_METAVAR) {
-          String kind = (x.queryReplaceableKind() == Replaceable.KIND_METAVAR ? "meta-" : "");
-          throw new IllegalRuleError("Rule", "_right-hand side of rule [" + toString() + "] " +
-            "contains " + kind + "variable " + x.toString() + " which does not occur on the _left.");
-        }
-        else if (!x.queryType().isBaseType() || !x.queryType().isTheoryType()) {
-          throw new IllegalRuleError("Rule", "_right-hand side of rule [" + toString() + "] " +
-            "contains fresh variable " + x.toString() + " of type " + x.queryType().toString() +
-            ", which is not a theory sort.");
-        }
-        else _isConstrained = true;
-      }
-    }
-  }
-
-  /**
-   * Checks if the constraint is T, and if so, returns true.  If not, then _consstrained is set to
-   * true, an IllegalRuleError is thrown if the parameter ruleShouldBeUnconstrained is set to true,
-   * and otherwise false is returned.
-   */
-  private boolean checkConstraintEmpty(boolean ruleShouldBeUnconstrained) {
-    if (_constraint.isValue() && _constraint.toValue().getBool()) return true;
-    _isConstrained = true;
-    if (ruleShouldBeUnconstrained) {
-      throw new IllegalRuleError("Rule", "Rule [" + toString() + "] has a constraint, which " +
-        "is not permitted in this kind of TRS.");
-    }
-    return false;
   }
 
   /** Checks that the constraint is a theory term. */
   private void checkConstraintTheory() {
     if (!_constraint.isTheoryTerm()) {
-      throw new IllegalRuleError("Rule", "constraint [" + _constraint.toString() + "] is not a " +
-        "theory term.");
+      throw new IllegalRuleError("constraint [" + _constraint.toString() + "] is not a theory " +
+        "term.");
     }
   }
 
-  /**
-   * Check that the constraint has no meta-variables, and all free variables are non-binder
-   * variables of a theory type.
+  /** Checks that the constraint is a first-order term. */
+  private void checkConstraintFirstOrder() {
+    if (!_constraint.isFirstOrder()) {
+      throw new IllegalRuleError("constraint [" + _constraint.toString() + "] is not first-order.");
+    }
+  }
+
+ /**
+   * Helper function for the constructor: calculates the variables (and meta-variables) that occur
+   * in the constraint and fresh in the right-hand side, and throws an IllegalRuleError if they are
+   * anything but non-binder variables of theory sort.
    */
-  private void checkConstraintVariables() {
-    ReplaceableList cvars = _constraint.freeReplaceables();
-    for (Replaceable x : cvars) {
-      if (x.queryReplaceableKind() == Replaceable.KIND_BINDER) {
-        throw new IllegalRuleError("Rule", "constraint [" + _constraint.toString() + "] contains " +
-          "a binder variable " + x.toString() + ".");
+  private void calculateLVars() {
+    ReplaceableList leftvars = _left.freeReplaceables();
+    ReplaceableList rightvars = _right.freeReplaceables();
+    _lvars = new TreeSet<Variable>();
+    for (Replaceable x : rightvars) {
+      if (leftvars.contains(x)) continue;
+      switch (x.queryReplaceableKind()) {
+        case Replaceable.KIND_METAVAR:
+          throw new IllegalRuleError("right-hand side of rule [" + toString() + "] contains " +
+            "meta-variable " + x.toString() + " which does not occur on the left.");
+        case Replaceable.KIND_BINDER:
+          throw new IllegalRuleError("right-hand side of rule [" + toString() + "] introduces " +
+            "a fresh binder variable " + x.toString() + " (so is not closed).");
+        case Replaceable.KIND_BASEVAR:
+          if (x.queryType().isBaseType() && x.queryType().isTheoryType()) {
+            _lvars.add((Variable)x);
+          }
+          else {
+            throw new IllegalRuleError("right-hand side of rule [" + toString() + "] contains " +
+              "variable " + x.toString() + " of type " + x.queryType().toString() + " which does " +
+              "not occur on the left; only variables of theory sorts may occur fresh (in some " +
+              "kinds of TRSs).");
+          }
+          break;
+        default: throw new Error("Exhausted switch for queryReplaceableKind");
       }
-      if (x.queryReplaceableKind() == Replaceable.KIND_METAVAR) {
-        throw new IllegalRuleError("Rule", "constraint [" + _constraint.toString() + "] contains " +
-          "a meta-variable " + x.toString() + "; only true terms are allowed in constraints.");
-      }
-      if (!x.queryType().isTheoryType()) {
-        throw new IllegalRuleError("Rule", "constraint [" + _constraint.toString() + "] contains " +
-          "a variable " + x.toString() + " of type " + x.queryType().toString() + "; only " +
-          "variables of a theory type are allowed to occur in a constraint.");
+    }
+
+    // at this point we already checked that the constraint is first-order, so we're only dealing
+    // with non-binder variables
+    for (Variable y : _constraint.vars()) {
+      if (y.queryType().isBaseType() && y.queryType().isTheoryType()) _lvars.add(y);
+      else {
+        throw new IllegalRuleError("constraint of rule [" + toString() + "] contains variable " +
+          y.toString() + " of type " + y.queryType().toString() + " which is not a theory sort.");
       }
     }
   }
-
-  /** Determines which higher-order aspects -- if any -- the constraint has. */
-  private void checkConstraintLevel(boolean shouldBeFo, boolean higherVarsAllowed) {
-    if (_constraint.isFirstOrder()) {
-      _constraintLevel = TrsKind.CONSTRAINTS_FO;
-      return;
-    }
-    if (shouldBeFo) {
-      throw new IllegalRuleError("Rule", "constraint [" + _constraint.toString() + "] is not " +
-        "first-order.");
-    }
-    _constraintLevel = TrsKind.CONSTRAINTS_LAMBDA;
-    for (Variable x : _constraint.vars()) {
-      if (x.queryType().queryTypeOrder() != 0) {
-        _constraintLevel = TrsKind.CONSTRAINTS_TRUE;
-        if (higherVarsAllowed) return;
-        throw new IllegalRuleError("Rule", "constraint [" + _constraint.toString() + "] uses a " +
-          "higher-order variable " + x.toString() + ".");
-      }
-    }
-  }
-
-
-
-
-
-
-
 }
 

@@ -44,6 +44,9 @@ public sealed interface Type permits
    * factory.
    */
   boolean isTheoryType();
+
+  /** Returns true if and only if the type has a product type as subtype. */
+  boolean hasProducts();
   
   /** Returns a string representation of the current type. */
   String toString();

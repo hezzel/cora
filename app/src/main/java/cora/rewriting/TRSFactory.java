@@ -45,11 +45,11 @@ public class TRSFactory {
     // TRSs)
     for (Rule rule : rules) {
       if (rule.queryLeftSide().isVariable()) {
-        throw new IllegalRuleError("TRS", "Rule " + rule.toString() + " has a variable as its " +
+        throw new IllegalRuleError("Rule " + rule.toString() + " has a variable as its " +
           "left-hand side.");
       }
       if (rule.queryLeftSide().isTheoryTerm()) {
-        throw new IllegalRuleError("TRS", "Rule " + rule.toString() + " has a theory term as " +
+        throw new IllegalRuleError("Rule " + rule.toString() + " has a theory term as " +
           "its left-hand side.");
       }
     }
@@ -65,11 +65,11 @@ public class TRSFactory {
     else {
       for (Rule rule : rules) {
         if (rule.isConstrained()) {
-          throw new IllegalRuleError("TRS", "Rule " + rule.toString() + " is constrained, " +
+          throw new IllegalRuleError("Rule " + rule.toString() + " is constrained, " +
             "so cannot occur in an unconstrained TRS.");
         }
         if (rule.rightHasFreshVariables()) {
-          throw new IllegalRuleError("TRS", "Rule " + rule.toString() + " has fresh variables " +
+          throw new IllegalRuleError("Rule " + rule.toString() + " has fresh variables " +
             "in the right-hand side, which is not allowed in an unconstrained TRS.");
         }
       }
@@ -95,7 +95,7 @@ public class TRSFactory {
     // assert that all the rules are first-order
     for (Rule rule : rules) {
       if (!rule.isFirstOrder()) {
-        throw new IllegalRuleError("MSTRS/LCTRS", "Rule " + rule.toString() + " cannot occur in " +
+        throw new IllegalRuleError("Rule " + rule.toString() + " cannot occur in " +
           "a many-sorted TRS, as it is not first-order.");
       }
     }
@@ -134,7 +134,7 @@ public class TRSFactory {
     // assert that all the rules are applicative
     for (Rule rule : rules) {
       if (!rule.isApplicative()) {
-        throw new IllegalRuleError("Applicative TRS", "Rule " + rule.toString() + " cannot " +
+        throw new IllegalRuleError("Rule " + rule.toString() + " cannot " +
           "occur in an applicative (simply-typed) TRS, as it is not applicative.");
       }
     }
@@ -174,7 +174,7 @@ public class TRSFactory {
     doConstraintChecks(false, rules, schemes);
     for (Rule rule : rules) {
       if (!rule.queryLeftSide().isTrueTerm()) {
-        throw new IllegalRuleError("Curried Functionsal System", "Rule " + rule.toString() +
+        throw new IllegalRuleError("Rule " + rule.toString() +
           " cannot occur in a Curried Functional System, as it contains meta-variables.");
       }
     }

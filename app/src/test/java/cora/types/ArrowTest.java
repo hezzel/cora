@@ -1,12 +1,13 @@
 package cora.types;
 
-import cora.exceptions.NullInitialisationError;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
+
+import cora.exceptions.NullInitialisationError;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -42,6 +43,19 @@ class ArrowTest {
     assertTrue(t.isArrowType());
     assertFalse(t.isBaseType());
     assertFalse(t.isProductType());
+  }
+
+  @Test
+  public void testHasProducts() {
+    Type inttype = intType();
+    Type booltype = boolType();
+    Type tuple = new Product(ImmutableList.of(inttype, inttype));
+    Type t = new Arrow(booltype, booltype);
+    assertFalse(t.hasProducts());
+    t = new Arrow(new Arrow(tuple, booltype), inttype);
+    assertTrue(t.hasProducts());
+    t = new Arrow(inttype, new Arrow(booltype, tuple));
+    assertTrue(t.hasProducts());
   }
 
   @Test

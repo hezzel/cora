@@ -23,8 +23,8 @@ package cora.exceptions;
 public class IllegalRuleError extends Error {
   private final String _problem;
 
-  public IllegalRuleError(String classname, String problem) {
-    super("Illegal rule creation for " + classname + ": " + problem);
+  public IllegalRuleError(String problem) {
+    super("Illegal rule creation: " + problem);
     _problem = problem;
   }
 

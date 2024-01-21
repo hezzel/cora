@@ -57,6 +57,7 @@ class ProductTest {
     assertFalse(prod.isArrowType());
     assertTrue(prod.queryArity() == 0);
     assertTrue(prod.queryOutputType() == prod);
+    assertTrue(prod.hasProducts());
   }
 
   @Test
