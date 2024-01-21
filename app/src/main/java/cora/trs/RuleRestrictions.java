@@ -16,7 +16,7 @@
 package cora.trs;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 import cora.exceptions.IllegalRuleError;
 import cora.utils.Pair;
 import cora.terms.Term;
@@ -29,14 +29,14 @@ import cora.terms.position.Position;
  * properties of TRSs or their rules.
  */
 class RuleRestrictions {
-  static final int LVL_FIRSTORDER   = 41;
-  static final int LVL_APPLICATIVE  = 42;
-  static final int LVL_LAMBDA       = 43;
-  static final int LVL_META         = 44;
+  static final int LVL_FIRSTORDER   = 101;
+  static final int LVL_APPLICATIVE  = 102;
+  static final int LVL_LAMBDA       = 103;
+  static final int LVL_META         = 104;
 
-  static final int ROOT_FUNCTION    = 51;
-  static final int ROOT_THEORY      = 52;
-  static final int ROOT_ANY         = 63;
+  static final int ROOT_FUNCTION    = 111;
+  static final int ROOT_THEORY      = 112;
+  static final int ROOT_ANY         = 113;
 
   private int _level; // one of the LVL_ constants
   private boolean _theories;  // whether or not this is a "constrained rule"
@@ -87,7 +87,7 @@ class RuleRestrictions {
   }
 
   /** Constructor that sets up the values corresponding to a given rule. */
-  RuleRestrictions(Term left, Term right, Term constraint, Set<Variable> lvars) {
+  RuleRestrictions(Term left, Term right, Term constraint, Collection<Variable> lvars) {
     // level
     if (left.isFirstOrder() && right.isFirstOrder()) _level = LVL_FIRSTORDER;
     else if (left.isApplicative() && right.isApplicative()) _level = LVL_APPLICATIVE;
@@ -102,11 +102,13 @@ class RuleRestrictions {
     // theories and products
     _theories = false;
     _products = false;
-    if (!constraint.isValue() || !constraint.toValue().getBool()) _theories = true;
     if (!lvars.isEmpty()) _theories = true;
     List<Pair<Term,Position>> subterms = left.querySubterms();
     subterms.addAll(right.querySubterms());
-    subterms.addAll(constraint.querySubterms());
+    if (!constraint.isValue() || !constraint.toValue().getBool()) {
+      _theories = true;
+      subterms.addAll(constraint.querySubterms());
+    }
     for (int i = 0; i < subterms.size() && !(_theories && _products); i++) {
       Term sub = subterms.get(i).fst();
       if (sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) _theories = true;

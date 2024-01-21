@@ -15,6 +15,7 @@
 
 package cora.trs;
 
+import com.google.common.collect.ImmutableList;
 import java.util.Map;
 import java.util.TreeSet;
 import cora.exceptions.IllegalRuleError;
@@ -33,7 +34,7 @@ public class Rule {
   private final Term _left;
   private final Term _right;
   private final Term _constraint;
-  private TreeSet<Variable> _lvars;
+  private ImmutableList<Variable> _lvars;
   private RuleRestrictions _properties;
 
   /**
@@ -77,6 +78,15 @@ public class Rule {
     return _constraint;
   }
 
+  public ImmutableList<Variable> queryLVars() {
+    return _lvars;
+  }
+
+  /** Only for internal use within the trs package. */
+  RuleRestrictions queryProperties() {
+    return _properties;
+  }
+
   /**
    * It is not guaranteed in all kinds of TRSs that the left-hand side has a root symbol, so this
    * returns the root symbol if defined, and otherwise null.
@@ -98,6 +108,31 @@ public class Rule {
     Value value = _constraint.toValue();
     if (value == null) return true;
     return !value.getBool();
+  }
+
+  /** This returns whether both left- and right-hand side of the rule are first-order. */
+  public boolean isFirstOrder() {
+    return _properties.queryLevel() == RuleRestrictions.LVL_FIRSTORDER;
+  }
+
+  /** This returns whether both left- and right-hand side of the rule are applicative. */
+  public boolean isApplicative() {
+    return _properties.queryLevel() <= RuleRestrictions.LVL_APPLICATIVE;
+  }
+
+  /** This returns whether both left- and right-hand side of the rule are true terms. */
+  public boolean isMetaFree() {
+    return _properties.queryLevel() <= RuleRestrictions.LVL_LAMBDA;
+  }
+
+  /** This returns whether the rule has a pattern as its left-hand side. */
+  public boolean isPatternRule() {
+    return !_properties.leftIsNonPattern();
+  }
+  
+  /** This returns whether the left-hand side has a root that is a (non-theory) function symbol. */
+  public boolean queryTermFunctionRoot() {
+    return _properties.rootStatus() == RuleRestrictions.ROOT_FUNCTION;
   }
 
   /** Gives a string representation of the current rule. */
@@ -126,6 +161,7 @@ public class Rule {
     checkNothingNull();
     checkTypesCorrect();
     checkLeftClosed();    // we'll check the right and the constraint separately
+    checkLeftNotTheory();
     checkConstraintTheory();
     checkConstraintFirstOrder();
   }
@@ -158,6 +194,13 @@ public class Rule {
     }
   }
 
+  /** Checks that the left-hand side is not a theory term. */
+  private void checkLeftNotTheory() {
+    if (_left.isTheoryTerm()) {
+      throw new IllegalRuleError("left-hand side of rule [" + toString() + "] is a theory term!");
+    }
+  }
+
   /** Checks that the constraint is a theory term. */
   private void checkConstraintTheory() {
     if (!_constraint.isTheoryTerm()) {
@@ -181,7 +224,8 @@ public class Rule {
   private void calculateLVars() {
     ReplaceableList leftvars = _left.freeReplaceables();
     ReplaceableList rightvars = _right.freeReplaceables();
-    _lvars = new TreeSet<Variable>();
+    ImmutableList.Builder<Variable> builder = ImmutableList.<Variable>builder();
+    TreeSet<Variable> sofar = new TreeSet<Variable>();
     for (Replaceable x : rightvars) {
       if (leftvars.contains(x)) continue;
       switch (x.queryReplaceableKind()) {
@@ -193,13 +237,14 @@ public class Rule {
             "a fresh binder variable " + x.toString() + " (so is not closed).");
         case Replaceable.KIND_BASEVAR:
           if (x.queryType().isBaseType() && x.queryType().isTheoryType()) {
-            _lvars.add((Variable)x);
+            Variable y = (Variable)x;
+            if (!sofar.contains(y)) { sofar.add(y); builder.add(y); }
           }
           else {
             throw new IllegalRuleError("right-hand side of rule [" + toString() + "] contains " +
               "variable " + x.toString() + " of type " + x.queryType().toString() + " which does " +
-              "not occur on the left; only variables of theory sorts may occur fresh (in some " +
-              "kinds of TRSs).");
+              "not occur on the left; only variables of theory sorts may occur fresh (and that " +
+              "only in some kinds of TRSs).");
           }
           break;
         default: throw new Error("Exhausted switch for queryReplaceableKind");
@@ -209,12 +254,16 @@ public class Rule {
     // at this point we already checked that the constraint is first-order, so we're only dealing
     // with non-binder variables
     for (Variable y : _constraint.vars()) {
-      if (y.queryType().isBaseType() && y.queryType().isTheoryType()) _lvars.add(y);
+      if (y.queryType().isBaseType() && y.queryType().isTheoryType()) {
+        if (!sofar.contains(y)) { sofar.add(y); builder.add(y); }
+      }
       else {
         throw new IllegalRuleError("constraint of rule [" + toString() + "] contains variable " +
           y.toString() + " of type " + y.queryType().toString() + " which is not a theory sort.");
       }
     }
+    
+    _lvars = builder.build();
   }
 }
 

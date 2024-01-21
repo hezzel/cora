@@ -36,60 +36,6 @@ public class RuleTest {
     return TermFactory.createConstant(name, type(ty));
   }
 
-  @Test(expected = NullInitialisationError.class)
-  public void testLeftNullCreation() {
-    Rule rule = RuleFactory.createRule(makeConstant("a", "b"), null);
-  }
-
-  @Test(expected = NullInitialisationError.class)
-  public void testRightNullCreation() {
-    Rule rule = RuleFactory.createApplicativeRule(null, makeConstant("a", "b"));
-  }
-
-  @Test(expected = TypingError.class)
-  public void testIlltypedRule() {
-    Variable x = TermFactory.createVar("x", type("a"));
-    Term left = makeConstant("id", "a → b → a").apply(x); // id(x)
-    Rule rule = RuleFactory.createRule(left, x);
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testIllegalFreshVariableOnTheRight() {
-    // f(λx.x, y) → g(y, z)
-    Variable x = TermFactory.createBinder("x", type("o"));
-    Variable y = TermFactory.createVar("y", type("o"));
-    Variable z = TermFactory.createVar("z", type("o"));
-    Term f = TermFactory.createConstant("f", type("(o → o) → o → o"));
-    Term g = TermFactory.createConstant("g", type("o → o → o"));
-    Term left = TermFactory.createApp(f, TermFactory.createAbstraction(x, x), y);
-    Term right = TermFactory.createApp(g, y, z);
-    Rule rule = RuleFactory.createRule(left, right);
-  }
-
-  @Test
-  public void testLegalFreshVariableOnTheRight() {
-    // f(λx.x, y) → g(y, z)
-    Variable x = TermFactory.createBinder("x", type("Int"));
-    Variable y = TermFactory.createVar("y", type("Int"));
-    Variable z = TermFactory.createVar("z", type("Int"));
-    Term f = TermFactory.createConstant("f", type("(Int → Int) → Int → Int"));
-    Term g = TermFactory.createConstant("g", type("Int → Int → Int"));
-    Term left = TermFactory.createApp(f, TermFactory.createAbstraction(x, x), y);
-    Term right = TermFactory.createApp(g, y, z);
-    Rule rule = RuleFactory.createRule(left, right);
-    assertTrue(rule.rightHasFreshVariables());
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testRuleNotClosed() {
-    // f(x, y) → y with x a binder
-    Variable x = TermFactory.createBinder("x", type("a"));
-    Variable y = TermFactory.createVar("y", type("b"));
-    Term f = TermFactory.createConstant("f", type("a → b → b"));
-    Term left = TermFactory.createApp(f, x, y);
-    Rule rule = RuleFactory.createRule(left, y);
-  }
-
   @Test(expected = IllegalRuleError.class)
   public void testApplicativeRuleNotApplicative() {
     // a → g(λz.z)
@@ -119,117 +65,6 @@ public class RuleTest {
     Term left = f.apply(TermFactory.createAbstraction(x, z.apply(x)));
     Term right = makeConstant("a", "o");
     Rule rule = RuleFactory.createPatternRule(left, right);
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testConstraintNotBool() {
-    // f(x) → x | x
-    Term f = TermFactory.createConstant("f", type("Int → Int"));
-    Variable x = TermFactory.createVar("x", type("Int"));
-    Rule rule = RuleFactory.createApplicativeRule(f.apply(x), x, x);
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testConstraintNotTheory() {
-    // f(x) → x | x > a
-    Term a = TermFactory.createConstant("a", type("Int"));
-    Term f = TermFactory.createConstant("f", type("Int → Int"));
-    Variable x = TermFactory.createVar("x", type("Int"));
-    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(a);
-    Rule rule = RuleFactory.createFirstOrderRule(f.apply(x), x, constraint);
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testConstraintWithNonTheoryVariable() {
-    // f(x) → x | x > 1 where x has type Int, but it is not marked as a theory sort
-    Term f = TermFactory.createConstant("f", type("Int → Int"));
-    Variable x = TermFactory.createVar("x", TypeFactory.createSort("Int"));
-    Term one = TheoryFactory.createValue(1);
-    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(one);
-    Rule rule = RuleFactory.createRule(f.apply(x), x, constraint);
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testConstraintWithBinder() {
-    // f(x) → x | x > 1 where x is a binder
-    Term f = TermFactory.createConstant("f", type("Int → Int"));
-    Variable x = TermFactory.createBinder("x", type("Int"));
-    Term one = TheoryFactory.createValue(1);
-    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(one);
-    Rule rule = RuleFactory.createRule(f.apply(x), x, constraint);
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testConstraintWithLambda() {
-    // f(x) → x | x > (λy.y)(1)
-    Term f = TermFactory.createConstant("f", type("Int → Int"));
-    Variable x = TermFactory.createVar("x", type("Int"));
-    Term one = TheoryFactory.createValue(1);
-    Variable y = TermFactory.createBinder("y", type("Int"));
-    Term abs = TermFactory.createAbstraction(y, y);
-    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(abs.apply(one));
-    Rule rule = RuleFactory.createRule(f.apply(x), x, constraint);
-  }
-
-  @Test
-  public void testConstraintWithFreshVariable() {
-    // f(x) → x | x > y
-    Term f = TermFactory.createConstant("f", type("Int → Int"));
-    Variable x = TermFactory.createVar("x", type("Int"));
-    Variable y = TermFactory.createVar("y", type("Int"));
-    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(y);
-    Rule rule = RuleFactory.createApplicativeRule(f.apply(x), x, constraint);
-    assertTrue(rule.toString().equals("f(x) → x | x > y"));
-    assertFalse(rule.rightHasFreshVariables());
-  }
-
-  @Test
-  public void testConstraintWithFreshVariableAlsoInRight() {
-    // f(x) → y | x > y
-    Term f = TermFactory.createConstant("f", type("Int → Int"));
-    Variable x = TermFactory.createVar("x", type("Int"));
-    Variable y = TermFactory.createVar("y", type("Int"));
-    Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(y);
-    Rule rule = RuleFactory.createApplicativeRule(f.apply(x), y, constraint);
-    assertTrue(rule.toString().equals("f(x) → y | x > y"));
-    assertTrue(rule.rightHasFreshVariables());
-  }
-
-  @Test
-  public void testVariableNaming() {
-    // f(x, y) → g(y, λz.z) -- except all variables have the same default name
-    Variable x = TermFactory.createVar("x", type("a"));
-    Variable y = TermFactory.createVar("x", type("b"));
-    Variable z = TermFactory.createBinder("x", type("c"));
-    FunctionSymbol f = makeConstant("f", "a → b → d");
-    FunctionSymbol g = makeConstant("g", "b → (c → c) → d");
-    Term left = TermFactory.createApp(f, x, y);
-    Term right = TermFactory.createApp(g, y, TermFactory.createAbstraction(z, z));
-    Rule rule = RuleFactory.createCFSRule(left, right);
-    assertTrue(rule.toString().equals("f(x__1, x__2) → g(x__2, λx1.x1)"));
-  }
-
-  @Test
-  public void testBasics() {
-    // f(λx.x(a), y) → y
-    Variable x = TermFactory.createBinder("x", type("o → o"));
-    Term a = makeConstant("a", "o");
-    Term abs = TermFactory.createAbstraction(x, x.apply(a));
-    Variable y = TermFactory.createVar("y", type("u"));
-    Term f = makeConstant("f", "((o → o) → o) → u → u");
-    Term left = TermFactory.createApp(f, abs, y);
-    Rule rule = RuleFactory.createPatternRule(left, y);
-    assertTrue(rule.queryLeftSide().equals(left));
-    assertTrue(rule.queryRightSide().equals(y));
-    assertTrue(rule.queryType().equals(type("u")));
-    assertTrue(rule.toString().equals("f(λx.x(a), y) → y"));
-    assertFalse(rule.isApplicative());
-    assertTrue(rule.isPatternRule());
-
-    rule = RuleFactory.createRule(y, y);
-    assertTrue(rule.toString().equals("y → y"));
-    assertTrue(rule.isApplicative());
-    assertFalse(rule.isPatternRule());
   }
 
   @Test
@@ -438,14 +273,6 @@ public class RuleTest {
     Term term = sum.apply(TheoryFactory.createValue(5));
     assertTrue(rule.applicable(term));
     assertTrue(rule.apply(term).toString().equals("5 + sum(5 - 1)"));
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testLhsTheory() {
-    // x + 0 → x
-    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
-    Term lhs = TheoryFactory.plusSymbol.apply(x).apply(TheoryFactory.createValue(0));
-    RuleFactory.createFirstOrderRule(lhs, x, null);
   }
 }
 
