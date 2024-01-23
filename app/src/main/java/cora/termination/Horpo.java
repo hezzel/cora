@@ -772,7 +772,7 @@ public class Horpo {
                                              TreeMap<Integer,TreeSet<Integer>> comparable,
                                              TreeMap<Integer,BVar> strict,
                                              TreeMap<Integer,IVar> pi) {
-    // require that if π(i) = j ∧ pi(i') = j then ¬strict_j
+    // require that if π(i) = j ∧ pi(i') = j then strict_j
     for (int i1 = 1; i1 < m; i1++) {
       for (int i2 = i1+1; i2 <= m; i2++) {
         for (int j = 1; j <= n; j++) {
@@ -782,8 +782,8 @@ public class Horpo {
           Constraint c1 = SmtProblem.createUnequal(pi.get(i1), SmtProblem.createValue(j));
           // create: pi(i2) != j
           Constraint c2 = SmtProblem.createUnequal(pi.get(i2), SmtProblem.createValue(j));
-          // create: ¬strict_j
-          Constraint c3 = SmtProblem.createNegation(strict.get(j));
+          // create: strict_j
+          Constraint c3 = strict.get(j);
           // combine them
           Constraint d = SmtProblem.createDisjunction(SmtProblem.createDisjunction(c1, c2), c3);
           // and require for this clause to hold if req holds

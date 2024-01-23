@@ -1,10 +1,10 @@
-return :: Int ⇒ ret
+return :: Int → ret
 error :: ret
 
-comp :: (Int ⇒ ret) ⇒ (Int ⇒ Int) ⇒ Int ⇒ ret
+comp :: (Int → ret) → (Int → Int) → Int → ret
 comp(f, g, x) → f(g(x))
 
-fact :: Int ⇒ (Int ⇒ ret) ⇒ ret
+fact :: Int → (Int → ret) → ret
 fact(n, k) → error                        | n < 0
 fact(n, k) → k(1)                         | n = 0
 fact(n, k) → fact(n-1, comp(k, [*](n)))   | n > 0
@@ -12,8 +12,8 @@ fact(n, k) → fact(n-1, comp(k, [*](n)))   | n > 0
 /**
 This is a case where the continuation arguably makes the program simpler; the first-order variation
 would be:
-  fact :: Int ⇒ ret
-  helper :: Int ⇒ ret ⇒ ret
+  fact :: Int → ret
+  helper :: Int → ret → ret
   
   fact(n) → error                         | n < 0
   fact(n) → return(1)                     | n = 0
