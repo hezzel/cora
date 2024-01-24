@@ -183,7 +183,7 @@ class DPGenerator {
     return new Problem (
       rules
         .stream()
-        .flatMap(rule -> DPGenerator.generateProblemFromRule(rule).getProblem().stream())
+        .flatMap(rule -> DPGenerator.generateProblemFromRule(rule).getDPList().stream())
         .collect(Collectors.toList())
     );
   }

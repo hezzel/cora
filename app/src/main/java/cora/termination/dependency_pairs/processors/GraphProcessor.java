@@ -1,13 +1,12 @@
 package cora.termination.dependency_pairs.processors;
 
-import com.google.common.collect.ImmutableList;
 import cora.data.digraph.Digraph;
 import cora.data.digraph.SCC;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
-import cora.utils.Pair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,15 +25,15 @@ public class GraphProcessor implements Processor {
   }
 
   @Contract("_ -> new")
-  private @NotNull Digraph problemToGraph(@NotNull Problem dpp) {
+  @NotNull Digraph problemToGraph(@NotNull Problem dpp) {
     // Implementation notice: this guarantees that dps
     // is a locally immutable reference to dpp's elements.
     // copyOf is smart enough to realize an actual deep copy isn't necessary
     // (when that is really the case)
-    List<DP> dps = dpp.getProblem();
+    List<DP> dps = dpp.getDPList();
 
     // Now in this digraph each node represents one DP problem in sequence.
-    Digraph graphOfProblem = new Digraph(dpp.getProblem().size());
+    Digraph graphOfProblem = new Digraph(dpp.getDPList().size());
 
     for(int i = 0; i < dps.size(); i++) {
       for (int j = 0; j < dps.size(); j++) {
@@ -46,7 +45,7 @@ public class GraphProcessor implements Processor {
     return graphOfProblem;
   }
 
-  private List<Problem> computeNewAllSubproblems(Problem dpp) {
+  List<Problem> computeNewAllSubproblems(Problem dpp) {
     Digraph graphOfDPP = problemToGraph(dpp);
     SCC scc = new SCC(graphOfDPP);
     List< List<Integer> > sccData = scc.getSccData();
@@ -61,9 +60,11 @@ public class GraphProcessor implements Processor {
       retDP.add(new ArrayList<>());
 
       List<Integer> sccVertices = sccData.get(i);
+
       for(int vertex : sccVertices) {
-        retDP.get(i).add(dpp.getProblem().get(vertex));
+        retDP.get(i).add(dpp.getDPList().get(vertex));
       }
+
       retGraph.add(graphOfDPP.getSubgraph(sccVertices));
 
       ret.add(new Problem(retDP.get(i), retGraph.get(i)));
@@ -73,7 +74,7 @@ public class GraphProcessor implements Processor {
   }
 
   public List<Problem> processDPP(Problem dpp) {
-    return null;
+    return computeNewAllSubproblems(dpp);
   }
 
 
