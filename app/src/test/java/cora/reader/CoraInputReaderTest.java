@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 import cora.exceptions.ParseError;
 import cora.types.Type;
@@ -47,10 +48,15 @@ public class CoraInputReaderTest {
     return data;
   }
 
+  private TRS createEmptyTRS(Alphabet alphabet) {
+    return TRSFactory.createCoraTRS(alphabet, new ArrayList<Rule>(), false,
+                                    new TreeSet<FunctionSymbol>());
+  }
+
   private TRS generateTRS() {
     SymbolData data = makeBasicData();
     Alphabet alphabet = data.queryCurrentAlphabet();
-    return TRSFactory.createCoraTRS(alphabet, new ArrayList<Rule>(), false);
+    return createEmptyTRS(alphabet);
   }
 
   @Test
@@ -205,7 +211,7 @@ public class CoraInputReaderTest {
     SymbolData data = new SymbolData();
     data.addFunctionSymbol(TermFactory.createConstant("sum", type("Int → Int")));
     Alphabet alphabet = data.queryCurrentAlphabet();
-    TRS trs = TRSFactory.createCoraTRS(alphabet, new ArrayList<Rule>(), false);
+    TRS trs = createEmptyTRS(alphabet);
     Rule rule = CoraInputReader.readRule("sum(x) -> x + sum(x-1) | x > 0", trs);
     assertTrue(rule.isConstrained());
     assertTrue(rule.toString().equals("sum(x) → x + sum(x - 1) | x > 0"));
@@ -217,7 +223,7 @@ public class CoraInputReaderTest {
     data.addFunctionSymbol(TermFactory.createConstant("rec",
       type("(Int → Int → Int → Int) → Int → Int → Int")));
     Alphabet alphabet = data.queryCurrentAlphabet();
-    TRS trs = TRSFactory.createCoraTRS(alphabet, new ArrayList<Rule>(), false);
+    TRS trs = createEmptyTRS(alphabet);
     Rule rule = CoraInputReader.readRule("rec(F, x, y) → F(x, y, rec(F, x-1, y)) | x > 0", trs);
     assertTrue(rule.isConstrained());
     assertTrue(rule.toString().equals("rec(F, x, y) → F(x, y, rec(F, x - 1, y)) | x > 0"));
@@ -228,7 +234,7 @@ public class CoraInputReaderTest {
     SymbolData data = new SymbolData();
     data.addFunctionSymbol(TermFactory.createConstant("app", type("(Int → Int) → Int → Int")));
     Alphabet alphabet = data.queryCurrentAlphabet();
-    TRS trs = TRSFactory.createCoraTRS(alphabet, new ArrayList<Rule>(), false);
+    TRS trs = createEmptyTRS(alphabet);
     Rule rule = CoraInputReader.readRule("app(F,x) -> F(x)|0 <= x ∧ (x < 10 ∨ x = 13)", trs);
     assertTrue(rule.toString().equals("app(F, x) → F(x) | 0 ≤ x ∧ (x < 10 ∨ x = 13)"));
   }
@@ -239,7 +245,7 @@ public class CoraInputReaderTest {
     data.addFunctionSymbol(TermFactory.createConstant("cons",type("Int → List → List")));
     data.addFunctionSymbol(TermFactory.createConstant("filter",type("(Int → Bool) → List → List")));
     Alphabet alphabet = data.queryCurrentAlphabet();
-    TRS trs = TRSFactory.createCoraTRS(alphabet, new ArrayList<Rule>(), false);
+    TRS trs = createEmptyTRS(alphabet);
     try { CoraInputReader.readRule("filter(F,cons(H,T)) -> cons(H, filter(F, T)) | F(H)", trs); }
     catch (ParseError e) {
       assertTrue(e.getMessage().equals(
@@ -266,7 +272,7 @@ public class CoraInputReaderTest {
     SymbolData data = new SymbolData();
     data.addFunctionSymbol(TermFactory.createConstant("random",  type("Int -> Int")));
     Alphabet alphabet = data.queryCurrentAlphabet();
-    TRS trs = TRSFactory.createCoraTRS(alphabet, new ArrayList<Rule>(), false);
+    TRS trs = createEmptyTRS(alphabet);
     Rule rule = CoraInputReader.readRule("random(x) → y | 0 <= x ∧ y < x", trs);
     assertTrue(rule.toString().equals("random(x) → y | 0 ≤ x ∧ y < x"));
   }
@@ -473,6 +479,19 @@ public class CoraInputReaderTest {
       "map :: (nat -> nat) -> list -> list nil :: list map(λx.Z[x], nil) → nil",
       CoraInputReader.AMS);
     assertTrue(trs.queryRule(0).queryLeftSide().isPattern());
+  }
+
+  @Test
+  public void testPrivateSymbol() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "public a :: Int private b :: Int c :: Int", CoraInputReader.LCTRS);
+    Alphabet alphabet = trs.queryAlphabet();
+    FunctionSymbol a = alphabet.lookup("a");
+    FunctionSymbol b = alphabet.lookup("b");
+    FunctionSymbol c = alphabet.lookup("c");
+    assertFalse(trs.isPrivate(a));
+    assertTrue(trs.isPrivate(b));
+    assertFalse(trs.isPrivate(c));
   }
 }
 

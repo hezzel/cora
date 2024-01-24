@@ -16,6 +16,7 @@
 package cora.rewriting;
 
 import java.util.ArrayList;
+import java.util.TreeSet;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +32,8 @@ class MstrsTest {
     try { return CoraInputReader.readType(str); }
     catch (Exception e) { System.out.println(e); return null; }
   }
+
+  private TreeSet<FunctionSymbol> emptyPriv() { return new TreeSet<FunctionSymbol>(); }
 
   private FunctionSymbol a() {
     return TermFactory.createConstant("a", 0);
@@ -72,7 +75,7 @@ class MstrsTest {
     rules.add(new Rule(left2, right2));
       // g(x, x, b) -> f(b, x)
 
-    return TRSFactory.createMSTRS(alf, rules);
+    return TRSFactory.createMSTRS(alf, rules, emptyPriv());
   }
 
   @Test
@@ -84,6 +87,22 @@ class MstrsTest {
     assertTrue(trs.querySchemeCount() == 0);
     assertTrue(trs.lookupSymbol("f").equals(f()));
     assertTrue(trs.lookupSymbol("ff") == null);
+  }
+
+  @Test
+  public void testPrivate() {
+    ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
+    symbols.add(a());
+    symbols.add(b());
+    Alphabet alf = new Alphabet(symbols);
+
+    ArrayList<Rule> rules = new ArrayList<Rule>();
+    TreeSet<FunctionSymbol> priv = new TreeSet<FunctionSymbol>();
+    priv.add(b());
+
+    TRS trs = TRSFactory.createMSTRS(alf, rules, priv);
+    assertFalse(trs.isPrivate(a()));
+    assertTrue(trs.isPrivate(b()));
   }
   
   @Test
@@ -125,7 +144,7 @@ class MstrsTest {
     rules.add(RuleFactory.createFirstOrderRule(TermFactory.createApp(f(), x, a()), x));
 
     assertThrows(cora.exceptions.IllegalSymbolError.class,
-      () -> TRSFactory.createMSTRS(alf, rules));
+      () -> TRSFactory.createMSTRS(alf, rules, emptyPriv()));
   }
 
   @Test
@@ -140,7 +159,7 @@ class MstrsTest {
     rules.add(RuleFactory.createApplicativeRule(f().apply(x), g.apply(x)));
 
     assertThrows(cora.exceptions.IllegalRuleError.class,
-      () -> TRSFactory.createMSTRS(alf, rules));
+      () -> TRSFactory.createMSTRS(alf, rules, emptyPriv()));
   }
 
   @Test
@@ -156,7 +175,7 @@ class MstrsTest {
     rules.add(RuleFactory.createApplicativeRule(TermFactory.createApp(f(), x, a()),
                                                 TermFactory.createApp(g().apply(b()), x, x)));
 
-    TRSFactory.createMSTRS(alf, rules);
+    TRSFactory.createMSTRS(alf, rules, emptyPriv());
   }
 
   @Test
@@ -167,7 +186,7 @@ class MstrsTest {
     Variable x = TermFactory.createVar("x");
     Variable y = TermFactory.createVar("y");
     rules.add(RuleFactory.createFirstOrderRule(TermFactory.createApp(f(), x, y), x));
-    TRS trs = TRSFactory.createMSTRS(new Alphabet(symbols), rules);
+    TRS trs = TRSFactory.createMSTRS(new Alphabet(symbols), rules, emptyPriv());
     symbols.add(a());
     rules.add(RuleFactory.createFirstOrderRule(a(), a()));
 

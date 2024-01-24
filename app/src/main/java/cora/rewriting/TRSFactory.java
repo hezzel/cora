@@ -17,6 +17,7 @@ package cora.rewriting;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import cora.exceptions.IllegalSymbolError;
 import cora.exceptions.IllegalRuleError;
 import cora.exceptions.NullInitialisationError;
@@ -76,7 +77,8 @@ public class TRSFactory {
   }
 
   /** Helper function for createMSTRS and createLCTRS */
-  private static TRS createFirstorderTRS(Alphabet alphabet, List<Rule> rules, boolean constrained) {
+  private static TRS createFirstorderTRS(Alphabet alphabet, List<Rule> rules, boolean constrained,
+                                         Set<FunctionSymbol> priv) {
     ArrayList<Scheme> schemes = new ArrayList<Scheme>();
 
     doBasicChecks(alphabet, rules, schemes);
@@ -98,7 +100,7 @@ public class TRSFactory {
       }
     }
 
-    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, constrained);
+    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, constrained, priv);
   }
 
   /**
@@ -106,8 +108,8 @@ public class TRSFactory {
    * and rules.  No rule schemes are included.  If the alphabet or rules are not first-order, then
    * an IllegalSymbolError or IllegalRulesError is thrown.
    */
-  public static TRS createMSTRS(Alphabet alphabet, List<Rule> rules) {
-    return createFirstorderTRS(alphabet, rules, false);
+  public static TRS createMSTRS(Alphabet alphabet, List<Rule> rules, Set<FunctionSymbol> priv) {
+    return createFirstorderTRS(alphabet, rules, false, priv);
   }
 
   /**
@@ -117,12 +119,13 @@ public class TRSFactory {
    * Note that the given alphabet is the *non-theory* alphabet.  If this alphabet or the rules are
    * not first-order, then an IllegalSymbolError or IllegalRulesError is thrown.
    */
-  public static TRS createLCTRS(Alphabet alphabet, List<Rule> rules) {
-    return createFirstorderTRS(alphabet, rules, true);
+  public static TRS createLCTRS(Alphabet alphabet, List<Rule> rules, Set<FunctionSymbol> priv) {
+    return createFirstorderTRS(alphabet, rules, true, priv);
   }
 
   /** Helper function for createApplicativeTRS and createLCSTRS */
-  private static TRS createApplicativeTRS(Alphabet alphabet, List<Rule> rules, boolean constr) {
+  private static TRS createApplicativeTRS(Alphabet alphabet, List<Rule> rules, boolean constr,
+                                          Set<FunctionSymbol> priv) {
     ArrayList<Scheme> schemes = new ArrayList<Scheme>();
 
     doBasicChecks(alphabet, rules, schemes);
@@ -136,7 +139,7 @@ public class TRSFactory {
       }
     }
 
-    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, constr);
+    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, constr, priv);
   }
 
   /**
@@ -144,8 +147,9 @@ public class TRSFactory {
    * No rule schemes are included, and rules are not constrained.  The rules are not required to be
    * patterns, only applicative.  If they are not, then an IllegalRuleError is thrown.
    */
-  public static TRS createApplicativeTRS(Alphabet alphabet, List<Rule> rules) {
-    return createApplicativeTRS(alphabet, rules, false);
+  public static TRS createApplicativeTRS(Alphabet alphabet, List<Rule> rules,
+                                         Set<FunctionSymbol> priv) {
+    return createApplicativeTRS(alphabet, rules, false, priv);
   }
   
   /**
@@ -153,15 +157,16 @@ public class TRSFactory {
    * given alphabet and rules.  Note that the alphabet is the *non-theory* alphabet; theory symbols
    * are automatically included.
    */
-  public static TRS createLCSTRS(Alphabet alphabet, List<Rule> rules) {
-    return createApplicativeTRS(alphabet, rules, true);
+  public static TRS createLCSTRS(Alphabet alphabet, List<Rule> rules, Set<FunctionSymbol> priv) {
+    return createApplicativeTRS(alphabet, rules, true, priv);
   }
 
   /**
    * Creates a Curried Functional System with the given alphabet, rules, the beta rule, and also
    * eta if this is indicated.
    */
-  public static TRS createCFS(Alphabet alphabet, List<Rule> rules, boolean includeEta) {
+  public static TRS createCFS(Alphabet alphabet, List<Rule> rules, boolean includeEta,
+                              Set<FunctionSymbol> priv) {
     ArrayList<Scheme> schemes = new ArrayList<Scheme>();
     schemes.add(new Beta());
     if (includeEta) schemes.add(new Eta());
@@ -173,33 +178,35 @@ public class TRSFactory {
           " cannot occur in a Curried Functional System, as it contains meta-variables.");
       }
     }
-    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, false);
+    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, false, priv);
   }
 
   /**
    * Creates an Applicative Meta-variable System with the given alphabet, rules, the beta rule,
    * and also eta if this is indicated.
    */
-  public static TRS createAMS(Alphabet alphabet, List<Rule> rules, boolean includeEta) {
+  public static TRS createAMS(Alphabet alphabet, List<Rule> rules, boolean includeEta,
+                              Set<FunctionSymbol> priv) {
     ArrayList<Scheme> schemes = new ArrayList<Scheme>();
     schemes.add(new Beta());
     if (includeEta) schemes.add(new Eta());
     doBasicChecks(alphabet, rules, schemes);
     doConstraintChecks(false, rules, schemes);
-    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, false);
+    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, false, priv);
   }
 
   /**
    * Creates an Applicative Meta-variable System with constraints and theory symbols over the
    * integers, booleans and strings.
    */
-  public static TRS createCoraTRS(Alphabet alphabet, List<Rule> rules, boolean includeEta) {
+  public static TRS createCoraTRS(Alphabet alphabet, List<Rule> rules, boolean includeEta,
+                                  Set<FunctionSymbol> priv) {
     ArrayList<Scheme> schemes = new ArrayList<Scheme>();
     schemes.add(new Beta());
     if (includeEta) schemes.add(new Eta());
     doConstraintChecks(true, rules, schemes);
     doBasicChecks(alphabet, rules, schemes);
-    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, true);
+    return new TRS(alphabet.copy(), new ArrayList<Rule>(rules), schemes, true, priv);
   }
 }
 

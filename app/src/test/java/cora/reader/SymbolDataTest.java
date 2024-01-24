@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
+import java.util.TreeSet;
 import cora.types.TypeFactory;
 import cora.terms.*;
 import cora.rewriting.Alphabet;
@@ -198,7 +199,7 @@ public class SymbolDataTest {
     FunctionSymbol bong = TermFactory.createConstant("bong", TypeFactory.createSort("b"));
     symbols.add(bing);
     Alphabet alf = new Alphabet(symbols);
-    TRS trs = TRSFactory.createMSTRS(alf, new ArrayList<Rule>());
+    TRS trs = TRSFactory.createMSTRS(alf, new ArrayList<Rule>(), new TreeSet<FunctionSymbol>());
     SymbolData data = new SymbolData(trs);
 
     assertTrue(data.lookupFunctionSymbol("bing").equals(bing));
@@ -216,7 +217,7 @@ public class SymbolDataTest {
     FunctionSymbol bing = TermFactory.createConstant("bing", TypeFactory.createSort("a"));
     symbols.add(bing);
     Alphabet alf = new Alphabet(symbols);
-    TRS trs = TRSFactory.createMSTRS(alf, new ArrayList<Rule>());
+    TRS trs = TRSFactory.createMSTRS(alf, new ArrayList<Rule>(), new TreeSet<FunctionSymbol>());
     SymbolData data = new SymbolData(trs);
 
     FunctionSymbol bong = TermFactory.createConstant("bing", TypeFactory.createSort("b"));

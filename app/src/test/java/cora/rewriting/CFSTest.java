@@ -18,6 +18,7 @@ package cora.rewriting;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.ArrayList;
+import java.util.TreeSet;
 import cora.exceptions.IllegalRuleError;
 import cora.exceptions.NullInitialisationError;
 import cora.types.*;
@@ -29,6 +30,8 @@ public class CFSTest {
   private Type type(String str) {
     return CoraInputReader.readType(str);
   }
+
+  private TreeSet<FunctionSymbol> emptyPriv() { return new TreeSet<FunctionSymbol>(); }
 
   private TRS createTermRewritingSystem(boolean includeEta) {
     // f(Z(a), λx.Y) → Z(Y)
@@ -63,7 +66,7 @@ public class CFSTest {
       TermFactory.createApp(g.apply(a), x2, y2),
       TermFactory.createApp(g.apply(b), y2, TermFactory.createApp(h, abs, x2))));
     rules.add(RuleFactory.createRule(TermFactory.createApp(h, z3, x3), z3.apply(x3)));
-    return TRSFactory.createCFS(new Alphabet(symbols), rules, includeEta);
+    return TRSFactory.createCFS(new Alphabet(symbols), rules, includeEta, emptyPriv());
   }
 
   @Test
@@ -103,7 +106,7 @@ public class CFSTest {
     Variable y = TermFactory.createVar("y", type("b"));
     FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
-    TRSFactory.createCFS(null, rules, true);
+    TRSFactory.createCFS(null, rules, true, emptyPriv());
   }
 
   @Test(expected = NullInitialisationError.class)
@@ -111,7 +114,7 @@ public class CFSTest {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
-    TRSFactory.createCFS(new Alphabet(symbols), null, false);
+    TRSFactory.createCFS(new Alphabet(symbols), null, false, emptyPriv());
   }
 
   @Test(expected = NullInitialisationError.class)
@@ -124,7 +127,7 @@ public class CFSTest {
     symbols.add(f);
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
     rules.add(null);
-    TRSFactory.createCFS(new Alphabet(symbols), rules, true);
+    TRSFactory.createCFS(new Alphabet(symbols), rules, true, emptyPriv());
   }
 
   @Test
@@ -136,7 +139,7 @@ public class CFSTest {
     FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
-    TRS trs = TRSFactory.createCFS(new Alphabet(symbols), rules, false);
+    TRS trs = TRSFactory.createCFS(new Alphabet(symbols), rules, false, emptyPriv());
     FunctionSymbol q = TermFactory.createConstant("q", type("a"));
     symbols.add(q);
     rules.add(RuleFactory.createRule(f, f));
@@ -179,8 +182,8 @@ public class CFSTest {
     Variable y = TermFactory.createVar("Y", type("A"));
     rules.add(RuleFactory.createRule(TermFactory.createApp(h, z, y), z.apply(y)));
     Alphabet alf = new Alphabet(symbols);
-    TRS trswith = TRSFactory.createCFS(alf, rules, true);
-    TRS trswithout = TRSFactory.createCFS(alf, rules, false);
+    TRS trswith = TRSFactory.createCFS(alf, rules, true, emptyPriv());
+    TRS trswithout = TRSFactory.createCFS(alf, rules, false, emptyPriv());
     // rule: h(Z, Y) → Z(Y)
 
     Variable x = TermFactory.createBinder("x", type("A"));

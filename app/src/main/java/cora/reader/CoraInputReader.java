@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.TreeSet;
 
 import com.google.common.collect.ImmutableList;
 import cora.exceptions.*;
@@ -45,12 +46,15 @@ public class CoraInputReader extends TermTyper {
   public static final int LCSTRS = 6;
   public static final int CORA   = 7;
 
+  private TreeSet<FunctionSymbol> _private;
+
   /**
    * Stores the parsing status for use by methods of the CoraInputReader class.
    * Private because it should only be called by the static methods that use a CoraInputReader.
    */
   private CoraInputReader(SymbolData data, ErrorCollector collector) {
     super(data, collector);
+    _private = new TreeSet<FunctionSymbol>();
   }
 
   // ==================================== READING DECLARATIONS ====================================
@@ -76,7 +80,11 @@ public class CoraInputReader extends TermTyper {
       storeError("Redeclaration of previously declared function symbol " + name + ".",
                  decl.token());
     }
-    else _symbols.addFunctionSymbol(TermFactory.createConstant(name, decl.type()));
+    else {
+      FunctionSymbol symbol = TermFactory.createConstant(name, decl.type());
+      _symbols.addFunctionSymbol(symbol);
+      if (decl.extra() == ParserDeclaration.EXTRA_PRIVATE) _private.add(symbol);
+    }
   }
 
   /** takes a set of parser declarations and stores them as variable declarations */
@@ -148,13 +156,13 @@ public class CoraInputReader extends TermTyper {
     Alphabet alf = _symbols.queryCurrentAlphabet();
     try {
       // LCTRS, LCSTRS and CORA are constrained, the rest is not
-      if (kind == MSTRS) return TRSFactory.createMSTRS(alf, rules);
-      if (kind == LCTRS) return TRSFactory.createLCTRS(alf, rules);
-      if (kind == STRS) return TRSFactory.createApplicativeTRS(alf, rules);
-      if (kind == LCSTRS) return TRSFactory.createLCSTRS(alf, rules);
-      if (kind == CFS) return TRSFactory.createCFS(alf, rules, false);
-      if (kind == AMS) return TRSFactory.createAMS(alf, rules, false);
-      return TRSFactory.createCoraTRS(_symbols.queryCurrentAlphabet(), rules, false);
+      if (kind == MSTRS) return TRSFactory.createMSTRS(alf, rules, _private);
+      if (kind == LCTRS) return TRSFactory.createLCTRS(alf, rules, _private);
+      if (kind == STRS) return TRSFactory.createApplicativeTRS(alf, rules, _private);
+      if (kind == LCSTRS) return TRSFactory.createLCSTRS(alf, rules, _private);
+      if (kind == CFS) return TRSFactory.createCFS(alf, rules, false, _private);
+      if (kind == AMS) return TRSFactory.createAMS(alf, rules, false, _private);
+      return TRSFactory.createCoraTRS(_symbols.queryCurrentAlphabet(), rules, false, _private);
     }
     catch (IllegalRuleError e) {
       _errors.addError(e.queryProblem());

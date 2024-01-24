@@ -18,6 +18,7 @@ package cora.rewriting;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.ArrayList;
+import java.util.TreeSet;
 import cora.exceptions.IllegalRuleError;
 import cora.exceptions.NullInitialisationError;
 import cora.types.*;
@@ -29,6 +30,8 @@ public class ApplicativeTrsTest {
   private Type type(String str) {
     return CoraInputReader.readType(str);
   }
+
+  private TreeSet<FunctionSymbol> emptyPriv() { return new TreeSet<FunctionSymbol>(); }
 
   private TRS createTermRewritingSystem() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
@@ -52,7 +55,7 @@ public class ApplicativeTrsTest {
       TermFactory.createApp(g, y.apply(x), x).apply(z),
       TermFactory.createApp(g, z, x).apply(y.apply(a))));
       // g(y(x), x, z) -> g(z, x, y(a))
-    return TRSFactory.createApplicativeTRS(new Alphabet(symbols), rules);
+    return TRSFactory.createApplicativeTRS(new Alphabet(symbols), rules, emptyPriv());
   }
 
   @Test
@@ -77,7 +80,7 @@ public class ApplicativeTrsTest {
     FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
-    TRSFactory.createApplicativeTRS(new Alphabet(symbols), rules);
+    TRSFactory.createApplicativeTRS(new Alphabet(symbols), rules, emptyPriv());
   }
 
   @Test(expected = NullInitialisationError.class)
@@ -87,7 +90,7 @@ public class ApplicativeTrsTest {
     Variable y = TermFactory.createVar("y", type("b"));
     FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
-    TRSFactory.createApplicativeTRS(null, rules);
+    TRSFactory.createApplicativeTRS(null, rules, emptyPriv());
   }
 
   @Test(expected = NullInitialisationError.class)
@@ -95,7 +98,7 @@ public class ApplicativeTrsTest {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
-    TRSFactory.createApplicativeTRS(new Alphabet(symbols), null);
+    TRSFactory.createApplicativeTRS(new Alphabet(symbols), null, emptyPriv());
   }
 
   @Test(expected = NullInitialisationError.class)
@@ -108,7 +111,7 @@ public class ApplicativeTrsTest {
     symbols.add(f);
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
     rules.add(null);
-    TRSFactory.createApplicativeTRS(new Alphabet(symbols), rules);
+    TRSFactory.createApplicativeTRS(new Alphabet(symbols), rules, emptyPriv());
   }
 
   @Test
@@ -120,7 +123,7 @@ public class ApplicativeTrsTest {
     FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
-    TRS trs = TRSFactory.createApplicativeTRS(new Alphabet(symbols), rules);
+    TRS trs = TRSFactory.createApplicativeTRS(new Alphabet(symbols), rules, emptyPriv());
     FunctionSymbol q = TermFactory.createConstant("q", type("a"));
     symbols.add(q);
     rules.add(RuleFactory.createRule(f, f));

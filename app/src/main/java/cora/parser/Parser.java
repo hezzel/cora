@@ -108,6 +108,8 @@ public interface Parser {
    * - for FUNCTION SYMBOL declarations, it indicates private status: 0 for public, 1 for private
    */
   public record ParserDeclaration(Token token, String name, Type type, int extra) {
+    public static final int EXTRA_PUBLIC = 0;
+    public static final int EXTRA_PRIVATE = 1;
     public ParserDeclaration(Token token, String name, Type type) {
       this(token, name, type, 0);
     }

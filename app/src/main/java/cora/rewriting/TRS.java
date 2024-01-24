@@ -18,6 +18,7 @@ package cora.rewriting;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.TreeMap;
+import java.util.Set;
 import java.util.Collections;
 import cora.exceptions.IndexingError;
 import cora.exceptions.NullInitialisationError;
@@ -45,17 +46,20 @@ public class TRS {
   private final List<Rule> _rules;
   private final List<Scheme> _schemes;
   private final boolean _theories;
+  private final Set<FunctionSymbol> _private;
 
   /**
    * Create a TRS with the given alphabet, rules and rule schemes.  Default because this should
    * only be called by the factory, which also does the correctness checking (such as making sure
    * that none of the components are null, and that the lists are not used elsewhere.
    */
-  TRS(Alphabet alphabet, List<Rule> rules, List<Scheme> schemes, boolean constrained) {
+  TRS(Alphabet alphabet, List<Rule> rules, List<Scheme> schemes, boolean constrained,
+      Set<FunctionSymbol> privateSymbols) {
     _alphabet = alphabet;
     _rules = rules;
     _schemes = schemes;
     _theories = constrained;
+    _private = privateSymbols;
   }
 
   /** @return the number of rules in the TRS that can be queried. */
@@ -100,6 +104,10 @@ public class TRS {
   /** Returns whether theory symbols and logical constraints are supported. */
   public boolean isConstrained() {
     return _theories;
+  }
+
+  public boolean isPrivate(FunctionSymbol symbol) {
+    return _private.contains(symbol);
   }
 
   /**

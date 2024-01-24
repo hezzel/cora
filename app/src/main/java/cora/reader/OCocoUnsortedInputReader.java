@@ -17,6 +17,7 @@ package cora.reader;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 import com.google.common.collect.ImmutableList;
 import cora.exceptions.IllegalRuleError;
@@ -198,7 +199,7 @@ public class OCocoUnsortedInputReader {
         }
       }
     }
-    return TRSFactory.createMSTRS(alphabet, rules);
+    return TRSFactory.createMSTRS(alphabet, rules, new TreeSet<FunctionSymbol>());
   }
 
   // ==================================== PUBLIC FUNCTIONALITY ====================================

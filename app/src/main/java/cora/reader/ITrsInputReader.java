@@ -429,7 +429,7 @@ public class ITrsInputReader {
       if (r != null) rules.add(r);
     }   
     Alphabet alphabet = _symbols.queryCurrentAlphabet();
-    try { return TRSFactory.createLCTRS(alphabet, rules); }
+    try { return TRSFactory.createLCTRS(alphabet, rules, new TreeSet<FunctionSymbol>()); }
     catch (IllegalRuleError e) {
       _errors.addError(e.getMessage());
       return null;
