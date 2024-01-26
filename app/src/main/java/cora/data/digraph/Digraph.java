@@ -100,7 +100,7 @@ public class Digraph {
   }
 
   // I am keeping this private since I am not sure if this method is really needed.
-  private void removeVertex(int vertex) {
+  public void removeVertex(int vertex) {
     validadeVertex(vertex, "Digraph", "removeVertex");
     int deletedEdges = _adjacencyList.get(vertex).size();
     _adjacencyList.remove(vertex);

@@ -16,13 +16,11 @@
 package cora;
 
 import com.google.common.collect.ImmutableList;
-import cora.config.Config;
 import cora.reader.OCocoInputReader;
 import cora.rewriting.TRS;
 import cora.reader.CoraInputReader;
 import cora.reader.OCocoInputReader;
 import cora.termination.Horpo;
-import cora.types.*;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
