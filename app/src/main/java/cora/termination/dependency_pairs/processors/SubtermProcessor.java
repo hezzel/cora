@@ -21,7 +21,6 @@ public class SubtermProcessor implements Processor {
   private static void generateFnConstraints(Problem dpp){
     List<FunctionSymbol> sharps = new ArrayList<>();
     Term s;
-    s.sto
   }
 
 

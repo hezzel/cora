@@ -1,6 +1,6 @@
 package cora.termination.dependency_pairs;
 
-import cora.parsing.CoraInputReader;
+import cora.reader.CoraInputReader;
 import cora.rewriting.Rule;
 import cora.rewriting.RuleFactory;
 import cora.terms.FunctionSymbol;
@@ -59,10 +59,10 @@ class DPGeneratorTest {
   @Test
   void testGenerateDpType() {
     Type ty =
-      CoraInputReader.readTypeFromString("Bool");
+      CoraInputReader.readType("Bool");
     Type depTy = DPGenerator.generateDpType(ty);
 
-    assumingThat(ty.isBaseType() || ty.isProdType(),  () -> {
+    assumingThat(ty.isBaseType() || ty.isProductType(),  () -> {
       assertTrue(DPGenerator.dpSort.equals(depTy));
     });
 
@@ -74,7 +74,7 @@ class DPGeneratorTest {
   @Test
   void testGenerateSharpFn() {
     FunctionSymbol f = TermFactory.
-      createConstant("f", CoraInputReader.readTypeFromString("Bool -> Int"));
+      createConstant("f", CoraInputReader.readType("Bool -> Int"));
     FunctionSymbol fSharp = DPGenerator.generateSharpFn(f);
 
     // the fsharp symbol is named correctly.
@@ -87,7 +87,7 @@ class DPGeneratorTest {
   @Test
   void testFakeEta(){
     Type arr =
-      CoraInputReader.readTypeFromString("Bool -> b -> c -> d -> e");
+      CoraInputReader.readType("Bool -> b -> c -> d -> e");
     Term f = TermFactory.createConstant("f",arr);
     Term x = TermFactory.createVar(TypeFactory.boolSort);
 
@@ -101,7 +101,7 @@ class DPGeneratorTest {
   @Test
   void testGenLeftSharpRule() {
     Type arr =
-      CoraInputReader.readTypeFromString(
+      CoraInputReader.readType(
         "Bool -> b -> c -> d -> e"
       );
     Term f = TermFactory.createConstant("f",arr);
@@ -113,11 +113,11 @@ class DPGeneratorTest {
   @Test
   void testGenRightCandidates() {
     Term f = TermFactory.createConstant("f",
-        CoraInputReader.readTypeFromString("a -> b -> c"));
-    Type a = CoraInputReader.readTypeFromString("a");
+        CoraInputReader.readType("a -> b -> c"));
+    Type a = CoraInputReader.readType("a");
     Term c = TermFactory.createConstant("c", a);
     Term g = TermFactory.createConstant("g",
-        CoraInputReader.readTypeFromString("a -> a"));
+        CoraInputReader.readType("a -> a"));
     Term gc = TermFactory.createApp(g,c);
     Term lhs = TermFactory.createApp(f, c);
     Term rhs = TermFactory.createApp(f, List.of(gc));

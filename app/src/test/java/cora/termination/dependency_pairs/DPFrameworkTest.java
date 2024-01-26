@@ -1,6 +1,6 @@
 package cora.termination.dependency_pairs;
 
-import cora.parsing.CoraInputReader;
+import cora.reader.CoraInputReader;
 import cora.rewriting.TRS;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +18,7 @@ class DPFrameworkTest {
       "sum(x) -> x + sum(x - 1) | x > 0\n" +
         "sum(x) -> f(z)\n" +
         "f(x) -> 0";
-    TRS trs = CoraInputReader.readProgramFromString(program);
+    TRS trs = CoraInputReader.readTrsFromString(program);
 
     System.out.println("Input TRS: " + trs);
 

@@ -16,7 +16,6 @@
 package cora;
 
 import com.google.common.collect.ImmutableList;
-import cora.config.Config;
 import cora.reader.OCocoInputReader;
 import cora.rewriting.TRS;
 import cora.reader.CoraInputReader;
