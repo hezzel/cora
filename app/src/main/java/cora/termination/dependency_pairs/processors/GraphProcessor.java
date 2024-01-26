@@ -13,7 +13,7 @@ import java.util.List;
 public class GraphProcessor implements Processor {
 
   @Override
-  public boolean isApplicable(DP dpp) { return true; }
+  public boolean isApplicable(Problem dpp) { return true; }
 
   // This function implements an over approximation algorithm needed to turn a DP problem into a Digraph.
   private boolean isDpConnected(DP u, DP v) {

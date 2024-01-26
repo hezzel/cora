@@ -15,13 +15,10 @@
 
 package cora;
 
-import com.google.common.collect.ImmutableList;
-import cora.config.Config;
 import cora.rewriting.TRS;
 import cora.parsing.CoraInputReader;
 import cora.parsing.TrsInputReader;
 import cora.termination.Horpo;
-import cora.types.*;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

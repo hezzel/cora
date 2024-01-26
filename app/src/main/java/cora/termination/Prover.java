@@ -1,10 +1,17 @@
 package cora.termination;
 
-import cora.termination.dependency_pairs.certification.Informal;
+import cora.rewriting.TRS;
+import cora.utils.Pair;
+import cora.termination.Handler.Answer;
 
-public class Prover {
-  public enum Technique { NONE, HORPO, DP }
+import java.util.Optional;
 
-  public enum Answer { YES, NO, MAYBE }
+public interface Prover {
+
+  default Boolean isTRSApplicable(TRS trs) {
+    return false;
+  }
+
+  Pair<Answer, Optional<String>> proveTermination(TRS trs);
 
 }

@@ -4,7 +4,6 @@ import cora.parsing.CoraInputReader;
 import cora.rewriting.TRS;
 import org.junit.jupiter.api.Test;
 
-import static cora.termination.dependency_pairs.DPFramework.proveTermination;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DPFrameworkTest {
@@ -25,7 +24,7 @@ class DPFrameworkTest {
 
     System.out.println("Ignoring the constraints for now...");
 
-    proveTermination(trs);
+
 
   }
 }

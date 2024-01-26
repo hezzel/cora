@@ -8,7 +8,9 @@ import java.util.List;
 public interface Processor {
 
   // check whether a given processor can be applied to a DP problem
-  boolean isApplicable(DP dp);
+  default boolean isApplicable(Problem dpp) {
+    return false;
+  }
 
   List<Problem> processDPP(Problem dpp);
 }
