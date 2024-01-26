@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface Processor {
 
-//  check whether a given processor can be applied to a DP problem
+  // check whether a given processor can be applied to a DP problem
   boolean isApplicable(DP dp);
 
   List<Problem> processDPP(Problem dpp);

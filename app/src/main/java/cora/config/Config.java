@@ -25,10 +25,9 @@ public class Config {
   @Contract(value = " -> new", pure = true)
   public static @NotNull Config getInstance() {
     if (_appConfig == null) {
-      return new Config();
-    } else {
-      return _appConfig;
+      _appConfig = new Config();
     }
+    return _appConfig;
   }
 
 }

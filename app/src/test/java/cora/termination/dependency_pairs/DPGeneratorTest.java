@@ -132,10 +132,10 @@ class DPGeneratorTest {
     DP t = new DP(f, f, f);
 
 //    System.out.println(t);
-    Rule r = RuleFactory.createRule(lhs, rhs);
-    System.out.println (
-        DPGenerator.generateProblemFromRule(r)
-    );
+//    Rule r = RuleFactory.createRule(lhs, rhs);
+//    System.out.println (
+//        DPGenerator.generateProblemFromRule(r)
+//    );
 
   }
 }

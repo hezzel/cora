@@ -76,6 +76,10 @@ public class TRS {
     return _rules.get(index);
   }
 
+  public List<Rule> queryRules() {
+    return _rules;
+  }
+
   /** @return the number of schemes in the TRS that can be queried. */
   public int querySchemeCount() {
     return _schemes.size();

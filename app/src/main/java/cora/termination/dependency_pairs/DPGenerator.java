@@ -81,6 +81,12 @@ class DPGenerator {
     );
   }
 
+  @Contract(pure = true)
+  static @NotNull Term generateSharpTm(@NotNull Term tm) {
+    FunctionSymbol newHead = generateSharpFn(tm.queryRoot());
+    return newHead.apply(tm.queryArguments());
+  }
+
   /**
    * This method applies a term of (possibly) arrow type to freshly generated variables until
    * it is of base type.
@@ -110,22 +116,26 @@ class DPGenerator {
     return DPGenerator.fakeEta(fSharp.apply(tm.queryArguments()));
   }
 
-  static @NotNull boolean isConstructor(Term tm) {
+  static @NotNull boolean isConstructor(TRS trs, FunctionSymbol tm) {
+    return !isDefined(trs, tm);
+  }
+
+  static @NotNull boolean isDefined(TRS trs, FunctionSymbol fn) {
+    for(Rule r : trs.queryRules()){
+      if (r.queryLeftSide().queryRoot().equals(fn))
+        return true;
+    }
     return false;
   }
 
-  static @NotNull boolean isDefined(FunctionSymbol tm) {
-    return true;
-  }
-
-  static @NotNull List<Term> generateCandidates(@NotNull Term tm) {
+  static @NotNull List<Term> generateCandidates(@NotNull TRS trs, @NotNull Term tm) {
     // In each case below we will have to recursively compute the
     // U_{i = 1}^k genRightCandidates(si), for the arguments si, of the rhs,
     // so we compute it beforehand.
     List<Term> argsCandidateApp = tm
       .queryArguments()
       .stream()
-      .map(t -> DPGenerator.generateCandidates(t).stream())
+      .map(t -> DPGenerator.generateCandidates(trs, t).stream())
       .reduce(Stream.empty(), Stream::concat)
       .toList();
 
@@ -134,7 +144,7 @@ class DPGenerator {
       return argsCandidateApp;
     }
     // Case c (s1, ..., sn), we return the candidates of each argument
-    else if (tm.isApplication() && isConstructor(tm.queryHead())) {
+    else if (tm.isApplication() && isConstructor(trs, tm.queryRoot())) {
       return argsCandidateApp;
     }
     // Case for: (| s1, ..., sn |), we return the candidates of each argument
@@ -142,35 +152,36 @@ class DPGenerator {
       return tm
         .queryTupleArguments()
         .stream()
-        .flatMap(t -> DPGenerator.generateCandidates(t).stream())
+        .flatMap(t -> DPGenerator.generateCandidates(trs, t).stream())
         .collect(Collectors.toList());
     }
     // Case for: g(s1, ..., sn) with g a defined symbol and n > 0
-    else if (tm.isApplication() && isDefined(tm.queryRoot())) {
+    else if (tm.isApplication() && isDefined(trs, tm.queryRoot())) {
       return Stream.concat(
         argsCandidateApp.stream(),
         Stream.of(DPGenerator.generateSharpEta(tm))
       ).toList();
-    } else if (tm.isConstant() && isDefined(tm.queryRoot())) {
+    } else if (tm.isConstant() && isDefined(trs, tm.queryRoot())) {
       return List.of(generateSharpEta(tm));
     }
     // If none of the cases above is true, we return an empty list.
     return List.of();
   }
 
-  static Problem generateProblemFromRule(Rule rule) {
+  static Problem generateProblemFromRule(TRS trs, Rule rule) {
     Term lhs = rule.queryLeftSide();
     Term rhs = rule.queryRightSide();
+    Term ctr = rule.queryConstraint();
     List<Term> freshDpVars = DPGenerator.generateVars(lhs.queryType());
-    Term dpLeft = lhs.apply(freshDpVars);
+    Term dpLeft = generateSharpTm(lhs).apply(freshDpVars);
     Term dpRight = rhs.apply(freshDpVars);
 
-    List<Term> candRight = generateCandidates(dpRight);
+    List<Term> candRight = generateCandidates(trs, dpRight);
 
-    return new Problem(
+    return new Problem (
       candRight
         .stream()
-        .map(t -> new DP(dpLeft, t, TheoryFactory.createValue(true)))
+        .map(t -> new DP(dpLeft, t, ctr) )
         .toList()
     );
   }
@@ -183,7 +194,10 @@ class DPGenerator {
     return new Problem (
       rules
         .stream()
-        .flatMap(rule -> DPGenerator.generateProblemFromRule(rule).getDPList().stream())
+        .flatMap(
+          rule ->
+            DPGenerator.generateProblemFromRule(trs, rule).getDPList().stream()
+        )
         .collect(Collectors.toList())
     );
   }
