@@ -130,7 +130,7 @@ public class Horpo {
   /*   + a list of requirements that we still need to handle                                     */
   /* - an SmtProblem representing the list of implications var → constraint that we need to      */
   /*   satisfy for the requirements to be satisfied                                              */
-  /* - a mapping of requirement string ⇒ variable, so we don't add the same formulas multiple    */
+  /* - a mapping of requirement string → variable, so we don't add the same formulas multiple    */
   /*   times                                                                                     */
   /***********************************************************************************************/
 
@@ -373,8 +373,8 @@ public class Horpo {
   }
 
   /**
-   * To handle an integer comparison, we check whether φ ⇒ l > -M ∧ l > r is valid, and if not,
-   * require that variable ∧ countDown cannot both hold; then we check the same for φ ⇒ l < M ∧
+   * To handle an integer comparison, we check whether φ → l > -M ∧ l > r is valid, and if not,
+   * require that variable ∧ countDown cannot both hold; then we check the same for φ → l < M ∧
    * l < r and if not, require that variable ∧ ¬countDown cannot both hold.  If strict = false,
    * we also allow the option l = r in both cases.
    * We use a separate SMT problem to do the validity check, as it should not be a part of the
@@ -638,7 +638,7 @@ public class Horpo {
         _problem.require(SmtProblem.createGeq(index, SmtProblem.createValue(1)));
         _problem.require(SmtProblem.createLeq(index, SmtProblem.createValue(m)));
         for (int i = 1; i < m; i++) {
-          // create constraint: index > i ⇒ l_i ≽ r_i
+          // create constraint: index > i → l_i ≽ r_i
           BVar ligeqri = getVariableFor(req.rule, l.queryArgument(i), GEQ, r.queryArgument(i),
                                         req.constraint, null);
           Constraint constraint = SmtProblem.createImplication(
@@ -646,7 +646,7 @@ public class Horpo {
           _problem.requireImplication(req.variable, constraint);
         }
         for (int i = 1; i <= m; i++) {
-          // create constraint: index = i ⇒ l_i ≻ r_i
+          // create constraint: index = i → l_i ≻ r_i
           BVar ligreri = getVariableFor(req.rule, l.queryArgument(i), GREATER, r.queryArgument(i),
                                         req.constraint, null);
           Constraint constraint = SmtProblem.createImplication(
@@ -671,18 +671,18 @@ public class Horpo {
     Term r = req.right;
     int m = r.numberArguments();
 
-    // [req] ⇒ k > 1 (as k = 1 implies a Lex step)
+    // [req] → k > 1 (as k = 1 implies a Lex step)
     _problem.requireImplication(req.variable, SmtProblem.createGreater(status,
         SmtProblem.createValue(1)));
     
-    // [req] ⇒ k ≤ m (we only require this if f r1 ... rm does not have base type, since otherwise
+    // [req] → k ≤ m (we only require this if f r1 ... rm does not have base type, since otherwise
     // it is already covered by the constraint on the creation of the status variable k)
     if (r.queryType().isArrowType()) {
       _problem.requireImplication(req.variable,
         SmtProblem.createLeq(status, SmtProblem.createValue(m)));
     }
 
-    // [req] ⇒ l ▷{φ} r_i for all arguments i; however, we omit 1,2 since the multiset constraints
+    // [req] → l ▷{φ} r_i for all arguments i; however, we omit 1,2 since the multiset constraints
     // always imply this (for i > 2, it could be that k = 2, and then these are not required)
     for (int i = 3; i <= m; i++) {
       _problem.requireImplication(req.variable,
@@ -722,14 +722,14 @@ public class Horpo {
       ret.put(j, strict_j);
       oneof.add(strict_j);
       if (j > 2) {
-        // [req] ⇒ ([strict_j] ⇒ k ≥ j)
+        // [req] → ([strict_j] → k ≥ j)
         Constraint constr = SmtProblem.createImplication(strict_j,
           SmtProblem.createGeq(status, SmtProblem.createValue(j)));
         _problem.requireImplication(reqvar, constr);
       }
     }
 
-    // [req] ⇒ [strict_1] ∨ ... ∨ [strict_n]
+    // [req] → [strict_1] ∨ ... ∨ [strict_n]
     _problem.requireImplication(reqvar, SmtProblem.createDisjunction(oneof));
     return ret;
   }
@@ -772,7 +772,7 @@ public class Horpo {
                                              TreeMap<Integer,TreeSet<Integer>> comparable,
                                              TreeMap<Integer,BVar> strict,
                                              TreeMap<Integer,IVar> pi) {
-    // require that if π(i) = j ∧ pi(i') = j then ¬strict_j
+    // require that if π(i) = j ∧ pi(i') = j then strict_j
     for (int i1 = 1; i1 < m; i1++) {
       for (int i2 = i1+1; i2 <= m; i2++) {
         for (int j = 1; j <= n; j++) {
@@ -782,8 +782,8 @@ public class Horpo {
           Constraint c1 = SmtProblem.createUnequal(pi.get(i1), SmtProblem.createValue(j));
           // create: pi(i2) != j
           Constraint c2 = SmtProblem.createUnequal(pi.get(i2), SmtProblem.createValue(j));
-          // create: ¬strict_j
-          Constraint c3 = SmtProblem.createNegation(strict.get(j));
+          // create: strict_j
+          Constraint c3 = strict.get(j);
           // combine them
           Constraint d = SmtProblem.createDisjunction(SmtProblem.createDisjunction(c1, c2), c3);
           // and require for this clause to hold if req holds

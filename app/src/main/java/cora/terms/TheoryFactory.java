@@ -65,6 +65,12 @@ public class TheoryFactory {
   /** The unary(!) symbol for integer negation */
   public static final CalculationSymbol minusSymbol = new MinusSymbol();
 
+  /** The binary symbol for division */
+  public static final CalculationSymbol divSymbol = new DivModSymbol(true);
+
+  /** The binary symbol for modulo */
+  public static final CalculationSymbol modSymbol = new DivModSymbol(false);
+
   /** The binary calculation symbol for conjunction */
   public static final CalculationSymbol andSymbol = new AndOrSymbol(false);
 

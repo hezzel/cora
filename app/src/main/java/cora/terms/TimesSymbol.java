@@ -23,7 +23,7 @@ import cora.types.TypeFactory;
 /** The binary multiplication symbol +. */
 class TimesSymbol extends CalculationInherit {
   TimesSymbol() {
-    // Int ⇒ Int ⇒ Int
+    // Int → Int → Int
     super(TypeFactory.createArrow(TypeFactory.intSort, TypeFactory.createArrow(
       TypeFactory.intSort, TypeFactory.intSort)));
   }
@@ -47,7 +47,13 @@ class TimesSymbol extends CalculationInherit {
   public boolean printInfix(StringBuilder builder, List<Term> args,
                             Map<Replaceable,String> renaming, Set<String> avoid) {
     if (args.size() != 2) return false; // let the standard printing procedure handle it
-    printHelper(builder, args.get(0), renaming, avoid, CalculationSymbol.INFIX_TIMES - 1);
+    Term a = args.get(0);
+    if (a.isFunctionalTerm() && a.queryRoot().equals(this)) {
+      printHelper(builder, args.get(0), renaming, avoid, CalculationSymbol.INFIX_TIMES - 1);
+    }
+    else {
+      printHelper(builder, args.get(0), renaming, avoid, CalculationSymbol.INFIX_TIMES);
+    }
     builder.append(" * ");
     printHelper(builder, args.get(1), renaming, avoid, CalculationSymbol.INFIX_TIMES);
     return true;

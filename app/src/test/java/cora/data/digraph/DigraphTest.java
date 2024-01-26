@@ -18,10 +18,10 @@ class DigraphTest {
     g.addEdge(1, 0);
     g.addEdge(1, 2);
     g.addEdge(2, 1);
-    System.out.println(g);
+//    System.out.println(g);
 
     Digraph sub = g.getSubgraph(List.of(1,0));
-    System.out.println(sub);
+//    System.out.println(sub);
   }
 
   @Test

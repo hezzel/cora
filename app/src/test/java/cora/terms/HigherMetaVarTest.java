@@ -69,7 +69,7 @@ public class HigherMetaVarTest {
     assertTrue(z.queryInputType(1).equals(TypeFactory.createSort("a")));
     assertTrue(z.queryInputType(2).equals(TypeFactory.createSort("b")));
     assertTrue(z.queryOutputType().equals(TypeFactory.createSort("c")));
-    assertTrue(z.queryType().toString().equals("a ⇒ b ⇒ c"));
+    assertTrue(z.queryType().toString().equals("a → b → c"));
     assertTrue(z.equals(z));
     MetaVariable z2 = TermFactory.createMetaVar("z", a, b, TypeFactory.createSort("c"));
     assertFalse(z.equals(z2));
@@ -90,7 +90,7 @@ public class HigherMetaVarTest {
     assertTrue(x.queryInputType(1).equals(TypeFactory.createSort("a")));
     assertTrue(x.queryInputType(2).equals(TypeFactory.createSort("b")));
     assertTrue(x.queryInputType(3).equals(TypeFactory.createSort("c")));
-    assertTrue(x.queryOutputType().toString().equals("d ⇒ e"));
+    assertTrue(x.queryOutputType().toString().equals("d → e"));
     assertTrue(x.queryType().equals(type));
   }
 

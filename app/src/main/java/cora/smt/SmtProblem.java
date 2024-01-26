@@ -72,6 +72,18 @@ public class SmtProblem {
     return new Minus(arg);
   }
 
+  public static IntegerExpression createDivision(IntegerExpression arg1, IntegerExpression arg2) {
+    if (arg1 == null) throw new NullInitialisationError("IDiv", "left argument");
+    if (arg2 == null) throw new NullInitialisationError("IDiv", "right argument");
+    return new Division(arg1, arg2);
+  }
+
+  public static IntegerExpression createModulo(IntegerExpression arg1, IntegerExpression arg2) {
+    if (arg1 == null) throw new NullInitialisationError("IMod", "left argument");
+    if (arg2 == null) throw new NullInitialisationError("IMod", "right argument");
+    return new Modulo(arg1, arg2);
+  }
+
   public static Constraint createValue(boolean b) {
     if (b) return new Truth();
     else return new Falsehood();
@@ -179,7 +191,7 @@ public class SmtProblem {
   }
 
   /**
-   * This requires that premise ⇒ conclusion holds.  Note that all variables in both premise and
+   * This requires that premise → conclusion holds.  Note that all variables in both premise and
    * conclusion must have been created through the createIntegerVariable or createBooleanVariable
    * functions, since this guarantees that they are stored in the SmtProblem.
    */

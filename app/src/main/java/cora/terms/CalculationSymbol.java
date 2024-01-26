@@ -26,6 +26,7 @@ public interface CalculationSymbol extends FunctionSymbol {
   public static int INFIX_NOT = 3;
   public static int INFIX_PLUS = 4;
   public static int INFIX_TIMES = 5;
+  public static int INFIX_DIVMOD = 5;
   public static int INFIX_MINUS = 6;
   public static int INFIX_NONE = 0;
 

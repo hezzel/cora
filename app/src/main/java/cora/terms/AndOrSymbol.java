@@ -25,7 +25,7 @@ class AndOrSymbol extends CalculationInherit {
   private final boolean _disjunction; // true if we are ∨, false if we are ∧
 
   AndOrSymbol(boolean isOr) {
-    // Bool ⇒ Bool ⇒ Bool
+    // Bool → Bool → Bool
     super(TypeFactory.createArrow(TypeFactory.boolSort, TypeFactory.createArrow(
       TypeFactory.boolSort, TypeFactory.boolSort)));
     _disjunction = isOr;

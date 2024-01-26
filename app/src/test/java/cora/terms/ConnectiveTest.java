@@ -26,7 +26,7 @@ public class ConnectiveTest extends TermTestFoundation {
   @Test
   public void testAndBasics() {
     CalculationSymbol a = new AndOrSymbol(false);
-    assertTrue(a.queryType().toString().equals("Bool ⇒ Bool ⇒ Bool"));
+    assertTrue(a.queryType().toString().equals("Bool → Bool → Bool"));
     assertTrue(a.queryInfixPriority() == CalculationSymbol.INFIX_ANDOR);
     assertTrue(a.queryName().equals("∧"));
     assertTrue(a.toString().equals("∧"));
@@ -37,7 +37,7 @@ public class ConnectiveTest extends TermTestFoundation {
   @Test
   public void testOrBasics() {
     CalculationSymbol o = new AndOrSymbol(true);
-    assertTrue(o.queryType().toString().equals("Bool ⇒ Bool ⇒ Bool"));
+    assertTrue(o.queryType().toString().equals("Bool → Bool → Bool"));
     assertTrue(o.queryInfixPriority() == CalculationSymbol.INFIX_ANDOR);
     assertTrue(o.queryName().equals("∨"));
     assertTrue(o.toString().equals("∨"));
@@ -48,7 +48,7 @@ public class ConnectiveTest extends TermTestFoundation {
   @Test
   public void testNotBasics() {
     CalculationSymbol o = new NotSymbol();
-    assertTrue(o.queryType().toString().equals("Bool ⇒ Bool"));
+    assertTrue(o.queryType().toString().equals("Bool → Bool"));
     assertTrue(o.queryInfixPriority() == CalculationSymbol.INFIX_NOT);
     assertTrue(o.queryName().equals("¬"));
     assertTrue(o.toString().equals("¬"));

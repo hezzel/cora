@@ -2,6 +2,8 @@ package cora.types;
 
 import com.google.common.collect.ImmutableList;
 import org.jetbrains.annotations.NotNull;
+
+import cora.exceptions.IndexingError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.ProdTypeConstructionError;
 
@@ -15,7 +17,7 @@ public record Product(ImmutableList<Type> types) implements Type {
    * Returns true only if this object is an instance of {@link cora.types.Product}.
    */
   @Override
-  public boolean isProdType() { return true; }
+  public boolean isProductType() { return true; }
 
   /** 
    * Returns true if the only base types sorts occurring in this type are theory sorts --
@@ -38,7 +40,7 @@ public record Product(ImmutableList<Type> types) implements Type {
         case Arrow(_, _), Product(_) -> "(" + types.get(i).toString() + ")";
       };
       if (i == 0) string.append(stringOfi);
-      else string.append(" x ").append(stringOfi);
+      else string.append(" × ").append(stringOfi);
     }
     return string.toString();
   }
@@ -79,5 +81,18 @@ public record Product(ImmutableList<Type> types) implements Type {
       .stream()
       .map(Type::queryTypeOrder)
       .reduce(0, (n,m) -> Math.max(n,m));
+  }
+
+  @Override
+  public int numberSubtypes() {
+    return this.types.size();
+  }
+
+  @Override
+  public Type subtype(int index) {
+    if (index <= 0 || index > this.types.size()) {
+      throw new IndexingError("Product", "subtype", index, 1, this.types.size());
+    }
+    return this.types.get(index-1);
   }
 }

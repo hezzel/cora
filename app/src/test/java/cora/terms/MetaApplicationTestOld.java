@@ -26,69 +26,6 @@ import cora.types.Type;
 import cora.types.TypeFactory;
 
 public class MetaApplicationTestOld extends TermTestFoundation {
-  @Test(expected = NullInitialisationError.class)
-  public void testUnaryWithNullArg() {
-    MetaVariable z = TermFactory.createMetaVar("z", baseType("a"), baseType("b"));
-    Term arg = null;
-    Term t = TermFactory.createMeta(z, arg);
-  }
-
-  @Test(expected = NullInitialisationError.class)
-  public void testBinaryWithNullHead() {
-    TermFactory.createMeta(null, constantTerm("a", baseType("b")),
-                                 constantTerm("a", baseType("c")));
-  }
-
-  @Test(expected = NullInitialisationError.class)
-  public void testNullArgs() {
-    MetaVariable z = TermFactory.createMetaVar("z", baseType("a"), baseType("b"));
-    ArrayList<Term> args = null;
-    TermFactory.createMeta(z, args);
-  }
-
-  @Test(expected = ArityError.class)
-  public void testNotEnoughArgs() {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(baseType("a"));
-    inputs.add(baseType("a"));
-    inputs.add(baseType("a"));
-    MetaVariable z = TermFactory.createMetaVar("z", inputs, baseType("a"));
-    Term s = constantTerm("s", baseType("a"));
-    TermFactory.createMeta(z, s, s);
-  }
-
-  @Test(expected = ArityError.class)
-  public void testTooManyArgs() {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(baseType("a"));
-    inputs.add(baseType("a"));
-    MetaVariable z = TermFactory.createMetaVar("z", inputs, arrowType("a", "a"));
-    ArrayList<Term> args = new ArrayList<Term>();
-    args.add(constantTerm("a", baseType("a")));
-    args.add(constantTerm("a", baseType("a")));
-    args.add(constantTerm("a", baseType("a")));
-    TermFactory.createMeta(z, args);
-  }
-
-  @Test(expected = IllegalTermError.class)
-  public void testNoArgs() {
-    MetaVariable z = new Var("z", arrowType("a", "a"));
-    ArrayList<Term> args = new ArrayList<Term>();
-    new MetaApplication(z, args);
-  }
-
-  @Test(expected = TypingError.class)
-  public void testBadArgumentType() {
-    ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(baseType("a"));
-    inputs.add(baseType("a"));
-    MetaVariable z = TermFactory.createMetaVar("z", inputs, arrowType("a", "a"));
-    ArrayList<Term> args = new ArrayList<Term>();
-    args.add(constantTerm("a", baseType("a")));
-    args.add(constantTerm("b", baseType("b")));
-    TermFactory.createMeta(z, args);
-  }
-
   private Term makeMeta(String name, Term arg, Type output) {
     MetaVariable z = TermFactory.createMetaVar(name, arg.queryType(), output);
     return TermFactory.createMeta(z, arg);

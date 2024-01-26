@@ -14,7 +14,6 @@ import cora.types.TypeFactory;
 import cora.terms.position.Position;
 
 class AbstractionTest extends TermTestFoundation {
-
   @Test
   void testConstructorsNullInitialization() {
     // Abstractions with null binders should throw NullInitializationError
@@ -186,7 +185,7 @@ class AbstractionTest extends TermTestFoundation {
     Variable x = new Binder("x", arrowType("o", "o"));
     Term abs = makeTerm(x);
 
-    assertEquals("(o ⇒ o) ⇒ b", abs.queryType().toString());
+    assertEquals("(o → o) → b", abs.queryType().toString());
     assertFalse(abs.isVariable());
     assertFalse(abs.isConstant());
     assertFalse(abs.isFunctionalTerm());
@@ -209,6 +208,24 @@ class AbstractionTest extends TermTestFoundation {
     assertFalse(abs.isValue());
     assertFalse(abs.isTheoryTerm());
     assertEquals("(λx.f(x, λy.y))(u)", abs.apply(constantTerm("u", arrowType("o", "o"))).toString());
+  }
+
+  @Test
+  public void testSymbols() {
+    // λx.⦇ f(x, λy.y), λy.g(y) ⦈
+    Variable x = new Binder("x", baseType("a"));
+    Variable y = new Binder("y", baseType("b"));
+    Constant f =
+      new Constant("f", arrowType(baseType("a"), arrowType(arrowType("b", "b"), baseType("b"))));
+    Constant g = new Constant("g", arrowType("b", "b"));
+    Term abs1 = new Application(f, x, new Abstraction(y, y));
+    Term abs2 = new Abstraction(y, new Application(g, y));
+    Term abs = new Abstraction(x, new Tuple(abs1, abs2));
+    TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
+    abs.storeFunctionSymbols(set);
+    assertTrue(set.contains(f));
+    assertTrue(set.contains(g));
+    assertTrue(set.size() == 2);
   }
 
   @Test

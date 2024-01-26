@@ -1,8 +1,10 @@
 package cora.types;
 
-import cora.exceptions.NullInitialisationError;
-import cora.utils.Pair;
 import org.jetbrains.annotations.NotNull;
+
+import cora.exceptions.NullInitialisationError;
+import cora.exceptions.IndexingError;
+import cora.utils.Pair;
 
 public record Arrow(Type left, Type right) implements Type {
 
@@ -31,7 +33,7 @@ public record Arrow(Type left, Type right) implements Type {
       case Pair(Arrow(_, _), _), Pair(Product(_), _) ->
         outLeft.append("(").append(leftStr).append(")");
     }
-    return outLeft.append(" ⇒ ").append(rightStr).toString();
+    return outLeft.append(" → ").append(rightStr).toString();
   }
 
   /** Returns true if all sorts in the type are theory sorts. */
@@ -71,6 +73,18 @@ public record Arrow(Type left, Type right) implements Type {
       1 + this.left.queryTypeOrder(),
       this.right.queryTypeOrder()
     );
+  }
+
+  @Override
+  public int numberSubtypes() {
+    return 2;
+  }
+
+  @Override
+  public Type subtype(int index) {
+    if (index == 1) return this.left;
+    if (index == 2) return this.right;
+    throw new IndexingError("Arrow", "subtype", index, 1, 2);
   }
 
   @Override @Deprecated

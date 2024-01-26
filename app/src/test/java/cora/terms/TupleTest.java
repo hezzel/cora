@@ -52,7 +52,7 @@ class TupleTest extends TermTestFoundation {
     ReplaceableList fr = tuple.freeReplaceables();
     assertTrue(tuple.vars().contains(x));
     assertTrue(tuple.boundVars().contains(y));
-    assertTrue(tuple.toString().equals("⦅λx1.x1, x⦆"));
+    assertTrue(tuple.toString().equals("⦇λx1.x1, x⦈"));
   }
 
   private Term exampleTuple() {
@@ -75,8 +75,8 @@ class TupleTest extends TermTestFoundation {
     Term tuple3 = new Tuple(a, unaryTerm("f", baseType("A"), a));
     Term tuple4 = new Tuple(new IntegerValue(3), new BooleanValue(false));
 
-    assertTrue(tuple.toString().equals("⦅a, λx.f(x), ⦅f(a), y⦆⦆"));
-    assertTrue(tuple.queryType().toString().equals("N x (N ⇒ M) x (M x P)"));
+    assertTrue(tuple.toString().equals("⦇a, λx.f(x), ⦇f(a), y⦈⦈"));
+    assertTrue(tuple.queryType().toString().equals("N × (N → M) × (M × P)"));
     assertFalse(tuple.isVariable());
     assertFalse(tuple2.isVariable());
     assertFalse(tuple.isConstant());
@@ -183,10 +183,10 @@ class TupleTest extends TermTestFoundation {
     assertTrue(tp.querySubterm(Position.parse("3.1")).toString().equals("f(a)"));
     assertTrue(tp.querySubterm(Position.parse("2.0*1")).toString().equals("f"));
     Term t = tp.replaceSubterm(positions.get(0), constantTerm("b", baseType("N")));
-    assertTrue(t.toString().equals("⦅b, λx.f(x), ⦅f(a), y⦆⦆"));
-    assertTrue(tp.toString().equals("⦅a, λx.f(x), ⦅f(a), y⦆⦆"));
+    assertTrue(t.toString().equals("⦇b, λx.f(x), ⦇f(a), y⦈⦈"));
+    assertTrue(tp.toString().equals("⦇a, λx.f(x), ⦇f(a), y⦈⦈"));
     t = tp.replaceSubterm(Position.parse("3.1*1"), new Var("Z", arrowType("N", "M")));
-    assertTrue(t.toString().equals("⦅a, λx.f(x), ⦅Z(a), y⦆⦆"));
+    assertTrue(t.toString().equals("⦇a, λx.f(x), ⦇Z(a), y⦈⦈"));
     assertThrows(TypingError.class,
       () -> tp.replaceSubterm(positions.get(0), constantTerm("b", baseType("A"))));
     assertThrows(TypingError.class, () ->
@@ -215,8 +215,8 @@ class TupleTest extends TermTestFoundation {
     Variable y = s.queryTupleArgument(3).queryTupleArgument(2).queryVariable();
     Substitution gamma = new Subst(y, constantTerm("q", baseType("P")));
     Term t = s.substitute(gamma);
-    assertTrue(s.toString().equals("⦅a, λx.f(x), ⦅f(a), y⦆⦆"));
-    assertTrue(t.toString().equals("⦅a, λx.f(x), ⦅f(a), q⦆⦆"));
+    assertTrue(s.toString().equals("⦇a, λx.f(x), ⦇f(a), y⦈⦈"));
+    assertTrue(t.toString().equals("⦇a, λx.f(x), ⦇f(a), q⦈⦈"));
   }
 
   @Test
@@ -233,12 +233,12 @@ class TupleTest extends TermTestFoundation {
 
     gamma = new Subst();
     assertTrue(tuple.match(a, gamma).equals(
-      "a does not instantiate ⦅X, Y, X⦆ (not a tuple term)."));
+      "a does not instantiate ⦇X, Y, X⦈ (not a tuple term)."));
 
     m = new Tuple(a, new Tuple(b, a));
     gamma = new Subst();
     assertTrue(tuple.match(m, gamma).equals(
-      "⦅a, ⦅b, a⦆⦆ does not instantiate ⦅X, Y, X⦆ (mismatch on the tuple sizes)."));
+      "⦇a, ⦇b, a⦈⦈ does not instantiate ⦇X, Y, X⦈ (mismatch on the tuple sizes)."));
 
     m = new Tuple(a, b, c);
     gamma = new Subst();

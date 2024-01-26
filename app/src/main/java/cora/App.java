@@ -15,9 +15,12 @@
 
 package cora;
 
+import com.google.common.collect.ImmutableList;
+import cora.config.Config;
+import cora.reader.OCocoInputReader;
 import cora.rewriting.TRS;
-import cora.parsing.CoraInputReader;
-import cora.parsing.TrsInputReader;
+import cora.reader.CoraInputReader;
+import cora.reader.OCocoInputReader;
 import cora.termination.Horpo;
 
 import java.io.BufferedReader;
@@ -37,8 +40,8 @@ public class App {
 
     private static TRS readInput(String file) throws Exception {
         String extension = getExtension(file);
-        if (extension.equals("trs")) return TrsInputReader.readTrsFromFile(file);
-        else return CoraInputReader.readProgramFromFile(file);
+        if (extension.equals("trs")) return OCocoInputReader.readTrsFromFile(file);
+        else return CoraInputReader.readTrsFromFile(file);
     }
 
     private static void readParameters(String[] args) {
@@ -73,7 +76,7 @@ public class App {
 
       do {
         term = trs.leftmostInnermostReduce(term);
-        if (term != null) System.out.println("⇒ " + term.toString());
+        if (term != null) System.out.println("→ " + term.toString());
       } while (term != null);
       */
             if (Horpo.applicable(trs)) {

@@ -26,7 +26,7 @@ public class ComparisonSymbolTest extends TermTestFoundation {
   @Test
   public void testGeqBasics() {
     CalculationSymbol s = new ComparisonSymbol(ComparisonSymbol.KIND_GEQ);
-    assertTrue(s.queryType().toString().equals("Int ⇒ Int ⇒ Bool"));
+    assertTrue(s.queryType().toString().equals("Int → Int → Bool"));
     assertTrue(s.queryInfixPriority() == CalculationSymbol.INFIX_COMPARISON);
     assertTrue(s.queryName().equals("≥"));
     assertTrue(s.toString().equals("≥"));
@@ -37,7 +37,7 @@ public class ComparisonSymbolTest extends TermTestFoundation {
   @Test
   public void testLeqBasics() {
     CalculationSymbol s = new ComparisonSymbol(ComparisonSymbol.KIND_LEQ);
-    assertTrue(s.queryType().toString().equals("Int ⇒ Int ⇒ Bool"));
+    assertTrue(s.queryType().toString().equals("Int → Int → Bool"));
     assertTrue(s.queryInfixPriority() == CalculationSymbol.INFIX_COMPARISON);
     assertTrue(s.queryName().equals("≤"));
     assertTrue(s.toString().equals("≤"));

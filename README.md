@@ -1,5 +1,7 @@
 # cora
 
+[![DOI](https://zenodo.org/badge/207259740.svg)](https://zenodo.org/doi/10.5281/zenodo.10460327)
+
 Cora is an analysis tool for constrained higher-order term rewriting.
 At the moment only one technique is implemented (constrained HORPO), but this is
 planned to be expanded in the future.
@@ -30,7 +32,7 @@ the ``app`` folder contains the source code and
 - ``java`` runtime ``jre >= 1.8``
 - the command ``z3`` should be available system-wide, so make sure ``z3``
 is properly installed in your system.
-  - Please check [https://github.com/Z3Prover/z3](https://github.com/Z3Prover/z3) 
+  - Please check [https://github.com/Z3Prover/z3](https://github.com/Z3Prover/z3)
   for installation instructions for your system.
 
 ### Running cora on an input file
@@ -101,7 +103,7 @@ We provided a docker file in the root of this artifact.
 In order to run ``cora`` from the docker image, please proceed as follows.
 
 - First make sure docker is properly installed on your system.
-  - You can get installation instructions for your system at 
+  - You can get installation instructions for your system at
   [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/).
 - The next step is to build the docker image. Proceed as follows:
 ```bash

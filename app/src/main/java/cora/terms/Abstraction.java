@@ -73,6 +73,12 @@ class Abstraction extends TermInherit {
     return _binder.queryType().isTheoryType() && _subterm.isTheoryTerm();
   }
 
+  /** Adds all function symbols in the present term to storage. */
+  @Override
+  public void storeFunctionSymbols(Set<FunctionSymbol> storage) {
+    _subterm.storeFunctionSymbols(storage);
+  }
+
   /** @return the subterm s for an abstraction λx.s */
   @Override
   public Term queryAbstractionSubterm() {

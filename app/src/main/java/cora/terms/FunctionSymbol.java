@@ -15,6 +15,7 @@
 
 package cora.terms;
 
+import java.lang.Comparable;
 import cora.types.Type;
 
 /**
@@ -24,7 +25,7 @@ import cora.types.Type;
  *
  * Note: all instances of FunctionSymbol must (and can be expected to) be immutable.
  */
-public interface FunctionSymbol extends Term {
+public interface FunctionSymbol extends Term, Comparable<FunctionSymbol> {
   /**
    * All function symbols have a name that identifies how they are printed.
    * They are not necessarily identified uniquely by their name.
@@ -54,5 +55,10 @@ public interface FunctionSymbol extends Term {
    * non-value cannot be equal even if they have the same name and type).
    */
   public boolean equals(FunctionSymbol other);
+
+  /** Defines a total ordering on function symbols. */
+  default int compareTo(FunctionSymbol symbol) {
+    return toUniqueString().compareTo(symbol.toUniqueString());
+  }
 }
 

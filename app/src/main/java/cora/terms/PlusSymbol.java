@@ -23,7 +23,7 @@ import cora.types.TypeFactory;
 /** The binary addition symbol +. */
 class PlusSymbol extends CalculationInherit {
   PlusSymbol() {
-    // Int ⇒ Int ⇒ Int
+    // Int → Int → Int
     super(TypeFactory.createArrow(TypeFactory.intSort, TypeFactory.createArrow(
       TypeFactory.intSort, TypeFactory.intSort)));
   }

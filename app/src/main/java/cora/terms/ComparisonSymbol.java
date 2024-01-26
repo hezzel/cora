@@ -32,7 +32,7 @@ class ComparisonSymbol extends CalculationInherit {
   private final String _kind;
 
   ComparisonSymbol(String kind) {
-    // Int ⇒ Int ⇒ Bool
+    // Int → Int → Bool
     super(TypeFactory.createArrow(TypeFactory.intSort, TypeFactory.createArrow(
       TypeFactory.intSort, TypeFactory.boolSort)));
     _kind = kind; // the factory should ensure this is only called with appropriate kinds

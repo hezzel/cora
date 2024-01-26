@@ -24,11 +24,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import cora.types.*;
 import cora.terms.*;
 import cora.terms.position.Position;
-import cora.parsing.CoraInputReader;
+import cora.reader.CoraInputReader;
 
 class MstrsTest {
   private Type type(String str) {
-    try { return CoraInputReader.readTypeFromString(str); }
+    try { return CoraInputReader.readType(str); }
     catch (Exception e) { System.out.println(e); return null; }
   }
 
@@ -90,7 +90,7 @@ class MstrsTest {
   public void testLeftmostInnermostRedex() {
     TRS trs = createTermRewritingSystem();
     String str = "g(f(a, b), f(g(a, b, a), g(b, b, b)), b)";
-    Term term = CoraInputReader.readTermFromString(str, trs);
+    Term term = CoraInputReader.readTerm(str, trs);
     Position pos = trs.leftmostInnermostRedexPosition(term);
     assertTrue(pos.toString().equals("2.2.ε"));
   }
@@ -99,7 +99,7 @@ class MstrsTest {
   public void testLeftmostInnermostReduction() {
     TRS trs = createTermRewritingSystem();
     String str = "g(f(a, b), f(g(a, b, a), g(b, b, b)), b)";
-    Term term = CoraInputReader.readTermFromString(str, trs);
+    Term term = CoraInputReader.readTerm(str, trs);
     String reduct = trs.leftmostInnermostReduce(term).toString();
     assertTrue(reduct.equals("g(f(a, b), f(g(a, b, a), f(b, b)), b)"));
   }
@@ -108,7 +108,7 @@ class MstrsTest {
   public void testLeftmostInnermostIrreducible() {
     TRS trs = createTermRewritingSystem();
     String str = "g(f(a, b), f(g(a, b, a), x), b)";
-    Term term = CoraInputReader.readTermFromString(str, trs);
+    Term term = CoraInputReader.readTerm(str, trs);
     assertTrue(trs.leftmostInnermostReduce(term) == null);
   }
 
@@ -117,7 +117,7 @@ class MstrsTest {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     symbols.add(a());
     symbols.add(b());
-    symbols.add(TermFactory.createConstant("i", type("(a ⇒ b) ⇒ a")));
+    symbols.add(TermFactory.createConstant("i", type("(a → b) → a")));
     symbols.add(f());
     Alphabet alf = new Alphabet(symbols);
     ArrayList<Rule> rules = new ArrayList<Rule>();

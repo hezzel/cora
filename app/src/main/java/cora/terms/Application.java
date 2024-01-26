@@ -169,6 +169,13 @@ class Application extends TermInherit {
   public boolean isTheoryTerm() {
     return _head.isTheoryTerm() && _args.stream().allMatch(Term::isTheoryTerm);
   }
+
+  /** Adds all function symbols in the present term to storage. */
+  @Override
+  public void storeFunctionSymbols(Set<FunctionSymbol> storage) {
+    _head.storeFunctionSymbols(storage);
+    for (Term t : _args) t.storeFunctionSymbols(storage);
+  }
   
   /** For a term h(s1,...,sn), this returns n. */
   public int numberArguments() {

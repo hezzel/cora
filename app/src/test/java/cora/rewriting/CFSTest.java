@@ -23,11 +23,11 @@ import cora.exceptions.NullInitialisationError;
 import cora.types.*;
 import cora.terms.*;
 import cora.terms.position.Position;
-import cora.parsing.CoraInputReader;
+import cora.reader.CoraInputReader;
 
 public class CFSTest {
   private Type type(String str) {
-    return CoraInputReader.readTypeFromString(str);
+    return CoraInputReader.readType(str);
   }
 
   private TRS createTermRewritingSystem(boolean includeEta) {
@@ -39,17 +39,17 @@ public class CFSTest {
     FunctionSymbol a = TermFactory.createConstant("a", type("A"));
     FunctionSymbol b = TermFactory.createConstant("b", type("A"));
     FunctionSymbol c = TermFactory.createConstant("c", type("B"));
-    FunctionSymbol f = TermFactory.createConstant("f", type("B ⇒ (B ⇒ A) ⇒ B"));
-    FunctionSymbol g = TermFactory.createConstant("g", type("A ⇒ A ⇒ A ⇒ B"));
-    FunctionSymbol h = TermFactory.createConstant("h", type("(A ⇒ A) ⇒ A ⇒ A"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("B → (B → A) → B"));
+    FunctionSymbol g = TermFactory.createConstant("g", type("A → A → A → B"));
+    FunctionSymbol h = TermFactory.createConstant("h", type("(A → A) → A → A"));
     Variable x1 = TermFactory.createBinder("x", type("B"));
     Variable y1 = TermFactory.createVar("Y", type("A"));
-    Variable z1 = TermFactory.createVar("Z", type("A ⇒ B"));
+    Variable z1 = TermFactory.createVar("Z", type("A → B"));
     Variable x2 = TermFactory.createVar("X", type("A"));
     Variable y2 = TermFactory.createVar("Y", type("A"));
     Variable z2 = TermFactory.createBinder("z", type("A"));
     Variable x3 = TermFactory.createVar("X", type("A"));
-    Variable z3 = TermFactory.createVar("Z", type("A ⇒ A"));
+    Variable z3 = TermFactory.createVar("Z", type("A → A"));
     symbols.add(a);
     symbols.add(b);
     symbols.add(c);
@@ -77,7 +77,7 @@ public class CFSTest {
     assertTrue(trs.queryScheme(0).isBeta());
     assertFalse(trs.queryScheme(0).isEta());
     assertTrue(trs.lookupSymbol("f").equals(
-      TermFactory.createConstant("f", type("B ⇒ (B ⇒ A) ⇒ B"))));
+      TermFactory.createConstant("f", type("B → (B → A) → B"))));
     assertTrue(trs.lookupSymbol("i") == null);
   }
 
@@ -92,7 +92,7 @@ public class CFSTest {
     assertTrue(trs.queryScheme(1).isEta());
     assertFalse(trs.queryScheme(1).isBeta());
     assertTrue(trs.lookupSymbol("h").equals(
-      TermFactory.createConstant("h", type("(A ⇒ A) ⇒ (A ⇒ A)"))));
+      TermFactory.createConstant("h", type("(A → A) → (A → A)"))));
     assertTrue(trs.lookupSymbol("i") == null);
   }
 
@@ -101,7 +101,7 @@ public class CFSTest {
     ArrayList<Rule> rules = new ArrayList<Rule>();
     Variable x = TermFactory.createVar("x", type("a"));
     Variable y = TermFactory.createVar("y", type("b"));
-    FunctionSymbol f = TermFactory.createConstant("f", type("a ⇒ b ⇒ b"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
     TRSFactory.createCFS(null, rules, true);
   }
@@ -109,7 +109,7 @@ public class CFSTest {
   @Test(expected = NullInitialisationError.class)
   public void testCreateCFSWithNullRules() {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
-    FunctionSymbol f = TermFactory.createConstant("f", type("a ⇒ b ⇒ b"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
     TRSFactory.createCFS(new Alphabet(symbols), null, false);
   }
@@ -120,7 +120,7 @@ public class CFSTest {
     ArrayList<Rule> rules = new ArrayList<Rule>();
     Variable x = TermFactory.createVar("x", type("a"));
     Variable y = TermFactory.createVar("y", type("b"));
-    FunctionSymbol f = TermFactory.createConstant("f", type("a ⇒ b ⇒ b"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
     rules.add(null);
@@ -133,7 +133,7 @@ public class CFSTest {
     ArrayList<Rule> rules = new ArrayList<Rule>();
     Variable x = TermFactory.createVar("x", type("a"));
     Variable y = TermFactory.createVar("y", type("b"));
-    FunctionSymbol f = TermFactory.createConstant("f", type("a ⇒ b ⇒ b"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
     rules.add(RuleFactory.createRule(TermFactory.createApp(f, x, y), y));
     TRS trs = TRSFactory.createCFS(new Alphabet(symbols), rules, false);
@@ -151,7 +151,7 @@ public class CFSTest {
   public void testLeftmostInnermostRedexIsRuleRedex() {
     TRS trs = createTermRewritingSystem(true);
     String str = "f(g(a, b, a), λz.a)";
-    Term term = CoraInputReader.readTermFromString(str, trs);
+    Term term = CoraInputReader.readTerm(str, trs);
     Position pos = trs.leftmostInnermostRedexPosition(term);
     assertTrue(pos.toString().equals("1.ε"));
   }
@@ -160,7 +160,7 @@ public class CFSTest {
   public void testLeftmostInnermostRedexIsBetaRedex() {
     TRS trs = createTermRewritingSystem(false);
     String str = "f(g(a, (λx::A.x)(b), a), λz.a)";
-    Term term = CoraInputReader.readTermFromString(str, trs);
+    Term term = CoraInputReader.readTerm(str, trs);
     Position pos = trs.leftmostInnermostRedexPosition(term);
     assertTrue(pos.toString().equals("1.2.ε"));
   }
@@ -170,12 +170,12 @@ public class CFSTest {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     ArrayList<Rule> rules = new ArrayList<Rule>();
     FunctionSymbol a = TermFactory.createConstant("a", type("A"));
-    FunctionSymbol g = TermFactory.createConstant("g", type("A ⇒ A ⇒ A"));
-    FunctionSymbol h = TermFactory.createConstant("h", type("(A ⇒ A) ⇒ A ⇒ A"));
+    FunctionSymbol g = TermFactory.createConstant("g", type("A → A → A"));
+    FunctionSymbol h = TermFactory.createConstant("h", type("(A → A) → A → A"));
     symbols.add(a);
     symbols.add(g);
     symbols.add(h);
-    Variable z = TermFactory.createVar("Z", type("A ⇒ A"));
+    Variable z = TermFactory.createVar("Z", type("A → A"));
     Variable y = TermFactory.createVar("Y", type("A"));
     rules.add(RuleFactory.createRule(TermFactory.createApp(h, z, y), z.apply(y)));
     Alphabet alf = new Alphabet(symbols);
@@ -200,7 +200,7 @@ public class CFSTest {
   public void testLeftmostInnermostReduction() {
     TRS trs = createTermRewritingSystem(true);
     String str = "f(g(a, (λx::A.x)(b), a), λz.a)";
-    Term term = CoraInputReader.readTermFromString(str, trs);
+    Term term = CoraInputReader.readTerm(str, trs);
     term = trs.leftmostInnermostReduce(term);
     assertTrue(term.toString().equals("f(g(a, b, a), λz.a)"));
     term = trs.leftmostInnermostReduce(term);

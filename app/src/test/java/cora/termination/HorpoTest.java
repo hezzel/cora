@@ -20,11 +20,11 @@ import static org.junit.Assert.*;
 import cora.terms.FunctionSymbol;
 import cora.terms.TheoryFactory;
 import cora.rewriting.TRS;
-import cora.parsing.CoraInputReader;
+import cora.reader.CoraInputReader;
 
 public class HorpoTest {
   private TRS makeTrs(String txt) {
-    return CoraInputReader.readProgramFromString(txt);
+    return CoraInputReader.readTrsFromString(txt);
   }
 
 /**
@@ -183,7 +183,7 @@ public class HorpoTest {
   @Test
   public void testSimplifyReductionToFreshVariable() {
     // additionally test splitting ≥ into parts, and 3a, 3f
-    TRS trs = makeTrs("f :: (o ⇒ o) ⇒ o ⇒ o ⇒ Int a :: o ⇒ o b :: o f(a, b, y) → x");
+    TRS trs = makeTrs("f :: (o → o) → o → o → Int a :: o → o b :: o f(a, b, y) → x");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 5; i++) assertTrue(horpo.handleTodo());
     assertTrue(horpo.toString(-1, 0).equals(
@@ -250,7 +250,7 @@ public class HorpoTest {
   @Test
   public void testIntegerComparison() {
     // test other cases of 3a and 3c, and 3b
-    TRS trs = makeTrs("f :: Int ⇒ Int f(x) → x - 1 | x > 3");
+    TRS trs = makeTrs("f :: Int → Int f(x) → x - 1 | x > 3");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 5; i++) horpo.handleTodo();
     assertTrue(horpo.toString().equals(
@@ -368,7 +368,7 @@ public class HorpoTest {
 
   @Test
   public void testIntegerComparisonUp() {
-    TRS trs = makeTrs("f :: Int ⇒ Int f(x) → x + y | x < 100 ∧ y > 0");
+    TRS trs = makeTrs("f :: Int → Int f(x) → x + y | x < 100 ∧ y > 0");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 17; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-1,1).equals(
@@ -383,7 +383,7 @@ public class HorpoTest {
 
   @Test
   public void testBooleanGeqStrict() {
-    TRS trs = makeTrs("f :: Bool ⇒ Bool f(x) → x ∧ false | x");
+    TRS trs = makeTrs("f :: Bool → Bool f(x) → x ∧ false | x");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 17; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-1,1).equals(
@@ -397,7 +397,7 @@ public class HorpoTest {
 
   @Test
   public void testBooleanGeqNonStrict() {
-    TRS trs = makeTrs("f :: Bool ⇒ Bool f(x) → x ∧ true | x");
+    TRS trs = makeTrs("f :: Bool → Bool f(x) → x ∧ true | x");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 17; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-1,1).equals(
@@ -411,7 +411,7 @@ public class HorpoTest {
 
   @Test
   public void testBooleanGeqFails() {
-    TRS trs = makeTrs("f :: Bool ⇒ Bool f(x) → x ∨ true | ¬x");
+    TRS trs = makeTrs("f :: Bool → Bool f(x) → x ∨ true | ¬x");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 17; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-1,1).equals(
@@ -426,7 +426,7 @@ public class HorpoTest {
 
   @Test
   public void testTheoryComparisonWrongTheoryTypes() {
-    TRS trs = makeTrs("f :: Int ⇒ Bool f(y) → false");
+    TRS trs = makeTrs("f :: Int → Bool f(y) → false");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 14; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-1,1).equals(
@@ -441,7 +441,7 @@ public class HorpoTest {
 
   @Test
   public void testLeftNotBounded() {
-    TRS trs = makeTrs("f :: Int ⇒ Int f(x) → x - 1 | x != 0");
+    TRS trs = makeTrs("f :: Int → Int f(x) → x - 1 | x != 0");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 17; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-1,1).equals(
@@ -457,7 +457,7 @@ public class HorpoTest {
 
   @Test
   public void testDecreaseInTheoryIntegerArgument() {
-    TRS trs = makeTrs("f :: Int ⇒ Int f(x) → f(x - 1) | x > 12");
+    TRS trs = makeTrs("f :: Int → Int f(x) → f(x - 1) | x > 12");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 2; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-1,1).equals(
@@ -484,7 +484,7 @@ public class HorpoTest {
 
   @Test
   public void testDecreaseInTheoryBooleanArgument() {
-    TRS trs = makeTrs("f :: Bool ⇒ unit f(x) → f(¬x) | x");
+    TRS trs = makeTrs("f :: Bool → unit f(x) → f(¬x) | x");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 12; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-1,1).equals(
@@ -498,7 +498,7 @@ public class HorpoTest {
 
   @Test
   public void testFailedDecreaseInTheoryArgument() {
-    TRS trs = makeTrs("f :: Int ⇒ Int f(x) → f(x + y) | x < 10 ∧ y ≥ 0");
+    TRS trs = makeTrs("f :: Int → Int f(x) → f(x + y) | x < 10 ∧ y ≥ 0");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 12; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-2,1).equals(
@@ -515,7 +515,7 @@ public class HorpoTest {
 
   @Test
   public void testFailedDecreaseInTheoryBooleanArgument() {
-    TRS trs = makeTrs("f :: Bool ⇒ unit f(x) → f(false) | x ∨ ¬x");
+    TRS trs = makeTrs("f :: Bool → unit f(x) → f(false) | x ∨ ¬x");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 12; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-1,1).equals(
@@ -530,7 +530,7 @@ public class HorpoTest {
 
   @Test
   public void testVartermDecrease() {
-    TRS trs = makeTrs("f :: o ⇒ o a :: o b :: o c :: o {x :: o ⇒ o ⇒ o} f(x(a,b)) -> f(x(a, c))");
+    TRS trs = makeTrs("f :: o → o a :: o b :: o c :: o {x :: o → o → o} f(x(a,b)) -> f(x(a, c))");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 11; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-1,1).equals(
@@ -561,7 +561,7 @@ public class HorpoTest {
 
   @Test
   public void testAppWhenArgumentTypesDiffer() {
-    TRS trs = makeTrs("f :: o ⇒ o g :: (o ⇒ o) ⇒ o h :: a ⇒ o a :: o b :: o ⇒ o " +
+    TRS trs = makeTrs("f :: o → o g :: (o → o) → o h :: a → o a :: o b :: o → o " +
       "f(f(a)) → g(b) f(h(x)) → f(a)");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 44; i++) horpo.handleTodo();
@@ -587,7 +587,7 @@ public class HorpoTest {
 
   @Test
   public void testLexWithDifferentArgumentCounts() {
-    TRS trs = makeTrs("f :: o ⇒ o ⇒ o g :: o ⇒ o ⇒ o a :: o b :: o f(a) -> g(f(b,b))");
+    TRS trs = makeTrs("f :: o → o → o g :: o → o → o a :: o b :: o f(a) -> g(f(b,b))");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 17; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-1,1).equals(
@@ -607,7 +607,7 @@ public class HorpoTest {
 
   @Test
   public void testFullLex() {
-    TRS trs = makeTrs("f :: o ⇒ o ⇒ o ⇒ o a :: o b :: o c :: o f(a,b,c) → f(b,c,a)");
+    TRS trs = makeTrs("f :: o → o → o → o a :: o b :: o c :: o f(a,b,c) → f(b,c,a)");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 5; i++) horpo.handleTodo();
     assertTrue(horpo.toString(-1,6).equals(
@@ -645,8 +645,8 @@ public class HorpoTest {
   public void testFullMul() {
     // the Mul case gives such huge requirements that we just print it for inspection rather than
     // saving what is supposed to come out
-    TRS trs = makeTrs("f :: o ⇒ a ⇒ (o ⇒ o) ⇒ o ⇒ b ⇒ o\n" +
-                      "v1 :: o v2 :: a v3 :: o ⇒ o v4 :: o v5 :: b\n" +
+    TRS trs = makeTrs("f :: o → a → (o → o) → o → b → o\n" +
+                      "v1 :: o v2 :: a v3 :: o → o v4 :: o v5 :: b\n" +
                       "f(x,y,z,u,w) -> f(v1,v2,v3,v4,v5)");
     Horpo horpo = new Horpo(trs);
     for (int i = 0; i < 60; i++) horpo.handleTodo();

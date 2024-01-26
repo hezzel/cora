@@ -113,7 +113,7 @@ fabric.properties
 .mtj.tmp/
 
 # Package Files #
-*.jar
+*.ja
 *.war
 *.nar
 *.ear

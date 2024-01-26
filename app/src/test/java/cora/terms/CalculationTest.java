@@ -15,9 +15,11 @@
 
 package cora.terms;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
+import java.util.TreeSet;
 import cora.exceptions.*;
 import cora.types.TypeFactory;
 import cora.types.Type;
@@ -55,39 +57,49 @@ public class CalculationTest extends TermTestFoundation {
     assertTrue(a.isPattern());
     assertTrue(o.isApplicative());
     assertTrue(p.queryPositions(false).size() == 1);
-    assertTrue(t.queryPositions(true).size() == 0);
+    assertTrue(t.queryPositions(true).size() == 1);
     assertTrue(a.vars().size() == 0);
     assertTrue(o.mvars().size() == 0);
     assertTrue(p.freeReplaceables().size() == 0);
   }
 
-  @Test(expected = InappropriatePatternDataError.class)
+  @Test
+  public void testStore() {
+    TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
+    CalculationSymbol d = new DivModSymbol(true);
+    d.storeFunctionSymbols(set);
+    assertTrue(set.size() == 1);
+    assertTrue(set.contains(d));
+  }
+
+  @Test
   public void testVariableRequest() {
     FunctionSymbol plus = new PlusSymbol();
-    Term x = plus.queryVariable();
+    assertThrows(InappropriatePatternDataError.class, () -> plus.queryVariable());
   }
 
-  @Test(expected = InappropriatePatternDataError.class)
+  @Test
   public void testAbstractionSubtermRequest() {
     FunctionSymbol times = new TimesSymbol();
-    times.queryAbstractionSubterm();
+    assertThrows(InappropriatePatternDataError.class, () -> times.queryAbstractionSubterm());
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testArgumentPositionRequest() {
     FunctionSymbol a = new AndOrSymbol(false);
-    a.querySubterm(new ArgumentPos(1, Position.empty));
+    assertThrows(IndexingError.class, () -> a.querySubterm(new ArgumentPos(1, Position.empty)));
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testHeadPositionRequest() {
     FunctionSymbol o = new AndOrSymbol(true);
-    o.querySubterm(new FinalPos(1));
+    assertThrows(IndexingError.class, () -> o.querySubterm(new FinalPos(1)));
   }
 
-  @Test(expected = IndexingError.class)
+  @Test
   public void testBadPositionReplacement() {
     FunctionSymbol plus = new PlusSymbol();
-    plus.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a")));
+    assertThrows(IndexingError.class, () ->
+      plus.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a"))));
   }
 }
