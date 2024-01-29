@@ -4,6 +4,7 @@ import cora.rewriting.TRS;
 import cora.termination.Handler.Answer;
 import cora.termination.Prover;
 import cora.termination.dependency_pairs.processors.GraphProcessor;
+import cora.termination.dependency_pairs.processors.SubtermProcessor;
 import cora.utils.Pair;
 
 import java.util.List;
@@ -37,6 +38,12 @@ public class DPFramework implements Prover {
       GraphProcessor graphProcesor = new GraphProcessor();
       Problem initialProblem       = DPFramework.computeInitialProblem(trs);
       List<Problem> dpsFromGraph   = graphProcesor.processDPP(initialProblem);
+
+      // Executing the subterm processor for testing
+      System.out.println("Execute Subterm Processor for testing...");
+      SubtermProcessor subProc = new SubtermProcessor();
+      List<Problem> ret = subProc.processDPP(dpsFromGraph.getFirst());
+      System.out.println("Final result of the processor: " + ret);
 
       if ( terminationStrategy(dpsFromGraph).isEmpty() ){
         return new Pair<>(MAYBE, Optional.of("Termination proover didn't run yet."));

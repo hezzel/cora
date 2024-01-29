@@ -11,18 +11,23 @@ class DPFrameworkTest {
   @Test
   void testProveTermination() {
     String program =
-      "sum :: Int -> Int\n" +
-        "f :: int -> Int\n" +
-        "z :: int\n" +
-      "sum(x) -> 0         | x ≤ 0\n" +
-      "sum(x) -> x + sum(x - 1) | x > 0\n" +
-        "sum(x) -> f(z)\n" +
-        "f(x) -> 0";
+      "rec :: (Int -> Int -> Int) -> Int -> Int -> Int\n" +
+        "rec(F, x, y) -> y | x ≤ 0\n" +
+        "rec(F, x, y) -> F(x, rec(F, x-1, y)) | x > 0\n" +
+        "\n" +
+        "readint :: Int\n" +
+        "readint → y\n" +
+        "\n" +
+        "myfun :: Int -> Int -> Int\n" +
+        "myfun(x, z) -> x + z";
+
     TRS trs = CoraInputReader.readTrsFromString(program);
 
     System.out.println("Input TRS: " + trs);
 
-    System.out.println("Ignoring the constraints for now...");
+    DPFramework dp = new DPFramework();
+
+    dp.proveTermination(trs);
 
 
 
