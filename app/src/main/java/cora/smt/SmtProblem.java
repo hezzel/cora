@@ -199,7 +199,7 @@ public class SmtProblem {
     _constraints.add(new Disjunction(new Not(premise), conclusion));
   }
 
-  /** This reomves all stored constraints, but not variables. */
+  /** This removes all stored constraints, but not variables. */
   public void clear() {
     _constraints.clear();
   }
