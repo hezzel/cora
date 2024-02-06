@@ -27,13 +27,7 @@ public class SubtermProcessor implements Processor {
    */
   private Map<FunctionSymbol, IVar> generateFnIvarMap(Problem dpp) {
     //TODO Refactor this function, it is highly non-efficient.
-
-    Set<FunctionSymbol> allFns = new TreeSet<>();
-
-    for (DP dp : dpp.getDPList()) {
-      dp.lhs().storeFunctionSymbols(allFns);
-      dp.rhs().storeFunctionSymbols(allFns);
-    }
+    Set<FunctionSymbol> allFns = dpp.getSharpHeads();
 
     Map<FunctionSymbol, IVar> retMap = new TreeMap<>();
 
@@ -41,7 +35,6 @@ public class SubtermProcessor implements Processor {
     //  Fix this later.
     allFns
       .stream()
-      .filter(fn -> fn.queryType().queryOutputType().equals(_dpSort))
       .forEach(fn -> retMap.put(fn, _smt.createIntegerVariable()));
     return retMap;
   }
@@ -149,7 +142,8 @@ public class SubtermProcessor implements Processor {
 
       GraphProcessor gProc = new GraphProcessor();
 
-      return gProc.processDPP(new Problem(removedDPs));
+      return gProc.processDPP(new Problem(removedDPs, dpp.getTRS()));
     }
   }
+
 }

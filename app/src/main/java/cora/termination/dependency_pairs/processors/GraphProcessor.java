@@ -15,13 +15,19 @@ public class GraphProcessor implements Processor {
   @Override
   public boolean isApplicable(Problem dpp) { return true; }
 
-  // This function implements an over approximation algorithm needed to turn a DP problem into a Digraph.
-  private boolean isDpConnected(DP u, DP v) {
-    return u.rhs().queryRoot().equals(v.lhs().queryRoot());
+  // This function implements an over approximation algorithm needed to turn a
+  // DP problem into a Digraph.
+  private boolean isDpConnected(Problem dpp, DP u, DP v) {
+    OverApproximation overApproximation = new OverApproximation(dpp.getTRS());
+    return overApproximation.mayReduce(u, v);
+//    return u
+//      .rhs()
+//      .queryRoot()
+//      .equals(v.lhs().queryRoot());
   }
 
   @Contract("_ -> new")
-  @NotNull Digraph problemToGraph(@NotNull Problem dpp) {
+  @NotNull public Digraph problemToGraph(@NotNull Problem dpp) {
     // Java is smart enough to realize a copy of dpp.getDPList() isn't really necessary,
     // so it will copy a reference of it to the local variable dps.
     List<DP> dps = dpp.getDPList();
@@ -33,14 +39,14 @@ public class GraphProcessor implements Processor {
 
     for(int i = 0; i < dps.size(); i++) {
       for (int j = 0; j < dps.size(); j++) {
-        if (isDpConnected(dps.get(i), dps.get(j)))
+        if (isDpConnected(dpp, dps.get(i), dps.get(j)))
           graphOfProblem.addEdge(i, j);
       }
     }
 
-    System.out.println("List of DP Problems received: \n" + dpp.getDPList() );
+    System.out.println("problemToGraph::List of DP Problems received: " + dpp.getDPList() );
 
-     System.out.println("graph of problem: \n" + graphOfProblem);
+    System.out.println("Graph generated to the problem: \n" + graphOfProblem);
 
     return graphOfProblem;
   }
@@ -83,7 +89,7 @@ public class GraphProcessor implements Processor {
 
       retGraph.add(graphOfDPP.getSubgraph(sccVertices));
 
-      subproblems.add(new Problem(retDP.get(i), retGraph.get(i)));
+      subproblems.add(new Problem(retDP.get(i), dpp.getTRS(), retGraph.get(i)));
     }
 
     return subproblems;

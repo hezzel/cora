@@ -2,10 +2,7 @@ package cora.termination.dependency_pairs;
 
 import cora.rewriting.Rule;
 import cora.rewriting.TRS;
-import cora.terms.FunctionSymbol;
-import cora.terms.Term;
-import cora.terms.TermFactory;
-import cora.terms.TheoryFactory;
+import cora.terms.*;
 import cora.types.*;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -15,11 +12,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  *
  */
-class DPGenerator {
+public class DPGenerator {
 
   /**
    * This property sets the output sort used in the DP method for marked symbols.
@@ -36,10 +34,10 @@ class DPGenerator {
    * @throws NullPointerException if ty is null
    */
   @Contract(pure = true)
-  static @NotNull List<Term> generateVars(Type ty) {
+  public static @NotNull List<Variable> generateVars(Type ty) {
     Objects.requireNonNull(ty, "Null argument given to DPGenerator::generateVars.");
 
-    List<Term> acc = new ArrayList<>();
+    List<Variable> acc = new ArrayList<>();
     // Notice that the variable while_ty starts with ty, and then we mutate it to the right hand side
     // of the arrow. Eventually we will get to a sort or product, which guarantees that
     // the whole recursion will be terminated.
@@ -103,8 +101,9 @@ class DPGenerator {
   @Contract(pure = true)
   static @NotNull Term fakeEta(@NotNull Term tm) {
     Type tmTy = tm.queryType();
-    List<Term> newVars = DPGenerator.generateVars(tmTy);
-    return tm.apply(newVars);
+    List<Variable> vars = DPGenerator.generateVars(tmTy);
+    List<Term> varsCasted = vars.stream().map( x -> (Term) x).toList();
+    return tm.apply(varsCasted);
   }
 
   /**
@@ -116,16 +115,52 @@ class DPGenerator {
     return DPGenerator.fakeEta(fSharp.apply(tm.queryArguments()));
   }
 
-  static @NotNull boolean isConstructor(TRS trs, FunctionSymbol tm) {
-    return !isDefined(trs, tm);
-  }
-
+  // TODO this probably isn't to be here
   static @NotNull boolean isDefined(TRS trs, FunctionSymbol fn) {
     for(Rule r : trs.queryRules()){
       if (r.queryLeftSide().queryRoot().equals(fn))
         return true;
     }
     return false;
+  }
+
+  // TODO this probably isn't to be here
+  static @NotNull boolean isConstructor(TRS trs, FunctionSymbol tm) {
+    return !isDefined(trs, tm);
+  }
+
+  // Computes the initial set V, defined in definition 5 (cade paper)
+  // a DP l -> r [Phi] should have the following set of initial variables
+  // Var(Phi) cup (Var(r) \ Var(l))
+  // TODO Implementation notice: this needs to get refactored, it just blindly convert
+  //   the result of calling vars() to lists... But I want streams easily!
+  //   so we pay the price in a bit of performance here. Deadline approaching,
+  //   so...
+  private static List<Variable> computeInitialVSet(Term lhs, Term rhs, Term constraint) {
+
+    List<Variable> lhsVars =
+      StreamSupport
+        .stream(lhs.vars().spliterator(), false)
+        .toList();
+
+    List<Variable> rhsVars =
+      StreamSupport
+        .stream(lhs.vars().spliterator(), false)
+        .toList();
+
+    //TODO also not so efficient, fix this
+    List<Variable> lVars =
+      rhsVars
+        .stream()
+        .filter(x -> !lhsVars.contains(x))
+        .toList();
+
+    List<Variable> constraintsVars =
+      StreamSupport
+        .stream(constraint.vars().spliterator(), false)
+        .toList();
+
+    return Stream.concat(constraintsVars.stream(), lVars.stream()).toList();
   }
 
   static @NotNull List<Term> generateCandidates(@NotNull TRS trs, @NotNull Term tm) {
@@ -172,7 +207,12 @@ class DPGenerator {
     Term lhs = rule.queryLeftSide();
     Term rhs = rule.queryRightSide();
     Term ctr = rule.queryConstraint();
-    List<Term> freshDpVars = DPGenerator.generateVars(lhs.queryType());
+    List<Term> freshDpVars = DPGenerator
+      .generateVars(lhs.queryType())
+      .stream()
+      .map(x -> (Term) x)
+      .toList();
+
     Term dpLeft = generateSharpTm(lhs).apply(freshDpVars);
     Term dpRight = rhs.apply(freshDpVars);
 
@@ -181,12 +221,14 @@ class DPGenerator {
     return new Problem (
       candRight
         .stream()
-        .map(t -> new DP(dpLeft, t, ctr) )
-        .toList()
+        .map(candidates ->
+          new DP(dpLeft, candidates, ctr, computeInitialVSet(dpLeft, candidates, ctr))
+        ).toList(),
+      trs
     );
   }
 
-  static Problem generateProblemFromTrs(TRS trs) {
+  public static Problem generateProblemFromTrs(TRS trs) {
     List<Rule> rules = new ArrayList<Rule>();
     for (int i = 0; i < trs.queryRuleCount(); i++) {
       rules.add(trs.queryRule(i));
@@ -198,7 +240,8 @@ class DPGenerator {
           rule ->
             DPGenerator.generateProblemFromRule(trs, rule).getDPList().stream()
         )
-        .collect(Collectors.toList())
+        .toList(),
+      trs
     );
   }
 }

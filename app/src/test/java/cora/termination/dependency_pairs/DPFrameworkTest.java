@@ -10,16 +10,19 @@ class DPFrameworkTest {
 
   @Test
   void testProveTermination() {
+//    String program =
+//        " Z :: nat \n" +
+//        "S :: nat -> nat \n" +
+//        "plus :: nat -> nat -> nat\n" +
+//        "plus(x, Z) -> Z\n" +
+//        "plus(x, S(y)) -> S(plus(x,y))";
+
     String program =
-      "rec :: (Int -> Int -> Int) -> Int -> Int -> Int\n" +
-        "rec(F, x, y) -> y | x ≤ 0\n" +
-        "rec(F, x, y) -> F(x, rec(F, x-1, y)) | x > 0\n" +
+      "F :: Int -> (Int -> Int) -> Int -> Int -> Int\n" +
+        "G :: Int -> (Int -> Int) -> Int -> Int -> Int\n" +
         "\n" +
-        "readint :: Int\n" +
-        "readint → y\n" +
-        "\n" +
-        "myfun :: Int -> Int -> Int\n" +
-        "myfun(x, z) -> x + z";
+        "F(x, f, y, z) -> F(f(x), f, y-1, z) | x=y /\\ y>=z+1\n" +
+        "G(x, f, y, z) -> G(x, f, F(x, f, y, z), z) | x>2 /\\ y>=x /\\ z+x>=0";
 
     TRS trs = CoraInputReader.readTrsFromString(program);
 

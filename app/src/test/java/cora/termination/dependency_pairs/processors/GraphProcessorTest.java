@@ -1,6 +1,8 @@
 package cora.termination.dependency_pairs.processors;
 
+import cora.reader.CoraInputReader;
 import cora.termination.dependency_pairs.DP;
+import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
 import cora.termination.dependency_pairs.certification.Informal;
 import cora.terms.Term;
@@ -13,28 +15,22 @@ import java.util.List;
 
 class GraphProcessorTest {
 
-  List<DP> createDPExamples() {
-    Term a = TermFactory.createConstant("a", TypeFactory.intSort);
-    Term b = TermFactory.createConstant("b", TypeFactory.intSort);
-    Term c = TermFactory.createConstant("c", TypeFactory.intSort);
-
-    DP dp1 = new DP(a, a);
-    DP dp2 = new DP(a,b);
-    DP dp3 = new DP(b,c);
-    DP dp4 = new DP(c,b);
-
-    return new ArrayList<>(List.of(dp1, dp2, dp3, dp4));
-  }
-
   @Test
   void processTest() {
-    List<DP> dps = this.createDPExamples();
-    System.out.println("Total list of DPs: " + dps);
+    System.out.println("We are considering the following TRS: ");
+    String program =
+      " a :: sort \n b :: sort \n c :: sort \n d :: sort \n" +
+      " a -> a \n a -> b \n b -> c \n c -> b";
 
-    Problem p = new Problem(dps);
+    System.out.println(program);
+
+    Problem dpp = DPGenerator.generateProblemFromTrs(CoraInputReader.readTrsFromString(program));
+
+    System.out.println("The DPP problem generated from this TRS is: " + dpp);
+
     GraphProcessor proc = new GraphProcessor();
 
-    List<Problem> pp = proc.computeAllSubproblems(p);
+    List<Problem> pp = proc.computeAllSubproblems(dpp);
 
     System.out.println("Number of problems that came from nontrivial SCCs: " + pp.size());
     System.out.println("The subgraph generated from each SCC...");
