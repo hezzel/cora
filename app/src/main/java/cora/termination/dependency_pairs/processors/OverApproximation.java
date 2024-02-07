@@ -7,7 +7,6 @@ import cora.termination.dependency_pairs.DP;
 import cora.terms.*;
 import cora.utils.Pair;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;

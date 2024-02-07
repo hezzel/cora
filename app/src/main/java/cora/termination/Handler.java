@@ -1,5 +1,8 @@
 package cora.termination;
+import cora.termination.dependency_pairs.DPFramework;
 import cora.utils.Pair;
+
+import java.util.Optional;
 
 public class Handler {
   private final Request _proofRequest;
@@ -10,22 +13,23 @@ public class Handler {
     _proofRequest = request;
   }
 
-  private Pair<Answer, String> buildMaybeAnswer() {
-    return new Pair<>(Answer.MAYBE, "");
+  private Pair<Answer, Optional<String>> buildMaybeAnswer() {
+    return new Pair<>(Answer.MAYBE, Optional.empty());
   }
 
-  public Pair<Answer, String> getResponse() {
-    return switch (_proofRequest.get_requestedTechnique()) {
+  public Pair<Answer, Optional<String>> getResponse() {
+    return switch (_proofRequest.getRequestedTechnique()) {
         case HORPO -> {
           System.out.println("Chosen horpo.");
           yield buildMaybeAnswer();
         }
         case DP -> {
-          yield buildMaybeAnswer();
+          DPFramework dpF = new DPFramework();
+          yield dpF.proveTermination(_proofRequest.getTRS());
         }
         default -> {
           System.out.println("No termination proof can be done.");
-          yield buildMaybeAnswer();
+          yield new Pair<>(Answer.NOT_APPLICABLE, Optional.empty());
         }
     };
   }

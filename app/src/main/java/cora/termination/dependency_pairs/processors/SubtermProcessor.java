@@ -8,6 +8,7 @@ import cora.terms.Term;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.utils.Pair;
+import java.util.Optional;
 
 import java.util.*;
 
@@ -108,7 +109,7 @@ public class SubtermProcessor implements Processor {
   }
 
   @Override
-  public List<Problem> processDPP(Problem dpp) {
+  public Optional<List<Problem>> processDPP(Problem dpp) {
     // Generates an IntegerSMT variable for each f-sharp symbol
     Map<FunctionSymbol, IVar> fSharpMap = generateFnIvarMap(dpp);
     // System.out.println("Mappings of fsharps: " + fSharpMap);
@@ -125,7 +126,7 @@ public class SubtermProcessor implements Processor {
 
     if (valuation == null) {
       // this processor cannot do anything
-      return new ArrayList<>(List.of(dpp));
+      return Optional.empty();
     } else {
       List<Integer> indexOfOrientedDPs = new ArrayList<>();
       dpbVarMap.forEach (

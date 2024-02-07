@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class GraphProcessor implements Processor {
 
@@ -20,10 +21,6 @@ public class GraphProcessor implements Processor {
   private boolean isDpConnected(Problem dpp, DP u, DP v) {
     OverApproximation overApproximation = new OverApproximation(dpp.getTRS());
     return overApproximation.mayReduce(u, v);
-//    return u
-//      .rhs()
-//      .queryRoot()
-//      .equals(v.lhs().queryRoot());
   }
 
   @Contract("_ -> new")
@@ -95,7 +92,7 @@ public class GraphProcessor implements Processor {
     return subproblems;
   }
 
-  public List<Problem> processDPP(Problem dpp) {
-    return computeAllSubproblems(dpp);
+  public Optional<List<Problem>> processDPP(Problem dpp) {
+    return Optional.of(computeAllSubproblems(dpp));
   }
 }

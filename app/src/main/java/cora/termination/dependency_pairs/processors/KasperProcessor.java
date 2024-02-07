@@ -1,8 +1,6 @@
 package cora.termination.dependency_pairs.processors;
 
-import cora.smt.IVar;
-import cora.smt.SmtProblem;
-import cora.smt.TermAnalyser;
+import cora.smt.*;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
@@ -130,21 +128,26 @@ public class KasperProcessor implements Processor {
     return retMap;
   }
 
-  private void requiresCtrs(Map<FunctionSymbol, IVar> map, Problem dpp) {
-    map.forEach( (f, ivar) -> {
+  private Map<DP, BVar> generateDpBVarMap(Problem dpp) {
+    Map<DP, BVar> retMap = new LinkedHashMap<>(dpp.getDPList().size());
+    dpp.getDPList()
+      .forEach(dp -> retMap.put(dp, _smt.createBooleanVariable()));
+    return retMap;
+  }
+
+  private void requiresCtrs(Map<FunctionSymbol, IVar> intMap) {
+    intMap.forEach( (f, ivar) -> {
       int upperBound = _candidates.get(f).size();
       _smt.require(SmtProblem.createLeq(SmtProblem.createValue(1), ivar));
       _smt.require(SmtProblem.createLeq(ivar, SmtProblem.createValue(upperBound)));
     });
-    System.out.println(_smt);
   }
 
-  private void putDpRequirements(Problem dpp) {
+  private void putDpRequirements(Map<FunctionSymbol, IVar> intMap, Map<DP, BVar> boolMap, Problem dpp) {
     for (DP dp : dpp.getDPList()) {
       Term lhs = dp.lhs();
       Term rhs = dp.rhs();
       Term ctr = dp.constraint();
-      List<Variable> var = dp.vars();
 
       FunctionSymbol lhsHead = lhs.queryRoot();
       FunctionSymbol rhsHead = rhs.queryRoot();
@@ -158,9 +161,6 @@ public class KasperProcessor implements Processor {
           Substitution substL = TermFactory.createEmptySubstitution();
           Substitution substR = TermFactory.createEmptySubstitution();
 
-          // Building two substitutions:
-          // substL = [x1 := s1, ..., xn := sn]
-          //
           for(int varL = 0; varL < lhsHead.queryArity(); varL ++) {
             substL.extend(_fnToFreshVar.get(lhsHead).get(varL), lhs.queryArgument(varL + 1));
           }
@@ -168,19 +168,60 @@ public class KasperProcessor implements Processor {
             substR.extend(_fnToFreshVar.get(rhsHead).get(varR), rhs.queryArgument(varR + 1));
           }
 
-          System.out.println( candLi + " |-> " + candLi.substitute(substL));
+          SmtProblem validityProblem = new SmtProblem();
 
+          Constraint constraintTranslation =
+            TermSmtTranslator.translateConstraint(ctr, validityProblem);
 
+          IntegerExpression candLiExpr =
+            TermSmtTranslator.
+              translateIntegerExpression(candLi.substitute(substL), validityProblem);
+          IntegerExpression candRjExpr =
+            TermSmtTranslator.
+              translateIntegerExpression(candRj.substitute(substR), validityProblem);
 
+          validityProblem
+            .requireImplication(constraintTranslation, SmtProblem.createGeq(candLiExpr, candRjExpr));
+
+          //Of and Og constraints
+          Constraint fSharpDisjunction =
+            SmtProblem.createDisjunction (
+              SmtProblem.createUnequal(intMap.get(lhsHead), SmtProblem.createValue(i)),
+              SmtProblem.createUnequal(intMap.get(rhsHead), SmtProblem.createValue(j))
+            );
+
+          if(validityProblem.isValid()) {
+
+            validityProblem.clear();
+
+            validityProblem.requireImplication (
+              constraintTranslation,
+              SmtProblem.createConjunction (
+                SmtProblem.createGeq(candLiExpr, SmtProblem.createValue(0)),
+                SmtProblem.createGreater(candLiExpr, candRjExpr)
+              ));
+
+            if(validityProblem.isValid()) {
+              continue;
+            } else {
+              _smt.require (
+                SmtProblem.createDisjunction(
+                  fSharpDisjunction,
+                  SmtProblem.createNegation(boolMap.get(dp))
+                ));
+            }
+
+          } else {
+            _smt.require(fSharpDisjunction);
+          }
         }
       }
-
-
     }
+    System.out.println("The analysis for all DPs done, here's the SMT state: " + _smt);
   }
 
   @Override
-  public List<Problem> processDPP(Problem dpp) {
+  public Optional<List<Problem>> processDPP(Problem dpp) {
 
     _fnToFreshVar = computeFreshVars(dpp);
 
@@ -188,18 +229,34 @@ public class KasperProcessor implements Processor {
 
     _candidates = computeInitialCandidates(dpp);
 
-//    System.out.println(" " + _candidates);
-
     updateCandidates(dpp);
 
-    System.out.println("State of the candidates:");
-    System.out.println(_candidates);
-
-    requiresCtrs(generateIVars(dpp), dpp);
-
+    requiresCtrs(generateIVars(dpp));
 
     System.out.println("------- testing generation of constraints\n");
-    putDpRequirements(dpp);
+    Map<FunctionSymbol, IVar> intMap = generateIVars(dpp);
+    Map<DP, BVar> boolMap = generateDpBVarMap(dpp);
+    putDpRequirements(intMap, boolMap, dpp);
+
+    Valuation result = _smt.satisfy();
+
+    if(result == null) {
+      System.out.println("No solution found");
+    } else {
+      System.out.println("The value of boolMap for each DP");
+      boolMap.forEach(
+        (dp, ibool) -> {
+          System.out.println("For the DP " + dp + " I found the value " + result.queryAssignment(ibool));
+        }
+      );
+      System.out.println("The value of intMap for all f# in the Problem: ");
+//      intMap.forEach(
+//        (fSharp, iint) -> {
+//          System.out.println("For the sharp symbol " + fSharp + " I found the value " + result.queryAssignment(iint));
+//          System.out.println("J(" + fSharp + ") = " + _candidates.get(fSharp).get(result.queryAssignment(iint)));
+//        }
+//      );
+    }
 
 
     return null;
