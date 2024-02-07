@@ -143,6 +143,14 @@ public class KasperProcessor implements Processor {
     });
   }
 
+  private void requireAtLeastOneStrict(Map<DP, BVar> boolMap) {
+    ArrayList<Constraint> disj = new ArrayList<Constraint>();
+    for (BVar b : boolMap.values()) {
+      disj.add(b);
+    }
+    _smt.require(SmtProblem.createDisjunction(disj));
+  }
+
   private void putDpRequirements(Map<FunctionSymbol, IVar> intMap, Map<DP, BVar> boolMap, Problem dpp) {
     for (DP dp : dpp.getDPList()) {
       Term lhs = dp.lhs();
@@ -231,11 +239,11 @@ public class KasperProcessor implements Processor {
 
     updateCandidates(dpp);
 
-    requiresCtrs(generateIVars(dpp));
-
     System.out.println("------- testing generation of constraints\n");
     Map<FunctionSymbol, IVar> intMap = generateIVars(dpp);
+    requiresCtrs(intMap);
     Map<DP, BVar> boolMap = generateDpBVarMap(dpp);
+    requireAtLeastOneStrict(boolMap);
     putDpRequirements(intMap, boolMap, dpp);
 
     Valuation result = _smt.satisfy();
@@ -250,12 +258,12 @@ public class KasperProcessor implements Processor {
         }
       );
       System.out.println("The value of intMap for all f# in the Problem: ");
-//      intMap.forEach(
-//        (fSharp, iint) -> {
-//          System.out.println("For the sharp symbol " + fSharp + " I found the value " + result.queryAssignment(iint));
-//          System.out.println("J(" + fSharp + ") = " + _candidates.get(fSharp).get(result.queryAssignment(iint)));
-//        }
-//      );
+      intMap.forEach(
+        (fSharp, iint) -> {
+          System.out.println("For the sharp symbol " + fSharp + " I found the value " + result.queryAssignment(iint));
+          System.out.println("J(" + fSharp + ") = " + _candidates.get(fSharp).get(result.queryAssignment(iint)-1));
+        }
+      );
     }
 
 
