@@ -27,9 +27,8 @@ class DPFrameworkTest {
 
 //    System.out.println("Input TRS: " + trs);
 
-//    DPFramework dp = new DPFramework();
-
-//    dp.proveTermination(trs);
+    DPFramework dp = new DPFramework();
+    dp.proveTermination(trs);
 
   }
 }

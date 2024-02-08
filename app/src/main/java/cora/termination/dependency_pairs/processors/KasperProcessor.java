@@ -265,8 +265,6 @@ public class KasperProcessor implements Processor {
         }
       );
     }
-
-
-    return null;
+    return Optional.of(new ArrayList<>());
   }
 }
