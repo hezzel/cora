@@ -15,16 +15,18 @@
 
 package cora;
 
-import com.google.common.collect.ImmutableList;
 import cora.reader.OCocoInputReader;
 import cora.rewriting.TRS;
 import cora.reader.CoraInputReader;
-import cora.reader.OCocoInputReader;
+import cora.termination.Handler;
+import cora.termination.Handler.Answer;
 import cora.termination.Horpo;
+import cora.termination.Request;
+import cora.utils.Pair;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-//import cora.ADT.* ;
+import java.util.Optional;
 
 /** Basic entry class: this reads a TRS and asks the user for a term, then reduces this term. */
 public class App {
@@ -62,28 +64,27 @@ public class App {
             TRS trs = readInput(_inputFile);
             if (trs == null) return;
 
-      /*
-      System.out.print(trs.toString());
+            // Build a request object requesting DP method to be used:
+            Request req = new Request(trs, Request.Technique.DP);
+            Handler handler = new Handler(req);
 
-      if (_inputTerm == null) {
-        System.out.println("Input term: ");
-        System.out.flush();
-        _inputTerm = (new BufferedReader(new InputStreamReader(System.in))).readLine();
-      }
+            switch (handler.getResponse()) {
+                case Pair<Answer, Optional<String>>(Answer answer , Optional<String> proof) : {
+                    System.out.println(answer + "\n\n");
 
-      Term term = CoraInputReader.readTermFromString(_inputTerm, trs);
-
-      do {
-        term = trs.leftmostInnermostReduce(term);
-        if (term != null) System.out.println("→ " + term.toString());
-      } while (term != null);
-      */
-            if (Horpo.applicable(trs)) {
-                Horpo.HorpoAnswer answer = Horpo.run(trs);
-                if (answer == null) System.out.println("MAYBE");
-                else System.out.println("YES\n\n" + trs.toString() + "\n" + answer.toString());
+                    proof.ifPresent(proofContents -> System.out.println(proofContents));
+                }
+                default : {
+                    System.out.println("NO\n\n");
+                }
             }
-            else System.out.println("Input is not an LCSTRS; no termination module is available.\n");
+
+//            if (Horpo.applicable(trs)) {
+//                Horpo.HorpoAnswer answer = Horpo.run(trs);
+//                if (answer == null) System.out.println("MAYBE");
+//                else System.out.println("YES\n\n" + trs.toString() + "\n" + answer.toString());
+//            }
+//            else System.out.println("Input is not an LCSTRS; no termination module is available.\n");
         }
         catch (Exception e) {
             System.out.println("Encountered an exception:\n" + e.getMessage());

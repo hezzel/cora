@@ -9,7 +9,7 @@ public class Handler {
 
   public enum Answer { YES, NO, MAYBE, NOT_APPLICABLE }
 
-  Handler(Request request) {
+  public Handler(Request request) {
     _proofRequest = request;
   }
 
