@@ -4,6 +4,7 @@ import cora.smt.*;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
+import cora.termination.dependency_pairs.certification.Informal;
 import cora.terms.*;
 
 import java.util.*;
@@ -12,10 +13,9 @@ import java.util.function.Consumer;
 public class KasperProcessor implements Processor {
 
   private final SmtProblem _smt = new SmtProblem();
-
   private Map< FunctionSymbol, List<Variable> > _fnToFreshVar;
-
   private Map< FunctionSymbol, List<Term> > _candidates;
+  private Map<Replaceable,String> _varNaming;
 
   @Override
   public boolean isApplicable(Problem dpp) {
@@ -28,18 +28,23 @@ public class KasperProcessor implements Processor {
    */
   private Map<FunctionSymbol, List<Variable>> computeFreshVars(Problem dpp) {
     Set<FunctionSymbol> allSharps = dpp.getSharpHeads();
+    _varNaming = new TreeMap<Replaceable,String>();
 
     Map<FunctionSymbol, List<Variable>> ret = new TreeMap<>();
     allSharps
       .forEach( fSharp -> {
         List<Variable> newVars = DPGenerator.generateVars(fSharp.queryType());
+        for (int i = 0; i < newVars.size(); i++) {
+          _varNaming.put(newVars.get(i), "arg_" + (i+1));
+        }
         ret.put(fSharp, newVars);
       });
 
     return ret;
   }
 
-  private Map<FunctionSymbol, List<Term>> computeInitialCandidates(Problem dpp) {
+  /** This computes all candidates of the form arg_i, where the ith argument is of theory sort. */
+  private Map<FunctionSymbol, List<Term>> computeSimpleCandidates(Problem dpp) {
     Set<FunctionSymbol> allSharps = dpp.getSharpHeads();
 
     Map<FunctionSymbol, List<Term>> ret = new TreeMap<>();
@@ -59,14 +64,43 @@ public class KasperProcessor implements Processor {
   }
 
   /**
-   * Updates the
-   * @param dpp
-   * @return
+   * Given a candidate term t over variables {x_1^f,...,x_n^f}, and a term of the form f(s1,...,sn),
+   * this returns t[x_1^f:=s1,...,x_n^f:=sn].
+   */
+  private Term instantiateCandidate(Term candidate, Term term) {
+    Substitution subst = TermFactory.createEmptySubstitution();
+    FunctionSymbol f = term.queryRoot();
+    for (int varL = 0; varL < f.queryArity(); varL ++) {
+      subst.extend(_fnToFreshVar.get(f).get(varL), term.queryArgument(varL + 1));
+    }
+    return candidate.substitute(subst);
+  }
+
+  /**
+   * This function filters out those candidates from the candidate list which, if chosen, would not
+   * generate a ground theory term with variables in theoryVars for the given term.
+   */
+  private void filterCandidateList(Term term, List<Variable> theoryVars) {
+    List<Term> updatedCandidates = new ArrayList<Term>();
+    FunctionSymbol fSharp = term.queryRoot();
+    for (Term cand : _candidates.get(fSharp)) {
+      Term inst = instantiateCandidate(cand, term);
+      if (!inst.isTheoryTerm()) continue;
+      boolean badvar = false;
+      for (Variable x : inst.vars()) {
+        if (!theoryVars.contains(x)) { badvar = true; break; }
+      }
+      if (!badvar) updatedCandidates.add(cand);
+    }
+    _candidates.replace(fSharp, updatedCandidates);
+  }
+
+  /**
+   * This function updates the list of candidate functions, by tossing out every candidate if, in
+   * any dependency pair, it would not be instantiated by a theory term.
    */
   private void updateCandidates(Problem dpp) {
     for(DP dp : dpp.getDPList()) {
-
-      System.out.println("The DP we are updating the candidates is: " + dp);
 
       // Decomposition of this dp as lhs => rhs [ ctr | V ]
       Term lhs = dp.lhs();
@@ -74,46 +108,9 @@ public class KasperProcessor implements Processor {
       Term ctr = dp.constraint();
       List<Variable> V = dp.vars();
 
-      // Given f# s1 ... sn (being the lhs or rhs of a DP), the consumer handler
-      // should do the following:
-      // for each si in [s1, ..., sn]
-      //     if si is not a theory term or vars(si) contains some variable not in V then:
-      //         we remove from _candidates(f#) all terms u such that the corresponding freshly generated variable
-      //         in _fnToFreshVar(f#) xi belongs to vars(u).
-      Consumer<Term> handler = (
-        s -> {
-          System.out.println("The term is : " + s);
-          for (Term si : s.queryArguments()) {
-            boolean siVarTest = false;
-            for (Variable v : si.vars()) {
-              if (V.contains(v)) { continue; } else { siVarTest = true; break;}
-            }
-            if(!si.isTheoryTerm() || siVarTest) {
-              FunctionSymbol fSharp = s.queryRoot();
-              Variable xi = _fnToFreshVar.get(fSharp).get(s.queryArguments().indexOf(si));
-              System.out.println("Analysing " + fSharp + " at argument " + si + ", which should be removed.");
-
-              System.out.println("Initial candidates " + _candidates.get(fSharp));
-
-              List<Term> updatedCandidates = _candidates.get(fSharp)
-                .stream()
-                .filter(t -> !t.vars().contains(xi))
-                .toList();
-              _candidates.replace(fSharp, updatedCandidates);
-
-              System.out.println("Updated candidates: " + updatedCandidates);
-
-              System.out.println("Moving to next argument...\n\n\n");
-
-            }
-          }
-        }
-      );
-      handler.accept(lhs);
-      System.out.println("------------------------------------");
-      handler.accept(rhs);
+      filterCandidateList(lhs, V);
+      filterCandidateList(rhs, V);
     }
-
   }
 
   private Map<FunctionSymbol, IVar> generateIVars(Problem dpp) {
@@ -124,7 +121,7 @@ public class KasperProcessor implements Processor {
 
     allFns.forEach(fSharp -> {
       retMap.put(fSharp, _smt.createIntegerVariable());
-      });
+    });
     return retMap;
   }
 
@@ -137,17 +134,15 @@ public class KasperProcessor implements Processor {
 
   private void requiresCtrs(Map<FunctionSymbol, IVar> intMap) {
     intMap.forEach( (f, ivar) -> {
-      int upperBound = _candidates.get(f).size();
-      _smt.require(SmtProblem.createLeq(SmtProblem.createValue(1), ivar));
+      int upperBound = _candidates.get(f).size()-1;
+      _smt.require(SmtProblem.createLeq(SmtProblem.createValue(0), ivar));
       _smt.require(SmtProblem.createLeq(ivar, SmtProblem.createValue(upperBound)));
     });
   }
 
   private void requireAtLeastOneStrict(Map<DP, BVar> boolMap) {
     ArrayList<Constraint> disj = new ArrayList<Constraint>();
-    for (BVar b : boolMap.values()) {
-      disj.add(b);
-    }
+    for (BVar b : boolMap.values()) disj.add(b);
     _smt.require(SmtProblem.createDisjunction(disj));
   }
 
@@ -160,72 +155,65 @@ public class KasperProcessor implements Processor {
       FunctionSymbol lhsHead = lhs.queryRoot();
       FunctionSymbol rhsHead = rhs.queryRoot();
 
-      for(int i = 0; i < _candidates.get(lhsHead).size(); i++) {
-        for(int j = 0; j < _candidates.get(rhsHead).size(); j++) {
+      for (int i = 0; i < _candidates.get(lhsHead).size(); i++) {
+        for (int j = 0; j < _candidates.get(rhsHead).size(); j++) {
+          if (lhsHead.equals(rhsHead) && i != j) continue;
 
-          Term candLi = _candidates.get(lhsHead).get(i);
-          Term candRj = _candidates.get(rhsHead).get(j);
-
-          Substitution substL = TermFactory.createEmptySubstitution();
-          Substitution substR = TermFactory.createEmptySubstitution();
-
-          for(int varL = 0; varL < lhsHead.queryArity(); varL ++) {
-            substL.extend(_fnToFreshVar.get(lhsHead).get(varL), lhs.queryArgument(varL + 1));
-          }
-          for(int varR = 0; varR < rhsHead.queryArity(); varR ++) {
-            substR.extend(_fnToFreshVar.get(rhsHead).get(varR), rhs.queryArgument(varR + 1));
-          }
+          Term instLi = instantiateCandidate(_candidates.get(lhsHead).get(i), lhs);
+          Term instRj = instantiateCandidate(_candidates.get(rhsHead).get(j), rhs);
 
           SmtProblem validityProblem = new SmtProblem();
 
+          // translate the constraint and instantiated candidates to smt language
           Constraint constraintTranslation =
             TermSmtTranslator.translateConstraint(ctr, validityProblem);
-
           IntegerExpression candLiExpr =
-            TermSmtTranslator.
-              translateIntegerExpression(candLi.substitute(substL), validityProblem);
+            TermSmtTranslator.translateIntegerExpression(instLi, validityProblem);
           IntegerExpression candRjExpr =
-            TermSmtTranslator.
-              translateIntegerExpression(candRj.substitute(substR), validityProblem);
-
-          validityProblem
-            .requireImplication(constraintTranslation, SmtProblem.createGeq(candLiExpr, candRjExpr));
-
-          //Of and Og constraints
+            TermSmtTranslator.translateIntegerExpression(instRj, validityProblem);
+          
+          // fSharpDisjunction = nu(leftroot) != i \/ nu(rightroot) != j
           Constraint fSharpDisjunction =
             SmtProblem.createDisjunction (
               SmtProblem.createUnequal(intMap.get(lhsHead), SmtProblem.createValue(i)),
               SmtProblem.createUnequal(intMap.get(rhsHead), SmtProblem.createValue(j))
             );
 
-          if(validityProblem.isValid()) {
-
-            validityProblem.clear();
-
-            validityProblem.requireImplication (
-              constraintTranslation,
-              SmtProblem.createConjunction (
-                SmtProblem.createGeq(candLiExpr, SmtProblem.createValue(0)),
-                SmtProblem.createGreater(candLiExpr, candRjExpr)
-              ));
-
-            if(validityProblem.isValid()) {
-              continue;
-            } else {
-              _smt.require (
-                SmtProblem.createDisjunction(
-                  fSharpDisjunction,
-                  SmtProblem.createNegation(boolMap.get(dp))
-                ));
-            }
-
-          } else {
+          // check one: if left ≥ right doesn't even hold, then we can't have that choice of
+          // candidates
+          validityProblem
+            .requireImplication(constraintTranslation, SmtProblem.createGeq(candLiExpr, candRjExpr));
+          if (!validityProblem.isValid()) {
             _smt.require(fSharpDisjunction);
+            continue;
+          }
+
+          // check two: if left > right holds, then having this choice of candidates means that the
+          // DP is oriented strictly; if it doesn't, then it means the DP is not oriented strictly
+          validityProblem.clear();
+          validityProblem.requireImplication (
+            constraintTranslation,
+            SmtProblem.createConjunction (
+              SmtProblem.createGeq(candLiExpr, SmtProblem.createValue(0)),
+              SmtProblem.createGreater(candLiExpr, candRjExpr)
+            ));
+
+          if(validityProblem.isValid()) {
+            _smt.require(
+              SmtProblem.createDisjunction(
+                fSharpDisjunction,
+                boolMap.get(dp)
+              ));
+          } else {
+            _smt.require (
+              SmtProblem.createDisjunction(
+                fSharpDisjunction,
+                SmtProblem.createNegation(boolMap.get(dp))
+              ));
           }
         }
       }
     }
-    System.out.println("The analysis for all DPs done, here's the SMT state: " + _smt);
   }
 
   @Override
@@ -233,13 +221,10 @@ public class KasperProcessor implements Processor {
 
     _fnToFreshVar = computeFreshVars(dpp);
 
-    System.out.println("\n\n\nCompletely fresh vars : " + _fnToFreshVar);
-
-    _candidates = computeInitialCandidates(dpp);
+    _candidates = computeSimpleCandidates(dpp);
 
     updateCandidates(dpp);
 
-    System.out.println("------- testing generation of constraints\n");
     Map<FunctionSymbol, IVar> intMap = generateIVars(dpp);
     requiresCtrs(intMap);
     Map<DP, BVar> boolMap = generateDpBVarMap(dpp);
@@ -248,23 +233,50 @@ public class KasperProcessor implements Processor {
 
     Valuation result = _smt.satisfy();
 
-    if(result == null) {
-      System.out.println("No solution found");
-    } else {
-      System.out.println("The value of boolMap for each DP");
-      boolMap.forEach(
-        (dp, ibool) -> {
-          System.out.println("For the DP " + dp + " I found the value " + result.queryAssignment(ibool));
-        }
-      );
-      System.out.println("The value of intMap for all f# in the Problem: ");
-      intMap.forEach(
-        (fSharp, iint) -> {
-          System.out.println("For the sharp symbol " + fSharp + " I found the value " + result.queryAssignment(iint));
-          System.out.println("J(" + fSharp + ") = " + _candidates.get(fSharp).get(result.queryAssignment(iint)-1));
-        }
-      );
+    if(result == null) return Optional.empty();
+
+    // we found a solution! Store the information from the valuation
+    TreeSet<Integer> indexOfOrientedDPs = new TreeSet<>();
+    TreeMap<FunctionSymbol,Term> candFun = new TreeMap<FunctionSymbol,Term>();
+    List<DP> originalDPs = dpp.getDPList();
+    List<DP> remainingDPs = new ArrayList<DP>();
+    intMap.forEach(
+      (f, ivar) -> {
+        candFun.put(f, _candidates.get(f).get(result.queryAssignment(ivar)));
+      }); 
+    for (int index = 0; index < originalDPs.size(); index++) {
+      DP dp = originalDPs.get(index);
+      BVar bvar = boolMap.get(dp);
+      if (result.queryAssignment(bvar)) { indexOfOrientedDPs.add(index); }
+      else { remainingDPs.add(dp); }
+    }  
+
+    // now let's generate output to the user
+    Informal.getInstance().addProofStep("We apply the integer function criterion with the " +
+      "following projection function.");
+    candFun.forEach(
+      (f, cand) -> {
+        StringBuilder builder = new StringBuilder("J( " + f.toString() + " ) = ");
+        cand.addToString(builder, _varNaming);
+        Informal.getInstance().addProofStep(builder.toString());
+      });
+    Informal.getInstance().addProofStep("We thus have: ");
+    for (int index = 0; index < originalDPs.size(); index++) {
+      DP dp = originalDPs.get(index);
+      String left = instantiateCandidate(candFun.get(dp.lhs().queryRoot()), dp.lhs()).toString();
+      String right = instantiateCandidate(candFun.get(dp.rhs().queryRoot()), dp.rhs()).toString();
+      if (indexOfOrientedDPs.contains(index)) {
+        Informal.getInstance().addProofStep("  " + dp.constraint().toString() + " ⊨ " + left +
+          " > " + right + " (and " + left + "≥ 0)    for the DP " + dp.toString());
+      }
+      else {
+        Informal.getInstance().addProofStep("  " + dp.constraint().toString() + " ⊨ " + left +
+          " ≥ " + right + "    for the DP " + dp.toString());
+      }
     }
-    return Optional.of(new ArrayList<>());
+    Informal.getInstance().addProofStep("And we remove all strictly oriented DPs.");
+
+    GraphProcessor gProc = new GraphProcessor();
+    return gProc.processDPP(new Problem(remainingDPs, dpp.getTRS()));
   }
 }

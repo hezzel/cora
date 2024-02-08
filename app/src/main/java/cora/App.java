@@ -69,7 +69,7 @@ public class App {
             Request req = new Request(trs, Request.Technique.DP);
             Handler handler = new Handler(req);
 
-            Informal.getInstance().addProofStep("We want prove termination of the following system:");
+            Informal.getInstance().addProofStep("We want to prove termination of the following system:");
             Informal.getInstance().addProofStep(trs.toString());
 
             Pair<Answer, Optional<String>> response = handler.getResponse();

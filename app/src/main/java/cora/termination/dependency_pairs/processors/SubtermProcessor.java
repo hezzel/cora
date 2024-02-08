@@ -164,7 +164,7 @@ public class SubtermProcessor implements Processor {
       DP dp = originalDPs.get(index);
       Informal
         .getInstance()
-        .addProofStep(STR."\{dp.lhs().queryArgument(nu.get(dp.lhs().queryRoot()))} \{ kind } \{dp.rhs().queryArgument(nu.get(dp.rhs().queryRoot()))}   for the DP \{dp.toString()}.");
+        .addProofStep(STR."  \{dp.lhs().queryArgument(nu.get(dp.lhs().queryRoot()))} \{ kind } \{dp.rhs().queryArgument(nu.get(dp.rhs().queryRoot()))}   for the DP \{dp.toString()}.");
     }
 
     Informal.getInstance().addProofStep("And we remove all strictly oriented DPs.");
