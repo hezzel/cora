@@ -22,6 +22,7 @@ import cora.termination.Handler;
 import cora.termination.Handler.Answer;
 import cora.termination.Horpo;
 import cora.termination.Request;
+import cora.termination.dependency_pairs.certification.Informal;
 import cora.utils.Pair;
 
 import java.io.BufferedReader;
@@ -64,20 +65,17 @@ public class App {
             TRS trs = readInput(_inputFile);
             if (trs == null) return;
 
-            // Build a request object requesting DP method to be used:
+            // Build a request object requesting DP method to be used
             Request req = new Request(trs, Request.Technique.DP);
             Handler handler = new Handler(req);
 
-            switch (handler.getResponse()) {
-                case Pair<Answer, Optional<String>>(Answer answer , Optional<String> proof) : {
-                    System.out.println(answer + "\n\n");
+            Informal.getInstance().addProofStep("We want prove termination of the following system:");
+            Informal.getInstance().addProofStep(trs.toString());
 
-                    proof.ifPresent(proofContents -> System.out.println(proofContents));
-                }
-                default : {
-                    System.out.println("NO\n\n");
-                }
-            }
+            Pair<Answer, Optional<String>> response = handler.getResponse();
+            System.out.println(response.fst() + "\n");
+
+            response.snd().ifPresent(System.out::println);
 
 //            if (Horpo.applicable(trs)) {
 //                Horpo.HorpoAnswer answer = Horpo.run(trs);
