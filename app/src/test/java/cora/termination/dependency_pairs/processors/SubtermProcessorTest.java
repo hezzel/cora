@@ -7,6 +7,7 @@ import cora.termination.dependency_pairs.Problem;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -49,5 +50,16 @@ class SubtermProcessorTest {
     Problem p = DPGenerator.generateProblemFromTrs(trs);
     // TODO: do an assert with the output of this
     if (ENABLE) subProc.processDPP(p);
+  }
+
+  @Test
+  public void testSubcritNotApplicable() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "f :: Int -> Int -> Int\n" +
+      "f(x, y) -> f(x, y+1) | y < x\n");
+    SubtermProcessor subProc = new SubtermProcessor();
+    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    // TODO: do an assert with the output of this
+    if (ENABLE) assertTrue(subProc.processDPP(p).equals(Optional.empty()));
   }
 }
