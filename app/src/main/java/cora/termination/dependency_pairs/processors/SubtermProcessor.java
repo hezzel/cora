@@ -57,6 +57,14 @@ public class SubtermProcessor implements Processor {
     );
   }
 
+  private void requireAtLeastOneStrict(Map<DP, BVar> boolMap) {
+    ArrayList<Constraint> disj = new ArrayList<Constraint>();
+    for (BVar b : boolMap.values()) {
+      disj.add(b);
+    }
+    _smt.require(SmtProblem.createDisjunction(disj));
+  }
+
   // TODO this function doesn't belong here...
   //  it implements the subterm relation s >= t.
   //  meaning s = t or <the normal subterm relation>
@@ -74,16 +82,14 @@ public class SubtermProcessor implements Processor {
   }
 
   private void addProblemConstraintsToSMT(Map<FunctionSymbol, IVar> fSharpMap, Map<DP, BVar> dpbVarMap, Problem dpp) {
-
-    addFnConstraintsToSMT(fSharpMap);
-
     for (DP dp : dpp.getDPList()) {
       Term lhs = dp.lhs();
       FunctionSymbol f = lhs.queryRoot();
       Term rhs = dp.rhs();
       FunctionSymbol g = rhs.queryRoot();
-      for(int i = 1; i <= lhs.queryArguments().size(); i++) {
+      for (int i = 1; i <= lhs.queryArguments().size(); i++) {
         for (int j = 1; j <= rhs.queryArguments().size(); j++) {
+          if (f.equals(g) && i != j) continue;
           Term si = lhs.queryArgument(i);
           Term tj = rhs.queryArgument(j);
           //
@@ -94,12 +100,10 @@ public class SubtermProcessor implements Processor {
             Constraint disjunction = SmtProblem.createDisjunction(new ArrayList<>(List.of(c0, c1, c2)));
             _smt.require(disjunction);
           } else if (isSubtermGTE(si, tj)) {
-            System.out.println(tj + " is a subtterm of " + si);
             Constraint c2 = dpbVarMap.get(dp);
             Constraint disjunction = SmtProblem.createDisjunction(new ArrayList<>(List.of(c0, c1, c2)));
             _smt.require(disjunction);
           } else {
-            System.out.println(tj + " is not subterm of " + si);
             Constraint disjunction = SmtProblem.createDisjunction(new ArrayList<>(List.of(c0, c1)));
             _smt.require(disjunction);
           }
@@ -112,39 +116,60 @@ public class SubtermProcessor implements Processor {
   public Optional<List<Problem>> processDPP(Problem dpp) {
     // Generates an IntegerSMT variable for each f-sharp symbol
     Map<FunctionSymbol, IVar> fSharpMap = generateFnIvarMap(dpp);
-    // System.out.println("Mappings of fsharps: " + fSharpMap);
     // Adds the respective constraints to the smt state
     addFnConstraintsToSMT(fSharpMap);
     // Generates boolean variables for each DP
     Map<DP, BVar> dpbVarMap = generateDpBVarMap(dpp);
-
+    // Requires that at least one DP is oriented strictly
+    requireAtLeastOneStrict(dpbVarMap);
     // Adds all the constraints of this dpp to the smt solver
     addProblemConstraintsToSMT(fSharpMap, dpbVarMap, dpp);
 
-    //
+    // Ask the SMT-solver to find the projection function for us.
     Valuation valuation = _smt.satisfy();
 
     if (valuation == null) {
       // this processor cannot do anything
       return Optional.empty();
-    } else {
-      List<Integer> indexOfOrientedDPs = new ArrayList<>();
-      dpbVarMap.forEach (
-        (dp, bvar) -> {
-          if (valuation.queryAssignment(bvar)) { indexOfOrientedDPs.add(dpp.getDPList().indexOf(dp)); }
-          System.out.println("Boolean value found for the dp " + dp + " is " + valuation.queryAssignment(bvar));
-        });
-
-      List<DP> removedDPs = new ArrayList<>(List.copyOf(dpp.getDPList()));
-
-      for (int indexToRemove : indexOfOrientedDPs) {
-        removedDPs.remove(indexToRemove);
-      }
-
-      GraphProcessor gProc = new GraphProcessor();
-
-      return gProc.processDPP(new Problem(removedDPs, dpp.getTRS()));
     }
-  }
 
+    // we found a solution! Store the information from the valuation
+    TreeSet<Integer> indexOfOrientedDPs = new TreeSet<>();
+    TreeMap<FunctionSymbol,Integer> nu = new TreeMap<FunctionSymbol,Integer>();
+    List<DP> originalDPs = dpp.getDPList();
+    List<DP> remainingDPs = new ArrayList<DP>();
+    fSharpMap.forEach(
+      (f, ivar) -> {
+        nu.put(f, valuation.queryAssignment(ivar));
+      });
+    for (int index = 0; index < originalDPs.size(); index++) {
+      DP dp = originalDPs.get(index);
+      BVar bvar = dpbVarMap.get(dp);
+      if (valuation.queryAssignment(bvar)) { indexOfOrientedDPs.add(index); }
+      else { remainingDPs.add(dp); }
+    }
+
+    // and let's generate output to the user
+    System.out.println("TODO: print output as follows:\n**********\n");
+    System.out.println("We apply the subterm criterion with the fullolowing projection function.");
+    nu.forEach(
+      (f, k) -> {
+        System.out.println("  ν(" + f.toString() + ") = " + k);
+      });
+    System.out.println("We thus have:");
+    for (int index = 0; index < originalDPs.size(); index++) {
+      String kind;
+      if (indexOfOrientedDPs.contains(index)) kind = "▷";
+      else kind = "=";
+      DP dp = originalDPs.get(index);
+      System.out.println(dp.lhs().queryArgument(nu.get(dp.lhs().queryRoot())) + " " +
+        kind + " " + dp.rhs().queryArgument(nu.get(dp.rhs().queryRoot())) + "   " +
+        "for the DP " + dp.toString() + ".");
+    }
+    System.out.println("And we remove all strictly oriented DPs.");
+    System.out.println("**********(END OF TODO)\n");
+
+    GraphProcessor gProc = new GraphProcessor();
+    return gProc.processDPP(new Problem(remainingDPs, dpp.getTRS()));
+  }
 }
