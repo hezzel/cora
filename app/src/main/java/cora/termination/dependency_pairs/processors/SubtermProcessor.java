@@ -57,6 +57,14 @@ public class SubtermProcessor implements Processor {
     );
   }
 
+  private void requireAtLeastOneStrict(Map<DP, BVar> boolMap) {
+    ArrayList<Constraint> disj = new ArrayList<Constraint>();
+    for (BVar b : boolMap.values()) {
+      disj.add(b);
+    }
+    _smt.require(SmtProblem.createDisjunction(disj));
+  }
+
   // TODO this function doesn't belong here...
   //  it implements the subterm relation s >= t.
   //  meaning s = t or <the normal subterm relation>
@@ -74,16 +82,14 @@ public class SubtermProcessor implements Processor {
   }
 
   private void addProblemConstraintsToSMT(Map<FunctionSymbol, IVar> fSharpMap, Map<DP, BVar> dpbVarMap, Problem dpp) {
-
-    addFnConstraintsToSMT(fSharpMap);
-
     for (DP dp : dpp.getDPList()) {
       Term lhs = dp.lhs();
       FunctionSymbol f = lhs.queryRoot();
       Term rhs = dp.rhs();
       FunctionSymbol g = rhs.queryRoot();
-      for(int i = 1; i <= lhs.queryArguments().size(); i++) {
+      for (int i = 1; i <= lhs.queryArguments().size(); i++) {
         for (int j = 1; j <= rhs.queryArguments().size(); j++) {
+          if (f.equals(j) && i != j) continue;
           Term si = lhs.queryArgument(i);
           Term tj = rhs.queryArgument(j);
           //
@@ -112,39 +118,36 @@ public class SubtermProcessor implements Processor {
   public Optional<List<Problem>> processDPP(Problem dpp) {
     // Generates an IntegerSMT variable for each f-sharp symbol
     Map<FunctionSymbol, IVar> fSharpMap = generateFnIvarMap(dpp);
-    // System.out.println("Mappings of fsharps: " + fSharpMap);
     // Adds the respective constraints to the smt state
     addFnConstraintsToSMT(fSharpMap);
     // Generates boolean variables for each DP
     Map<DP, BVar> dpbVarMap = generateDpBVarMap(dpp);
-
+    // Requires that at least one DP is oriented strictly
+    requireAtLeastOneStrict(dpbVarMap);
     // Adds all the constraints of this dpp to the smt solver
     addProblemConstraintsToSMT(fSharpMap, dpbVarMap, dpp);
 
-    //
+    // Ask the SMT-solver to find the projection function for us.
     Valuation valuation = _smt.satisfy();
 
     if (valuation == null) {
       // this processor cannot do anything
       return Optional.empty();
     } else {
-      List<Integer> indexOfOrientedDPs = new ArrayList<>();
+      TreeSet<Integer> indexOfOrientedDPs = new TreeSet<>();
       dpbVarMap.forEach (
         (dp, bvar) -> {
           if (valuation.queryAssignment(bvar)) { indexOfOrientedDPs.add(dpp.getDPList().indexOf(dp)); }
           System.out.println("Boolean value found for the dp " + dp + " is " + valuation.queryAssignment(bvar));
         });
 
-      List<DP> removedDPs = new ArrayList<>(List.copyOf(dpp.getDPList()));
-
-      for (int indexToRemove : indexOfOrientedDPs) {
-        removedDPs.remove(indexToRemove);
+      List<DP> remainingDPs = new ArrayList<DP>();
+      List<DP> originalDPs = dpp.getDPList();
+      for (int index = 0; index < originalDPs.size(); index++) {
+        if (!indexOfOrientedDPs.contains(index)) remainingDPs.add(originalDPs.get(index));
       }
-
       GraphProcessor gProc = new GraphProcessor();
-
-      return gProc.processDPP(new Problem(removedDPs, dpp.getTRS()));
+      return gProc.processDPP(new Problem(remainingDPs, dpp.getTRS()));
     }
   }
-
 }
