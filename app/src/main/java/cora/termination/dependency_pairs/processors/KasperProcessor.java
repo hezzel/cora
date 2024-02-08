@@ -57,10 +57,101 @@ public class KasperProcessor implements Processor {
         .filter( x -> x.queryType().isTheoryType() && x.queryType().isBaseType())
         .map(x -> (Term) x)
         .toList();
-      ret.put(fSharp, varToTerms);
+      ret.put(fSharp, new ArrayList<Term>(varToTerms));
+      // TODO: this is a weird and roundabout way to not get an immutable list in the place where
+      // we are going to add more candidates in the next function
     });
 
     return ret;
+  }
+
+  /** This computes all candidates based on the constraints of a dependency pair. */
+  private void addComplexCandidates(Problem dpp) {
+    for (DP dp : dpp.getDPList()) {
+      Term lhs = dp.lhs();
+      Term root = lhs.queryRoot();
+      // let subst be the substitution such that, if left = f l1 ... ln and li is a variable of
+      // theory sort, then subst[li] = x_i^f
+      Substitution subst = TermFactory.createEmptySubstitution();
+      for (int i = 1; i <= lhs.numberArguments(); i++) {
+        Term argi = lhs.queryArgument(i);
+        if (argi.isVariable() && argi.queryType().isTheoryType() && argi.queryType().isBaseType()) {
+          subst.extend(argi.queryVariable(), _fnToFreshVar.get(root).get(i-1));
+        }
+      }
+      // let suggestions be the suggestions obtained from comparisons in the constraint, but not
+      // yet adapted with the argument variables
+      ArrayList<Term> suggestions = new ArrayList<Term>();
+      addAllComparisonFunctions(dp.constraint(), suggestions);
+      // filter out those that use variables we aren't allowed to use, and store the remainder in
+      // candidates!
+      for (Term s : suggestions) {
+        boolean ok = true;
+        for (Variable x : s.vars()) {
+          if (subst.get(x) == null) { ok = false; break; }
+        }
+        if (ok) _candidates.get(root).add(s.substitute(subst));
+      }
+    }
+  }
+
+  /**
+   * Given a constraint, for all comparisons s ≥ t that occur in it (below ∧ or ∨), add s - t to
+   * ret.  This includes other comparisons that can be seen as a ≥; for instance if s < t occurs
+   * then we add t - s - 1.
+   */
+  private void addAllComparisonFunctions(Term constraint, ArrayList<Term> ret) {
+    if (!constraint.isFunctionalTerm()) return;
+    FunctionSymbol f = constraint.queryRoot();
+    if (f.equals(TheoryFactory.andSymbol) || f.equals(TheoryFactory.orSymbol)) {
+      for (int i = 1; i <= constraint.numberArguments(); i++) {
+        addAllComparisonFunctions(constraint.queryArgument(i), ret);
+      }
+    }
+    if (constraint.numberArguments() != 2) return;
+    Term left = constraint.queryArgument(1);
+    Term right = constraint.queryArgument(2);
+    // left ≥ right  =>  left - right
+    if (f.equals(TheoryFactory.geqSymbol) || f.equals(TheoryFactory.equalSymbol) ||
+        f.equals(TheoryFactory.greaterSymbol)) {
+      if (right.equals(TheoryFactory.createValue(0))) ret.add(left);
+      else {
+        Term minright = TheoryFactory.minusSymbol.apply(right);
+        ret.add(TermFactory.createApp(TheoryFactory.plusSymbol, left, minright));
+      }
+    }
+    // left > right  =>  left - right - 1
+    if (f.equals(TheoryFactory.greaterSymbol)) {
+      Term minright = TheoryFactory.minusSymbol.apply(right);
+      Term leftminright = TermFactory.createApp(TheoryFactory.plusSymbol, left, minright);
+      if (right.equals(TheoryFactory.createValue(0))) leftminright = left;
+      Term minone = TheoryFactory.createValue(-1);
+      ret.add(TermFactory.createApp(TheoryFactory.plusSymbol, leftminright, minone));
+    }
+    // left ≤ right  =>  right - left
+    if (f.equals(TheoryFactory.leqSymbol) || f.equals(TheoryFactory.equalSymbol) ||
+        f.equals(TheoryFactory.smallerSymbol)) {
+      if (left.equals(TheoryFactory.createValue(0))) ret.add(right);
+      else {
+        Term minleft = TheoryFactory.minusSymbol.apply(left);
+        ret.add(TermFactory.createApp(TheoryFactory.plusSymbol, right, minleft));
+      }
+    }
+    // left < right  =>  right - left - 1
+    if (f.equals(TheoryFactory.smallerSymbol)) {
+      Term minleft = TheoryFactory.minusSymbol.apply(left);
+      Term rightminleft = TermFactory.createApp(TheoryFactory.plusSymbol, right, minleft);
+      if (left.equals(TheoryFactory.createValue(0))) rightminleft = right;
+      Term minone = TheoryFactory.createValue(-1);
+      ret.add(TermFactory.createApp(TheoryFactory.plusSymbol, rightminleft, minone));
+    }
+  }
+
+  private boolean everyFunctionHasAtLeastOneCandidate() {
+    for (List<Term> xs : _candidates.values()) {
+      if (xs.size() == 0) return false;
+    }
+    return true;
   }
 
   /**
@@ -100,7 +191,7 @@ public class KasperProcessor implements Processor {
    * any dependency pair, it would not be instantiated by a theory term.
    */
   private void updateCandidates(Problem dpp) {
-    for(DP dp : dpp.getDPList()) {
+    for (DP dp : dpp.getDPList()) {
 
       // Decomposition of this dp as lhs => rhs [ ctr | V ]
       Term lhs = dp.lhs();
@@ -116,8 +207,6 @@ public class KasperProcessor implements Processor {
   private Map<FunctionSymbol, IVar> generateIVars(Problem dpp) {
     Set<FunctionSymbol> allFns = dpp.getSharpHeads();
     Map<FunctionSymbol, IVar> retMap = new TreeMap<>();
-
-    System.out.println(allFns);
 
     allFns.forEach(fSharp -> {
       retMap.put(fSharp, _smt.createIntegerVariable());
@@ -222,8 +311,10 @@ public class KasperProcessor implements Processor {
     _fnToFreshVar = computeFreshVars(dpp);
 
     _candidates = computeSimpleCandidates(dpp);
-
+    addComplexCandidates(dpp);
     updateCandidates(dpp);
+    if (!everyFunctionHasAtLeastOneCandidate()) return Optional.empty();
+
 
     Map<FunctionSymbol, IVar> intMap = generateIVars(dpp);
     requiresCtrs(intMap);
@@ -267,7 +358,7 @@ public class KasperProcessor implements Processor {
       String right = instantiateCandidate(candFun.get(dp.rhs().queryRoot()), dp.rhs()).toString();
       if (indexOfOrientedDPs.contains(index)) {
         Informal.getInstance().addProofStep("  " + dp.constraint().toString() + " ⊨ " + left +
-          " > " + right + " (and " + left + "≥ 0)    for the DP " + dp.toString());
+          " > " + right + " ( and " + left + "≥ 0)    for the DP " + dp.toString());
       }
       else {
         Informal.getInstance().addProofStep("  " + dp.constraint().toString() + " ⊨ " + left +

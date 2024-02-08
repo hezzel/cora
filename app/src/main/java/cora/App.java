@@ -86,6 +86,7 @@ public class App {
         }
         catch (Exception e) {
             System.out.println("Encountered an exception:\n" + e.getMessage());
+            e.printStackTrace();
         }
         catch (Error e) {
             System.out.println("Encountered an error:\n" + e.getMessage());
