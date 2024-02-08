@@ -41,14 +41,10 @@ public class GraphProcessor implements Processor {
       }
     }
 
-    System.out.println("problemToGraph::List of DP Problems received: " + dpp.getDPList() );
-
-    System.out.println("Graph generated to the problem: \n" + graphOfProblem);
-
     return graphOfProblem;
   }
 
-  List<Problem> computeAllSubproblems(Problem dpp) {
+  List<Problem> computeAllSubproblems(@NotNull Problem dpp) {
     Digraph graphOfDPP = problemToGraph(dpp);
     SCC scc = new SCC(graphOfDPP);
     // We need to filter out the nontrivial SCCs from the SCC data in the scc object.
@@ -59,7 +55,7 @@ public class GraphProcessor implements Processor {
           ||
           (component.size() == 1 && graphOfDPP.getNeighbors(component.getFirst()).contains(component.getFirst()))
       ).toList();
-    System.out.println("SCC Processing...\nVertex on each nontrivial SCCs: " + nonTrivalSCCs);
+
     int numberOfNontrivialSCCs = nonTrivalSCCs.size();
 
     List< List<DP> > retDP            = new ArrayList<>(numberOfNontrivialSCCs);

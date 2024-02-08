@@ -3,19 +3,18 @@ package cora.termination.dependency_pairs.processors;
 import cora.smt.*;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
+import cora.termination.dependency_pairs.certification.Informal;
 import cora.terms.FunctionSymbol;
 import cora.terms.Term;
-import cora.types.Type;
-import cora.types.TypeFactory;
 import cora.utils.Pair;
-import java.util.Optional;
 
+import java.util.Optional;
 import java.util.*;
+import static java.lang.StringTemplate.STR;
 
 public class SubtermProcessor implements Processor {
 
   private final SmtProblem _smt = new SmtProblem();
-  private static final Type _dpSort = TypeFactory.createSort("DP_SORT");
 
   @Override
   public boolean isApplicable(Problem dp) { return true; }
@@ -150,24 +149,25 @@ public class SubtermProcessor implements Processor {
     }
 
     // and let's generate output to the user
-    System.out.println("TODO: print output as follows:\n**********\n");
-    System.out.println("We apply the subterm criterion with the fullolowing projection function.");
-    nu.forEach(
+    Informal.getInstance().addProofStep("We apply the subterm criterion with the fullolowing projection function.");
+    nu.forEach (
       (f, k) -> {
-        System.out.println("  ν(" + f.toString() + ") = " + k);
+        Informal.getInstance().addProofStep(STR." ν( \{ f.toString() } ) = \{ k } ");
       });
-    System.out.println("We thus have:");
+
+    Informal.getInstance().addProofStep("We thus have: ");
+
     for (int index = 0; index < originalDPs.size(); index++) {
       String kind;
       if (indexOfOrientedDPs.contains(index)) kind = "▷";
       else kind = "=";
       DP dp = originalDPs.get(index);
-      System.out.println(dp.lhs().queryArgument(nu.get(dp.lhs().queryRoot())) + " " +
-        kind + " " + dp.rhs().queryArgument(nu.get(dp.rhs().queryRoot())) + "   " +
-        "for the DP " + dp.toString() + ".");
+      Informal
+        .getInstance()
+        .addProofStep(STR."\{dp.lhs().queryArgument(nu.get(dp.lhs().queryRoot()))} \{ kind } \{dp.rhs().queryArgument(nu.get(dp.rhs().queryRoot()))}   for the DP \{dp.toString()}.");
     }
-    System.out.println("And we remove all strictly oriented DPs.");
-    System.out.println("**********(END OF TODO)\n");
+
+    Informal.getInstance().addProofStep("And we remove all strictly oriented DPs.");
 
     GraphProcessor gProc = new GraphProcessor();
     return gProc.processDPP(new Problem(remainingDPs, dpp.getTRS()));

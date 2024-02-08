@@ -2,33 +2,29 @@ package cora.termination.dependency_pairs;
 
 import cora.reader.CoraInputReader;
 import cora.rewriting.TRS;
+import cora.termination.Handler;
+import cora.termination.dependency_pairs.certification.Informal;
+import cora.utils.Pair;
 import org.junit.jupiter.api.Test;
+
+import java.util.Optional;
 
 class DPFrameworkTest {
 
   @Test
   void testProveTermination() {
-//    String program =
-//        " Z :: nat \n" +
-//        "S :: nat -> nat \n" +
-//        "plus :: nat -> nat -> nat\n" +
-//        "plus(x, Z) -> Z\n" +
-//        "plus(x, S(y)) -> S(plus(x,y))";
-
     String program =
       "eval :: Int -> Int -> Int\n" +
-        "\n" +
-        "eval(x, y) -> eval(x-1, y) | x>0";
+      "eval(x, y) -> eval(x - 1, y) | x>y";
 
     TRS trs = CoraInputReader.readTrsFromString(program);
 
-    AccessibilityChecker acc = new AccessibilityChecker(trs);
-    System.out.println(acc.checkAccessibility());
-
-//    System.out.println("Input TRS: " + trs);
-
     DPFramework dp = new DPFramework();
-    dp.proveTermination(trs);
+    Pair<Handler.Answer, Optional<String>> proof = dp.proveTermination(trs);
+
+    System.out.println(proof.fst());
+
+    System.out.println(Informal.getInstance().getInformalProof());
 
   }
 }
