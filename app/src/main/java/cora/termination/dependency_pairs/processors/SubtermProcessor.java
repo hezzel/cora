@@ -149,10 +149,13 @@ public class SubtermProcessor implements Processor {
     }
 
     // and let's generate output to the user
-    Informal.getInstance().addProofStep("We apply the subterm criterion with the fullolowing projection function.");
+    Informal.getInstance().addProofStep(
+      "***** Investigating the following DP problem using the integer function processor:");
+    Informal.getInstance().addProofStep(dpp.toString());
+    Informal.getInstance().addProofStep("We use the following projection function.");
     nu.forEach (
       (f, k) -> {
-        Informal.getInstance().addProofStep(STR." ν( \{ f.toString() } ) = \{ k } ");
+        Informal.getInstance().addProofStep(STR."  ν( \{ f.toString() } ) = \{ k } ");
       });
 
     Informal.getInstance().addProofStep("We thus have: ");
@@ -168,8 +171,14 @@ public class SubtermProcessor implements Processor {
     }
 
     Informal.getInstance().addProofStep("And we remove all strictly oriented DPs.");
-
-    GraphProcessor gProc = new GraphProcessor();
-    return gProc.processDPP(new Problem(remainingDPs, dpp.getTRS()));
+    if (remainingDPs.size() == 0) {
+      Informal.getInstance().addProofStep(
+        "As there are no DPs left, the problem is removed altogether.\n");
+      return Optional.of(List.of());
+    }
+    else {
+      Informal.getInstance().addProofStep("");  // end with an empty line
+      return Optional.of(List.of(new Problem(remainingDPs, dpp.getTRS())));
+    }
   }
 }

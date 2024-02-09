@@ -348,11 +348,13 @@ public class KasperProcessor implements Processor {
     }  
 
     // now let's generate output to the user
-    Informal.getInstance().addProofStep("We apply the integer function criterion with the " +
-      "following projection function.");
+    Informal.getInstance().addProofStep(
+      "***** Investigating the following DP problem using the integer function processor:");
+    Informal.getInstance().addProofStep(dpp.toString());
+    Informal.getInstance().addProofStep("We use the following interpretation function.");
     candFun.forEach(
       (f, cand) -> {
-        StringBuilder builder = new StringBuilder("J( " + f.toString() + " ) = ");
+        StringBuilder builder = new StringBuilder("  J( " + f.toString() + " ) = ");
         cand.addToString(builder, _varNaming);
         Informal.getInstance().addProofStep(builder.toString());
       });
@@ -371,8 +373,14 @@ public class KasperProcessor implements Processor {
       }
     }
     Informal.getInstance().addProofStep("And we remove all strictly oriented DPs.");
-
-    GraphProcessor gProc = new GraphProcessor();
-    return gProc.processDPP(new Problem(remainingDPs, dpp.getTRS()));
+    if (remainingDPs.size() == 0) {
+      Informal.getInstance().addProofStep(
+        "As there are no DPs left, the problem is removed altogether.\n");
+      return Optional.of(List.of());
+    }   
+    else {
+      Informal.getInstance().addProofStep("");  // end with an empty line
+      return Optional.of(List.of(new Problem(remainingDPs, dpp.getTRS())));
+    }
   }
 }

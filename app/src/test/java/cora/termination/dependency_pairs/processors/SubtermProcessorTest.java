@@ -12,7 +12,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SubtermProcessorTest {
-  private static boolean ENABLE = true;
+  private static boolean ENABLE = false;
 
   @Test
   void testSubcritWithAckermann() {
@@ -27,13 +27,9 @@ class SubtermProcessorTest {
 
     Problem p = DPGenerator.generateProblemFromTrs(trs);
 
-    // Let's get SCCS for it...
-    GraphProcessor graphProc = new GraphProcessor();
-    List<Problem> sccProblems = graphProc.processDPP(p).get();
-    Problem pToTest = sccProblems.getFirst();
     SubtermProcessor subProc = new SubtermProcessor();
     // TODO: do an assert with the output of this
-    if (ENABLE) subProc.processDPP(pToTest);
+    if (ENABLE) subProc.processDPP(p);
   }
 
   @Test

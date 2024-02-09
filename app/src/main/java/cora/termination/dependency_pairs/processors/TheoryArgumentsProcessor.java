@@ -160,6 +160,40 @@ public class TheoryArgumentsProcessor implements Processor {
   }
 
   public Optional<List<Problem>> processDPP(Problem dpp) {
-    return Optional.empty();
+    setupInitialArgumentsFunction(dpp);
+    imposeMinimalLimitations(dpp);
+    imposeConsistencyLimitations(dpp);
+    int numfixed = 0;
+    for (DP dp : dpp.getDPList()) {
+      if (checkFixes(dp)) numfixed++;
+    }
+    if (numfixed == dpp.getDPList().size()) return Optional.empty();    // we can't improve on that!
+    if (numfixed == 0) {
+      // It is very possible that we could improve in this case, but then we'd have to start trying
+      // out different DPs to fix.  For now, we have not implemented this.
+      return Optional.empty();
+    }
+    ArrayList<DP> newdpsA = new ArrayList<DP>();
+    ArrayList<DP> newdpsB = new ArrayList<DP>();
+    for (DP dp : dpp.getDPList()) {
+      if (checkFixes(dp)) newdpsA.add(dp);
+      else {
+        newdpsB.add(dp);
+        newdpsA.add(updateVariables(dp));
+      }
+    }
+    Problem retA = new Problem(newdpsA, dpp.getTRS());
+    Problem retB = new Problem(newdpsB, dpp.getTRS());
+    Informal.getInstance().addProofStep(
+      "***** Investigating the following DP problem using the theory arguments processor:");
+    Informal.getInstance().addProofStep(dpp.toString());
+    Informal.getInstance().addProofStep("We use the following theory arguments function: " +
+      _targs);
+    Informal.getInstance().addProofStep("This yields two new DP Problems:");
+    Informal.getInstance().addProofStep(retA.toString());
+    Informal.getInstance().addProofStep("And:");
+    Informal.getInstance().addProofStep(retB.toString());
+
+    return Optional.of(List.of(retA, retB));
   }
 }

@@ -29,56 +29,53 @@ public class DPFramework implements Prover {
 
   @Override
   public Pair< Answer, Optional<String> > proveTermination(TRS trs) {
-    if (isTRSApplicable(trs)) {
-      GraphProcessor   graphProcessor    = new GraphProcessor();
-      SubtermProcessor subtermProcessor = new SubtermProcessor();
-      KasperProcessor  kasperProcessor  = new KasperProcessor();
-      TheoryArgumentsProcessor targProcessor = new TheoryArgumentsProcessor();
-      SplittingProcessor splitProcessor = new SplittingProcessor();
+    if (!isTRSApplicable(trs)) return new Pair<>(MAYBE, Optional.empty());
 
-      Informal.getInstance().addProofStep("We start by calculating the following Static Dependency Pairs:");
+    GraphProcessor   graphProcessor    = new GraphProcessor();
+    SubtermProcessor subtermProcessor = new SubtermProcessor();
+    KasperProcessor  kasperProcessor  = new KasperProcessor();
+    TheoryArgumentsProcessor targProcessor = new TheoryArgumentsProcessor();
+    SplittingProcessor splitProcessor = new SplittingProcessor();
+    List<Processor> proclist =
+      List.of(graphProcessor, subtermProcessor, targProcessor, kasperProcessor);
 
-      Problem initialProblem = DPFramework.computeInitialProblem(trs);
+    Informal.getInstance().addProofStep("We start by calculating the following Static Dependency Pairs:");
 
-      Informal.getInstance().addProofStep(initialProblem.toString());
+    Problem initialProblem = DPFramework.computeInitialProblem(trs);
 
-      // we start with the processors that preserve the "public" nature of a chain
-      initialProblem = splitProcessor.transform(initialProblem);
-      initialProblem = targProcessor.transform(initialProblem);
+    Informal.getInstance().addProofStep(initialProblem.toString());
 
-      // First, we compute the graph of the initial problem.
-      Optional<List<Problem>> dppsFromGraph = graphProcessor.processDPP(initialProblem);
+    // we start with the processors that preserve the "public" nature of a chain
+    initialProblem = splitProcessor.transform(initialProblem);
+    initialProblem = targProcessor.transform(initialProblem);
+    // TODO: reachability processor
 
-      if (dppsFromGraph.isEmpty()) {
-        return new Pair<>(MAYBE, Optional.empty());
-      } else {
-        List<Problem> toBeSolved = dppsFromGraph.get();
+    // At this point, we are looking for the absence of any chains, not just public chains;
+    // this is handled by the main loop.
 
-        // Trying to solve each problem in toBeSolved
-        while (!toBeSolved.isEmpty()) {
-          // Get the first problem in the list of problems to be solved
-          Problem p = toBeSolved.getFirst();
-          // Try subterm processor
-          Optional<List<Problem>> subterm = subtermProcessor.processDPP(p);
-          if (subterm.isPresent()) {
-            toBeSolved.removeFirst();
-            toBeSolved.addAll(subterm.get());
-          } else {
-            // Try kasper's processor
-            Optional<List<Problem>> kasper = kasperProcessor.processDPP(p);
-            if (kasper.isPresent()) {
-              toBeSolved.removeFirst();
-              toBeSolved.addAll(kasper.get());
-            } else {
-              // Here the problem failed in all processors and couldn't be solved
-              return new Pair<>(MAYBE, Optional.empty());
-            }
-          }
+    ArrayList<Problem> toBeSolved = new ArrayList<Problem>();
+    toBeSolved.add(initialProblem);
+    // Trying to solve each problem in toBeSolved
+    while (!toBeSolved.isEmpty()) {
+      // Get the first problem in the list of problems to be solved
+      Problem p = toBeSolved.removeFirst();
+      boolean success = false;
+      for (Processor proc : proclist) {
+        Optional<List<Problem>> result = proc.processDPP(p);
+        if (result.isPresent()) {
+          toBeSolved.addAll(result.get());
+          success = true;
+          break;
         }
-        return new Pair<>(YES, Optional.of(Informal.getInstance().getInformalProof()));
       }
-    } else {
-      return new Pair<>(MAYBE, Optional.empty());
+      if (!success) {
+        // Here the problem failed in all processors and couldn't be solved
+        Informal.getInstance().addProofStep("***** No progress could be made on DP problem:\n" +
+          p.toString());
+        return new Pair<>(MAYBE, Optional.of(Informal.getInstance().getInformalProof()));
+      }
     }
+    return new Pair<>(YES, Optional.of(Informal.getInstance().getInformalProof()));
   }
 }
+
