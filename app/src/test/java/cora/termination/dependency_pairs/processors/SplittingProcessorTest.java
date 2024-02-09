@@ -36,7 +36,8 @@ class SplittingProcessorTest {
     assertFalse(result.isEmpty());
     assertTrue(result.get().size() == 1);
     assertTrue(result.get().get(0).toString().equals(
-      "[f#(x, y) -> f#(x, y - 1) [ x > y ] , f#(x, y) -> f#(x, y - 1) [ x < y ] ]"));
+      "  f#(x, y) -> f#(x, y - 1) [ x > y ] \n" +
+      "  f#(x, y) -> f#(x, y - 1) [ x < y ] \n"));
   }
 
   @Test
@@ -49,9 +50,11 @@ class SplittingProcessorTest {
     Optional<List<Problem>> result = splitProc.processDPP(p);
     assertFalse(result.isEmpty());
     assertTrue(result.get().size() == 1);
+    System.out.println(result.get().get(0).toString());
     assertTrue(result.get().get(0).toString().equals(
-      "[f#(x, y) -> f#(x, y - 1) [ x = 1 ] , f#(x, y) -> f#(x, y - 1) [ x = 3 ] , " +
-      "f#(x, y) -> f#(x, y - 1) [ x = 10 ] ]"));
+      "  f#(x, y) -> f#(x, y - 1) [ x = 1 ] \n" +
+      "  f#(x, y) -> f#(x, y - 1) [ x = 3 ] \n" +
+      "  f#(x, y) -> f#(x, y - 1) [ x = 10 ] \n"));
   }
 
   @Test
@@ -65,8 +68,8 @@ class SplittingProcessorTest {
     assertFalse(result.isEmpty());
     assertTrue(result.get().size() == 1);
     assertTrue(result.get().get(0).toString().equals(
-      "[f#(x, y) -> f#(x, y - 1) [ x > y ∧ x ≤ y ] , " +
-       "f#(x, y) -> f#(x, y - 1) [ x < y ∧ x ≤ y ] ]"));
+      "  f#(x, y) -> f#(x, y - 1) [ x > y ∧ x ≤ y ] \n" +
+      "  f#(x, y) -> f#(x, y - 1) [ x < y ∧ x ≤ y ] \n"));
   }
 
   @Test
@@ -83,8 +86,9 @@ class SplittingProcessorTest {
     assertFalse(result.isEmpty());
     assertTrue(result.get().size() == 1);
     assertTrue(result.get().get(0).toString().equals(
-      "[f#(x) -> f#(x + 1) [ 3 = 4 ∧ x < 0 ] , f#(x) -> f#(x + 1) [ 3 = 4 ∧ x > 10 ] , " +
-       "g#(x) -> f#(x) [ x ≤ 0 ] ]"));
+      "  f#(x) -> f#(x + 1) [ 3 = 4 ∧ x < 0 ] \n" +
+      "  f#(x) -> f#(x + 1) [ 3 = 4 ∧ x > 10 ] \n" +
+      "  g#(x) -> f#(x) [ x ≤ 0 ] \n"));
   }
 
   @Test

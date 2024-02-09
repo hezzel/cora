@@ -47,16 +47,18 @@ public class KasperProcessor implements Processor {
     return TermFactory.createApp(TheoryFactory.plusSymbol, a, b);
   }
 
-  /** This computes all candidates of the form arg_i and arg_i - 1, where the ith argument is of theory sort. */
-  private Map<FunctionSymbol, List<Term>> computeSimpleCandidates(Problem dpp) {
+  /** This creates an empty set of candidates for every root symbol of interest. */
+  private void initiateCandidates(Problem dpp) {
     Set<FunctionSymbol> allSharps = dpp.getSharpHeads();
-
-    Map<FunctionSymbol, List<Term>> ret = new TreeMap<>();
-
-    // the initial candidates are the variables generated before such that
-    // they are of theory type and base type
+    _candidates = new TreeMap<FunctionSymbol,List<Term>>();
     allSharps.forEach(fSharp -> {
-      ArrayList<Term> options = new ArrayList<Term>();
+      _candidates.put(fSharp, new ArrayList<Term>());
+    });
+  }
+
+  /** This computes all candidates of the form arg_i and arg_i - 1, where the ith argument is of theory sort. */
+  private void addSimpleCandidates() {
+    _candidates.forEach( (fSharp, options) -> {
       for (Variable y : _fnToFreshVar.get(fSharp).stream()
                         .filter(x -> x.queryType().isTheoryType() && x.queryType().isBaseType())
                         .toList()) {
@@ -64,10 +66,7 @@ public class KasperProcessor implements Processor {
         options.add(makePlus(y, TheoryFactory.createValue(-1)));
         options.add(makePlus(y, TheoryFactory.createValue(1)));
       }
-      ret.put(fSharp, options);
     });
-
-    return ret;
   }
 
   /** This computes all candidates based on the constraints of a dependency pair. */
@@ -315,7 +314,8 @@ public class KasperProcessor implements Processor {
 
     _fnToFreshVar = computeFreshVars(dpp);
 
-    _candidates = computeSimpleCandidates(dpp);
+    initiateCandidates(dpp);
+    addSimpleCandidates();
     addComplexCandidates(dpp);
     updateCandidates(dpp);
     if (!everyFunctionHasAtLeastOneCandidate()) return Optional.empty();
