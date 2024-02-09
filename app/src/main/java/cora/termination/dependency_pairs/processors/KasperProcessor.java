@@ -43,7 +43,11 @@ public class KasperProcessor implements Processor {
     return ret;
   }
 
-  /** This computes all candidates of the form arg_i, where the ith argument is of theory sort. */
+  private Term makePlus(Term a, Term b) {
+    return TermFactory.createApp(TheoryFactory.plusSymbol, a, b);
+  }
+
+  /** This computes all candidates of the form arg_i and arg_i - 1, where the ith argument is of theory sort. */
   private Map<FunctionSymbol, List<Term>> computeSimpleCandidates(Problem dpp) {
     Set<FunctionSymbol> allSharps = dpp.getSharpHeads();
 
@@ -52,14 +56,15 @@ public class KasperProcessor implements Processor {
     // the initial candidates are the variables generated before such that
     // they are of theory type and base type
     allSharps.forEach(fSharp -> {
-      List<Term> varToTerms = _fnToFreshVar.get(fSharp)
-        .stream()
-        .filter( x -> x.queryType().isTheoryType() && x.queryType().isBaseType())
-        .map(x -> (Term) x)
-        .toList();
-      ret.put(fSharp, new ArrayList<Term>(varToTerms));
-      // TODO: this is a weird and roundabout way to not get an immutable list in the place where
-      // we are going to add more candidates in the next function
+      ArrayList<Term> options = new ArrayList<Term>();
+      for (Variable y : _fnToFreshVar.get(fSharp).stream()
+                        .filter(x -> x.queryType().isTheoryType() && x.queryType().isBaseType())
+                        .toList()) {
+        options.add(y);
+        options.add(makePlus(y, TheoryFactory.createValue(-1)));
+        options.add(makePlus(y, TheoryFactory.createValue(1)));
+      }
+      ret.put(fSharp, options);
     });
 
     return ret;
@@ -117,16 +122,16 @@ public class KasperProcessor implements Processor {
       if (right.equals(TheoryFactory.createValue(0))) ret.add(left);
       else {
         Term minright = TheoryFactory.minusSymbol.apply(right);
-        ret.add(TermFactory.createApp(TheoryFactory.plusSymbol, left, minright));
+        ret.add(makePlus(left, minright));
       }
     }
     // left > right  =>  left - right - 1
     if (f.equals(TheoryFactory.greaterSymbol)) {
       Term minright = TheoryFactory.minusSymbol.apply(right);
-      Term leftminright = TermFactory.createApp(TheoryFactory.plusSymbol, left, minright);
+      Term leftminright = makePlus(left, minright);
       if (right.equals(TheoryFactory.createValue(0))) leftminright = left;
       Term minone = TheoryFactory.createValue(-1);
-      ret.add(TermFactory.createApp(TheoryFactory.plusSymbol, leftminright, minone));
+      ret.add(makePlus(leftminright, minone));
     }
     // left ≤ right  =>  right - left
     if (f.equals(TheoryFactory.leqSymbol) || f.equals(TheoryFactory.equalSymbol) ||
@@ -134,16 +139,16 @@ public class KasperProcessor implements Processor {
       if (left.equals(TheoryFactory.createValue(0))) ret.add(right);
       else {
         Term minleft = TheoryFactory.minusSymbol.apply(left);
-        ret.add(TermFactory.createApp(TheoryFactory.plusSymbol, right, minleft));
+        ret.add(makePlus(right, minleft));
       }
     }
     // left < right  =>  right - left - 1
     if (f.equals(TheoryFactory.smallerSymbol)) {
       Term minleft = TheoryFactory.minusSymbol.apply(left);
-      Term rightminleft = TermFactory.createApp(TheoryFactory.plusSymbol, right, minleft);
+      Term rightminleft = makePlus(right, minleft);
       if (left.equals(TheoryFactory.createValue(0))) rightminleft = right;
       Term minone = TheoryFactory.createValue(-1);
-      ret.add(TermFactory.createApp(TheoryFactory.plusSymbol, rightminleft, minone));
+      ret.add(makePlus(rightminleft, minone));
     }
   }
 
