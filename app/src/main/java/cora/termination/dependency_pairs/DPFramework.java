@@ -4,9 +4,7 @@ import cora.rewriting.TRS;
 import cora.termination.Handler.Answer;
 import cora.termination.Prover;
 import cora.termination.dependency_pairs.certification.Informal;
-import cora.termination.dependency_pairs.processors.GraphProcessor;
-import cora.termination.dependency_pairs.processors.KasperProcessor;
-import cora.termination.dependency_pairs.processors.SubtermProcessor;
+import cora.termination.dependency_pairs.processors.*;
 import cora.utils.Pair;
 import org.checkerframework.checker.units.qual.K;
 
@@ -35,12 +33,16 @@ public class DPFramework implements Prover {
       GraphProcessor   graphProcessor    = new GraphProcessor();
       SubtermProcessor subtermProcessor = new SubtermProcessor();
       KasperProcessor  kasperProcessor  = new KasperProcessor();
+      TheoryArgumentsProcessor targProcessor = new TheoryArgumentsProcessor();
+      SplittingProcessor splitProcessor = new SplittingProcessor();
 
       Informal.getInstance().addProofStep("We start by calculating the following Static Dependency Pairs:");
 
       Problem initialProblem = DPFramework.computeInitialProblem(trs);
 
-
+      // we start with the processors that preserve the "public" nature of a chain
+      initialProblem = splitProcessor.transform(initialProblem);
+      initialProblem = targProcessor.transform(initialProblem);
 
       // First, we compute the graph of the initial problem.
       Optional<List<Problem>> dppsFromGraph = graphProcessor.processDPP(initialProblem);

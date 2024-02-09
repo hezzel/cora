@@ -34,6 +34,10 @@ public class TheoryArgumentsProcessor implements Processor {
     System.out.println(_targs);
   }
 
+  public Problem transform(Problem dpp) {
+    return dpp;
+  }
+
   public Optional<List<Problem>> processDPP(Problem dpp) {
     setupInitialArgumentsFunction(dpp);
     return Optional.empty();
