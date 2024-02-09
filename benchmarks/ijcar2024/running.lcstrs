@@ -8,7 +8,7 @@ map :: (Int -> Int) -> intlist -> intlist
 map(F, nil) -> nil
 map(F, cons(H, T)) -> cons(F(H), map(F, T))
 
-fsum :: (Int -> Int) -> Int -> Int
+private fsum :: (Int -> Int) -> Int -> Int
 fsum(F, 0) -> 0
 fsum(F, N) -> F(N) + fsum(F, N-1) | N != 0
 
