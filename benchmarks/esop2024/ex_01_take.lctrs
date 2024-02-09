@@ -1,0 +1,8 @@
+nil :: list
+cons :: Int -> list -> list
+
+take :: Int -> list -> list
+take(n, nil) -> nil
+take(n, l) -> nil                             | n ≤ 0
+take(n, cons(x, l)) -> cons(x, take(n-1, l))  | n > 0
+
