@@ -30,13 +30,6 @@ class GraphProcessorTest {
 
     GraphProcessor proc = new GraphProcessor();
 
-    List<Problem> pp = proc.computeAllSubproblems(dpp);
-
-    System.out.println("Number of problems that came from nontrivial SCCs: " + pp.size());
-    System.out.println("The subgraph generated from each SCC...");
-    for(Problem g : pp) {
-      g.getGraph().ifPresent(System.out::println);
-    }
   }
 
   @Test

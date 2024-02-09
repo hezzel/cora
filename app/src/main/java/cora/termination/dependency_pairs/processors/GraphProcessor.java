@@ -16,36 +16,8 @@ public class GraphProcessor implements Processor {
   @Override
   public boolean isApplicable(Problem dpp) { return true; }
 
-  // This function implements an over approximation algorithm needed to turn a
-  // DP problem into a Digraph.
-  private boolean isDpConnected(Problem dpp, DP u, DP v) {
-    OverApproximation overApproximation = new OverApproximation(dpp.getTRS());
-    return overApproximation.mayReduce(u, v);
-  }
-
-  @Contract("_ -> new")
-  @NotNull public Digraph problemToGraph(@NotNull Problem dpp) {
-    // Java is smart enough to realize a copy of dpp.getDPList() isn't really necessary,
-    // so it will copy a reference of it to the local variable dps.
-    List<DP> dps = dpp.getDPList();
-
-    Digraph graphOfProblem = new Digraph(dpp.getDPList().size());
-    // Notice that in this graph, each vertex represents i represent exactly
-    // the DP at index i in the list dps.
-    // This is not enforced by code (which would use memory/time).
-
-    for(int i = 0; i < dps.size(); i++) {
-      for (int j = 0; j < dps.size(); j++) {
-        if (isDpConnected(dpp, dps.get(i), dps.get(j)))
-          graphOfProblem.addEdge(i, j);
-      }
-    }
-
-    return graphOfProblem;
-  }
-
-  List<Problem> computeAllSubproblems(@NotNull Problem dpp) {
-    Digraph graphOfDPP = problemToGraph(dpp);
+  private List<Problem> computeAllSubproblems(@NotNull Problem dpp) {
+    Digraph graphOfDPP = Approximator.problemToGraph(dpp);
 
     SCC scc = new SCC(graphOfDPP);
     // We need to filter out the nontrivial SCCs from the SCC data in the scc object.
@@ -90,7 +62,6 @@ public class GraphProcessor implements Processor {
   }
 
   public Optional<List<Problem>> processDPP(Problem dpp) {
-
     return Optional.of(computeAllSubproblems(dpp));
   }
 }
