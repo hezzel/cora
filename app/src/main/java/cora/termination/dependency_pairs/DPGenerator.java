@@ -222,7 +222,7 @@ public class DPGenerator {
       candRight
         .stream()
         .map(candidates ->
-          new DP(dpLeft, candidates, ctr, computeInitialVSet(dpLeft, candidates, ctr))
+          new DP(dpLeft, candidates, ctr, computeInitialVSet(dpLeft, candidates, ctr), trs.isPrivate(lhs.queryRoot()))
         ).toList(),
       trs
     );

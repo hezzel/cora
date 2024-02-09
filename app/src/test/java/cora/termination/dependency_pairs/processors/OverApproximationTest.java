@@ -50,7 +50,7 @@ class OverApproximationTest {
     List<Variable> vars = new ArrayList<>();
     vars.add(x);
     vars.add(y);
-    DP dp = new DP(left, right, y, vars);
+    DP dp = new DP(left, right, y, vars, false);
     DP dp2 = OverApproximation.rename(dp);
 //    assertTrue(dp2.lhs().toString().equals("f(x, y)"));
 //    assertTrue(dp2.rhs().toString().equals("g(x)"));

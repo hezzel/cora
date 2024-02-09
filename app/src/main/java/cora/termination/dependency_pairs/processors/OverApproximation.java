@@ -43,7 +43,7 @@ class OverApproximation {
     for (Variable x : dp.vars()) {
       if (subst.get(x) != null) theory.add(subst.get(x).queryVariable());
     }
-    return new DP(newleft, newright, newconstraint, theory);
+    return new DP(newleft, newright, newconstraint, theory, dp.isPrivate());
   }
 
   private Term makeAnd(Term phi, Term psi) {

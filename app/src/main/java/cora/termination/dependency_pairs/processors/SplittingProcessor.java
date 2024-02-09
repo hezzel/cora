@@ -115,7 +115,7 @@ public class SplittingProcessor implements Processor {
     if (numSplit == 0) return Optional.empty();
     ArrayList<DP> ret = new ArrayList<DP>();
     for (int i = 0; i < results.size(); i++) {
-      ret.add(new DP(dp.lhs(), dp.rhs(), results.get(i), dp.vars()));
+      ret.add(new DP(dp.lhs(), dp.rhs(), results.get(i), dp.vars(), dp.isPrivate()));
     }
     return Optional.of(ret);
   }
@@ -137,4 +137,3 @@ public class SplittingProcessor implements Processor {
     else return Optional.empty();
   }
 }
-

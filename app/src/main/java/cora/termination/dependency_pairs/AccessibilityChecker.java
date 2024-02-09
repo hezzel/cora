@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.Map;
 import cora.exceptions.NotYetImplementedError;
+import cora.termination.dependency_pairs.certification.Informal;
 import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;
@@ -123,12 +124,16 @@ public class AccessibilityChecker {
     Valuation solution = _problem.satisfy();
     if (solution == null) { _result = ""; return false; }
     StringBuilder builder = new StringBuilder();
-    for (Map.Entry<String,IVar> entry : _sortVariables.entrySet()) {
-      String x = entry.getKey();
-      IVar v = entry.getValue();
-      builder.append(x + " : " + solution.queryAssignment(v) + "\n");
-    }
+
+    _sortVariables.forEach ((x, v) -> builder.append(STR."\{x} : \{solution.queryAssignment(v)}\n"));
+
     _result = builder.toString();
+
+    System.out.println(_result);
+
+    Informal.getInstance().addProofStep("The accessibility checking ");
+    Informal.getInstance().addProofStep(_result);
+
     return true;
   }
 

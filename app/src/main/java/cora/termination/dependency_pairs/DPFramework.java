@@ -36,7 +36,11 @@ public class DPFramework implements Prover {
       SubtermProcessor subtermProcessor = new SubtermProcessor();
       KasperProcessor  kasperProcessor  = new KasperProcessor();
 
+      Informal.getInstance().addProofStep("We start by calculating the following Static Dependency Pairs:");
+
       Problem initialProblem = DPFramework.computeInitialProblem(trs);
+
+
 
       // First, we compute the graph of the initial problem.
       Optional<List<Problem>> dppsFromGraph = graphProcessor.processDPP(initialProblem);

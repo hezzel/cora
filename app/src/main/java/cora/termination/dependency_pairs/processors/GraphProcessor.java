@@ -46,6 +46,7 @@ public class GraphProcessor implements Processor {
 
   List<Problem> computeAllSubproblems(@NotNull Problem dpp) {
     Digraph graphOfDPP = problemToGraph(dpp);
+
     SCC scc = new SCC(graphOfDPP);
     // We need to filter out the nontrivial SCCs from the SCC data in the scc object.
     List< List<Integer> > nonTrivalSCCs = scc.getSccData()
@@ -89,6 +90,7 @@ public class GraphProcessor implements Processor {
   }
 
   public Optional<List<Problem>> processDPP(Problem dpp) {
+
     return Optional.of(computeAllSubproblems(dpp));
   }
 }

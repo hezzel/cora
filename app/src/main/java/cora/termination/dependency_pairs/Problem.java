@@ -5,7 +5,6 @@ import cora.exceptions.IllegalArgumentError;
 import cora.exceptions.NullInitialisationError;
 import cora.rewriting.TRS;
 import cora.terms.FunctionSymbol;
-import cora.terms.TheoryFactory;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import org.jetbrains.annotations.NotNull;

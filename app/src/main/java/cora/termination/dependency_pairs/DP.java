@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public record DP(Term lhs, Term rhs, Term constraint, List<Variable> vars) {
+public record DP(Term lhs, Term rhs, Term constraint, List<Variable> vars, boolean isPrivate) {
 
   private static boolean initialVarSetCondition(Term constraint, List<Variable> set) {
     List<Variable> constraintVars =
@@ -29,11 +29,12 @@ public record DP(Term lhs, Term rhs, Term constraint, List<Variable> vars) {
      return new HashSet<>(set).containsAll(constraintVars);
   }
 
-  public DP(Term lhs, Term rhs, Term constraint, List<Variable> vars) {
+  public DP(Term lhs, Term rhs, Term constraint, List<Variable> vars, boolean isPrivate) {
     //TODO do null checking
     this.lhs = lhs;
     this.rhs = rhs;
     this.constraint = constraint;
+    this.isPrivate = isPrivate;
     // the initial condition must be satisfied, otherwise we don't even create
     // the DP object, the lower bound however is higher than Vars(Phi)
     // and that's why we compute it here at object creation
@@ -57,7 +58,7 @@ public record DP(Term lhs, Term rhs, Term constraint, List<Variable> vars) {
    * @param rhs
    */
   public DP(Term lhs, Term rhs) {
-    this(lhs, rhs, TheoryFactory.createValue(true), List.of());
+    this(lhs, rhs, TheoryFactory.createValue(true), List.of(), true);
   }
 
   @Override
