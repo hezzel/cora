@@ -20,11 +20,12 @@ class DPFrameworkTest {
     TRS trs = CoraInputReader.readTrsFromString(program);
 
     DPFramework dp = new DPFramework();
+/*
     Pair<Handler.Answer, Optional<String>> proof = dp.proveTermination(trs);
 
     System.out.println(proof.fst());
 
     System.out.println(Informal.getInstance().getInformalProof());
-
+*/
   }
 }

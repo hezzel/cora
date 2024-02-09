@@ -3,12 +3,15 @@ package cora.termination.dependency_pairs.processors;
 import cora.terms.*;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
+import cora.termination.dependency_pairs.certification.Informal;
 import java.util.Optional;
 import java.util.ArrayList;
 
 import java.util.*;
 
 public class SplittingProcessor implements Processor {
+  private boolean _anythingChanged;
+
   @Override
   public boolean isApplicable(Problem dp) { return true; }
   
@@ -120,20 +123,31 @@ public class SplittingProcessor implements Processor {
     return Optional.of(ret);
   }
 
-  @Override
-  public Optional<List<Problem>> processDPP(Problem dpp) {
+  public Problem transform(Problem dpp) {
     List<DP> dps = dpp.getDPList();
     ArrayList<DP> ret = new ArrayList<DP>();
-    boolean anychanges = false;
     for (int i = 0; i < dps.size(); i++) {
       Optional<ArrayList<DP>> splitDP = split(dps.get(i));
       if (splitDP.isEmpty()) ret.add(dps.get(i));
       else {
-        anychanges = true;
-        for (DP dp : splitDP.get()) ret.add(dp);
+        _anythingChanged = true;
+        StringBuilder builder = new StringBuilder("Using the splitting processor, we replace ");
+        builder.append(dps.get(i).toString() + " by");
+        for (DP dp : splitDP.get()) {
+          ret.add(dp);
+          builder.append("\n  * " + dp.toString());
+        }
+        Informal.getInstance().addProofStep(builder.toString());
       }
     }
-    if (anychanges) return Optional.of(List.of(new Problem(ret, dpp.getTRS())));
+    return new Problem(ret, dpp.getTRS());
+  }
+
+  @Override
+  public Optional<List<Problem>> processDPP(Problem dpp) {
+    _anythingChanged = false;
+    Problem ret = transform(dpp);
+    if (_anythingChanged) return Optional.of(List.of(ret));
     else return Optional.empty();
   }
 }
