@@ -95,6 +95,12 @@ public class Problem {
 
   @Override
   public String toString() {
-    return _dps.toString();
+    StringBuilder builder = new StringBuilder();
+    for (int i = 0; i < _dps.size(); i++) {
+      builder.append("  ");
+      builder.append(_dps.get(i).toString());
+      builder.append("\n");
+    }
+    return builder.toString();
   }
 }

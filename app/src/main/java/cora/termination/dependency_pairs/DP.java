@@ -63,6 +63,25 @@ public record DP(Term lhs, Term rhs, Term constraint, List<Variable> vars, boole
 
   @Override
   public String toString() {
-    return STR."\{lhs.toString()} -> \{rhs.toString()} [ \{constraint.toString()} ] ";
+    if (vars.size() == constraint.vars().size()) {
+      return STR."\{lhs.toString()} -> \{rhs.toString()} [ \{constraint.toString()} ] ";
+    }
+    else {
+      StringBuilder builder = new StringBuilder();
+      builder.append(lhs.toString());
+      builder.append(" -> ");
+      builder.append(rhs.toString());
+      builder.append(" [ ");
+      builder.append(constraint.toString());
+      builder.append(" | ");
+      boolean first = true;
+      for (Variable x : vars) {
+        if (first) first = false;
+        else builder.append(", ");
+        builder.append(x.toString());
+      }
+      builder.append("]");
+      return builder.toString();
+    }
   }
 }

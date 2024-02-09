@@ -40,6 +40,8 @@ public class DPFramework implements Prover {
 
       Problem initialProblem = DPFramework.computeInitialProblem(trs);
 
+      Informal.getInstance().addProofStep(initialProblem.toString());
+
       // we start with the processors that preserve the "public" nature of a chain
       initialProblem = splitProcessor.transform(initialProblem);
       initialProblem = targProcessor.transform(initialProblem);
