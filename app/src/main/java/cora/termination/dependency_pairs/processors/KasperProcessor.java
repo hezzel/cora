@@ -1,11 +1,12 @@
 package cora.termination.dependency_pairs.processors;
 
+import cora.types.TypeFactory;
+import cora.terms.*;
 import cora.smt.*;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
 import cora.termination.dependency_pairs.certification.Informal;
-import cora.terms.*;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -60,7 +61,7 @@ public class KasperProcessor implements Processor {
   private void addSimpleCandidates() {
     _candidates.forEach( (fSharp, options) -> {
       for (Variable y : _fnToFreshVar.get(fSharp).stream()
-                        .filter(x -> x.queryType().isTheoryType() && x.queryType().isBaseType())
+                        .filter(x -> x.queryType().equals(TypeFactory.intSort))
                         .toList()) {
         options.add(y);
         options.add(makePlus(y, TheoryFactory.createValue(-1)));
@@ -366,7 +367,7 @@ public class KasperProcessor implements Processor {
       String right = instantiateCandidate(candFun.get(dp.rhs().queryRoot()), dp.rhs()).toString();
       if (indexOfOrientedDPs.contains(index)) {
         Informal.getInstance().addProofStep("  " + dp.constraint().toString() + " ⊨ " + left +
-          " > " + right + " ( and " + left + "≥ 0)    for the DP " + dp.toString());
+          " > " + right + "  (and " + left + "≥ 0)    for the DP " + dp.toString());
       }
       else {
         Informal.getInstance().addProofStep("  " + dp.constraint().toString() + " ⊨ " + left +
