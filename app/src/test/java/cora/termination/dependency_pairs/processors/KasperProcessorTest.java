@@ -26,6 +26,5 @@ class KasperProcessorTest {
     // Let's get SCCS for it...
     KasperProcessor kasperProc = new KasperProcessor();
     kasperProc.processDPP(p);
-
   }
 }
