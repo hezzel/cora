@@ -1,10 +1,13 @@
 package cora.termination.dependency_pairs;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.TreeMap;
 import java.util.Map;
 import cora.exceptions.NotYetImplementedError;
 import cora.termination.dependency_pairs.certification.Informal;
+import cora.utils.Pair;
 import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;
@@ -119,20 +122,41 @@ public class AccessibilityChecker {
     return ret;
   }
 
+  private String buildSortOrderingExplanation(Valuation solution) {
+    // get all the sorts, and their calculated weights
+    ArrayList<Pair<String,Integer>> sorts = new ArrayList<Pair<String,Integer>>();
+    _sortVariables.forEach( (x, v) -> {
+      sorts.add(new Pair<String,Integer>(x, solution.queryAssignment(v)));
+    });
+    // sort them in decreasing order
+    Collections.sort(sorts, new Comparator<Pair<String,Integer>>() {
+      public int compare(Pair<String,Integer> p1, Pair<String,Integer> p2) {
+        return p2.snd() - p1.snd();
+      }
+    });
+    boolean allequal = true;
+    if (sorts.size() == 0) return "a sort ordering that equates all sorts";
+    StringBuilder ret = new StringBuilder("a sort ordering with ");
+    ret.append(sorts.get(0).fst());
+    for (int i = 1; i < sorts.size(); i++) {
+      if (sorts.get(i).snd() < sorts.get(i-1).snd()) {
+        allequal = false;
+        ret.append(" ≻ ");
+      }
+      else ret.append(" ≈ ");
+      ret.append(sorts.get(i).fst());
+    }
+    if (allequal) return "a sort ordering that equates all sorts";
+    return ret.toString();
+  }
+
   public boolean checkAccessibility() {
     generateTrsConstraints();
     Valuation solution = _problem.satisfy();
     if (solution == null) { _result = ""; return false; }
-    StringBuilder builder = new StringBuilder();
 
-    _sortVariables.forEach ((x, v) -> builder.append(STR."\{x} : \{solution.queryAssignment(v)}\n"));
-
-    _result = builder.toString();
-
-    System.out.println(_result);
-
-    Informal.getInstance().addProofStep("The accessibility checking ");
-    Informal.getInstance().addProofStep(_result);
+    Informal.getInstance().addProofStep("This system is accessible-function passing by " +
+      buildSortOrderingExplanation(solution) + ".\n");
 
     return true;
   }
