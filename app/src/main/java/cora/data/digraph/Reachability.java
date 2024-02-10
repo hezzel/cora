@@ -86,4 +86,9 @@ public class Reachability {
     }
     return ret;
   }
+
+  @Override
+  public String toString() {
+    return getReachableVertices().toString();
+  }
 }

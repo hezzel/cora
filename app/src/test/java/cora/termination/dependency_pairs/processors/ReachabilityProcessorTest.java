@@ -1,0 +1,42 @@
+package cora.termination.dependency_pairs.processors;
+
+import cora.reader.CoraInputReader;
+import cora.rewriting.TRS;
+import cora.termination.dependency_pairs.DPGenerator;
+import cora.termination.dependency_pairs.Problem;
+import cora.terms.TheoryFactory;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class ReachabilityProcessorTest {
+
+  @Test
+  void processDPP() {
+    TRS program = CoraInputReader.readTrsFromString("nil :: intlist\n" +
+      "cons :: Int -> intlist -> intlist\n" +
+      "\n" +
+      "init :: (Int -> Int) -> intlist -> intlist\n" +
+      "init(f) -> map([+](fsum(f, 10)))\n" +
+      "\n" +
+      "map :: (Int -> Int) -> intlist -> intlist\n" +
+      "map(F, nil) -> nil\n" +
+      "map(F, cons(H, T)) -> cons(F(H), map(F, T))\n" +
+      "\n" +
+      "private fsum :: (Int -> Int) -> Int -> Int\n" +
+      "fsum(F, 0) -> 0\n" +
+      "fsum(F, N) -> F(N) + fsum(F, N-1) | N != 0");
+
+    Problem p = DPGenerator.generateProblemFromTrs(program);
+    SplittingProcessor split = new SplittingProcessor();
+    TheoryArgumentsProcessor targ = new TheoryArgumentsProcessor();
+
+    p = split.transform(p);
+    p = targ.transform(p);
+
+    ReachabilityProcessor r = new ReachabilityProcessor();
+
+    r.transform(p);
+
+  }
+}
