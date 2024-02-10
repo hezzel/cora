@@ -399,6 +399,7 @@ public class ITrsInputReader {
    * stored.
    */
   private Rule makeRule(ParserRule rule) {
+    _symbols.clearEnvironment();
     Term l = makeTerm(rule.left(), null);
     if (l.isVariable()) {
       storeError("The left-hand side of a rule is not allowed to be a variable.", rule.token());

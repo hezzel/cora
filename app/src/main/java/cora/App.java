@@ -33,7 +33,8 @@ import java.util.Optional;
 /** Basic entry class: this reads a TRS and asks the user for a term, then reduces this term. */
 public class App {
     private static String _inputFile;
-    private static String _inputTerm;
+    private static String _outputFile;
+    private static Request.Technique _technique;
 
     private static String getExtension(String filename) {
         int i = filename.lastIndexOf('.');
@@ -49,10 +50,16 @@ public class App {
     }
 
     private static void readParameters(String[] args) {
-        _inputFile = null;
-        _inputTerm = null;
-        if (args.length > 0) _inputFile = args[0];
-        if (args.length > 1) _inputTerm = args[0];
+      _inputFile = null;
+      _outputFile = null;
+      _technique = Request.Technique.DP;
+      for (int i = 0; i < args.length; i++) {
+        if (args[i].equals("-o") && i+1 < args.length) {
+          _outputFile = args[i];
+        }
+        else if (args[i].equals("--horpo")) _technique = Request.Technique.HORPO;
+        else _inputFile = args[i];
+      }
     }
 
     public static void main(String[] args) {
@@ -68,7 +75,7 @@ public class App {
             if (trs == null) return;
 
             // Build a request object requesting DP method to be used
-            Request req = new Request(trs, Request.Technique.DP);
+            Request req = new Request(trs, _technique);
             Handler handler = new Handler(req);
 
             Informal.getInstance().addProofStep("We want to prove termination of the following system:");
@@ -78,6 +85,7 @@ public class App {
             System.out.println(response.fst() + "\n");
 
             response.snd().ifPresent(System.out::println);
+            // TODO: write output proof to file if an output file is given
             System.exit(0);
 
 //            if (Horpo.applicable(trs)) {
