@@ -31,7 +31,8 @@ public class DPFramework implements Prover {
   public Pair< Answer, Optional<String> > proveTermination(TRS trs) {
     if (!isTRSApplicable(trs)) return new Pair<>(MAYBE, Optional.empty());
 
-    GraphProcessor   graphProcessor    = new GraphProcessor();
+    ReachabilityProcessor reachProcessor = new ReachabilityProcessor();
+    GraphProcessor   graphProcessor   = new GraphProcessor();
     SubtermProcessor subtermProcessor = new SubtermProcessor();
     KasperProcessor  kasperProcessor  = new KasperProcessor();
     TheoryArgumentsProcessor targProcessor = new TheoryArgumentsProcessor();
@@ -48,7 +49,7 @@ public class DPFramework implements Prover {
     // we start with the processors that preserve the "public" nature of a chain
     initialProblem = splitProcessor.transform(initialProblem);
     initialProblem = targProcessor.transform(initialProblem);
-    // TODO: reachability processor
+    initialProblem = reachProcessor.transform(initialProblem);
 
     // At this point, we are looking for the absence of any chains, not just public chains;
     // this is handled by the main loop.
