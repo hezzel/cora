@@ -120,7 +120,7 @@ class SmtSolver {
       Scanner reader = new Scanner(file);
       if (!reader.hasNextLine()) {
         System.err.println("Could not read result file.");
-        return null;
+        return "maybe";
       }
       String answer = reader.nextLine();
       if (answer.toLowerCase().equals("unsat")) return "unsat";
