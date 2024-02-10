@@ -1,11 +1,12 @@
 package cora.termination.dependency_pairs.processors;
 
 import cora.exceptions.NullInitialisationError;
+import cora.utils.Pair;
+import cora.types.TypeFactory;
+import cora.terms.*;
 import cora.rewriting.TRS;
 import cora.smt.TermAnalyser;
 import cora.termination.dependency_pairs.DP;
-import cora.terms.*;
-import cora.utils.Pair;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +52,19 @@ class OverApproximation {
   }
 
   private Term makeEqual(Term expr1, Term expr2) {
-    return TermFactory.createApp(TheoryFactory.equalSymbol, expr1, expr2);
+    if (expr1.queryType().equals(TypeFactory.intSort)) {
+      return TermFactory.createApp(TheoryFactory.equalSymbol, expr1, expr2);
+    }
+    // we don't have IFF yet, so we just build it
+    if (expr1.queryType().equals(TypeFactory.boolSort)) {
+      Term notexpr1 = TheoryFactory.notSymbol.apply(expr1);
+      Term notexpr2 = TheoryFactory.notSymbol.apply(expr2);
+      Term a = TermFactory.createApp(TheoryFactory.orSymbol, notexpr1, expr2);
+      Term b = TermFactory.createApp(TheoryFactory.orSymbol, notexpr2, expr1);
+      return TermFactory.createApp(TheoryFactory.andSymbol, a, b);
+    }
+    // no idea what to do with other types for now
+    return TheoryFactory.createValue(true);
   }
 
   /**
