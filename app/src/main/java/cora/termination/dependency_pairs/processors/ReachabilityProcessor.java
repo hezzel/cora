@@ -5,6 +5,7 @@ import cora.data.digraph.Digraph;
 import cora.data.digraph.Reachability;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
+import cora.termination.dependency_pairs.certification.Informal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,7 @@ public class ReachabilityProcessor implements Processor {
     return true;
   }
 
-  Problem transform(Problem dpp) {
+  public Problem transform(Problem dpp) {
 
     Digraph overApproximationGraph = Approximator.problemToGraph(dpp);
 
@@ -41,7 +42,14 @@ public class ReachabilityProcessor implements Processor {
         .stream()
         .map( index -> dpp.getDPList().get(index))
         .toList();
-      return new Problem(newDps, dpp.getTRS());
+      Problem ret = new Problem(newDps, dpp.getTRS());
+      Informal.getInstance().addProofStep(
+        "***** Investigating the following DP problem using the reachability processor:");
+      Informal.getInstance().addProofStep(dpp.toString());
+      Informal.getInstance().addProofStep("We remove " +
+        (dpp.getDPList().size() - reachability.getReachableVertices().size()) +
+        " unreachable dependency pairs.\n");
+      return ret;
     } else {
       return dpp;
     }

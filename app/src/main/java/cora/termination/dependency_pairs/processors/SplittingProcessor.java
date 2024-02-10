@@ -137,7 +137,7 @@ public class SplittingProcessor implements Processor {
           Informal.getInstance().addProofStep(dpp.toString());
         }
         _anythingChanged = true;
-        StringBuilder builder = new StringBuilder("  We replace ");
+        StringBuilder builder = new StringBuilder("We replace ");
         builder.append(dps.get(i).toString() + " by");
         for (DP dp : splitDP.get()) {
           ret.add(dp);

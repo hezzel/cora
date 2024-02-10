@@ -15,8 +15,9 @@
 
 package cora;
 
-import cora.reader.OCocoInputReader;
 import cora.rewriting.TRS;
+import cora.reader.OCocoInputReader;
+import cora.reader.ITrsInputReader;
 import cora.reader.CoraInputReader;
 import cora.termination.Handler;
 import cora.termination.Handler.Answer;
@@ -43,6 +44,7 @@ public class App {
     private static TRS readInput(String file) throws Exception {
         String extension = getExtension(file);
         if (extension.equals("trs")) return OCocoInputReader.readTrsFromFile(file);
+        else if (extension.equals("itrs")) return ITrsInputReader.readTrsFromFile(file);
         else return CoraInputReader.readTrsFromFile(file);
     }
 
@@ -90,6 +92,7 @@ public class App {
         }
         catch (Error e) {
             System.out.println("Encountered an error:\n" + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

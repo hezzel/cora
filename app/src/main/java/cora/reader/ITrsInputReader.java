@@ -408,8 +408,23 @@ public class ITrsInputReader {
     Term r = makeTerm(rule.right(), l.queryType());
     Term constraint = null;
     if (rule.constraint() != null) constraint = makeTerm(rule.constraint(), null);
-       
-    _symbols.clearEnvironment();
+
+    for (Variable x : r.vars()) {
+      if (!l.vars().contains(x)) {
+        if (constraint == null) constraint = TheoryFactory.createValue(true);
+        if (!constraint.vars().contains(x)) {
+          if (x.queryType().equals(TypeFactory.intSort)) {
+            Term xisx = TermFactory.createApp(TheoryFactory.equalSymbol, x, x);
+            constraint = TermFactory.createApp(TheoryFactory.andSymbol, constraint, xisx);
+          }
+          else if (x.queryType().equals(TypeFactory.boolSort)) {
+            Term xornotx =
+              TermFactory.createApp(TheoryFactory.orSymbol, x, TheoryFactory.notSymbol.apply(x));
+            constraint = TermFactory.createApp(TheoryFactory.andSymbol, constraint, xornotx);
+          }
+        }
+      }
+    }
 
     try {
       if (constraint != null) return RuleFactory.createFirstOrderRule(l, r, constraint);
