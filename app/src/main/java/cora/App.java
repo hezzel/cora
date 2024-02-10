@@ -78,6 +78,7 @@ public class App {
             System.out.println(response.fst() + "\n");
 
             response.snd().ifPresent(System.out::println);
+            System.exit(0);
 
 //            if (Horpo.applicable(trs)) {
 //                Horpo.HorpoAnswer answer = Horpo.run(trs);
@@ -89,10 +90,12 @@ public class App {
         catch (Exception e) {
             System.out.println("Encountered an exception:\n" + e.getMessage());
             e.printStackTrace();
+            System.exit(1);
         }
         catch (Error e) {
             System.out.println("Encountered an error:\n" + e.getMessage());
             e.printStackTrace();
+            System.exit(1);
         }
     }
 }

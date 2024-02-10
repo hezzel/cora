@@ -18,10 +18,10 @@ FILES="$EXP_PATH/esop2024/*"
 
 for f in $FILES
 do
-    printf "${PURPLE}Experiment number $FILE_COUNTER...${NC}\n"
-    printf "${BLUE}Invoking cora on file $f ${NC}"
+    printf "${PURPLE}Experiment number $((FILE_COUNTER + 1))...${NC}\n"
+    printf "${BLUE}Invoking cora on file $f ${NC}\n"
     ./bin/app "$f"
-    printf "Done."
+    printf "${GREEN}Done.${NC}\n\n"
     FILE_COUNTER=$((FILE_COUNTER+1))
 done
 
@@ -34,9 +34,9 @@ FILES="$EXP_PATH/ijcar2024/*"
 for f in $FILES
 do
     printf "${PURPLE}Experiment number $FILE_COUNTER...${NC}\n"
-    printf "${BLUE}Invoking cora on file $f ${NC}"
+    printf "${BLUE}Invoking cora on file $f ${NC}\n"
     ./bin/app "$f"
-    echo "Done."
+    printf "${GREEN}Done.${NC}\n\n"
     FILE_COUNTER=$((FILE_COUNTER+1))
 done
 
@@ -48,9 +48,9 @@ FILES="$EXP_PATH/tpdb_itrs/*"
 for f in $FILES
 do
     printf "${PURPLE}Experiment number $FILE_COUNTER...${NC}\n"
-    printf "${BLUE}Invoking cora on file $f ${NC}"
+    printf "${BLUE}Invoking cora on file $f ${NC}\n"
     ./bin/app "$f"
-    echo "Done."
+    printf "${GREEN}Done.${NC}\n\n"
     FILE_COUNTER=$((FILE_COUNTER+1))
 done
 
@@ -62,9 +62,9 @@ FILES="$EXP_PATH/extra/*"
 for f in $FILES
 do
     printf "${PURPLE}Experiment number $FILE_COUNTER...${NC}\n"
-    printf "${BLUE}Invoking cora on file $f ${NC}"
+    printf "${BLUE}Invoking cora on file $f ${NC}\n"
     ./bin/app "$f"
-    echo "Done."
+    printf "${GREEN}Done.${NC}\n\n"
     FILE_COUNTER=$((FILE_COUNTER+1))
 done
 
