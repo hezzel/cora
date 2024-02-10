@@ -2,7 +2,7 @@ nil :: intlist
 cons :: Int -> intlist -> intlist
 
 init :: (Int -> Int) -> intlist -> intlist
-init(F) -> map([+](fsum(F,10)))
+init(F) -> map(fsum(F))
 
 map :: (Int -> Int) -> intlist -> intlist
 map(F, nil) -> nil

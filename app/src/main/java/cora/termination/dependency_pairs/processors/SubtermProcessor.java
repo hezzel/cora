@@ -14,7 +14,7 @@ import static java.lang.StringTemplate.STR;
 
 public class SubtermProcessor implements Processor {
 
-  private final SmtProblem _smt = new SmtProblem();
+  private SmtProblem _smt;
 
   @Override
   public boolean isApplicable(Problem dp) { return true; }
@@ -113,6 +113,8 @@ public class SubtermProcessor implements Processor {
 
   @Override
   public Optional<List<Problem>> processDPP(Problem dpp) {
+    _smt = new SmtProblem();
+
     // Generates an IntegerSMT variable for each f-sharp symbol
     Map<FunctionSymbol, IVar> fSharpMap = generateFnIvarMap(dpp);
     // Adds the respective constraints to the smt state
@@ -150,7 +152,7 @@ public class SubtermProcessor implements Processor {
 
     // and let's generate output to the user
     Informal.getInstance().addProofStep(
-      "***** Investigating the following DP problem using the integer function processor:");
+      "***** Investigating the following DP problem using the subterm processor:");
     Informal.getInstance().addProofStep(dpp.toString());
     Informal.getInstance().addProofStep("We use the following projection function.");
     nu.forEach (

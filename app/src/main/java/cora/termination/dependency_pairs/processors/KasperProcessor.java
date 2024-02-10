@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 
 public class KasperProcessor implements Processor {
 
-  private final SmtProblem _smt = new SmtProblem();
+  private SmtProblem _smt;
   private Map< FunctionSymbol, List<Variable> > _fnToFreshVar;
   private Map< FunctionSymbol, List<Term> > _candidates;
   private Map<Replaceable,String> _varNaming;
@@ -311,6 +311,7 @@ public class KasperProcessor implements Processor {
 
   @Override
   public Optional<List<Problem>> processDPP(Problem dpp) {
+    _smt = new SmtProblem();
 
     _fnToFreshVar = computeFreshVars(dpp);
 
