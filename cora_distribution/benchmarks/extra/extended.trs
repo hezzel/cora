@@ -1,0 +1,6 @@
+(VAR x y)
+(SIG (f 2) (a 0) (b 0) (h 1))
+(RULES
+   f(x,x) -> x
+   f(a,y) -> f(y,b)
+)
