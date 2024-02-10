@@ -149,7 +149,6 @@ class SmtSolver {
       String answer = reader.nextLine();
       if (answer.toLowerCase().equals("unsat")) return null;
       if (!answer.toLowerCase().equals("sat")) {
-        System.err.println("Unexpected answer: " + answer);
         return null;
       }
       reader.useDelimiter("[\\s()]+");
