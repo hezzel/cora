@@ -21,11 +21,12 @@ public class Problem {
   private TRS _trs;
 
   public Problem (@NotNull List<DP> dps, @NotNull TRS trs, @NotNull Digraph graph) {
-    if (dps == null || graph == null) throw new NullInitialisationError (
-      "Problem",
-      // update this message to a proper one
-      "for god's sake don't create objects with null arguments!"
-    );
+    if (dps == null || trs == null || graph == null) {
+      throw new NullInitialisationError(
+        "Problem",
+        "one of the arguments"
+      );
+    }
 
     if (dps.size() == graph.getNumberOfVertices()) {
       _dps = dps;
@@ -95,6 +96,12 @@ public class Problem {
 
   @Override
   public String toString() {
-    return _dps.toString();
+    StringBuilder builder = new StringBuilder();
+    for (int i = 0; i < _dps.size(); i++) {
+      builder.append("  ");
+      builder.append(_dps.get(i).toString());
+      builder.append("\n");
+    }
+    return builder.toString();
   }
 }

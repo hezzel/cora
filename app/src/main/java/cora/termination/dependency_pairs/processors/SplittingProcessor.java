@@ -130,8 +130,14 @@ public class SplittingProcessor implements Processor {
       Optional<ArrayList<DP>> splitDP = split(dps.get(i));
       if (splitDP.isEmpty()) ret.add(dps.get(i));
       else {
+        if (!_anythingChanged) {
+          Informal.getInstance().addProofStep(
+            "***** Investigating the following DP problem using the constraint modification " +
+            "processor:");
+          Informal.getInstance().addProofStep(dpp.toString());
+        }
         _anythingChanged = true;
-        StringBuilder builder = new StringBuilder("Using the splitting processor, we replace ");
+        StringBuilder builder = new StringBuilder("  We replace ");
         builder.append(dps.get(i).toString() + " by");
         for (DP dp : splitDP.get()) {
           ret.add(dp);
@@ -140,6 +146,7 @@ public class SplittingProcessor implements Processor {
         Informal.getInstance().addProofStep(builder.toString());
       }
     }
+    if (_anythingChanged) Informal.getInstance().addProofStep("");
     return new Problem(ret, dpp.getTRS());
   }
 

@@ -4,6 +4,7 @@ import cora.data.digraph.Digraph;
 import cora.data.digraph.SCC;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
+import cora.termination.dependency_pairs.certification.Informal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -62,6 +63,32 @@ public class GraphProcessor implements Processor {
   }
 
   public Optional<List<Problem>> processDPP(Problem dpp) {
-    return Optional.of(computeAllSubproblems(dpp));
+    List<Problem> ret = computeAllSubproblems(dpp);
+    if (ret.size() == 1 && ret.get(0).getDPList().size() == dpp.getDPList().size()) {
+      return Optional.empty();
+    }
+
+    Informal.getInstance().addProofStep(
+      "***** Investigating the following DP problem using the graph processor:");
+    Informal.getInstance().addProofStep(dpp.toString());
+    if (ret.size() == 0) {
+      Informal.getInstance().addProofStep(
+        "As there are no SCCs, this DP problem is removed.");
+    }
+    else if (ret.size() == 1) {
+      Informal.getInstance().addProofStep(
+        "Using the graph processor, this DP problem is decreased to the following SCC:");
+      Informal.getInstance().addProofStep(ret.get(0).toString());
+    }
+    else {
+      Informal.getInstance().addProofStep(
+        "Using the graph processor, this DP problem is split into the following SCCs:");
+      for (int i = 0; i < ret.size(); i++) {
+        if (i > 0) Informal.getInstance().addProofStep("And:");
+        Informal.getInstance().addProofStep(ret.get(i).toString());
+      }
+    }
+
+    return Optional.of(ret);
   }
 }

@@ -24,12 +24,8 @@ class KasperProcessorTest {
     Problem p = DPGenerator.generateProblemFromTrs(trs);
 
     // Let's get SCCS for it...
-    GraphProcessor graphProc = new GraphProcessor();
-    List<Problem> sccProblems = graphProc.processDPP(p).get();
-    Problem pToTest = sccProblems.getFirst();
-
     KasperProcessor kasperProc = new KasperProcessor();
-    kasperProc.processDPP(pToTest);
+    kasperProc.processDPP(p);
 
   }
 }

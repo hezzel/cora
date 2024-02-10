@@ -43,26 +43,30 @@ public class KasperProcessor implements Processor {
     return ret;
   }
 
-  /** This computes all candidates of the form arg_i, where the ith argument is of theory sort. */
-  private Map<FunctionSymbol, List<Term>> computeSimpleCandidates(Problem dpp) {
+  private Term makePlus(Term a, Term b) {
+    return TermFactory.createApp(TheoryFactory.plusSymbol, a, b);
+  }
+
+  /** This creates an empty set of candidates for every root symbol of interest. */
+  private void initiateCandidates(Problem dpp) {
     Set<FunctionSymbol> allSharps = dpp.getSharpHeads();
-
-    Map<FunctionSymbol, List<Term>> ret = new TreeMap<>();
-
-    // the initial candidates are the variables generated before such that
-    // they are of theory type and base type
+    _candidates = new TreeMap<FunctionSymbol,List<Term>>();
     allSharps.forEach(fSharp -> {
-      List<Term> varToTerms = _fnToFreshVar.get(fSharp)
-        .stream()
-        .filter( x -> x.queryType().isTheoryType() && x.queryType().isBaseType())
-        .map(x -> (Term) x)
-        .toList();
-      ret.put(fSharp, new ArrayList<Term>(varToTerms));
-      // TODO: this is a weird and roundabout way to not get an immutable list in the place where
-      // we are going to add more candidates in the next function
+      _candidates.put(fSharp, new ArrayList<Term>());
     });
+  }
 
-    return ret;
+  /** This computes all candidates of the form arg_i and arg_i - 1, where the ith argument is of theory sort. */
+  private void addSimpleCandidates() {
+    _candidates.forEach( (fSharp, options) -> {
+      for (Variable y : _fnToFreshVar.get(fSharp).stream()
+                        .filter(x -> x.queryType().isTheoryType() && x.queryType().isBaseType())
+                        .toList()) {
+        options.add(y);
+        options.add(makePlus(y, TheoryFactory.createValue(-1)));
+        options.add(makePlus(y, TheoryFactory.createValue(1)));
+      }
+    });
   }
 
   /** This computes all candidates based on the constraints of a dependency pair. */
@@ -117,16 +121,16 @@ public class KasperProcessor implements Processor {
       if (right.equals(TheoryFactory.createValue(0))) ret.add(left);
       else {
         Term minright = TheoryFactory.minusSymbol.apply(right);
-        ret.add(TermFactory.createApp(TheoryFactory.plusSymbol, left, minright));
+        ret.add(makePlus(left, minright));
       }
     }
     // left > right  =>  left - right - 1
     if (f.equals(TheoryFactory.greaterSymbol)) {
       Term minright = TheoryFactory.minusSymbol.apply(right);
-      Term leftminright = TermFactory.createApp(TheoryFactory.plusSymbol, left, minright);
+      Term leftminright = makePlus(left, minright);
       if (right.equals(TheoryFactory.createValue(0))) leftminright = left;
       Term minone = TheoryFactory.createValue(-1);
-      ret.add(TermFactory.createApp(TheoryFactory.plusSymbol, leftminright, minone));
+      ret.add(makePlus(leftminright, minone));
     }
     // left ≤ right  =>  right - left
     if (f.equals(TheoryFactory.leqSymbol) || f.equals(TheoryFactory.equalSymbol) ||
@@ -134,16 +138,16 @@ public class KasperProcessor implements Processor {
       if (left.equals(TheoryFactory.createValue(0))) ret.add(right);
       else {
         Term minleft = TheoryFactory.minusSymbol.apply(left);
-        ret.add(TermFactory.createApp(TheoryFactory.plusSymbol, right, minleft));
+        ret.add(makePlus(right, minleft));
       }
     }
     // left < right  =>  right - left - 1
     if (f.equals(TheoryFactory.smallerSymbol)) {
       Term minleft = TheoryFactory.minusSymbol.apply(left);
-      Term rightminleft = TermFactory.createApp(TheoryFactory.plusSymbol, right, minleft);
+      Term rightminleft = makePlus(right, minleft);
       if (left.equals(TheoryFactory.createValue(0))) rightminleft = right;
       Term minone = TheoryFactory.createValue(-1);
-      ret.add(TermFactory.createApp(TheoryFactory.plusSymbol, rightminleft, minone));
+      ret.add(makePlus(rightminleft, minone));
     }
   }
 
@@ -310,7 +314,8 @@ public class KasperProcessor implements Processor {
 
     _fnToFreshVar = computeFreshVars(dpp);
 
-    _candidates = computeSimpleCandidates(dpp);
+    initiateCandidates(dpp);
+    addSimpleCandidates();
     addComplexCandidates(dpp);
     updateCandidates(dpp);
     if (!everyFunctionHasAtLeastOneCandidate()) return Optional.empty();
@@ -343,11 +348,13 @@ public class KasperProcessor implements Processor {
     }  
 
     // now let's generate output to the user
-    Informal.getInstance().addProofStep("We apply the integer function criterion with the " +
-      "following projection function.");
+    Informal.getInstance().addProofStep(
+      "***** Investigating the following DP problem using the integer function processor:");
+    Informal.getInstance().addProofStep(dpp.toString());
+    Informal.getInstance().addProofStep("We use the following interpretation function.");
     candFun.forEach(
       (f, cand) -> {
-        StringBuilder builder = new StringBuilder("J( " + f.toString() + " ) = ");
+        StringBuilder builder = new StringBuilder("  J( " + f.toString() + " ) = ");
         cand.addToString(builder, _varNaming);
         Informal.getInstance().addProofStep(builder.toString());
       });
@@ -366,8 +373,14 @@ public class KasperProcessor implements Processor {
       }
     }
     Informal.getInstance().addProofStep("And we remove all strictly oriented DPs.");
-
-    GraphProcessor gProc = new GraphProcessor();
-    return gProc.processDPP(new Problem(remainingDPs, dpp.getTRS()));
+    if (remainingDPs.size() == 0) {
+      Informal.getInstance().addProofStep(
+        "As there are no DPs left, the problem is removed altogether.\n");
+      return Optional.of(List.of());
+    }   
+    else {
+      Informal.getInstance().addProofStep("");  // end with an empty line
+      return Optional.of(List.of(new Problem(remainingDPs, dpp.getTRS())));
+    }
   }
 }
