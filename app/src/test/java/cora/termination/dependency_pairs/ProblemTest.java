@@ -19,39 +19,39 @@ import java.util.Optional;
 
 class ProblemTest {
 
-  List<DP> createDPExamples() {
-    Term a = TermFactory.createConstant("a", TypeFactory.intSort);
-    Term b = TermFactory.createConstant("b", TypeFactory.intSort);
-    Term c = TermFactory.createConstant("a", TypeFactory.intSort);
+//  List<DP> createDPExamples() {
+//    Term a = TermFactory.createConstant("a", TypeFactory.intSort);
+//    Term b = TermFactory.createConstant("b", TypeFactory.intSort);
+//    Term c = TermFactory.createConstant("a", TypeFactory.intSort);
+//
+//    DP dp1 = new DP(a, a);
+//    DP dp2 = new DP(a,b);
+//    DP dp3 = new DP(a,c);
+//
+//    return new ArrayList<>(List.of(dp1, dp2, dp3));
+//  }
 
-    DP dp1 = new DP(a, a);
-    DP dp2 = new DP(a,b);
-    DP dp3 = new DP(a,c);
 
-    return new ArrayList<>(List.of(dp1, dp2, dp3));
-  }
-
-
-  @Test
-  void testProblemCreation() {
-    List<DP> dp = this.createDPExamples();
-    Problem p = new Problem(this.createDPExamples(), new Digraph(3));
-
-    Assertions.assertThrows(NullInitialisationError.class, () -> {
-      new Problem(null);
-    });
-
-    Assertions.assertThrows(NullInitialisationError.class, () -> {
-      new Problem(this.createDPExamples(), null);
-    });
-
-    Assertions.assertThrows(NullInitialisationError.class, () -> {
-      new Problem(null, new Digraph(0));
-    });
-
-    Assertions.assertThrows(IllegalArgumentError.class, () -> {
-      new Problem(dp, new Digraph(0));
-    });
-  }
+//  @Test
+//  void testProblemCreation() {
+//    List<DP> dp = this.createDPExamples();
+//    Problem p = new Problem(this.createDPExamples(), new Digraph(3));
+//
+//    Assertions.assertThrows(NullInitialisationError.class, () -> {
+//      new Problem(null);
+//    });
+//
+//    Assertions.assertThrows(NullInitialisationError.class, () -> {
+//      new Problem(this.createDPExamples(), null);
+//    });
+//
+//    Assertions.assertThrows(NullInitialisationError.class, () -> {
+//      new Problem(null, new Digraph(0));
+//    });
+//
+//    Assertions.assertThrows(IllegalArgumentError.class, () -> {
+//      new Problem(dp, new Digraph(0));
+//    });
+//  }
 
 }

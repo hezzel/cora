@@ -13,9 +13,7 @@ public class Informal {
     initialProofString();
   }
 
-  private void initialProofString() {
-    _proof.append("d").append("\n");
-  }
+  private void initialProofString() { }
 
   public static @NotNull Informal getInstance() {
     if (_certificate == null) {

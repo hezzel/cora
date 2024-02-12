@@ -4,6 +4,7 @@ import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface Processor {
 
@@ -12,5 +13,5 @@ public interface Processor {
     return false;
   }
 
-  List<Problem> processDPP(Problem dpp);
+  Optional<List<Problem>> processDPP(Problem dpp);
 }

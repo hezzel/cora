@@ -4,49 +4,22 @@ import cora.data.digraph.Digraph;
 import cora.data.digraph.SCC;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
+import cora.termination.dependency_pairs.certification.Informal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class GraphProcessor implements Processor {
 
   @Override
   public boolean isApplicable(Problem dpp) { return true; }
 
-  // This function implements an over approximation algorithm needed to turn a DP problem into a Digraph.
-  private boolean isDpConnected(DP u, DP v) {
-    return u.rhs().queryRoot().equals(v.lhs().queryRoot());
-  }
+  private List<Problem> computeAllSubproblems(@NotNull Problem dpp) {
+    Digraph graphOfDPP = Approximator.problemToGraph(dpp);
 
-  @Contract("_ -> new")
-  @NotNull Digraph problemToGraph(@NotNull Problem dpp) {
-    // Java is smart enough to realize a copy of dpp.getDPList() isn't really necessary,
-    // so it will copy a reference of it to the local variable dps.
-    List<DP> dps = dpp.getDPList();
-
-    Digraph graphOfProblem = new Digraph(dpp.getDPList().size());
-    // Notice that in this graph, each vertex represents i represent exactly
-    // the DP at index i in the list dps.
-    // This is not enforced by code (which would use memory/time).
-
-    for(int i = 0; i < dps.size(); i++) {
-      for (int j = 0; j < dps.size(); j++) {
-        if (isDpConnected(dps.get(i), dps.get(j)))
-          graphOfProblem.addEdge(i, j);
-      }
-    }
-
-    System.out.println("List of DP Problems received: \n" + dpp.getDPList() );
-
-     System.out.println("graph of problem: \n" + graphOfProblem);
-
-    return graphOfProblem;
-  }
-
-  List<Problem> computeAllSubproblems(Problem dpp) {
-    Digraph graphOfDPP = problemToGraph(dpp);
     SCC scc = new SCC(graphOfDPP);
     // We need to filter out the nontrivial SCCs from the SCC data in the scc object.
     List< List<Integer> > nonTrivalSCCs = scc.getSccData()
@@ -56,7 +29,7 @@ public class GraphProcessor implements Processor {
           ||
           (component.size() == 1 && graphOfDPP.getNeighbors(component.getFirst()).contains(component.getFirst()))
       ).toList();
-    System.out.println("SCC Processing...\nVertex on each nontrivial SCCs: " + nonTrivalSCCs);
+
     int numberOfNontrivialSCCs = nonTrivalSCCs.size();
 
     List< List<DP> > retDP            = new ArrayList<>(numberOfNontrivialSCCs);
@@ -83,13 +56,39 @@ public class GraphProcessor implements Processor {
 
       retGraph.add(graphOfDPP.getSubgraph(sccVertices));
 
-      subproblems.add(new Problem(retDP.get(i), retGraph.get(i)));
+      subproblems.add(new Problem(retDP.get(i), dpp.getTRS(), retGraph.get(i)));
     }
 
     return subproblems;
   }
 
-  public List<Problem> processDPP(Problem dpp) {
-    return computeAllSubproblems(dpp);
+  public Optional<List<Problem>> processDPP(Problem dpp) {
+    List<Problem> ret = computeAllSubproblems(dpp);
+    if (ret.size() == 1 && ret.get(0).getDPList().size() == dpp.getDPList().size()) {
+      return Optional.empty();
+    }
+
+    Informal.getInstance().addProofStep(
+      "***** Investigating the following DP problem using the graph processor:");
+    Informal.getInstance().addProofStep(dpp.toString());
+    if (ret.size() == 0) {
+      Informal.getInstance().addProofStep(
+        "As there are no SCCs, this DP problem is removed.");
+    }
+    else if (ret.size() == 1) {
+      Informal.getInstance().addProofStep(
+        "Using the graph processor, this DP problem is decreased to the following SCC:");
+      Informal.getInstance().addProofStep(ret.get(0).toString());
+    }
+    else {
+      Informal.getInstance().addProofStep(
+        "Using the graph processor, this DP problem is split into the following SCCs:");
+      for (int i = 0; i < ret.size(); i++) {
+        if (i > 0) Informal.getInstance().addProofStep("And:");
+        Informal.getInstance().addProofStep(ret.get(i).toString());
+      }
+    }
+
+    return Optional.of(ret);
   }
 }

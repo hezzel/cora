@@ -303,22 +303,17 @@ public class Horpo {
    * yet been defined for product types.
    */
   private boolean sameTypeStructure(Type a, Type b) {
-    switch(a) {
-      case Base _:
-        switch(b) {
-          case Base _: return true;
-          case Arrow _: return false;
-          case Product _: return false;
-        }
-      case Arrow (Type in1, Type out1):
-        switch(b) {
-          case Base _: return false;
-          case Arrow (Type in2, Type out2):
-            return sameTypeStructure(in1, in2) && sameTypeStructure(out1, out2);
-          case Product _: return false;
-        }
-      case Product _: return false;
-    }
+    return switch (a) {
+      case Base(_) -> switch (b) {
+        case Base _ -> true;
+        case Arrow _, Product _ -> false;
+      };
+      case Arrow(Type in1, Type out1) -> switch (b) {
+        case Base _, Product _ -> false;
+        case Arrow(Type in2, Type out2) -> sameTypeStructure(in1, in2) && sameTypeStructure(out1, out2);
+      };
+      case Product _ -> false;
+    };
   }
 
   /**

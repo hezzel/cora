@@ -1,10 +1,9 @@
 package cora.termination.dependency_pairs;
 
 import cora.reader.CoraInputReader;
-import cora.rewriting.Rule;
-import cora.rewriting.RuleFactory;
 import cora.terms.FunctionSymbol;
 import cora.terms.TermFactory;
+import cora.terms.Variable;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ class DPGeneratorTest {
       )
     );
 
-    List<Term> dpVars = DPGenerator.generateVars(ty);
+    List<Variable> dpVars = DPGenerator.generateVars(ty);
 
     assertEquals(2,dpVars.size());
 
@@ -85,7 +84,7 @@ class DPGeneratorTest {
   }
 
   @Test
-  void testFakeEta(){
+  void testFakeEta() {
     Type arr =
       CoraInputReader.readType("Bool -> b -> c -> d -> e");
     Term f = TermFactory.createConstant("f",arr);
@@ -126,11 +125,11 @@ class DPGeneratorTest {
     // Printing part
     System.out.println("Original lhs: " + lhs + " : " + lhs.queryType());
     System.out.println("Original rhs: " + rhs + " : " + rhs.queryType());
-//    System.out.println("Fake eta expanded form: " + eta + " : " + eta.queryType());
+    System.out.println("Fake eta expanded form: " + eta + " : " + eta.queryType());
 //    System.out.println(DPGenerator.genRightCandidates(eta));
 
-    DP t = new DP(f, f, f);
-
+//    DP t = new DP(f, f);
+//
 //    System.out.println(t);
 //    Rule r = RuleFactory.createRule(lhs, rhs);
 //    System.out.println (

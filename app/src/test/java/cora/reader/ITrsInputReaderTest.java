@@ -173,9 +173,10 @@ public class ITrsInputReaderTest {
       "(RULES f(x) -> g(y, x))\n";
     try { ITrsInputReader.readTrsFromString(str); }
     catch (ParseError e) {
+      System.out.println(e.getMessage());
       assertTrue(e.getMessage().equals(
-        "2:13: right-hand side of rule [f(x) → g(y, x)] contains variable y which does not " +
-        "occur on the left.\n"));
+        "2:13: right-hand side of rule [f(x) → g(y, x)] contains fresh variable y of type o, " +
+        "which is not a theory sort.\n"));
       return;
     }
     assertTrue(false);

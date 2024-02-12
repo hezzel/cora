@@ -1,4 +1,4 @@
-# Getting Started Guide - Artifact Evaluation
+# Getting Started Guide - Running Experiments on Docker
 
 ## Running from docker container
 Please use either linux or macOS (Intel/ARM).

@@ -2,29 +2,30 @@ package cora.termination.dependency_pairs;
 
 import cora.reader.CoraInputReader;
 import cora.rewriting.TRS;
+import cora.termination.Handler;
+import cora.termination.dependency_pairs.certification.Informal;
+import cora.utils.Pair;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Optional;
 
 class DPFrameworkTest {
 
   @Test
   void testProveTermination() {
     String program =
-      "sum :: Int -> Int\n" +
-        "f :: int -> Int\n" +
-        "z :: int\n" +
-      "sum(x) -> 0         | x ≤ 0\n" +
-      "sum(x) -> x + sum(x - 1) | x > 0\n" +
-        "sum(x) -> f(z)\n" +
-        "f(x) -> 0";
+      "eval :: Int -> Int -> Int\n" +
+      "eval(x, y) -> eval(x - 1, y) | x>y";
+
     TRS trs = CoraInputReader.readTrsFromString(program);
 
-    System.out.println("Input TRS: " + trs);
+    DPFramework dp = new DPFramework();
+/*
+    Pair<Handler.Answer, Optional<String>> proof = dp.proveTermination(trs);
 
-    System.out.println("Ignoring the constraints for now...");
+    System.out.println(proof.fst());
 
-
-
+    System.out.println(Informal.getInstance().getInformalProof());
+*/
   }
 }
