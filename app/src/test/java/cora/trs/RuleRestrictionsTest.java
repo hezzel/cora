@@ -30,5 +30,34 @@ public class RuleRestrictionsTest {
     assertTrue(rest.leftIsNonPattern());
     assertTrue(rest.rootStatus() == RuleRestrictions.ROOT_ANY);
   }
+
+  @Test
+  public void testCovers() {
+    RuleRestrictions nothing = new RuleRestrictions(RuleRestrictions.LVL_FIRSTORDER, false, false,
+                                                    false, RuleRestrictions.ROOT_FUNCTION);
+    RuleRestrictions anything = new RuleRestrictions(RuleRestrictions.LVL_META, true, true,
+                                                    true, RuleRestrictions.ROOT_ANY);
+    assertTrue(nothing.checkCoverage(nothing) == null);
+    assertTrue(nothing.checkCoverage(anything).equals(
+      "rule level is limited to first-order terms, not meta-terms"));
+    RuleRestrictions a = new RuleRestrictions(RuleRestrictions.LVL_APPLICATIVE, true, true,
+                                              false, RuleRestrictions.ROOT_THEORY);
+    RuleRestrictions b = new RuleRestrictions(RuleRestrictions.LVL_LAMBDA, false, false,
+                                              true, RuleRestrictions.ROOT_THEORY);
+    RuleRestrictions c = new RuleRestrictions(RuleRestrictions.LVL_APPLICATIVE, true, false,
+                                              true, RuleRestrictions.ROOT_ANY);
+    RuleRestrictions d = new RuleRestrictions(RuleRestrictions.LVL_META, true, true, false,
+                                              RuleRestrictions.ROOT_ANY);
+    assertTrue(a.checkCoverage(b).equals(
+      "rule level is limited to applicative terms, not true terms"));
+    assertTrue(a.checkCoverage(c).equals(
+      "left-hand side should have a function symbol as root, not anything else"));
+    assertTrue(b.checkCoverage(a).equals(
+      "use of theory symbols / constraints is not supported"));
+    assertTrue(c.checkCoverage(a).equals(
+      "use of tuples (or any occurrence of product types) is not supported"));
+    assertTrue(d.checkCoverage(b).equals(
+      "left-hand side should be a pattern"));
+  }
 }
 

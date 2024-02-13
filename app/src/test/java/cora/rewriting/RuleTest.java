@@ -36,37 +36,6 @@ public class RuleTest {
     return TermFactory.createConstant(name, type(ty));
   }
 
-  @Test(expected = IllegalRuleError.class)
-  public void testApplicativeRuleNotApplicative() {
-    // a → g(λz.z)
-    Term a = makeConstant("a", "o");
-    Term g = makeConstant("g", "(a → a) → o");
-    Variable z = TermFactory.createBinder("z", type("a"));
-    Rule rule = RuleFactory.createApplicativeRule(a, g.apply(TermFactory.createAbstraction(z, z)));
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testCMSRuleWithMetaVariables() {
-    // f(λx.Z⟨x⟩) → a
-    Term f = TermFactory.createConstant("f", type("(o → o) → o"));
-    Variable x = TermFactory.createBinder("x", type("o"));
-    MetaVariable z = TermFactory.createMetaVar("Z", type("o → o"), 1);
-    Term left = f.apply(TermFactory.createAbstraction(x, TermFactory.createMeta(z, x)));
-    Term right = makeConstant("a", "o");
-    Rule rule = RuleFactory.createCFSRule(left, right);
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testNonPatternRule() {
-    // f(λx.Z(x)) → a
-    Term f = TermFactory.createConstant("f", type("(o → o) → o"));
-    Variable x = TermFactory.createBinder("x", type("o"));
-    Variable z = TermFactory.createVar("Z", type("o → o"));
-    Term left = f.apply(TermFactory.createAbstraction(x, z.apply(x)));
-    Term right = makeConstant("a", "o");
-    Rule rule = RuleFactory.createPatternRule(left, right);
-  }
-
   @Test
   public void testSuccessfulUnconstrainedRootApplication() {
     // rule: f(g(x), λz.y(z)) → h(x, y(3)), λz.z) :: Int → Int

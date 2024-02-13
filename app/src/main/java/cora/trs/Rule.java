@@ -96,6 +96,7 @@ public class Rule {
     else return null;
   }
 
+  /** Returns the type of left- and right-hand side of this rule. */
   public Type queryType() {
     return _left.queryType();
   }

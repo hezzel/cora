@@ -115,5 +115,33 @@ class RuleRestrictions {
       if (sub.queryType().hasProducts()) _products = true;
     }
   }
+
+  /**
+   * This checks if all our properties are ≥ than those of other.
+   * If so, null is returned.
+   * If not, a message is returned explaining the problem.
+   */
+  String checkCoverage(RuleRestrictions other) {
+    if (_level < other._level) {
+      String[] kinds = { "first-order ", "applicative ", "true ", "meta-" };
+      return "rule level is limited to " + kinds[_level - LVL_FIRSTORDER] + "terms, not " +
+        kinds[other._level - LVL_FIRSTORDER] + "terms";
+    }
+    if (_rootStatus < other._rootStatus) {
+      String[] kinds = { "a non-theory symbol", "a function symbol", "anything else" };
+      return "left-hand side should have " + kinds[_rootStatus - ROOT_FUNCTION] + " as root, not " +
+        kinds[other._rootStatus - ROOT_FUNCTION];
+    }
+    if (!_theories && other._theories) {
+      return "use of theory symbols / constraints is not supported";
+    }
+    if (!_products && other._products) {
+      return "use of tuples (or any occurrence of product types) is not supported";
+    }
+    if (!_nonPattern && other._nonPattern) {
+      return "left-hand side should be a pattern";
+    }
+    return null;
+  }
 }
 

@@ -44,62 +44,6 @@ public class RuleTestFirstOrder {
     return f.apply(arg);
   }
 
-  @Test(expected = NullInitialisationError.class)
-  public void testLeftNullCreation() {
-    Rule rule = RuleFactory.createFirstOrderRule(makeConstant("a", baseType("b")), null);
-  }
-
-  @Test(expected = NullInitialisationError.class)
-  public void testRightNullCreation() {
-    Rule rule = RuleFactory.createFirstOrderRule(null, makeConstant("a", baseType("b")));
-  }
-
-  @Test(expected = TypingError.class)
-  public void testIlltypedRule() {
-    Variable x = TermFactory.createVar("x", baseType("a"));
-    Term left = unaryTerm("id", baseType("b"), x);
-    Rule rule = RuleFactory.createFirstOrderRule(left, x);
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testVariableLeft() {
-    Variable x = TermFactory.createVar("x", baseType("a"));
-    Term right = unaryTerm("id", baseType("a"), x);
-    Rule rule = RuleFactory.createFirstOrderRule(x, right);
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testNotFirstOrder() {
-    Type type = arrowType("a", "b");
-    Variable x = TermFactory.createVar("x", type);
-    Term left = unaryTerm("id", type, x);
-    Rule rule = RuleFactory.createFirstOrderRule(left, x);
-  }
-
-  @Test(expected = IllegalRuleError.class)
-  public void testFreshVariableInRhs() {
-    Variable x = TermFactory.createVar("x", baseType("Bool"));
-    Variable y = TermFactory.createVar("y", baseType("Int"));
-    Variable z = TermFactory.createVar("z", baseType("Int"));
-    Type type = TypeFactory.createArrow(baseType("Bool"), arrowType("Int", "o"));
-    FunctionSymbol f = TermFactory.createConstant("f", type);
-    Term left = TermFactory.createApp(f, x, y);
-    Term right = TermFactory.createApp(f, x, z);
-    Rule rule = RuleFactory.createFirstOrderRule(left, right);
-  }
-
-  @Test
-  public void testBasics() {
-    Variable x = TermFactory.createVar("x", baseType("a"));
-    Term left = unaryTerm("id", baseType("a"), x);
-    Rule rule = RuleFactory.createFirstOrderRule(left, x);
-    assertTrue(rule.queryLeftSide().equals(left));
-    assertTrue(rule.queryRightSide().equals(x));
-    assertTrue(rule.queryType().equals(baseType("a")));
-    assertTrue(rule.toString().equals("id(x) → x"));
-    assertTrue(rule.isApplicative());
-  }
-
   @Test
   public void testSuccessfulApplication() {
     Variable x = TermFactory.createVar("x", baseType("Int"));
