@@ -264,6 +264,15 @@ class Application extends TermInherit {
     return _args.stream().allMatch(Term::isPattern);
   }
 
+  /**
+   * Returns true if this application is a semi-pattern; that is, that its head and all its
+   * arguments are.
+   */
+  public boolean isSemiPattern() {
+    if (!_head.isSemiPattern()) return false;
+    return _args.stream().allMatch(Term::isSemiPattern);
+  }
+
   /** Returns true if all strict subterms are applicative. */
   public boolean isApplicative() {
     if (!_head.isApplicative()) return false;

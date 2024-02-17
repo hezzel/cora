@@ -149,6 +149,11 @@ class MetaApplication extends TermInherit {
     return true;
   }
 
+  /** Returns true if this meta-application is applied to distinct binder variables. */
+  public boolean isSemiPattern() {
+    return isPattern();
+  }
+
   /**
    * Returns all full subterms and their respective positions, from from left to right, with the
    * current term and empty position in the end.

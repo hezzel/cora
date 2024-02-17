@@ -182,6 +182,13 @@ public interface Term {
    */
   boolean isPattern();
 
+  /**
+   * Returns true if this term is a semi-pattern (so: meta-variables only take distinct bound
+   * variables as arguments, but it is allowed for meta-variables and variables to appear at the
+   * head of an application). Note that any true term is a semi-pattern.
+   */
+  boolean isSemiPattern();
+
   /** Returns true if this term is applicative (so: without binder variables or meta-application) */
   boolean isApplicative();
 

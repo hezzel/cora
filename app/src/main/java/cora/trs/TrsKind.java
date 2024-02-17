@@ -43,15 +43,20 @@ public class TrsKind {
   public static final int LVL_APPLICATIVE           = RuleRestrictions.LVL_APPLICATIVE;
   public static final int LVL_LAMBDA                = RuleRestrictions.LVL_LAMBDA;
   public static final int LVL_META                  = RuleRestrictions.LVL_META;
+
   public static final int THEORIES_NONE             = 21;
   public static final int THEORIES_YES              = 22;
+  
   public static final int PRODUCTS_DISALLOWED       = 31;
   public static final int PRODUCTS_ALLOWED          = 32;
+  
   public static final int ROOT_FUNCTION             = RuleRestrictions.ROOT_FUNCTION;
   public static final int ROOT_THEORY               = RuleRestrictions.ROOT_THEORY;
   public static final int ROOT_ANY                  = RuleRestrictions.ROOT_ANY;
-  public static final int LHS_PATTERNS              = 41;
-  public static final int LHS_NONPATTERNS           = 42;
+
+  public static final int LHS_PATTERN               = RuleRestrictions.LHS_PATTERN;
+  public static final int LHS_SEMIPATTERN           = RuleRestrictions.LHS_SEMIPATTERN;
+  public static final int LHS_NONPATTERN            = RuleRestrictions.LHS_NONPATTERN;
 
   private String _name;
   private int _level;  // one of LVL_FIRSTORDER, LVL_APPLICATIVE or LVL_LAMBDA
@@ -73,7 +78,7 @@ public class TrsKind {
   TrsKind(String name, int ...properties) {
     int ruleLevel = LVL_FIRSTORDER;
     int rootStatus = ROOT_FUNCTION;
-    boolean patternfree = false;
+    int patternStatus = LHS_PATTERN;
     _level = LVL_FIRSTORDER;
     _theories = false;
     _tuples = false;
@@ -86,11 +91,10 @@ public class TrsKind {
       else if (prop == PRODUCTS_DISALLOWED) { _tuples = false; }
       else if (prop == PRODUCTS_ALLOWED) { _tuples = true; }
       else if (prop >= ROOT_FUNCTION && prop <= ROOT_ANY) { rootStatus = prop; }
-      else if (prop == LHS_PATTERNS) { patternfree = false; }
-      else if (prop == LHS_NONPATTERNS) { patternfree = true; }
+      else if (prop >= LHS_PATTERN && prop <= LHS_NONPATTERN) { patternStatus = prop; }
       else throw new Error("Illegal property: " + prop);
     }
-    _rules = new RuleRestrictions(ruleLevel, _theories, _tuples, patternfree, rootStatus);
+    _rules = new RuleRestrictions(ruleLevel, _theories, _tuples, patternStatus, rootStatus);
   }
 
   String queryName() {
@@ -99,6 +103,26 @@ public class TrsKind {
 
   RuleRestrictions queryRestrictions() {
     return _rules;
+  }
+
+  boolean includeTheories() {
+    return _theories;
+  }
+
+  boolean includeTuples() {
+    return _tuples;
+  }
+
+  boolean termsFirstOrder() {
+    return _level == LVL_FIRSTORDER;
+  }
+
+  boolean termsApplicative() {
+    return _level <= LVL_APPLICATIVE;
+  }
+
+  boolean termsIncludeLambda() {
+    return _level >= LVL_LAMBDA;
   }
 }
 

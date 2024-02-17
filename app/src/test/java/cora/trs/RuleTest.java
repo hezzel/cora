@@ -101,14 +101,14 @@ public class RuleTest {
     assertTrue(properties.queryLevel() == RuleRestrictions.LVL_LAMBDA);
     assertFalse(properties.theoriesUsed());
     assertFalse(properties.productsUsed());
-    assertFalse(properties.leftIsNonPattern());
+    assertTrue(properties.patternStatus() == RuleRestrictions.LHS_PATTERN);
     assertTrue(properties.rootStatus() == RuleRestrictions.ROOT_FUNCTION);
     assertFalse(rule.isConstrained());
   }
 
   @Test
   public void testPropertiesTwo() {
-    // f(λx.Z⟨x⟩) → g( ⦇1,2⦈ )
+    // f(λx.Z⟨x⟩) → g( ⦇1,2⦈ ) with f a variable
     Term f = TermFactory.createVar("f", type("(o → o) → o"));
     Variable x = TermFactory.createBinder("x", type("o"));
     MetaVariable z = TermFactory.createMetaVar("Z", type("o → o"), 1);
@@ -122,24 +122,26 @@ public class RuleTest {
     assertTrue(properties.queryLevel() == RuleRestrictions.LVL_META);
     assertTrue(properties.theoriesUsed());
     assertTrue(properties.productsUsed());
-    assertTrue(properties.leftIsNonPattern());
+    assertTrue(properties.patternStatus() == RuleRestrictions.LHS_SEMIPATTERN);
     assertTrue(properties.rootStatus() == RuleRestrictions.ROOT_ANY);
     assertFalse(rule.isConstrained());
   }
 
   @Test
   public void testPropertiesThree() {
-    // +(a, 1) → x | x > 0
+    // +(a, Z⟨1⟩) → x | x > 0
     Term a = TermFactory.createConstant("a", type("Int"));
-    Term left = TheoryFactory.plusSymbol.apply(a).apply(TheoryFactory.createValue(1));
+    MetaVariable z = TermFactory.createMetaVar("Z", type("Int → Int"), 1);
+    Term z1 = TermFactory.createMeta(z, TheoryFactory.createValue(1));
+    Term left = TheoryFactory.plusSymbol.apply(a).apply(z1);
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(TheoryFactory.createValue(0));
     Rule rule = new Rule(left, x, constraint);
     RuleRestrictions properties = rule.queryProperties();
-    assertTrue(properties.queryLevel() == RuleRestrictions.LVL_FIRSTORDER);
+    assertTrue(properties.queryLevel() == RuleRestrictions.LVL_META);
     assertTrue(properties.theoriesUsed());
     assertFalse(properties.productsUsed());
-    assertFalse(properties.leftIsNonPattern());
+    assertTrue(properties.patternStatus() == RuleRestrictions.LHS_NONPATTERN);
     assertTrue(properties.rootStatus() == RuleRestrictions.ROOT_THEORY);
     assertTrue(rule.isConstrained());
   }

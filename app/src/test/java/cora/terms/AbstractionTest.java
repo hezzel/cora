@@ -271,12 +271,20 @@ class AbstractionTest extends TermTestFoundation {
     // note that not all binder variables are bound, but this is not required
     Term s = new Abstraction(x, new Application(f, x.apply(z), y));
     assertTrue(s.isPattern());
+    assertTrue(s.isSemiPattern());
     // λz.f(x(y), z) -- still a pattern, even though it's now not a bound variable that is applied
     s = new Abstraction(z, new Application(f, x.apply(y), z));
     assertTrue(s.isPattern());
-    // λz.f(u(z), y) -- not a pattern, as a free variable is applied
+    assertTrue(s.isSemiPattern());
+    // λz.f(u(z), y) -- not a pattern, as a free variable is applied, but still a semi-pattern
     s = new Abstraction(z, new Application(f, u.apply(z), y));
     assertFalse(s.isPattern());
+    assertTrue(s.isSemiPattern());
+    // λz.F[u(z)] -- not a pattern or semi-pattern
+    MetaVariable ff = TermFactory.createMetaVar("F", baseType("o"), baseType("o"));
+    s = new Abstraction(z, TermFactory.createMeta(ff, u.apply(z)));
+    assertFalse(s.isPattern());
+    assertFalse(s.isSemiPattern());
   }
 
   @Test

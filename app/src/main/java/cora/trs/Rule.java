@@ -128,12 +128,22 @@ public class Rule {
 
   /** This returns whether the rule has a pattern as its left-hand side. */
   public boolean isPatternRule() {
-    return !_properties.leftIsNonPattern();
+    return _properties.patternStatus() == RuleRestrictions.LHS_PATTERN;
+  }
+  
+  /** This returns whether the rule has a semi-pattern as its left-hand side. */
+  public boolean isSemiPatternRule() {
+    return _properties.patternStatus() == RuleRestrictions.LHS_SEMIPATTERN;
   }
   
   /** This returns whether the left-hand side has a root that is a (non-theory) function symbol. */
   public boolean queryTermFunctionRoot() {
     return _properties.rootStatus() == RuleRestrictions.ROOT_FUNCTION;
+  }
+
+  /** This returns whether the left-hand side has a root that is a (non-theory) function symbol. */
+  public boolean queryTheoryFunctionRoot() {
+    return _properties.rootStatus() == RuleRestrictions.ROOT_THEORY;
   }
 
   /** Gives a string representation of the current rule. */

@@ -42,6 +42,10 @@ abstract class LeafTermInherit extends TermInherit {
     return true;
   }
 
+  public boolean isSemiPattern() {
+    return true;
+  }
+
   /** if the current term is a function symbol, it is added to storage; otherwise nothing is done */
   public void storeFunctionSymbols(Set<FunctionSymbol> storage) {
     if (isFunctionalTerm()) storage.add(queryRoot());

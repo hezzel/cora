@@ -106,6 +106,11 @@ class Abstraction extends TermInherit {
     return _subterm.isPattern();
   }
 
+  /** @return whether this abstraction is a semi-pattern (iff the immediate subterm is) */
+  public boolean isSemiPattern() {
+    return _subterm.isSemiPattern();
+  }
+
   /** @return false, as an applicative term cannot include abstractions. */
   public boolean isApplicative() {
     return false;

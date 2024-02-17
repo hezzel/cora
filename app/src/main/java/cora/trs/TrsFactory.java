@@ -15,8 +15,13 @@
 
 package cora.trs;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import cora.exceptions.IllegalArgumentError;
 import cora.exceptions.IllegalRuleError;
+import cora.exceptions.NullInitialisationError;
 import cora.terms.Term;
 
 /**
@@ -28,22 +33,22 @@ public class TrsFactory {
                 TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_FUNCTION);
   public static final TrsKind STRS =
     new TrsKind("STRS", TrsKind.LVL_APPLICATIVE, TrsKind.THEORIES_NONE,
-                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_ANY, TrsKind.LHS_NONPATTERNS);
+                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_ANY, TrsKind.LHS_SEMIPATTERN);
   public static final TrsKind CFS =
     new TrsKind("CFS", TrsKind.LVL_LAMBDA, TrsKind.THEORIES_NONE,
-                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_FUNCTION, TrsKind.LHS_PATTERNS);
+                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_FUNCTION, TrsKind.LHS_PATTERN);
   public static final TrsKind AMS =
     new TrsKind("AMS", TrsKind.LVL_META, TrsKind.THEORIES_NONE,
-                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_FUNCTION, TrsKind.LHS_NONPATTERNS);
+                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_FUNCTION, TrsKind.LHS_SEMIPATTERN);
   public static final TrsKind LCTRS =
     new TrsKind("LCTRS", TrsKind.LVL_META, TrsKind.THEORIES_YES,
                 TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_ANY);
   public static final TrsKind LCSTRS =
     new TrsKind("LCSTRS", TrsKind.LVL_META, TrsKind.THEORIES_YES,
-                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_THEORY, TrsKind.LHS_PATTERNS);
+                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_THEORY, TrsKind.LHS_SEMIPATTERN);
   public static final TrsKind CORA =
     new TrsKind("Cora-TRS", TrsKind.LVL_META, TrsKind.THEORIES_YES,
-                TrsKind.PRODUCTS_ALLOWED, TrsKind.ROOT_ANY, TrsKind.LHS_NONPATTERNS);
+                TrsKind.PRODUCTS_ALLOWED, TrsKind.ROOT_ANY, TrsKind.LHS_NONPATTERN);
 
   /**
    * Check if the given rule is allowed in the given kind of TRS.  If not, throws an
@@ -67,6 +72,12 @@ public class TrsFactory {
     return rule;
   }
 
+  /** This function creates an unconstrained rule left → right. */
+  public static Rule createRule(Term left, Term right) {
+    Rule rule = new Rule(left, right);
+    return rule;
+  }
+
   /**
    * This function creates a constrained rule left → right | constraint.
    * The rule is checked against the given TRS kind: if the rule is not allowed in the given kind
@@ -76,6 +87,49 @@ public class TrsFactory {
     Rule rule = new Rule(left, right, constraint);
     checkRestrictions(rule, restrictions);
     return rule;
+  }
+
+  /** This function creates a constrained rule left → right | constraint. */
+  public static Rule createRule(Term left, Term right, Term constraint) {
+    Rule rule = new Rule(left, right, constraint);
+    return rule;
+  }
+
+  /**
+   * Creates a TRS with the given restrictions, rules and private symbols, and adds the Eta rule
+   * scheme if this is required. (Other rule schemes are included based on the kind of TRS.)
+   */
+  public static TRS createTrs(Alphabet alphabet, List<Rule> rules, Set<String> privateSymbols,
+                              boolean includeEta, TrsKind kind) {
+    if (alphabet == null) throw new NullInitialisationError("TRS", "alphabet");
+    if (rules == null) throw new NullInitialisationError("TRS", "rules");
+    if (privateSymbols == null) privateSymbols = new TreeSet<String>();
+    if (kind == null) throw new NullInitialisationError("TRS", "trs kind");
+
+    ImmutableList.Builder<Rule> newrules = ImmutableList.<Rule>builder();
+    for (Rule rule : rules) {
+      if (rule == null) throw new NullInitialisationError("TRS", "one of the rules");
+      String problem = kind.queryRestrictions().checkCoverage(rule.queryProperties());
+      if (problem != null) throw new IllegalRuleError(problem);
+      newrules.add(rule);
+    }
+    ImmutableList.Builder<TRS.RuleScheme> newschemes = ImmutableList.<TRS.RuleScheme>builder();
+    if (kind.termsIncludeLambda()) {
+      newschemes.add(TRS.RuleScheme.Beta);
+      if (includeEta) newschemes.add(TRS.RuleScheme.Beta);
+    }
+    else if (includeEta) {
+      throw new IllegalRuleError("Eta can only be added to TRSs whose term formation includes " +
+        "abstraction.");
+    }
+    if (kind.includeTheories()) newschemes.add(TRS.RuleScheme.Calc);
+    if (kind.includeTuples()) newschemes.add(TRS.RuleScheme.Projection);
+    return new TRS(alphabet, newrules.build(), newschemes.build(), privateSymbols, kind);
+  }
+
+  /** Creates a TRS with the given restrictions, with no private symbols or extra rule schemes. */
+  public static TRS createTrs(Alphabet alphabet, List<Rule> rules, TrsKind kind) {
+    return createTrs(alphabet, rules, new TreeSet<String>(), false, kind);
   }
 }
 

@@ -38,11 +38,15 @@ class RuleRestrictions {
   static final int ROOT_THEORY      = 112;
   static final int ROOT_ANY         = 113;
 
-  private int _level; // one of the LVL_ constants
+  static final int LHS_PATTERN      = 121;
+  static final int LHS_SEMIPATTERN  = 122;
+  static final int LHS_NONPATTERN   = 123;
+
+  private int _level;         // one of the LVL_ constants
   private boolean _theories;  // whether or not this is a "constrained rule"
   private boolean _products;  // whether product types are used in the construction
-  private boolean _nonPattern; // if the lhs is a pattern or not
-  private int _rootStatus; // one of the ROOT_ constants
+  private int _pattern;       // whether the lhs is a pattern or semi-pattern
+  private int _rootStatus;    // one of the ROOT_ constants
 
   /**
    * Returns the lowest one of LVL_FIRSTORDER, LVL_APPLICATIVE, LVL_LAMBDA, LVL_META that both left
@@ -63,8 +67,8 @@ class RuleRestrictions {
    */
   boolean productsUsed() { return _products; }
 
-  /** Returns whether or not the left-hand side is a non-pattern. */
-  boolean leftIsNonPattern() { return _nonPattern; }
+  /** Returns whether the left-hand side is a pattern, semi-pattern or non-pattern. */
+  int patternStatus() { return _pattern; }
 
   /**
    * Returns ROOT_FUNCTION if the root of the left-hand side is a non-theory function symbol,
@@ -78,11 +82,11 @@ class RuleRestrictions {
    * if the given level is indeed one of the permitted constants) because this can only be called
    * from within the trs package.
    */
-  RuleRestrictions(int lvl, boolean theories, boolean products, boolean nonpattern, int rootstat) {
+  RuleRestrictions(int lvl, boolean theories, boolean products, int pattern, int rootstat) {
     _level = lvl;
     _theories = theories;
     _products = products;
-    _nonPattern = nonpattern;
+    _pattern = pattern;
     _rootStatus = rootstat;
   }
 
@@ -94,7 +98,10 @@ class RuleRestrictions {
     else if (left.isTrueTerm() && right.isTrueTerm()) _level = LVL_LAMBDA;
     else _level = LVL_META;
     // pattern restriction
-    _nonPattern = !left.isPattern();
+    if (left.isPattern()) _pattern = LHS_PATTERN;
+    else if (_level != LVL_META) _pattern = LHS_SEMIPATTERN;
+    else if (left.isSemiPattern()) _pattern = LHS_SEMIPATTERN;
+    else _pattern = LHS_NONPATTERN;
     // root status
     if (!left.isFunctionalTerm()) _rootStatus = ROOT_ANY;
     else if (left.queryRoot().isTheorySymbol()) _rootStatus = ROOT_THEORY;
@@ -132,16 +139,23 @@ class RuleRestrictions {
       return "left-hand side should have " + kinds[_rootStatus - ROOT_FUNCTION] + " as root, not " +
         kinds[other._rootStatus - ROOT_FUNCTION];
     }
+    if (_pattern < other._pattern) {
+      String[] kinds = { "pattern", "semi-pattern", "non-pattern" };
+      return "left-hand side should be a " + kinds[_pattern - LHS_PATTERN] + ", not a " +
+        kinds[other._pattern - LHS_PATTERN];
+    }
     if (!_theories && other._theories) {
       return "use of theory symbols / constraints is not supported";
     }
     if (!_products && other._products) {
       return "use of tuples (or any occurrence of product types) is not supported";
     }
-    if (!_nonPattern && other._nonPattern) {
-      return "left-hand side should be a pattern";
-    }
     return null;
+  }
+
+  /** This returns true iff all our properties are ≥ those of other. */
+  boolean covers(RuleRestrictions other) {
+    return checkCoverage(other) != null;
   }
 }
 

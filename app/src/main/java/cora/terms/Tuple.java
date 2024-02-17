@@ -159,12 +159,11 @@ public class Tuple extends TermInherit {
     return  _components.stream().allMatch(Term::isFirstOrder);
   }
 
-  /**
-   * Returns true if this term is a pattern (so: non-binder variables are not applied at all, and
-   * meta-variables
-   */
   @Override
   public boolean isPattern() { return _components.stream().allMatch(Term::isPattern); }
+
+  @Override
+  public boolean isSemiPattern() { return _components.stream().allMatch(Term::isSemiPattern); }
 
   /**
    * Returns true if this term is applicative (so: without binder variables or meta-application)

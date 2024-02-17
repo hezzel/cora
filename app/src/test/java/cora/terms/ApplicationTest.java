@@ -322,6 +322,7 @@ public class ApplicationTest extends TermTestFoundation {
     Term f = new Constant("f", arrowType("B", "B"));
     Term fxa = new Application(f, xa);
     assertFalse(fxa.isPattern());
+    assertTrue(fxa.isSemiPattern());
   }
 
   @Test
@@ -335,9 +336,37 @@ public class ApplicationTest extends TermTestFoundation {
     args.add(ba);
     Term xybterm = new Application(x, args);  // x(y, bb(aa))
     assertTrue(xybterm.isPattern());    // we're allowed to apply binder variables
+    assertTrue(xybterm.isSemiPattern());
     args.set(1, z.apply(ba));
     Term combiterm = new Application(x, args);  // x(y, bb(aa), z(bb(aa)))
     assertFalse(combiterm.isPattern()); // but the arguments do all need to be patterns :)
+  }
+
+  @Test
+  public void testSemiNonPattern() {
+    MetaVariable z = TermFactory.createMetaVar("Z", baseType("o"), arrowType("o", "o"));
+    MetaVariable y = TermFactory.createMetaVar("Z", baseType("o"), arrowType("o", "o"));
+    Term u = new Constant("u", baseType("o"));
+    Term v = new Constant("v", arrowType(arrowType("o", "o"), baseType("o")));
+    Variable x = new Binder("x", baseType("o"));
+    Term zx = TermFactory.createMeta(z, x);
+    Term zu = TermFactory.createMeta(z, u);
+    // z[x](u)
+    Term zxu = zx.apply(u);
+    assertFalse(zxu.isPattern());
+    assertTrue(zxu.isSemiPattern());
+    // z[u](x)
+    Term zux = zu.apply(x);
+    assertFalse(zux.isPattern());
+    assertFalse(zux.isSemiPattern());
+    // v(z[x])
+    Term vzx = v.apply(zx);
+    assertTrue(vzx.isPattern());
+    assertTrue(vzx.isSemiPattern());
+    // v(z[u])
+    Term vzu = v.apply(zu);
+    assertFalse(vzu.isPattern());
+    assertFalse(vzu.isSemiPattern());
   }
 
   @Test

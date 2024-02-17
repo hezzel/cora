@@ -124,6 +124,14 @@ public class TrsFactoryRuleCreationTest {
   }
 
   @Test
+  public void testRuleWithBinder() {
+    Variable x = TermFactory.createBinder("x", type("a"));
+    Variable y = TermFactory.createVar("y", type("b"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
+    assertThrows(IllegalRuleError.class, () -> new Rule(TermFactory.createApp(f, x, y), y));
+  }
+
+  @Test
   public void testBasics() {
     Variable x = TermFactory.createVar("x", type("a"));
     Term left = unaryTerm("id", type("a"), x);
