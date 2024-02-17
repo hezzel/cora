@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 
 import cora.exceptions.IllegalRuleError;
+import cora.exceptions.IllegalSymbolError;
 import cora.exceptions.NullInitialisationError;
 import cora.types.Type;
 import cora.types.TypeFactory;
@@ -31,6 +32,44 @@ import cora.reader.CoraInputReader;
 public class TrsFactoryTrsCreationTest {
   private Type type(String text) {
     return CoraInputReader.readType(text);
+  }
+
+  @Test
+  public void testCreateMSTRS() {
+    FunctionSymbol a = TermFactory.createConstant("a", 0);
+    FunctionSymbol b = TermFactory.createConstant("b", 0);
+    FunctionSymbol f = TermFactory.createConstant("f", 2);
+    FunctionSymbol g = TermFactory.createConstant("g", 3);
+    ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
+    symbols.add(a);
+    symbols.add(b);
+    symbols.add(f);
+    symbols.add(g);
+    Alphabet alf = new Alphabet(symbols);
+
+    ArrayList<Rule> rules = new ArrayList<Rule>();
+    Variable x = TermFactory.createVar("x");
+    Term left1 = TermFactory.createApp(f, x, a);
+    Term right1 = x;
+    rules.add(new Rule(left1, right1));
+      // f(x, a) -> x
+
+    ArrayList<Term> args = new ArrayList<Term>();
+    args.add(x);
+    args.add(x);
+    args.add(b);
+    Term left2 = TermFactory.createApp(g, args);
+    Term right2 = TermFactory.createApp(f, b, x);
+    rules.add(new Rule(left2, right2));
+      // g(x, x, b) -> f(b, x)
+
+    TRS trs = TrsFactory.createTrs(alf, rules, TrsFactory.MSTRS);
+    assertTrue(trs.queryRuleCount() == 2);
+    assertTrue(trs.queryRule(0).toString().equals("f(x, a) → x"));
+    assertTrue(trs.queryRule(1).toString().equals("g(x, x, b) → f(b, x)"));
+    assertTrue(trs.querySchemeCount() == 0);
+    assertTrue(trs.lookupSymbol("f").equals(f));
+    assertTrue(trs.lookupSymbol("ff") == null);
   }
 
   @Test
@@ -66,6 +105,29 @@ public class TrsFactoryTrsCreationTest {
     assertTrue(trs.lookupSymbol("f").equals(
       TermFactory.createConstant("f", type("(A → A → B) → A → A → B"))));
     assertTrue(trs.lookupSymbol("h") == null);
+  }
+
+  @Test
+  public void testMstrsWithUnusedIllegalSymbol() {
+    FunctionSymbol a = TermFactory.createConstant("a", 0);
+    FunctionSymbol b = TermFactory.createConstant("b", 0);
+    FunctionSymbol f = TermFactory.createConstant("f", 2);
+    ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
+    symbols.add(a);
+    symbols.add(b);
+    symbols.add(f);
+    symbols.add(TermFactory.createConstant("i", type("(a → b) → a")));
+
+    ArrayList<Rule> rules = new ArrayList<Rule>();
+    Variable x = TermFactory.createVar("x");
+    rules.add(TrsFactory.createRule(TermFactory.createApp(f, x, a), x));
+
+    assertThrows(cora.exceptions.IllegalSymbolError.class,
+      () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.MSTRS));
+
+    symbols.set(symbols.size()-1, TermFactory.createConstant("i", type("(a * b) → a")));
+    assertThrows(cora.exceptions.IllegalSymbolError.class,
+      () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.CFS));
   }
 
   @Test
@@ -135,6 +197,25 @@ public class TrsFactoryTrsCreationTest {
     assertTrue(trs.queryRule(0).toString().equals("f(x, y) → y"));
     assertTrue(trs.lookupSymbol("f") == f);
     assertTrue(trs.lookupSymbol("q") == null);
+  }
+
+  @Test
+  public void testCreateMSTRSWithLegalApplicativeRule() {
+    FunctionSymbol a = TermFactory.createConstant("a", 0);
+    FunctionSymbol b = TermFactory.createConstant("b", 0);
+    FunctionSymbol f = TermFactory.createConstant("f", 2);
+    FunctionSymbol g = TermFactory.createConstant("g", 3);
+    ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
+    symbols.add(a);
+    symbols.add(b);
+    symbols.add(f);
+    Alphabet alf = new Alphabet(symbols);
+    ArrayList<Rule> rules = new ArrayList<Rule>();
+    Variable x = TermFactory.createVar("x");
+    rules.add(TrsFactory.createRule(TermFactory.createApp(f, x, a),
+                                    TermFactory.createApp(g.apply(b), x, x),
+                                    TrsFactory.LCSTRS));
+    TrsFactory.createTrs(alf, rules, TrsFactory.MSTRS);
   }
 }
 
