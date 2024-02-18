@@ -15,6 +15,7 @@
 
 package cora.trs;
 
+import java.util.Map;
 import java.util.List;
 import java.util.Collection;
 import cora.exceptions.IllegalRuleError;
@@ -22,6 +23,7 @@ import cora.utils.Pair;
 import cora.terms.Term;
 import cora.terms.Variable;
 import cora.terms.position.Position;
+import cora.trs.TrsProperties.*;
 
 /**
  * The RuleRestrictions class tracks properties that a rule in a TRS satisfies.  This class is
@@ -29,30 +31,17 @@ import cora.terms.position.Position;
  * properties of TRSs or their rules.
  */
 class RuleRestrictions {
-  static final int LVL_FIRSTORDER   = 101;
-  static final int LVL_APPLICATIVE  = 102;
-  static final int LVL_LAMBDA       = 103;
-  static final int LVL_META         = 104;
-
-  static final int ROOT_FUNCTION    = 111;
-  static final int ROOT_THEORY      = 112;
-  static final int ROOT_ANY         = 113;
-
-  static final int LHS_PATTERN      = 121;
-  static final int LHS_SEMIPATTERN  = 122;
-  static final int LHS_NONPATTERN   = 123;
-
-  private int _level;         // one of the LVL_ constants
-  private boolean _theories;  // whether or not this is a "constrained rule"
-  private boolean _products;  // whether product types are used in the construction
-  private int _pattern;       // whether the lhs is a pattern or semi-pattern
-  private int _rootStatus;    // one of the ROOT_ constants
+  private Level _level;
+  private boolean _theories;
+  private boolean _products;
+  private Lhs _pattern;
+  private Root _rootStatus;
 
   /**
-   * Returns the lowest one of LVL_FIRSTORDER, LVL_APPLICATIVE, LVL_LAMBDA, LVL_META that both left
-   * and right hand side of the rule satisfy. (Note: the constraint is NOT considered in this.)
+   * Returns the lowest level that both left and right hand side of the rule satisfy.
+   * (Note: the constraint is NOT considered in this.)
    */
-  int queryLevel() { return _level; }
+  Level queryLevel() { return _level; }
 
   /**
    * Returns whether theories are used in any way (that is, there is a constraint, a fresh theory
@@ -68,24 +57,33 @@ class RuleRestrictions {
   boolean productsUsed() { return _products; }
 
   /** Returns whether the left-hand side is a pattern, semi-pattern or non-pattern. */
-  int patternStatus() { return _pattern; }
+  Lhs patternStatus() { return _pattern; }
 
   /**
-   * Returns ROOT_FUNCTION if the root of the left-hand side is a non-theory function symbol,
-   * ROOT_CALC if the root of the left-hand side is a theory symbol, and ROOT_ANY if the
+   * Returns Root.FUNCTION if the root of the left-hand side is a non-theory function symbol,
+   * Root.CALC if the root of the left-hand side is a theory symbol, and Root.ANY if the
    * left-hand side does not have a function symbol as root.
    */
-  int rootStatus() { return _rootStatus; }
+  Root rootStatus() { return _rootStatus; }
 
-  /**
+  /** Constructor that sets up the minimum value for all properties. */
+  RuleRestrictions() {
+    _level = Level.FIRSTORDER;
+    _theories = false;
+    _products = false;
+    _pattern = Lhs.PATTERN;
+    _rootStatus = Root.FUNCTION;
+  }
+
+  /** 
    * Constructor that sets up all values in order.  No error checking is done (for instance to see
    * if the given level is indeed one of the permitted constants) because this can only be called
    * from within the trs package.
    */
-  RuleRestrictions(int lvl, boolean theories, boolean products, int pattern, int rootstat) {
+  RuleRestrictions(Level lvl, Constrained theories, Products products, Lhs pattern, Root rootstat) {
     _level = lvl;
-    _theories = theories;
-    _products = products;
+    _theories = (theories == Constrained.YES);
+    _products = (products == Products.ALLOWED);
     _pattern = pattern;
     _rootStatus = rootstat;
   }
@@ -93,19 +91,19 @@ class RuleRestrictions {
   /** Constructor that sets up the values corresponding to a given rule. */
   RuleRestrictions(Term left, Term right, Term constraint, Collection<Variable> lvars) {
     // level
-    if (left.isFirstOrder() && right.isFirstOrder()) _level = LVL_FIRSTORDER;
-    else if (left.isApplicative() && right.isApplicative()) _level = LVL_APPLICATIVE;
-    else if (left.isTrueTerm() && right.isTrueTerm()) _level = LVL_LAMBDA;
-    else _level = LVL_META;
+    if (left.isFirstOrder() && right.isFirstOrder()) _level = Level.FIRSTORDER;
+    else if (left.isApplicative() && right.isApplicative()) _level = Level.APPLICATIVE;
+    else if (left.isTrueTerm() && right.isTrueTerm()) _level = Level.LAMBDA;
+    else _level = Level.META;
     // pattern restriction
-    if (left.isPattern()) _pattern = LHS_PATTERN;
-    else if (_level != LVL_META) _pattern = LHS_SEMIPATTERN;
-    else if (left.isSemiPattern()) _pattern = LHS_SEMIPATTERN;
-    else _pattern = LHS_NONPATTERN;
+    if (left.isPattern()) _pattern = Lhs.PATTERN;
+    else if (_level != Level.META) _pattern = Lhs.SEMIPATTERN;
+    else if (left.isSemiPattern()) _pattern = Lhs.SEMIPATTERN;
+    else _pattern = Lhs.NONPATTERN;
     // root status
-    if (!left.isFunctionalTerm()) _rootStatus = ROOT_ANY;
-    else if (left.queryRoot().isTheorySymbol()) _rootStatus = ROOT_THEORY;
-    else _rootStatus = ROOT_FUNCTION;
+    if (!left.isFunctionalTerm()) _rootStatus = Root.ANY;
+    else if (left.queryRoot().isTheorySymbol()) _rootStatus = Root.THEORY;
+    else _rootStatus = Root.FUNCTION;
     // theories and products
     _theories = false;
     _products = false;
@@ -129,20 +127,31 @@ class RuleRestrictions {
    * If not, a message is returned explaining the problem.
    */
   String checkCoverage(RuleRestrictions other) {
-    if (_level < other._level) {
-      String[] kinds = { "first-order ", "applicative ", "true ", "meta-" };
-      return "rule level is limited to " + kinds[_level - LVL_FIRSTORDER] + "terms, not " +
-        kinds[other._level - LVL_FIRSTORDER] + "terms";
+    if (_level.compareTo(other._level) < 0) {
+      Map<Level,String> explanation = Map.of(
+        Level.FIRSTORDER, "first-order ", Level.APPLICATIVE, "applicative ",
+        Level.LAMBDA, "true ", Level.META, "meta-");
+      return "rule level is limited to " + explanation.get(_level) + "terms, not " +
+        explanation.get(other._level) + "terms";
     }
-    if (_rootStatus < other._rootStatus) {
-      String[] kinds = { "a non-theory symbol", "a function symbol", "anything else" };
-      return "left-hand side should have " + kinds[_rootStatus - ROOT_FUNCTION] + " as root, not " +
-        kinds[other._rootStatus - ROOT_FUNCTION];
+    if (_rootStatus.compareTo(other._rootStatus) < 0) {
+      String original = switch (_rootStatus) {
+        case Root.FUNCTION -> "a non-theory function symbol";
+        case Root.THEORY -> "a function symbol";
+        case Root.ANY -> "MEH THERE IS A BUG IN CHECKCOVERAGE";
+      };
+      String real = switch (other._rootStatus) {
+        case Root.FUNCTION -> "EEK THERE IS A BUG IN CHECKCOVERAGE";
+        case Root.THEORY -> "a theory symbol";
+        case Root.ANY -> "anything else";
+      };
+      return "left-hand side should have " + original + " as root, not " + real;
     }
-    if (_pattern < other._pattern) {
-      String[] kinds = { "pattern", "semi-pattern", "non-pattern" };
-      return "left-hand side should be a " + kinds[_pattern - LHS_PATTERN] + ", not a " +
-        kinds[other._pattern - LHS_PATTERN];
+    if (_pattern.compareTo(other._pattern) < 0) {
+      Map<Lhs,String> explanation = Map.of(
+        Lhs.PATTERN, "pattern", Lhs.SEMIPATTERN, "semi-pattern", Lhs.NONPATTERN, "non-pattern");
+      return "left-hand side should be a " + explanation.get(_pattern) + ", not a " +
+        explanation.get(other._pattern);
     }
     if (!_theories && other._theories) {
       return "use of theory symbols / constraints is not supported";
@@ -153,9 +162,26 @@ class RuleRestrictions {
     return null;
   }
 
-  /** This returns true iff all our properties are ≥ those of other. */
-  boolean covers(RuleRestrictions other) {
-    return checkCoverage(other) != null;
+  /** This returns the smallest RuleRestrictions class that is ≥ both this and other. */
+  RuleRestrictions supremum(RuleRestrictions other) {
+    Level maxlevel = _level;
+    Root maxroot = _rootStatus;
+    Lhs maxpattern = _pattern;
+    boolean maxtheories = _theories;
+    boolean maxproducts = _products;
+    if (other._level.compareTo(maxlevel) > 0) maxlevel = other._level;
+    if (other._rootStatus.compareTo(maxroot) > 0) maxroot = other._rootStatus;
+    if (other._pattern.compareTo(maxpattern) > 0) maxpattern = other._pattern;
+    if (other._theories) maxtheories = true;
+    if (other._products) maxproducts = true;
+    return new RuleRestrictions(maxlevel, maxtheories ? Constrained.YES : Constrained.NO,
+      maxproducts ? Products.ALLOWED : Products.DISALLOWED, maxpattern, maxroot);
   }
+
+  /** Used for debugging */
+  public String toString() {
+    return "{ " + _level + " ; " + _theories + " ; " + _products + " ; " + _pattern + " ; " +
+      _rootStatus + " }";
+  };
 }
 

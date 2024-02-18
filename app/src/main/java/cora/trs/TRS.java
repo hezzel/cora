@@ -16,11 +16,15 @@
 package cora.trs;
 
 import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.TreeSet;
 import java.util.Collection;
 import cora.exceptions.IndexingError;
+import cora.exceptions.IllegalRuleError;
+import cora.exceptions.IllegalSymbolError;
 import cora.exceptions.NullInitialisationError;
 import cora.utils.Pair;
+import cora.types.Type;
 import cora.terms.FunctionSymbol;
 import cora.terms.Term;
 import cora.terms.position.Position;
@@ -79,15 +83,50 @@ public class TRS {
   /**
    * Create a TRS with the given settings.  Default because this should only be called by the
    * factory.
-   * (This is also why no null checks are done here.)
    */
-  TRS(Alphabet alphabet, ImmutableList<Rule> rules, ImmutableList<RuleScheme> schemes,
-      Collection<String> privateSymbols, TrsKind restrictions) {
+  TRS(Alphabet alphabet, List<Rule> rules, ImmutableList<RuleScheme> schemes,
+      Collection<String> privateSymbols, TrsKind kind) {
+    if (alphabet == null) throw new NullInitialisationError("TRS", "alphabet");
+    if (rules == null) throw new NullInitialisationError("TRS", "rules");
+    if (kind == null) throw new NullInitialisationError("TRS", "trs kind");
+
     _alphabet = alphabet;
-    _rules = rules;
     _schemes = schemes;
-    _private = new TreeSet<String>(privateSymbols);
-    _kind = restrictions;
+    if (privateSymbols == null) _private = new TreeSet<String>();
+    else _private = new TreeSet<String>(privateSymbols);
+
+    // ensure that the alphabet follows the given TRS kind
+    verifyAlphabet(kind);
+
+    // build the rules list, and collect the actual rule restrictions while we're at it
+    RuleRestrictions actual = new RuleRestrictions();
+    ImmutableList.Builder<Rule> rulebuilder = ImmutableList.<Rule>builder();
+    for (Rule rule : rules) {
+      if (rule == null) throw new NullInitialisationError("TRS", "one of the rules");
+      actual = actual.supremum(rule.queryProperties());
+      rulebuilder.add(rule);
+    }
+    _rules = rulebuilder.build();
+
+    // store the TRS kind, as updated to what we actually use
+    String problem = kind.queryRestrictions().checkCoverage(actual);
+    if (problem != null) throw new IllegalRuleError(problem);
+    _kind = kind.updateRestrictions(actual);
+  }
+
+  /** This checks that the alphabet follows the given TRS kind and throws an error if not. */
+  private void verifyAlphabet(TrsKind kind) {
+    for (FunctionSymbol f : _alphabet.getSymbols()) {
+      Type type = f.queryType();
+      if (kind.termsFirstOrder() && type.queryTypeOrder() > 1) {
+        throw new IllegalSymbolError("TRS", f.toString(), "Symbol with a type " + type.toString() +
+          " cannot occur in a first-order TRS.");
+      }
+      if (!kind.includeTuples() && type.hasProducts()) {
+        throw new IllegalSymbolError("TRS", f.toString(), "Symbol with a type " + type.toString() +
+          " cannot occur in a product-free TRS.");
+      }
+    }
   }
 
   /** @return the alphabet for this TRS. */

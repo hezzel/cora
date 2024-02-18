@@ -19,42 +19,38 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import cora.trs.TrsProperties.*;
+
 public class RuleRestrictionsTest {
   @Test
   public void testBasicCreate() {
-    RuleRestrictions rest = new RuleRestrictions(RuleRestrictions.LVL_APPLICATIVE, true, false,
-                                                 RuleRestrictions.LHS_NONPATTERN,
-                                                 RuleRestrictions.ROOT_ANY);
-    assertTrue(rest.queryLevel() == RuleRestrictions.LVL_APPLICATIVE);
+    RuleRestrictions rest = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES,
+                                                 Products.DISALLOWED, Lhs.NONPATTERN, Root.ANY);
+    assertTrue(rest.queryLevel() == Level.APPLICATIVE);
     assertTrue(rest.theoriesUsed());
     assertFalse(rest.productsUsed());
-    assertTrue(rest.patternStatus() == RuleRestrictions.LHS_NONPATTERN);
-    assertTrue(rest.rootStatus() == RuleRestrictions.ROOT_ANY);
+    assertTrue(rest.patternStatus() == Lhs.NONPATTERN);
+    assertTrue(rest.rootStatus() == Root.ANY);
   }
 
   @Test
   public void testCovers() {
-    RuleRestrictions nothing = new RuleRestrictions(RuleRestrictions.LVL_FIRSTORDER, false, false,
-                                                    RuleRestrictions.LHS_PATTERN,
-                                                    RuleRestrictions.ROOT_FUNCTION);
-    RuleRestrictions anything = new RuleRestrictions(RuleRestrictions.LVL_META, true, true,
-                                                     RuleRestrictions.LHS_NONPATTERN,
-                                                     RuleRestrictions.ROOT_ANY);
+    RuleRestrictions nothing = new RuleRestrictions(Level.FIRSTORDER, Constrained.YES,
+                                                    Products.DISALLOWED, Lhs.PATTERN,
+                                                    Root.FUNCTION);
+    RuleRestrictions anything = new RuleRestrictions(Level.META, Constrained.YES, Products.ALLOWED,
+                                                     Lhs.NONPATTERN, Root.ANY);
     assertTrue(nothing.checkCoverage(nothing) == null);
     assertTrue(nothing.checkCoverage(anything).equals(
       "rule level is limited to first-order terms, not meta-terms"));
-    RuleRestrictions a = new RuleRestrictions(RuleRestrictions.LVL_APPLICATIVE, true, true,
-                                              RuleRestrictions.LHS_PATTERN,
-                                              RuleRestrictions.ROOT_THEORY);
-    RuleRestrictions b = new RuleRestrictions(RuleRestrictions.LVL_LAMBDA, false, false,
-                                              RuleRestrictions.LHS_SEMIPATTERN,
-                                              RuleRestrictions.ROOT_THEORY);
-    RuleRestrictions c = new RuleRestrictions(RuleRestrictions.LVL_APPLICATIVE, true, false,
-                                              RuleRestrictions.LHS_SEMIPATTERN,
-                                              RuleRestrictions.ROOT_ANY);
-    RuleRestrictions d = new RuleRestrictions(RuleRestrictions.LVL_META, true, true,
-                                              RuleRestrictions.LHS_PATTERN,
-                                              RuleRestrictions.ROOT_ANY);
+    RuleRestrictions a = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES, Products.ALLOWED,
+                                              Lhs.PATTERN, Root.THEORY);
+    RuleRestrictions b = new RuleRestrictions(Level.LAMBDA, Constrained.NO, Products.DISALLOWED,
+                                              Lhs.SEMIPATTERN, Root.THEORY);
+    RuleRestrictions c = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES,
+                                              Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY);
+    RuleRestrictions d = new RuleRestrictions(Level.META, Constrained.YES, Products.ALLOWED,
+                                              Lhs.PATTERN, Root.ANY);
     assertTrue(a.checkCoverage(b).equals(
       "rule level is limited to applicative terms, not true terms"));
     assertTrue(a.checkCoverage(c).equals(
@@ -65,6 +61,27 @@ public class RuleRestrictionsTest {
       "use of tuples (or any occurrence of product types) is not supported"));
     assertTrue(d.checkCoverage(b).equals(
       "left-hand side should be a pattern, not a semi-pattern"));
+  }
+
+  @Test
+  public void testSupremum() {
+    RuleRestrictions a = new RuleRestrictions(Level.APPLICATIVE, Constrained.NO,
+                                              Products.ALLOWED, Lhs.SEMIPATTERN, Root.ANY);
+    RuleRestrictions b = new RuleRestrictions(Level.META, Constrained.YES, Products.DISALLOWED,
+                                              Lhs.PATTERN, Root.THEORY);
+    // doing it from either side should result in the same
+    RuleRestrictions c = a.supremum(b);
+    RuleRestrictions d = b.supremum(a);
+    assertTrue(c.queryLevel() == Level.META);
+    assertTrue(d.queryLevel() == Level.META);
+    assertTrue(c.theoriesUsed());
+    assertTrue(d.theoriesUsed());
+    assertTrue(c.productsUsed());
+    assertTrue(d.productsUsed());
+    assertTrue(c.patternStatus() == Lhs.SEMIPATTERN);
+    assertTrue(d.patternStatus() == Lhs.SEMIPATTERN);
+    assertTrue(c.rootStatus() == Root.ANY);
+    assertTrue(d.rootStatus() == Root.ANY);
   }
 }
 

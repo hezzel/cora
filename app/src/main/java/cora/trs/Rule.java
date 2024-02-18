@@ -24,6 +24,7 @@ import cora.exceptions.TypingError;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;
+import cora.trs.TrsProperties.*;
 
 /**
  * Rules are the core objects that define the reduction relation in a term rewriting system.  These
@@ -113,37 +114,37 @@ public class Rule {
 
   /** This returns whether both left- and right-hand side of the rule are first-order. */
   public boolean isFirstOrder() {
-    return _properties.queryLevel() == RuleRestrictions.LVL_FIRSTORDER;
+    return _properties.queryLevel() == Level.FIRSTORDER;
   }
 
   /** This returns whether both left- and right-hand side of the rule are applicative. */
   public boolean isApplicative() {
-    return _properties.queryLevel() <= RuleRestrictions.LVL_APPLICATIVE;
+    return _properties.queryLevel().compareTo(Level.APPLICATIVE) <= 0;
   }
 
   /** This returns whether both left- and right-hand side of the rule are true terms. */
   public boolean isMetaFree() {
-    return _properties.queryLevel() <= RuleRestrictions.LVL_LAMBDA;
+    return _properties.queryLevel().compareTo(Level.LAMBDA) <= 0;
   }
 
   /** This returns whether the rule has a pattern as its left-hand side. */
   public boolean isPatternRule() {
-    return _properties.patternStatus() == RuleRestrictions.LHS_PATTERN;
+    return _properties.patternStatus() == Lhs.PATTERN;
   }
   
   /** This returns whether the rule has a semi-pattern as its left-hand side. */
   public boolean isSemiPatternRule() {
-    return _properties.patternStatus() == RuleRestrictions.LHS_SEMIPATTERN;
+    return _properties.patternStatus().compareTo(Lhs.SEMIPATTERN) <= 0;
   }
   
   /** This returns whether the left-hand side has a root that is a (non-theory) function symbol. */
   public boolean queryTermFunctionRoot() {
-    return _properties.rootStatus() == RuleRestrictions.ROOT_FUNCTION;
+    return _properties.rootStatus() == Root.FUNCTION;
   }
 
-  /** This returns whether the left-hand side has a root that is a (non-theory) function symbol. */
-  public boolean queryTheoryFunctionRoot() {
-    return _properties.rootStatus() == RuleRestrictions.ROOT_THEORY;
+  /** Returns whether the left-hand side has a root that is a (possibly theory) function symbol. */
+  public boolean queryFunctionRoot() {
+    return _properties.rootStatus().compareTo(Root.THEORY) <= 0;
   }
 
   /** Gives a string representation of the current rule. */

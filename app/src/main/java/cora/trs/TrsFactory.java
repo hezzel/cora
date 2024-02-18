@@ -20,35 +20,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import cora.exceptions.IllegalRuleError;
-import cora.exceptions.IllegalSymbolError;
-import cora.exceptions.NullInitialisationError;
-import cora.types.Type;
 import cora.terms.Term;
-import cora.terms.FunctionSymbol;
+import cora.trs.TrsProperties.*;
 
 /** The TrsFactory is used to create both rules and various kinds of TRSs. */
 public class TrsFactory {
-  public static final TrsKind MSTRS =
-    new TrsKind("MSTRS", TrsKind.LVL_FIRSTORDER, TrsKind.THEORIES_NONE,
-                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_FUNCTION);
-  public static final TrsKind STRS =
-    new TrsKind("STRS", TrsKind.LVL_APPLICATIVE, TrsKind.THEORIES_NONE,
-                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_ANY, TrsKind.LHS_SEMIPATTERN);
-  public static final TrsKind CFS =
-    new TrsKind("CFS", TrsKind.LVL_LAMBDA, TrsKind.THEORIES_NONE,
-                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_ANY, TrsKind.LHS_PATTERN);
-  public static final TrsKind AMS =
-    new TrsKind("AMS", TrsKind.LVL_META, TrsKind.THEORIES_NONE,
-                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_ANY, TrsKind.LHS_SEMIPATTERN);
-  public static final TrsKind LCTRS =
-    new TrsKind("LCTRS", TrsKind.LVL_FIRSTORDER, TrsKind.THEORIES_YES,
-                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_THEORY);
-  public static final TrsKind LCSTRS =
-    new TrsKind("LCSTRS", TrsKind.LVL_APPLICATIVE, TrsKind.THEORIES_YES,
-                TrsKind.PRODUCTS_DISALLOWED, TrsKind.ROOT_ANY, TrsKind.LHS_SEMIPATTERN);
-  public static final TrsKind CORA =
-    new TrsKind("Cora-TRS", TrsKind.LVL_META, TrsKind.THEORIES_YES,
-                TrsKind.PRODUCTS_ALLOWED, TrsKind.ROOT_ANY, TrsKind.LHS_NONPATTERN);
+  public static final TrsKind MSTRS = new TrsKind("MSTRS",
+    Level.FIRSTORDER,  Constrained.NO,  Products.DISALLOWED, Lhs.PATTERN,     Root.FUNCTION);
+  public static final TrsKind STRS = new TrsKind("STRS",
+    Level.APPLICATIVE, Constrained.NO,  Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY);
+  public static final TrsKind CFS = new TrsKind("CFS",
+    Level.LAMBDA,      Constrained.NO,  Products.DISALLOWED, Lhs.PATTERN,     Root.ANY);
+  public static final TrsKind AMS = new TrsKind("AMS",
+    Level.META,        Constrained.NO,  Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY);
+  public static final TrsKind LCTRS = new TrsKind("LCTRS",
+    Level.FIRSTORDER,  Constrained.YES, Products.DISALLOWED, Lhs.PATTERN,     Root.THEORY);
+  public static final TrsKind LCSTRS = new TrsKind("LCSTRS",
+    Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY);
+  public static final TrsKind CORA = new TrsKind("Cora-TRS",
+    Level.META,        Constrained.YES, Products.ALLOWED,    Lhs.NONPATTERN,  Root.ANY);
 
   /**
    * Check if the given rule is allowed in the given kind of TRS.  If not, throws an
@@ -101,19 +91,6 @@ public class TrsFactory {
    */
   public static TRS createTrs(Alphabet alphabet, List<Rule> rules, Set<String> privateSymbols,
                               boolean includeEta, TrsKind kind) {
-    if (alphabet == null) throw new NullInitialisationError("TRS", "alphabet");
-    if (rules == null) throw new NullInitialisationError("TRS", "rules");
-    if (privateSymbols == null) privateSymbols = new TreeSet<String>();
-    if (kind == null) throw new NullInitialisationError("TRS", "trs kind");
-
-    // build the rules list, and ensure that all rules follow the given TRS kind
-    ImmutableList.Builder<Rule> newrules = ImmutableList.<Rule>builder();
-    for (Rule rule : rules) {
-      if (rule == null) throw new NullInitialisationError("TRS", "one of the rules");
-      String problem = kind.queryRestrictions().checkCoverage(rule.queryProperties());
-      if (problem != null) throw new IllegalRuleError(problem);
-      newrules.add(rule);
-    }
     // build the list of rule schemes
     ImmutableList.Builder<TRS.RuleScheme> newschemes = ImmutableList.<TRS.RuleScheme>builder();
     if (kind.termsIncludeLambda()) {
@@ -126,20 +103,8 @@ public class TrsFactory {
     }
     if (kind.includeTheories()) newschemes.add(TRS.RuleScheme.Calc);
     if (kind.includeTuples()) newschemes.add(TRS.RuleScheme.Projection);
-    // ensure that the alphabet follows the given TRS kind
-    for (FunctionSymbol f : alphabet.getSymbols()) {
-      Type type = f.queryType();
-      if (kind.termsFirstOrder() && type.queryTypeOrder() > 1) {
-        throw new IllegalSymbolError("TRS", f.toString(), "Symbol with a type " + type.toString() +
-          " cannot occur in a first-order TRS.");
-      }
-      if (!kind.includeTuples() && type.hasProducts()) {
-        throw new IllegalSymbolError("TRS", f.toString(), "Symbol with a type " + type.toString() +
-          " cannot occur in a product-free TRS.");
-      }
-    }
 
-    return new TRS(alphabet, newrules.build(), newschemes.build(), privateSymbols, kind);
+    return new TRS(alphabet, rules, newschemes.build(), privateSymbols, kind);
   }
 
   /** Creates a TRS with the given restrictions, with no private symbols or extra rule schemes. */

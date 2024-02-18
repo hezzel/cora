@@ -26,6 +26,7 @@ import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;
 import cora.reader.CoraInputReader;
+import cora.trs.TrsProperties.*;
 
 public class RuleTest {
   private Type type(String txt) {
@@ -98,11 +99,11 @@ public class RuleTest {
     Variable z = TermFactory.createBinder("z", type("a"));
     Rule rule = new Rule(a, g.apply(TermFactory.createAbstraction(z, z)));
     RuleRestrictions properties = rule.queryProperties();
-    assertTrue(properties.queryLevel() == RuleRestrictions.LVL_LAMBDA);
+    assertTrue(properties.queryLevel() == Level.LAMBDA);
     assertFalse(properties.theoriesUsed());
     assertFalse(properties.productsUsed());
-    assertTrue(properties.patternStatus() == RuleRestrictions.LHS_PATTERN);
-    assertTrue(properties.rootStatus() == RuleRestrictions.ROOT_FUNCTION);
+    assertTrue(properties.patternStatus() == Lhs.PATTERN);
+    assertTrue(properties.rootStatus() == Root.FUNCTION);
     assertFalse(rule.isConstrained());
   }
 
@@ -119,11 +120,11 @@ public class RuleTest {
     Term right = g.apply(tuple);
     Rule rule = new Rule(left, right);
     RuleRestrictions properties = rule.queryProperties();
-    assertTrue(properties.queryLevel() == RuleRestrictions.LVL_META);
+    assertTrue(properties.queryLevel() == Level.META);
     assertTrue(properties.theoriesUsed());
     assertTrue(properties.productsUsed());
-    assertTrue(properties.patternStatus() == RuleRestrictions.LHS_SEMIPATTERN);
-    assertTrue(properties.rootStatus() == RuleRestrictions.ROOT_ANY);
+    assertTrue(properties.patternStatus() == Lhs.SEMIPATTERN);
+    assertTrue(properties.rootStatus() == Root.ANY);
     assertFalse(rule.isConstrained());
   }
 
@@ -138,11 +139,11 @@ public class RuleTest {
     Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(TheoryFactory.createValue(0));
     Rule rule = new Rule(left, x, constraint);
     RuleRestrictions properties = rule.queryProperties();
-    assertTrue(properties.queryLevel() == RuleRestrictions.LVL_META);
+    assertTrue(properties.queryLevel() == Level.META);
     assertTrue(properties.theoriesUsed());
     assertFalse(properties.productsUsed());
-    assertTrue(properties.patternStatus() == RuleRestrictions.LHS_NONPATTERN);
-    assertTrue(properties.rootStatus() == RuleRestrictions.ROOT_THEORY);
+    assertTrue(properties.patternStatus() == Lhs.NONPATTERN);
+    assertTrue(properties.rootStatus() == Root.THEORY);
     assertTrue(rule.isConstrained());
   }
 
