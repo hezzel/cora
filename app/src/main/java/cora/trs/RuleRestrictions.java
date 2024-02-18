@@ -27,8 +27,8 @@ import cora.trs.TrsProperties.*;
 
 /**
  * The RuleRestrictions class tracks properties that a rule in a TRS satisfies.  This class is
- * meant for internal use within the trs package, as it is used for error handling and storing
- * properties of TRSs or their rules.
+ * deliberately not public, as it is only meant for internal use within the trs package: it is used
+ * for error handling and storing properties of TRSs or their rules.
  */
 class RuleRestrictions {
   private Level _level;

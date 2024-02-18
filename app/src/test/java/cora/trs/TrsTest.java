@@ -143,7 +143,7 @@ public class TrsTest {
     rules.add(TrsFactory.createRule(TermFactory.createApp(f, x, b), x));
     TRS trs = TrsFactory.createTrs(alf, rules, TrsFactory.CORA);
     assertTrue(trs.theoriesIncluded());
-    assertTrue(trs.tuplesIncluded());
+    assertTrue(trs.productsIncluded());
     assertFalse(trs.isApplicative());
     // TODO: use the checkSupport function
   }

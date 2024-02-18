@@ -25,6 +25,22 @@ import cora.trs.TrsProperties.*;
 
 /** The TrsFactory is used to create both rules and various kinds of TRSs. */
 public class TrsFactory {
+  /**
+   * A TrsKind contains the name and default properties of certain kinds of TRSs (e.g., an MSTRS is
+   * first-order and unconstrained).  This is used in the constructors for TRSs and perhaps rules to
+   * ensure that the right correctness checks are done.
+   */
+  public static class TrsKind {
+    private String _name;
+    private RuleRestrictions _restrictions;
+    private TrsKind(String name, Level lvl, Constrained theories, Products products, Lhs pattern,
+                    Root rootstat) {
+      _name = name;
+      _restrictions = new RuleRestrictions(lvl, theories, products, pattern, rootstat);
+    }
+    public String toString() { return _name + " with " + _restrictions.toString(); }
+  }
+
   public static final TrsKind MSTRS = new TrsKind("MSTRS",
     Level.FIRSTORDER,  Constrained.NO,  Products.DISALLOWED, Lhs.PATTERN,     Root.FUNCTION);
   public static final TrsKind STRS = new TrsKind("STRS",
@@ -45,10 +61,10 @@ public class TrsFactory {
    * IllegalRuleError.
    */
   private static void checkRestrictions(Rule rule, TrsKind kind) {
-    String problem = kind.queryRestrictions().checkCoverage(rule.queryProperties());
+    String problem = kind._restrictions.checkCoverage(rule.queryProperties());
     if (problem == null) return;
     throw new IllegalRuleError("The rule " + rule.toString() + " is not allowed to occur in " +
-      kind.queryName() + "s: " + problem + ".");
+      kind._name + "s: " + problem + ".");
   }
 
   /**
@@ -64,8 +80,7 @@ public class TrsFactory {
 
   /** This function creates an unconstrained rule left → right. */
   public static Rule createRule(Term left, Term right) {
-    Rule rule = new Rule(left, right);
-    return rule;
+    return new Rule(left, right);
   }
 
   /**
@@ -81,8 +96,7 @@ public class TrsFactory {
 
   /** This function creates a constrained rule left → right | constraint. */
   public static Rule createRule(Term left, Term right, Term constraint) {
-    Rule rule = new Rule(left, right, constraint);
-    return rule;
+    return new Rule(left, right, constraint);
   }
 
   /**
@@ -93,7 +107,7 @@ public class TrsFactory {
                               boolean includeEta, TrsKind kind) {
     // build the list of rule schemes
     ImmutableList.Builder<TRS.RuleScheme> newschemes = ImmutableList.<TRS.RuleScheme>builder();
-    if (kind.termsIncludeLambda()) {
+    if (kind._restrictions.queryLevel().compareTo(Level.LAMBDA) >= 0) {
       newschemes.add(TRS.RuleScheme.Beta);
       if (includeEta) newschemes.add(TRS.RuleScheme.Beta);
     }
@@ -101,10 +115,13 @@ public class TrsFactory {
       throw new IllegalRuleError("Eta can only be added to TRSs whose term formation includes " +
         "abstraction.");
     }
-    if (kind.includeTheories()) newschemes.add(TRS.RuleScheme.Calc);
-    if (kind.includeTuples()) newschemes.add(TRS.RuleScheme.Projection);
+    if (kind._restrictions.theoriesUsed()) newschemes.add(TRS.RuleScheme.Calc);
+    if (kind._restrictions.productsUsed()) newschemes.add(TRS.RuleScheme.Projection);
 
-    return new TRS(alphabet, rules, newschemes.build(), privateSymbols, kind);
+    return new TRS(alphabet, rules, newschemes.build(), privateSymbols, kind._name,
+                   TrsProperties.translateRuleToTermLevel(kind._restrictions.queryLevel()),
+                   kind._restrictions.theoriesUsed(), kind._restrictions.productsUsed(),
+                   kind._restrictions);
   }
 
   /** Creates a TRS with the given restrictions, with no private symbols or extra rule schemes. */

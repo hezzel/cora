@@ -70,5 +70,21 @@ public class TrsProperties {
    * (Meta-terms are never allowed to occur outside of room formation.)
    */
   public enum TermLevel { FIRSTORDER, APPLICATIVE, LAMBDA }
+
+  /**
+   * This returns the level of terms that should be permitted to occur in a TRS with rules of the
+   * given level. (This is essentially the same level, except that meta-variables never occur in
+   * terms, as they are only meant to be used in matching.)
+   */
+  public static TermLevel translateRuleToTermLevel(Level level) {
+    switch (level) {
+      case Level.FIRSTORDER: return TermLevel.FIRSTORDER;
+      case Level.APPLICATIVE: return TermLevel.APPLICATIVE;
+      case Level.LAMBDA: return TermLevel.LAMBDA;
+      case level.META: return TermLevel.LAMBDA;
+    }
+    // this statement should be unreachable, but Java protests if it is omitted.
+    return TermLevel.LAMBDA;
+  }
 }
 

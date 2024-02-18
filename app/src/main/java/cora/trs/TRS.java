@@ -28,6 +28,7 @@ import cora.types.Type;
 import cora.terms.FunctionSymbol;
 import cora.terms.Term;
 import cora.terms.position.Position;
+import cora.trs.TrsProperties.*;
 
 /**
  * A TRS (term rewriting system), in essence, is a pair (T, →) of a set of terms and a reduction
@@ -78,51 +79,60 @@ public class TRS {
   private final ImmutableList<Rule> _rules;
   private final ImmutableList<RuleScheme> _schemes;
   private final TreeSet<String> _private;
-  private final TrsKind _kind;
+  private String _trsKind;
+  private TermLevel _level;
+  private boolean _theoriesIncluded;
+  private boolean _productsIncluded;
+  private RuleRestrictions _rulesProperties;
 
   /**
    * Create a TRS with the given settings.  Default because this should only be called by the
    * factory.
    */
   TRS(Alphabet alphabet, List<Rule> rules, ImmutableList<RuleScheme> schemes,
-      Collection<String> privateSymbols, TrsKind kind) {
+      Collection<String> privateSymbols, String trsKindName, TermLevel trsLevel,
+      boolean includeTheories, boolean includeProducts, RuleRestrictions restrictions) {
+
     if (alphabet == null) throw new NullInitialisationError("TRS", "alphabet");
     if (rules == null) throw new NullInitialisationError("TRS", "rules");
-    if (kind == null) throw new NullInitialisationError("TRS", "trs kind");
 
+    _theoriesIncluded = includeTheories;
+    _productsIncluded = includeProducts;
+    _level = trsLevel;
     _alphabet = alphabet;
     _schemes = schemes;
     if (privateSymbols == null) _private = new TreeSet<String>();
     else _private = new TreeSet<String>(privateSymbols);
 
-    // ensure that the alphabet follows the given TRS kind
-    verifyAlphabet(kind);
+    // ensure that the alphabet follows the requirements we just stored
+    verifyAlphabet();
 
     // build the rules list, and collect the actual rule restrictions while we're at it
-    RuleRestrictions actual = new RuleRestrictions();
+    _rulesProperties = new RuleRestrictions();
     ImmutableList.Builder<Rule> rulebuilder = ImmutableList.<Rule>builder();
     for (Rule rule : rules) {
       if (rule == null) throw new NullInitialisationError("TRS", "one of the rules");
-      actual = actual.supremum(rule.queryProperties());
+      _rulesProperties = _rulesProperties.supremum(rule.queryProperties());
       rulebuilder.add(rule);
     }
     _rules = rulebuilder.build();
 
-    // store the TRS kind, as updated to what we actually use
-    String problem = kind.queryRestrictions().checkCoverage(actual);
-    if (problem != null) throw new IllegalRuleError(problem);
-    _kind = kind.updateRestrictions(actual);
+    // and give an error if we don't satisfy the given restrictions on the rules
+    if (restrictions != null) {
+      String problem = restrictions.checkCoverage(_rulesProperties);
+      if (problem != null) throw new IllegalRuleError(problem);
+    }
   }
 
-  /** This checks that the alphabet follows the given TRS kind and throws an error if not. */
-  private void verifyAlphabet(TrsKind kind) {
+  /** This checks that the alphabet follows the properties stored for the TRS terms. */
+  private void verifyAlphabet() {
     for (FunctionSymbol f : _alphabet.getSymbols()) {
       Type type = f.queryType();
-      if (kind.termsFirstOrder() && type.queryTypeOrder() > 1) {
+      if (_level == TermLevel.FIRSTORDER && type.queryTypeOrder() > 1) {
         throw new IllegalSymbolError("TRS", f.toString(), "Symbol with a type " + type.toString() +
           " cannot occur in a first-order TRS.");
       }
-      if (!kind.includeTuples() && type.hasProducts()) {
+      if (!_productsIncluded && type.hasProducts()) {
         throw new IllegalSymbolError("TRS", f.toString(), "Symbol with a type " + type.toString() +
           " cannot occur in a product-free TRS.");
       }
@@ -175,22 +185,22 @@ public class TRS {
 
   /** Returns whether theory symbols are supported in term construction. */
   public boolean theoriesIncluded() {
-    return _kind.includeTheories();
+    return _theoriesIncluded;
   }
 
   /** Returns whether tuples and product types are supported in term construction. */
-  public boolean tuplesIncluded() {
-    return _kind.includeTuples();
+  public boolean productsIncluded() {
+    return _productsIncluded;
   }
 
   /** Returns whether we are limited to first-order terms in term construction. */
   public boolean isFirstOrder() {
-    return _kind.termsFirstOrder();
+    return _level == TermLevel.FIRSTORDER;
   }
 
   /** Returns whether we are limited to applicative terms in term construction. */
   public boolean isApplicative() {
-    return _kind.termsApplicative();
+    return _level.compareTo(TermLevel.APPLICATIVE) <= 0;
   }
 
   /** Returns whether the given term is allowed to be used in this TRS. */
@@ -201,13 +211,13 @@ public class TRS {
     else if (isApplicative()) {
       if (!term.isApplicative()) return false;
     }
-    if (tuplesIncluded() && theoriesIncluded()) return true;
+    if (_productsIncluded && _theoriesIncluded) return true;
     for (Pair<Term,Position> pair : term.querySubterms()) {
       Term sub = pair.fst();
-      if (!theoriesIncluded() && sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) {
+      if (!_theoriesIncluded && sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) {
         return false;
       }
-      if (!tuplesIncluded() && sub.queryType().hasProducts()) return false;
+      if (!_productsIncluded && sub.queryType().hasProducts()) return false;
     }
     return true;
   }
@@ -221,7 +231,7 @@ public class TRS {
       if (_private.contains(f.queryName())) ret.append("  (private)");
       ret.append("\n");
     }
-    if (_kind.includeTheories()) ret.append("} ∪ Σ_{theory}\n");
+    if (_theoriesIncluded) ret.append("} ∪ Σ_{theory}\n");
     else ret.append("}\n");
     ret.append("R = {\n");
     for (int i = 0; i < _rules.size(); i++) {
