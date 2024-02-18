@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -26,6 +27,8 @@ import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;
 import cora.reader.CoraInputReader;
+import cora.trs.TrsProperties.*;
+import cora.trs.TRS.RuleScheme;
 
 public class TrsTest {
   private Type type(String txt) {
@@ -136,6 +139,25 @@ public class TrsTest {
   }
 
   @Test
+  public void testVerifyPropertiesWithoutRules() {
+    setupTRSs();
+    assertTrue(_mstrs.verifyProperties(Level.FIRSTORDER, Constrained.NO, Products.DISALLOWED,
+                                       Lhs.PATTERN, Root.FUNCTION));
+    assertFalse(_lctrs.verifyProperties(Level.FIRSTORDER, Constrained.NO, Products.DISALLOWED,
+                                        Lhs.PATTERN, Root.FUNCTION));
+    assertTrue(_lctrs.verifyProperties(Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED,
+                                       Lhs.PATTERN, Root.FUNCTION));
+    assertTrue(_lcstrs.verifyProperties(Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED,
+                                        Lhs.PATTERN, Root.FUNCTION));
+    assertFalse(_cfs.verifyProperties(Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED,
+                                      Lhs.PATTERN, Root.FUNCTION));
+    assertFalse(_cora.verifyProperties(Level.META, Constrained.YES, Products.DISALLOWED,
+                                       Lhs.PATTERN, Root.FUNCTION));
+    assertTrue(_cora.verifyProperties(Level.META, Constrained.YES, Products.ALLOWED,
+                                      Lhs.PATTERN, Root.FUNCTION));
+  }
+
+  @Test
   public void testDerivedProperties() {
     Alphabet alf = new Alphabet(List.of(f, a, b));
     ArrayList<Rule> rules = new ArrayList<Rule>();
@@ -145,7 +167,60 @@ public class TrsTest {
     assertTrue(trs.theoriesIncluded());
     assertTrue(trs.productsIncluded());
     assertFalse(trs.isApplicative());
-    // TODO: use the checkSupport function
+    assertTrue(trs.verifyProperties(Level.FIRSTORDER, Constrained.NO, Products.DISALLOWED,
+                                    Lhs.PATTERN, Root.FUNCTION, TermLevel.LAMBDA, Constrained.YES,
+                                    Products.ALLOWED));
+    assertFalse(trs.verifyProperties(Level.FIRSTORDER, Constrained.NO, Products.DISALLOWED,
+                                     Lhs.PATTERN, Root.FUNCTION));
+  }
+
+  @Test
+  public void testVerifyPropertiesWithRules() {
+    Variable z = TermFactory.createVar("Z", type("a -> b"));
+    Variable y = TermFactory.createVar("y", type("a"));
+    Variable x = TermFactory.createBinder("x", type("a"));
+    Variable u = TermFactory.createVar("u", type("Int"));
+    
+    // h(Z, y) -> h(λx.b, y)
+    Rule rule1 = TrsFactory.createRule(TermFactory.createApp(h, z, y),
+                   TermFactory.createApp(h, TermFactory.createAbstraction(x, b), y));
+    // Z(A) -> B
+    Rule rule2 = TrsFactory.createRule(z.apply(a), b);
+    // g(u) -> A | y > 0
+    Rule rule3 = TrsFactory.createRule(g.apply(u), a, TermFactory.createApp(
+      TheoryFactory.greaterSymbol, u, TheoryFactory.createValue(0)));
+
+    Alphabet alf = new Alphabet(List.of(f,g,h,a,b));
+    TRS ams1 = TrsFactory.createTrs(alf, List.of(rule1), TrsFactory.AMS);
+    TRS ams2 = TrsFactory.createTrs(alf, List.of(rule1, rule2), TrsFactory.AMS);
+    TRS ams3 = TrsFactory.createTrs(alf, List.of(rule1, rule2), Set.of("f"), true, TrsFactory.AMS);
+    TRS lcstrs1 = TrsFactory.createTrs(alf, List.of(rule3), TrsFactory.LCSTRS);
+    TRS lcstrs2 = TrsFactory.createTrs(alf, List.of(rule2, rule3), TrsFactory.LCSTRS);
+
+    assertTrue(ams1.verifyProperties(
+      Level.LAMBDA, Constrained.NO, Products.DISALLOWED, Lhs.PATTERN, Root.FUNCTION));
+    assertFalse(ams2.verifyProperties(
+      Level.LAMBDA, Constrained.NO, Products.DISALLOWED, Lhs.PATTERN, Root.FUNCTION));
+    assertTrue(ams2.verifyProperties(
+      Level.LAMBDA, Constrained.NO, Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY));
+    assertFalse(ams3.verifyProperties(
+      Level.LAMBDA, Constrained.NO, Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY));
+    assertTrue(ams3.verifyProperties(
+      Level.LAMBDA, Constrained.NO, Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY,
+      RuleScheme.Eta));
+
+    assertTrue(lcstrs1.verifyProperties(
+      Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED, Lhs.PATTERN, Root.FUNCTION));
+    assertFalse(lcstrs1.verifyProperties(
+      Level.FIRSTORDER, Constrained.YES, Products.DISALLOWED, Lhs.PATTERN, Root.FUNCTION));
+    assertTrue(lcstrs1.verifyProperties(
+      Level.FIRSTORDER, Constrained.YES, Products.DISALLOWED, Lhs.PATTERN, Root.FUNCTION,
+      TermLevel.APPLICATIVE, Constrained.YES, Products.DISALLOWED));
+    
+    assertFalse(lcstrs2.verifyProperties(
+      Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED, Lhs.PATTERN, Root.FUNCTION));
+    assertTrue(lcstrs2.verifyProperties(
+      Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY));
   }
 }
 

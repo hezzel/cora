@@ -203,6 +203,70 @@ public class TRS {
     return _level.compareTo(TermLevel.APPLICATIVE) <= 0;
   }
 
+  /**
+   * Returns true if all of the following hold:
+   * (a) all the rules satisfy AT MOST the given properties (e.g., if Level.APPLICATIVE is given
+   *     is is okay to have first-order rules, but not rules with lambdas)
+   * (b) term construction in the current TRS also follows the given properties (e.g., if
+   *     Constrained.NO is given, then the TRS should not include theory symbols even if the
+   *     rules don't use them); if Level.META is given then any level of terms is included
+   * (c) the TRS does not have the Eta rule scheme, or Eta is given as an additional argument
+   * Returns false otherwise.
+   *
+   * Note: some settings automatically imply the inclusion of certain rule schemes:
+   *   - if lvl = Level.LAMBDA or lvl = Level.META, then Beta is automatically included
+   *   - if theories = Constrained.YES, then Calc is automatically included
+   *   - if products = Products.ALLOWED, then Projection is automatically included
+   * Hence, any method indicating these settings should also support the presence of these rule
+   * schemes.  However, these do not need to be listed in the call to verifyProperties.
+   */
+  public boolean verifyProperties(Level lvl, Constrained theories, Products products, Lhs pattern,
+                                  Root rootstat, RuleScheme ...additionalSchemes) {
+    if (_theoriesIncluded && theories == Constrained.NO) return false;
+    if (_productsIncluded && products == Products.DISALLOWED) return false;
+    if (TrsProperties.translateRuleToTermLevel(lvl).compareTo(_level) < 0) return false;
+    if (!schemesIncluded(additionalSchemes)) return false;
+    RuleRestrictions rest = new RuleRestrictions(lvl, theories, products, pattern, rootstat);
+    return rest.covers(_rulesProperties);
+  }
+
+  /**
+   * Returns true if all of the following hold:
+   * (a) all the rules satisfy AT MOST the given properties (e.g., if Level.APPLICATIVE is given
+   *     is is okay to have first-order rules, but not rules with lambdas)
+   * (b) term construction in the current TRS follows the given "term" properties
+   * (c) the TRS does not have the Eta rule scheme, or Eta is given as an additional argument
+   * Returns false otherwise.
+   *
+   * Note: some settings automatically imply the inclusion of certain rule schemes:
+   *   - if termLevel = TermLevel.LAMBDA, then Beta is automatically included
+   *   - if termTheories = Constrained.YES, then Calc is automatically included
+   *   - if termProducts = Products.ALLOWED, then Projection is automatically included
+   * Hence, any method indicating these settings should also support the presence of these rule
+   * schemes.  However, these do not need to be listed in the call to verifyProperties.
+   */
+  public boolean verifyProperties(Level ruleLevel, Constrained ruleTheories, Products ruleProducts,
+                                  Lhs pattern, Root rootstat, TermLevel termLevel,
+                                  Constrained termTheories, Products termProducts,
+                                  RuleScheme ...additionalSchemes) {
+    if (_theoriesIncluded && termTheories == Constrained.NO) return false;
+    if (_productsIncluded && termProducts == Products.DISALLOWED) return false;
+    if (termLevel.compareTo(_level) < 0) return false;
+    if (!schemesIncluded(additionalSchemes)) return false;
+    RuleRestrictions rest =
+      new RuleRestrictions(ruleLevel, ruleTheories, ruleProducts, pattern, rootstat);
+    return rest.covers(_rulesProperties);
+  }
+
+  /** Returns true if all our rule schemes are included in supported */
+  private boolean schemesIncluded(RuleScheme[] supported) {
+    if (!_schemes.contains(RuleScheme.Eta)) return true;
+    for (RuleScheme s : supported) {
+      if (s == RuleScheme.Eta) return true;
+    }
+    return false;
+  }
+
   /** Returns whether the given term is allowed to be used in this TRS. */
   public boolean termAllowed(Term term) {
     if (isFirstOrder()) {

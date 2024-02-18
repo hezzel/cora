@@ -162,6 +162,11 @@ class RuleRestrictions {
     return null;
   }
 
+  /** This returns if all our properties are ≥ than those of other. */
+  boolean covers(RuleRestrictions other) {
+    return checkCoverage(other) == null;
+  }
+
   /** This returns the smallest RuleRestrictions class that is ≥ both this and other. */
   RuleRestrictions supremum(RuleRestrictions other) {
     Level maxlevel = _level;

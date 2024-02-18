@@ -109,7 +109,7 @@ public class TrsFactory {
     ImmutableList.Builder<TRS.RuleScheme> newschemes = ImmutableList.<TRS.RuleScheme>builder();
     if (kind._restrictions.queryLevel().compareTo(Level.LAMBDA) >= 0) {
       newschemes.add(TRS.RuleScheme.Beta);
-      if (includeEta) newschemes.add(TRS.RuleScheme.Beta);
+      if (includeEta) newschemes.add(TRS.RuleScheme.Eta);
     }
     else if (includeEta) {
       throw new IllegalRuleError("Eta can only be added to TRSs whose term formation includes " +
