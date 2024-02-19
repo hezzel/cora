@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,31 +13,29 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rewriting;
+package cora.reduction;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import cora.types.TypeFactory;
 import cora.terms.*;
 
-public class CalcTest {
+public class CalcReducerTest {
   private Term plus() { return TheoryFactory.plusSymbol; }
   private Term v(int i) { return TheoryFactory.createValue(i); }
   private Term v(boolean b) { return TheoryFactory.createValue(b); }
 
   @Test
   public void testBasics() {
-    Scheme scheme = new Calc();
-    assertTrue(scheme.isCalc());
-    assertFalse(scheme.isBeta());
-    assertFalse(scheme.isEta());
+    ReduceObject scheme = new CalcReducer();
     assertTrue(scheme.toString().equals(
       "calc : f(x1,...,xk) → y [f(x1,...,xk) = y] for f ∈ Σ_{theory}"));
   }
 
   @Test
-  public void testBasicCalc() {
-    Scheme scheme = new Calc();
+  public void testBasicCalcReducer() {
+    ReduceObject scheme = new CalcReducer();
 
     // 1 + 1
     Term t = plus().apply(v(1)).apply(v(1));
@@ -52,7 +50,7 @@ public class CalcTest {
 
   @Test
   public void testTheoryTermButNotApplicableAtTop() {
-    Scheme scheme = new Calc();
+    ReduceObject scheme = new CalcReducer();
     // 0 + 1 < 3
     Term t = TheoryFactory.smallerSymbol.apply(plus().apply(v(0)).apply(v(1))).apply(v(3));
     assertFalse(scheme.applicable(t));
@@ -61,7 +59,7 @@ public class CalcTest {
 
   @Test
   public void testPartiallyApplied() {
-    Scheme scheme = new Calc();
+    ReduceObject scheme = new CalcReducer();
     // *(0)
     Term t = TheoryFactory.timesSymbol.apply(v(0));
     assertFalse(scheme.applicable(t));
@@ -70,7 +68,7 @@ public class CalcTest {
 
   @Test
   public void testApplyToValue() {
-    Scheme scheme = new Calc();
+    ReduceObject scheme = new CalcReducer();
     // true
     Term t = v(true);
     assertFalse(scheme.applicable(t));
@@ -78,8 +76,8 @@ public class CalcTest {
   }
 
   @Test
-  public void testCalculationSymbolOnVariable() {
-    Scheme scheme = new Calc();
+  public void testCalcReducerulationSymbolOnVariable() {
+    ReduceObject scheme = new CalcReducer();
     // 0 > x
     Term t = TheoryFactory.greaterSymbol.apply(v(0)).apply(TermFactory.createVar(
       v(0).queryType()));
@@ -89,7 +87,7 @@ public class CalcTest {
 
   @Test
   public void testVariableAppliedToValues() {
-    Scheme scheme = new Calc();
+    ReduceObject scheme = new CalcReducer();
     // X(0, 1)
     Term x = TermFactory.createBinder("X", plus().queryType());
     Term t = x.apply(v(0)).apply(v(1));
@@ -98,8 +96,8 @@ public class CalcTest {
   }
 
   @Test
-  public void testFakeCalculation() {
-    Scheme scheme = new Calc();
+  public void testFakeCalcReducerulation() {
+    ReduceObject scheme = new CalcReducer();
     // plus(37, 42)
     Term f = TermFactory.createConstant("+", plus().queryType());
     Term t = f.apply(v(37)).apply(v(42));

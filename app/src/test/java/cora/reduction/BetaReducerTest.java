@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,16 +13,18 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rewriting;
+package cora.reduction;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import cora.types.TypeFactory;
 import cora.terms.*;
 
-public class BetaTest {
+public class BetaReducerTest {
   @Test
-  public void testBasicBeta() {
+  public void testBasicBetaReducer() {
     // (λx.f(x,y))(a) → f(a, y)
     FunctionSymbol f = TermFactory.createConstant("f", 2);
     FunctionSymbol a = TermFactory.createConstant("a", 0);
@@ -31,17 +33,14 @@ public class BetaTest {
     Term s = TermFactory.createApp(TermFactory.createAbstraction(x,
       TermFactory.createApp(f, x, y)), a);
 
-    Beta beta = new Beta();
-    assertTrue(beta.isBeta());
-    assertFalse(beta.isEta());
-    assertFalse(beta.isCalc());
+    BetaReducer beta = new BetaReducer();
     assertTrue(beta.applicable(s));
     Term t = beta.apply(s);
     assertTrue(t.toString().equals("f(a, y)"));
   }
 
   @Test
-  public void testBetaAtHead() {
+  public void testBetaReducerAtHead() {
     // (λx.λy.f(x, f(y, x)))(a, b) → (λy.f(a, f(y, a)))(b)
     FunctionSymbol f = TermFactory.createConstant("f", 2);
     FunctionSymbol a = TermFactory.createConstant("a", 0);
@@ -52,14 +51,14 @@ public class BetaTest {
       TermFactory.createApp(f, x, TermFactory.createApp(f, y, x))));
     Term s = TermFactory.createApp(abs, a, b);
 
-    Beta beta = new Beta();
+    BetaReducer beta = new BetaReducer();
     assertTrue(beta.applicable(s));
     Term t = beta.apply(s);
     assertTrue(t.toString().equals("(λy.f(a, f(y, a)))(b)"));
   }
 
   @Test
-  public void testBetaEta() {
+  public void testBetaReducerEta() {
     // (λx.f(y,x))(f(z,z)) → f(y, f(z, z))
     FunctionSymbol f = TermFactory.createConstant("f", 2);
     Variable x = TermFactory.createBinder("x", TypeFactory.unitSort);
@@ -68,31 +67,31 @@ public class BetaTest {
     Term abs = TermFactory.createAbstraction(x, TermFactory.createApp(f, y, x));
     Term s = TermFactory.createApp(abs, TermFactory.createApp(f, z, z));
 
-    Beta beta = new Beta();
+    BetaReducer beta = new BetaReducer();
     assertTrue(beta.applicable(s));
     Term t = beta.apply(s);
     assertTrue(t.toString().equals("f(y, f(z, z))"));
   }
 
   @Test
-  public void testAbstractionNoBeta() {
+  public void testAbstractionNoBetaReducer() {
     // λx.f(x)
     FunctionSymbol f = TermFactory.createConstant("f", 1);
     Variable x = TermFactory.createBinder("x", TypeFactory.unitSort);
     Term s = TermFactory.createAbstraction(x, TermFactory.createApp(f, x));
-    Beta beta = new Beta();
+    BetaReducer beta = new BetaReducer();
     assertFalse(beta.applicable(s));
     assertTrue(beta.apply(s) == null);
   }
 
   @Test
-  public void testApplicationNoBeta() {
+  public void testApplicationNoBetaReducer() {
     // f(a, b)
     FunctionSymbol f = TermFactory.createConstant("f", 2);
     FunctionSymbol a = TermFactory.createConstant("a", 0);
     FunctionSymbol b = TermFactory.createConstant("b", 0);
     Term s = TermFactory.createApp(f, a, b);
-    Beta beta = new Beta();
+    BetaReducer beta = new BetaReducer();
     assertFalse(beta.applicable(s));
     assertTrue(beta.apply(s) == null);
   }

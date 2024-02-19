@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,31 +13,29 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rewriting;
+package cora.reduction;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import cora.types.TypeFactory;
 import cora.terms.*;
 
-public class EtaTest {
+public class EtaReducerTest {
   @Test
-  public void testBasicEta() {
+  public void testBasicEtaReducer() {
     // λx.f(x) → f
     FunctionSymbol f = TermFactory.createConstant("f", 1);
     Variable x = TermFactory.createBinder("x", TypeFactory.unitSort);
     Term s = TermFactory.createAbstraction(x, f.apply(x));
-    Eta eta = new Eta();
-    assertTrue(eta.isEta());
-    assertFalse(eta.isBeta());
-    assertFalse(eta.isCalc());
+    EtaReducer eta = new EtaReducer();
     assertTrue(eta.applicable(s));
     Term t = eta.apply(s);
     assertTrue(t.equals(f));
   }
 
   @Test
-  public void testEtaAtHead() {
+  public void testEtaReducerAtHead() {
     // (λx.f(y, x))(a, b) → f(y, a, b)
     FunctionSymbol f = TermFactory.createConstant("f", 3);
     FunctionSymbol a = TermFactory.createConstant("a", 0);
@@ -46,7 +44,7 @@ public class EtaTest {
     Variable y = TermFactory.createBinder("y", TypeFactory.unitSort);
     Term abs = TermFactory.createAbstraction(x, TermFactory.createApp(f, y, x));
     Term s = TermFactory.createApp(abs, a, b);
-    Eta eta = new Eta();
+    EtaReducer eta = new EtaReducer();
     assertTrue(eta.applicable(s));
     Term t = eta.apply(s);
     assertTrue(t.toString().equals("f(y, a, b)"));
@@ -62,7 +60,7 @@ public class EtaTest {
     Term abs = TermFactory.createAbstraction(y, TermFactory.createApp(f, x, y));
       // λy.f(x,y)
     Term s = TermFactory.createAbstraction(x, TermFactory.createApp(abs, a, x));
-    Eta eta = new Eta();
+    EtaReducer eta = new EtaReducer();
     assertFalse(eta.applicable(s));
     assertTrue(eta.apply(s) == null);
   }
@@ -76,7 +74,7 @@ public class EtaTest {
     Variable y = TermFactory.createBinder("y", TypeFactory.unitSort);
     Term abs = TermFactory.createAbstraction(x, TermFactory.createApp(f, y, x).apply(x));
     Term s = abs.apply(a);
-    Eta eta = new Eta();
+    EtaReducer eta = new EtaReducer();
     assertFalse(eta.applicable(s));
     assertTrue(eta.apply(s) == null);
   }

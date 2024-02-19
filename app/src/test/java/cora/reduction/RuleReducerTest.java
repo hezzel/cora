@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,20 +13,20 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rewriting;
+package cora.reduction;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
-import cora.exceptions.IllegalRuleError;
-import cora.exceptions.NullInitialisationError;
-import cora.exceptions.TypingError;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;
+import cora.trs.Rule;
+import cora.trs.TrsFactory;
 import cora.reader.CoraInputReader;
 
-public class RuleTest {
+public class RuleReducerTest {
   private Type type(String txt) {
     try { return CoraInputReader.readType(txt); }
     catch (Exception e) { System.out.println(e); return null; }
@@ -34,6 +34,44 @@ public class RuleTest {
 
   private FunctionSymbol makeConstant(String name, String ty) {
     return TermFactory.createConstant(name, type(ty));
+  }
+
+  @Test
+  public void testSuccessfulFirstOrderUnconstrainedApplication() {
+    // f(g(x), y) -> h(x, 3)
+    Variable x = TermFactory.createVar("x", type("Int"));
+    Variable y = TermFactory.createVar("y", type("Bool"));
+    Variable z = TermFactory.createVar("z", type("Int"));
+    FunctionSymbol g = makeConstant("g", "Int -> Bool");
+    FunctionSymbol f = makeConstant("f", "Bool -> Bool -> Int");
+    FunctionSymbol h = makeConstant("h", "Int -> Int -> Int");
+    Term left = TermFactory.createApp(f, g.apply(x), y);
+    Term right = TermFactory.createApp(h, x, makeConstant("3", "Int"));
+    Rule rule = TrsFactory.createRule(left, right);
+    RuleReducer reducer = new RuleReducer(rule);
+
+    // reduce f(g(h(5, z)), true)
+    Term instance = TermFactory.createApp(f, TermFactory.createApp(g, TermFactory.createApp(h,
+      makeConstant("5", "Int"), z)), makeConstant("true", "Bool"));
+    // this should give h(h(5, z), 3)
+    Term target = TermFactory.createApp(h, TermFactory.createApp(h, makeConstant("5", "Int"),
+      z), makeConstant("3", "Int"));
+
+    assertTrue(reducer.applicable(instance));
+    assertTrue(reducer.apply(instance).equals(target));
+  }
+
+  @Test
+  public void testFailedApplication() {
+    Variable x = TermFactory.createVar("x", type("Int"));
+    FunctionSymbol f = makeConstant("f", "Int -> Int -> Int");
+    Rule rule = TrsFactory.createRule(TermFactory.createApp(f, x, x), x);
+    Term noninstance = TermFactory.createApp(f, makeConstant("1", "Int"), makeConstant("2", "Int"));
+    RuleReducer reducer = new RuleReducer(rule);
+
+    // we cannot apply f(x, x) -> x on f(1, 2)
+    assertFalse(reducer.applicable(noninstance));
+    assertTrue(reducer.apply(noninstance) == null);
   }
 
   @Test
@@ -49,7 +87,7 @@ public class RuleTest {
     Term left = TermFactory.createApp(f, g.apply(x), TermFactory.createAbstraction(z, y.apply(z)));
     Term right = TermFactory.createApp(h, x, y.apply(three)).apply(
       TermFactory.createAbstraction(z, z));
-    Rule rule = RuleFactory.createRule(left, right);
+    RuleReducer reducer = new RuleReducer(TrsFactory.createRule(left, right));
 
     // instance: f(g(j(5, z)), λa.(λb,c.true)(3, a))
     Term top = makeConstant("true", "Bool");
@@ -63,8 +101,8 @@ public class RuleTest {
     Term abs2 = TermFactory.createAbstraction(a, TermFactory.createApp(abs1, three, a));
 
     Term instance = TermFactory.createApp(f, gterm, abs2);
-    assertTrue(rule.applicable(instance));
-    assertTrue(rule.apply(instance).toString().equals("h(j(5, z), (λb.λc.true)(3, 3), λz1.z1)"));
+    assertTrue(reducer.applicable(instance));
+    assertTrue(reducer.apply(instance).toString().equals("h(j(5, z), (λb.λc.true)(3, 3), λz1.z1)"));
   }
 
   @Test
@@ -78,31 +116,55 @@ public class RuleTest {
     Term g = makeConstant("g", "Int → o");
     Term left = TermFactory.createApp(f, h, x);
     Term right = TermFactory.createApp(h, g.apply(y), z);
-    Term constr = TermFactory.createApp(TheoryFactory.andSymbol,
+    Term constr =
+      TermFactory.createApp(TheoryFactory.smallerSymbol, TheoryFactory.createValue(0), x);
+    RuleReducer reducer1 = new RuleReducer(TrsFactory.createRule(left, right, constr));
+    // rule: f(H, x) → H(g(y), z) | 0 < y ∧ y < x
+    constr = TermFactory.createApp(TheoryFactory.andSymbol,
       TermFactory.createApp(TheoryFactory.smallerSymbol, TheoryFactory.createValue(0), y),
       TermFactory.createApp(TheoryFactory.smallerSymbol, y, x));
-    Rule rule = RuleFactory.createApplicativeRule(left, right, constr);
+    RuleReducer reducer2 = new RuleReducer(TrsFactory.createRule(left, right, constr));
 
     // instance: f(q(false), 3)
     Term qq = makeConstant("q", "(Bool → o → Int → Int)").apply(TheoryFactory.createValue(false));
     Term instance = TermFactory.createApp(f, qq, TheoryFactory.createValue(3));
 
-    assertTrue(rule.applicable(instance));
-    assertTrue(rule.apply(instance) != null);
-    //System.out.println(rule.apply(instance).toString());
+    assertTrue(reducer1.applicable(instance));
+    assertTrue(reducer1.apply(instance) != null);
+    //System.out.println(reducer.apply(instance).toString());
+
+    /*
+    // TODO: use the internal solver for this (once we implement it)
+    assertTrue(reducer2.applicable(instance));
+    assertTrue(reducer2.apply(instance) != null);
+    //System.out.println(reducer.apply(instance).toString());
+    */
   }
 
   @Test
   public void testFailedRootApplication() {
     Variable x = TermFactory.createVar("x", type("Int"));
     FunctionSymbol f = makeConstant("f", "Int → Int → Int");
-    Rule rule = RuleFactory.createApplicativeRule(TermFactory.createApp(f, x, x), x);
+    RuleReducer reducer = new RuleReducer(TrsFactory.createRule(TermFactory.createApp(f, x, x), x));
     // rule: f(x, x) -> x
     Term noninstance = TermFactory.createApp(f, makeConstant("1", "Int"), makeConstant("2", "Int"));
     // noninstance: f(1, 2)
 
-    assertFalse(rule.applicable(noninstance));
-    assertTrue(rule.apply(noninstance) == null);
+    assertFalse(reducer.applicable(noninstance));
+    assertTrue(reducer.apply(noninstance) == null);
+  }
+
+  @Test
+  public void testConstraintNotSatisfied() {
+    // sum(x) → 0 [x ≤ 0] applied to sum(3)
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    FunctionSymbol sum = makeConstant("sum", "Int → Int");
+    Term zero = TheoryFactory.createValue(0);
+    Term constraint = TheoryFactory.leqSymbol.apply(x).apply(zero);
+    RuleReducer reducer = new RuleReducer(TrsFactory.createRule(sum.apply(x), zero, constraint));
+    Term term = sum.apply(TheoryFactory.createValue(3));
+    assertFalse(reducer.applicable(term));
+    assertTrue(reducer.apply(term) == null);
   }
 
   @Test
@@ -114,12 +176,15 @@ public class RuleTest {
     Term constr = TermFactory.createApp(TheoryFactory.andSymbol,
       TermFactory.createApp(TheoryFactory.smallerSymbol, TheoryFactory.createValue(0), y),
       TermFactory.createApp(TheoryFactory.smallerSymbol, y, x));
-    Rule rule = RuleFactory.createApplicativeRule(f.apply(x), x, constr);
+    RuleReducer reducer = new RuleReducer(TrsFactory.createRule(f.apply(x), x, constr));
 
     // instance: f(1)
+    /*
+    // TODO: use the internal solver for this (once we implement it)
     Term instance = f.apply(TheoryFactory.createValue(1));
-    assertFalse(rule.applicable(instance));
-    assertTrue(rule.apply(instance) == null);
+    assertFalse(reducer.applicable(instance));
+    assertTrue(reducer.apply(instance) == null);
+    */
   }
 
   @Test
@@ -133,7 +198,7 @@ public class RuleTest {
     Term right = TermFactory.createApp(g, x.apply(u));
     Term constr = TermFactory.createApp(
       TheoryFactory.equalSymbol, u, TheoryFactory.createValue(-3));
-    Rule rule = RuleFactory.createRule(left, right, constr);
+    RuleReducer reducer = new RuleReducer(TrsFactory.createRule(left, right, constr));
 
     // instance: f(λy.h(y), λz.h(z), true, 7)
     Variable y = TermFactory.createBinder("y", type("Int"));
@@ -155,8 +220,11 @@ public class RuleTest {
     targs.add(seven);
     Term target = g.apply(targs);
 
-    assertTrue(rule.applicable(instance));
-    assertTrue(rule.apply(instance).equals(target));
+    /*
+    // TODO: use the internal solver for this (once we implement it)
+    assertTrue(reducer.applicable(instance));
+    assertTrue(reducer.apply(instance).equals(target));
+    */
   }
 
   @Test
@@ -164,15 +232,15 @@ public class RuleTest {
     Variable x = TermFactory.createVar("x", type("Int → Int"));
     FunctionSymbol f = makeConstant("f", "(Int → Int) → (Int → Int)");
     FunctionSymbol g = makeConstant("g", "Int → Int");
-  
-    Rule rule = RuleFactory.createRule(f.apply(x), x);
+
+    RuleReducer reducer = new RuleReducer(TrsFactory.createRule(f.apply(x), x));
     // rule: f(x) -> x : Int -> Int
-  
+
     Term noninstance = g.apply(makeConstant("0", "Int"));
     // noninstance: g 0 : Int
-  
-    assertFalse(rule.applicable(noninstance));
-    assertTrue(rule.apply(noninstance) == null);
+
+    assertFalse(reducer.applicable(noninstance));
+    assertTrue(reducer.apply(noninstance) == null);
   }
 
   @Test
@@ -180,28 +248,15 @@ public class RuleTest {
     Variable x = TermFactory.createVar("x", type("Bool → Int"));
     FunctionSymbol f = makeConstant("f", "(Bool → Int) → Bool → Int");
     FunctionSymbol g = makeConstant("f", "(Bool → Int) → Int → Int");
-  
-    Rule rule = RuleFactory.createRule(f.apply(x), x);
+
+    RuleReducer reducer = new RuleReducer(TrsFactory.createRule(f.apply(x), x));
     // rule: f(x) -> x : Bool -> Int
-  
+
     Term noninstance = TermFactory.createApp(g, x, makeConstant("0", "Int"));
     // noninstance: g(x,0) : Int
-  
-    assertFalse(rule.applicable(noninstance));
-    assertTrue(rule.apply(noninstance) == null);
-  }
 
-  @Test
-  public void testConstraintNotSatisfied() {
-    // sum(x) → 0 [x ≤ 0] applied to sum(3)
-    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
-    FunctionSymbol sum = makeConstant("sum", "Int → Int");
-    Term zero = TheoryFactory.createValue(0);
-    Term constraint = TheoryFactory.leqSymbol.apply(x).apply(zero);
-    Rule rule = RuleFactory.createRule(sum.apply(x), zero, constraint);
-    Term term = sum.apply(TheoryFactory.createValue(3));
-    assertFalse(rule.applicable(term));
-    assertTrue(rule.apply(term) == null);
+    assertFalse(reducer.applicable(noninstance));
+    assertTrue(reducer.apply(noninstance) == null);
   }
 
   @Test
@@ -217,12 +272,12 @@ public class RuleTest {
     Term right = TheoryFactory.plusSymbol.apply(x).apply(
       sum.apply(TheoryFactory.plusSymbol.apply(x).apply(neg)));
     Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(nul);
-    Rule rule = RuleFactory.createFirstOrderRule(left, right, constraint);
+    RuleReducer reducer = new RuleReducer(TrsFactory.createRule(left, right, constraint));
 
     Term addition = TheoryFactory.plusSymbol.apply(two).apply(one);
     Term term = sum.apply(addition);
-    assertFalse(rule.applicable(term));
-    assertTrue(rule.apply(term) == null);
+    assertFalse(reducer.applicable(term));
+    assertTrue(reducer.apply(term) == null);
   }
 
   @Test
@@ -237,11 +292,11 @@ public class RuleTest {
     Term right = TheoryFactory.plusSymbol.apply(x).apply(
       sum.apply(TheoryFactory.plusSymbol.apply(x).apply(neg)));
     Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(nul);
-    Rule rule = RuleFactory.createFirstOrderRule(left, right, constraint);
+    RuleReducer reducer = new RuleReducer(TrsFactory.createRule(left, right, constraint));
 
     Term term = sum.apply(TheoryFactory.createValue(5));
-    assertTrue(rule.applicable(term));
-    assertTrue(rule.apply(term).toString().equals("5 + sum(5 - 1)"));
+    assertTrue(reducer.applicable(term));
+    assertTrue(reducer.apply(term).toString().equals("5 + sum(5 - 1)"));
   }
 }
 

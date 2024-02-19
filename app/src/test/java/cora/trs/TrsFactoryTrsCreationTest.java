@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 import cora.exceptions.IllegalRuleError;
 import cora.exceptions.IllegalSymbolError;
@@ -216,6 +217,70 @@ public class TrsFactoryTrsCreationTest {
                                     TermFactory.createApp(g.apply(b), x, x),
                                     TrsFactory.LCSTRS));
     TrsFactory.createTrs(alf, rules, TrsFactory.MSTRS);
+  }
+
+  private TRS createSemiCFS(boolean includeEta) {
+    // f(Z(a), λx.Y) → Z(Y)
+    // g(a, X, Y) → g(b, Y, h(λz.z, X))
+    // h(Z, X) → Z(X)
+    ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
+    ArrayList<Rule> rules = new ArrayList<Rule>();
+    FunctionSymbol a = TermFactory.createConstant("a", type("A"));
+    FunctionSymbol b = TermFactory.createConstant("b", type("A"));
+    FunctionSymbol c = TermFactory.createConstant("c", type("B"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("B → (B → A) → B"));
+    FunctionSymbol g = TermFactory.createConstant("g", type("A → A → A → B"));
+    FunctionSymbol h = TermFactory.createConstant("h", type("(A → A) → A → A"));
+    Variable x1 = TermFactory.createBinder("x", type("B"));
+    Variable y1 = TermFactory.createVar("Y", type("A"));
+    Variable z1 = TermFactory.createVar("Z", type("A → B"));
+    Variable x2 = TermFactory.createVar("X", type("A"));
+    Variable y2 = TermFactory.createVar("Y", type("A"));
+    Variable z2 = TermFactory.createBinder("z", type("A"));
+    Variable x3 = TermFactory.createVar("X", type("A"));
+    Variable z3 = TermFactory.createVar("Z", type("A → A"));
+    symbols.add(a);
+    symbols.add(b);
+    symbols.add(c);
+    symbols.add(f);
+    symbols.add(g);
+    symbols.add(h);
+    rules.add(TrsFactory.createRule(
+      TermFactory.createApp(f, z1.apply(a), TermFactory.createAbstraction(x1, y1)), z1.apply(y1)));
+    Term abs = TermFactory.createAbstraction(z2, z2);
+    rules.add(TrsFactory.createRule(
+      TermFactory.createApp(g.apply(a), x2, y2),
+      TermFactory.createApp(g.apply(b), y2, TermFactory.createApp(h, abs, x2))));
+    rules.add(TrsFactory.createRule(TermFactory.createApp(h, z3, x3), z3.apply(x3)));
+    return TrsFactory.createTrs(new Alphabet(symbols), rules, new TreeSet<String>(), includeEta,
+                                TrsFactory.AMS);
+  }
+
+  @Test
+  public void testCreateCFSWithoutEta() {
+    TRS trs = createSemiCFS(false);
+    assertTrue(trs.queryRuleCount() == 3);
+    assertTrue(trs.queryRule(0).toString().equals("f(Z(a), λx.Y) → Z(Y)"));
+    assertTrue(trs.queryRule(1).toString().equals("g(a, X, Y) → g(b, Y, h(λz.z, X))"));
+    assertTrue(trs.queryRule(2).toString().equals("h(Z, X) → Z(X)"));
+    assertTrue(trs.querySchemeCount() == 1);
+    assertTrue(trs.queryScheme(0) == TRS.RuleScheme.Beta);
+    assertTrue(trs.lookupSymbol("f").equals(
+      TermFactory.createConstant("f", type("B → (B → A) → B"))));
+    assertTrue(trs.lookupSymbol("i") == null);
+  }
+
+  @Test
+  public void testCreateCFSWithEta() {
+    TRS trs = createSemiCFS(true);
+    assertTrue(trs.queryRuleCount() == 3);
+    assertTrue(trs.queryRule(1).toString().equals("g(a, X, Y) → g(b, Y, h(λz.z, X))"));
+    assertTrue(trs.querySchemeCount() == 2);
+    assertTrue(trs.queryScheme(0) == TRS.RuleScheme.Beta);
+    assertTrue(trs.queryScheme(1) == TRS.RuleScheme.Eta);
+    assertTrue(trs.lookupSymbol("h").equals(
+      TermFactory.createConstant("h", type("(A → A) → (A → A)"))));
+    assertTrue(trs.lookupSymbol("i") == null);
   }
 }
 
