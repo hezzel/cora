@@ -4,7 +4,7 @@ import cora.exceptions.NullInitialisationError;
 import cora.utils.Pair;
 import cora.types.TypeFactory;
 import cora.terms.*;
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 import cora.smt.TermAnalyser;
 import cora.termination.dependency_pairs.DP;
 import org.jetbrains.annotations.NotNull;

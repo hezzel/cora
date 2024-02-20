@@ -32,7 +32,7 @@ import cora.parser.Parser.*;
 import cora.parser.ITrsParser;
 import cora.types.*;
 import cora.terms.*;
-import cora.rewriting.*;
+import cora.trs.*;
 
 /**
  * This class reads text from string or file written in the .itrs format that up until 2023 was used
@@ -410,26 +410,9 @@ public class ITrsInputReader {
     Term constraint = null;
     if (rule.constraint() != null) constraint = makeTerm(rule.constraint(), null);
 
-    for (Variable x : r.vars()) {
-      if (!l.vars().contains(x)) {
-        if (constraint == null) constraint = TheoryFactory.createValue(true);
-        if (!constraint.vars().contains(x)) {
-          if (x.queryType().equals(TypeFactory.intSort)) {
-            Term xisx = TermFactory.createApp(TheoryFactory.equalSymbol, x, x);
-            constraint = TermFactory.createApp(TheoryFactory.andSymbol, constraint, xisx);
-          }
-          else if (x.queryType().equals(TypeFactory.boolSort)) {
-            Term xornotx =
-              TermFactory.createApp(TheoryFactory.orSymbol, x, TheoryFactory.notSymbol.apply(x));
-            constraint = TermFactory.createApp(TheoryFactory.andSymbol, constraint, xornotx);
-          }
-        }
-      }
-    }
-
     try {
-      if (constraint != null) return RuleFactory.createFirstOrderRule(l, r, constraint);
-      else return RuleFactory.createFirstOrderRule(l, r);
+      if (constraint != null) return TrsFactory.createRule(l, r, constraint, TrsFactory.LCTRS);
+      else return TrsFactory.createRule(l, r, TrsFactory.LCTRS);
     }
     catch (IllegalRuleError e) {
       storeError(e.queryProblem(), rule.token());
@@ -445,7 +428,7 @@ public class ITrsInputReader {
       if (r != null) rules.add(r);
     }   
     Alphabet alphabet = _symbols.queryCurrentAlphabet();
-    try { return TRSFactory.createLCTRS(alphabet, rules, new TreeSet<FunctionSymbol>()); }
+    try { return TrsFactory.createTrs(alphabet, rules, TrsFactory.LCTRS); }
     catch (IllegalRuleError e) {
       _errors.addError(e.getMessage());
       return null;

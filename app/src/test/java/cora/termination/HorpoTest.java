@@ -19,7 +19,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import cora.terms.FunctionSymbol;
 import cora.terms.TheoryFactory;
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 import cora.reader.CoraInputReader;
 
 public class HorpoTest {

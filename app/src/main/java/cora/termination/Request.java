@@ -1,6 +1,6 @@
 package cora.termination;
 
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 
 public class Request {
 

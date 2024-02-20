@@ -25,8 +25,8 @@ import cora.terms.Term;
 import cora.terms.Variable;
 import cora.terms.FunctionSymbol;
 import cora.terms.TermFactory;
-import cora.rewriting.Rule;
-import cora.rewriting.TRS;
+import cora.trs.Rule;
+import cora.trs.TRS;
 
 public class OCocoSortedInputReaderTest {
   @Test
@@ -198,8 +198,9 @@ public class OCocoSortedInputReaderTest {
       assertTrue(e.getMessage().equals(
       "2:7: Undeclared function symbol: s.\n" +
       "2:18: Undeclared function symbol: s.\n" +
-      "2:13: right-hand side of rule [f(x, s(y)) → f(s(x), y)] contains variable y which does " +
-        "not occur on the left.\n" +
+      "2:13: right-hand side of rule [f(x, s(y)) → f(s(x), y)] contains variable y of type o " +
+        "which does not occur on the left; only variables of theory sorts may occur fresh (and " +
+        "that only in some kinds of TRSs).\n" +
       "3:13: Undeclared function symbol: g.\n"));
         // the third error is given because the variable below s is not recognised as the same
         // variable; this does not cause a problem in the last case, because then x is already
@@ -271,8 +272,9 @@ public class OCocoSortedInputReaderTest {
     try { OCocoSortedInputReader.readTrsFromString(str); }
     catch (ParseError e) {
       assertTrue(e.getMessage().equals(
-        "1:28: right-hand side of rule [f(x, y) → f(y, z)] contains variable z which does " +
-        "not occur on the left.\n"));
+        "1:28: right-hand side of rule [f(x, y) → f(y, z)] contains variable z of type o which " +
+        "does not occur on the left; only variables of theory sorts may occur fresh (and that " +
+        "only in some kinds of TRSs).\n"));
       return;
     }
     assertTrue(false);

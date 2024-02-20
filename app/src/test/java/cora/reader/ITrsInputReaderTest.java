@@ -25,7 +25,7 @@ import cora.terms.Term;
 import cora.terms.Variable;
 import cora.terms.FunctionSymbol;
 import cora.terms.TermFactory;
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 
 public class ITrsInputReaderTest {
   @Test
@@ -173,10 +173,10 @@ public class ITrsInputReaderTest {
       "(RULES f(x) -> g(y, x))\n";
     try { ITrsInputReader.readTrsFromString(str); }
     catch (ParseError e) {
-      System.out.println(e.getMessage());
       assertTrue(e.getMessage().equals(
-        "2:13: right-hand side of rule [f(x) → g(y, x)] contains fresh variable y of type o, " +
-        "which is not a theory sort.\n"));
+        "2:13: right-hand side of rule [f(x) → g(y, x)] contains variable y of type o " +
+          "which does not occur on the left; only variables of theory sorts may occur " +
+          "fresh (and that only in some kinds of TRSs).\n"));
       return;
     }
     assertTrue(false);
@@ -211,8 +211,8 @@ public class ITrsInputReaderTest {
       ")";
     try { ITrsInputReader.readTrsFromString(str); }
     catch (ParseError e) {
-      assertTrue(e.getMessage().equals("Illegal rule creation: Rule ¬y → if(y, false, true) " +
-        "has a theory term as its left-hand side.\n"));
+      assertTrue(e.getMessage().equals("3:8: left-hand side of rule [¬y → if(y, false, true)] " +
+        "is a theory term!\n"));
       return;
     }
     assertTrue(false);

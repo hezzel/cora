@@ -29,7 +29,7 @@ import cora.parser.CoraParser;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;
-import cora.rewriting.*;
+import cora.trs.*;
 
 public class CoraInputReaderTest {
   private Type type(String str) {
@@ -49,8 +49,7 @@ public class CoraInputReaderTest {
   }
 
   private TRS createEmptyTRS(Alphabet alphabet) {
-    return TRSFactory.createCoraTRS(alphabet, new ArrayList<Rule>(), false,
-                                    new TreeSet<FunctionSymbol>());
+    return TrsFactory.createTrs(alphabet, new ArrayList<Rule>(), TrsFactory.CORA);
   }
 
   private TRS generateTRS() {
@@ -62,12 +61,12 @@ public class CoraInputReaderTest {
   @Test
   public void testCorrectDeclaration() {
     ErrorCollector collector = new ErrorCollector();
-    SymbolData data = makeBasicData();
-    String str = "g :: a -> (b -> c) -> d\ng(x,y) -> h";
-    CoraInputReader.readDeclarationForUnitTest(str, data, false, collector);
-    assertTrue(data.lookupFunctionSymbol("g").queryType().toString().equals("a → (b → c) → d"));
-    assertTrue(collector.queryCollectedMessages().equals(
-      "2:1: Expected end of input but got IDENTIFIER (g).\n"));
+    SymbolData data = new SymbolData();
+    CoraInputReader.readDeclarationForUnitTest("public f :: a -> a", data, false, collector);
+    CoraInputReader.readDeclarationForUnitTest("private g :: a -> a", data, false, collector);
+    CoraInputReader.readDeclarationForUnitTest("h :: a -> a", data, false, collector);
+    assertTrue(data.queryPrivateSymbols().size() == 1);
+    assertTrue(data.queryPrivateSymbols().contains("g"));
   }
 
   @Test
@@ -81,7 +80,16 @@ public class CoraInputReaderTest {
       "1:1: Redeclaration of previously declared function symbol f.\n"));
   }
 
-  // no tests yet for public and private, because we don't yet support this in cora.rewriting
+  @Test
+  public void testPublicPrivateStored() {
+    ErrorCollector collector = new ErrorCollector();
+    SymbolData data = makeBasicData();
+    String str = "f :: a -> (b -> c)";
+    CoraInputReader.readDeclarationForUnitTest(str, data, true, collector);
+    assertTrue(data.lookupFunctionSymbol("f").queryType().toString().equals("a → Int"));
+    assertTrue(collector.queryCollectedMessages().equals(
+      "1:1: Redeclaration of previously declared function symbol f.\n"));
+  }
 
   @Test
   public void testRuleWithVariableEnvironment() {
@@ -248,9 +256,7 @@ public class CoraInputReaderTest {
     TRS trs = createEmptyTRS(alphabet);
     try { CoraInputReader.readRule("filter(F,cons(H,T)) -> cons(H, filter(F, T)) | F(H)", trs); }
     catch (ParseError e) {
-      assertTrue(e.getMessage().equals(
-        "1:1: constraint [F(H)] contains a variable F of type Int → Bool; only " +
-        "variables of theory sort are allowed to occur in a constraint.\n"));
+      assertTrue(e.getMessage().equals("1:1: constraint [F(H)] is not first-order.\n"));
       return;
     }
     assertTrue(false);
@@ -260,8 +266,10 @@ public class CoraInputReaderTest {
   public void testUnconstrainedRuleWithFreshVariableInRhs() {
     try { CoraInputReader.readRule(" i(x) -> y", generateTRS()); }
     catch (ParseError e) {
-      assertTrue(e.getMessage().equals("1:2: right-hand side of rule " +
-        "[i(x) → y] contains fresh variable y of type a, which is not a theory sort.\n"));
+      assertTrue(e.getMessage().equals("1:2: right-hand side of rule [i(x) → y] " +
+        "contains variable y of type a which does not occur on the left; only " +
+        "variables of theory sorts may occur fresh (and that only in some kinds " +
+        "of TRSs).\n"));
       return;
     }
     assertTrue(false);
@@ -298,7 +306,7 @@ public class CoraInputReaderTest {
   public void testShortFirstOrderProgram() {
     TRS trs = CoraInputReader.readTrsFromString(
       "0 :: N s :: N -> N add :: N -> N -> N add(0,y) -> y add(s(x),y) -> s(add(x,y))",
-      CoraInputReader.MSTRS);
+      TrsFactory.MSTRS);
     assertTrue(trs.lookupSymbol("0").queryType().toString().equals("N"));
     assertTrue(trs.lookupSymbol("s").queryType().toString().equals("N → N"));
     assertTrue(trs.lookupSymbol("add").queryType().toString().equals("N → N → N"));
@@ -309,8 +317,7 @@ public class CoraInputReaderTest {
   @Test
   public void testWeirdProgram() {
     TRS trs = CoraInputReader.readTrsFromString(
-      "f :: a -> a -> a b :: b f(x,x) -> x b -> b c :: a",
-      CoraInputReader.MSTRS);
+      "f :: a -> a -> a b :: b f(x,x) -> x b -> b c :: a", TrsFactory.MSTRS);
     assertTrue(trs.lookupSymbol("f").queryType().toString().equals("a → a → a"));
     assertTrue(trs.lookupSymbol("b").queryType().toString().equals("b"));
     assertTrue(trs.lookupSymbol("c").queryType().toString().equals("a"));
@@ -323,7 +330,7 @@ public class CoraInputReaderTest {
     TRS trs = CoraInputReader.readTrsFromString(
       "3 :: Int 7 :: Int f :: Bool -> Int -> Bool\n" +
       "{X :: Int -> Int -> Int -> Bool} f(X(3,y,7), y) -> X(7,3,y)",
-      CoraInputReader.STRS);
+      TrsFactory.STRS);
     assertTrue(trs.lookupSymbol("3").queryType().toString().equals("Int"));
     assertTrue(trs.lookupSymbol("7").queryType().toString().equals("Int"));
     assertTrue(trs.lookupSymbol("f").queryType().toString().equals("Bool → Int → Bool"));
@@ -343,7 +350,7 @@ public class CoraInputReaderTest {
     try {
       TRS trs = CoraInputReader.readTrsFromString(
         "3 :: Int 7 :: Int f :: Bool -> Int -> Bool\n" +
-        "f(X(3,y,7), y) -> X(7,3,y)", CoraInputReader.AMS);
+        "f(X(3,y,7), y) -> X(7,3,y)", TrsFactory.AMS);
     }
     catch (ParseError e) {
       assertTrue(e.getMessage().equals(
@@ -376,7 +383,7 @@ public class CoraInputReaderTest {
         "f(x) -> g(2,x)\n" +
         "a :: 3\n" +
         "g(a,y) -> a -> y\n" +
-        "f(2) -> 3\n", CoraInputReader.AMS);
+        "f(2) -> 3\n", TrsFactory.AMS);
     }
     catch (ParseError e) {
       assertTrue(e.getMessage().equals(
@@ -384,8 +391,9 @@ public class CoraInputReaderTest {
         "3:9: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
         "5:1: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
         "5:11: Expected term of type o, but got function symbol a which has type 3.\n" +
-        "6:1: right-hand side of rule [f(2) → 3] contains fresh variable 3 of type nat, which " +
-          "is not a theory sort.\n"));
+        "6:1: right-hand side of rule [f(2) → 3] contains variable 3 of type nat which does " +
+        "not occur on the left; only variables of theory sorts may occur fresh (and that only " +
+        "in some kinds of TRSs).\n"));
       return;
     }
     assertTrue(false);
@@ -402,7 +410,7 @@ public class CoraInputReaderTest {
         "- :: Int -> Int -> Int\n" +
         "f(3) -> 4 | true \n" +
         "-(x, y) -> x + -1 * y\n",
-        CoraInputReader.LCSTRS);
+        TrsFactory.LCSTRS);
     }
     catch (ParseError e) {
       assertTrue(e.getMessage().equals(
@@ -420,11 +428,11 @@ public class CoraInputReaderTest {
   public void testNotFirstOrderDueToSymbol() {
     try {
       TRS trs = CoraInputReader.readTrsFromString(
-        "f :: nat -> nat g :: (nat -> nat) -> nat f(x) → x", CoraInputReader.MSTRS);
+        "f :: nat -> nat g :: (nat -> nat) -> nat f(x) → x", TrsFactory.MSTRS);
     }
     catch (ParseError e) {
       assertTrue(e.getMessage().equals(
-        "Symbol with a type (nat → nat) → nat cannot occur in a many-sorted TRS.\n"));
+        "Symbol g with a type (nat → nat) → nat cannot occur in a first-order TRS.\n"));
       return;
     }
     assertTrue(false);
@@ -434,11 +442,12 @@ public class CoraInputReaderTest {
   public void testNotFirstOrderDueToRule() {
     try {
       TRS trs = CoraInputReader.readTrsFromString(
-        "f :: nat -> nat { F :: nat -> nat } f(F(x)) → x", CoraInputReader.MSTRS);
+        "f :: nat -> nat { F :: nat -> nat } f(F(x)) → x", TrsFactory.MSTRS);
     }
     catch (ParseError e) {
       assertTrue(e.getMessage().equals(
-        "Rule f(F(x)) → x cannot occur in a many-sorted TRS, as it is not first-order.\n"));
+        "1:17: The rule f(F(x)) → x is not allowed to occur in MSTRSs: rule level is " +
+        "limited to first-order terms, not applicative terms.\n"));
       return;
     }
     assertTrue(false);
@@ -448,11 +457,11 @@ public class CoraInputReaderTest {
   public void testNotApplicative() {
     try {
       TRS trs = CoraInputReader.readTrsFromString(
-        "f :: (nat -> nat) -> nat f(F) → f(λx.F(x))", CoraInputReader.STRS);
+        "f :: (nat -> nat) -> nat f(F) → f(λx.F(x))", TrsFactory.STRS);
     }
     catch (ParseError e) {
-      assertTrue(e.getMessage().equals("Rule f(F) → f(λx.F(x)) cannot occur in an applicative " +
-        "(simply-typed) TRS, as it is not applicative.\n"));
+      assertTrue(e.getMessage().equals("1:26: The rule f(F) → f(λx.F(x)) is not allowed to " +
+        "occur in STRSs: rule level is limited to applicative terms, not true terms.\n"));
       return;
     }
     assertTrue(false);
@@ -463,11 +472,11 @@ public class CoraInputReaderTest {
     try {
       TRS trs = CoraInputReader.readTrsFromString(
         "map :: (nat -> nat) -> list -> list nil :: list map(λx.Z[x], nil) → nil",
-        CoraInputReader.CFS);
+        TrsFactory.CFS);
     }
     catch (ParseError e) {
-      assertTrue(e.getMessage().equals("Rule map(λx.Z⟨x⟩, nil) → nil cannot occur in " +
-        "a Curried Functional System, as it contains meta-variables.\n"));
+      assertTrue(e.getMessage().equals("1:49: The rule map(λx.Z⟨x⟩, nil) → nil is not allowed " +
+        "to occur in CFSs: rule level is limited to true terms, not meta-terms.\n"));
       return;
     }
     assertTrue(false);
@@ -477,14 +486,14 @@ public class CoraInputReaderTest {
   public void testReadAMS() {
     TRS trs = CoraInputReader.readTrsFromString(
       "map :: (nat -> nat) -> list -> list nil :: list map(λx.Z[x], nil) → nil",
-      CoraInputReader.AMS);
+      TrsFactory.AMS);
     assertTrue(trs.queryRule(0).queryLeftSide().isPattern());
   }
 
   @Test
   public void testPrivateSymbol() {
     TRS trs = CoraInputReader.readTrsFromString(
-      "public a :: Int private b :: Int c :: Int", CoraInputReader.LCTRS);
+      "public a :: Int private b :: Int c :: Int", TrsFactory.LCTRS);
     Alphabet alphabet = trs.queryAlphabet();
     FunctionSymbol a = alphabet.lookup("a");
     FunctionSymbol b = alphabet.lookup("b");

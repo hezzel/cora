@@ -79,6 +79,7 @@ public class TRS {
   private final ImmutableList<Rule> _rules;
   private final ImmutableList<RuleScheme> _schemes;
   private final TreeSet<String> _private;
+  private TreeSet<FunctionSymbol> _defined;
   private String _trsKind;
   private TermLevel _level;
   private boolean _theoriesIncluded;
@@ -103,6 +104,7 @@ public class TRS {
     _schemes = schemes;
     if (privateSymbols == null) _private = new TreeSet<String>();
     else _private = new TreeSet<String>(privateSymbols);
+    _defined = new TreeSet<FunctionSymbol>();
 
     // ensure that the alphabet follows the requirements we just stored
     verifyAlphabet();
@@ -114,6 +116,8 @@ public class TRS {
       if (rule == null) throw new NullInitialisationError("TRS", "one of the rules");
       _rulesProperties = _rulesProperties.supremum(rule.queryProperties());
       rulebuilder.add(rule);
+      FunctionSymbol root = rule.queryRoot();
+      if (root != null) _defined.add(root);
     }
     _rules = rulebuilder.build();
 
@@ -129,8 +133,8 @@ public class TRS {
     for (FunctionSymbol f : _alphabet.getSymbols()) {
       Type type = f.queryType();
       if (_level == TermLevel.FIRSTORDER && type.queryTypeOrder() > 1) {
-        throw new IllegalSymbolError("TRS", f.toString(), "Symbol with a type " + type.toString() +
-          " cannot occur in a first-order TRS.");
+        throw new IllegalSymbolError("TRS", f.toString(), "Symbol " + f.toString() +
+          " with a type " + type.toString() + " cannot occur in a first-order TRS.");
       }
       if (!_productsIncluded && type.hasProducts()) {
         throw new IllegalSymbolError("TRS", f.toString(), "Symbol with a type " + type.toString() +
@@ -147,6 +151,11 @@ public class TRS {
   /** @return true if the function symbol is private in this TRS. */
   public boolean isPrivate(FunctionSymbol symbol) {
     return _private.contains(symbol.queryName());
+  }
+
+  /** @return true if the function symbol is the root symbol of the lhs of some rule. */
+  public boolean isDefined(FunctionSymbol symbol) {
+    return _defined.contains(symbol);
   }
 
   /** @return the number of rules in the TRS that can be queried. */
@@ -173,6 +182,11 @@ public class TRS {
       throw new IndexingError("TRS", "queryScheme", index, 0, querySchemeCount()-1);
     }
     return _schemes.get(index);
+  }
+
+  /** Returns a copy of the set of defined symbols. */
+  public TreeSet<FunctionSymbol> definedSymbols() {
+    return new TreeSet<FunctionSymbol>(_defined);
   }
 
   /**

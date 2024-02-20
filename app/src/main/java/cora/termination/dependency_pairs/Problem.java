@@ -3,7 +3,7 @@ package cora.termination.dependency_pairs;
 import cora.data.digraph.Digraph;
 import cora.exceptions.IllegalArgumentError;
 import cora.exceptions.NullInitialisationError;
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 import cora.terms.FunctionSymbol;
 import cora.types.Type;
 import cora.types.TypeFactory;

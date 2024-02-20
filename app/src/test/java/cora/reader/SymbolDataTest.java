@@ -23,8 +23,7 @@ import java.util.ArrayList;
 import java.util.TreeSet;
 import cora.types.TypeFactory;
 import cora.terms.*;
-import cora.rewriting.Alphabet;
-import cora.rewriting.*;
+import cora.trs.*;
 
 /** This class tests the helper class SymbolData that stores information on function symbols. */
 public class SymbolDataTest {
@@ -199,7 +198,7 @@ public class SymbolDataTest {
     FunctionSymbol bong = TermFactory.createConstant("bong", TypeFactory.createSort("b"));
     symbols.add(bing);
     Alphabet alf = new Alphabet(symbols);
-    TRS trs = TRSFactory.createMSTRS(alf, new ArrayList<Rule>(), new TreeSet<FunctionSymbol>());
+    TRS trs = TrsFactory.createTrs(alf, new ArrayList<Rule>(), TrsFactory.MSTRS);
     SymbolData data = new SymbolData(trs);
 
     assertTrue(data.lookupFunctionSymbol("bing").equals(bing));
@@ -217,7 +216,7 @@ public class SymbolDataTest {
     FunctionSymbol bing = TermFactory.createConstant("bing", TypeFactory.createSort("a"));
     symbols.add(bing);
     Alphabet alf = new Alphabet(symbols);
-    TRS trs = TRSFactory.createMSTRS(alf, new ArrayList<Rule>(), new TreeSet<FunctionSymbol>());
+    TRS trs = TrsFactory.createTrs(alf, new ArrayList<Rule>(), TrsFactory.MSTRS);
     SymbolData data = new SymbolData(trs);
 
     FunctionSymbol bong = TermFactory.createConstant("bing", TypeFactory.createSort("b"));

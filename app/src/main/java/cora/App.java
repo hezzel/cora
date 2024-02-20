@@ -15,7 +15,7 @@
 
 package cora;
 
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 import cora.reader.OCocoInputReader;
 import cora.reader.ITrsInputReader;
 import cora.reader.CoraInputReader;

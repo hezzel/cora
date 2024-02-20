@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import cora.types.*;
 import cora.terms.*;
-import cora.rewriting.*;
+import cora.trs.*;
 import cora.reader.CoraInputReader;
 
 class AccessibilityCheckerTest {
@@ -99,7 +99,7 @@ class AccessibilityCheckerTest {
         "rec(s(x), z, F, G) -> F(x, rec(x, z, F, G))\n" +
         "rec(lim(H), z, F, G) -> G(H, helper(H, z, F, G))\n" +
         "helper(H, z, F, G, n) -> rec(H(n), z, F, G)\n",
-      CoraInputReader.STRS
+      TrsFactory.STRS
     );
     AccessibilityChecker checker = new AccessibilityChecker(trs);
     // ord ≥ ord (for x), ord ≥ ord, ord > nat (for H)

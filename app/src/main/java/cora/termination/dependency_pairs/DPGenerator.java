@@ -1,7 +1,7 @@
 package cora.termination.dependency_pairs;
 
-import cora.rewriting.Rule;
-import cora.rewriting.TRS;
+import cora.trs.Rule;
+import cora.trs.TRS;
 import cora.terms.*;
 import cora.types.*;
 import org.jetbrains.annotations.Contract;
@@ -115,18 +115,13 @@ public class DPGenerator {
     return DPGenerator.fakeEta(fSharp.apply(tm.queryArguments()));
   }
 
-  // TODO this probably isn't to be here
   static @NotNull boolean isDefined(TRS trs, FunctionSymbol fn) {
-    for(Rule r : trs.queryRules()){
-      if (r.queryLeftSide().queryRoot().equals(fn))
-        return true;
-    }
-    return false;
+    return trs.isDefined(fn);
   }
 
   // TODO this probably isn't to be here
   static @NotNull boolean isConstructor(TRS trs, FunctionSymbol tm) {
-    return !isDefined(trs, tm);
+    return !trs.isDefined(tm);
   }
 
   // Computes the initial set V, defined in definition 5 (cade paper)

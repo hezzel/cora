@@ -31,7 +31,7 @@ import cora.parser.Parser.*;
 import cora.parser.OCocoParser;
 import cora.types.*;
 import cora.terms.*;
-import cora.rewriting.*;
+import cora.trs.*;
 
 /**
  * This class reads text from string or file written in the .trs format that up until 2023 was used
@@ -184,7 +184,7 @@ public class OCocoSortedInputReader {
     
     _symbols.clearEnvironment();
 
-    try { return RuleFactory.createFirstOrderRule(l, r); }
+    try { return TrsFactory.createRule(l, r, TrsFactory.MSTRS); }
     catch (IllegalRuleError e) {
       storeError(e.queryProblem(), rule.token());
       return null;
@@ -205,7 +205,7 @@ public class OCocoSortedInputReader {
       if (r != null) rules.add(r);
     }   
     Alphabet alphabet = _symbols.queryCurrentAlphabet();
-    return TRSFactory.createMSTRS(alphabet, rules, new TreeSet<FunctionSymbol>());
+    return TrsFactory.createTrs(alphabet, rules, TrsFactory.MSTRS);
   }
 
   // ==================================== PUBLIC FUNCTIONALITY ====================================

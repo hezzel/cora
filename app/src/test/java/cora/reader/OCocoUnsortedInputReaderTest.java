@@ -25,7 +25,8 @@ import cora.terms.Term;
 import cora.terms.Variable;
 import cora.terms.FunctionSymbol;
 import cora.terms.TermFactory;
-import cora.rewriting.TRS;
+import cora.trs.TRS;
+import cora.reduction.Reducer;
 
 public class OCocoUnsortedInputReaderTest {
   @Test
@@ -144,10 +145,11 @@ public class OCocoUnsortedInputReaderTest {
     Term t = TermFactory.createApp(cons, zero, TermFactory.createApp(cons, zero, nil));
     Term q = TermFactory.createApp(append, s, t);
     assertTrue(q.toString().equals("append(cons(s(0), nil), cons(0, cons(0, nil)))"));
-    q = trs.leftmostInnermostReduce(q);
-    q = trs.leftmostInnermostReduce(q);
+    Reducer reducer = new Reducer(trs);
+    q = reducer.leftmostInnermostReduce(q);
+    q = reducer.leftmostInnermostReduce(q);
     assertTrue(q.toString().equals("cons(s(0), cons(0, cons(0, nil)))"));
-    assertTrue(trs.leftmostInnermostReduce(q) == null);
+    assertTrue(reducer.leftmostInnermostReduce(q) == null);
   }
 
   @Test
@@ -208,8 +210,9 @@ public class OCocoUnsortedInputReaderTest {
       assertTrue(e.getMessage().equals(
         "1:42: Expected a comma or closing bracket but got IDENTIFIER (y).\n" +
         "1:63: Function symbol f was previously used with 2 arguments, but is here used with 1.\n" +
-        "1:60: right-hand side of rule [g(x) → f(z)] contains variable z which does not occur on " +
-          "the left.\n"));
+        "1:60: right-hand side of rule [g(x) → f(z)] contains variable z of type o which does " +
+        "not occur on the left; only variables of theory sorts may occur fresh (and that only " +
+        "in some kinds of TRSs).\n"));
       return;
     }
     assertTrue(false);
@@ -235,7 +238,8 @@ public class OCocoUnsortedInputReaderTest {
     try { OCocoUnsortedInputReader.readTrsFromString(str); }
     catch (ParseError e) {
       assertTrue(e.getMessage().equals(
-        "1:18: illegal rule [x → f(x, x)] with a variable as the left-hand side.\n"));
+        "1:18: The rule x → f(x, x) is not allowed to occur in MSTRSs: left-hand side should " +
+        "have a non-theory function symbol as root, not anything else.\n"));
       return;
     }
     assertTrue(false);

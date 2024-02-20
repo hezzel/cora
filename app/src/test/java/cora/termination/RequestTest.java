@@ -1,7 +1,7 @@
 package cora.termination;
 
 import cora.reader.CoraInputReader;
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 import org.junit.jupiter.api.Test;
 
 import static cora.termination.Request.Technique.DP;

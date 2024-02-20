@@ -1,6 +1,6 @@
 package cora.termination;
 
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 import cora.utils.Pair;
 import cora.termination.Handler.Answer;
 

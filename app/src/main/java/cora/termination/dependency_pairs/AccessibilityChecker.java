@@ -11,7 +11,7 @@ import cora.utils.Pair;
 import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 
 public class AccessibilityChecker {
   private SmtProblem _problem;

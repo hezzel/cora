@@ -1,7 +1,8 @@
 package cora.termination.dependency_pairs.processors;
 
 import cora.reader.CoraInputReader;
-import cora.rewriting.TRS;
+import cora.trs.TRS;
+import cora.trs.TrsFactory;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ class SubtermProcessorTest {
       "ack(0, n) -> s(n)\n" +
       "ack(s(m),0) -> ack(m, s(0))\n" +
       "ack(s(m),s(n)) -> ack(m, ack(s(m),n))\n",
-      CoraInputReader.MSTRS);
+      TrsFactory.MSTRS);
 
     Problem p = DPGenerator.generateProblemFromTrs(trs);
 

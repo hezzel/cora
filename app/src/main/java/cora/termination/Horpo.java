@@ -22,7 +22,8 @@ import java.util.TreeSet;
 import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;
-import cora.rewriting.*;
+import cora.trs.*;
+import cora.trs.TrsProperties.*;
 
 /**
  * This is an implementation of a basic version of Horpo for LCSTRSs (so with constraints).
@@ -34,15 +35,8 @@ public class Horpo {
    * are not theory terms.
    */
   public static boolean applicable(TRS trs) {
-    for (int i = 0; i < trs.queryRuleCount(); i++) {
-      Rule rule = trs.queryRule(i);
-      if (!rule.isApplicative()) return false;
-      if (rule.queryLeftSide().isTheoryTerm()) return false;
-    }
-    for (int i = 0; i < trs.querySchemeCount(); i++) {
-      if (!trs.queryScheme(i).isCalc()) return false;
-    }
-    return true;
+    return trs.verifyProperties(Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED,
+                                Lhs.NONPATTERN, Root.ANY);
   }
 
   /**

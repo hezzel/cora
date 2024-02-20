@@ -1,7 +1,7 @@
 package cora.termination.dependency_pairs;
 
 import cora.reader.CoraInputReader;
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 import cora.termination.Handler;
 import cora.termination.dependency_pairs.certification.Informal;
 import cora.utils.Pair;

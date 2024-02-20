@@ -1,6 +1,6 @@
 package cora.termination.dependency_pairs;
 
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 import cora.termination.Handler.Answer;
 import cora.termination.Prover;
 import cora.termination.dependency_pairs.certification.Informal;

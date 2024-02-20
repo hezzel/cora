@@ -26,7 +26,7 @@ import cora.terms.Term;
 import cora.terms.Variable;
 import cora.terms.TermFactory;
 import cora.terms.TheoryFactory;
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 
 public class TermSmtTranslatorTest {
   private TRS _trs = null;

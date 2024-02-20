@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import cora.parser.lib.ErrorCollector;
 import cora.parser.OCocoParser;
 import cora.parser.Parser.ParserProgram;
-import cora.rewriting.TRS;
+import cora.trs.TRS;
 
 /**
  * This class reads text from string or file written in the .trs format that up until 2023 was used

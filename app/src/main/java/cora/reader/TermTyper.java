@@ -27,7 +27,6 @@ import cora.parser.Parser.*;
 import cora.parser.CoraParser;
 import cora.types.*;
 import cora.terms.*;
-import cora.rewriting.*;
 
 /**
  * This class takes a ParserTerm, and turns it into a proper term -- assuming that it is

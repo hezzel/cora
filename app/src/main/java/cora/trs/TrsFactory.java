@@ -38,6 +38,7 @@ public class TrsFactory {
       _name = name;
       _restrictions = new RuleRestrictions(lvl, theories, products, pattern, rootstat);
     }
+    public boolean theoriesIncluded() { return _restrictions.theoriesUsed(); }
     public String toString() { return _name + " with " + _restrictions.toString(); }
   }
 

@@ -16,13 +16,14 @@
 package cora.reader;
 
 import java.util.TreeMap;
+import java.util.TreeSet;
 import cora.exceptions.NullStorageError;
 import cora.types.Type;
 import cora.terms.FunctionSymbol;
 import cora.terms.Variable;
 import cora.terms.MetaVariable;
-import cora.rewriting.Alphabet;
-import cora.rewriting.TRS;
+import cora.trs.Alphabet;
+import cora.trs.TRS;
 
 /**
  * This class maintains information used for turning data from the parser into proper Cora
@@ -34,12 +35,14 @@ class SymbolData {
   private TreeMap<String,FunctionSymbol> _alphabet;   // function symbols
   private TreeMap<String,Variable> _variables;        // variables
   private TreeMap<String,MetaVariable> _mvariables;   // meta-variables of arity ≥ 1
+  private TreeSet<String> _private;                   // the names of private symbols
 
   SymbolData() {
     _trs = null;
     _alphabet = new TreeMap<String,FunctionSymbol>();
     _variables = new TreeMap<String,Variable>();
     _mvariables = new TreeMap<String,MetaVariable>();
+    _private = new TreeSet<String>();
   }
 
   /**
@@ -123,6 +126,12 @@ class SymbolData {
     _mvariables.put(varname, mvar);
   }
 
+  /** This marks the given function symbol as a private symbol. */
+  public void setPrivate(FunctionSymbol symbol) {
+    if (symbol == null) throw new NullStorageError("SymbolData", "private function symbol");
+    _private.add(symbol.queryName());
+  }
+
   /** Remove the variable by the given name, if any; and return it in this case. */
   public Variable removeVariable(String name) {
     Variable existing = _variables.get(name);
@@ -170,6 +179,11 @@ class SymbolData {
       throw new Error("Calling queryCurrentAlphabet for SymbolData constructed with a given TRS!");
     }
     return new Alphabet(_alphabet.values());
+  }
+
+  /** This returns the set of private symbols defined in the symbol data. */
+  public TreeSet<String> queryPrivateSymbols() {
+    return new TreeSet<String>(_private);
   }
 }
 
