@@ -317,10 +317,13 @@ public class CoraInputReaderTest {
   @Test
   public void testWeirdProgram() {
     TRS trs = CoraInputReader.readTrsFromString(
-      "f :: a -> a -> a b :: b f(x,x) -> x b -> b c :: a", TrsFactory.MSTRS);
+      "public f :: a -> a -> a private b :: b f(x,x) -> x b -> b c :: a", TrsFactory.MSTRS);
     assertTrue(trs.lookupSymbol("f").queryType().toString().equals("a → a → a"));
     assertTrue(trs.lookupSymbol("b").queryType().toString().equals("b"));
     assertTrue(trs.lookupSymbol("c").queryType().toString().equals("a"));
+    assertFalse(trs.isPrivate(trs.lookupSymbol("f")));
+    assertTrue(trs.isPrivate(trs.lookupSymbol("b")));
+    assertFalse(trs.isPrivate(trs.lookupSymbol("c")));
     assertTrue(trs.queryRule(0).toString().equals("f(x, x) → x"));
     assertTrue(trs.queryRule(1).toString().equals("b → b"));
   }

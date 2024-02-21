@@ -47,7 +47,7 @@ public class TrsFactory {
   public static final TrsKind STRS = new TrsKind("STRS",
     Level.APPLICATIVE, Constrained.NO,  Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY);
   public static final TrsKind CFS = new TrsKind("CFS",
-    Level.LAMBDA,      Constrained.NO,  Products.DISALLOWED, Lhs.PATTERN,     Root.ANY);
+    Level.LAMBDA,      Constrained.NO,  Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY);
   public static final TrsKind AMS = new TrsKind("AMS",
     Level.META,        Constrained.NO,  Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY);
   public static final TrsKind LCTRS = new TrsKind("LCTRS",

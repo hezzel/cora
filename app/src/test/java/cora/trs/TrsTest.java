@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 import cora.types.Type;
 import cora.types.TypeFactory;
@@ -221,6 +222,37 @@ public class TrsTest {
       Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED, Lhs.PATTERN, Root.FUNCTION));
     assertTrue(lcstrs2.verifyProperties(
       Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY));
+  }
+
+  @Test
+  public void testNoDefinedSymbols() {
+    setupTRSs();
+    assertTrue(_lcstrs.definedSymbols().size() == 0);
+    assertFalse(_mstrs.isDefined(f));
+  }
+
+  @Test
+  public void testDefinedSymbols() {
+    ArrayList<Rule> rules = new ArrayList<Rule>();
+    Variable x = TermFactory.createVar("x", type("a"));
+    Term fxb = TermFactory.createApp(f, x, b);
+    rules.add(TrsFactory.createRule(fxb, x)); // f(x, B) -> x
+    Variable y = TermFactory.createVar("y", type("Int"));
+    Term zero = TheoryFactory.createValue(0);
+    Term constraint = TermFactory.createApp(TheoryFactory.greaterSymbol, y, zero);
+    rules.add(TrsFactory.createRule(g.apply(y), a, constraint)); // g(y) -> 0 | x > 0
+    Variable z = TermFactory.createVar("Z", type("a -> b -> a"));
+    Term zab = TermFactory.createApp(z, a, b);
+    rules.add(TrsFactory.createRule(zab, a)); // Z(A,B) -> A
+    Alphabet alf = new Alphabet(List.of(f,g,h,a,b));
+    TRS trs = TrsFactory.createTrs(alf, rules, TrsFactory.CORA);
+    TreeSet<FunctionSymbol> defineds = trs.definedSymbols();
+    assertTrue(defineds.size() == 2);
+    assertTrue(defineds.contains(f));
+    assertTrue(defineds.contains(g));
+    assertFalse(defineds.contains(h));
+    defineds.add(h);
+    assertTrue(trs.definedSymbols().size() == 2);
   }
 }
 

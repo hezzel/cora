@@ -31,7 +31,6 @@ import cora.trs.*;
 import cora.reader.CoraInputReader;
 
 public class ReducerTest {
-/*
   private Type type(String txt) {
     try { return CoraInputReader.readType(txt); }
     catch (Exception e) { System.out.println(e); return null; }
@@ -86,7 +85,7 @@ public class ReducerTest {
   }
 
   @Test
-  public void testLeftmostInnermostReduction() {
+  public void testLeftmostInnermostMSTRSReduction() {
     TRS trs = createMSTRS();
     Reducer reducer = new Reducer(trs);
     String str = "g(f(a, b), f(g(a, b, a), g(b, b, b)), b)";
@@ -248,7 +247,7 @@ public class ReducerTest {
   }
 
   @Test
-  public void testLeftmostInnermostReduction() {
+  public void testLeftmostInnermostCFSReduction() {
     TRS trs = createCFS(true);
     Reducer reducer = new Reducer(trs);
     String str = "f(g(a, (λx::A.x)(b), a), λz.a)";
@@ -264,6 +263,5 @@ public class ReducerTest {
     term = reducer.leftmostInnermostReduce(term);
     assertTrue(term == null);
   }
-*/
 }
 

@@ -112,15 +112,13 @@ public class TrsFactoryRuleCreationTest {
 
   @Test
   public void testNonPatternRule() {
-    // f(λx.Z(x)) → a
+    // f(λx.Z[b]) → a
     Term f = TermFactory.createConstant("f", type("(o → o) → o"));
     Variable x = TermFactory.createBinder("x", type("o"));
-    Variable z = TermFactory.createVar("Z", type("o → o"));
-    Term left = f.apply(TermFactory.createAbstraction(x, z.apply(x)));
-    Term right = makeConstant("a", type("o"));
-    assertThrows(IllegalRuleError.class, () ->
-      TrsFactory.createRule(left, right, TrsFactory.CFS));
-    TrsFactory.createRule(left, right, TrsFactory.AMS);
+    MetaVariable z = TermFactory.createMetaVar("Z", type("o → o"), 1);
+    Term a = makeConstant("a", type("o"));
+    Term left = f.apply(TermFactory.createAbstraction(x, TermFactory.createMeta(z, a)));
+    assertThrows(IllegalRuleError.class, () -> TrsFactory.createRule(left, a, TrsFactory.AMS));
   }
 
   @Test
