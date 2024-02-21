@@ -62,6 +62,7 @@ class ITrsTokenData {
     "TRUE"                                    , TRUTH,
     "FALSE"                                   , FALSEHOOD,
     "[0-9]+"                                  , INTEGER,
+    "@z"                                      , Token.SKIP,
 
     "[^\\s()\",|\\-\\+\\*/%><=!&#:\\\\]+"     , IDENTIFIER,
         // I could not find a description of the formalism, so this is just a
