@@ -286,7 +286,7 @@ public class ITrsInputReader {
   private Type determineNodeType(String node, TreeSet<String> intNodes, TreeSet<String> boolNodes) {
     if (intNodes.contains(node)) return TypeFactory.intSort;
     if (boolNodes.contains(node)) return TypeFactory.boolSort;
-    return TypeFactory.unitSort;
+    return TypeFactory.defaultSort;
   }
 
   /**

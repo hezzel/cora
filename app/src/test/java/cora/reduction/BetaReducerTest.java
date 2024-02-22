@@ -28,8 +28,8 @@ public class BetaReducerTest {
     // (λx.f(x,y))(a) → f(a, y)
     FunctionSymbol f = TermFactory.createConstant("f", 2);
     FunctionSymbol a = TermFactory.createConstant("a", 0);
-    Variable x = TermFactory.createBinder("x", TypeFactory.unitSort);
-    Variable y = TermFactory.createBinder("y", TypeFactory.unitSort);
+    Variable x = TermFactory.createBinder("x", TypeFactory.defaultSort);
+    Variable y = TermFactory.createBinder("y", TypeFactory.defaultSort);
     Term s = TermFactory.createApp(TermFactory.createAbstraction(x,
       TermFactory.createApp(f, x, y)), a);
 
@@ -45,8 +45,8 @@ public class BetaReducerTest {
     FunctionSymbol f = TermFactory.createConstant("f", 2);
     FunctionSymbol a = TermFactory.createConstant("a", 0);
     FunctionSymbol b = TermFactory.createConstant("b", 0);
-    Variable x = TermFactory.createBinder("x", TypeFactory.unitSort);
-    Variable y = TermFactory.createBinder("y", TypeFactory.unitSort);
+    Variable x = TermFactory.createBinder("x", TypeFactory.defaultSort);
+    Variable y = TermFactory.createBinder("y", TypeFactory.defaultSort);
     Term abs = TermFactory.createAbstraction(x, TermFactory.createAbstraction(y,
       TermFactory.createApp(f, x, TermFactory.createApp(f, y, x))));
     Term s = TermFactory.createApp(abs, a, b);
@@ -61,9 +61,9 @@ public class BetaReducerTest {
   public void testBetaReducerEta() {
     // (λx.f(y,x))(f(z,z)) → f(y, f(z, z))
     FunctionSymbol f = TermFactory.createConstant("f", 2);
-    Variable x = TermFactory.createBinder("x", TypeFactory.unitSort);
-    Variable y = TermFactory.createBinder("y", TypeFactory.unitSort);
-    Variable z = TermFactory.createBinder("z", TypeFactory.unitSort);
+    Variable x = TermFactory.createBinder("x", TypeFactory.defaultSort);
+    Variable y = TermFactory.createBinder("y", TypeFactory.defaultSort);
+    Variable z = TermFactory.createBinder("z", TypeFactory.defaultSort);
     Term abs = TermFactory.createAbstraction(x, TermFactory.createApp(f, y, x));
     Term s = TermFactory.createApp(abs, TermFactory.createApp(f, z, z));
 
@@ -77,7 +77,7 @@ public class BetaReducerTest {
   public void testAbstractionNoBetaReducer() {
     // λx.f(x)
     FunctionSymbol f = TermFactory.createConstant("f", 1);
-    Variable x = TermFactory.createBinder("x", TypeFactory.unitSort);
+    Variable x = TermFactory.createBinder("x", TypeFactory.defaultSort);
     Term s = TermFactory.createAbstraction(x, TermFactory.createApp(f, x));
     BetaReducer beta = new BetaReducer();
     assertFalse(beta.applicable(s));

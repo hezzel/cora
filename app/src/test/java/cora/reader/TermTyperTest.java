@@ -90,7 +90,7 @@ public class TermTyperTest {
       "1:1: Undeclared symbol: xx_yy.  Type cannot easily be deduced from context.\n");
     assertTrue(t.isVariable());
     assertFalse(t.queryVariable().isBinderVariable());
-    assertTrue(t.queryType().equals(TypeFactory.unitSort));
+    assertTrue(t.queryType().equals(TypeFactory.defaultSort));
   }
 
   @Test

@@ -69,8 +69,8 @@ public class OCocoUnsortedInputReader {
   /**
    * This attempts to turn a ParserTerm into a Term, using that all variables are necessarily
    * declared in the symbol data, and that function symbols may only be typed with first-order types
-   * over the unit sort.  If function symbols are used with inconsistent arity, then an appropriate
-   * error message is stored in the error collector.
+   * over the default sort.  If function symbols are used with inconsistent arity, then an
+   * appropriate error message is stored in the error collector.
    *
    * Regardless of errors, this is guaranteed to return a term.
    */
@@ -162,7 +162,7 @@ public class OCocoUnsortedInputReader {
   private Boolean isUnsorted(Type t) {
     switch (t) {
       case Base(String n):
-        return t.equals(TypeFactory.unitSort);
+        return t.equals(TypeFactory.defaultSort);
       case Arrow(Type a, Type b):
         return isUnsorted(a) && isUnsorted(b);
       case Product(ImmutableList<Type> args):

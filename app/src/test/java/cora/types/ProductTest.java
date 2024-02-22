@@ -65,7 +65,7 @@ class ProductTest {
     Type prod = TypeFactory.createProduct(TypeFactory.intSort,
       new Arrow(TypeFactory.stringSort, TypeFactory.boolSort), TypeFactory.boolSort);
     assertTrue(prod.isTheoryType());
-    prod = TypeFactory.createProduct(TypeFactory.intSort, TypeFactory.unitSort);
+    prod = TypeFactory.createProduct(TypeFactory.intSort, TypeFactory.defaultSort);
     assertFalse(prod.isTheoryType());
   }
 

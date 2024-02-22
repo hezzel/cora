@@ -68,7 +68,7 @@ class TermTyper {
    * meta-variables).
    * If the given type is null, and the type cannot easily be derived (which is the case if the
    * term is a variable), then if typeShouldBeDerivable is set to true, an error is stored.  If
-   * typeShouldBeDerivable is set to false, then the term is just given the unit sort as a default.
+   * typeShouldBeDerivable is set to false, then the term is just given the default sort.
    * If function symbols are used with arity different from their declared arity, or types do not
    * match the declaration, then an appropriate error message is stored in the parser status.
    *
@@ -222,7 +222,7 @@ class TermTyper {
       types.add(targ.queryType());
     }
     mvar = TermFactory.createMetaVar(name, types,
-                                     expected == null ? TypeFactory.unitSort : expected);
+                                     expected == null ? TypeFactory.defaultSort : expected);
     if (expected != null) _symbols.addMetaVariable(mvar);
     return TermFactory.createMeta(mvar, targs);
   }
@@ -333,7 +333,7 @@ class TermTyper {
     // handle the error cases!
     if (elems.size() == 0) {
       storeError("Illegal empty tuple: tuples should have at least length 2.", token);
-      return TermFactory.createConstant("⦇⦈", expected == null ? TypeFactory.unitSort : expected);
+      return TermFactory.createConstant("⦇⦈", expected == null ? TypeFactory.defaultSort : expected);
     }
     if (elems.size() == 1) {
       storeError("Illegal singleton tuple: tuples should have at least length 2.", token);
@@ -375,7 +375,7 @@ class TermTyper {
       }
       Term subterm = makeTerm(arg, null, false);
       return TermFactory.createAbstraction(TermFactory.createBinder(varname,
-        TypeFactory.unitSort), subterm);
+        TypeFactory.defaultSort), subterm);
     }
 
     // special error case: we are not expecting an arrow type

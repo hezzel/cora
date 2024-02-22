@@ -81,7 +81,7 @@ public class OCocoSortedInputReader {
    */
   private Term makeTerm(ParserTerm pterm, Type expected) {
     FunctionSymbol f;
-    Type texp = expected == null ? TypeFactory.unitSort : expected;
+    Type texp = expected == null ? TypeFactory.defaultSort : expected;
 
     switch (pterm) {
       // base case: a constant or variable
@@ -147,7 +147,7 @@ public class OCocoSortedInputReader {
           children.add(makeTerm(args.get(children.size()), null));
         }
         Type t = expected;
-        if (t == null) t = TypeFactory.unitSort;
+        if (t == null) t = TypeFactory.defaultSort;
         for (int i = children.size()-1; i >= 0; i--) {
           t = TypeFactory.createArrow(children.get(i).queryType(), t);
         }

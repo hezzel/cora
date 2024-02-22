@@ -32,8 +32,8 @@ public class TypeFactory {
   /** The theory sort String, representing the set of Strings. */
   public static final Base stringSort = UniqueTypes.stringSort;
 
-  /** The unit sort is the unique sort that is used for "unsorted" term rewriting. */
-  public static final Base unitSort = UniqueTypes.unitSort;
+  /** The default sort is the unique sort that is used for "unsorted" term rewriting. */
+  public static final Base defaultSort = UniqueTypes.defaultSort;
 
   /** Creates a basic (non-theory) type by the given name. */
   public static Base createSort(String name) { return new Base(name); }
@@ -66,9 +66,9 @@ public class TypeFactory {
   }
 
   /** Creates a type o → ... → o → o, with in total k+1 os. */
-  public static Type createUnitArrow(int arity) {
-    Type ret = unitSort;
-    for (int i = 0; i < arity; i++) ret = new Arrow(unitSort, ret);
+  public static Type createDefaultArrow(int arity) {
+    Type ret = defaultSort;
+    for (int i = 0; i < arity; i++) ret = new Arrow(defaultSort, ret);
     return ret;
   }
 }

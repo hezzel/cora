@@ -239,7 +239,7 @@ class AbstractionTest extends TermTestFoundation {
     assertNull(abs.toValue());
 
     // λy::o.0
-    Variable y = new Binder("y", TypeFactory.unitSort);
+    Variable y = new Binder("y", TypeFactory.defaultSort);
     abs = new Abstraction(y, new IntegerValue(0));
     assertFalse(abs.isTheoryTerm());
   }

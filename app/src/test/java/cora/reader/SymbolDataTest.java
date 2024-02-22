@@ -157,7 +157,7 @@ public class SymbolDataTest {
   @Test
   public void testMetaVariableOfArityZero() {
     SymbolData data = new SymbolData();
-    MetaVariable x = TermFactory.createMetaVar("bing", TypeFactory.unitSort, 0);
+    MetaVariable x = TermFactory.createMetaVar("bing", TypeFactory.defaultSort, 0);
     data.addMetaVariable(x);
     assertTrue(data.lookupMetaVariable("bing") == x);
     assertTrue(data.lookupMetaVariable("bing") == x);
