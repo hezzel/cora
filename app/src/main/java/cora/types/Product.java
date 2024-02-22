@@ -39,16 +39,9 @@ public record Product(ImmutableList<Type> types) implements Type {
 
   @Override
   public @NotNull String toString(){
-    StringBuilder string = new StringBuilder();
-    for(int i = 0; i < types.size(); i++) {
-      String stringOfi = switch (types.get(i)) {
-        case Base(_) -> types.get(i).toString();
-        case Arrow(_, _), Product(_) -> "(" + types.get(i).toString() + ")";
-      };
-      if (i == 0) string.append(stringOfi);
-      else string.append(" × ").append(stringOfi);
-    }
-    return string.toString();
+    StringBuilder builder = new StringBuilder();
+    (new TypePrinter()).printType(this, builder);
+    return builder.toString();
   }
 
   /**

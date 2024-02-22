@@ -48,9 +48,6 @@ public sealed interface Type permits
   /** Returns true if and only if the type has a product type as subtype. */
   boolean hasProducts();
   
-  /** Returns a string representation of the current type. */
-  String toString();
-
   /** Returns whether the given Type is equal to us. */
   boolean equals(Type type);
 

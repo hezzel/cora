@@ -21,19 +21,9 @@ public record Arrow(Type left, Type right) implements Type {
 
   @Override
   public @NotNull String toString() {
-    String leftStr = this.left.toString();
-    String rightStr = this.right.toString();
-
-    StringBuilder outLeft = new StringBuilder();
-
-    //Cases to where to put parenthesis on a type A => B.
-    switch (new Pair<Type, Type>(this.left, this.right)){
-      case Pair(Base(_), _) ->
-        outLeft.append(leftStr);
-      case Pair(Arrow(_, _), _), Pair(Product(_), _) ->
-        outLeft.append("(").append(leftStr).append(")");
-    }
-    return outLeft.append(" → ").append(rightStr).toString();
+    StringBuilder builder = new StringBuilder();
+    (new TypePrinter()).printType(this, builder);
+    return builder.toString();
   }
 
   /** Returns true if all sorts in the type are theory sorts. */
