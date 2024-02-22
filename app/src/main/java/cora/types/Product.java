@@ -13,9 +13,7 @@ public record Product(ImmutableList<Type> types) implements Type {
     if (types.size() < 2) throw new ProdTypeConstructionError();
   }
 
-  /**
-   * Returns true only if this object is an instance of {@link cora.types.Product}.
-   */
+  /** Returns true only if this object is an instance of {@link cora.types.Product}. */
   @Override
   public boolean isProductType() { return true; }
 
@@ -25,10 +23,7 @@ public record Product(ImmutableList<Type> types) implements Type {
    */
   @Override
   public boolean isTheoryType() {
-    return types
-      .stream()
-      .map(Type::isTheoryType)
-      .reduce(true, (x, y) -> x && y);
+    return types.stream().allMatch(Type::isTheoryType);
   }
 
   /** @return true */
@@ -44,27 +39,17 @@ public record Product(ImmutableList<Type> types) implements Type {
     return builder.toString();
   }
 
-  /**
-   * Returns whether the given Type is equal to us.
-   *
-   * @param type
-   */
   @Override
   public boolean equals(Type type) {
-    return switch (type) {
-      case Product(ImmutableList<Type> componentTypes) -> {
-        if (this.types.size() == componentTypes.size()) {
-          boolean isEqual = true;
-          for (int i = 0; i < this.types.size(); i++) {
-            isEqual = isEqual && this.types.get(i).equals(componentTypes.get(i));
-          }
-          yield isEqual;
-        } else {
-          yield  false;
+    switch (type) {
+      case Product(ImmutableList<Type> componentTypes):
+        if (this.types.size() != componentTypes.size()) return false;
+        for (int i = 0; i < this.types.size(); i++) {
+          if (!this.types.get(i).equals(componentTypes.get(i))) return false;
         }
-      }
-      default -> false;
-    };
+        return true;
+      default: return false;
+    }
   }
 
   /** For σ1 → ,,, → σm → τ, returns τ; so this returns itself. */

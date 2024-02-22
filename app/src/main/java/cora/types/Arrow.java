@@ -7,11 +7,8 @@ import cora.exceptions.IndexingError;
 import cora.utils.Pair;
 
 public record Arrow(Type left, Type right) implements Type {
-
   public Arrow(Type left, Type right) {
-    if (left == null || right == null) {
-      throw new NullInitialisationError("Arrow", "type");
-    }
+    if (left == null || right == null) throw new NullInitialisationError("Arrow", "type");
     this.left = left;
     this.right = right;
   }
@@ -34,39 +31,25 @@ public record Arrow(Type left, Type right) implements Type {
   @Override
   public boolean hasProducts() { return this.left.hasProducts() || this.right.hasProducts(); }
 
-  /**
-   * Returns whether the given Type is equal to us.
-   *
-   * @param type
-   */
   @Override
   public boolean equals(Type type) {
-    return switch (type){
-      case Arrow(Type l, Type r) ->
-        this.left.equals(l) && this.right.equals(r);
+    return switch (type) {
+      case Arrow(Type l, Type r) -> this.left.equals(l) && this.right.equals(r);
       default -> false;
     };
   }
 
-  /**
-   * For σ1 → ,,, → σm → τ, returns m.
-   */
+  /** For σ1 → ,,, → σm → τ, returns m. */
   @Override
   public int queryArity() { return 1 + this.right.queryArity(); }
 
-  /**
-   * For σ1 → ,,, → σm → τ, returns τ
-   */
+  /** For σ1 → ,,, → σm → τ, returns τ */
   @Override
   public Type queryOutputType() { return this.right.queryOutputType(); }
 
-  /** Returns the type order for the current type. */
   @Override
   public int queryTypeOrder() {
-    return Math.max(
-      1 + this.left.queryTypeOrder(),
-      this.right.queryTypeOrder()
-    );
+    return Math.max(1 + this.left.queryTypeOrder(), this.right.queryTypeOrder());
   }
 
   @Override
