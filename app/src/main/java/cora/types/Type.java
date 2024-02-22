@@ -76,12 +76,4 @@ public sealed interface Type permits
    * right) of the type.  Otherwise, an IndexingError is thrown.
    */
   Type subtype(int i);
-
-  /** Should not be called on anything but Arrow. */
-  @Deprecated
-  default Type queryArrowInputType() { return null; }
-
-  /** Should not be called on anything but Arrow. */
-  @Deprecated
-  default Type queryArrowOutputType(){ return null; }
 }

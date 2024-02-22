@@ -80,11 +80,4 @@ public record Arrow(Type left, Type right) implements Type {
     if (index == 2) return this.right;
     throw new IndexingError("Arrow", "subtype", index, 1, 2);
   }
-
-  @Override @Deprecated
-  public Type queryArrowInputType() { return this.left; }
-
-  @Override @Deprecated
-  public Type queryArrowOutputType() { return this.right; }
-
 }
