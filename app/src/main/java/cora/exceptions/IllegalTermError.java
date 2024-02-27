@@ -24,7 +24,7 @@ public class IllegalTermError extends Error {
   private final String _problem;
 
   public IllegalTermError(String classname, String problem) {
-    super("Illegal rule creation for " + classname + ": " + problem);
+    super("Illegal term creation for " + classname + ": " + problem);
     _problem = problem;
   }
 

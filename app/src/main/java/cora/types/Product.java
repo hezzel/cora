@@ -34,9 +34,7 @@ public record Product(ImmutableList<Type> types) implements Type {
 
   @Override
   public @NotNull String toString(){
-    StringBuilder builder = new StringBuilder();
-    (new TypePrinter()).printType(this, builder);
-    return builder.toString();
+    return (new TypePrinter()).print(this);
   }
 
   @Override

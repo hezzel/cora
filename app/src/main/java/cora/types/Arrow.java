@@ -18,9 +18,7 @@ public record Arrow(Type left, Type right) implements Type {
 
   @Override
   public @NotNull String toString() {
-    StringBuilder builder = new StringBuilder();
-    (new TypePrinter()).printType(this, builder);
-    return builder.toString();
+    return (new TypePrinter()).print(this);
   }
 
   /** Returns true if all sorts in the type are theory sorts. */

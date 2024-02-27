@@ -68,7 +68,6 @@ public class ValueTest extends TermTestFoundation {
     assertTrue(v.toString().equals("-37"));
     assertTrue(b.toString().equals("true"));
     assertTrue(s.toString().equals("\"Hello\\nworld\""));
-    assertTrue(v.getUniqueNaming().size() == 0);
     assertTrue(b.refreshBinders() == b);
     assertTrue(v.apply(new ArrayList<Term>()) == v);
   }

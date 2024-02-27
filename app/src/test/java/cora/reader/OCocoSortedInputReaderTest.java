@@ -198,9 +198,9 @@ public class OCocoSortedInputReaderTest {
       assertTrue(e.getMessage().equals(
       "2:7: Undeclared function symbol: s.\n" +
       "2:18: Undeclared function symbol: s.\n" +
-      "2:13: right-hand side of rule [f(x, s(y)) → f(s(x), y)] contains variable y of type o " +
-        "which does not occur on the left; only variables of theory sorts may occur fresh (and " +
-        "that only in some kinds of TRSs).\n" +
+      "2:13: right-hand side of rule [f(x, s(y__1)) → f(s(x), y__2)] contains variable y of " +
+        "type o which does not occur on the left; only variables of theory sorts may occur " +
+        "fresh (and that only in some kinds of TRSs).\n" +
       "3:13: Undeclared function symbol: g.\n"));
         // the third error is given because the variable below s is not recognised as the same
         // variable; this does not cause a problem in the last case, because then x is already

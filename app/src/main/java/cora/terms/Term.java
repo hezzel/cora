@@ -312,12 +312,6 @@ public interface Term {
   void addToString(StringBuilder builder, Map<Replaceable,String> renaming);
 
   /**
-   * This function returns a unique name for every variable and meta-variable occurring in the
-   * term.  For use in addToString.
-   */
-  Map<Replaceable,String> getUniqueNaming();
-
-  /**
    * Performs an equality check with the given other term.
    * Equality is modulo alpha (but this is only relevant for higher-order rewriting with lambdas).
    */

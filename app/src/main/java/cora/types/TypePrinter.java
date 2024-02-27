@@ -24,15 +24,25 @@ import com.google.common.collect.ImmutableList;
  */
 public class TypePrinter {
   /**
-   * This is the public access function.  Call this to ensure that the given type is printed to the
-   * given string builder.
+   * Returns a string representation of the given type (using the other print method).
+   * This is only supplied as a public access function, and is not meant to be overridden.
+   */
+  public final String print(Type t) {
+    StringBuilder builder = new StringBuilder();
+    print(t, builder);
+    return builder.toString();
+  }
+
+  /**
+   * This is the main public access function.  Call this to ensure that the given type is printed
+   * to the given string builder.
    * 
    * To define your own TypePrinter, you can either override this method directly -- in which
    * case there is no need to override any of the other methods in the class -- or override (some
    * of) the functions it calls, which are printBaseType, printArrowType and printProductType
    * directly.
    */
-  public void printType(Type t, StringBuilder builder) {
+  public void print(Type t, StringBuilder builder) {
     switch (t) {
       case Base(String name): printBaseType(name, builder); break;
       case Arrow(Type left, Type right): printArrowType(left, right, builder); break;
@@ -55,12 +65,12 @@ public class TypePrinter {
    */
   protected void printArrowType(Type left, Type right, StringBuilder builder) {
     if (!left.isBaseType()) builder.append("(");
-    printType(left, builder);
+    print(left, builder);
     if (!left.isBaseType()) builder.append(")");
     builder.append(" ");
     builder.append(queryArrowSymbol());
     builder.append(" ");
-    printType(right, builder);
+    print(right, builder);
   }
 
   /**
@@ -78,7 +88,7 @@ public class TypePrinter {
         builder.append(" ");
       }
       if (!elems.get(i).isBaseType()) builder.append("(");
-      printType(elems.get(i), builder);
+      print(elems.get(i), builder);
       if (!elems.get(i).isBaseType()) builder.append(")");
     }   
   }
