@@ -1,6 +1,6 @@
 package cora.termination.dependency_pairs.processors;
 
-import cora.types.TypeFactory;
+import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;
 import cora.termination.dependency_pairs.DP;
@@ -16,7 +16,6 @@ public class KasperProcessor implements Processor {
   private SmtProblem _smt;
   private Map< FunctionSymbol, List<Variable> > _fnToFreshVar;
   private Map< FunctionSymbol, List<Term> > _candidates;
-  private Map<Replaceable,String> _varNaming;
 
   @Override
   public boolean isApplicable(Problem dpp) {
@@ -29,16 +28,17 @@ public class KasperProcessor implements Processor {
    */
   private Map<FunctionSymbol, List<Variable>> computeFreshVars(Problem dpp) {
     Set<FunctionSymbol> allSharps = dpp.getSharpHeads();
-    _varNaming = new TreeMap<Replaceable,String>();
 
     Map<FunctionSymbol, List<Variable>> ret = new TreeMap<>();
     allSharps
       .forEach( fSharp -> {
-        List<Variable> newVars = DPGenerator.generateVars(fSharp.queryType());
-        for (int i = 0; i < newVars.size(); i++) {
-          _varNaming.put(newVars.get(i), "arg_" + (i+1));
+        Type ty = fSharp.queryType();
+        ArrayList<Variable> newvars = new ArrayList<Variable>();
+        for (int i = 1; ty instanceof Arrow(Type left, Type right); i++) {
+          newvars.add(TermFactory.createVar("arg_" + i, left));
+          ty = right;
         }
-        ret.put(fSharp, newVars);
+        ret.put(fSharp, newvars);
       });
 
     return ret;
@@ -357,7 +357,7 @@ public class KasperProcessor implements Processor {
     candFun.forEach(
       (f, cand) -> {
         StringBuilder builder = new StringBuilder("  J( " + f.toString() + " ) = ");
-        cand.addToString(builder, _varNaming);
+        builder.append(cand.toString());
         Informal.getInstance().addProofStep(builder.toString());
       });
     Informal.getInstance().addProofStep("We thus have: ");
