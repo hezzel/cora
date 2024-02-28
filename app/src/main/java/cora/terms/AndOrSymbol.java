@@ -45,8 +45,17 @@ class AndOrSymbol extends CalculationInherit {
     else return "∧";
   }
 
+  public Kind queryKind() {
+    if (_disjunction) return Kind.OR;
+    else return Kind.AND;
+  }
+
   public int queryInfixPriority() {
     return CalculationSymbol.INFIX_ANDOR;
+  }
+
+  public Associativity queryAssociativity() {
+    return Associativity.ASSOC_LEFT;
   }
 
   public boolean printInfix(StringBuilder builder, List<Term> args,

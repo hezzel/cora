@@ -45,8 +45,17 @@ class DivModSymbol extends CalculationInherit {
     else return "%";
   }
 
+  public Kind queryKind() {
+    if (_division) return Kind.DIV;
+    else return Kind.MOD;
+  }
+
   public int queryInfixPriority() {
     return CalculationSymbol.INFIX_DIVMOD;
+  }
+
+  public Associativity queryAssociativity() {
+    return Associativity.ASSOC_NONE;
   }
 
   public boolean printInfix(StringBuilder builder, List<Term> args,

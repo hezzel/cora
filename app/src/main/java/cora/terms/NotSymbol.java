@@ -38,8 +38,16 @@ class NotSymbol extends CalculationInherit {
     return "¬";
   }
 
+  public Kind queryKind() {
+    return Kind.NOT;
+  }
+
   public int queryInfixPriority() {
     return CalculationSymbol.INFIX_NOT;
+  }
+
+  public Associativity queryAssociativity() {
+    return Associativity.NOT_INFIX;
   }
 
   public boolean printInfix(StringBuilder builder, List<Term> args,

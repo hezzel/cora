@@ -21,6 +21,10 @@ import java.util.Set;
 
 /** CalculationSymbols are symbols in the theory signature that can perform a computation. */
 public interface CalculationSymbol extends FunctionSymbol {
+  public enum Kind { AND, OR, GREATER, SMALLER, GEQ, LEQ, EQUALS, NEQ, NOT,
+                     PLUS, TIMES, DIV, MOD, MINUS }
+  public enum Associativity { ASSOC_LEFT, ASSOC_RIGHT, ASSOC_NONE, NOT_INFIX }
+
   public static int INFIX_ANDOR = 1;
   public static int INFIX_COMPARISON = 2;
   public static int INFIX_NOT = 3;
@@ -30,6 +34,9 @@ public interface CalculationSymbol extends FunctionSymbol {
   public static int INFIX_MINUS = 6;
   public static int INFIX_NONE = 0;
 
+  /** Returns which of the in-built calculation symbols this represents. */
+  public Kind queryKind();
+
   /**
    * Used for printing: if symbols # and $ are printed infix (or otherwise in a special way), then
    * x # y $ z is meant as (x # y) $ z if # has higher infix priority, and as x # (y $ z) if $ has
@@ -38,6 +45,11 @@ public interface CalculationSymbol extends FunctionSymbol {
    * Symbols that are not printed in a special way should return 0 for infix priority.
    */
   public int queryInfixPriority();
+
+  /**
+   * Returns the infix associativity of the function symbol.
+   */
+  public Associativity queryAssociativity();
 
   /**
    * If this is a function symbol that should be printed in infix notation for the given number of

@@ -40,8 +40,16 @@ class PlusSymbol extends CalculationInherit {
     return "+";
   }
 
+  public Kind queryKind() {
+    return Kind.PLUS;
+  }
+
   public int queryInfixPriority() {
     return CalculationSymbol.INFIX_PLUS;
+  }
+
+  public Associativity queryAssociativity() {
+    return Associativity.ASSOC_LEFT;
   }
 
   public boolean printInfix(StringBuilder builder, List<Term> args,

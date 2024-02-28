@@ -37,7 +37,7 @@ public class TermPrinter {
   public final class Renaming {
     private TreeMap<Replaceable,String> _map;
     private TreeSet<String> _avoid;
-    private Renaming() {
+    public Renaming() {
       _map = new TreeMap<Replaceable,String>();
       _avoid = new TreeSet<String>(_blockedNames);
     }
@@ -338,8 +338,121 @@ public class TermPrinter {
    * printSoloCalculationSymbol.  Values are printed through printValue.
    */
   protected void printFullTheoryTerm(Term term, Renaming naming, StringBuilder builder) {
-    term.queryRoot().toCalculationSymbol().printInfix(builder, term.queryArguments(), naming._map, naming._avoid);
-    // TODO
+    CalculationSymbol root = term.queryRoot().toCalculationSymbol();
+
+    if (term.numberArguments() == 0) {  // this shouldn't really happen, but just in case
+      printSoloCalculationSymbol(root, builder);
+    }
+    else if (term.numberArguments() == 1) {  // this happens for NOT and MINUS
+      printUnaryCalculation(root, term.queryArgument(1), naming, builder);
+    }
+    else if (term.numberArguments() == 2 &&
+             root.queryAssociativity() != CalculationSymbol.Associativity.NOT_INFIX) {
+      printInfix(root, term.queryArgument(1), term.queryArgument(2), naming, builder);
+    }
+    else { // this shouldn't really happen, but just in case
+      printApplication(term, naming, builder);
+    }
+  }
+
+  /**
+   * Called by the default implementation of printFullTheoryTerm() for printing a base-type term
+   * f(s), where f is a calculation symbol.
+   *
+   * The default implementation prints either fs or f(s), depending on the shape of s.  Note that
+   * this assumes that functional terms are typically printed in a form g(a1,...,an) and therefore
+   * do not need brackets; override (or override printFullTheoryTerm or printTerm) if this is not
+   * the case.
+   */
+  protected void printUnaryCalculation(CalculationSymbol rootsymb, Term arg, Renaming naming,
+                                       StringBuilder builder) {
+    boolean brackets = arg.isFunctionalTerm() && arg.queryRoot().toCalculationSymbol() != null;
+    if (!brackets && arg.isValue()) {
+      Value v = arg.toValue();
+      if (v.isIntegerValue() && v.getInt() < 0) brackets = true;
+    }
+    builder.append(rootsymb.queryName());
+    if (brackets) builder.append("(");
+    print(arg, naming, builder);
+    if (brackets) builder.append(")");
+  }
+
+  /**
+   * Called by the default implementation of printFullTheoryTerm() for printing a base-type term
+   * f(left, right) where f is a calculation system that may be printed in infix notation.
+   *
+   * The default functionality determines whether left and right should have brackets based on the
+   * root symbol of left/right (if any) and the associativity of f, and then prints:
+   * <maybeleftopen>left<maybeleftclose><operator><mayberightopen>right<mayberightclose>
+   * where <operator> is printed using printInfixOperator.
+   *
+   * Moreover, if root is the PLUS symbol, and right is negative (so either a negative constant or
+   * a term with root symbol MINUS), then right is negated and the operator printed as MINUS
+   * instead.
+   *
+   * Note that if you mostly like this default functionality and only want to change the way the
+   * operator is printed, it suffices to override printInfixOperator.  However, this default
+   * implementation ONLY prints brackets surrounding terms whose root symbol is a calculation
+   * symbol; if this is undesirable, you should override the whole function instead.
+   */
+  protected void printInfix(CalculationSymbol root, Term left, Term right, Renaming naming,
+                            StringBuilder builder) {
+    CalculationSymbol.Kind rootkind = root.queryKind();
+    String rootname = root.queryName();
+
+    // special case: replacing + by -
+    if (root.queryKind().equals(CalculationSymbol.Kind.PLUS)) {
+      if (right.isFunctionalTerm() && right.queryRoot().toCalculationSymbol() != null &&
+          right.queryRoot().toCalculationSymbol().queryKind().equals(CalculationSymbol.Kind.MINUS)) {
+        rootkind = CalculationSymbol.Kind.MINUS;
+        rootname = "-";
+        right = right.queryArgument(1);
+      }
+      else if (right.isValue() && right.toValue().getInt() < 0) {
+        rootkind = CalculationSymbol.Kind.MINUS;
+        rootname = "-";
+        right = new IntegerValue(-right.toValue().getInt());
+      }
+    }
+
+    int leftpriority = root.queryInfixPriority();
+    int rightpriority = root.queryInfixPriority();
+    if (root.queryAssociativity().equals(CalculationSymbol.Associativity.ASSOC_LEFT) &&
+        left.isFunctionalTerm() && left.queryRoot().equals(root)) leftpriority--;
+    if (root.queryAssociativity().equals(CalculationSymbol.Associativity.ASSOC_RIGHT) &&
+        right.isFunctionalTerm() && right.queryRoot().equals(root)) rightpriority--;
+    printInfixHelper(left, naming, builder, leftpriority);
+    printInfixOperator(rootkind, rootname, builder);
+    printInfixHelper(right, naming, builder, rightpriority);
+  }
+
+  /**
+   * Called by the default functionality for printInfix to print the given operator.
+   * Note that the operator may be any infix operator, but also MINUS (which is here used in a
+   * binary way).
+   */
+  protected void printInfixOperator(CalculationSymbol.Kind operatorkind, String operatorname,
+                                    StringBuilder builder) {
+    builder.append(" ");
+    builder.append(operatorname);
+    builder.append(" ");
+  }
+
+  /**
+   * This function prints the given argument to the string builder, putting it in brackets if it's
+   * a term with infix root of priority ≤ priority.
+   */
+  private void printInfixHelper(Term arg, Renaming naming, StringBuilder builder, int priority) {
+    boolean brackets = false;
+    if (arg.isFunctionalTerm()) {
+      CalculationSymbol root = arg.queryRoot().toCalculationSymbol();
+      if (root != null && root.queryInfixPriority() > 0) {
+        brackets = root.queryInfixPriority() <= priority;
+      }
+    }
+    if (brackets) builder.append("(");
+    print(arg, naming, builder);
+    if (brackets) builder.append(")");
   }
 
   /**

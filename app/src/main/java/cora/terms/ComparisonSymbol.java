@@ -50,8 +50,22 @@ class ComparisonSymbol extends CalculationInherit {
     return _kind;
   }
 
+  public Kind queryKind() {
+    if (_kind.equals(KIND_GRE)) return Kind.GREATER;
+    if (_kind.equals(KIND_SMA)) return Kind.SMALLER;
+    if (_kind.equals(KIND_GEQ)) return Kind.GEQ;
+    if (_kind.equals(KIND_LEQ)) return Kind.LEQ;
+    if (_kind.equals(KIND_EQU)) return Kind.EQUALS;
+    if (_kind.equals(KIND_NEQ)) return Kind.NEQ;
+    throw new Error("Unknown comparison kind: " + _kind);
+  }
+
   public int queryInfixPriority() {
     return CalculationSymbol.INFIX_COMPARISON;
+  }
+
+  public Associativity queryAssociativity() {
+    return Associativity.ASSOC_NONE;
   }
 
   public boolean printInfix(StringBuilder builder, List<Term> args,

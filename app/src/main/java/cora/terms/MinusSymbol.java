@@ -38,8 +38,16 @@ class MinusSymbol extends CalculationInherit {
     return "-";
   }
 
+  public Kind queryKind() {
+    return Kind.MINUS;
+  }
+
   public int queryInfixPriority() {
     return CalculationSymbol.INFIX_MINUS;
+  }
+
+  public Associativity queryAssociativity() {
+    return Associativity.NOT_INFIX;
   }
 
   public boolean printInfix(StringBuilder builder, List<Term> args,

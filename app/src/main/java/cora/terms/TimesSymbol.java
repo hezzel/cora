@@ -40,8 +40,16 @@ class TimesSymbol extends CalculationInherit {
     return "*";
   }
 
+  public Kind queryKind() {
+    return Kind.TIMES;
+  }
+
   public int queryInfixPriority() {
     return CalculationSymbol.INFIX_TIMES;
+  }
+
+  public Associativity queryAssociativity() {
+    return Associativity.ASSOC_LEFT;
   }
 
   public boolean printInfix(StringBuilder builder, List<Term> args,
