@@ -1,0 +1,113 @@
+/**************************************************************************************************
+ Copyright 2024 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
+package cora.terms;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.Set;
+import cora.types.*;
+
+/**
+ * Not too many tests here, because most testing is actually done through the toString() functions
+ * of the various kinds of terms.
+ */
+public class TermPrinterTest {
+  @Test
+  public void testRenamingWithoutAvoidance() {
+    Type a = TypeFactory.createSort("a");
+    Type b = TypeFactory.createSort("b");
+    Type ab = TypeFactory.createArrow(a, b);
+    Variable x1 = new Var("x", a);
+    Variable x2 = new Var("x", a);
+    Variable x3 = new Binder("x", b);
+    MetaVariable mvar = TermFactory.createMetaVar("x", TypeFactory.createArrow(a, a), 1);
+    Term x4 = TermFactory.createMeta(mvar, TermFactory.createConstant("A", a));
+    Variable y = new Binder("y", b);
+    Variable z1 = new Binder("z", ab);
+    Variable z2 = new Var("z", ab);
+    TermPrinter printer = new TermPrinter(new TypePrinter(), Set.of());
+    TermPrinter.Renaming naming = printer.generateUniqueNaming(x1, x2, x3, x4, y, z1, z2);
+    assertTrue(naming.get(x1).equals("x__2"));
+    assertTrue(naming.get(x2).equals("x__3"));
+    assertTrue(naming.get(x3).equals("x__4"));
+    assertTrue(naming.get(mvar).equals("x__1"));  // meta-variables come before variables
+    assertTrue(naming.get(y).equals("y"));
+    assertTrue(naming.get(z1).equals("z__2"));  // binders come after non-binders
+    assertTrue(naming.get(z2).equals("z__1"));
+  }
+
+  @Test
+  public void testBannedOverlap() {
+    TermPrinter printer = new TermPrinter(new TypePrinter(),
+                                          Set.of("x", "y__1", "z", "z__1", "u", "v__1"));
+    Type o = TypeFactory.defaultSort;
+    Variable x = new Var("x", o);
+    Variable y1 = new Var("y", o);
+    Variable y2 = new Var("y", o);
+    Variable z = new Binder("z", o);
+    Variable u1 = new Var("u", o);
+    Variable u2 = new Var("u", o);
+    Variable v = new Var("v", o);
+    Variable w = new Var("", o);
+    Variable a = new Var("17", o);
+    Variable b1 = new Var("b", o);
+    Variable b2 = new Var("b", o);
+    Variable b3 = new Var("b__1", o);
+    TermPrinter.Renaming naming =
+      printer.generateUniqueNaming(x, y1, y2, z, u1, u2, v, w, a, b1, b2, b3);
+    assertTrue(naming.get(x).equals("x__1"));
+    assertTrue(naming.get(y1).equals("y__3"));
+    assertTrue(naming.get(y2).equals("y__2"));
+    assertTrue(naming.get(z).equals("z__2"));
+    assertTrue(naming.get(u1).equals("u__1"));
+    assertTrue(naming.get(u2).equals("u__2"));
+    assertTrue(naming.get(v).equals("v"));
+    assertTrue(naming.get(w).equals("VAR"));
+    assertTrue(naming.get(a).equals("_17"));
+    assertTrue(naming.get(b1).equals("b__3"));
+    assertTrue(naming.get(b2).equals("b__2"));
+    assertTrue(naming.get(b3).equals("b__1"));
+  }
+
+  @Test
+  public void testBoundVariableRenaming() {
+    Type o = TypeFactory.defaultSort;
+    Variable x = new Binder("x", o);
+    Variable y = new Binder("y", o);
+    Term abs1 = new Abstraction(x, x);
+    Term abs2 = new Abstraction(y, y);
+    Type oo = TypeFactory.createArrow(o, o);
+    Term f =
+      TermFactory.createConstant("f", TypeFactory.createArrow(oo, TypeFactory.createArrow(oo, o)));
+    Term term = TermFactory.createApp(f, abs1, abs2); // f(λx.x, λy.y)
+
+    TermPrinter printer = new TermPrinter(new TypePrinter(), Set.of());
+    TermPrinter.Renaming naming = printer.generateUniqueNaming(term, x);
+    assertTrue(naming.get(x).equals("x"));
+    assertTrue(naming.get(y) == null);
+    assertFalse(naming.isAvailable("x"));
+    assertTrue(naming.isAvailable("y"));
+    StringBuilder builder = new StringBuilder();
+    printer.print(term, naming, builder);
+    assertTrue(naming.get(x).equals("x"));
+    assertTrue(naming.get(y) == null);
+    assertFalse(naming.isAvailable("x"));
+    assertTrue(naming.isAvailable("y"));
+    assertTrue(builder.toString().equals("f(λx1.x1, λy.y)"));
+  }
+}
+
