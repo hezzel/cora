@@ -57,21 +57,4 @@ class AndOrSymbol extends CalculationInherit {
   public Associativity queryAssociativity() {
     return Associativity.ASSOC_LEFT;
   }
-
-  public boolean printInfix(StringBuilder builder, List<Term> args,
-                            Map<Replaceable,String> renaming, Set<String> avoid) {
-    if (args.size() != 2) return false; // let the standard printing procedure handle it
-    
-    // we are left-associative, so if the left component is the same symbol, it can be printed
-    // without brackets
-    Term left = args.get(0);
-    if (left.isFunctionalTerm() && equals(args.get(0).queryRoot())) {
-      left.addToString(builder, renaming, avoid);
-    }
-    else printHelper(builder, left, renaming, avoid, CalculationSymbol.INFIX_ANDOR);
-
-    builder.append(" " + queryName() + " ");
-    printHelper(builder, args.get(1), renaming, avoid, CalculationSymbol.INFIX_ANDOR);
-    return true;
-  }
 }

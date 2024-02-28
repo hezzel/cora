@@ -96,13 +96,6 @@ class Binder extends LeafTermInherit implements Variable {
     return 0;
   }
 
-  /** Appends the name of the variable to the builder. */
-  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
-                          Set<String> avoid) {
-    if (renaming == null || !renaming.containsKey(this)) builder.append(_name);
-    else builder.append(renaming.get(this));
-  }
-
   /** @return this */
   public Variable queryVariable() {
     return this;

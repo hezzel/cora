@@ -51,20 +51,5 @@ class TimesSymbol extends CalculationInherit {
   public Associativity queryAssociativity() {
     return Associativity.ASSOC_LEFT;
   }
-
-  public boolean printInfix(StringBuilder builder, List<Term> args,
-                            Map<Replaceable,String> renaming, Set<String> avoid) {
-    if (args.size() != 2) return false; // let the standard printing procedure handle it
-    Term a = args.get(0);
-    if (a.isFunctionalTerm() && a.queryRoot().equals(this)) {
-      printHelper(builder, args.get(0), renaming, avoid, CalculationSymbol.INFIX_TIMES - 1);
-    }
-    else {
-      printHelper(builder, args.get(0), renaming, avoid, CalculationSymbol.INFIX_TIMES);
-    }
-    builder.append(" * ");
-    printHelper(builder, args.get(1), renaming, avoid, CalculationSymbol.INFIX_TIMES);
-    return true;
-  }
 }
 

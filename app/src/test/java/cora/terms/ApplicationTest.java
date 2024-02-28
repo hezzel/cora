@@ -1019,14 +1019,6 @@ public class ApplicationTest extends TermTestFoundation {
     Variable c = new Var("x", baseType("o"));
     Term combi = new Application(a, b, c);
     assertTrue(combi.toString().equals("x__3(x__1, x__2)"));
-    StringBuilder builder = new StringBuilder();
-    combi.addToString(builder, null);
-    assertTrue(builder.toString().equals("x(x, x)"));
-    TreeMap<Replaceable,String> naming = new TreeMap<Replaceable,String>();
-    naming.put(b, "y");
-    builder.setLength(0);
-    combi.addToString(builder, naming);
-    assertTrue(builder.toString().equals("x(y, x)"));
   }
 
   @Test

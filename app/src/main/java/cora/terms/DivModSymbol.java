@@ -57,14 +57,4 @@ class DivModSymbol extends CalculationInherit {
   public Associativity queryAssociativity() {
     return Associativity.ASSOC_NONE;
   }
-
-  public boolean printInfix(StringBuilder builder, List<Term> args,
-                            Map<Replaceable,String> renaming, Set<String> avoid) {
-    if (args.size() != 2) return false; // let the standard printing procedure handle it
-    // no associativity!
-    printHelper(builder, args.get(0), renaming, avoid, CalculationSymbol.INFIX_DIVMOD);
-    builder.append(" " + queryName() + " ");
-    printHelper(builder, args.get(1), renaming, avoid, CalculationSymbol.INFIX_DIVMOD);
-    return true;
-  }
 }

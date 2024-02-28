@@ -279,20 +279,6 @@ class MetaApplication extends TermInherit {
       previous.toString() + " and to " + ret.toString() + ".";
   }
 
-  /** This method gives a string representation of the term. */
-  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
-                          Set<String> avoid) {
-    if (renaming == null || !renaming.containsKey(_metavar)) builder.append(_metavar.queryName());
-    else builder.append(renaming.get(_metavar));
-    builder.append("⟨");
-    _args.get(0).addToString(builder, renaming, avoid);
-    for (int i = 1; i < _args.size(); i++) {
-      builder.append(", ");
-      _args.get(i).addToString(builder, renaming, avoid);
-    }
-    builder.append("⟩");
-  }
-
   /**
    * This method verifies equality to another Term.  Since meta-variables are not renamable
    * variables, a meta-application Z⟨s1,...,sk⟩ can only be equivalent to Z⟨t1,...,tk⟩ if each

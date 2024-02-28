@@ -50,15 +50,5 @@ public interface CalculationSymbol extends FunctionSymbol {
    * Returns the infix associativity of the function symbol.
    */
   public Associativity queryAssociativity();
-
-  /**
-   * If this is a function symbol that should be printed in infix notation for the given number of
-   * arguments, this function call will add the thus-printed term to the given string builder and
-   * return true.  If not, false will be returned.  The arguments will not be altered in any way.
-   * Objects calling this function should make sure the arguments fit the type of the function
-   * symbol.
-   */
-  public boolean printInfix(StringBuilder builder, List<Term> args,
-                            Map<Replaceable,String> renaming, Set<String> avoid);
 }
 

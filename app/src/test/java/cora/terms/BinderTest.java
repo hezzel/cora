@@ -328,19 +328,5 @@ public class BinderTest extends TermTestFoundation {
     Subst gamma = new Subst();
     assertTrue(x.match(t, gamma) != null);
   }
-
-  @Test
-  public void testRenaming() {
-    Variable x = new Binder("x", baseType("a"));
-    StringBuilder builder = new StringBuilder();
-    x.addToString(builder, null);
-    builder.append(" ");
-    TreeMap<Replaceable,String> map = new TreeMap<Replaceable,String>();
-    x.addToString(builder, map, new TreeSet<String>());
-    builder.append(" ");
-    map.put(x, "y");
-    x.addToString(builder, map);
-    assertTrue(builder.toString().equals("x x y"));
-  }
 }
 

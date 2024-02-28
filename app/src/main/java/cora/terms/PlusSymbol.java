@@ -51,27 +51,5 @@ class PlusSymbol extends CalculationInherit {
   public Associativity queryAssociativity() {
     return Associativity.ASSOC_LEFT;
   }
-
-  public boolean printInfix(StringBuilder builder, List<Term> args,
-                            Map<Replaceable,String> renaming, Set<String> avoid) {
-    if (args.size() != 2) return false; // let the standard printing procedure handle it
-    printHelper(builder, args.get(0), renaming, avoid, CalculationSymbol.INFIX_PLUS-1);
-    Term right = args.get(1);
-    if (right.isValue()) {
-      int k = right.toValue().getInt();
-      if (k < 0) builder.append(" - " + (-k));
-      else builder.append(" + " + k);
-    }
-    else if (right.isFunctionalTerm() && right.numberArguments() == 1 &&
-             right.queryHead() instanceof MinusSymbol) {
-      builder.append(" - ");
-      printHelper(builder, right.queryArgument(1), renaming, avoid, CalculationSymbol.INFIX_PLUS);
-    }
-    else {
-      builder.append(" + ");
-      printHelper(builder, right, renaming, avoid, CalculationSymbol.INFIX_PLUS);
-    }
-    return true;
-  }
 }
 

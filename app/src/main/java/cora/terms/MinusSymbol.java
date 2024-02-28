@@ -49,20 +49,5 @@ class MinusSymbol extends CalculationInherit {
   public Associativity queryAssociativity() {
     return Associativity.NOT_INFIX;
   }
-
-  public boolean printInfix(StringBuilder builder, List<Term> args,
-                            Map<Replaceable,String> renaming, Set<String> avoid) {
-    if (args.size() != 1) return false; // let the standard printing procedure handle it
-
-    builder.append("-");
-    Term arg = args.get(0);
-    if (arg.isValue()) {
-      int k = arg.toValue().getInt();
-      if (k < 0) builder.append("(" + k + ")");
-      else builder.append("" + k);
-    }
-    else printHelper(builder, arg, renaming, avoid, CalculationSymbol.INFIX_MINUS);
-    return true;
-  }
 }
 

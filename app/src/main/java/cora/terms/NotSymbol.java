@@ -49,14 +49,5 @@ class NotSymbol extends CalculationInherit {
   public Associativity queryAssociativity() {
     return Associativity.NOT_INFIX;
   }
-
-  public boolean printInfix(StringBuilder builder, List<Term> args,
-                            Map<Replaceable,String> renaming, Set<String> avoid) {
-    if (args.size() != 1) return false; // let the standard printing procedure handle it
-
-    builder.append("¬");
-    printHelper(builder, args.get(0), renaming, avoid, CalculationSymbol.INFIX_NOT);
-    return true;
-  }
 }
 

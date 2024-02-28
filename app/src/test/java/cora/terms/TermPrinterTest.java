@@ -109,5 +109,38 @@ public class TermPrinterTest {
     assertTrue(naming.isAvailable("y"));
     assertTrue(builder.toString().equals("f(λx1.x1, λy.y)"));
   }
+
+  @Test
+  public void testIncompleteRenamingUsedWithAbstraction() {
+    Type o = TypeFactory.createSort("o");
+    // λx.λy.λu.f(g(z2,u),z1,x) where x and u have the same name, and z1 and z2 too
+    Variable x = new Binder("x", o);
+    Variable y = new Binder("y", o);
+    Variable z1 = new Binder("z", o);
+    Variable z2 = new Binder("z", o);
+    Variable u = new Binder("x", o);
+    Constant f = new Constant("f", TypeFactory.createArrow(o, TypeFactory.createArrow(o,
+      TypeFactory.createArrow(o, o))));
+    Constant g = new Constant("g", TypeFactory.createArrow(o, TypeFactory.createArrow(o, o)));
+    Term main = (new Application(f, new Application(g, z2, u), z1)).apply(x);
+    Term abs = new Abstraction(x, new Abstraction(y, new Abstraction(u, main)));
+
+    TermPrinter printer = new TermPrinter(new TypePrinter(), Set.of());
+    TermPrinter.Renaming naming = printer.generateUniqueNaming(abs);
+
+    StringBuilder builder = new StringBuilder();
+    printer.print(abs, naming, builder);
+    assertTrue(builder.toString().equals("λx.λy.λx1.f(g(z__2, x1), z__1, x)"));
+
+    builder.setLength(0);
+    naming = printer.new Renaming();
+    printer.print(abs, naming, builder);
+    assertEquals("λx.λy.λx1.f(g(z, x1), z, x)", builder.toString());
+
+    builder.setLength(0);
+    naming = printer.generateUniqueNaming(new Var("x", o));
+    printer.print(abs, naming, builder);
+    assertEquals("λx1.λy.λx2.f(g(z, x2), z, x1)", builder.toString());
+  }
 }
 

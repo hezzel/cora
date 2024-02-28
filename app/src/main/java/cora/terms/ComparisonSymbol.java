@@ -67,13 +67,4 @@ class ComparisonSymbol extends CalculationInherit {
   public Associativity queryAssociativity() {
     return Associativity.ASSOC_NONE;
   }
-
-  public boolean printInfix(StringBuilder builder, List<Term> args,
-                            Map<Replaceable,String> renaming, Set<String> avoid) {
-    if (args.size() != 2) return false; // let the standard printing procedure handle it
-    printHelper(builder, args.get(0), renaming, avoid, CalculationSymbol.INFIX_COMPARISON - 1);
-    builder.append(" " + _kind + " ");
-    printHelper(builder, args.get(1), renaming, avoid, CalculationSymbol.INFIX_COMPARISON - 1);
-    return true;
-  }
 }

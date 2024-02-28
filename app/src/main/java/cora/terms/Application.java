@@ -392,27 +392,6 @@ class Application extends TermInherit {
     return _head.match(other.queryImmediateHeadSubterm(i), gamma);
   }
 
-  /** This method gives a string representation of the term. */
-  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
-                          Set<String> avoid) {
-    // special case for theory symbols that might be infix
-    if (_head.isConstant()) {
-      CalculationSymbol f = _head.queryRoot().toCalculationSymbol();
-      if (f != null && f.printInfix(builder, _args, renaming, avoid)) return;
-    }
-
-    if (_head.isAbstraction()) builder.append("(");
-    _head.addToString(builder, renaming, avoid);
-    if (_head.isAbstraction()) builder.append(")");
-    builder.append("(");
-    _args.get(0).addToString(builder, renaming, avoid);
-    for (int i = 1; i < _args.size(); i++) {
-      builder.append(", ");
-      _args.get(i).addToString(builder, renaming, avoid);
-    }
-    builder.append(")");
-  }
-
   /** This method verifies equality to another Term. */
   public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
     if (!term.isApplication()) return false;

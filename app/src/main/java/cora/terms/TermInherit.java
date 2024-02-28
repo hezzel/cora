@@ -273,18 +273,6 @@ abstract class TermInherit implements Term {
     return (new TermPrinter(new TypePrinter(), new TreeSet<String>())).print(this);
   }
 
-  /** This function adds a representation of the current term to the given builder. */
-  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming) {
-    TreeSet<String> avoid = new TreeSet<String>();
-    if (renaming == null) renaming = new TreeMap<Replaceable,String>();
-    for (Replaceable x : _freeReplaceables) {
-      String name = x.queryName();
-      avoid.add(name);
-      if (renaming.containsKey(x)) avoid.add(renaming.get(x));
-    }
-    addToString(builder, renaming, avoid);
-  }
-
   // the following functions are all default implementations of interface functions, to be
   // overwritten only in one or two of the inheriting classes
 

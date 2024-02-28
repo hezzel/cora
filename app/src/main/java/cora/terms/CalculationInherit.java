@@ -98,31 +98,5 @@ public abstract class CalculationInherit extends LeafTermInherit implements Calc
     if (!queryType().equals(other.queryType())) return false;
     return queryName().equals(other.queryName());
   }
-
-  /** Adds the term to a string. */
-  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
-                          Set<String> avoid) {
-    builder.append("[");
-    builder.append(queryName());
-    builder.append("]");
-  }
-
-  /**
-   * This function prints the given argument to the string builder, putting it in brackets if it's
-   * a term with infix root of priority ≤ priority.
-   */
-  protected void printHelper(StringBuilder builder, Term arg, Map<Replaceable,String> renaming,
-                             Set<String> avoid, int priority) {
-    boolean brackets = false;
-    if (arg.isFunctionalTerm()) {
-      CalculationSymbol root = arg.queryRoot().toCalculationSymbol();
-      if (root != null && root.queryInfixPriority() > 0) {
-        brackets = root.queryInfixPriority() <= priority;
-      }
-    }
-    if (brackets) builder.append("(");
-    arg.addToString(builder, renaming, avoid);
-    if (brackets) builder.append(")");
-  }
 }
 
