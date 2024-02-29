@@ -25,7 +25,7 @@ import cora.types.Type;
 public class ConnectiveTest extends TermTestFoundation {
   @Test
   public void testAndBasics() {
-    CalculationSymbol a = new AndOrSymbol(false);
+    CalculationSymbol a = TheoryFactory.andSymbol;
     assertTrue(a.queryType().toString().equals("Bool → Bool → Bool"));
     assertTrue(a.queryInfixPriority() == CalculationSymbol.INFIX_ANDOR);
     assertTrue(a.queryName().equals("∧"));
@@ -36,7 +36,7 @@ public class ConnectiveTest extends TermTestFoundation {
 
   @Test
   public void testOrBasics() {
-    CalculationSymbol o = new AndOrSymbol(true);
+    CalculationSymbol o = TheoryFactory.orSymbol;
     assertTrue(o.queryType().toString().equals("Bool → Bool → Bool"));
     assertTrue(o.queryInfixPriority() == CalculationSymbol.INFIX_ANDOR);
     assertTrue(o.queryName().equals("∨"));
@@ -47,9 +47,9 @@ public class ConnectiveTest extends TermTestFoundation {
 
   @Test
   public void testNotBasics() {
-    CalculationSymbol o = new NotSymbol();
+    CalculationSymbol o = TheoryFactory.notSymbol;
     assertTrue(o.queryType().toString().equals("Bool → Bool"));
-    assertTrue(o.queryInfixPriority() == CalculationSymbol.INFIX_NOT);
+    assertTrue(o.queryInfixPriority() == CalculationSymbol.INFIX_NONE);
     assertTrue(o.queryName().equals("¬"));
     assertTrue(o.toString().equals("¬"));
     assertTrue(o.toUniqueString().equals("¬"));
@@ -58,7 +58,7 @@ public class ConnectiveTest extends TermTestFoundation {
 
   @Test
   public void testSimpleAndToString() {
-    CalculationSymbol f = new AndOrSymbol(false);
+    CalculationSymbol f = TheoryFactory.andSymbol;
     assertTrue(f.toString().equals("∧"));
     Value v = new BooleanValue(true);
     assertTrue(f.apply(v).toString().equals("∧(true)"));
@@ -71,7 +71,7 @@ public class ConnectiveTest extends TermTestFoundation {
 
   @Test
   public void testSimpleOrToString() {
-    CalculationSymbol f = new AndOrSymbol(true);
+    CalculationSymbol f = TheoryFactory.orSymbol;
     assertTrue(f.toString().equals("∨"));
     Term v = new Var("x", TypeFactory.boolSort);
     assertTrue(f.apply(v).toString().equals("∨(x)"));
@@ -84,7 +84,7 @@ public class ConnectiveTest extends TermTestFoundation {
 
   @Test
   public void testSimpleNotToString() {
-    CalculationSymbol f = new NotSymbol();
+    CalculationSymbol f = TheoryFactory.notSymbol;
     assertTrue(f.toString().equals("¬"));
     Term v = new Var("x", TypeFactory.boolSort);
     assertTrue(f.apply(v).toString().equals("¬x"));
@@ -92,7 +92,7 @@ public class ConnectiveTest extends TermTestFoundation {
 
   @Test
   public void testDoubleNotToString() {
-    CalculationSymbol f = new NotSymbol();
+    CalculationSymbol f = TheoryFactory.notSymbol;
     Term v = new BooleanValue(true);
     Term s = f.apply(f.apply(v));
     assertTrue(s.toString().equals("¬(¬true)"));
@@ -103,7 +103,7 @@ public class ConnectiveTest extends TermTestFoundation {
     Var x = new Var("x", TypeFactory.boolSort);
     Var y = new Var("y", TypeFactory.boolSort);
     Var z = new Var("z", TypeFactory.boolSort);
-    CalculationSymbol a = new AndOrSymbol(false);
+    CalculationSymbol a = TheoryFactory.andSymbol;
     Term s = new Application(a, new Application(a, x, y), z);
     assertTrue(s.toString().equals("x ∧ y ∧ z"));
   }
@@ -113,7 +113,7 @@ public class ConnectiveTest extends TermTestFoundation {
     Var x = new Var("x", TypeFactory.boolSort);
     Var y = new Var("y", TypeFactory.boolSort);
     Var z = new Var("z", TypeFactory.boolSort);
-    CalculationSymbol o = new AndOrSymbol(true);
+    CalculationSymbol o = TheoryFactory.orSymbol;
     Term s = new Application(o, x, new Application(o, y, z));
     assertTrue(s.toString().equals("x ∨ (y ∨ z)"));
   }
@@ -122,9 +122,9 @@ public class ConnectiveTest extends TermTestFoundation {
   public void testNotInAndInOr() {
     Var x = new Var("x", TypeFactory.boolSort);
     Var y = new Var("y", TypeFactory.boolSort);
-    Term notx = new Application(new NotSymbol(), x);
-    CalculationSymbol a = new AndOrSymbol(false);
-    CalculationSymbol o = new AndOrSymbol(true);
+    Term notx = new Application(TheoryFactory.notSymbol, x);
+    CalculationSymbol a = TheoryFactory.andSymbol;
+    CalculationSymbol o = TheoryFactory.orSymbol;
     Term s = new Application(o, new Application(a, notx, y), new Application(a, y, notx));
     assertTrue(s.toString().equals("(¬x ∧ y) ∨ (y ∧ ¬x)"));
   }
@@ -133,9 +133,9 @@ public class ConnectiveTest extends TermTestFoundation {
   public void testOrInAndInNot() {
     Var x = new Var("x", TypeFactory.boolSort);
     Var y = new Var("y", TypeFactory.boolSort);
-    CalculationSymbol a = new AndOrSymbol(false);
-    CalculationSymbol o = new AndOrSymbol(true);
-    CalculationSymbol n = new NotSymbol();
+    CalculationSymbol a = TheoryFactory.andSymbol;
+    CalculationSymbol o = TheoryFactory.orSymbol;
+    CalculationSymbol n = TheoryFactory.notSymbol;
     Term s = new Application(a, new Application(o, x, y), new Application(o, y, x));
     Term t = new Application(n, s);
     assertTrue(t.toString().equals("¬((x ∨ y) ∧ (y ∨ x))"));
@@ -143,11 +143,11 @@ public class ConnectiveTest extends TermTestFoundation {
 
   @Test
   public void testAndOrEquality() {
-    FunctionSymbol a = new AndOrSymbol(false);
-    FunctionSymbol o = new AndOrSymbol(true);
+    FunctionSymbol a = TheoryFactory.andSymbol;
+    FunctionSymbol o = TheoryFactory.orSymbol;
     Type b = TypeFactory.boolSort;
     FunctionSymbol fakeand = new Constant("∧", arrowType(b, arrowType(b, b)));
-    assertTrue(a.equals(new AndOrSymbol(false)));
+    assertTrue(a.equals(TheoryFactory.andSymbol));
     assertFalse(a.equals(o));
     assertFalse(a.equals(fakeand));
     assertFalse(fakeand.equals(a));
@@ -155,11 +155,11 @@ public class ConnectiveTest extends TermTestFoundation {
 
   @Test
   public void testNotEquality() {
-    FunctionSymbol n = new NotSymbol();
+    FunctionSymbol n = TheoryFactory.notSymbol;
     FunctionSymbol fakenot =
       new Constant("¬", arrowType(TypeFactory.boolSort, TypeFactory.boolSort));
     assertTrue(n.equals(n));
-    assertFalse(n.equals(new AndOrSymbol(true)));
+    assertFalse(n.equals(TheoryFactory.orSymbol));
     assertFalse(n.equals(fakenot));
     assertFalse(fakenot.equals(n));
   }

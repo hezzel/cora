@@ -190,7 +190,7 @@ class AbstractionTest extends TermTestFoundation {
   public void testTheory() {
     // λx::Int.x + 1
     Variable x = new Binder("x", TypeFactory.intSort);
-    Term abs = new Abstraction(x, new Application(new PlusSymbol(), x, new IntegerValue(1)));
+    Term abs = new Abstraction(x, new Application(TheoryFactory.plusSymbol, x, new IntegerValue(1)));
     assertEquals("λx.x + 1", abs.toString());
     assertTrue(abs.isTheoryTerm());
     assertFalse(abs.isValue());

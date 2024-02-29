@@ -173,7 +173,7 @@ public class ApplicationTest extends TermTestFoundation {
     Type i = zero.queryType();
     Term x = new Var("x", arrowType(i, i));
     Term y = new Binder("y", i);
-    Term t = new Application(new PlusSymbol(), x.apply(zero), y);
+    Term t = new Application(TheoryFactory.plusSymbol, x.apply(zero), y);
     assertTrue(t.isTheoryTerm());
     assertFalse(t.isValue());
     assertTrue(t.toValue() == null);
@@ -182,7 +182,7 @@ public class ApplicationTest extends TermTestFoundation {
     t = z.apply(zero);
     assertFalse(t.isTheoryTerm());
     // +(1, 2)
-    t = new Application(new PlusSymbol(), new IntegerValue(1), new IntegerValue(2));
+    t = new Application(TheoryFactory.plusSymbol, new IntegerValue(1), new IntegerValue(2));
     assertTrue(t.isTheoryTerm());
     assertFalse(t.isValue());
     assertTrue(t.toValue() == null);

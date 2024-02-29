@@ -28,10 +28,10 @@ import cora.terms.position.*;
 public class CalculationTest extends TermTestFoundation {
   @Test
   public void testBasics() {
-    CalculationSymbol p = new PlusSymbol();
-    CalculationSymbol t = new TimesSymbol();
-    CalculationSymbol a = new AndOrSymbol(false);
-    CalculationSymbol o = new AndOrSymbol(true);
+    CalculationSymbol p = TheoryFactory.plusSymbol;
+    CalculationSymbol t = TheoryFactory.timesSymbol;
+    CalculationSymbol a = TheoryFactory.andSymbol;
+    CalculationSymbol o = TheoryFactory.orSymbol;
     assertFalse(p.isVariable());
     assertTrue(t.isConstant());
     assertTrue(a.isFunctionalTerm());
@@ -53,7 +53,7 @@ public class CalculationTest extends TermTestFoundation {
     assertTrue(a.queryRoot() == a);
     assertTrue(o.toValue() == null);
     assertTrue(p.toCalculationSymbol() == p);
-    assertTrue(t.isFirstOrder());
+    assertFalse(t.isFirstOrder());
     assertTrue(a.isPattern());
     assertTrue(o.isApplicative());
     assertTrue(p.queryPositions(false).size() == 1);
@@ -66,7 +66,7 @@ public class CalculationTest extends TermTestFoundation {
   @Test
   public void testStore() {
     TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
-    CalculationSymbol d = new DivModSymbol(true);
+    CalculationSymbol d = TheoryFactory.divSymbol;
     d.storeFunctionSymbols(set);
     assertTrue(set.size() == 1);
     assertTrue(set.contains(d));
@@ -74,31 +74,31 @@ public class CalculationTest extends TermTestFoundation {
 
   @Test
   public void testVariableRequest() {
-    FunctionSymbol plus = new PlusSymbol();
+    FunctionSymbol plus = TheoryFactory.plusSymbol;
     assertThrows(InappropriatePatternDataError.class, () -> plus.queryVariable());
   }
 
   @Test
   public void testAbstractionSubtermRequest() {
-    FunctionSymbol times = new TimesSymbol();
+    FunctionSymbol times = TheoryFactory.timesSymbol;
     assertThrows(InappropriatePatternDataError.class, () -> times.queryAbstractionSubterm());
   }
 
   @Test
   public void testArgumentPositionRequest() {
-    FunctionSymbol a = new AndOrSymbol(false);
+    FunctionSymbol a = TheoryFactory.andSymbol;
     assertThrows(IndexingError.class, () -> a.querySubterm(new ArgumentPos(1, Position.empty)));
   }
 
   @Test
   public void testHeadPositionRequest() {
-    FunctionSymbol o = new AndOrSymbol(true);
+    FunctionSymbol o = TheoryFactory.orSymbol;
     assertThrows(IndexingError.class, () -> o.querySubterm(new FinalPos(1)));
   }
 
   @Test
   public void testBadPositionReplacement() {
-    FunctionSymbol plus = new PlusSymbol();
+    FunctionSymbol plus = TheoryFactory.plusSymbol;
     assertThrows(IndexingError.class, () ->
       plus.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a"))));
   }

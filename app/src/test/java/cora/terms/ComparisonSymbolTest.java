@@ -25,7 +25,7 @@ import cora.types.Type;
 public class ComparisonSymbolTest extends TermTestFoundation {
   @Test
   public void testGeqBasics() {
-    CalculationSymbol s = new ComparisonSymbol(ComparisonSymbol.KIND_GEQ);
+    CalculationSymbol s = TheoryFactory.geqSymbol;
     assertTrue(s.queryType().toString().equals("Int → Int → Bool"));
     assertTrue(s.queryInfixPriority() == CalculationSymbol.INFIX_COMPARISON);
     assertTrue(s.queryName().equals("≥"));
@@ -36,7 +36,7 @@ public class ComparisonSymbolTest extends TermTestFoundation {
 
   @Test
   public void testLeqBasics() {
-    CalculationSymbol s = new ComparisonSymbol(ComparisonSymbol.KIND_LEQ);
+    CalculationSymbol s = TheoryFactory.leqSymbol;
     assertTrue(s.queryType().toString().equals("Int → Int → Bool"));
     assertTrue(s.queryInfixPriority() == CalculationSymbol.INFIX_COMPARISON);
     assertTrue(s.queryName().equals("≤"));
@@ -47,7 +47,7 @@ public class ComparisonSymbolTest extends TermTestFoundation {
 
   @Test
   public void testGreaterBasics() {
-    CalculationSymbol s = new ComparisonSymbol(ComparisonSymbol.KIND_GRE);
+    CalculationSymbol s = TheoryFactory.greaterSymbol;
     assertTrue(s.queryName().equals(">"));
     assertTrue(s.toString().equals(">"));
     assertTrue(s.toUniqueString().equals(">"));
@@ -55,7 +55,7 @@ public class ComparisonSymbolTest extends TermTestFoundation {
 
   @Test
   public void testSmallerBasics() {
-    CalculationSymbol s = new ComparisonSymbol(ComparisonSymbol.KIND_SMA);
+    CalculationSymbol s = TheoryFactory.smallerSymbol;
     assertTrue(s.queryName().equals("<"));
     assertTrue(s.toString().equals("<"));
     assertTrue(s.toUniqueString().equals("<"));
@@ -63,7 +63,7 @@ public class ComparisonSymbolTest extends TermTestFoundation {
 
   @Test
   public void testSimpleToString() {
-    CalculationSymbol s = new ComparisonSymbol(ComparisonSymbol.KIND_GRE);
+    CalculationSymbol s = TheoryFactory.greaterSymbol;
 
     Value v = new IntegerValue(12);
     assertTrue(s.apply(v).toString().equals(">(12)"));
@@ -77,30 +77,30 @@ public class ComparisonSymbolTest extends TermTestFoundation {
 
   @Test
   public void testToStringWithComplexChildren() {
-    CalculationSymbol s = new ComparisonSymbol(ComparisonSymbol.KIND_GEQ);
+    CalculationSymbol s = TheoryFactory.geqSymbol;
     Variable x = new Var("x", TypeFactory.intSort);
     Variable y = new Binder("y", TypeFactory.intSort);
-    Term t = s.apply(new Application(new PlusSymbol(), x, y))
-              .apply(new Application(new TimesSymbol(), y, x));
+    Term t = s.apply(new Application(TheoryFactory.plusSymbol, x, y))
+              .apply(new Application(TheoryFactory.timesSymbol, y, x));
     assertTrue(t.toString().equals("x + y ≥ y * x"));
   }
 
   @Test
   public void testToStringWithNot() {
-    CalculationSymbol s = new ComparisonSymbol(ComparisonSymbol.KIND_GRE);
+    CalculationSymbol s = TheoryFactory.greaterSymbol;
     Variable x = new Var("x", TypeFactory.intSort);
     Variable y = new Binder("y", TypeFactory.intSort);
-    Term t = s.apply(new Application(new PlusSymbol(), x, y)).apply(x);
-    t = (new NotSymbol()).apply(t);
+    Term t = s.apply(new Application(TheoryFactory.plusSymbol, x, y)).apply(x);
+    t = TheoryFactory.notSymbol.apply(t);
     assertTrue(t.toString().equals("¬(x + y > x)"));
   }
 
   @Test
   public void testEqualityEquality() {
-    FunctionSymbol a = new ComparisonSymbol(ComparisonSymbol.KIND_SMA);
-    FunctionSymbol b = new ComparisonSymbol(ComparisonSymbol.KIND_LEQ);
+    FunctionSymbol a = TheoryFactory.smallerSymbol;
+    FunctionSymbol b = TheoryFactory.leqSymbol;
     FunctionSymbol c = new Constant("<", a.queryType());
-    assertTrue(a.equals(new ComparisonSymbol(ComparisonSymbol.KIND_SMA)));
+    assertTrue(a.equals(TheoryFactory.smallerSymbol));
     assertFalse(a.equals(b));
     assertFalse(a.equals(c));
     assertFalse(c.equals(a));
