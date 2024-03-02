@@ -15,7 +15,7 @@
 
 package cora.smt;
 
-public class Geq extends Comparison {
+public final class Geq extends Comparison {
   Geq(IntegerExpression left, IntegerExpression right) { super(left, right); }
   protected boolean evaluate(int l, int r) { return l >= r; }
   protected String symbol() { return ">="; }

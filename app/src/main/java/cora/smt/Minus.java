@@ -15,7 +15,7 @@
 
 package cora.smt;
 
-public class Minus extends IntegerExpression {
+public final class Minus extends IntegerExpression {
   private IntegerExpression _negated;
 
   /** The constructor is hidden, since IntegerExpressions should be made through the SmtFactory. */

@@ -16,7 +16,9 @@
 package cora.smt;
 
 /** Not a public class on purpose: use Constraint, or use Greater/Geq directly. */
-abstract class Comparison extends Constraint {
+abstract sealed class Comparison extends Constraint
+    permits Greater, Geq, Equal, Distinct {
+
   protected IntegerExpression _left;
   protected IntegerExpression _right;
 

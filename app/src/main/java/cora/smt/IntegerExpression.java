@@ -22,7 +22,8 @@ package cora.smt;
  * IntegerExpressions can be expected to be immutable.
  */
 
-public abstract class IntegerExpression {
+public sealed abstract class IntegerExpression
+  permits IVar, IValue, Division, Modulo, Minus, Multiplication, Addition {
   /**
    * Assuming the current expression has no variables, this function evaluates it to its integer
    * value.  If there is a variable in it, an SmtEvaluationError will be thrown instead.

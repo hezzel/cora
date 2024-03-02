@@ -15,7 +15,7 @@
 
 package cora.smt;
 
-public class Modulo extends IntegerExpression {
+public final class Modulo extends IntegerExpression {
   private IntegerExpression _numerator;
   private IntegerExpression _denominator;
 

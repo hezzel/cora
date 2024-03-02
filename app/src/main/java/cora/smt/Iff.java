@@ -15,31 +15,40 @@
 
 package cora.smt;
 
-import cora.exceptions.IndexingError;
+public final class Iff extends Constraint {
+  private Constraint _left;
+  private Constraint _right;
 
-public final class IValue extends IntegerExpression {
-  private int _k;
-
-  /** The constructor is hidden, since IntegerExpressions should be made through the SmtFactory. */
-  IValue(int i) {
-    _k = i;
+  /** The constructor is hidden, since Constraints should be made through the SmtFactory. */
+  Iff(Constraint a, Constraint b) {
+    _left = a;
+    _right = b;
   }
 
-  public int queryValue() {
-    return _k;
+  public Constraint queryLeft() {
+    return _left;
   }
 
-  public int evaluate() {
-    return _k;
+  public Constraint queryRight() {
+    return _right;
+  }
+
+  public boolean evaluate() {
+    return _left.evaluate() == _right.evaluate();
   }
 
   public void addToSmtString(StringBuilder builder) {
-    if (_k >= 0) builder.append("" + _k);
-    else builder.append("(- " + (-_k) + ")");
+    builder.append("(= ");
+    _left.addToSmtString(builder);
+    builder.append(" ");
+    _right.addToSmtString(builder);
+    builder.append(")");
   }
 
-  public boolean equals(IntegerExpression other) {
-    return (other instanceof IValue) && (((IValue)other).evaluate() == _k);
+  public boolean equals(Constraint other) {
+    if (!(other instanceof Iff)) return false;
+    Iff o = (Iff)other;
+    return _left.equals(o.queryLeft()) && _right.equals(o.queryRight());
   }
 }
 

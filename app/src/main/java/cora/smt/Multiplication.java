@@ -18,7 +18,7 @@ package cora.smt;
 import java.util.ArrayList;
 import cora.exceptions.IndexingError;
 
-public class Multiplication extends IntegerExpression {
+public final class Multiplication extends IntegerExpression {
   protected ArrayList<IntegerExpression> _children;
 
   protected void addChild(IntegerExpression child) {

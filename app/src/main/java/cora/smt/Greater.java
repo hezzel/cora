@@ -15,7 +15,7 @@
 
 package cora.smt;
 
-public class Greater extends Comparison {
+public final class Greater extends Comparison {
   Greater(IntegerExpression left, IntegerExpression right) { super(left, right); }
   protected boolean evaluate(int l, int r) { return l > r; }
   protected String symbol() { return ">"; }

@@ -15,7 +15,7 @@
 
 package cora.smt;
 
-public class Division extends IntegerExpression {
+public final class Division extends IntegerExpression {
   private IntegerExpression _numerator;
   private IntegerExpression _denominator;
 

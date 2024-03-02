@@ -17,10 +17,10 @@ package cora.smt;
 
 import cora.exceptions.SmtEvaluationError;
 
-public class IVar extends IntegerExpression {
+public final class IVar extends IntegerExpression {
   private int _index;
 
-  /** The constructor is hidden, since IntegerExpressions should be made through the SmtFactory. */
+  /** The constructor is hidden, since IntegerExpressions should be made through an SmtProblem. */
   IVar(int i) {
     _index = i;
   }

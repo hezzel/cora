@@ -18,7 +18,7 @@ package cora.smt;
 import java.util.ArrayList;
 import cora.exceptions.IndexingError;
 
-public class Disjunction extends Junction {
+public final class Disjunction extends Junction {
   Disjunction(Constraint a, Constraint b) {
     super(a, b);
   }

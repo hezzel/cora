@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import cora.exceptions.IndexingError;
 
 /** Shared inherit functionality for Conjunction and Disjunction; do not use on its own. */
-abstract class Junction extends Constraint {
+abstract sealed class Junction extends Constraint permits Conjunction, Disjunction {
   protected ArrayList<Constraint> _children;
 
   protected abstract String symbol();

@@ -15,7 +15,7 @@
 
 package cora.smt;
 
-public class Distinct extends Comparison {
+public final class Distinct extends Comparison {
   Distinct(IntegerExpression left, IntegerExpression right) { super(left, right); }
   protected boolean evaluate(int l, int r) { return l != r; }
   protected String symbol() { return "distinct"; }
