@@ -13,19 +13,21 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.smt;
+package cora.theorytranslation;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import cora.exceptions.UnsupportedTheoryError;
 import cora.types.TypeFactory;
 import cora.terms.*;
 
 public class TermAnalyserTest {
-  @Test(expected = UnsupportedTheoryError.class)
+  @Test
   public void testIncompleteCalculate() {
-    TermAnalyser.calculate(TheoryFactory.andSymbol.apply(TheoryFactory.createValue(false)));
+    assertThrows(UnsupportedTheoryError.class, () ->
+      TermAnalyser.calculate(TheoryFactory.andSymbol.apply(TheoryFactory.createValue(false))));
   }
 
   @Test

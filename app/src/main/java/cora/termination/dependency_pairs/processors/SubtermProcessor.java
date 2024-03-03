@@ -50,8 +50,8 @@ public class SubtermProcessor implements Processor {
     map.forEach (
       (fn, ivar) -> {
         int arity = fn.queryArity();
-        _smt.require(SmtProblem.createLeq(SmtProblem.createValue(1),  ivar));
-        _smt.require(SmtProblem.createGeq(SmtProblem.createValue(arity), ivar));
+        _smt.require(SmtFactory.createLeq(SmtFactory.createValue(1),  ivar));
+        _smt.require(SmtFactory.createGeq(SmtFactory.createValue(arity), ivar));
       }
     );
   }
@@ -61,7 +61,7 @@ public class SubtermProcessor implements Processor {
     for (BVar b : boolMap.values()) {
       disj.add(b);
     }
-    _smt.require(SmtProblem.createDisjunction(disj));
+    _smt.require(SmtFactory.createDisjunction(disj));
   }
 
   // TODO this function doesn't belong here...
@@ -92,18 +92,18 @@ public class SubtermProcessor implements Processor {
           Term si = lhs.queryArgument(i);
           Term tj = rhs.queryArgument(j);
           //
-          Constraint c0 = SmtProblem.createUnequal(fSharpMap.get(f), SmtProblem.createValue(i));
-          Constraint c1 = SmtProblem.createUnequal(fSharpMap.get(g), SmtProblem.createValue(j));
+          Constraint c0 = SmtFactory.createUnequal(fSharpMap.get(f), SmtFactory.createValue(i));
+          Constraint c1 = SmtFactory.createUnequal(fSharpMap.get(g), SmtFactory.createValue(j));
           if (si.equals(tj)) {
-            Constraint c2 = SmtProblem.createNegation(dpbVarMap.get(dp));
-            Constraint disjunction = SmtProblem.createDisjunction(new ArrayList<>(List.of(c0, c1, c2)));
+            Constraint c2 = SmtFactory.createNegation(dpbVarMap.get(dp));
+            Constraint disjunction = SmtFactory.createDisjunction(new ArrayList<>(List.of(c0, c1, c2)));
             _smt.require(disjunction);
           } else if (isSubtermGTE(si, tj)) {
             Constraint c2 = dpbVarMap.get(dp);
-            Constraint disjunction = SmtProblem.createDisjunction(new ArrayList<>(List.of(c0, c1, c2)));
+            Constraint disjunction = SmtFactory.createDisjunction(new ArrayList<>(List.of(c0, c1, c2)));
             _smt.require(disjunction);
           } else {
-            Constraint disjunction = SmtProblem.createDisjunction(new ArrayList<>(List.of(c0, c1)));
+            Constraint disjunction = SmtFactory.createDisjunction(new ArrayList<>(List.of(c0, c1)));
             _smt.require(disjunction);
           }
         }

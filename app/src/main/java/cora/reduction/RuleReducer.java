@@ -20,7 +20,7 @@ import java.util.Map;
 import cora.types.Type;
 import cora.terms.*;
 import cora.trs.Rule;
-import cora.smt.TermAnalyser;
+import cora.theorytranslation.TermAnalyser;
 
 /**
  * Rules are the core objects that define the reduction relation in a term rewriting system.  These

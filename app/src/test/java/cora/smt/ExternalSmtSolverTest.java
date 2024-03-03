@@ -21,11 +21,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.TreeSet;
 
-public class SmtSolverTest {
+public class ExternalSmtSolverTest {
   // @Test
   // NOTE: @Test removed because we don't want to be writing files at every compile
   public void testSimpleValidityCheck() {
-    SmtSolver solver = new SmtSolver();
+    ExternalSmtSolver solver = new ExternalSmtSolver();
 
     TreeSet<Integer> boolvars = new TreeSet<Integer>();
     TreeSet<Integer> intvars = new TreeSet<Integer>();
@@ -45,7 +45,7 @@ public class SmtSolverTest {
   // @Test
   // NOTE: @Test removed because we don't want to be writing files at every compile
   public void testSimpleSatisfiabilityCheck() {
-    SmtSolver solver = new SmtSolver();
+    ExternalSmtSolver solver = new ExternalSmtSolver();
 
     TreeSet<Integer> boolvars = new TreeSet<Integer>();
     TreeSet<Integer> intvars = new TreeSet<Integer>();

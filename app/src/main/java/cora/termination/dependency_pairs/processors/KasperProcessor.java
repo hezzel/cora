@@ -3,6 +3,7 @@ package cora.termination.dependency_pairs.processors;
 import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;
+import cora.theorytranslation.TermSmtTranslator;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
@@ -229,15 +230,15 @@ public class KasperProcessor implements Processor {
   private void requiresCtrs(Map<FunctionSymbol, IVar> intMap) {
     intMap.forEach( (f, ivar) -> {
       int upperBound = _candidates.get(f).size()-1;
-      _smt.require(SmtProblem.createLeq(SmtProblem.createValue(0), ivar));
-      _smt.require(SmtProblem.createLeq(ivar, SmtProblem.createValue(upperBound)));
+      _smt.require(SmtFactory.createLeq(SmtFactory.createValue(0), ivar));
+      _smt.require(SmtFactory.createLeq(ivar, SmtFactory.createValue(upperBound)));
     });
   }
 
   private void requireAtLeastOneStrict(Map<DP, BVar> boolMap) {
     ArrayList<Constraint> disj = new ArrayList<Constraint>();
     for (BVar b : boolMap.values()) disj.add(b);
-    _smt.require(SmtProblem.createDisjunction(disj));
+    _smt.require(SmtFactory.createDisjunction(disj));
   }
 
   private void putDpRequirements(Map<FunctionSymbol, IVar> intMap, Map<DP, BVar> boolMap, Problem dpp) {
@@ -257,26 +258,24 @@ public class KasperProcessor implements Processor {
           Term instRj = instantiateCandidate(_candidates.get(rhsHead).get(j), rhs);
 
           SmtProblem validityProblem = new SmtProblem();
+          TermSmtTranslator tst = new TermSmtTranslator(validityProblem);
 
           // translate the constraint and instantiated candidates to smt language
-          Constraint constraintTranslation =
-            TermSmtTranslator.translateConstraint(ctr, validityProblem);
-          IntegerExpression candLiExpr =
-            TermSmtTranslator.translateIntegerExpression(instLi, validityProblem);
-          IntegerExpression candRjExpr =
-            TermSmtTranslator.translateIntegerExpression(instRj, validityProblem);
+          Constraint constraintTranslation = tst.translateConstraint(ctr);
+          IntegerExpression candLiExpr = tst.translateIntegerExpression(instLi);
+          IntegerExpression candRjExpr = tst.translateIntegerExpression(instRj);
           
           // fSharpDisjunction = nu(leftroot) != i \/ nu(rightroot) != j
           Constraint fSharpDisjunction =
-            SmtProblem.createDisjunction (
-              SmtProblem.createUnequal(intMap.get(lhsHead), SmtProblem.createValue(i)),
-              SmtProblem.createUnequal(intMap.get(rhsHead), SmtProblem.createValue(j))
+            SmtFactory.createDisjunction (
+              SmtFactory.createUnequal(intMap.get(lhsHead), SmtFactory.createValue(i)),
+              SmtFactory.createUnequal(intMap.get(rhsHead), SmtFactory.createValue(j))
             );
 
           // check one: if left ≥ right doesn't even hold, then we can't have that choice of
           // candidates
           validityProblem
-            .requireImplication(constraintTranslation, SmtProblem.createGeq(candLiExpr, candRjExpr));
+            .requireImplication(constraintTranslation, SmtFactory.createGeq(candLiExpr, candRjExpr));
           if (!validityProblem.isValid()) {
             _smt.require(fSharpDisjunction);
             continue;
@@ -287,22 +286,22 @@ public class KasperProcessor implements Processor {
           validityProblem.clear();
           validityProblem.requireImplication (
             constraintTranslation,
-            SmtProblem.createConjunction (
-              SmtProblem.createGeq(candLiExpr, SmtProblem.createValue(0)),
-              SmtProblem.createGreater(candLiExpr, candRjExpr)
+            SmtFactory.createConjunction (
+              SmtFactory.createGeq(candLiExpr, SmtFactory.createValue(0)),
+              SmtFactory.createGreater(candLiExpr, candRjExpr)
             ));
 
           if(validityProblem.isValid()) {
             _smt.require(
-              SmtProblem.createDisjunction(
+              SmtFactory.createDisjunction(
                 fSharpDisjunction,
                 boolMap.get(dp)
               ));
           } else {
             _smt.require (
-              SmtProblem.createDisjunction(
+              SmtFactory.createDisjunction(
                 fSharpDisjunction,
-                SmtProblem.createNegation(boolMap.get(dp))
+                SmtFactory.createNegation(boolMap.get(dp))
               ));
           }
         }

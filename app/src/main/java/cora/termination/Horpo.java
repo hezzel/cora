@@ -24,6 +24,7 @@ import cora.terms.*;
 import cora.smt.*;
 import cora.trs.*;
 import cora.trs.TrsProperties.*;
+import cora.theorytranslation.TermSmtTranslator;
 
 /**
  * This is an implementation of a basic version of Horpo for LCSTRSs (so with constraints).
@@ -218,8 +219,8 @@ public class Horpo {
     if (_precedence.containsKey(f.toString())) return _precedence.get(f.toString());
     IVar x = _problem.createIntegerVariable();
     // theory symbols have values < 0, non-theory symbols ≥ 0
-    if (f.isTheorySymbol()) _problem.require(SmtProblem.createSmaller(x, SmtProblem.createValue(0)));
-    else _problem.require(SmtProblem.createGeq(x, SmtProblem.createValue(0)));
+    if (f.isTheorySymbol()) _problem.require(SmtFactory.createSmaller(x, SmtFactory.createValue(0)));
+    else _problem.require(SmtFactory.createGeq(x, SmtFactory.createValue(0)));
     _precedence.put(f.toString(), x);
     return x;
   }
@@ -235,8 +236,8 @@ public class Horpo {
     if (_status.containsKey(f.toString())) return _status.get(f.toString());
     IVar x = _problem.createIntegerVariable();
     _status.put(f.toString(), x);
-    _problem.require(SmtProblem.createGeq(x, SmtProblem.createValue(1)));
-    _problem.require(SmtProblem.createLeq(x, SmtProblem.createValue(f.queryArity())));
+    _problem.require(SmtFactory.createGeq(x, SmtFactory.createValue(1)));
+    _problem.require(SmtFactory.createLeq(x, SmtFactory.createValue(f.queryArity())));
     return x;
   }
 
@@ -336,7 +337,7 @@ public class Horpo {
       lst.add(getVariableFor(req.rule, l, GEQ, r, c, "1a"));
       lst.add(getVariableFor(req.rule, l, GEQ, r, c, "1b"));
       lst.add(getVariableFor(req.rule, l, GEQ, r, c, "1d"));
-      Constraint combi = SmtProblem.createDisjunction(lst);
+      Constraint combi = SmtFactory.createDisjunction(lst);
       _problem.requireImplication(req.variable, combi);
     }
     else if (req.clause.equals("1a")) {
@@ -371,27 +372,28 @@ public class Horpo {
    */
   private void handleIntComparison(Term l, Term r, Term phi, BVar variable, boolean strict) {
     SmtProblem validityProblem = new SmtProblem();
-    IntegerExpression el = TermSmtTranslator.translateIntegerExpression(l, validityProblem);
-    IntegerExpression er = TermSmtTranslator.translateIntegerExpression(r, validityProblem);
-    Constraint c = TermSmtTranslator.translateConstraint(phi, validityProblem);
-    Constraint equal = SmtProblem.createEqual(el, er);
+    TermSmtTranslator tst = new TermSmtTranslator(validityProblem);
+    IntegerExpression el = tst.translateIntegerExpression(l);
+    IntegerExpression er = tst.translateIntegerExpression(r);
+    Constraint c = tst.translateConstraint(phi);
+    Constraint equal = SmtFactory.createEqual(el, er);
 
-    IntegerExpression eMM = SmtProblem.createValue(-_M);
-    Constraint decrease = SmtProblem.createConjunction(  // l > -M ∧ l > r
-      SmtProblem.createGreater(el, eMM),
-      SmtProblem.createGreater(el, er));
-    if (!strict) decrease = SmtProblem.createDisjunction(equal, decrease);  // l = r ∨ above
+    IntegerExpression eMM = SmtFactory.createValue(-_M);
+    Constraint decrease = SmtFactory.createConjunction(  // l > -M ∧ l > r
+      SmtFactory.createGreater(el, eMM),
+      SmtFactory.createGreater(el, er));
+    if (!strict) decrease = SmtFactory.createDisjunction(equal, decrease);  // l = r ∨ above
     validityProblem.requireImplication(c, decrease);
     if (!validityProblem.isValid()) {
-      _problem.requireImplication(variable, SmtProblem.createNegation(_down));
+      _problem.requireImplication(variable, SmtFactory.createNegation(_down));
     }
 
     validityProblem.clear();
-    IntegerExpression eM = SmtProblem.createValue(_M);
-    Constraint increase = SmtProblem.createConjunction(  // l < M ∧ l < r
-      SmtProblem.createSmaller(el, eM),
-      SmtProblem.createSmaller(el, er));
-    if (!strict) increase = SmtProblem.createDisjunction(equal, increase);
+    IntegerExpression eM = SmtFactory.createValue(_M);
+    Constraint increase = SmtFactory.createConjunction(  // l < M ∧ l < r
+      SmtFactory.createSmaller(el, eM),
+      SmtFactory.createSmaller(el, er));
+    if (!strict) increase = SmtFactory.createDisjunction(equal, increase);
     validityProblem.requireImplication(c, increase);
     if (!validityProblem.isValid()) {
       _problem.requireImplication(variable, _down);
@@ -400,34 +402,35 @@ public class Horpo {
 
   private void handleBoolComparison(Term l, Term r, Term phi, BVar variable, boolean strict) {
     SmtProblem validityProblem = new SmtProblem();
-    Constraint cl = TermSmtTranslator.translateConstraint(l, validityProblem);
-    Constraint cr = TermSmtTranslator.translateConstraint(r, validityProblem);
-    Constraint cp = TermSmtTranslator.translateConstraint(phi, validityProblem);
-    Constraint negr = SmtProblem.createNegation(cr);
+    TermSmtTranslator tst = new TermSmtTranslator(validityProblem);
+    Constraint cl = tst.translateConstraint(l);
+    Constraint cr = tst.translateConstraint(r);
+    Constraint cp = tst.translateConstraint(phi);
+    Constraint negr = SmtFactory.createNegation(cr);
 
     // we fix the comparison true ⊐ false (as this case rarely occurs anyway)
     Constraint constr;
-    if (strict) constr = SmtProblem.createConjunction(cl, negr);
-    else constr = SmtProblem.createDisjunction(cl, negr);
+    if (strict) constr = SmtFactory.createConjunction(cl, negr);
+    else constr = SmtFactory.createDisjunction(cl, negr);
     validityProblem.requireImplication(cp, constr);
 
-    if (!validityProblem.isValid()) _problem.require(SmtProblem.createNegation(variable));
+    if (!validityProblem.isValid()) _problem.require(SmtFactory.createNegation(variable));
   }
 
   private void handleTheoryComparison(Term l, Term r, Term phi, BVar variable, boolean strict) {
-    if (!theoryAllowed(l, r, phi)) _problem.require(SmtProblem.createNegation(variable));
+    if (!theoryAllowed(l, r, phi)) _problem.require(SmtFactory.createNegation(variable));
     else if (l.queryType().equals(TypeFactory.intSort)) {
       handleIntComparison(l, r, phi, variable, strict);
     }
     else if (l.queryType().equals(TypeFactory.boolSort)) {
       handleBoolComparison(l, r, phi, variable, strict);
     }
-    else _problem.require(SmtProblem.createNegation(variable));
+    else _problem.require(SmtFactory.createNegation(variable));
   }
 
   private void handleGeqB(HorpoRequirement req) {
     // for theory terms, > never succeeds where the other rules for ≥ fail
-    if (req.left.isTheoryTerm()) _problem.require(SmtProblem.createNegation(req.variable));
+    if (req.left.isTheoryTerm()) _problem.require(SmtFactory.createNegation(req.variable));
     else {
        BVar x = getVariableFor(req.rule, req.left, GREATER, req.right, req.constraint, null);
       _problem.requireImplication(req.variable, x);
@@ -437,7 +440,7 @@ public class Horpo {
   private void handleGeqC(HorpoRequirement req) {
     // this case is actually only relevant if both sides are equal: if they are theory terms we
     // have l ≥ r by 1a, and if they are applications we have l ≥ r by 1d
-    if (!req.left.equals(req.right)) _problem.require(SmtProblem.createNegation(req.variable));
+    if (!req.left.equals(req.right)) _problem.require(SmtFactory.createNegation(req.variable));
   }
 
   private void handleGeqD(HorpoRequirement req) {
@@ -456,7 +459,7 @@ public class Horpo {
         return;
       }
     }
-    _problem.require(SmtProblem.createNegation(req.variable));
+    _problem.require(SmtFactory.createNegation(req.variable));
   }
 
   private void handleGreater(HorpoRequirement req) {
@@ -470,7 +473,7 @@ public class Horpo {
       lst.add(getVariableFor(req.rule, l, GREATER, r, c, "2c"));
       lst.add(getVariableFor(req.rule, l, GREATER, r, c, "2d"));
       lst.add(getVariableFor(req.rule, l, GREATER, r, c, "2b"));
-      Constraint combi = SmtProblem.createDisjunction(lst);
+      Constraint combi = SmtFactory.createDisjunction(lst);
       _problem.requireImplication(req.variable, combi);
     }
     else if (req.clause.equals("2a")) {
@@ -483,7 +486,7 @@ public class Horpo {
 
   private void handleGreaterB(HorpoRequirement req) {
     if (!req.left.isFunctionalTerm() || req.left.isTheoryTerm()) {
-      _problem.require(SmtProblem.createNegation(req.variable));
+      _problem.require(SmtFactory.createNegation(req.variable));
     }
     else {
       BVar x = getVariableFor(req.rule, req.left, RPO, req.right, req.constraint, null);
@@ -502,14 +505,14 @@ public class Horpo {
       onestrict.add(getVariableFor(req.rule, l.queryArgument(i), GREATER, r.queryArgument(i),
                                    req.constraint, null));
     }
-    _problem.requireImplication(req.variable, SmtProblem.createDisjunction(onestrict));
+    _problem.requireImplication(req.variable, SmtFactory.createDisjunction(onestrict));
   }
 
   private void handleGreaterC(HorpoRequirement req) {
     if (!req.left.isFunctionalTerm() || !req.right.isFunctionalTerm() ||
         req.left.numberArguments() != req.right.numberArguments() ||
         !req.left.queryRoot().equals(req.right.queryRoot())) {
-      _problem.require(SmtProblem.createNegation(req.variable));
+      _problem.require(SmtFactory.createNegation(req.variable));
     }
     else handleGreaterArguments(req);
   }
@@ -518,7 +521,7 @@ public class Horpo {
     if (!req.left.isVarTerm() || !req.right.isVarTerm() ||
         req.left.numberArguments() != req.right.numberArguments() ||
         !req.left.queryVariable().equals(req.right.queryVariable())) {
-      _problem.require(SmtProblem.createNegation(req.variable));
+      _problem.require(SmtFactory.createNegation(req.variable));
     }
     else handleGreaterArguments(req);
   }
@@ -537,7 +540,7 @@ public class Horpo {
       combi.add(getVariableFor(req.rule, l, RPO, r, c, "3d"));
       combi.add(getVariableFor(req.rule, l, RPO, r, c, "3e"));
       combi.add(getVariableFor(req.rule, l, RPO, r, c, "3b"));
-      _problem.requireImplication(req.variable, SmtProblem.createDisjunction(combi));
+      _problem.requireImplication(req.variable, SmtFactory.createDisjunction(combi));
     }
     else if (req.clause.equals("3a")) handleRpoA(req);
     else if (req.clause.equals("3b")) handleRpoB(req);
@@ -555,20 +558,20 @@ public class Horpo {
       Term a = l.queryArgument(i);
       if (sameTypeStructure(a.queryType(), rtype)) args.add(a);
     }
-    if (args.size() == 0) _problem.require(SmtProblem.createNegation(req.variable));
+    if (args.size() == 0) _problem.require(SmtFactory.createNegation(req.variable));
     else {
       ArrayList<Constraint> vars = new ArrayList<Constraint>();
       for (int i = 0; i < args.size(); i++) {
         vars.add(getVariableFor(req.rule, args.get(i), GEQ, req.right, req.constraint, null));
       }
-      _problem.requireImplication(req.variable, SmtProblem.createDisjunction(vars));
+      _problem.requireImplication(req.variable, SmtFactory.createDisjunction(vars));
     }
   }
 
   private void handleRpoB(HorpoRequirement req) {
     Term r = req.right;
     if (r.numberArguments() == 0) {
-      _problem.require(SmtProblem.createNegation(req.variable));
+      _problem.require(SmtFactory.createNegation(req.variable));
       return;
     }
     Term a = r.queryImmediateHeadSubterm(r.numberArguments()-1);
@@ -585,13 +588,13 @@ public class Horpo {
     FunctionSymbol f = l.queryRoot();
     if (!r.isFunctionalTerm() || r.queryRoot().equals(f) || r.isValue()) {
       // values are excluded here because this case is already covered by 3f
-      _problem.require(SmtProblem.createNegation(req.variable));
+      _problem.require(SmtFactory.createNegation(req.variable));
     }
     else {
       FunctionSymbol g = r.queryRoot();
       IVar predf = getPrecedenceFor(f);
       IVar predg = getPrecedenceFor(g);
-      _problem.requireImplication(req.variable, SmtProblem.createGreater(predf, predg));
+      _problem.requireImplication(req.variable, SmtFactory.createGreater(predf, predg));
       for (int i = 1; i <= r.numberArguments(); i++) {
         _problem.requireImplication(req.variable,
           getVariableFor(req.rule, l, RPO, r.queryArgument(i), req.constraint, null));
@@ -603,19 +606,19 @@ public class Horpo {
     Term l = req.left, r = req.right;
     FunctionSymbol f = l.queryRoot();
     if (!r.isFunctionalTerm() || !r.queryRoot().equals(f)) {
-      _problem.require(SmtProblem.createNegation(req.variable));
+      _problem.require(SmtFactory.createNegation(req.variable));
       return;
     }
     // to apply lex, status(f) should be Lex, which we represent as 1
     IVar status = getStatusFor(f);
     if (status != null) {   // in the null case, status is automatically lex
-      _problem.requireImplication(req.variable, SmtProblem.createEqual(getStatusFor(f),
-        SmtProblem.createValue(1)));
+      _problem.requireImplication(req.variable, SmtFactory.createEqual(getStatusFor(f),
+        SmtFactory.createValue(1)));
     }
     int m = l.numberArguments();
     if (r.numberArguments() < m) m = r.numberArguments();
     // in the case some side has 0 arguments, this case cannot occur
-    if (m == 0) _problem.require(SmtProblem.createNegation(req.variable));
+    if (m == 0) _problem.require(SmtFactory.createNegation(req.variable));
     else {
       if (m == 1) {
         BVar x = getVariableFor(req.rule, l.queryArgument(1), GREATER,
@@ -624,22 +627,22 @@ public class Horpo {
       }
       else {
         IVar index = _problem.createIntegerVariable();
-        _problem.require(SmtProblem.createGeq(index, SmtProblem.createValue(1)));
-        _problem.require(SmtProblem.createLeq(index, SmtProblem.createValue(m)));
+        _problem.require(SmtFactory.createGeq(index, SmtFactory.createValue(1)));
+        _problem.require(SmtFactory.createLeq(index, SmtFactory.createValue(m)));
         for (int i = 1; i < m; i++) {
           // create constraint: index > i → l_i ≽ r_i
           BVar ligeqri = getVariableFor(req.rule, l.queryArgument(i), GEQ, r.queryArgument(i),
                                         req.constraint, null);
-          Constraint constraint = SmtProblem.createImplication(
-            SmtProblem.createGreater(index, SmtProblem.createValue(i)), ligeqri);
+          Constraint constraint = SmtFactory.createImplication(
+            SmtFactory.createGreater(index, SmtFactory.createValue(i)), ligeqri);
           _problem.requireImplication(req.variable, constraint);
         }
         for (int i = 1; i <= m; i++) {
           // create constraint: index = i → l_i ≻ r_i
           BVar ligreri = getVariableFor(req.rule, l.queryArgument(i), GREATER, r.queryArgument(i),
                                         req.constraint, null);
-          Constraint constraint = SmtProblem.createImplication(
-            SmtProblem.createEqual(index, SmtProblem.createValue(i)), ligreri);
+          Constraint constraint = SmtFactory.createImplication(
+            SmtFactory.createEqual(index, SmtFactory.createValue(i)), ligreri);
           _problem.requireImplication(req.variable, constraint);
         }
       }
@@ -661,14 +664,14 @@ public class Horpo {
     int m = r.numberArguments();
 
     // [req] → k > 1 (as k = 1 implies a Lex step)
-    _problem.requireImplication(req.variable, SmtProblem.createGreater(status,
-        SmtProblem.createValue(1)));
+    _problem.requireImplication(req.variable, SmtFactory.createGreater(status,
+        SmtFactory.createValue(1)));
     
     // [req] → k ≤ m (we only require this if f r1 ... rm does not have base type, since otherwise
     // it is already covered by the constraint on the creation of the status variable k)
     if (r.queryType().isArrowType()) {
       _problem.requireImplication(req.variable,
-        SmtProblem.createLeq(status, SmtProblem.createValue(m)));
+        SmtFactory.createLeq(status, SmtFactory.createValue(m)));
     }
 
     // [req] → l ▷{φ} r_i for all arguments i; however, we omit 1,2 since the multiset constraints
@@ -712,14 +715,14 @@ public class Horpo {
       oneof.add(strict_j);
       if (j > 2) {
         // [req] → ([strict_j] → k ≥ j)
-        Constraint constr = SmtProblem.createImplication(strict_j,
-          SmtProblem.createGeq(status, SmtProblem.createValue(j)));
+        Constraint constr = SmtFactory.createImplication(strict_j,
+          SmtFactory.createGeq(status, SmtFactory.createValue(j)));
         _problem.requireImplication(reqvar, constr);
       }
     }
 
     // [req] → [strict_1] ∨ ... ∨ [strict_n]
-    _problem.requireImplication(reqvar, SmtProblem.createDisjunction(oneof));
+    _problem.requireImplication(reqvar, SmtFactory.createDisjunction(oneof));
     return ret;
   }
 
@@ -736,13 +739,13 @@ public class Horpo {
     // require that, for 1 ≤ i ≤ status, 1 ≤ π(i) ≤ status and π(i) ≤ n
     for (int i = 1; i <= m; i++) {
       IVar pi_i = pi.get(i);
-      Constraint inotinrange = SmtProblem.createGreater(SmtProblem.createValue(i), status);
-      Constraint atleastone = SmtProblem.createGeq(pi_i, SmtProblem.createValue(1));
-      Constraint atmostn = SmtProblem.createLeq(pi_i, SmtProblem.createValue(n));
-      Constraint atmostk = SmtProblem.createLeq(pi_i, status);
-      _problem.requireImplication(reqvar, SmtProblem.createDisjunction(inotinrange, atleastone));
-      _problem.requireImplication(reqvar, SmtProblem.createDisjunction(inotinrange, atmostn));
-      _problem.requireImplication(reqvar, SmtProblem.createDisjunction(inotinrange, atmostk));
+      Constraint inotinrange = SmtFactory.createGreater(SmtFactory.createValue(i), status);
+      Constraint atleastone = SmtFactory.createGeq(pi_i, SmtFactory.createValue(1));
+      Constraint atmostn = SmtFactory.createLeq(pi_i, SmtFactory.createValue(n));
+      Constraint atmostk = SmtFactory.createLeq(pi_i, status);
+      _problem.requireImplication(reqvar, SmtFactory.createDisjunction(inotinrange, atleastone));
+      _problem.requireImplication(reqvar, SmtFactory.createDisjunction(inotinrange, atmostn));
+      _problem.requireImplication(reqvar, SmtFactory.createDisjunction(inotinrange, atmostk));
     }
     // require that π(i) != j if l_j and r_i do not have the same type structure
     for (int i = 1; i <= m; i++) {
@@ -750,7 +753,7 @@ public class Horpo {
       IVar pi_i = pi.get(i);
       for (int j = 1; j <= n; j++) {
         if (!ok.contains(j)) {
-          _problem.requireImplication(reqvar, SmtProblem.createUnequal(pi_i, SmtProblem.createValue(j)));
+          _problem.requireImplication(reqvar, SmtFactory.createUnequal(pi_i, SmtFactory.createValue(j)));
         }
       }
     }
@@ -768,13 +771,13 @@ public class Horpo {
           if (!comparable.get(i1).contains(j)) continue;
           if (!comparable.get(i2).contains(j)) continue;
           // create: pi(i1) != j
-          Constraint c1 = SmtProblem.createUnequal(pi.get(i1), SmtProblem.createValue(j));
+          Constraint c1 = SmtFactory.createUnequal(pi.get(i1), SmtFactory.createValue(j));
           // create: pi(i2) != j
-          Constraint c2 = SmtProblem.createUnequal(pi.get(i2), SmtProblem.createValue(j));
+          Constraint c2 = SmtFactory.createUnequal(pi.get(i2), SmtFactory.createValue(j));
           // create: strict_j
           Constraint c3 = strict.get(j);
           // combine them
-          Constraint d = SmtProblem.createDisjunction(SmtProblem.createDisjunction(c1, c2), c3);
+          Constraint d = SmtFactory.createDisjunction(SmtFactory.createDisjunction(c1, c2), c3);
           // and require for this clause to hold if req holds
           _problem.requireImplication(reqvar, d);
         }
@@ -787,7 +790,7 @@ public class Horpo {
     FunctionSymbol f = l.queryRoot();
     if (!r.isFunctionalTerm() || !r.queryRoot().equals(f) || r.numberArguments() <= 1 ||
         l.numberArguments() == 0) {
-      _problem.require(SmtProblem.createNegation(req.variable));
+      _problem.require(SmtFactory.createNegation(req.variable));
       return;
     }
     int n = l.numberArguments(), m = r.numberArguments();
@@ -799,7 +802,7 @@ public class Horpo {
     // to apply mul, status(f) should be Mul_k, which we represent as k > 1
     IVar status = getStatusFor(f);
     if (status == null) {   // in the null case, status is automatically lex
-      _problem.require(SmtProblem.createNegation(req.variable));
+      _problem.require(SmtFactory.createNegation(req.variable));
       return;
     }
     handleMulBasics(req, status);
@@ -809,25 +812,25 @@ public class Horpo {
     requirePiEqualityForNonStrict(req.variable, status, n, m, comparable, strict, pi);
 
     for (int i = 1; i <= m; i++) {
-      Constraint itoobig = SmtProblem.createGreater(SmtProblem.createValue(i), status);
+      Constraint itoobig = SmtFactory.createGreater(SmtFactory.createValue(i), status);
       TreeSet<Integer> ok = comparable.get(i);
       for (int j = 1; j <= n; j++) {
         if (!ok.contains(j)) continue;
-        Constraint pinotj = SmtProblem.createUnequal(SmtProblem.createValue(j), pi.get(i));
-        Constraint notstrict = SmtProblem.createNegation(strict.get(j));
+        Constraint pinotj = SmtFactory.createUnequal(SmtFactory.createValue(j), pi.get(i));
+        Constraint notstrict = SmtFactory.createNegation(strict.get(j));
         // if [req] ∧ i ≤ status ∧ π(i) = j ∧ strict_j then s_i > t_j
         BVar gr = getVariableFor(req.rule, l.queryArgument(j), GREATER, r.queryArgument(i),
                                  req.constraint, null);
-        Constraint c = SmtProblem.createDisjunction(
-          SmtProblem.createDisjunction(itoobig, pinotj),
-          SmtProblem.createDisjunction(notstrict, gr));
+        Constraint c = SmtFactory.createDisjunction(
+          SmtFactory.createDisjunction(itoobig, pinotj),
+          SmtFactory.createDisjunction(notstrict, gr));
         _problem.requireImplication(req.variable, c);
         // if [req] ∧ i ≤ status ∧ π(i) = j ∧ ¬strict_j then s_i ≥ t_j
         BVar geq = getVariableFor(req.rule, l.queryArgument(j), GEQ, r.queryArgument(i),
                                   req.constraint, null);
-        c = SmtProblem.createDisjunction(
-          SmtProblem.createDisjunction(itoobig, pinotj),
-          SmtProblem.createDisjunction(strict.get(j), geq));
+        c = SmtFactory.createDisjunction(
+          SmtFactory.createDisjunction(itoobig, pinotj),
+          SmtFactory.createDisjunction(strict.get(j), geq));
         _problem.requireImplication(req.variable, c);
       }
     }
@@ -837,7 +840,7 @@ public class Horpo {
     Term r = req.right;
     if (r.isValue()) return;    // nothing to require, the variable can be set to true
     if (r.isVariable() && req.constraint.vars().contains(r.queryVariable())) return; // same
-    _problem.require(SmtProblem.createNegation(req.variable));
+    _problem.require(SmtFactory.createNegation(req.variable));
   }
 
   private HorpoAnswer solve() {

@@ -5,7 +5,7 @@ import cora.utils.Pair;
 import cora.types.TypeFactory;
 import cora.terms.*;
 import cora.trs.TRS;
-import cora.smt.TermAnalyser;
+import cora.theorytranslation.TermAnalyser;
 import cora.termination.dependency_pairs.DP;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;

@@ -36,9 +36,9 @@ public class AccessibilityChecker {
   private Constraint posGeq(Base iota, Type sigma) {
     switch (sigma) {
       case Base(String name):
-        return _problem.createGeq(getSortVariable(iota.toString()), getSortVariable(name));
+        return SmtFactory.createGeq(getSortVariable(iota.toString()), getSortVariable(name));
       case Arrow(Type left, Type right):
-        return _problem.createConjunction(minGre(iota, left), posGeq(iota, right));
+        return SmtFactory.createConjunction(minGre(iota, left), posGeq(iota, right));
       default:
         throw new NotYetImplementedError("accessibility has not yet been defined for product types");
     }
@@ -48,9 +48,9 @@ public class AccessibilityChecker {
   private Constraint minGre(Base iota, Type sigma) {
     switch (sigma) {
       case Base(String name):
-        return _problem.createGreater(getSortVariable(iota.toString()), getSortVariable(name));
+        return SmtFactory.createGreater(getSortVariable(iota.toString()), getSortVariable(name));
       case Arrow(Type left, Type right):
-        return _problem.createConjunction(posGeq(iota, left), minGre(iota, right));
+        return SmtFactory.createConjunction(posGeq(iota, left), minGre(iota, right));
       default:
         throw new NotYetImplementedError("accessibility has not yet been defined for product types");
     }
@@ -76,7 +76,7 @@ public class AccessibilityChecker {
     // a variable is definitely accessible in itself
     if (s.isVariable()) return;
     // abstractions are not supported, and non-patterns are not okay!
-    if (!s.isFunctionalTerm()) { _problem.require(_problem.createValue(false)); return; }
+    if (!s.isFunctionalTerm()) { _problem.require(SmtFactory.createValue(false)); return; }
     // okay, get the output type and argument types
     FunctionSymbol f = s.queryRoot();
     Type type = f.queryType();

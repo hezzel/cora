@@ -29,11 +29,11 @@ public class SmtProblemTest {
     IVar x = problem.createIntegerVariable(1);
     IVar y = problem.createIntegerVariable(2);
     BVar z = problem.createBooleanVariable(3);
-    problem.require(problem.createDisjunction(problem.createGreater(x, problem.createValue(1)),
-      problem.createSmaller(x, problem.createValue(0))));
-    problem.require(problem.createConjunction(problem.createEqual(y, problem.createValue(3)),
-      problem.createDisjunction(problem.createUnequal(y, x), z)));
-    problem.require(problem.createEqual(y, problem.createValue(9)));
+    problem.require(SmtFactory.createDisjunction(SmtFactory.createGreater(x,
+      SmtFactory.createValue(1)), SmtFactory.createSmaller(x, SmtFactory.createValue(0))));
+    problem.require(SmtFactory.createConjunction(SmtFactory.createEqual(y,
+      SmtFactory.createValue(3)), SmtFactory.createDisjunction(SmtFactory.createUnequal(y, x), z)));
+    problem.require(SmtFactory.createEqual(y, SmtFactory.createValue(9)));
     assertTrue(problem.toString().equals(
       "(or (> i1 1) (> 0 i1))\n" +
       "(and (= i2 3) (or (distinct i2 i1) b3))\n" +

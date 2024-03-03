@@ -25,39 +25,39 @@ public class IffTest {
   public void testToString() {
     IntegerExpression left = new IVar(7);
     IntegerExpression right = new Addition(new IValue(3), new IVar(1));
-    Constraint comp = SmtProblem.createGreater(left, right);
+    Constraint comp = SmtFactory.createGreater(left, right);
     Constraint bvar = new BVar(9);
-    Constraint iff = SmtProblem.createIff(comp, bvar);
+    Constraint iff = SmtFactory.createIff(comp, bvar);
     System.out.println(iff.toString());
     assertTrue(iff.toString().equals("(= (> i7 (+ 3 i1)) b9)"));
   }
 
   @Test
   public void testEquality() {
-    Constraint comp = SmtProblem.createSmaller(new IVar(2), new IValue(2));
-    Constraint neg = SmtProblem.createNegation(comp);
-    Constraint other = SmtProblem.createGeq(new IValue(3), new IVar(3));
-    Constraint iff = SmtProblem.createIff(neg, other);
+    Constraint comp = SmtFactory.createSmaller(new IVar(2), new IValue(2));
+    Constraint neg = SmtFactory.createNegation(comp);
+    Constraint other = SmtFactory.createGeq(new IValue(3), new IVar(3));
+    Constraint iff = SmtFactory.createIff(neg, other);
     assertTrue(iff.equals(iff));
-    assertTrue(iff.equals(SmtProblem.createIff(neg, other)));
-    assertFalse(iff.equals(SmtProblem.createIff(other, neg)));
-    assertFalse(iff.equals(SmtProblem.createIff(neg, neg)));
-    assertFalse(iff.equals(SmtProblem.createIff(other, other)));
+    assertTrue(iff.equals(SmtFactory.createIff(neg, other)));
+    assertFalse(iff.equals(SmtFactory.createIff(other, neg)));
+    assertFalse(iff.equals(SmtFactory.createIff(neg, neg)));
+    assertFalse(iff.equals(SmtFactory.createIff(other, other)));
   }
 
   @Test
   public void testLegalEvaluate() {
-    Constraint a = SmtProblem.createNegation(new Truth());
+    Constraint a = SmtFactory.createNegation(new Truth());
     Constraint b = new Falsehood();
     Constraint iff1 = new Iff(a, b);
-    Constraint iff2 = new Iff(SmtProblem.createNegation(b), a);
+    Constraint iff2 = new Iff(SmtFactory.createNegation(b), a);
     assertTrue(iff1.evaluate());
     assertFalse(iff2.evaluate());
   }
 
   @Test
   public void testQueryParts() {
-    Not n = new Not(SmtProblem.createGeq(new IVar(1), new IValue(3)));
+    Not n = new Not(SmtFactory.createGeq(new IVar(1), new IValue(3)));
     BVar a = new BVar(7);
     Iff i = new Iff(a, n);
     assertTrue(i.queryLeft().equals(a));

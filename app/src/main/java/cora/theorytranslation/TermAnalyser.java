@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.smt;
+package cora.theorytranslation;
 
 import java.util.Random;
 
@@ -21,6 +21,10 @@ import cora.exceptions.UnsupportedTheoryError;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;
+import cora.smt.SmtProblem;
+import cora.smt.Constraint;
+import cora.smt.IntegerExpression;
+import cora.smt.Valuation;
 
 /**
  * This class provides analysis functions on theory terms, by using a translation to SMT.
@@ -33,20 +37,20 @@ public class TermAnalyser {
     int r = _rnd.nextInt();
     if (type.equals(TypeFactory.intSort)) return TheoryFactory.createValue(r);
     if (type.equals(TypeFactory.boolSort)) return TheoryFactory.createValue((r % 2) == 0);
-    if (type.equals(TypeFactory.stringSort)) return TheoryFactory.createValue("" + r);
+    if (type.equals(TypeFactory.stringSort)) return TheoryFactory.createValue("{" + r + "}");
     throw new UnsupportedTheoryError("variable", "Asked to choose random value of type " +
       type.toString() + ", which is not a supported theory sort.");
   }
 
   /** Given a ground theory term, this fully evaluates it to a Value. */
   public static Value evaluate(Term t) {
-    SmtProblem problem = new SmtProblem();
+    TermSmtTranslator translator = new TermSmtTranslator();
     if (t.queryType().equals(TypeFactory.intSort)) {
-      IntegerExpression e = TermSmtTranslator.translateIntegerExpression(t, problem);
+      IntegerExpression e = translator.translateIntegerExpression(t);
       return TheoryFactory.createValue(e.evaluate());
     }
     if (t.queryType().equals(TypeFactory.boolSort)) {
-      Constraint c = TermSmtTranslator.translateConstraint(t, problem);
+      Constraint c = translator.translateConstraint(t);
       return TheoryFactory.createValue(c.evaluate());
     }
     if (t.isValue()) return t.toValue();
@@ -74,10 +78,9 @@ public class TermAnalyser {
    * not, null is returned.
    */
   public static Substitution satisfy(Term t) {
-    SmtProblem problem = new SmtProblem();
-    Constraint c = TermSmtTranslator.translateConstraint(t, problem);
-    problem.require(c);
-    Valuation val = problem.satisfy();
+    TermSmtTranslator translator = new TermSmtTranslator();
+    translator.require(t);
+    Valuation val = translator.queryProblem().satisfy();
     if (val == null) return null;
     Substitution ret = TermFactory.createEmptySubstitution();
     for (Variable x : t.vars()) {
