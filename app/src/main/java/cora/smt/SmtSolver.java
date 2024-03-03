@@ -23,7 +23,7 @@ public interface SmtSolver {
     boolean isYes();
     public record YES(Valuation val) implements Answer { public boolean isYes() { return true; } }
     public record NO() implements Answer { public boolean isYes() { return false; } }
-    public record MAYBE(String reason) { public boolean isYes() { return false; } }
+    public record MAYBE(String reason) implements Answer { public boolean isYes() { return false; } }
   }
 
   /**

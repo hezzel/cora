@@ -26,9 +26,9 @@ public class SmtProblemTest {
     // y = 3 ∧ (y != x ∨ z)
     // y = 9
     SmtProblem problem = new SmtProblem();
-    IVar x = problem.createIntegerVariable(1);
-    IVar y = problem.createIntegerVariable(2);
-    BVar z = problem.createBooleanVariable(3);
+    IVar x = problem.createIntegerVariable();
+    IVar y = problem.createIntegerVariable();
+    BVar z = problem.createBooleanVariable();
     problem.require(SmtFactory.createDisjunction(SmtFactory.createGreater(x,
       SmtFactory.createValue(1)), SmtFactory.createSmaller(x, SmtFactory.createValue(0))));
     problem.require(SmtFactory.createConjunction(SmtFactory.createEqual(y,
@@ -36,14 +36,14 @@ public class SmtProblemTest {
     problem.require(SmtFactory.createEqual(y, SmtFactory.createValue(9)));
     assertTrue(problem.toString().equals(
       "(or (> i1 1) (> 0 i1))\n" +
-      "(and (= i2 3) (or (distinct i2 i1) b3))\n" +
+      "(and (= i2 3) (or (distinct i2 i1) b1))\n" +
       "(= i2 9)\n"));
     assertTrue(problem.toString(1).equals(
       "(or (> i1 1) (> 0 i1))\n"));
     assertTrue(problem.toString(3).equals(problem.toString()));
     assertTrue(problem.toString(4).equals(problem.toString()));
     assertTrue(problem.toString(-2).equals(
-      "(and (= i2 3) (or (distinct i2 i1) b3))\n" +
+      "(and (= i2 3) (or (distinct i2 i1) b1))\n" +
       "(= i2 9)\n"));
     assertTrue(problem.toString(-3).equals(problem.toString()));
     assertTrue(problem.toString(-4).equals(problem.toString()));
@@ -51,22 +51,18 @@ public class SmtProblemTest {
   }
 
   @Test
-  public void testCreateWithoutIndex() {
+  public void testCreateVariables() {
     SmtProblem problem = new SmtProblem();
     IVar a = problem.createIntegerVariable();
     IVar b = problem.createIntegerVariable();
     BVar c = problem.createBooleanVariable();
-    IVar d = problem.createIntegerVariable(5);
-    IVar e = problem.createIntegerVariable(-1);
-    IVar f = problem.createIntegerVariable();
-    BVar g = problem.createBooleanVariable();
+    IVar d = problem.createIntegerVariable();
+    BVar e = problem.createBooleanVariable();
     assertTrue(a.queryIndex() == 1);
     assertTrue(b.queryIndex() == 2);
     assertTrue(c.queryIndex() == 1);
-    assertTrue(d.queryIndex() == 5);
-    assertTrue(e.queryIndex() == -1);
-    assertTrue(f.queryIndex() == 6);
-    assertTrue(g.queryIndex() == 2);
+    assertTrue(d.queryIndex() == 3);
+    assertTrue(e.queryIndex() == 2);
   }
 }
 

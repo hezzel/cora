@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -20,58 +20,62 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.TreeSet;
+import cora.smt.SmtSolver.Answer;
 
 public class ExternalSmtSolverTest {
   // @Test
   // NOTE: @Test removed because we don't want to be writing files at every compile
   public void testSimpleValidityCheck() {
     ExternalSmtSolver solver = new ExternalSmtSolver();
-
-    TreeSet<Integer> boolvars = new TreeSet<Integer>();
-    TreeSet<Integer> intvars = new TreeSet<Integer>();
-    intvars.add(1);
-
+    SmtProblem problem = new SmtProblem();
     // x > 1 => x > 0 is valid
-    IVar x = new IVar(1);
+    IVar x = problem.createIntegerVariable();
     Constraint gr1 = new Greater(x, new IValue(1));
     Constraint gr0 = new Greater(x, new IValue(0));
-    Constraint c = new Disjunction(new Not(gr1), gr0);
-    assertTrue(solver.checkValidity(boolvars, intvars, c));
+    problem.requireImplication(gr1, gr0);
+    assertTrue(solver.checkValidity(problem));
     // x > 0 => x > 1 is not valid
-    c = new Disjunction(new Not(gr0), gr1);
-    assertFalse(solver.checkValidity(boolvars, intvars, c));
+    problem.clear();
+    problem.requireImplication(gr0, gr1);
+    assertFalse(solver.checkValidity(problem));
   }
 
   // @Test
   // NOTE: @Test removed because we don't want to be writing files at every compile
   public void testSimpleSatisfiabilityCheck() {
     ExternalSmtSolver solver = new ExternalSmtSolver();
-
-    TreeSet<Integer> boolvars = new TreeSet<Integer>();
-    TreeSet<Integer> intvars = new TreeSet<Integer>();
-    boolvars.add(1);
-    intvars.add(2);
-    intvars.add(3);
-    intvars.add(4);
-    boolvars.add(5);
-
+    SmtProblem problem = new SmtProblem();
     // x ∧ z < 0 ∧ y > 12 ∧ y = z
-    BVar x = new BVar(1);
-    IVar y = new IVar(2);
-    IVar z = new IVar(3);
+    BVar x = problem.createBooleanVariable();
+    IVar y = problem.createIntegerVariable();
+    IVar z = problem.createIntegerVariable();
+    problem.createBooleanVariable();
     Constraint le = new Greater(new IValue(0), z);
     Constraint gr = new Greater(y, new IValue(12));
     Constraint eq = new Equal(y, z);
-    Constraint c = new Conjunction(x, new Conjunction(le, new Conjunction(gr, eq)));
-    assertTrue(solver.checkSatisfiability(boolvars, intvars, c) == null);
+    problem.require(new Conjunction(x, new Conjunction(le, new Conjunction(gr, eq))));
+    assertTrue(solver.checkSatisfiability(problem) instanceof Answer.NO);
+    problem.clear();
     // x ∧ z < 10 ∧ (y > 12 ∨ y = z)
-    c = new Conjunction(x, new Conjunction(le, new Disjunction(gr, eq)));
-    Valuation v = solver.checkSatisfiability(boolvars, intvars, c);
-    assertTrue(v != null);
-    assertTrue(v.queryAssignment(x));
-    assertTrue(v.queryAssignment(z) < 0);
-    assertTrue(v.queryAssignment(y) > 12 || v.queryAssignment(y) == v.queryAssignment(z));
-    System.out.println(v);
+    problem.require(new Conjunction(x, new Conjunction(le, new Disjunction(gr, eq))));
+    Answer a = solver.checkSatisfiability(problem);
+    if (a instanceof Answer.YES(Valuation v)) {
+      assertTrue(v.queryAssignment(x));
+      assertTrue(v.queryAssignment(z) < 0);
+      assertTrue(v.queryAssignment(y) > 12 || v.queryAssignment(y) == v.queryAssignment(z));
+      System.out.println(v);
+    }
+    else assertTrue(false);
+    problem.clear();
+    // x ∧ z > u, where u is a variable NOT in the problem
+    IVar u = new IVar(100);
+    problem.require(new Conjunction(x, new Greater(z, u)));
+    a = solver.checkSatisfiability(problem);
+    if (a instanceof Answer.MAYBE(String reason)) {
+      System.out.println(reason);
+    }
+    else assertTrue(false);
+    problem.clear();
   }
 }
 

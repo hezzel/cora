@@ -172,7 +172,7 @@ public class Horpo {
     _varCache = new TreeMap<String,BVar>();
     _precedence = new TreeMap<String,IVar>();
     _status = new TreeMap<String,IVar>();
-    _down = _problem.createBooleanVariable(0);
+    _down = _problem.createBooleanVariable();
 
     computeIntegerVariableBound(trs);
 
