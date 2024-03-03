@@ -15,13 +15,13 @@
 
 package cora.smt;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.TreeSet;
 
 public class SmtProblemTest {
-  @Test
-  public void testToString() {
+  private SmtProblem exampleProblem() {
     // x > 1 ∨ x < 0
     // y = 3 ∧ (y != x ∨ z)
     // y = 9
@@ -34,6 +34,12 @@ public class SmtProblemTest {
     problem.require(SmtFactory.createConjunction(SmtFactory.createEqual(y,
       SmtFactory.createValue(3)), SmtFactory.createDisjunction(SmtFactory.createUnequal(y, x), z)));
     problem.require(SmtFactory.createEqual(y, SmtFactory.createValue(9)));
+    return problem;
+  }
+
+  @Test
+  public void testToString() {
+    SmtProblem problem = exampleProblem();
     assertTrue(problem.toString().equals(
       "(or (> i1 1) (> 0 i1))\n" +
       "(and (= i2 3) (or (distinct i2 i1) b1))\n" +
@@ -48,6 +54,16 @@ public class SmtProblemTest {
     assertTrue(problem.toString(-3).equals(problem.toString()));
     assertTrue(problem.toString(-4).equals(problem.toString()));
     assertTrue(problem.toString(0).equals(""));
+  }
+
+  @Test
+  public void testCombinedConstraint() {
+    SmtProblem problem = exampleProblem();
+    assertTrue(problem.queryCombinedConstraint().toString().equals("(and " +
+      "(or (> i1 1) (> 0 i1)) " +
+      "(= i2 3) " +
+      "(or (distinct i2 i1) b1) " +
+      "(= i2 9))"));
   }
 
   @Test

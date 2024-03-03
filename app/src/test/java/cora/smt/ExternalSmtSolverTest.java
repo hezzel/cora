@@ -18,7 +18,6 @@ package cora.smt;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.TreeSet;
 import cora.smt.SmtSolver.Answer;
 
