@@ -1,12 +1,13 @@
 package cora.termination.dependency_pairs.processors;
 
+import cora.utils.Pair;
 import cora.smt.*;
+import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
 import cora.termination.dependency_pairs.certification.Informal;
 import cora.terms.FunctionSymbol;
 import cora.terms.Term;
-import cora.utils.Pair;
 
 import java.util.Optional;
 import java.util.*;
@@ -127,7 +128,10 @@ public class SubtermProcessor implements Processor {
     addProblemConstraintsToSMT(fSharpMap, dpbVarMap, dpp);
 
     // Ask the SMT-solver to find the projection function for us.
-    Valuation valuation = _smt.satisfy();
+    Valuation valuation = switch (Settings.smtSolver.checkSatisfiability(_smt)) {
+      case SmtSolver.Answer.YES(Valuation val) -> val;
+      default -> null;
+    };
 
     if (valuation == null) {
       // this processor cannot do anything

@@ -1,7 +1,7 @@
 package cora.termination;
 
-import cora.termination.dependency_pairs.DPFramework;
 import cora.utils.Pair;
+import cora.termination.dependency_pairs.DPFramework;
 
 import java.util.Optional;
 

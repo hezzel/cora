@@ -15,6 +15,7 @@
 
 package cora;
 
+import cora.utils.Pair;
 import cora.trs.TRS;
 import cora.reader.OCocoInputReader;
 import cora.reader.ITrsInputReader;
@@ -24,7 +25,6 @@ import cora.termination.Handler.Answer;
 import cora.termination.Horpo;
 import cora.termination.Request;
 import cora.termination.dependency_pairs.certification.Informal;
-import cora.utils.Pair;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

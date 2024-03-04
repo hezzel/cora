@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022, 2023 Cynthia Kop
+ Copyright 2019--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -21,6 +21,7 @@ import cora.types.Type;
 import cora.terms.*;
 import cora.trs.Rule;
 import cora.theorytranslation.TermAnalyser;
+import cora.config.Settings;
 
 /**
  * Rules are the core objects that define the reduction relation in a term rewriting system.  These
@@ -60,7 +61,7 @@ class RuleReducer implements ReduceObject {
     }
     Term csub = _rule.queryConstraint().substitute(subst);
     if (csub.isGround()) return TermAnalyser.evaluate(csub).getBool();
-    else return TermAnalyser.satisfy(csub) != null;
+    else return TermAnalyser.satisfy(csub, Settings.smtSolver) != null;
   }
 
   /**
@@ -84,7 +85,7 @@ class RuleReducer implements ReduceObject {
       if (!TermAnalyser.evaluate(csub).getBool()) return null;
     }
     else {
-      Substitution result = TermAnalyser.satisfy(csub);
+      Substitution result = TermAnalyser.satisfy(csub, Settings.smtSolver);
       if (result == null) return null;
       for (Variable x : csub.vars()) {
         if (!subst.extend(x, result.get(x))) return null;

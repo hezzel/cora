@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -25,6 +25,7 @@ import cora.smt.*;
 import cora.trs.*;
 import cora.trs.TrsProperties.*;
 import cora.theorytranslation.TermSmtTranslator;
+import cora.config.Settings;
 
 /**
  * This is an implementation of a basic version of Horpo for LCSTRSs (so with constraints).
@@ -384,7 +385,7 @@ public class Horpo {
       SmtFactory.createGreater(el, er));
     if (!strict) decrease = SmtFactory.createDisjunction(equal, decrease);  // l = r ∨ above
     validityProblem.requireImplication(c, decrease);
-    if (!validityProblem.isValid()) {
+    if (!Settings.smtSolver.checkValidity(validityProblem)) {
       _problem.requireImplication(variable, SmtFactory.createNegation(_down));
     }
 
@@ -395,7 +396,7 @@ public class Horpo {
       SmtFactory.createSmaller(el, er));
     if (!strict) increase = SmtFactory.createDisjunction(equal, increase);
     validityProblem.requireImplication(c, increase);
-    if (!validityProblem.isValid()) {
+    if (!Settings.smtSolver.checkValidity(validityProblem)) {
       _problem.requireImplication(variable, _down);
     }
   }
@@ -414,7 +415,9 @@ public class Horpo {
     else constr = SmtFactory.createDisjunction(cl, negr);
     validityProblem.requireImplication(cp, constr);
 
-    if (!validityProblem.isValid()) _problem.require(SmtFactory.createNegation(variable));
+    if (!Settings.smtSolver.checkValidity(validityProblem)) {
+      _problem.require(SmtFactory.createNegation(variable));
+    }
   }
 
   private void handleTheoryComparison(Term l, Term r, Term phi, BVar variable, boolean strict) {
@@ -844,7 +847,10 @@ public class Horpo {
   }
 
   private HorpoAnswer solve() {
-    Valuation valuation = _problem.satisfy();
+    Valuation valuation = switch (Settings.smtSolver.checkSatisfiability(_problem)) {
+      case SmtSolver.Answer.YES(Valuation val) -> val;
+      default -> null;
+    };
     if (valuation == null) return null; // unsolvable problem
     HorpoAnswer ret = new HorpoAnswer();
     for (String symbol : _precedence.keySet()) {

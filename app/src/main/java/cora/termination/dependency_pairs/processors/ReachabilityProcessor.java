@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class ReachabilityProcessor implements Processor {
-
   @Override
   public boolean isApplicable(Problem dpp) {
     return true;

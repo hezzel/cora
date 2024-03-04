@@ -107,33 +107,6 @@ public class SmtProblem implements Iterable<Constraint> {
     return new Conjunction(_constraints);
   }
 
-  /**
-   * This calls an SMT solver to verify validity of the requirements.
-   * Note that true is returned if the conjunction of the constraints is valid, and false is
-   * returned if either it is not valid, or we cannot determine if it is valid.
-   * TODO: remove
-   */
-  public boolean isValid() {
-    return (new ExternalSmtSolver()).checkValidity(this);
-  }
-
-  /**
-   * This calls an SMT solver to find a satisfying assignment of the requirements.
-   * Note that if the conjunction of the constraints can be confirmed to be satisfiable, a
-   * Valuation representing a satisfying assignment is returned.  However, if this cannot be
-   * confirmed -- whether because it is unsatisfiable, the problem is too hard, or we run
-   * into I/O issues -- then null is returned.
-   * TODO: remove
-   */
-  public Valuation satisfy() {
-    SmtSolver.Answer ret = (new ExternalSmtSolver()).checkSatisfiability(this);
-    return switch (ret) {
-      case SmtSolver.Answer.YES(Valuation answer) -> answer;
-      case SmtSolver.Answer.NO() -> null;
-      case SmtSolver.Answer.MAYBE(String explanation) -> null;
-    };
-  }
-
   /** Returns a string representation of all constraints in the problem, for debugging purposes */
   public String toString() {
     StringBuilder ret = new StringBuilder();

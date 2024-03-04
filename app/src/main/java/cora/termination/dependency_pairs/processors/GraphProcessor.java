@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class GraphProcessor implements Processor {
-
   @Override
   public boolean isApplicable(Problem dpp) { return true; }
 

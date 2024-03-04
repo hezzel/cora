@@ -4,6 +4,7 @@ import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;
 import cora.theorytranslation.TermSmtTranslator;
+import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
@@ -276,7 +277,7 @@ public class KasperProcessor implements Processor {
           // candidates
           validityProblem
             .requireImplication(constraintTranslation, SmtFactory.createGeq(candLiExpr, candRjExpr));
-          if (!validityProblem.isValid()) {
+          if (!Settings.smtSolver.checkValidity(validityProblem)) {
             _smt.require(fSharpDisjunction);
             continue;
           }
@@ -291,7 +292,7 @@ public class KasperProcessor implements Processor {
               SmtFactory.createGreater(candLiExpr, candRjExpr)
             ));
 
-          if(validityProblem.isValid()) {
+          if (Settings.smtSolver.checkValidity(validityProblem)) {
             _smt.require(
               SmtFactory.createDisjunction(
                 fSharpDisjunction,
@@ -328,9 +329,12 @@ public class KasperProcessor implements Processor {
     requireAtLeastOneStrict(boolMap);
     putDpRequirements(intMap, boolMap, dpp);
 
-    Valuation result = _smt.satisfy();
+    Valuation result = switch (Settings.smtSolver.checkSatisfiability(_smt)) {
+      case SmtSolver.Answer.YES(Valuation val) -> val;
+      default -> null;
+    };
 
-    if(result == null) return Optional.empty();
+    if (result == null) return Optional.empty();
 
     // we found a solution! Store the information from the valuation
     TreeSet<Integer> indexOfOrientedDPs = new TreeSet<>();

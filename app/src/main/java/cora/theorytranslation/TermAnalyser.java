@@ -21,10 +21,8 @@ import cora.exceptions.UnsupportedTheoryError;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;
-import cora.smt.SmtProblem;
-import cora.smt.Constraint;
-import cora.smt.IntegerExpression;
-import cora.smt.Valuation;
+import cora.smt.*;
+import cora.smt.SmtSolver.Answer;
 
 /**
  * This class provides analysis functions on theory terms, by using a translation to SMT.
@@ -77,21 +75,24 @@ public class TermAnalyser {
    * in it that makes the term evaluate to true.  If successful, this substitution is returned; if
    * not, null is returned.
    */
-  public static Substitution satisfy(Term t) {
+  public static Substitution satisfy(Term t, SmtSolver solver) {
     TermSmtTranslator translator = new TermSmtTranslator();
     translator.require(t);
-    Valuation val = translator.queryProblem().satisfy();
-    if (val == null) return null;
-    Substitution ret = TermFactory.createEmptySubstitution();
-    for (Variable x : t.vars()) {
-      if (x.queryType().equals(TypeFactory.boolSort)) {
-        ret.extend(x, TheoryFactory.createValue(val.queryBoolAssignment(x.queryIndex())));
-      }
-      else if (x.queryType().equals(TypeFactory.intSort)) {
-        ret.extend(x, TheoryFactory.createValue(val.queryIntAssignment(x.queryIndex())));
-      }
+    switch (solver.checkSatisfiability(translator.queryProblem())) {
+      case Answer.YES(Valuation val):
+        Substitution ret = TermFactory.createEmptySubstitution();
+        for (Variable x : t.vars()) {
+          if (x.queryType().equals(TypeFactory.boolSort)) {
+            ret.extend(x, TheoryFactory.createValue(val.queryBoolAssignment(x.queryIndex())));
+          }
+          else if (x.queryType().equals(TypeFactory.intSort)) {
+            ret.extend(x, TheoryFactory.createValue(val.queryIntAssignment(x.queryIndex())));
+          }
+        }
+        return ret;
+      default:
+        return null;
     }
-    return ret;
   }
 }
 

@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import cora.exceptions.UnsupportedTheoryError;
 import cora.types.TypeFactory;
 import cora.terms.*;
+import cora.smt.ExternalSmtSolver;
 
 public class TermAnalyserTest {
   @Test
@@ -80,7 +81,7 @@ public class TermAnalyserTest {
     // +(x, y) > 12
     Term t = TheoryFactory.plusSymbol.apply(x).apply(y);
     Term c = TheoryFactory.greaterSymbol.apply(t).apply(TheoryFactory.createValue(12));
-    Substitution subst = TermAnalyser.satisfy(c);
+    Substitution subst = TermAnalyser.satisfy(c, new ExternalSmtSolver()); // TODO spot
     assertTrue(subst.get(x).toValue().getInt() +
                subst.get(y).toValue().getInt() > 12);
   }

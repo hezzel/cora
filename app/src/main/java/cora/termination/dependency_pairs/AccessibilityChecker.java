@@ -12,6 +12,7 @@ import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;
 import cora.trs.TRS;
+import cora.config.Settings;
 
 public class AccessibilityChecker {
   private SmtProblem _problem;
@@ -152,13 +153,15 @@ public class AccessibilityChecker {
 
   public boolean checkAccessibility() {
     generateTrsConstraints();
-    Valuation solution = _problem.satisfy();
-    if (solution == null) { _result = ""; return false; }
-
-    Informal.getInstance().addProofStep("This system is accessible-function passing by " +
-      buildSortOrderingExplanation(solution) + ".\n");
-
-    return true;
+    switch (Settings.smtSolver.checkSatisfiability(_problem)) {
+      case SmtSolver.Answer.YES(Valuation solution):
+        Informal.getInstance().addProofStep("This system is accessible-function passing by " +
+          buildSortOrderingExplanation(solution) + ".\n");
+        return true;
+      default:
+        _result = "";
+        return false;
+    }
   }
 
   public String querySortOrdering() {

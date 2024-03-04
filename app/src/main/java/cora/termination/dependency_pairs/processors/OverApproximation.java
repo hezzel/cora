@@ -6,6 +6,7 @@ import cora.types.TypeFactory;
 import cora.terms.*;
 import cora.trs.TRS;
 import cora.theorytranslation.TermAnalyser;
+import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
@@ -17,11 +18,7 @@ class OverApproximation {
   private TRS _trs;
 
   public OverApproximation(@NotNull TRS trs) {
-    if (trs == null) throw new
-      NullInitialisationError (
-        "OverApproximation",
-      "null initialization of trs argument."
-    );
+    if (trs == null) throw new NullInitialisationError("OverApproximation", "trs argument.");
     _trs = trs;
   }
 
@@ -174,6 +171,6 @@ class OverApproximation {
         todo.push(new Pair<Term,Term>(a, b));
       }
     }
-    return TermAnalyser.satisfy(requirements) != null;
+    return TermAnalyser.satisfy(requirements, Settings.smtSolver) != null;
   }
 }
