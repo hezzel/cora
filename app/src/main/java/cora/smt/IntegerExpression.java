@@ -23,7 +23,7 @@ package cora.smt;
  */
 
 public sealed abstract class IntegerExpression
-  permits IVar, IValue, Division, Modulo, Minus, Multiplication, Addition {
+  permits IVar, IValue, Division, Modulo, ConstantMultiplication, Multiplication, Addition {
   /**
    * Assuming the current expression has no variables, this function evaluates it to its integer
    * value.  If there is a variable in it, an SmtEvaluationError will be thrown instead.

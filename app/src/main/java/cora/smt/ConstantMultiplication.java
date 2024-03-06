@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,30 +15,40 @@
 
 package cora.smt;
 
-public final class Minus extends IntegerExpression {
-  private IntegerExpression _negated;
+public final class ConstantMultiplication extends IntegerExpression {
+  private int _constant;
+  private IntegerExpression _main;
 
   /** The constructor is hidden, since IntegerExpressions should be made through the SmtFactory. */
-  Minus(IntegerExpression e) {
-    _negated = e;
+  ConstantMultiplication(int k, IntegerExpression e) {
+    _constant = k;
+    _main = e;
+  }
+
+  public int queryConstant() {
+    return _constant;
   }
 
   public IntegerExpression queryChild() {
-    return _negated;
+    return _main;
   }
 
   public int evaluate() {
-    return -(_negated.evaluate());
+    return _constant * _main.evaluate();
   }
 
   public void addToSmtString(StringBuilder builder) {
-    builder.append("(- ");
-    _negated.addToSmtString(builder);
+    if (_constant == -1) builder.append("(- ");
+    else if (_constant < 0) builder.append("(* (- " + (-_constant) + ") ");
+    else builder.append("(* " + _constant + " ");
+    _main.addToSmtString(builder);
     builder.append(")");
   }
 
   public boolean equals(IntegerExpression other) {
-    return (other instanceof Minus) && (_negated.equals(((Minus)other).queryChild()));
+    return (other instanceof ConstantMultiplication) &&
+           (_constant == ((ConstantMultiplication)other).queryConstant()) &&
+           (_main.equals(((ConstantMultiplication)other).queryChild()));
   }
 }
 

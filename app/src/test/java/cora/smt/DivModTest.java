@@ -33,8 +33,9 @@ public class DivModTest {
 
   @Test
   public void testModuloBasics() {
-    Modulo modulo = new Modulo(new Minus(new IVar(2)), new Multiplication(new IValue(2), new IVar(3)));
-    assertTrue(modulo.queryNumerator().equals(new Minus(new IVar(2))));
+    Modulo modulo = new Modulo(new ConstantMultiplication(-1, new IVar(2)),
+      new Multiplication(new IValue(2), new IVar(3)));
+    assertTrue(modulo.queryNumerator().equals(new ConstantMultiplication(-1, new IVar(2))));
     assertTrue(modulo.queryDenominator().equals(new Multiplication(new IValue(2), new IVar(3))));
     assertTrue(modulo.toString().equals("(mod (- i2) (* 2 i3))"));
   }
