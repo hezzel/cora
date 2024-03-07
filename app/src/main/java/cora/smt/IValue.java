@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -38,8 +38,11 @@ public final class IValue extends IntegerExpression {
     else builder.append("(- " + (-_k) + ")");
   }
 
-  public boolean equals(IntegerExpression other) {
-    return (other instanceof IValue) && (((IValue)other).evaluate() == _k);
+  public int compareTo(IntegerExpression other) {
+    return switch (other) {
+      case IValue v -> _k - v.queryValue();
+      default -> -1;
+    };
   }
 }
 

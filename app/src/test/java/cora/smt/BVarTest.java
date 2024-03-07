@@ -15,8 +15,9 @@
 
 package cora.smt;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BVarTest {
   @Test
@@ -34,9 +35,9 @@ public class BVarTest {
     assertFalse(x.equals(new IVar(12)));
   }
 
-  @Test(expected = cora.exceptions.SmtEvaluationError.class)
+  @Test
   public void testEvaluate() {
     BVar x = new BVar(3);
-    x.evaluate();
+    assertThrows(cora.exceptions.SmtEvaluationError.class, () -> x.evaluate());
   }
 }

@@ -45,10 +45,16 @@ public final class ConstantMultiplication extends IntegerExpression {
     builder.append(")");
   }
 
-  public boolean equals(IntegerExpression other) {
-    return (other instanceof ConstantMultiplication) &&
-           (_constant == ((ConstantMultiplication)other).queryConstant()) &&
-           (_main.equals(((ConstantMultiplication)other).queryChild()));
+  public int compareTo(IntegerExpression other) {
+    return switch (other) {
+      case IValue v -> 1;
+      case ConstantMultiplication cm -> {
+        int c = _main.compareTo(cm.queryChild());
+        if (c != 0) yield c;
+        else yield _constant - cm.queryConstant();
+      }
+      default -> _main.compareTo(other) >= 0 ? 1 : -1;
+    };
   }
 }
 

@@ -58,10 +58,20 @@ public final class Modulo extends IntegerExpression {
     builder.append(")");
   }
 
-  public boolean equals(IntegerExpression other) {
-    if (!(other instanceof Modulo)) return false;
-    Modulo o = (Modulo)other;
-    return _numerator.equals(o._numerator) && _denominator.equals(o._denominator);
+  public int compareTo(IntegerExpression other) {
+    return switch (other) {
+      case IValue v -> 1;
+      case IVar x -> 1;
+      case ConstantMultiplication cm -> compareTo(cm.queryChild()) <= 0 ? -1 : 1;
+      case Addition a -> 1;
+      case Multiplication m -> 1;
+      case Division m -> 1;
+      case Modulo m -> {
+        int c = _denominator.compareTo(m._denominator);
+        if (c != 0) yield c;
+        else yield _numerator.compareTo(m._numerator);
+      }   
+    };
   }
 }
 

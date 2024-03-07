@@ -68,14 +68,22 @@ public final class Addition extends IntegerExpression {
     builder.append(")");
   }
 
-  public boolean equals(IntegerExpression other) {
-    if (!(other instanceof Addition)) return false;
-    Addition a = (Addition)other;
-    if (a.numChildren() != _children.size()) return false;
-    for (int i = 0; i < _children.size(); i++) {
-      if (!_children.get(i).equals(a.queryChild(i+1))) return false;
-    }
-    return true;
+  public int compareTo(IntegerExpression other) {
+    return switch (other) {
+      case IValue v -> 1;
+      case IVar x -> 1;
+      case ConstantMultiplication cm -> compareTo(cm.queryChild()) <= 0 ? -1 : 1;
+      case Addition a -> {
+        for (int i = _children.size(), j = a.numChildren(); i > 0 && j > 0; i--, j--) {
+          int c = _children.get(i-1).compareTo(a.queryChild(j));
+          if (c != 0) yield c;
+        }
+        yield _children.size() - a.numChildren();
+      }
+      case Multiplication m -> -1;
+      case Division m -> -1;
+      case Modulo m -> -1;
+    };
   }
 }
 

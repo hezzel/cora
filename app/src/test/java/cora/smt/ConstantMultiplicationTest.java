@@ -55,7 +55,7 @@ public class ConstantMultiplicationTest {
   }
 
   @Test
-  public void testEquality() {
+  public void testComparison() {
     IntegerExpression mf = new IValue(-4);
     IntegerExpression mt = new IValue(-3);
     IntegerExpression x = new IVar(1);
@@ -64,11 +64,11 @@ public class ConstantMultiplicationTest {
     IntegerExpression m3 = new ConstantMultiplication(-2, new Addition(mt, x));
     IntegerExpression m4 = new Multiplication(new IValue(-2), new Addition(mf, x));
     IntegerExpression p = new Addition(new IValue(8), new ConstantMultiplication(-2, x));
-    assertTrue(m1.equals(m2));
-    assertFalse(m1.equals(m3));
-    assertFalse(m1.equals(m4));
-    assertFalse(m1.equals(p));
-    assertFalse(m4.equals(m1));
-    assertFalse(p.equals(m1));
+    assertTrue(m1.compareTo(m2) == 0);
+    assertTrue(m1.compareTo(m3) < 0);
+    assertTrue(m1.compareTo(m4) != 0);
+    assertTrue(m1.compareTo(m4) == -m4.compareTo(m1));
+    assertTrue(m1.compareTo(p) != 0);
+    assertTrue(m1.compareTo(p) == -p.compareTo(m1));
   }
 }

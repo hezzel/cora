@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,6 +15,8 @@
 
 package cora.smt;
 
+import java.lang.Comparable;
+
 /**
  * An IntegerExpression is an expression built from integer values, addition, multiplication, etc.:
  * the symbols in the integer theory, yielding an int.
@@ -22,7 +24,7 @@ package cora.smt;
  * IntegerExpressions can be expected to be immutable.
  */
 
-public sealed abstract class IntegerExpression
+public sealed abstract class IntegerExpression implements Comparable<IntegerExpression>
   permits IVar, IValue, Division, Modulo, ConstantMultiplication, Multiplication, Addition {
   /**
    * Assuming the current expression has no variables, this function evaluates it to its integer
@@ -33,17 +35,20 @@ public sealed abstract class IntegerExpression
   /** Adds the SMT description of the current expression to the given string builder. */
   public abstract void addToSmtString(StringBuilder builder);
 
-  /** Equality check between IntegerExpressions. */
-  public abstract boolean equals(IntegerExpression other);
-
   public String toString() {
     StringBuilder builder = new StringBuilder();
     addToSmtString(builder);
     return builder.toString();
   }
 
+  /**
+   * This generates a total ordering on integer expressions.  Constants are guaranteed to be minimal
+   * in the ordering (compared to expressions that are not constants).
+   */
+  public abstract int compareTo(IntegerExpression other);
+
   public boolean equals(Object other) {
-    return (other instanceof IntegerExpression) && equals((IntegerExpression)other);
+    return (other instanceof IntegerExpression) && compareTo((IntegerExpression)other) == 0;
   }
 }
 
