@@ -59,6 +59,14 @@ public final class Addition extends IntegerExpression {
     return ret;
   }
 
+  public IntegerExpression multiply(int constant) {
+    if (constant == 0) return new IValue(0);
+    if (constant == 1) return this;
+    ArrayList<IntegerExpression> cs = new ArrayList<IntegerExpression>();
+    for (int i = 0; i < _children.size(); i++) cs.add(_children.get(i).multiply(constant));
+    return new Addition(cs);
+  }
+
   public void addToSmtString(StringBuilder builder) {
     builder.append("(+");
     for (int i = 0; i < _children.size(); i++) {

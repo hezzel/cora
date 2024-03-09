@@ -40,6 +40,18 @@ public class ConstantMultiplicationTest {
   }
 
   @Test
+  public void testMultiply() {
+    IVar x = new IVar(2);
+    IntegerExpression cm = new ConstantMultiplication(-1, x);
+    assertTrue(cm.multiply(0).equals(new IValue(0)));
+    assertTrue(cm.multiply(1).equals(cm));
+    assertTrue(cm.multiply(-1).equals(x));
+    assertTrue(cm.multiply(2).equals(new ConstantMultiplication(-2, x)));
+    assertTrue(cm.multiply(-2).equals(new ConstantMultiplication(2, x)));
+    assertTrue(cm.negate().equals(x));
+  }
+
+  @Test
   public void testToString() {
     IntegerExpression xy = new Multiplication(new IVar(1), new IVar(2));
     ConstantMultiplication a = new ConstantMultiplication(-2, xy);

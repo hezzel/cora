@@ -37,6 +37,14 @@ public final class ConstantMultiplication extends IntegerExpression {
     return _constant * _main.evaluate();
   }
 
+  public IntegerExpression multiply(int constant) {
+    int newconstant = _constant * constant;
+    if (newconstant == 0) return new IValue(0);
+    if (newconstant == 1) return _main;
+    if (constant == 1) return this;
+    return new ConstantMultiplication(newconstant, _main);
+  }
+
   public void addToSmtString(StringBuilder builder) {
     if (_constant == -1) builder.append("(- ");
     else if (_constant < 0) builder.append("(* (- " + (-_constant) + ") ");

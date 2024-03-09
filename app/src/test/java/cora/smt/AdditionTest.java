@@ -31,6 +31,22 @@ public class AdditionTest {
   }
 
   @Test
+  public void testMultiply() {
+    IVar x = new IVar(3);
+    IVar y = new IVar(5);
+    IntegerExpression xy = new Multiplication(x, y);
+    Addition plus = new Addition(new IValue(2), new Addition(x, new ConstantMultiplication(3, xy)));
+    assertTrue(plus.multiply(0).equals(new IValue(0)));
+    assertTrue(plus.multiply(1).equals(plus));
+    assertTrue(plus.multiply(5).equals(
+      new Addition(new IValue(10), new Addition(new ConstantMultiplication(5, x),
+      new ConstantMultiplication(15, xy)))));
+    assertTrue(plus.negate().equals(
+      new Addition(new IValue(-2), new Addition(new ConstantMultiplication(-1, x),
+      new ConstantMultiplication(-3, xy)))));
+  }
+
+  @Test
   public void testEquality() {
     IntegerExpression plus = new Addition(new IValue(1), new IValue(2));
     assertTrue(plus.equals(new Addition(new IValue(1), new IValue(2))));

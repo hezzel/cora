@@ -60,6 +60,18 @@ public class DivModTest {
   }
 
   @Test
+  public void testConstantMultiplication() {
+    IVar x = new IVar(7);
+    IValue c = new IValue(3);
+    IntegerExpression d = new Division(x, c);
+    IntegerExpression m = new Modulo(x, c);
+    assertTrue(d.negate().equals(new ConstantMultiplication(-1, d)));
+    assertTrue(m.multiply(3).equals(new ConstantMultiplication(3, m)));
+    assertTrue(d.multiply(1).equals(d));
+    assertTrue(m.multiply(0).equals(new IValue(0)));
+  }
+
+  @Test
   public void testDivisionComparison() {
     IntegerExpression a = new Division(new IValue(3), new IVar(2));
     IntegerExpression b = new Division(new IValue(3), new IVar(2));

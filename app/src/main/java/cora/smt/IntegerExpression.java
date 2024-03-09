@@ -35,19 +35,37 @@ public sealed abstract class IntegerExpression implements Comparable<IntegerExpr
   /** Adds the SMT description of the current expression to the given string builder. */
   public abstract void addToSmtString(StringBuilder builder);
 
-  public String toString() {
-    StringBuilder builder = new StringBuilder();
-    addToSmtString(builder);
-    return builder.toString();
-  }
-
   /**
    * This generates a total ordering on integer expressions.  Constants are guaranteed to be minimal
    * in the ordering (compared to expressions that are not constants).
    */
   public abstract int compareTo(IntegerExpression other);
 
-  public boolean equals(Object other) {
+  /**
+   * This returns an integer expression obtained from multiplying the current one by the given
+   * constant.  If the current IntegerExpression is in simplified form, then so is the result.
+   */
+  public IntegerExpression multiply(int constant) {
+    if (constant == 0) return new IValue(0);
+    if (constant == 1) return this;
+    return new ConstantMultiplication(constant, this);
+  }
+
+  /**
+   * This returns an integer expression obtained from multiplying the current one by -1.  If the
+   * current IntegerExpression is in simplified form, then so is the result.
+   */
+  public final IntegerExpression negate() {
+    return multiply(-1);
+  }
+
+  public final String toString() {
+    StringBuilder builder = new StringBuilder();
+    addToSmtString(builder);
+    return builder.toString();
+  }
+
+  public final boolean equals(Object other) {
     return (other instanceof IntegerExpression) && compareTo((IntegerExpression)other) == 0;
   }
 }

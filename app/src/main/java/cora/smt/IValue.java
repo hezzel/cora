@@ -33,6 +33,10 @@ public final class IValue extends IntegerExpression {
     return _k;
   }
 
+  public IntegerExpression multiply(int value) {
+    return new IValue(value * _k);
+  }
+
   public void addToSmtString(StringBuilder builder) {
     if (_k >= 0) builder.append("" + _k);
     else builder.append("(- " + (-_k) + ")");
