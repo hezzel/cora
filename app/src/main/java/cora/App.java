@@ -73,7 +73,7 @@ public class App {
 
   private static ProofObject executeRequest(TRS trs) {
     if (_request == null || _request.toLowerCase().equals("termination")) {
-      System.out.println("Asked to prove termination!");
+      return TerminationHandler.proveTermination(trs);
     }
     else if (_request.toLowerCase().equals("horpo")) {
       return TerminationHandler.proveHorpoTermination(trs);

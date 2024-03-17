@@ -1,11 +1,11 @@
 package cora.termination.dependency_pairs;
 
 import cora.trs.TRS;
+import cora.io.OutputModule;
+import cora.io.ProofObject;
 import cora.termination.TerminationAnswer;
-import cora.termination.Prover;
 import cora.termination.dependency_pairs.certification.Informal;
 import cora.termination.dependency_pairs.processors.*;
-import cora.utils.Pair;
 import org.checkerframework.checker.units.qual.K;
 
 import java.util.ArrayList;
@@ -15,9 +15,8 @@ import java.util.Stack;
 
 import static cora.termination.TerminationAnswer.*;
 
-public class DPFramework implements Prover {
+public class DPFramework {
 
-  @Override
   public Boolean isTRSApplicable(TRS trs) {
     AccessibilityChecker checker = new AccessibilityChecker(trs);
     return checker.checkAccessibility();
@@ -27,9 +26,13 @@ public class DPFramework implements Prover {
     return DPGenerator.generateProblemFromTrs(trs);
   }
 
-  @Override
-  public Pair< TerminationAnswer, Optional<String> > proveTermination(TRS trs) {
-    if (!isTRSApplicable(trs)) return new Pair<>(MAYBE, Optional.empty());
+  public ProofObject proveTermination(TRS trs) {
+    if (!isTRSApplicable(trs)) return new ProofObject() {
+      public TerminationAnswer queryAnswer() { return MAYBE; }
+      public void justify(OutputModule o) {
+        o.println("The TRS does not satisfy the preconditions to apply static dependency pairs.");
+      }
+    };
 
     ReachabilityProcessor reachProcessor = new ReachabilityProcessor();
     GraphProcessor   graphProcessor   = new GraphProcessor();
@@ -73,10 +76,20 @@ public class DPFramework implements Prover {
         // Here the problem failed in all processors and couldn't be solved
         Informal.getInstance().addProofStep("***** No progress could be made on DP problem:\n" +
           p.toString());
-        return new Pair<>(MAYBE, Optional.of(Informal.getInstance().getInformalProof()));
+        return new ProofObject() {
+          public TerminationAnswer queryAnswer() { return MAYBE; }
+          public void justify(OutputModule o) {
+            o.println(Informal.getInstance().getInformalProof());
+          }
+        };
       }
     }
-    return new Pair<>(YES, Optional.of(Informal.getInstance().getInformalProof()));
+    return new ProofObject() {
+      public TerminationAnswer queryAnswer() { return YES; }
+      public void justify(OutputModule o) {
+        o.println(Informal.getInstance().getInformalProof());
+      }
+    };
   }
 }
 
