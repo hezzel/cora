@@ -1,7 +1,7 @@
 package cora.termination.dependency_pairs;
 
 import cora.trs.TRS;
-import cora.termination.Handler.Answer;
+import cora.termination.TerminationAnswer;
 import cora.termination.Prover;
 import cora.termination.dependency_pairs.certification.Informal;
 import cora.termination.dependency_pairs.processors.*;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 
-import static cora.termination.Handler.Answer.*;
+import static cora.termination.TerminationAnswer.*;
 
 public class DPFramework implements Prover {
 
@@ -28,7 +28,7 @@ public class DPFramework implements Prover {
   }
 
   @Override
-  public Pair< Answer, Optional<String> > proveTermination(TRS trs) {
+  public Pair< TerminationAnswer, Optional<String> > proveTermination(TRS trs) {
     if (!isTRSApplicable(trs)) return new Pair<>(MAYBE, Optional.empty());
 
     ReachabilityProcessor reachProcessor = new ReachabilityProcessor();

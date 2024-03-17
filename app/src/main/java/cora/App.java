@@ -25,8 +25,7 @@ import cora.reader.CoraInputReader;
 import cora.io.*;
 import cora.config.Settings;
 import cora.reduction.Reducer;
-import cora.termination.Handler;
-import cora.termination.Horpo;
+import cora.termination.TerminationHandler;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -77,7 +76,7 @@ public class App {
       System.out.println("Asked to prove termination!");
     }
     else if (_request.toLowerCase().equals("horpo")) {
-      System.out.println("Asked for a HORPOR termination proof");
+      return TerminationHandler.proveHorpoTermination(trs);
     }
     else if (_request.length() > 6 && _request.toLowerCase().substring(0,6).equals("reduce")) {
       String reduceme = _request.substring(7);
@@ -133,13 +132,6 @@ public class App {
             // TODO: write output proof to file if an output file is given
             System.exit(0);
 
-//            if (Horpo.applicable(trs)) {
-//                Horpo.HorpoAnswer answer = Horpo.run(trs);
-//                if (answer == null) System.out.println("MAYBE");
-//                else System.out.println("YES\n\n" + trs.toString() + "\n" + answer.toString());
-//            }
-//            else System.out.println("Input is not an LCSTRS; no termination module is available.\n");
-        }
         catch (Exception e) {
             System.out.println("Encountered an exception:\n" + e.getMessage());
             e.printStackTrace();

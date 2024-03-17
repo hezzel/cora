@@ -1,19 +1,23 @@
 package cora.termination;
 
 import cora.utils.Pair;
+import cora.trs.TRS;
+import cora.io.ProofObject;
+import cora.io.OutputModule;
+import cora.termination.horpo.Horpo;
 import cora.termination.dependency_pairs.DPFramework;
 
 import java.util.Optional;
 
-public class Handler {
-  private final Request _proofRequest;
-
-  public enum Answer { YES, NO, MAYBE, NOT_APPLICABLE }
-
-  public Handler(Request request) {
-    _proofRequest = request;
+public class TerminationHandler {
+  public static ProofObject proveHorpoTermination(TRS trs) {
+    if (!Horpo.applicable(trs)) return new ProofObject() {
+      public Object queryAnswer() { return TerminationAnswer.NOT_APPLICABLE; }
+      public void justify(OutputModule om) { }
+    };
+    return Horpo.run(trs);
   }
-
+  /*
   private Pair<Answer, Optional<String>> buildMaybeAnswer() {
     return new Pair<>(Answer.MAYBE, Optional.empty());
   }
@@ -34,4 +38,5 @@ public class Handler {
         }
     };
   }
+  */
 }
