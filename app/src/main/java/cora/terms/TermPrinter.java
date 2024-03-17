@@ -15,7 +15,8 @@
 
 package cora.terms;
 
-import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
@@ -63,6 +64,14 @@ public class TermPrinter {
   }
 
   /**
+   * This access function to generateUniqueNaming can be called with an arbitrary number of
+   * term arguments.
+   */
+  public final Renaming generateUniqueNaming(Term ...terms) {
+    return generateUniqueNaming(Arrays.asList(terms));
+  }
+
+  /**
    * When printing a term, both free and bound variables (as well as meta-variables) may be renamed
    * in the string output.  This is because variables are not defined by their name, and therefore
    * two distinct variables may have the same name, which could be very confusing (yet, printing
@@ -78,7 +87,7 @@ public class TermPrinter {
    *
    * To influence the chosen names, override the generateNames function.
    */
-  public final Renaming generateUniqueNaming(Term ...terms) {
+  public final Renaming generateUniqueNaming(List<Term> terms) {
     TreeMap<String,TreeSet<Replaceable>> existingNames = new TreeMap<String,TreeSet<Replaceable>>();
     // group (meta-)variables by name, so we can see how often each name occurs
     for (Term t : terms) {
@@ -189,6 +198,17 @@ public class TermPrinter {
   }
 
   /**
+   * Returns a string representation of the given term using the given Renaming (and using the
+   * print function that takes two arguments).
+   * This is only supplied as a public access function, and is not meant to be overridden.
+   */
+  public final String print(Term term, Renaming naming) {
+    StringBuilder builder = new StringBuilder();
+    print(term, naming, builder);
+    return builder.toString();
+  }
+
+  /**
    * Adds a string representation of the given term to the given string builder (using the print
    * function that takes two arguments).
    * This is only supplied as a public access function, and is not meant to be overridden.
@@ -287,7 +307,7 @@ public class TermPrinter {
    */
   protected void printSoloCalculationSymbol(CalculationSymbol constant, StringBuilder builder) {
     builder.append("[");
-    builder.append(constant.queryName());
+    builder.append(queryCalculationName(constant.queryKind(), constant.queryName()));
     builder.append("]");
   }
 
@@ -331,7 +351,9 @@ public class TermPrinter {
    * Called by print() to print a base-type functional term f(s1,...,sn) whose root symbol is a
    * calculation symbol (which also implies that n ≥ 1).
    *
-   * The default functionality is TODO.
+   * The default functionality calls either printUnaryCalculation() or printInfix(), depending on
+   * whether there are one or two arguments. (There are currently no calculation symbols in Cora
+   * that take more than two arguments, but if one such occurs, printApplication is called instead.)
    *
    * Note that functional terms with a calculation symbol as root but which are not fully applied
    * are printed through printPartialTheoryTerm or (if they have no arguments) through
@@ -371,7 +393,7 @@ public class TermPrinter {
       Value v = arg.toValue();
       if (v.isIntegerValue() && v.getInt() < 0) brackets = true;
     }
-    builder.append(rootsymb.queryName());
+    builder.append(queryCalculationName(rootsymb.queryKind(), rootsymb.queryName()));
     if (brackets) builder.append("(");
     print(arg, naming, builder);
     if (brackets) builder.append(")");
@@ -434,7 +456,7 @@ public class TermPrinter {
   protected void printInfixOperator(CalculationSymbol.Kind operatorkind, String operatorname,
                                     StringBuilder builder) {
     builder.append(" ");
-    builder.append(operatorname);
+    builder.append(queryCalculationName(operatorkind, operatorname));
     builder.append(" ");
   }
 
@@ -580,5 +602,12 @@ public class TermPrinter {
    * change the closing bracket for a meta-application.
    */
   protected String queryMetaCloseBracket() { return "⟩"; }
+  /**
+   * If the default names of the in-built calculation symbols do not suit you, then you can override
+   * this to return a different name.
+   */
+  protected String queryCalculationName(CalculationSymbol.Kind kind, String defaultName) {
+    return defaultName;
+  }
 }
 

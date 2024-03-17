@@ -15,16 +15,18 @@
 
 package cora;
 
+import cora.exceptions.ParseError;
 import cora.utils.Pair;
+import cora.terms.Term;
 import cora.trs.TRS;
 import cora.reader.OCocoInputReader;
 import cora.reader.ITrsInputReader;
 import cora.reader.CoraInputReader;
+import cora.io.*;
+import cora.config.Settings;
+import cora.reduction.Reducer;
 import cora.termination.Handler;
-import cora.termination.Handler.Answer;
 import cora.termination.Horpo;
-import cora.termination.Request;
-import cora.termination.dependency_pairs.certification.Informal;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -32,48 +34,91 @@ import java.util.Optional;
 
 /** Basic entry class: this reads a TRS and asks the user for a term, then reduces this term. */
 public class App {
-    private static String _inputFile;
-    private static String _outputFile;
-    private static Request.Technique _technique;
-
-    private static String getExtension(String filename) {
-        int i = filename.lastIndexOf('.');
-        if (i >= 0) return filename.substring(i+1);
-        return "";
-    }
-
-    private static TRS readInput(String file) throws Exception {
-        String extension = getExtension(file);
-        if (extension.equals("trs")) return OCocoInputReader.readTrsFromFile(file);
-        else if (extension.equals("itrs")) return ITrsInputReader.readTrsFromFile(file);
-        else return CoraInputReader.readTrsFromFile(file);
-    }
-
-    private static void readParameters(String[] args) {
-      _inputFile = null;
-      _outputFile = null;
-      _technique = Request.Technique.DP;
-      for (int i = 0; i < args.length; i++) {
-        if (args[i].equals("-o") && i+1 < args.length) {
-          _outputFile = args[i];
-        }
-        else if (args[i].equals("--horpo")) _technique = Request.Technique.HORPO;
-        else _inputFile = args[i];
+  private static String _inputFile;
+  private static String _request;
+  
+  private static void readParameters(String[] args) {
+    _inputFile = null;
+    _request = null;
+    for (int i = 0; i < args.length; i++) {
+      if (args[i].equals("-r") && i+1 < args.length) {
+        _request = args[i+1];
+        i++;
       }
+      else if (args[i].length() > 10 && args[i].substring(0,10).equals("--request=")) {
+        _request = args[i].substring(10);
+      }
+      else if (args[i].charAt(0) == '-') {
+        System.out.println("Unknown option: " + args[i]);
+      }
+      else if (_inputFile != null) {
+        System.out.println("Only one input file should be given (received both " + _inputFile +
+          " and " + args[i] + ").");
+      }
+      else _inputFile = args[i];
+    }
+  }
+
+  private static String getExtension(String filename) {
+    int i = filename.lastIndexOf('.');
+    if (i >= 0) return filename.substring(i+1).toLowerCase();
+    return "";
+  }
+
+  private static TRS readInput(String file) throws Exception {
+    String extension = getExtension(file);
+    if (extension.equals("trs")) return OCocoInputReader.readTrsFromFile(file);
+    else if (extension.equals("itrs")) return ITrsInputReader.readTrsFromFile(file);
+    else return CoraInputReader.readTrsFromFile(file);
+  }
+
+  private static ProofObject executeRequest(TRS trs) {
+    if (_request == null || _request.toLowerCase().equals("termination")) {
+      System.out.println("Asked to prove termination!");
+    }
+    else if (_request.toLowerCase().equals("horpo")) {
+      System.out.println("Asked for a HORPOR termination proof");
+    }
+    else if (_request.length() > 6 && _request.toLowerCase().substring(0,6).equals("reduce")) {
+      String reduceme = _request.substring(7);
+      Term start = CoraInputReader.readTerm(reduceme, trs);
+      Reducer reducer = new Reducer(trs);
+      return reducer.normalise(start);
+    }
+    return null;
+  }
+
+  public static void main(String[] args) {
+    readParameters(args);
+    if (_inputFile == null) {
+      System.out.println("Please supply an input file.");
+      return;
     }
 
-    public static void main(String[] args) {
-        try {
-            readParameters(args);
-
-            if (_inputFile == null) {
-                System.out.print("Input file: ");
-                System.out.flush();
-                _inputFile = (new BufferedReader(new InputStreamReader(System.in))).readLine();
-            }
-            TRS trs = readInput(_inputFile);
-            if (trs == null) return;
-
+    try {
+      TRS trs = readInput(_inputFile);
+      if (trs == null) return;
+      ProofObject pobject = executeRequest(trs);
+      System.out.println(pobject.queryAnswer());
+      OutputModule om = DefaultOutputModule.createDefaultModule(trs);
+      pobject.justify(om);
+      om.printToStdout();
+    }
+    catch (Exception e) {
+      System.out.println(e.getMessage());
+      System.exit(1);
+    }
+    catch (ParseError e) {
+      System.out.println(e.getMessage());
+      System.exit(1);
+    }
+    catch (Error e) {
+      System.out.println("Encountered an error:\n" + e.getMessage());
+      e.printStackTrace();
+      System.exit(1);
+    }
+  }
+/*
             // Build a request object requesting DP method to be used
             Request req = new Request(trs, _technique);
             Handler handler = new Handler(req);
@@ -106,4 +151,5 @@ public class App {
             System.exit(1);
         }
     }
+*/
 }
