@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import cora.utils.Pair;
+import cora.types.Type;
 import cora.types.TypePrinter;
 import cora.terms.TermPrinter;
 import cora.terms.TermPrinter.Renaming;
@@ -44,22 +45,114 @@ public class DefaultOutputModule implements OutputModule {
     ArrayList<Pair<String,String>> codes = new ArrayList<Pair<String,String>>();
     codes.add(new Pair<String,String>("%{ruleArrow}", "->"));
     codes.add(new Pair<String,String>("%{typeArrow}", "->"));
-    codes.add(new Pair<String,String>("%{lambda}", "\\"));
+    codes.add(new Pair<String,String>("%{mapsto}", "|->"));
+    codes.add(new Pair<String,String>("%{thickArrow}", "=>"));
+    codes.add(new Pair<String,String>("%{longArrow}", "-->"));
+    codes.add(new Pair<String,String>("%{downArrow}", "!down"));
+    codes.add(new Pair<String,String>("%{revRuleArrow}", "<-"));
     codes.add(new Pair<String,String>("%{vdash}", "|-"));
+    codes.add(new Pair<String,String>("%{Vdash}", "|="));
+    codes.add(new Pair<String,String>("%{forall}", "FORALL"));
+    codes.add(new Pair<String,String>("%{exists}", "EXISTS"));
+    codes.add(new Pair<String,String>("%{sqsupset}", "[>]"));
+    codes.add(new Pair<String,String>("%{sqsupseteq}", "[>=]"));
+    codes.add(new Pair<String,String>("%{succ}", "(>)"));
+    codes.add(new Pair<String,String>("%{succeq}", "(>=)"));
+    codes.add(new Pair<String,String>("%{subterm}", "|<|"));
+    codes.add(new Pair<String,String>("%{subtermeq}", "|<=|"));
+    codes.add(new Pair<String,String>("%{supterm}", "|>|"));
+    codes.add(new Pair<String,String>("%{suptermeq}", "|>=|"));
+    codes.add(new Pair<String,String>("%{greater}", ">"));
+    codes.add(new Pair<String,String>("%{smaller}", "<"));
+    codes.add(new Pair<String,String>("%{geq}", ">="));
+    codes.add(new Pair<String,String>("%{leq}", "<="));
+    codes.add(new Pair<String,String>("%{and}", "/\\"));
+    codes.add(new Pair<String,String>("%{or}", "\\/"));
+    codes.add(new Pair<String,String>("%{not}", "not "));
+    codes.add(new Pair<String,String>("%{implies}", "=>"));
+    codes.add(new Pair<String,String>("%{distinct}", "!="));
+    codes.add(new Pair<String,String>("%{alpha}", "alpha"));
+    codes.add(new Pair<String,String>("%{beta}", "beta"));
+    codes.add(new Pair<String,String>("%{gamma}", "gamma"));
+    codes.add(new Pair<String,String>("%{delta}", "delta"));
+    codes.add(new Pair<String,String>("%{epsilon}", "eps"));
+    codes.add(new Pair<String,String>("%{zeta}", "zeta"));
+    codes.add(new Pair<String,String>("%{eta}", "eta"));
+    codes.add(new Pair<String,String>("%{theta}", "th"));
+    codes.add(new Pair<String,String>("%{iota}", "iota"));
+    codes.add(new Pair<String,String>("%{kappa}", "kappa"));
+    codes.add(new Pair<String,String>("%{lambda}", "\\"));
+    codes.add(new Pair<String,String>("%{mu}", "mu"));
+    codes.add(new Pair<String,String>("%{nu}", "nu"));
+    codes.add(new Pair<String,String>("%{xi}", "xi"));
+    codes.add(new Pair<String,String>("%{pi}", "pi"));
+    codes.add(new Pair<String,String>("%{rho}", "rho"));
+    codes.add(new Pair<String,String>("%{sigma}", "sigma"));
+    codes.add(new Pair<String,String>("%{tau}", "tau"));
+    codes.add(new Pair<String,String>("%{phi}", "phi"));
+    codes.add(new Pair<String,String>("%{chi}", "chi"));
+    codes.add(new Pair<String,String>("%{psi}", "psi"));
+    codes.add(new Pair<String,String>("%{omega}", "omega"));
     return new DefaultOutputModule(typr, new PlainTermPrinter(typr,avoid), Style.Plain, codes);
   }
 
   /** This creates a module with Unicode style (pure text, but unicode symbols are allowed). */
   public static OutputModule createUnicodeModule(TRS trs) {
-    TypePrinter typr = new PlainTypePrinter();
+    TypePrinter typr = new TypePrinter();
     Set<String> avoid = trs.queryAlphabet().getSymbols().stream()
                            .map(FunctionSymbol::queryName).collect(Collectors.toSet());
     ArrayList<Pair<String,String>> codes = new ArrayList<Pair<String,String>>();
     codes.add(new Pair<String,String>("%{ruleArrow}", "→"));
     codes.add(new Pair<String,String>("%{typeArrow}", "→"));
-    codes.add(new Pair<String,String>("%{lambda}", "λ"));
+    codes.add(new Pair<String,String>("%{mapsto}", "↦"));
+    codes.add(new Pair<String,String>("%{thickArrow}", "➡"));
+    codes.add(new Pair<String,String>("%{longArrow}", "⟶"));
+    codes.add(new Pair<String,String>("%{downArrow}", "↓"));
+    codes.add(new Pair<String,String>("%{revRuleArrow}", "←"));
     codes.add(new Pair<String,String>("%{vdash}", "⊢"));
-    return new DefaultOutputModule(typr, new PlainTermPrinter(typr,avoid), Style.Unicode, codes);
+    codes.add(new Pair<String,String>("%{Vdash}", "⊨"));
+    codes.add(new Pair<String,String>("%{forall}", "∀"));
+    codes.add(new Pair<String,String>("%{exists}", "∃"));
+    codes.add(new Pair<String,String>("%{sqsupset}", "⊐"));
+    codes.add(new Pair<String,String>("%{sqsupseteq}", "⊒"));
+    codes.add(new Pair<String,String>("%{succ}", "≻"));
+    codes.add(new Pair<String,String>("%{succeq}", "≽"));
+    codes.add(new Pair<String,String>("%{subterm}", "⊲"));
+    codes.add(new Pair<String,String>("%{subtermeq}", "⊴"));
+    codes.add(new Pair<String,String>("%{supterm}", "⊳"));
+    codes.add(new Pair<String,String>("%{suptermeq}", "⊵"));
+    codes.add(new Pair<String,String>("%{greater}", ">"));
+    codes.add(new Pair<String,String>("%{smaller}", "<"));
+    codes.add(new Pair<String,String>("%{geq}", "≥"));
+    codes.add(new Pair<String,String>("%{leq}", "≤"));
+    codes.add(new Pair<String,String>("%{and}", "∧"));
+    codes.add(new Pair<String,String>("%{or}", "∨"));
+    codes.add(new Pair<String,String>("%{not}", "¬"));
+    codes.add(new Pair<String,String>("%{implies}", "⇒"));
+    codes.add(new Pair<String,String>("%{distinct}", "≠"));
+    codes.add(new Pair<String,String>("%{alpha}", "α"));
+    codes.add(new Pair<String,String>("%{beta}", "β"));
+    codes.add(new Pair<String,String>("%{gamma}", "γ"));
+    codes.add(new Pair<String,String>("%{delta}", "δ"));
+    codes.add(new Pair<String,String>("%{epsilon}", "ε"));
+    codes.add(new Pair<String,String>("%{zeta}", "ζ"));
+    codes.add(new Pair<String,String>("%{eta}", "η"));
+    codes.add(new Pair<String,String>("%{theta}", "θ"));
+    codes.add(new Pair<String,String>("%{iota}", "ι"));
+    codes.add(new Pair<String,String>("%{kappa}", "κ"));
+    codes.add(new Pair<String,String>("%{lambda}", "λ"));
+    codes.add(new Pair<String,String>("%{mu}", "μ"));
+    codes.add(new Pair<String,String>("%{nu}", "ν"));
+    codes.add(new Pair<String,String>("%{xi}", "ξ"));
+    codes.add(new Pair<String,String>("%{pi}", "π"));
+    codes.add(new Pair<String,String>("%{rho}", "ρ"));
+    codes.add(new Pair<String,String>("%{sigma}", "σ"));
+    codes.add(new Pair<String,String>("%{tau}", "τ"));
+    codes.add(new Pair<String,String>("%{phi}", "φ"));
+    codes.add(new Pair<String,String>("%{chi}", "χ"));
+    codes.add(new Pair<String,String>("%{psi}", "ψ"));
+    codes.add(new Pair<String,String>("%{omega}", "ω"));
+    return new DefaultOutputModule(typr, new TermPrinter(typr,avoid), Style.Unicode, codes);
   }
 
   /** This creates a standard module for printing. */
@@ -211,23 +304,13 @@ public class DefaultOutputModule implements OutputModule {
     StringBuilder ret = new StringBuilder();
     int searchfrom = 0;
     for (int i = 0; i < objects.length; i++) {
-      int pos = text.indexOf('%', searchfrom);
+      int pos = text.indexOf("%a", searchfrom);
       if (pos < 0) {
         throw new IllegalPrintError("Illegal print; arguments " + text + " with " + objects.length +
                                     " arguments");
       }
       ret.append(text.substring(searchfrom, pos));
-      if (pos == text.length() -1) ret.append("%");
-      else {
-        String code = text.substring(pos, pos+2);
-        String replacement = replaceObjectCode(code, objects[i]);
-        if (replacement != null) ret.append(replacement);
-        else {
-          i--;
-          if (code.equals("%%")) ret.append("%");
-          else ret.append(code);
-        }
-      }
+      ret.append(printObject(objects[i]));
       searchfrom = pos + 2;
     }
     if (searchfrom < text.length()) ret.append(text.substring(searchfrom));
@@ -265,39 +348,38 @@ public class DefaultOutputModule implements OutputModule {
    * corresponding object as such.  If the object does not have the right type, then an
    * IllegalPrintError is thrown instead.
    */
-  private String replaceObjectCode(String code, Object ob) {
-    if (code.equals("%s")) {
-      if (ob instanceof String s) return s;
-      else throw new IllegalPrintError("Incorrect code %s used for object " + ob.toString() + ".");
+  private String printObject(Object ob) {
+    if (ob instanceof Type y) {
+      return _typePrinter.print(y);
     }
-    if (code.equals("%t")) {
-      if (ob instanceof Pair p) {
-        if (p.fst() instanceof Term t && p.snd() instanceof Renaming r) {
-          return _termPrinter.print(t, r);
-        }
+    // no need to special-case Terms, as these have all been transformed into Pairs
+    if (ob instanceof Pair p) {
+      if (p.fst() instanceof Term t && p.snd() instanceof Renaming r) {
+        return _termPrinter.print(t, r);
       }
-      else throw new IllegalPrintError("Incorrect code %t used for object " + ob.toString() + ".");
-    }
-    if (code.equals("%r")) {
-      if (ob instanceof Rule r) {
-        Term left = r.queryLeftSide();
-        Term right = r.queryRightSide();
-        Term constraint = r.queryConstraint();
-        Renaming renaming = _termPrinter.generateUniqueNaming(left, right, constraint);
-        StringBuilder ret = new StringBuilder();
-        _termPrinter.print(left, renaming, ret);
-        ret.append(replaceCodes(" %{ruleArrow} "));
-        _termPrinter.print(right, renaming, ret);
-        if (r.isConstrained()) {
-          ret.append(" | ");
-          _termPrinter.print(constraint, renaming, ret);
-        }
-        return ret.toString();
+      if (p.fst() instanceof String s && p.snd() instanceof Object[] obs) {
+        return makeString(s, obs);
       }
-      else throw new IllegalPrintError("Incorrect code %r used for object " + ob.toString() + ".");
+      if (p.fst() instanceof String s) {
+        return makeString(s, new Object[] { p.snd() });
+      }
     }
-    // it's not a code we know!
-    return null;
+    if (ob instanceof Rule r) {
+      Term left = r.queryLeftSide();
+      Term right = r.queryRightSide();
+      Term constraint = r.queryConstraint();
+      Renaming renaming = _termPrinter.generateUniqueNaming(left, right, constraint);
+      StringBuilder ret = new StringBuilder();
+      _termPrinter.print(left, renaming, ret);
+      ret.append(replaceCodes(" %{ruleArrow} "));
+      _termPrinter.print(right, renaming, ret);
+      if (r.isConstrained()) {
+        ret.append(" | ");
+        _termPrinter.print(constraint, renaming, ret);
+      }
+      return ret.toString();
+    }
+    return ob.toString();
   }
 }
 

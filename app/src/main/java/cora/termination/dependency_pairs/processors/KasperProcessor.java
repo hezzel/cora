@@ -1,17 +1,17 @@
 package cora.termination.dependency_pairs.processors;
 
+import java.util.*;
+import java.util.function.Consumer;
+
 import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;
 import cora.theorytranslation.TermSmtTranslator;
+import cora.io.OutputModule;
 import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
-import cora.termination.dependency_pairs.certification.Informal;
-
-import java.util.*;
-import java.util.function.Consumer;
 
 public class KasperProcessor implements Processor {
 
@@ -311,7 +311,7 @@ public class KasperProcessor implements Processor {
   }
 
   @Override
-  public Optional<List<Problem>> processDPP(Problem dpp) {
+  public IntegerFunctionProof processDPP(Problem dpp) {
     _smt = new SmtProblem();
 
     _fnToFreshVar = computeFreshVars(dpp);
@@ -320,8 +320,7 @@ public class KasperProcessor implements Processor {
     addSimpleCandidates();
     addComplexCandidates(dpp);
     updateCandidates(dpp);
-    if (!everyFunctionHasAtLeastOneCandidate()) return Optional.empty();
-
+    if (!everyFunctionHasAtLeastOneCandidate()) return new IntegerFunctionProof(dpp);
 
     Map<FunctionSymbol, IVar> intMap = generateIVars(dpp);
     requiresCtrs(intMap);
@@ -334,7 +333,7 @@ public class KasperProcessor implements Processor {
       default -> null;
     };
 
-    if (result == null) return Optional.empty();
+    if (result == null) return new IntegerFunctionProof(dpp);
 
     // we found a solution! Store the information from the valuation
     TreeSet<Integer> indexOfOrientedDPs = new TreeSet<>();
@@ -352,40 +351,6 @@ public class KasperProcessor implements Processor {
       else { remainingDPs.add(dp); }
     }  
 
-    // now let's generate output to the user
-    Informal.getInstance().addProofStep(
-      "***** Investigating the following DP problem using the integer function processor:");
-    Informal.getInstance().addProofStep(dpp.toString());
-    Informal.getInstance().addProofStep("We use the following interpretation function.");
-    candFun.forEach(
-      (f, cand) -> {
-        StringBuilder builder = new StringBuilder("  J( " + f.toString() + " ) = ");
-        builder.append(cand.toString());
-        Informal.getInstance().addProofStep(builder.toString());
-      });
-    Informal.getInstance().addProofStep("We thus have: ");
-    for (int index = 0; index < originalDPs.size(); index++) {
-      DP dp = originalDPs.get(index);
-      String left = instantiateCandidate(candFun.get(dp.lhs().queryRoot()), dp.lhs()).toString();
-      String right = instantiateCandidate(candFun.get(dp.rhs().queryRoot()), dp.rhs()).toString();
-      if (indexOfOrientedDPs.contains(index)) {
-        Informal.getInstance().addProofStep("  " + dp.constraint().toString() + " ⊨ " + left +
-          " > " + right + "  (and " + left + "≥ 0)    for the DP " + dp.toString());
-      }
-      else {
-        Informal.getInstance().addProofStep("  " + dp.constraint().toString() + " ⊨ " + left +
-          " ≥ " + right + "    for the DP " + dp.toString());
-      }
-    }
-    Informal.getInstance().addProofStep("And we remove all strictly oriented DPs.");
-    if (remainingDPs.size() == 0) {
-      Informal.getInstance().addProofStep(
-        "As there are no DPs left, the problem is removed altogether.\n");
-      return Optional.of(List.of());
-    }   
-    else {
-      Informal.getInstance().addProofStep("");  // end with an empty line
-      return Optional.of(List.of(new Problem(remainingDPs, dpp.getTRS())));
-    }
+    return new IntegerFunctionProof(dpp, indexOfOrientedDPs, _fnToFreshVar, candFun);
   }
 }

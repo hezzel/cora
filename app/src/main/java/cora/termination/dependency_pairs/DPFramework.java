@@ -1,6 +1,7 @@
 package cora.termination.dependency_pairs;
 
 import cora.trs.TRS;
+import cora.trs.TrsProperties.*;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.termination.TerminationAnswer;
@@ -10,14 +11,23 @@ import org.checkerframework.checker.units.qual.K;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Stack;
 
 import static cora.termination.TerminationAnswer.*;
 
 public class DPFramework {
-
-  public Boolean isTRSApplicable(TRS trs) {
+  private ProofObject isTRSApplicable(TRS trs) {
+    if (!trs.verifyProperties(Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED,
+                              Lhs.PATTERN, Root.FUNCTION)) {
+      return new ProofObject() {
+        public Boolean queryAnswer() { return false; }
+        public void justify(OutputModule o) {
+          o.println("For now, static dependency pairs can only be applied on applicative " +
+                    "systems without tuples, where the left-hand sides of rules are patterns " +
+                    "and their root always a non-theory symbol.");
+        }
+      };
+    }
     AccessibilityChecker checker = new AccessibilityChecker(trs);
     return checker.checkAccessibility();
   }
@@ -26,13 +36,9 @@ public class DPFramework {
     return DPGenerator.generateProblemFromTrs(trs);
   }
 
-  public ProofObject proveTermination(TRS trs) {
-    if (!isTRSApplicable(trs)) return new ProofObject() {
-      public TerminationAnswer queryAnswer() { return MAYBE; }
-      public void justify(OutputModule o) {
-        o.println("The TRS does not satisfy the preconditions to apply static dependency pairs.");
-      }
-    };
+  public DPProofObject proveTermination(TRS trs) {
+    ProofObject appl = isTRSApplicable(trs);
+    if (!((Boolean)appl.queryAnswer()).booleanValue()) return new DPProofObject(appl);
 
     ReachabilityProcessor reachProcessor = new ReachabilityProcessor();
     GraphProcessor   graphProcessor   = new GraphProcessor();
@@ -43,16 +49,17 @@ public class DPFramework {
     List<Processor> proclist =
       List.of(graphProcessor, subtermProcessor, targProcessor, kasperProcessor);
 
-    Informal.getInstance().addProofStep("We start by calculating the following Static Dependency Pairs:");
-
     Problem initialProblem = DPFramework.computeInitialProblem(trs);
-
-    Informal.getInstance().addProofStep(initialProblem.toString());
+    DPProofObject ret = new DPProofObject(appl, initialProblem);
 
     // we start with the processors that preserve the "public" nature of a chain
-    initialProblem = splitProcessor.transform(initialProblem);
-    initialProblem = targProcessor.transform(initialProblem);
-    initialProblem = reachProcessor.transform(initialProblem);
+    ProcessorProofObject tmp;
+    tmp = splitProcessor.transform(initialProblem);
+    if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
+    tmp = targProcessor.transform(initialProblem);
+    if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
+    tmp = reachProcessor.transform(initialProblem);
+    if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
 
     // At this point, we are looking for the absence of any chains, not just public chains;
     // this is handled by the main loop.
@@ -65,31 +72,22 @@ public class DPFramework {
       Problem p = toBeSolved.removeFirst();
       boolean success = false;
       for (Processor proc : proclist) {
-        Optional<List<Problem>> result = proc.processDPP(p);
-        if (result.isPresent()) {
-          toBeSolved.addAll(result.get());
+        ProcessorProofObject ppo = proc.processDPP(p);
+        if (ppo.applicable()) {
+          toBeSolved.addAll(ppo.queryResults());
+          ret.addProcessorProof(ppo);
           success = true;
           break;
         }
       }
       if (!success) {
         // Here the problem failed in all processors and couldn't be solved
-        Informal.getInstance().addProofStep("***** No progress could be made on DP problem:\n" +
-          p.toString());
-        return new ProofObject() {
-          public TerminationAnswer queryAnswer() { return MAYBE; }
-          public void justify(OutputModule o) {
-            o.println(Informal.getInstance().getInformalProof());
-          }
-        };
+        ret.setFailedProof(p);
+        return ret;
       }
     }
-    return new ProofObject() {
-      public TerminationAnswer queryAnswer() { return YES; }
-      public void justify(OutputModule o) {
-        o.println(Informal.getInstance().getInformalProof());
-      }
-    };
+    ret.setTerminating();
+    return ret;
   }
 }
 

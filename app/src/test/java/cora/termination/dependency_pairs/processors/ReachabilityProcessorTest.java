@@ -31,8 +31,8 @@ class ReachabilityProcessorTest {
     SplittingProcessor split = new SplittingProcessor();
     TheoryArgumentsProcessor targ = new TheoryArgumentsProcessor();
 
-    p = split.transform(p);
-    p = targ.transform(p);
+    p = split.transform(p).queryOutput();
+    p = targ.transform(p).queryOutput();
 
     ReachabilityProcessor r = new ReachabilityProcessor();
 

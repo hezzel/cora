@@ -2,7 +2,6 @@ package cora.termination.dependency_pairs.processors;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.TreeMap;
@@ -10,9 +9,9 @@ import cora.types.Type;
 import cora.terms.FunctionSymbol;
 import cora.terms.Variable;
 import cora.terms.Term;
+import cora.io.OutputModule;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
-import cora.termination.dependency_pairs.certification.Informal;
 
 public class TheoryArgumentsProcessor implements Processor {
   private TreeMap<FunctionSymbol,TreeSet<Integer>> _targs;
@@ -131,7 +130,30 @@ public class TheoryArgumentsProcessor implements Processor {
                   new ArrayList<Variable>(newvars), dp.isPrivate());
   }
 
-  public Problem transform(Problem dpp) {
+  private class TAProofObject extends ProcessorProofObject {
+    public TAProofObject(Problem inp) { super(inp); }
+    public TAProofObject(Problem inp, Problem out) { super(inp, out); }
+    public TAProofObject(Problem inp, List<Problem> out) { super(inp, out); }
+    public String queryProcessorName() { return "Theory Arguments"; }
+    public void justify(OutputModule module) {
+      if (_output.size() == 1) {
+        module.println("We use the following theory arguments function, which fixes all public " +
+          "dependency pairs:");
+      }
+      else module.println("We use the following theory arguments function:");
+      module.startTable();
+      for (FunctionSymbol f : _targs.keySet()) {
+        module.nextColumn("%s", f.toString());
+        module.nextColumn(":");
+        module.println("%s", _targs.get(f).toString());
+      }
+      module.endTable();
+      if (_output.size() == 1) module.println("This yields:");
+      else module.println("This yields the following new DP problems:");
+    }
+  }
+
+  public ProcessorProofObject transform(Problem dpp) {
     setupInitialArgumentsFunction(dpp);
     imposeMinimalLimitations(dpp);
     for (DP dp : dpp.getDPList()) {
@@ -148,18 +170,14 @@ public class TheoryArgumentsProcessor implements Processor {
         newdps.add(updateVariables(dp));
       }
     }
-    if (!anythingChanged) return dpp;
+    if (!anythingChanged) return new TAProofObject(dpp);
 
     Problem ret = new Problem(newdps, dpp.getTRS());
 
-    Informal.getInstance().addProofStep("We use a theory arguments function " + _targs +
-      " that fixes all public dependency pairs.  This yields:");
-    Informal.getInstance().addProofStep(ret.toString());
-
-    return ret;
+    return new TAProofObject(dpp, ret);
   }
 
-  public Optional<List<Problem>> processDPP(Problem dpp) {
+  public TAProofObject processDPP(Problem dpp) {
     setupInitialArgumentsFunction(dpp);
     imposeMinimalLimitations(dpp);
     imposeConsistencyLimitations(dpp);
@@ -167,11 +185,11 @@ public class TheoryArgumentsProcessor implements Processor {
     for (DP dp : dpp.getDPList()) {
       if (checkFixes(dp)) numfixed++;
     }
-    if (numfixed == dpp.getDPList().size()) return Optional.empty();    // we can't improve on that!
+    if (numfixed == dpp.getDPList().size()) return new TAProofObject(dpp); // can't improve on that!
     if (numfixed == 0) {
       // It is very possible that we could improve in this case, but then we'd have to start trying
       // out different DPs to fix.  For now, we have not implemented this.
-      return Optional.empty();
+      return new TAProofObject(dpp);
     }
     ArrayList<DP> newdpsA = new ArrayList<DP>();
     ArrayList<DP> newdpsB = new ArrayList<DP>();
@@ -184,16 +202,7 @@ public class TheoryArgumentsProcessor implements Processor {
     }
     Problem retA = new Problem(newdpsA, dpp.getTRS());
     Problem retB = new Problem(newdpsB, dpp.getTRS());
-    Informal.getInstance().addProofStep(
-      "***** Investigating the following DP problem using the theory arguments processor:");
-    Informal.getInstance().addProofStep(dpp.toString());
-    Informal.getInstance().addProofStep("We use the following theory arguments function: " +
-      _targs);
-    Informal.getInstance().addProofStep("This yields two new DP Problems:");
-    Informal.getInstance().addProofStep(retA.toString());
-    Informal.getInstance().addProofStep("And:");
-    Informal.getInstance().addProofStep(retB.toString());
 
-    return Optional.of(List.of(retA, retB));
+    return new TAProofObject(dpp, List.of(retA, retB));
   }
 }

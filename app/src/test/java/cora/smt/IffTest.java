@@ -28,7 +28,6 @@ public class IffTest {
     Constraint comp = SmtFactory.createGreater(left, right);
     Constraint bvar = new BVar(9);
     Constraint iff = SmtFactory.createIff(comp, bvar);
-    System.out.println(iff.toString());
     assertTrue(iff.toString().equals("(= (> i7 (+ 3 i1)) b9)"));
   }
 

@@ -2,16 +2,15 @@ package cora.termination.dependency_pairs.processors;
 
 import cora.utils.Pair;
 import cora.smt.*;
+import cora.io.OutputModule;
 import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
-import cora.termination.dependency_pairs.certification.Informal;
 import cora.terms.FunctionSymbol;
 import cora.terms.Term;
 
 import java.util.Optional;
 import java.util.*;
-import static java.lang.StringTemplate.STR;
 
 public class SubtermProcessor implements Processor {
 
@@ -112,8 +111,16 @@ public class SubtermProcessor implements Processor {
     }
   }
 
+  private class SubcritProofObject extends ProcessorProofObject {
+    public SubcritProofObject(Problem inp) { super(inp); }
+    public SubcritProofObject(Problem inp, Problem out) { super(inp, out); }
+    public SubcritProofObject(Problem inp, List<Problem> out) { super(inp, out); }
+    public void justify(OutputModule module) { }
+    public String queryProcessorName() { return "Subterm Criterion"; }
+  }
+
   @Override
-  public Optional<List<Problem>> processDPP(Problem dpp) {
+  public ProcessorProofObject processDPP(Problem dpp) {
     _smt = new SmtProblem();
 
     // Generates an IntegerSMT variable for each f-sharp symbol
@@ -128,63 +135,27 @@ public class SubtermProcessor implements Processor {
     addProblemConstraintsToSMT(fSharpMap, dpbVarMap, dpp);
 
     // Ask the SMT-solver to find the projection function for us.
-    Valuation valuation = switch (Settings.smtSolver.checkSatisfiability(_smt)) {
-      case SmtSolver.Answer.YES(Valuation val) -> val;
-      default -> null;
+    Valuation valuation = null;
+    switch (Settings.smtSolver.checkSatisfiability(_smt)) {
+      case SmtSolver.Answer.YES(Valuation val): valuation = val; break;
+      default: return new SubcritProofObject(dpp); // this processor cannot do anything
     };
-
-    if (valuation == null) {
-      // this processor cannot do anything
-      return Optional.empty();
-    }
 
     // we found a solution! Store the information from the valuation
     TreeSet<Integer> indexOfOrientedDPs = new TreeSet<>();
     TreeMap<FunctionSymbol,Integer> nu = new TreeMap<FunctionSymbol,Integer>();
     List<DP> originalDPs = dpp.getDPList();
-    List<DP> remainingDPs = new ArrayList<DP>();
+    Valuation v = valuation;  // local variables referenced from a lambda expression must be effectively final
     fSharpMap.forEach(
       (f, ivar) -> {
-        nu.put(f, valuation.queryAssignment(ivar));
+        nu.put(f, v.queryAssignment(ivar));
       });
     for (int index = 0; index < originalDPs.size(); index++) {
       DP dp = originalDPs.get(index);
       BVar bvar = dpbVarMap.get(dp);
       if (valuation.queryAssignment(bvar)) { indexOfOrientedDPs.add(index); }
-      else { remainingDPs.add(dp); }
     }
 
-    // and let's generate output to the user
-    Informal.getInstance().addProofStep(
-      "***** Investigating the following DP problem using the subterm processor:");
-    Informal.getInstance().addProofStep(dpp.toString());
-    Informal.getInstance().addProofStep("We use the following projection function.");
-    nu.forEach (
-      (f, k) -> {
-        Informal.getInstance().addProofStep(STR."  ν( \{ f.toString() } ) = \{ k } ");
-      });
-
-    Informal.getInstance().addProofStep("We thus have: ");
-
-    for (int index = 0; index < originalDPs.size(); index++) {
-      String kind;
-      if (indexOfOrientedDPs.contains(index)) kind = "▷";
-      else kind = "=";
-      DP dp = originalDPs.get(index);
-      Informal
-        .getInstance()
-        .addProofStep(STR."  \{dp.lhs().queryArgument(nu.get(dp.lhs().queryRoot()))} \{ kind } \{dp.rhs().queryArgument(nu.get(dp.rhs().queryRoot()))}   for the DP \{dp.toString()}.");
-    }
-
-    Informal.getInstance().addProofStep("And we remove all strictly oriented DPs.");
-    if (remainingDPs.size() == 0) {
-      Informal.getInstance().addProofStep(
-        "As there are no DPs left, the problem is removed altogether.\n");
-      return Optional.of(List.of());
-    }
-    else {
-      Informal.getInstance().addProofStep("");  // end with an empty line
-      return Optional.of(List.of(new Problem(remainingDPs, dpp.getTRS())));
-    }
+    return new SubtermCriterionProof(dpp, indexOfOrientedDPs, nu);
   }
 }

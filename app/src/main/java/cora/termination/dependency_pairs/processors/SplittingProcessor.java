@@ -1,9 +1,25 @@
+/**************************************************************************************************
+ Copyright 2024 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
 package cora.termination.dependency_pairs.processors;
 
+import cora.utils.Pair;
 import cora.terms.*;
+import cora.io.OutputModule;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
-import cora.termination.dependency_pairs.certification.Informal;
 import java.util.Optional;
 import java.util.ArrayList;
 
@@ -123,38 +139,48 @@ public class SplittingProcessor implements Processor {
     return Optional.of(ret);
   }
 
-  public Problem transform(Problem dpp) {
+  private class SplittingProofObject extends ProcessorProofObject {
+    private List<Pair<DP,List<DP>>> _splitDP;
+    public SplittingProofObject(Problem inp) { super(inp); _splitDP = null; }
+    public SplittingProofObject(Problem inp, Problem out, List<Pair<DP,List<DP>>> splitDP) {
+      super(inp, out);
+      _splitDP = splitDP;
+    }
+    public String queryProcessorName() { return "Constraint Modification"; }
+    public void justify(OutputModule module) {
+      if (_splitDP == null) return;   // nothing to justify
+      for (Pair<DP,List<DP>> p : _splitDP) {
+        module.println("We replace %a by:", p.fst());
+        module.startTable();
+        for (DP result : p.snd()) module.println("%a", result);
+        module.endTable();
+      }
+      module.println("This yields:");
+    }
+  }
+
+  public ProcessorProofObject transform(Problem dpp) {
+    _anythingChanged = false;
     List<DP> dps = dpp.getDPList();
     ArrayList<DP> ret = new ArrayList<DP>();
+    ArrayList<Pair<DP,List<DP>>> info = new ArrayList<Pair<DP,List<DP>>>();
     for (int i = 0; i < dps.size(); i++) {
       Optional<ArrayList<DP>> splitDP = split(dps.get(i));
       if (splitDP.isEmpty()) ret.add(dps.get(i));
       else {
-        if (!_anythingChanged) {
-          Informal.getInstance().addProofStep(
-            "***** Investigating the following DP problem using the constraint modification " +
-            "processor:");
-          Informal.getInstance().addProofStep(dpp.toString());
-        }
         _anythingChanged = true;
-        StringBuilder builder = new StringBuilder("We replace ");
-        builder.append(dps.get(i).toString() + " by");
-        for (DP dp : splitDP.get()) {
-          ret.add(dp);
-          builder.append("\n  * " + dp.toString());
-        }
-        Informal.getInstance().addProofStep(builder.toString());
+        info.add(new Pair<DP,List<DP>>(dps.get(i), splitDP.get()));
+        for (DP dp : splitDP.get()) ret.add(dp);
       }
     }
-    if (_anythingChanged) Informal.getInstance().addProofStep("");
-    return new Problem(ret, dpp.getTRS());
+    if (_anythingChanged) {
+      return new SplittingProofObject(dpp, new Problem(ret, dpp.getTRS()), info);
+    }
+    return new SplittingProofObject(dpp);
   }
 
   @Override
-  public Optional<List<Problem>> processDPP(Problem dpp) {
-    _anythingChanged = false;
-    Problem ret = transform(dpp);
-    if (_anythingChanged) return Optional.of(List.of(ret));
-    else return Optional.empty();
+  public ProcessorProofObject processDPP(Problem dpp) {
+    return transform(dpp);
   }
 }

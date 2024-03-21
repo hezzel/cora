@@ -77,8 +77,8 @@ class HorpoResult implements ProofObject {
 
   public String integerOrdering() {
     String ret = "{(x,y) | ";
-    if (_bound <= 0) ret += "x > " + _bound + " ∧ x > y }";
-    else ret += "x < " + _bound + " ∧ x < y }";
+    if (_bound <= 0) ret += "x %{greater} " + _bound + " %{and} x %{greater} y }";
+    else ret += "x %{smaller} " + _bound + " %{and} x %{smaller} y }";
     return ret;
   }
 
@@ -93,29 +93,25 @@ class HorpoResult implements ProofObject {
       "0 for other symbols):");
     o.startTable();
     for (String symbol : _pred.keySet()) {
-      o.nextColumn(symbol);
+      o.nextColumn("%a", symbol);
       o.nextColumn(":");
-      o.println(_pred.get(symbol).toString());
+      o.println("%a", _pred.get(symbol));
     }
     o.endTable();
     o.println("* Status (all non-mentioned symbols have status Lex):");
     o.startTable();
     for (String symbol : _stat.keySet()) {
-      o.nextColumn(symbol);
+      o.nextColumn("%a", symbol);
       o.nextColumn(":");
       o.println((_stat.get(symbol) <= 1 ? "Lex" : "Mul_" + _stat.get(symbol)));
     }
     o.endTable();
     o.println("* Well-founded theory orderings:");
-    String symbol = switch (o.queryStyle()) {
-      case OutputModule.Style.Unicode -> "⊐";
-      default -> "[>]";
-    };
     o.startTable();
-    o.nextColumn(symbol + "_{Bool}");
+    o.nextColumn("%{sqsupset}_{Bool}");
     o.nextColumn("=");
     o.println("{(true,false)}");
-    o.nextColumn(symbol + "_{Int}");
+    o.nextColumn("%{sqsupset}_{Int}");
     o.nextColumn("=");
     o.println(integerOrdering());
     o.endTable();

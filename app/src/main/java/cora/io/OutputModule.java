@@ -23,22 +23,22 @@ import cora.trs.Rule;
  * An OutputModule is used to print Cora data to the user.  This class is meant to be implemented
  * to allow output to be printed in a variety of ways; for example, plain, unicode and HTML output.
  *
- * To support this, and also to support the broad spectrum of things that should be printable, the
- * OutputModule is in principle implemented through the Adapter pattern: there is a default
- * version, and extensions may for instance define additional codes for the print function.
+ * It is also possible to define extensions of an existing OutputModule that know how to print
+ * special kinds of objects (e.g., dependency pairs, equations).  This is handled using the
+ * OutputModuleAdapter.
  */
 public interface OutputModule {
   enum Style { Plain, Unicode }
 
   /**
    * This returns the style used for printing anything in this OutputModule.  Objects printing to
-   * an OutputModule may use swith on the style to decide on how to print something (for example,
-   * whether to print ∀ or FORALL in some formula depending on whether the style if Plain or
-   * Unicode).
+   * an OutputModule may use swith on the style to decide on how to print something.
    *
    * It is possible that future extensions of OutputModule will support more styles.  Anything
    * printing to an OutputModule should support at least the Plain style, and if the OutputModule
    * uses an unknown style, default to that.
+   *
+   * (Note that for most purposes, using the designated codes and print methods should suffice.)
    */
   Style queryStyle();
 
@@ -61,27 +61,40 @@ public interface OutputModule {
   /**
    * The core print method.  The given text is printed, and codes in it are parsed.  The following
    * codes should be supported in any implementation of OutputModule:
-   *   %{ruleArrow}, %{typeArrow}, %{lambda}, %{vdash}
+   *   %{ruleArrow}, %{typeArrow}, %{mapsto}, %{thickArrow}, %{longArrow}, %{downArrow},
+   *   %{revRuleArrow}
+   *   %{vdash}, %{Vdash}, %{forall}, %{exists},
+   *   %{sqSupset}, %{sqSupseteq}, %{succ}, %{succeq},
+   *   %{subterm}, %{subtermeq}, %{supterm}, %{suptermeq},
+   *   %{greater}, %{smaller}, %{geq}, %{leq}, %{and}, %{or}, %{not}, %{implies}, %{distinct},
+   *   %{alpha}, %{beta}, %{gamma}, %{delta}, %{epsilon}, %{zeta}, %{eta}, %{theta}, %{iota},
+   *   %{kappa}, %{lambda}, %{mu}, %{nu}, %{xi}, %{pi}, %{rho}, %{sigma}, %{tau}, %{phi}, %{chi},
+   *   %{psi}, %{omega},
    * and most importantly:
-   *   codes %s, %t and %r are replaced, in order, by the object of the same index in the given
-   *   list:
-   *   - for a code %s, the corresponding item must be a String, which is printed as is
-   *   - for a code %t, the corresponding item must be a Term
-   *   - for a code %r, the corresponding item must be a Rule
-   * This is done in such a way that occurrences of the same variable in multiple terms all have
-   * the same name, and this name is only used for ONE variable.  (Formally: they are printed
-   * using the same naming: TermPrinter.Renaming.)
-   * As an aside, %% is replaced by just % (as shorthand for using %s with an argument "%").
+   *   codes %a, in order, are replaced by a string representation of the object of the same
+   *   index in the given list.
    *
-   * For example, print("%t %{ruleArrow} %t | %t", [a,b,c]) calls printFinal("a → b | c") if
-   * the function queryRuleArrow() returns "→".
+   * Special behaviour is defined for %a for Type, Term and Rule bbjects, as well as
+   * Pair<Term,Renaming> and Pair<String,Object[]> objects; all other objects are printed through
+   * ob.toString() (although it is possible for extensions of OutputModule to define their own
+   * improved ways of printing other kinds of objects).
    *
-   * Additional codes may be supported in specific kinds of OutputModule.
+   * In particular, the Term objects are printed in such a way that occurrences of the same
+   * variables in multiple terms (in the given object list) are all printed with the same name,
+   * and this name is only used for ONE variable.  (Formally: they are printed using the same
+   * naming: TermPrinter.Renaming.)
    *
-   * Note: it is possible to pass a Pair<Term,Renaming> as one of the Object arguments instead of
-   * just a term.  This will lead to the given term being printed with the given Renaming.  Hence,
-   * if there is a need to print terms across multiple paragraphs using the same Renaming, then the
-   * calling method can use this to do so (but needs to keep track of the Renaming by itself).
+   * For example, print("%a %{ruleArrow} %a | %a", [a,b,c]) causes"a → b | c" to be printed if the
+   * current style has set the code for %{ruleArrow} to →.
+   *
+   * Note: if you pass a Pair<Term,Renaming> as one of the Object arguments instead of just a term,
+   * then this will lead to the given term being printed with the given Renaming, and not being
+   * considered for the naming of other terms in the given list.  Hence, if there is a need to
+   * print terms across multiple paragraphs using the same Renaming, then the calling method can
+   * use this to do so (but needs to keep track of the Renaming by itself).
+   *
+   * Note also: if you pass a Pair<String,Object[]> as one of the Object arguments (say (s,lst)),
+   * that's the same as calling print(s, lst).
    */
   void print(String text, Object ...objects);
 
@@ -143,7 +156,7 @@ public interface OutputModule {
   /** This prints the given set of rules in a table to the output module. */
   default void printRules(List<Rule> rules) {
     startTable();
-    for (Rule rule : rules) { println("%r", rule); }
+    for (Rule rule : rules) { println("%a", rule); }
     endTable();
   }
 

@@ -19,7 +19,7 @@ package cora.io;
  * A ProofObject is the way that some method within Cora passes its result to the calling function.
  * A ProofObject provides an answer, and can prints the justification for this answer.  In the
  * future, it may also be able to print a formal proof for automatic certification.
- * (If the answer is something like MAYBE, the justification may just be empty.)
+ * (The justification is allowed to be empty, for example if the answer is something like MAYBE.)
  */
 public interface ProofObject {
   /**

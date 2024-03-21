@@ -6,6 +6,8 @@ import java.util.Comparator;
 import java.util.TreeMap;
 import java.util.Map;
 import cora.exceptions.NotYetImplementedError;
+import cora.io.OutputModule;
+import cora.io.ProofObject;
 import cora.termination.dependency_pairs.certification.Informal;
 import cora.utils.Pair;
 import cora.types.*;
@@ -123,44 +125,59 @@ public class AccessibilityChecker {
     return ret;
   }
 
-  private String buildSortOrderingExplanation(Valuation solution) {
-    // get all the sorts, and their calculated weights
-    ArrayList<Pair<String,Integer>> sorts = new ArrayList<Pair<String,Integer>>();
-    _sortVariables.forEach( (x, v) -> {
-      sorts.add(new Pair<String,Integer>(x, solution.queryAssignment(v)));
-    });
-    // sort them in decreasing order
-    Collections.sort(sorts, new Comparator<Pair<String,Integer>>() {
-      public int compare(Pair<String,Integer> p1, Pair<String,Integer> p2) {
-        return p2.snd() - p1.snd();
-      }
-    });
-    boolean allequal = true;
-    if (sorts.size() == 0) return "a sort ordering that equates all sorts";
-    StringBuilder ret = new StringBuilder("a sort ordering with ");
-    ret.append(sorts.get(0).fst());
-    for (int i = 1; i < sorts.size(); i++) {
-      if (sorts.get(i).snd() < sorts.get(i-1).snd()) {
-        allequal = false;
-        ret.append(" ≻ ");
-      }
-      else ret.append(" ≈ ");
-      ret.append(sorts.get(i).fst());
+  private class AccessibilityProofObject implements ProofObject {
+    private ArrayList<Pair<String,Integer>> _sorts;
+
+    private AccessibilityProofObject(Valuation solution) {
+      _sorts = new ArrayList<Pair<String,Integer>>();
+      _sortVariables.forEach( (x, v) -> {
+        _sorts.add(new Pair<String,Integer>(x, solution.queryAssignment(v)));
+      });
+      Collections.sort(_sorts, new Comparator<Pair<String,Integer>>() {
+        public int compare(Pair<String,Integer> p1, Pair<String,Integer> p2) {
+          return p2.snd() - p1.snd();
+        }
+      });
     }
-    if (allequal) return "a sort ordering that equates all sorts";
-    return ret.toString();
+
+    private AccessibilityProofObject() {
+      _sorts = null;
+    }
+
+    public Boolean queryAnswer() { return _sorts != null; }
+
+    public void justify(OutputModule module) {
+      if (_sorts == null) {
+        module.println("The system does not satisfy the preconditions to apply static " +
+                       "dependency pairs: it is not accessible function passing.");
+        return;
+      }
+      
+      module.print("The system is accessible function passing by ");
+
+      if (_sorts.size() == 0 ||
+          _sorts.get(0).snd().equals(_sorts.get(_sorts.size()-1).snd())) {
+        module.println("a sort ordering that equates all sorts.");
+        return;
+      }
+
+      module.print("a sort ordering with %s", _sorts.get(0).fst());
+      for (int i = 1; i < _sorts.size(); i++) {
+        if (_sorts.get(i).snd() < _sorts.get(i-1).snd()) module.print(" ≻ ");
+        else module.print(" = ");
+        module.print("%s", _sorts.get(i).fst());
+      }
+      module.println(".");
+    }
   }
 
-  public boolean checkAccessibility() {
+  public ProofObject checkAccessibility() {
     generateTrsConstraints();
     switch (Settings.smtSolver.checkSatisfiability(_problem)) {
       case SmtSolver.Answer.YES(Valuation solution):
-        Informal.getInstance().addProofStep("This system is accessible-function passing by " +
-          buildSortOrderingExplanation(solution) + ".\n");
-        return true;
+        return new AccessibilityProofObject(solution);
       default:
-        _result = "";
-        return false;
+        return new AccessibilityProofObject();
     }
   }
 
