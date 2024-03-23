@@ -287,8 +287,6 @@ public class DefaultOutputModule implements OutputModule {
 
   /** This returns a string representation of the results so far. */
   public String toString() {
-    if (_inParagraph) println();
-    else if (_currentTable != null) endTable();
     return _builder.toString();
   }
 

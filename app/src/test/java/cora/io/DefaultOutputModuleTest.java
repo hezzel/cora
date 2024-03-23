@@ -41,6 +41,7 @@ public class DefaultOutputModuleTest {
     o.print("Hello ");
     o.println("world!");
     o.print("Test.");
+    o.println();
     assertTrue(o.toString().equals("Hello world!\n\nTest.\n\n"));
   }
 
@@ -78,6 +79,7 @@ public class DefaultOutputModuleTest {
     o.nextColumn("bb");
     o.print("Super long");
     o.println(" line!");
+    o.endTable();
     assertTrue(o.toString().equals("  Hello a\n  bb    Super long line!\n\n"));
   }
 
@@ -108,7 +110,7 @@ public class DefaultOutputModuleTest {
     o.println("E");
     o.endTable();
     o.print("Some more testing");
-    assertTrue(o.toString().equals("  ABCD x\n  \n  E\n\nSome more testing\n\n"));
+    assertTrue(o.toString().equals("  ABCD x\n  \n  E\n\nSome more testing"));
   }
 
   @Test
@@ -150,7 +152,7 @@ public class DefaultOutputModuleTest {
     o.print(" and %a.", b);
     assertTrue(o.toString().equals(
       "First attempt: terms are f(x__1, 3) and f(0, x__2 + y).\n\n" +
-      "Second attempt: terms are f(x, 3) and f(0, x + y).\n\n"));
+      "Second attempt: terms are f(x, 3) and f(0, x + y)."));
   }
 
   @Test
