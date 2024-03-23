@@ -5,9 +5,7 @@ import cora.trs.TrsProperties.*;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.termination.TerminationAnswer;
-import cora.termination.dependency_pairs.certification.Informal;
 import cora.termination.dependency_pairs.processors.*;
-import org.checkerframework.checker.units.qual.K;
 
 import java.util.ArrayList;
 import java.util.List;

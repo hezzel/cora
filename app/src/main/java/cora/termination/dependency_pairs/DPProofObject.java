@@ -42,6 +42,10 @@ class DPProofObject implements ProofObject {
    * This starts up a ProofObject for a system where the static dependency pair method is
    * *not* applicable, for instance because it is not accessible function passing.  The given
    * proof object contains the argument why it is not applicable.
+   *
+   * Note that, after using this constructor, no further calls of addProcessorProof may be done on
+   * it.  Similarly, the response and failure reason do not need to be set.  (There is relatively
+   * little error checking on this, because these functions are all package-private.)
    */
   DPProofObject(ProofObject accessibility) {
     _accessibilityCheck = accessibility;
@@ -67,16 +71,31 @@ class DPProofObject implements ProofObject {
     _failure = null;
   }
 
-  /** This marks the proof as complete, with a successful termination proof. */
+  /**
+   * This marks the proof as complete, with a successful termination proof.
+   * Package-private because this should only be done by the DP Framework constructing this object.
+   */
   void setTerminating() { _answer = TerminationAnswer.YES; }
 
-  /** This marks the proof as complete, with a successful non-termination proof. */
+  /**
+   * This marks the proof as complete, with a successful non-termination proof.
+   * Package-private because this should only be done by the DP Framework constructing this object.
+  */
   void setNonTerminating() { _answer = TerminationAnswer.NO; }
 
-  /** This marks the proof as abandoned, with the given DP Problem being unsimplifable. */
-  void setFailedProof(Problem problem) { _failure = problem; }
+  /**
+   * This marks the proof as abandoned, with the given DP Problem being unsimplifable.
+   * Package-private because this should only be done by the DP Framework constructing this object.
+   */
+  void setFailedProof(Problem problem) {
+    _failure = problem;
+    _answer = TerminationAnswer.MAYBE;
+  }
 
-  /** This adds a proof from a processor. */
+  /**
+   * This adds a proof from a processor.
+   * Package-private because this should only be done by the DP Framework constructing this object.
+   */
   void addProcessorProof(ProcessorProofObject procproof) {
     _processorProofs.add(procproof);
   }
