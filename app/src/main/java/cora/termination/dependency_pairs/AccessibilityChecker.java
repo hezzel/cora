@@ -8,7 +8,6 @@ import java.util.Map;
 import cora.exceptions.NotYetImplementedError;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
-import cora.termination.dependency_pairs.certification.Informal;
 import cora.utils.Pair;
 import cora.types.*;
 import cora.terms.*;

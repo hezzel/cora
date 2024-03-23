@@ -7,7 +7,6 @@ import cora.reader.CoraInputReader;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
-import cora.termination.dependency_pairs.certification.Informal;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

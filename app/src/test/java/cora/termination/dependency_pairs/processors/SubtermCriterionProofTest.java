@@ -67,7 +67,7 @@ class SubtermCriterionProofTest {
       "  nu(f#) = 2\n" +
       "  nu(g#) = 1\n\n" +
       "We thus have:\n\n" +
-      "  (1) y [>=] y\n\n" +
+      "  (1) y |>=| y\n\n" +
       "We may remove the strictly oriented DPs, which yields:\n\n"));
   }
 
@@ -129,7 +129,7 @@ class SubtermCriterionProofTest {
       "We use the following projection function:\n\n" +
       "  nu(append#) = 1\n\n" +
       "We thus have:\n\n" +
-      "  (1) cons(x, y) [>] y\n\n" +
+      "  (1) cons(x, y) |>| y\n\n" +
       "All DPs are strictly oriented, and may be removed.  Hence, this DP problem is finite.\n\n"));
   }
 }
