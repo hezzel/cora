@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.types.*;
-import cora.terms.*;
+import charlie.terms.*;
 import cora.trs.*;
 import cora.reader.CoraInputReader;
 

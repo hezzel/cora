@@ -15,7 +15,7 @@
 
 package cora.reduction;
 
-import cora.terms.Term;
+import charlie.terms.Term;
 
 /**
  * Reduce objects are representatives of rules or rule schemes: objects that can be applied on a

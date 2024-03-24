@@ -30,7 +30,7 @@ import charlie.parser.Parser;
 import charlie.parser.Parser.*;
 import charlie.parser.OCocoParser;
 import charlie.types.*;
-import cora.terms.*;
+import charlie.terms.*;
 import cora.trs.*;
 
 /**

@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
-import cora.terms.*;
+import charlie.terms.*;
 import cora.trs.Rule;
 import cora.trs.TrsFactory;
 import cora.reader.CoraInputReader;

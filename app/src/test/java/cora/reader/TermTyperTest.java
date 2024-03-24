@@ -23,7 +23,7 @@ import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.CoraParser;
-import cora.terms.*;
+import charlie.terms.*;
 
 public class TermTyperTest {
   private Type type(String str) {

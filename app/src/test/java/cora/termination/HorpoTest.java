@@ -18,8 +18,8 @@ package cora.termination;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import cora.terms.FunctionSymbol;
-import cora.terms.TheoryFactory;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.TheoryFactory;
 import cora.trs.TRS;
 import cora.reader.CoraInputReader;
 

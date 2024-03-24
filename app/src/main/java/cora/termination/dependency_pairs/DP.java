@@ -3,10 +3,10 @@ package cora.termination.dependency_pairs;
 import com.google.errorprone.annotations.Var;
 import com.sun.jdi.event.StepEvent;
 import charlie.exceptions.InappropriatePatternDataError;
-import cora.terms.Environment;
-import cora.terms.Term;
-import cora.terms.TheoryFactory;
-import cora.terms.Variable;
+import charlie.terms.Environment;
+import charlie.terms.Term;
+import charlie.terms.TheoryFactory;
+import charlie.terms.Variable;
 
 import java.util.ArrayList;
 import java.util.HashSet;

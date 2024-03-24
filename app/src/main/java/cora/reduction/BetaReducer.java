@@ -16,10 +16,10 @@
 package cora.reduction;
 
 import java.util.List;
-import cora.terms.Term;
-import cora.terms.Variable;
-import cora.terms.TermFactory;
-import cora.terms.Substitution;
+import charlie.terms.Term;
+import charlie.terms.Variable;
+import charlie.terms.TermFactory;
+import charlie.terms.Substitution;
 
 /** This class implements the beta rule scheme. */
 class BetaReducer implements ReduceObject {

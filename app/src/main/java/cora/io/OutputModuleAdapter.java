@@ -17,7 +17,7 @@ package cora.io;
 
 import java.util.List;
 import charlie.exceptions.NullStorageError;
-import cora.terms.TermPrinter;
+import charlie.terms.TermPrinter;
 
 /**
  * An OutputModuleAdapter is used to add functionality to an existing OutputModule.  In particular,

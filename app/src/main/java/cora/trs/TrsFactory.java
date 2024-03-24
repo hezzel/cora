@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import charlie.exceptions.IllegalRuleError;
-import cora.terms.Term;
+import charlie.terms.Term;
 import cora.trs.TrsProperties.*;
 
 /** The TrsFactory is used to create both rules and various kinds of TRSs. */

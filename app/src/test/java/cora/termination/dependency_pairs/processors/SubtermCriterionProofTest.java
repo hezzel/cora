@@ -22,9 +22,9 @@ import java.util.TreeMap;
 import java.util.List;
 import java.util.Set;
 
-import cora.terms.Term;
-import cora.terms.Variable;
-import cora.terms.FunctionSymbol;
+import charlie.terms.Term;
+import charlie.terms.Variable;
+import charlie.terms.FunctionSymbol;
 import cora.trs.TRS;
 import cora.reader.CoraInputReader;
 import cora.io.OutputModule;

@@ -15,7 +15,6 @@
 
 package cora.reduction;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
@@ -24,8 +23,8 @@ import java.util.TreeSet;
 
 import charlie.types.Type;
 import charlie.types.TypeFactory;
-import cora.terms.*;
-import cora.terms.position.Position;
+import charlie.terms.position.Position;
+import charlie.terms.*;
 import cora.trs.Rule;
 import cora.trs.*;
 import cora.reader.CoraInputReader;

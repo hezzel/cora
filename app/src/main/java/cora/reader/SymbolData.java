@@ -19,9 +19,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import charlie.exceptions.NullStorageError;
 import charlie.types.Type;
-import cora.terms.FunctionSymbol;
-import cora.terms.Variable;
-import cora.terms.MetaVariable;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.Variable;
+import charlie.terms.MetaVariable;
 import cora.trs.Alphabet;
 import cora.trs.TRS;
 

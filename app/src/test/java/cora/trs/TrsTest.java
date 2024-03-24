@@ -26,7 +26,7 @@ import java.util.TreeSet;
 
 import charlie.types.Type;
 import charlie.types.TypeFactory;
-import cora.terms.*;
+import charlie.terms.*;
 import cora.reader.CoraInputReader;
 import cora.trs.TrsProperties.*;
 import cora.trs.TRS.RuleScheme;

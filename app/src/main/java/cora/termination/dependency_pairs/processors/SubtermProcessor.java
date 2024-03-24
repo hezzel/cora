@@ -6,8 +6,8 @@ import cora.io.OutputModule;
 import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
-import cora.terms.FunctionSymbol;
-import cora.terms.Term;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.Term;
 
 import java.util.Optional;
 import java.util.*;

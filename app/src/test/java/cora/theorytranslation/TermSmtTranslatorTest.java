@@ -22,10 +22,10 @@ import charlie.exceptions.UnsupportedTheoryError;
 import charlie.exceptions.TypingError;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
-import cora.terms.Term;
-import cora.terms.Variable;
-import cora.terms.TermFactory;
-import cora.terms.TheoryFactory;
+import charlie.terms.Term;
+import charlie.terms.Variable;
+import charlie.terms.TermFactory;
+import charlie.terms.TheoryFactory;
 import charlie.smt.*;
 
 public class TermSmtTranslatorTest {

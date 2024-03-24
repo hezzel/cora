@@ -27,7 +27,7 @@ import charlie.exceptions.IllegalSymbolError;
 import charlie.exceptions.NullInitialisationError;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
-import cora.terms.*;
+import charlie.terms.*;
 import cora.reader.CoraInputReader;
 
 public class TrsFactoryTrsCreationTest {

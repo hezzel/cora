@@ -17,7 +17,7 @@ package cora;
 
 import charlie.exceptions.ParseError;
 import charlie.util.Pair;
-import cora.terms.Term;
+import charlie.terms.Term;
 import cora.trs.TRS;
 import cora.reader.OCocoInputReader;
 import cora.reader.ITrsInputReader;

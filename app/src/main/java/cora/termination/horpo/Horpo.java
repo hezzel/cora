@@ -20,7 +20,7 @@ import java.util.LinkedList;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import charlie.types.*;
-import cora.terms.*;
+import charlie.terms.*;
 import charlie.smt.*;
 import cora.trs.*;
 import cora.trs.TrsProperties.*;

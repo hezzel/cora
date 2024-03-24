@@ -16,7 +16,7 @@
 package cora.termination.dependency_pairs.processors;
 
 import charlie.util.Pair;
-import cora.terms.*;
+import charlie.terms.*;
 import cora.io.OutputModule;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;

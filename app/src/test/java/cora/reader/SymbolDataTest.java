@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import charlie.types.TypeFactory;
-import cora.terms.*;
+import charlie.terms.*;
 import cora.trs.*;
 
 /** This class tests the helper class SymbolData that stores information on function symbols. */

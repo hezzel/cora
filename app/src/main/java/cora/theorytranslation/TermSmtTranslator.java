@@ -19,7 +19,7 @@ import java.util.TreeMap;
 import charlie.exceptions.TypingError;
 import charlie.exceptions.UnsupportedTheoryError;
 import charlie.types.TypeFactory;
-import cora.terms.*;
+import charlie.terms.*;
 import charlie.smt.*;
 
 /**

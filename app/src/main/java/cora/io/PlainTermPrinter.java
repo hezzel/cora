@@ -17,9 +17,9 @@ package cora.io;
 
 import java.util.Set;
 import charlie.types.TypePrinter;
-import cora.terms.TermPrinter;
-import cora.terms.CalculationSymbol;
-import cora.terms.CalculationSymbol.Kind;
+import charlie.terms.TermPrinter;
+import charlie.terms.CalculationSymbol;
+import charlie.terms.CalculationSymbol.Kind;
 
 /** The PlainTermPrinter adapts the standard TermPrinter to avoid unicode symbols. */
 public class PlainTermPrinter extends TermPrinter {

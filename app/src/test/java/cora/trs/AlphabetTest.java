@@ -25,8 +25,8 @@ import charlie.exceptions.NullInitialisationError;
 import charlie.exceptions.TypingError;
 import charlie.util.LookupMap;
 import charlie.types.*;
-import cora.terms.FunctionSymbol;
-import cora.terms.TermFactory;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.TermFactory;
 
 public class AlphabetTest {
   private Type baseType(String name) {

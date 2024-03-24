@@ -21,9 +21,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.util.Pair;
 import charlie.types.Type;
-import cora.terms.Term;
-import cora.terms.TermFactory;
-import cora.terms.TermPrinter.Renaming;
+import charlie.terms.Term;
+import charlie.terms.TermFactory;
+import charlie.terms.TermPrinter.Renaming;
 import cora.trs.Rule;
 import cora.trs.TRS;
 import cora.reader.CoraInputReader;
