@@ -16,9 +16,9 @@
 package cora.terms;
 
 import com.google.common.collect.ImmutableList;
-import cora.exceptions.IndexingError;
-import cora.exceptions.IllegalArgumentError;
-import cora.exceptions.NullInitialisationError;
+import charlie.exceptions.IndexingError;
+import charlie.exceptions.IllegalArgumentError;
+import charlie.exceptions.NullInitialisationError;
 import cora.types.Type;
 import cora.types.TypeFactory;
 

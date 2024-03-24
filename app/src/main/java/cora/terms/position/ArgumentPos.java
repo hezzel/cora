@@ -1,7 +1,7 @@
 package cora.terms.position;
 
-import cora.exceptions.IllegalArgumentError;
-import cora.exceptions.NullInitialisationError;
+import charlie.exceptions.IllegalArgumentError;
+import charlie.exceptions.NullInitialisationError;
 
 public record ArgumentPos(int index, Position tail) implements Position {
   public ArgumentPos(int index, Position tail) {

@@ -15,7 +15,7 @@
 
 package cora.parser.lib;
 
-import cora.exceptions.ParseError;
+import charlie.exceptions.ParseError;
 
 /**
  * A ParsingStatus object is used to keep track of progress and errors during parsing.  This is

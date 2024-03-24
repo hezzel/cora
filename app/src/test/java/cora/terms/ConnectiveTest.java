@@ -18,7 +18,7 @@ package cora.terms;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.ArrayList;
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.types.TypeFactory;
 import cora.types.Type;
 

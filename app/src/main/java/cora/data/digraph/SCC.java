@@ -1,6 +1,6 @@
 package cora.data.digraph;
 
-import cora.exceptions.IllegalArgumentError;
+import charlie.exceptions.IllegalArgumentError;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -20,9 +20,9 @@ import java.util.ArrayList;
 import java.util.TreeSet;
 
 import com.google.common.collect.ImmutableList;
-import cora.exceptions.IllegalRuleError;
-import cora.exceptions.ParseError;
-import cora.exceptions.UnexpectedPatternError;
+import charlie.exceptions.IllegalRuleError;
+import charlie.exceptions.ParseError;
+import charlie.exceptions.UnexpectedPatternError;
 import cora.utils.LookupMap;
 import cora.parser.lib.Token;
 import cora.parser.lib.ErrorCollector;

@@ -17,7 +17,7 @@ package cora.parser.lib;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import cora.exceptions.IllegalArgumentError;
+import charlie.exceptions.IllegalArgumentError;
 
 /**
  * The TokenFinder keeps track of a number of regular expressions, each of which defines a token to

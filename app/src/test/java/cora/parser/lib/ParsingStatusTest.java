@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.LinkedList;
-import cora.exceptions.ParseError;
+import charlie.exceptions.ParseError;
 
 public class ParsingStatusTest {
   private class TestTokenQueue implements TokenQueue {

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 
-import cora.exceptions.NullInitialisationError;
+import charlie.exceptions.NullInitialisationError;
 
 import static org.junit.jupiter.api.Assertions.*;
 

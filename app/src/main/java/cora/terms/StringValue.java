@@ -17,8 +17,8 @@ package cora.terms;
 
 import java.util.Map;
 import java.util.Set;
-import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.IncorrectStringException;
+import charlie.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.IncorrectStringException;
 import cora.types.TypeFactory;
 
 /**

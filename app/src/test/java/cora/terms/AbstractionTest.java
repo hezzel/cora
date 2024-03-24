@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.utils.Pair;
 import cora.types.Type;
 import cora.types.TypeFactory;

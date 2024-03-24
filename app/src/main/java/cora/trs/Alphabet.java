@@ -16,8 +16,8 @@
 package cora.trs;
 
 import java.util.Collection;
-import cora.exceptions.NullInitialisationError;
-import cora.exceptions.TypingError;
+import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.TypingError;
 import cora.utils.LookupMap;
 import cora.terms.FunctionSymbol;
 

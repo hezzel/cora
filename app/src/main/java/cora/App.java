@@ -15,7 +15,7 @@
 
 package cora;
 
-import cora.exceptions.ParseError;
+import charlie.exceptions.ParseError;
 import cora.utils.Pair;
 import cora.terms.Term;
 import cora.trs.TRS;

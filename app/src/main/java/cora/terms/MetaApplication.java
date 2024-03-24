@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.utils.Pair;
 import cora.types.Type;
 import cora.terms.position.Position;
@@ -203,7 +203,7 @@ class MetaApplication extends TermInherit {
    * t[x1:=s1γ,...,xk:=skγ]; the result is returned.
    */
   public Term substitute(Substitution gamma) {
-    if (gamma == null) throw new NullCallError("Application", "substitute", "substitution (gamma)");
+    if (gamma == null) throw new NullPointerException("Substitution in Application::substitute");
     ArrayList<Term> newArgs = new ArrayList<Term>();
     for (int i = 0; i < _args.size(); i++) newArgs.add(_args.get(i).substitute(gamma));
     Term value = gamma.get(_metavar);
@@ -232,8 +232,8 @@ class MetaApplication extends TermInherit {
    * is thrown.
    */
   public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullCallError("MetaApplication", "match", "argument term (other)");
-    if (gamma == null) throw new NullCallError("MetaApplication", "match", "substitution (gamma)");
+    if (other == null) throw new NullPointerException("argument term for MetaApplication::match");
+    if (gamma == null) throw new NullPointerException("substitution for MetaApplication::match");
     // get all the substituted arguments, and make sure they are distinct bound variables
     ArrayList<Variable> substitutedArgs = new ArrayList<Variable>();
     TreeSet<Variable> set = new TreeSet<Variable>();

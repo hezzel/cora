@@ -17,7 +17,7 @@ package cora.terms;
 
 import java.util.ArrayList;
 import java.util.Set;
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.utils.Pair;
 import cora.types.Type;
 import cora.terms.position.Position;

@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 import java.lang.Error;
 import java.util.ArrayList;
 import java.util.TreeMap;
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.position.*;

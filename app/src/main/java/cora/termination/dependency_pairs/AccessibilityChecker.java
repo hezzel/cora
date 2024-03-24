@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.TreeMap;
 import java.util.Map;
-import cora.exceptions.NotYetImplementedError;
+import charlie.exceptions.NotYetImplementedError;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.utils.Pair;

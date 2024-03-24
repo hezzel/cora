@@ -16,8 +16,8 @@
 package cora.theorytranslation;
 
 import java.util.TreeMap;
-import cora.exceptions.TypingError;
-import cora.exceptions.UnsupportedTheoryError;
+import charlie.exceptions.TypingError;
+import charlie.exceptions.UnsupportedTheoryError;
 import cora.types.TypeFactory;
 import cora.terms.*;
 import cora.smt.*;

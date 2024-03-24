@@ -17,9 +17,9 @@ package cora.terms;
 
 import java.util.HashMap;
 import java.util.Set;
-import cora.exceptions.ArityError;
-import cora.exceptions.NullStorageError;
-import cora.exceptions.TypingError;
+import charlie.exceptions.ArityError;
+import charlie.exceptions.NullStorageError;
+import charlie.exceptions.TypingError;
 
 /**
  * A substitution is a function that maps a finite set of variables/meta-variables (replaceables)

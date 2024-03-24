@@ -21,8 +21,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
 import java.util.function.Predicate;
-import cora.exceptions.UnexpectedPatternError;
-import cora.exceptions.IllegalArgumentError;
+import charlie.exceptions.UnexpectedPatternError;
+import charlie.exceptions.IllegalArgumentError;
 import cora.types.TypePrinter;
 
 /**

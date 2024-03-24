@@ -1,6 +1,6 @@
 package cora.data.digraph;
 
-import cora.exceptions.IllegalArgumentError;
+import charlie.exceptions.IllegalArgumentError;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

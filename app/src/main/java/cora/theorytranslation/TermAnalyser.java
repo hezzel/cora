@@ -17,7 +17,7 @@ package cora.theorytranslation;
 
 import java.util.Random;
 
-import cora.exceptions.UnsupportedTheoryError;
+import charlie.exceptions.UnsupportedTheoryError;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;

@@ -22,7 +22,7 @@ import java.util.Comparator;
 import java.util.TreeSet;
 
 import com.google.common.collect.ImmutableList;
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.utils.LookupMap;
 import cora.parser.lib.Token;
 import cora.parser.lib.ErrorCollector;

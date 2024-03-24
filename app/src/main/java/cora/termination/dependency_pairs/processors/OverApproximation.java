@@ -1,6 +1,6 @@
 package cora.termination.dependency_pairs.processors;
 
-import cora.exceptions.NullInitialisationError;
+import charlie.exceptions.NullInitialisationError;
 import cora.utils.Pair;
 import cora.types.TypeFactory;
 import cora.terms.*;

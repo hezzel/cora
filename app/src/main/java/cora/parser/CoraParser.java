@@ -757,7 +757,7 @@ public class CoraParser {
    * sorts, and identifiers are restricted as they are when reading a constrained TRS (e.g., sort
    * names may not contain "+").  If it is set to false, then identifiers are more general and
    * the pre-defined types will not be marked as theory sorts.
-   * @throws cora.exceptions.ParseError
+   * @throws charlie.exceptions.ParseError
    */
   public static Type readType(String str, boolean constrainedTRS, ErrorCollector collector) {
     ParsingStatus status = makeStatus(str, constrainedTRS, collector);
@@ -781,7 +781,7 @@ public class CoraParser {
    * error recovery, and stores its erorrs in the given collector; only if parsing really fails is
    * an error thrown.  If the given collector is null, any error causes a ParseError to be thrown
    * (although we still try to collect all relevant errors in the same ParseError).
-   * @throws cora.exceptions.ParseError
+   * @throws charlie.exceptions.ParseError
    */
   public static ParserTerm readTerm(String str, boolean constrainedTRS, ErrorCollector collector) {
     ParsingStatus status = makeStatus(str, constrainedTRS, collector);
@@ -793,7 +793,7 @@ public class CoraParser {
 
   /**
    * Reads a rule from the given string.
-   * @throws cora.exceptions.ParseError
+   * @throws charlie.exceptions.ParseError
    */
   public static ParserRule readRule(String str, boolean constrained, ErrorCollector collector) {
     ParsingStatus status = makeStatus(str, constrained, collector);
@@ -812,7 +812,7 @@ public class CoraParser {
    * - a ParserDeclaration with type() null: if something was read, but an error occurred
    * - a valid ParserDeclaration: if the declaration was read
    *   if the declaration is private, moreover the extra() field is 1; otherwise it is 0.
-   * @throws cora.exceptions.ParseError
+   * @throws charlie.exceptions.ParseError
    */
   public static ParserDeclaration readDeclaration(String str, boolean constrained,
                                                   ErrorCollector collector) {
@@ -841,7 +841,7 @@ public class CoraParser {
 
   /**
    * Reads a full TRS, in the expected format for the current paser, from the given file.
-   * @throws cora.exceptions.ParseError
+   * @throws charlie.exceptions.ParseError
    */
   public static ParserProgram readProgramFromFile(String filename, boolean constrained,
                                                   ErrorCollector collector) throws IOException {

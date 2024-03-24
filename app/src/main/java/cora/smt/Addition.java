@@ -16,7 +16,7 @@
 package cora.smt;
 
 import java.util.ArrayList;
-import cora.exceptions.IndexingError;
+import charlie.exceptions.IndexingError;
 
 public final class Addition extends IntegerExpression {
   protected ArrayList<IntegerExpression> _children;

@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.utils.Pair;
 import cora.types.Type;
 import cora.terms.position.*;
@@ -829,7 +829,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testNullMatch() {
     Term t = twoArgFuncTerm();
     Substitution subst = new Subst();
-    assertThrows(NullCallError.class, () -> t.match(null, subst));
+    assertThrows(NullPointerException.class, () -> t.match(null, subst));
   }
 
   @Test

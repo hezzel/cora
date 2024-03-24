@@ -15,8 +15,8 @@
 
 package cora.terms.position;
 
-import cora.exceptions.CustomParserError;
-import cora.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.CustomParserError;
+import charlie.exceptions.InappropriatePatternDataError;
 
 /**
  * Positions are a tool to refer to a specific location in a term.

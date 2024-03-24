@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.utils.Pair;
 import cora.types.Type;
 import cora.types.TypeFactory;
@@ -53,20 +53,20 @@ public class BinderTest extends TermTestFoundation {
   @Test
   public void testNullSubstitution() {
     Term t = new Binder("x", baseType("Int"));
-    assertThrows(NullCallError.class, () -> t.substitute(null));
+    assertThrows(NullPointerException.class, () -> t.substitute(null));
   }
 
   @Test
   public void testNullMatch1() {
     Term t = new Binder("x", baseType("Int"));
-    assertThrows(NullCallError.class, () -> t.match(constantTerm("37", baseType("Int")), null));
+    assertThrows(NullPointerException.class, () -> t.match(constantTerm("37", baseType("Int")), null));
   }
 
   @Test
   public void testNullMatch2() {
     Term t = new Binder("x", baseType("Int"));
     Substitution subst = new Subst();
-    assertThrows(NullCallError.class, () -> t.match(null, subst));
+    assertThrows(NullPointerException.class, () -> t.match(null, subst));
   }
 
   @Test

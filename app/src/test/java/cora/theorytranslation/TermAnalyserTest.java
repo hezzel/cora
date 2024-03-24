@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import cora.exceptions.UnsupportedTheoryError;
+import charlie.exceptions.UnsupportedTheoryError;
 import cora.types.TypeFactory;
 import cora.terms.*;
 import cora.smt.ExternalSmtSolver;

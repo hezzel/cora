@@ -17,8 +17,7 @@ package cora.terms;
 
 import java.util.Map;
 import java.util.Set;
-import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.NullCallError;
+import charlie.exceptions.InappropriatePatternDataError;
 import cora.types.Type;
 
 /** A Constant that happens to be a Calculation Symbol. */
@@ -108,7 +107,7 @@ public class CalculationConstant extends LeafTermInherit implements CalculationS
    * otherwise a description of the instantiation failure.
    */
   public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullCallError("CalculationConstant", "match", "other term");
+    if (other == null) throw new NullPointerException("Other term in CalculationConstant::match");
     if (equals(other)) return null;
     return "calculation symbol " + _name + " is not instantiated by " + other.toString() + ".";
   }

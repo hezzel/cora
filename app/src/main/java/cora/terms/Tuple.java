@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.utils.Pair;
 import cora.types.Type;
 import cora.types.TypeFactory;
@@ -242,8 +242,7 @@ public class Tuple extends TermInherit {
    */
   @Override
   public String match(Term other, Substitution gamma) {
-    if (other == null) throw new
-      NullCallError("Application", "match", "argument term (other)");
+    if (other == null) throw new NullPointerException("Argument term in Application::match");
     if (!other.isTuple()) {
       return other.toString() + " does not instantiate " + toString() + " (not a tuple term).";
     }

@@ -15,7 +15,7 @@
 
 package cora.smt;
 
-import cora.exceptions.IndexingError;
+import charlie.exceptions.IndexingError;
 
 public final class IValue extends IntegerExpression {
   private int _k;

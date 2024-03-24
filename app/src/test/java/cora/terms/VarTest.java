@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.utils.Pair;
 import cora.types.Type;
 import cora.types.TypeFactory;
@@ -49,19 +49,19 @@ public class VarTest extends TermTestFoundation {
     x.queryArgument(1);
   }
 
-  @Test(expected = NullCallError.class)
+  @Test(expected = NullPointerException.class)
   public void testNullSubstitution() {
     Term t = new Var("x", baseType("Int"));
     t.substitute(null);
   }
 
-  @Test(expected = NullCallError.class)
+  @Test(expected = NullPointerException.class)
   public void testNullMatch1() {
     Term t = new Var("x", baseType("Int"));
     t.match(constantTerm("37", baseType("Int")), null);
   }
 
-  @Test(expected = NullCallError.class)
+  @Test(expected = NullPointerException.class)
   public void testNullMatch2() {
     Term t = new Var("x", baseType("Int"));
     Substitution subst = new Subst();

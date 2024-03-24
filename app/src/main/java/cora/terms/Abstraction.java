@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.utils.Pair;
 import cora.types.Type;
 import cora.types.TypeFactory;
@@ -178,8 +178,8 @@ class Abstraction extends TermInherit {
    * - s ([x:=y] ∪ (γ \ {x})) =α t'
    */
   public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullCallError("Var", "match", "other (matched term)");
-    if (gamma == null) throw new NullCallError("Var", "match", "gamma (matching substitution");
+    if (other == null) throw new NullPointerException("other term in Var::match");
+    if (gamma == null) throw new NullPointerException("Substitution in Var::match");
 
     if (!other.isAbstraction()) {
       return "Abstraction " + toString() + " is not instantiated by " + other + ".";

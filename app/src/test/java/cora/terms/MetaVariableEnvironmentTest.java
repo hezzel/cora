@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.types.Type;
 import cora.types.TypeFactory;
 

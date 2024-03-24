@@ -20,9 +20,9 @@ import static org.junit.Assert.*;
 import java.lang.Error;
 import java.util.Set;
 import java.util.ArrayList;
-import cora.exceptions.ArityError;
-import cora.exceptions.NullStorageError;
-import cora.exceptions.TypingError;
+import charlie.exceptions.ArityError;
+import charlie.exceptions.NullStorageError;
+import charlie.exceptions.TypingError;
 import cora.types.Type;
 import cora.types.TypeFactory;
 

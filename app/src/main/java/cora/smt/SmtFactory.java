@@ -17,7 +17,7 @@ package cora.smt;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
-import cora.exceptions.NullInitialisationError;
+import charlie.exceptions.NullInitialisationError;
 
 /**
  * The SmtFactory is used to create Constraints and IntegerExpressions.

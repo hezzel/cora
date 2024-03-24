@@ -2,7 +2,7 @@ package cora.termination.dependency_pairs;
 
 import com.google.errorprone.annotations.Var;
 import com.sun.jdi.event.StepEvent;
-import cora.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.InappropriatePatternDataError;
 import cora.terms.Environment;
 import cora.terms.Term;
 import cora.terms.TheoryFactory;

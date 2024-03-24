@@ -17,9 +17,8 @@ package cora.terms;
 
 import java.util.Map;
 import java.util.Set;
-import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.NullInitialisationError;
-import cora.exceptions.NullCallError;
+import charlie.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.NullInitialisationError;
 import cora.types.Type;
 
 /**
@@ -127,7 +126,7 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
    * description of the instantiation failure.
    */
   public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullCallError("Constant", "match", "other term");
+    if (other == null) throw new NullPointerException("Other term in Constant::match");
     if (equals(other)) return null;
     return "constant " + _name + " is not instantiated by " + other.toString() + ".";
   }
