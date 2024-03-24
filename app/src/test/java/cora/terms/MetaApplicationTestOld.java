@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import charlie.exceptions.*;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 
 public class MetaApplicationTestOld extends TermTestFoundation {
   private Term makeMeta(String name, Term arg, Type output) {

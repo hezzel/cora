@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.junit.jupiter.api.Assertions.*;
 
-import cora.types.*;
+import charlie.types.*;
 import cora.terms.*;
 import cora.trs.*;
 import cora.reader.CoraInputReader;

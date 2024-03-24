@@ -18,9 +18,9 @@ package cora.theorytranslation;
 import java.util.TreeMap;
 import charlie.exceptions.TypingError;
 import charlie.exceptions.UnsupportedTheoryError;
-import cora.types.TypeFactory;
+import charlie.types.TypeFactory;
 import cora.terms.*;
-import cora.smt.*;
+import charlie.smt.*;
 
 /**
  * This class provides translations between theory terms and SMT expressions.

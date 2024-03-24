@@ -22,8 +22,8 @@ import java.util.Set;
 
 import charlie.exceptions.*;
 import charlie.util.Pair;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import cora.terms.position.Position;
 import cora.terms.position.LambdaPos;
 

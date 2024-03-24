@@ -21,8 +21,8 @@ import java.lang.Error;
 import java.util.ArrayList;
 import java.util.TreeMap;
 import charlie.exceptions.*;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import cora.terms.position.*;
 
 public class ConstantTest extends TermTestFoundation {

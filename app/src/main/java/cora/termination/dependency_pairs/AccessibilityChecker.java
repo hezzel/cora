@@ -10,9 +10,9 @@ import charlie.exceptions.NotYetImplementedError;
 import charlie.util.Pair;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
-import cora.types.*;
+import charlie.types.*;
 import cora.terms.*;
-import cora.smt.*;
+import charlie.smt.*;
 import cora.trs.TRS;
 import cora.config.Settings;
 

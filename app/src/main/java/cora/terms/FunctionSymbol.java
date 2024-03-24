@@ -16,7 +16,7 @@
 package cora.terms;
 
 import java.lang.Comparable;
-import cora.types.Type;
+import charlie.types.Type;
 
 /**
  * FunctionSymbols are the primary ingredient to construct terms.

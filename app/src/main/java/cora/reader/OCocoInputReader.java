@@ -18,9 +18,9 @@ package cora.reader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import cora.parser.lib.ErrorCollector;
-import cora.parser.OCocoParser;
-import cora.parser.Parser.ParserProgram;
+import charlie.parser.lib.ErrorCollector;
+import charlie.parser.OCocoParser;
+import charlie.parser.Parser.ParserProgram;
 import cora.trs.TRS;
 
 /**

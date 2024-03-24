@@ -19,8 +19,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.ArrayList;
 import charlie.exceptions.*;
-import cora.types.TypeFactory;
-import cora.types.Type;
+import charlie.types.TypeFactory;
+import charlie.types.Type;
 
 public class ConnectiveTest extends TermTestFoundation {
   @Test

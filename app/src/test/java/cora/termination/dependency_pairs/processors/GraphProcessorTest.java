@@ -1,6 +1,6 @@
 package cora.termination.dependency_pairs.processors;
 
-import cora.types.TypeFactory;
+import charlie.types.TypeFactory;
 import cora.terms.Term;
 import cora.terms.TermFactory;
 import cora.reader.CoraInputReader;

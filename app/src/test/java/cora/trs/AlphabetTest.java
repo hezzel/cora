@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import charlie.exceptions.NullInitialisationError;
 import charlie.exceptions.TypingError;
 import charlie.util.LookupMap;
-import cora.types.*;
+import charlie.types.*;
 import cora.terms.FunctionSymbol;
 import cora.terms.TermFactory;
 

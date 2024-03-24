@@ -24,12 +24,12 @@ import charlie.exceptions.IllegalRuleError;
 import charlie.exceptions.ParseError;
 import charlie.exceptions.UnexpectedPatternError;
 import charlie.util.LookupMap;
-import cora.parser.lib.Token;
-import cora.parser.lib.ErrorCollector;
-import cora.parser.Parser;
-import cora.parser.Parser.*;
-import cora.parser.OCocoParser;
-import cora.types.*;
+import charlie.parser.lib.Token;
+import charlie.parser.lib.ErrorCollector;
+import charlie.parser.Parser;
+import charlie.parser.Parser.*;
+import charlie.parser.OCocoParser;
+import charlie.types.*;
 import cora.terms.*;
 import cora.trs.*;
 

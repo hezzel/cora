@@ -15,8 +15,8 @@
 
 package cora.terms;
 
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 
 public class TermTestFoundation {
   protected Type baseType(String name) {

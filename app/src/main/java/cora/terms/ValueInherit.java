@@ -17,8 +17,8 @@ package cora.terms;
 
 import java.util.Map;
 import charlie.exceptions.InappropriatePatternDataError;
-import cora.types.Base;
-import cora.types.TypeFactory;
+import charlie.types.Base;
+import charlie.types.TypeFactory;
 
 /**
  * Values are constants of a theory sorts that cannot be rewritten; they are the representations of

@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import charlie.exceptions.*;
 import charlie.util.Pair;
-import cora.types.Type;
+import charlie.types.Type;
 import cora.terms.position.Position;
 
 /**

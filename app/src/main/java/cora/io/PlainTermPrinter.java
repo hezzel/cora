@@ -16,7 +16,7 @@
 package cora.io;
 
 import java.util.Set;
-import cora.types.TypePrinter;
+import charlie.types.TypePrinter;
 import cora.terms.TermPrinter;
 import cora.terms.CalculationSymbol;
 import cora.terms.CalculationSymbol.Kind;

@@ -20,8 +20,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import charlie.exceptions.*;
-import cora.types.TypeFactory;
-import cora.types.Type;
+import charlie.types.TypeFactory;
+import charlie.types.Type;
 
 public class IntegerCalculationSymbolTest extends TermTestFoundation {
   @Test

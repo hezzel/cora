@@ -19,9 +19,9 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import charlie.exceptions.ArityError;
 import charlie.exceptions.IllegalArgumentError;
-import cora.types.Arrow;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Arrow;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 
 public class TermFactory {
   /** Create a non-binder variable with the given name and type. */

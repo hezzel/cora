@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import charlie.exceptions.InappropriatePatternDataError;
 import charlie.exceptions.IncorrectStringException;
-import cora.types.TypeFactory;
+import charlie.types.TypeFactory;
 
 /**
  * StringValues are strings, which can be printed to the user when using a logically constrained

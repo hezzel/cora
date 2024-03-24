@@ -25,8 +25,8 @@ import java.util.TreeSet;
 import charlie.exceptions.IllegalRuleError;
 import charlie.exceptions.IllegalSymbolError;
 import charlie.exceptions.NullInitialisationError;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import cora.terms.*;
 import cora.reader.CoraInputReader;
 

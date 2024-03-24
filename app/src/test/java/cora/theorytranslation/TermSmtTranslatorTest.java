@@ -15,19 +15,18 @@
 
 package cora.theorytranslation;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import charlie.exceptions.UnsupportedTheoryError;
 import charlie.exceptions.TypingError;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import cora.terms.Term;
 import cora.terms.Variable;
 import cora.terms.TermFactory;
 import cora.terms.TheoryFactory;
-import cora.smt.*;
+import charlie.smt.*;
 
 public class TermSmtTranslatorTest {
   @Test

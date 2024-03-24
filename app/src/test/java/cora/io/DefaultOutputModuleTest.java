@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.util.Pair;
-import cora.types.Type;
+import charlie.types.Type;
 import cora.terms.Term;
 import cora.terms.TermFactory;
 import cora.terms.TermPrinter.Renaming;

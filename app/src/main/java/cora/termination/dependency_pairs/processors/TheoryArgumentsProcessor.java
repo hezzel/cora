@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.TreeMap;
-import cora.types.Type;
+import charlie.types.Type;
 import cora.terms.FunctionSymbol;
 import cora.terms.Variable;
 import cora.terms.Term;

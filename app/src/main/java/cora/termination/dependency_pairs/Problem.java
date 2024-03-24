@@ -5,8 +5,8 @@ import charlie.exceptions.IllegalArgumentError;
 import charlie.exceptions.NullInitialisationError;
 import cora.trs.TRS;
 import cora.terms.FunctionSymbol;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

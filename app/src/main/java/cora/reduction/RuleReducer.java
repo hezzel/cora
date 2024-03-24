@@ -17,7 +17,7 @@ package cora.reduction;
 
 import java.util.ArrayList;
 import java.util.Map;
-import cora.types.Type;
+import charlie.types.Type;
 import cora.terms.*;
 import cora.trs.Rule;
 import cora.theorytranslation.TermAnalyser;

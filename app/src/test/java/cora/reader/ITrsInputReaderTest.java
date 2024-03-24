@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022, 2023 Cynthia Kop
+ Copyright 2019--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,12 +15,11 @@
 
 package cora.reader;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.exceptions.ParseError;
-import cora.types.TypeFactory;
+import charlie.types.TypeFactory;
 import cora.terms.Term;
 import cora.terms.Variable;
 import cora.terms.FunctionSymbol;

@@ -4,8 +4,8 @@ import cora.reader.CoraInputReader;
 import cora.terms.FunctionSymbol;
 import cora.terms.TermFactory;
 import cora.terms.Variable;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import org.junit.jupiter.api.Test;
 import cora.terms.Term;
 

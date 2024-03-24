@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import charlie.exceptions.UnexpectedPatternError;
 import charlie.exceptions.IllegalArgumentError;
-import cora.types.TypePrinter;
+import charlie.types.TypePrinter;
 
 /**
  * TermPrinters are used in the overall output process of the tool.  This class provides a default

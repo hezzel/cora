@@ -21,8 +21,8 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 
 import charlie.exceptions.*;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 
 public class HigherMetaVarTest {
   private ImmutableList<Type> muli(Type type1, Type type2) {

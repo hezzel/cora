@@ -23,8 +23,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import charlie.exceptions.*;
 import charlie.util.Pair;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import cora.terms.position.*;
 
 public class BinderTest extends TermTestFoundation {

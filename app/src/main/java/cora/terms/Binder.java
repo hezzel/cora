@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import charlie.exceptions.InappropriatePatternDataError;
 import charlie.exceptions.NullInitialisationError;
-import cora.types.Type;
+import charlie.types.Type;
 
 /**
  * Binders are variables in Vbinder: variables that are only meant to be used as binders in an
