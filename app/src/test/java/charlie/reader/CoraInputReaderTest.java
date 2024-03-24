@@ -13,13 +13,12 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.reader;
+package charlie.reader;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
-import java.util.TreeSet;
 
 import charlie.exceptions.ParseError;
 import charlie.types.Type;

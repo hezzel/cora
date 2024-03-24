@@ -21,7 +21,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.trs.TRS;
-import cora.reader.CoraInputReader;
+import charlie.reader.CoraInputReader;
 import cora.io.ProofObject;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;

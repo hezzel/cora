@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import charlie.types.*;
 import charlie.terms.*;
 import charlie.trs.*;
-import cora.reader.CoraInputReader;
+import charlie.reader.CoraInputReader;
 
 class AccessibilityCheckerTest {
   private Type type(String text) {

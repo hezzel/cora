@@ -27,7 +27,7 @@ import charlie.terms.position.Position;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.*;
-import cora.reader.CoraInputReader;
+import charlie.reader.CoraInputReader;
 
 public class ReducerTest {
   private Type type(String txt) {

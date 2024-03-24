@@ -1,6 +1,6 @@
 package cora.termination.dependency_pairs;
 
-import cora.reader.CoraInputReader;
+import charlie.reader.CoraInputReader;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TermFactory;
 import charlie.terms.Variable;

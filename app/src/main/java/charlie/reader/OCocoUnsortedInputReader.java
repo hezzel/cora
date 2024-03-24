@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,23 +13,22 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.reader;
+package charlie.reader;
 
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.TreeSet;
 
 import charlie.exceptions.IllegalRuleError;
 import charlie.exceptions.ParseError;
 import charlie.exceptions.UnexpectedPatternError;
 import charlie.util.LookupMap;
+import charlie.types.*;
 import charlie.parser.lib.Token;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser;
 import charlie.parser.Parser.*;
 import charlie.parser.OCocoParser;
-import charlie.types.*;
 import charlie.terms.*;
 import charlie.trs.*;
 

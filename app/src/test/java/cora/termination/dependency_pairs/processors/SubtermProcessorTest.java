@@ -1,6 +1,6 @@
 package cora.termination.dependency_pairs.processors;
 
-import cora.reader.CoraInputReader;
+import charlie.reader.CoraInputReader;
 import charlie.trs.TRS;
 import charlie.trs.TrsFactory;
 import cora.termination.dependency_pairs.DPGenerator;

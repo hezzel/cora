@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022, 2023 Cynthia Kop
+ Copyright 2019--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,9 +13,8 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.reader;
+package charlie.reader;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,7 +25,6 @@ import charlie.terms.Variable;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TermFactory;
 import charlie.trs.TRS;
-import cora.reduction.Reducer;
 
 public class OCocoUnsortedInputReaderTest {
   @Test
@@ -145,11 +143,6 @@ public class OCocoUnsortedInputReaderTest {
     Term t = TermFactory.createApp(cons, zero, TermFactory.createApp(cons, zero, nil));
     Term q = TermFactory.createApp(append, s, t);
     assertTrue(q.toString().equals("append(cons(s(0), nil), cons(0, cons(0, nil)))"));
-    Reducer reducer = new Reducer(trs);
-    q = reducer.leftmostInnermostReduce(q);
-    q = reducer.leftmostInnermostReduce(q);
-    assertTrue(q.toString().equals("cons(s(0), cons(0, cons(0, nil)))"));
-    assertTrue(reducer.leftmostInnermostReduce(q) == null);
   }
 
   @Test
