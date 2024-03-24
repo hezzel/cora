@@ -23,7 +23,7 @@ import charlie.exceptions.IndexingError;
 import charlie.exceptions.IllegalRuleError;
 import charlie.exceptions.IllegalSymbolError;
 import charlie.exceptions.NullInitialisationError;
-import cora.utils.Pair;
+import charlie.util.Pair;
 import cora.types.Type;
 import cora.terms.FunctionSymbol;
 import cora.terms.Term;

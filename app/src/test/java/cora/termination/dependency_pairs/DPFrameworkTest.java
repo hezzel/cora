@@ -1,10 +1,10 @@
 package cora.termination.dependency_pairs;
 
+import org.junit.jupiter.api.Test;
+
 import cora.reader.CoraInputReader;
 import cora.trs.TRS;
 import cora.termination.TerminationHandler;
-import cora.utils.Pair;
-import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 

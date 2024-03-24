@@ -22,7 +22,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import com.google.common.collect.ImmutableList;
 import charlie.exceptions.*;
-import cora.utils.Pair;
+import charlie.util.Pair;
 import cora.types.TypePrinter;
 import cora.terms.position.Position;
 import cora.terms.position.FinalPos;

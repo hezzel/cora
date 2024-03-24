@@ -18,7 +18,7 @@ package cora.io;
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
-import cora.utils.Pair;
+import charlie.util.Pair;
 import cora.types.Type;
 import cora.types.TypePrinter;
 import cora.terms.TermPrinter;

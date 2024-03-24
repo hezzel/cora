@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import charlie.exceptions.*;
-import cora.utils.Pair;
+import charlie.util.Pair;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.position.*;

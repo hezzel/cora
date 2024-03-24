@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.exceptions.*;
-import cora.utils.Pair;
 import cora.types.Product;
 import cora.types.Type;
 import cora.types.TypeFactory;

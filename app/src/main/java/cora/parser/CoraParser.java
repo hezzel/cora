@@ -19,8 +19,8 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import charlie.util.LookupMap;
 import cora.types.*;
-import cora.utils.LookupMap;
 import cora.parser.lib.*;
 import cora.parser.InfixManager.OperatorData;
 import cora.parser.Parser.*;

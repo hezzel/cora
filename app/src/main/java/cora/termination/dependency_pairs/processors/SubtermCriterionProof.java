@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
-import cora.utils.Pair;
+
+import charlie.util.Pair;
 import cora.terms.*;
 import cora.terms.TermPrinter.Renaming;
 import cora.io.OutputModule;

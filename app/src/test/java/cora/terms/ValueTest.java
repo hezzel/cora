@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import charlie.exceptions.*;
-import cora.utils.Pair;
 import cora.types.TypeFactory;
 import cora.terms.position.*;
 

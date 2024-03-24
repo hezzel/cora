@@ -5,10 +5,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.TreeMap;
 import java.util.Map;
+
 import charlie.exceptions.NotYetImplementedError;
+import charlie.util.Pair;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
-import cora.utils.Pair;
 import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;

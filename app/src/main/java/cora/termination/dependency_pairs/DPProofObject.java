@@ -17,7 +17,7 @@ package cora.termination.dependency_pairs;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import cora.utils.Pair;
+import charlie.util.Pair;
 import cora.terms.Term;
 import cora.terms.Variable;
 import cora.terms.TermPrinter.Renaming;

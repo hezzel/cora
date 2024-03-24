@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import cora.utils.Pair;
+import charlie.util.Pair;
 import cora.terms.Term;
 import cora.terms.position.Position;
 import cora.trs.TRS;

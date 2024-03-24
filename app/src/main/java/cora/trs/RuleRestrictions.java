@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.Collection;
 import charlie.exceptions.IllegalRuleError;
-import cora.utils.Pair;
+import charlie.util.Pair;
 import cora.terms.Term;
 import cora.terms.Variable;
 import cora.terms.position.Position;
