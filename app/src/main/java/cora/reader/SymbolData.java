@@ -22,8 +22,8 @@ import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Variable;
 import charlie.terms.MetaVariable;
-import cora.trs.Alphabet;
-import cora.trs.TRS;
+import charlie.trs.Alphabet;
+import charlie.trs.TRS;
 
 /**
  * This class maintains information used for turning data from the parser into proper Cora

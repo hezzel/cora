@@ -3,7 +3,7 @@ package cora.termination.dependency_pairs;
 import org.junit.jupiter.api.Test;
 
 import cora.reader.CoraInputReader;
-import cora.trs.TRS;
+import charlie.trs.TRS;
 import cora.termination.TerminationHandler;
 
 import java.util.Optional;

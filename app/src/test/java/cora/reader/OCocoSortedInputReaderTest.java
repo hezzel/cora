@@ -25,8 +25,8 @@ import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TermFactory;
-import cora.trs.Rule;
-import cora.trs.TRS;
+import charlie.trs.Rule;
+import charlie.trs.TRS;
 
 public class OCocoSortedInputReaderTest {
   @Test

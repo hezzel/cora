@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.trs;
+package charlie.trs;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Map;
@@ -26,7 +26,7 @@ import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.types.TypePrinter;
 import charlie.terms.*;
-import cora.trs.TrsProperties.*;
+import charlie.trs.TrsProperties.*;
 
 /**
  * Rules are the core objects that define the reduction relation in a term rewriting system.  These

@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.types.*;
 import charlie.terms.*;
-import cora.trs.*;
+import charlie.trs.*;
 import cora.reader.CoraInputReader;
 
 class OverApproximationTest {

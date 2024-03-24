@@ -13,11 +13,11 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.trs;
+package charlie.trs;
 
 /**
  * This class lists the static properties that a TRS may have.
- * Use import cora.trs.TrsProps.* for easy use in the corresponding functions.
+ * Use import charlie.trs.TrsProps.* for easy use in the corresponding functions.
  *
  * Note: DO NOT REORDER THE CONSTANTS IN THESE ENUMS.  The lower values are always the more
  * restrictive ones.
@@ -77,14 +77,12 @@ public class TrsProperties {
    * terms, as they are only meant to be used in matching.)
    */
   public static TermLevel translateRuleToTermLevel(Level level) {
-    switch (level) {
-      case Level.FIRSTORDER: return TermLevel.FIRSTORDER;
-      case Level.APPLICATIVE: return TermLevel.APPLICATIVE;
-      case Level.LAMBDA: return TermLevel.LAMBDA;
-      case level.META: return TermLevel.LAMBDA;
-    }
-    // this statement should be unreachable, but Java protests if it is omitted.
-    return TermLevel.LAMBDA;
+    return switch (level) {
+      case Level.FIRSTORDER -> TermLevel.FIRSTORDER;
+      case Level.APPLICATIVE -> TermLevel.APPLICATIVE;
+      case Level.LAMBDA -> TermLevel.LAMBDA;
+      case level.META -> TermLevel.LAMBDA;
+    };
   }
 }
 

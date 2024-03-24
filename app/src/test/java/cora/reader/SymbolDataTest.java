@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.TreeSet;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
-import cora.trs.*;
+import charlie.trs.*;
 
 /** This class tests the helper class SymbolData that stores information on function symbols. */
 public class SymbolDataTest {

@@ -24,7 +24,7 @@ import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TermFactory;
-import cora.trs.TRS;
+import charlie.trs.TRS;
 
 public class ITrsInputReaderTest {
   @Test

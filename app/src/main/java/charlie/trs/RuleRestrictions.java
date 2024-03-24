@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.trs;
+package charlie.trs;
 
 import java.util.Map;
 import java.util.List;
@@ -23,7 +23,7 @@ import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.position.Position;
-import cora.trs.TrsProperties.*;
+import charlie.trs.TrsProperties.*;
 
 /**
  * The RuleRestrictions class tracks properties that a rule in a TRS satisfies.  This class is

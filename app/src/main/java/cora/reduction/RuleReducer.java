@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import charlie.types.Type;
 import charlie.terms.*;
-import cora.trs.Rule;
+import charlie.trs.Rule;
 import cora.theorytranslation.TermAnalyser;
 import cora.config.Settings;
 

@@ -1,8 +1,8 @@
 package cora.termination.dependency_pairs.processors;
 
 import cora.reader.CoraInputReader;
-import cora.trs.TRS;
-import cora.trs.TrsFactory;
+import charlie.trs.TRS;
+import charlie.trs.TrsFactory;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
 import org.junit.jupiter.api.Test;

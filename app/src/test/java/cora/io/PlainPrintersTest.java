@@ -21,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 import charlie.types.Type;
 import charlie.terms.Term;
-import cora.trs.Rule;
-import cora.trs.TRS;
+import charlie.trs.Rule;
+import charlie.trs.TRS;
 import cora.reader.CoraInputReader;
 
 public class PlainPrintersTest {

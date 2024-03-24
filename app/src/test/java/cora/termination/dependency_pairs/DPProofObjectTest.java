@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
-import cora.trs.TRS;
+import charlie.trs.TRS;
 import cora.reader.CoraInputReader;
 import cora.io.ProofObject;
 import cora.io.OutputModule;

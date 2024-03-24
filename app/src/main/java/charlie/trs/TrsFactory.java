@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.trs;
+package charlie.trs;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import charlie.exceptions.IllegalRuleError;
 import charlie.terms.Term;
-import cora.trs.TrsProperties.*;
+import charlie.trs.TrsProperties.*;
 
 /** The TrsFactory is used to create both rules and various kinds of TRSs. */
 public class TrsFactory {

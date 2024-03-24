@@ -1,7 +1,7 @@
 package cora.termination.dependency_pairs;
 
-import cora.trs.TRS;
-import cora.trs.TrsProperties.*;
+import charlie.trs.TRS;
+import charlie.trs.TrsProperties.*;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.termination.TerminationAnswer;

@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
-import cora.trs.Rule;
-import cora.trs.TrsFactory;
+import charlie.trs.Rule;
+import charlie.trs.TrsFactory;
 import cora.reader.CoraInputReader;
 
 public class RuleReducerTest {

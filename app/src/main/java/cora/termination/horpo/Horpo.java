@@ -22,8 +22,8 @@ import java.util.TreeSet;
 import charlie.types.*;
 import charlie.terms.*;
 import charlie.smt.*;
-import cora.trs.*;
-import cora.trs.TrsProperties.*;
+import charlie.trs.*;
+import charlie.trs.TrsProperties.*;
 import cora.theorytranslation.TermSmtTranslator;
 import cora.config.Settings;
 
