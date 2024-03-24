@@ -24,7 +24,7 @@ import charlie.types.TypeFactory;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TrsFactory;
-import cora.reader.CoraInputReader;
+import charlie.reader.CoraInputReader;
 
 public class RuleReducerTest {
   private Type type(String txt) {

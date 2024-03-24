@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.reader;
+package charlie.reader;
 
 import java.util.TreeMap;
 import java.util.TreeSet;

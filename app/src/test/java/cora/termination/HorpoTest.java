@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TheoryFactory;
 import charlie.trs.TRS;
-import cora.reader.CoraInputReader;
+import charlie.reader.CoraInputReader;
 
 public class HorpoTest {
   private TRS makeTrs(String txt) {

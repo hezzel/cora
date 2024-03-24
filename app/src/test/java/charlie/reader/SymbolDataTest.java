@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022, 2023, 2024 Cynthia Kop
+ Copyright 2019--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,14 +13,12 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.reader;
+package charlie.reader;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
-import java.util.TreeSet;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
 import charlie.trs.*;

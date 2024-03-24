@@ -26,7 +26,7 @@ import charlie.terms.TermFactory;
 import charlie.terms.TermPrinter.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
-import cora.reader.CoraInputReader;
+import charlie.reader.CoraInputReader;
 
 public class DefaultOutputModuleTest {
   private TRS exampleTrs() {

@@ -23,7 +23,7 @@ import charlie.types.Type;
 import charlie.terms.Term;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
-import cora.reader.CoraInputReader;
+import charlie.reader.CoraInputReader;
 
 public class PlainPrintersTest {
   private TRS exampleTrs() {

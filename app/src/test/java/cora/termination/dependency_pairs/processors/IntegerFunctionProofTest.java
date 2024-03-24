@@ -27,7 +27,7 @@ import charlie.terms.Variable;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TermFactory;
 import charlie.trs.TRS;
-import cora.reader.CoraInputReader;
+import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
 import cora.termination.dependency_pairs.DPGenerator;

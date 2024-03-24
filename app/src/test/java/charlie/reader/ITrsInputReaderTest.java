@@ -13,17 +13,12 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.reader;
+package charlie.reader;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.exceptions.ParseError;
-import charlie.types.TypeFactory;
-import charlie.terms.Term;
-import charlie.terms.Variable;
-import charlie.terms.FunctionSymbol;
-import charlie.terms.TermFactory;
 import charlie.trs.TRS;
 
 public class ITrsInputReaderTest {
