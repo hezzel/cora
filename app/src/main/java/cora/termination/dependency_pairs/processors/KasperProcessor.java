@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import charlie.types.*;
-import cora.terms.*;
+import charlie.terms.*;
 import charlie.smt.*;
 import cora.theorytranslation.TermSmtTranslator;
 import cora.io.OutputModule;

@@ -31,7 +31,7 @@ import charlie.parser.Parser;
 import charlie.parser.Parser.*;
 import charlie.parser.ITrsParser;
 import charlie.types.*;
-import cora.terms.*;
+import charlie.terms.*;
 import cora.trs.*;
 
 /**

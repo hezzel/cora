@@ -17,8 +17,8 @@ package cora.reduction;
 
 import java.util.List;
 import charlie.util.Pair;
-import cora.terms.Term;
-import cora.terms.TermPrinter.Renaming;
+import charlie.terms.Term;
+import charlie.terms.TermPrinter.Renaming;
 import cora.io.ProofObject;
 import cora.io.OutputModule;
 

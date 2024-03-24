@@ -16,7 +16,7 @@
 package cora.termination.horpo;
 
 import java.util.TreeMap;
-import cora.terms.*;
+import charlie.terms.*;
 import cora.trs.*;
 import cora.io.OutputModule;
 import cora.io.ProofObject;

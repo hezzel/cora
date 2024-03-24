@@ -20,8 +20,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import charlie.util.Pair;
-import cora.terms.Term;
-import cora.terms.position.Position;
+import charlie.terms.Term;
+import charlie.terms.position.Position;
 import cora.trs.TRS;
 import cora.trs.TRS.RuleScheme;
 

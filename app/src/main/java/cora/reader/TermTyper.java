@@ -26,7 +26,7 @@ import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
 import charlie.parser.CoraParser;
 import charlie.types.*;
-import cora.terms.*;
+import charlie.terms.*;
 
 /**
  * This class takes a ParserTerm, and turns it into a proper term -- assuming that it is

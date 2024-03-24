@@ -20,9 +20,9 @@ import java.util.List;
 import java.util.Collection;
 import charlie.exceptions.IllegalRuleError;
 import charlie.util.Pair;
-import cora.terms.Term;
-import cora.terms.Variable;
-import cora.terms.position.Position;
+import charlie.terms.Term;
+import charlie.terms.Variable;
+import charlie.terms.position.Position;
 import cora.trs.TrsProperties.*;
 
 /**

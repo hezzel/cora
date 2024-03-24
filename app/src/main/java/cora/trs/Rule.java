@@ -25,7 +25,7 @@ import charlie.exceptions.TypingError;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.types.TypePrinter;
-import cora.terms.*;
+import charlie.terms.*;
 import cora.trs.TrsProperties.*;
 
 /**

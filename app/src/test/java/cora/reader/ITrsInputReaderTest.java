@@ -20,10 +20,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.exceptions.ParseError;
 import charlie.types.TypeFactory;
-import cora.terms.Term;
-import cora.terms.Variable;
-import cora.terms.FunctionSymbol;
-import cora.terms.TermFactory;
+import charlie.terms.Term;
+import charlie.terms.Variable;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.TermFactory;
 import cora.trs.TRS;
 
 public class ITrsInputReaderTest {

@@ -4,7 +4,7 @@ import cora.data.digraph.Digraph;
 import charlie.exceptions.IllegalArgumentError;
 import charlie.exceptions.NullInitialisationError;
 import cora.trs.TRS;
-import cora.terms.FunctionSymbol;
+import charlie.terms.FunctionSymbol;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import org.jetbrains.annotations.NotNull;

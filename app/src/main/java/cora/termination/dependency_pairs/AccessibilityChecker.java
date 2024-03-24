@@ -11,7 +11,7 @@ import charlie.util.Pair;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import charlie.types.*;
-import cora.terms.*;
+import charlie.terms.*;
 import charlie.smt.*;
 import cora.trs.TRS;
 import cora.config.Settings;

@@ -1,13 +1,13 @@
 package cora.termination.dependency_pairs;
 
 import cora.reader.CoraInputReader;
-import cora.terms.FunctionSymbol;
-import cora.terms.TermFactory;
-import cora.terms.Variable;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.TermFactory;
+import charlie.terms.Variable;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import org.junit.jupiter.api.Test;
-import cora.terms.Term;
+import charlie.terms.Term;
 
 import java.util.List;
 

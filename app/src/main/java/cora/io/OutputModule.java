@@ -16,7 +16,7 @@
 package cora.io;
 
 import java.util.List;
-import cora.terms.TermPrinter;
+import charlie.terms.TermPrinter;
 import cora.trs.Rule;
 
 /**

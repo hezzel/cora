@@ -19,7 +19,7 @@ import java.util.Collection;
 import charlie.exceptions.NullInitialisationError;
 import charlie.exceptions.TypingError;
 import charlie.util.LookupMap;
-import cora.terms.FunctionSymbol;
+import charlie.terms.FunctionSymbol;
 
 /** A finite, immutable set of user-defined symbols, with no duplicate names. */
 public class Alphabet {

@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.exceptions.UnsupportedTheoryError;
 import charlie.types.TypeFactory;
-import cora.terms.*;
+import charlie.terms.*;
 import charlie.smt.ExternalSmtSolver;
 
 public class TermAnalyserTest {

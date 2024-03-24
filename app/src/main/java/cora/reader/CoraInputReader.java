@@ -29,7 +29,7 @@ import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
 import charlie.parser.CoraParser;
 import charlie.types.*;
-import cora.terms.*;
+import charlie.terms.*;
 import cora.trs.*;
 import cora.trs.TrsFactory.TrsKind;
 

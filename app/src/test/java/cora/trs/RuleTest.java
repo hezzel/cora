@@ -24,7 +24,7 @@ import charlie.exceptions.NullInitialisationError;
 import charlie.exceptions.TypingError;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
-import cora.terms.*;
+import charlie.terms.*;
 import cora.reader.CoraInputReader;
 import cora.trs.TrsProperties.*;
 

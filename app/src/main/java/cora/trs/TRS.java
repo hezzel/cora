@@ -25,9 +25,9 @@ import charlie.exceptions.IllegalSymbolError;
 import charlie.exceptions.NullInitialisationError;
 import charlie.util.Pair;
 import charlie.types.Type;
-import cora.terms.FunctionSymbol;
-import cora.terms.Term;
-import cora.terms.position.Position;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.Term;
+import charlie.terms.position.Position;
 import cora.trs.TrsProperties.*;
 
 /**

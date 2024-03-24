@@ -2,7 +2,7 @@ package cora.termination.dependency_pairs;
 
 import cora.trs.Rule;
 import cora.trs.TRS;
-import cora.terms.*;
+import charlie.terms.*;
 import charlie.types.*;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

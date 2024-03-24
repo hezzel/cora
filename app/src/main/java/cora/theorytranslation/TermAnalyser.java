@@ -20,7 +20,7 @@ import java.util.Random;
 import charlie.exceptions.UnsupportedTheoryError;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
-import cora.terms.*;
+import charlie.terms.*;
 import charlie.smt.*;
 import charlie.smt.SmtSolver.Answer;
 

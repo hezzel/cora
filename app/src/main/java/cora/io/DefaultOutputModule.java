@@ -21,10 +21,10 @@ import java.util.stream.Collectors;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.types.TypePrinter;
-import cora.terms.TermPrinter;
-import cora.terms.TermPrinter.Renaming;
-import cora.terms.FunctionSymbol;
-import cora.terms.Term;
+import charlie.terms.TermPrinter;
+import charlie.terms.TermPrinter.Renaming;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.Term;
 import cora.trs.Rule;
 import cora.trs.TRS;
 
