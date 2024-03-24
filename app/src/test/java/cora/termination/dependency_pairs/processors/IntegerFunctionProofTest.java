@@ -26,7 +26,7 @@ import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TermFactory;
-import cora.trs.TRS;
+import charlie.trs.TRS;
 import cora.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;

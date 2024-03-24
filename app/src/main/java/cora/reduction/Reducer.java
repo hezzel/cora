@@ -22,8 +22,8 @@ import java.util.Collections;
 import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.position.Position;
-import cora.trs.TRS;
-import cora.trs.TRS.RuleScheme;
+import charlie.trs.TRS;
+import charlie.trs.TRS.RuleScheme;
 
 /** A Reducer is a straightforward class to reduce terms for a given TRS. */
 public class Reducer {

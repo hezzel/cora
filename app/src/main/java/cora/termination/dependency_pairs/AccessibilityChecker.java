@@ -13,7 +13,7 @@ import cora.io.ProofObject;
 import charlie.types.*;
 import charlie.terms.*;
 import charlie.smt.*;
-import cora.trs.TRS;
+import charlie.trs.TRS;
 import cora.config.Settings;
 
 public class AccessibilityChecker {

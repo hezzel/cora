@@ -17,7 +17,7 @@ package cora.io;
 
 import java.util.List;
 import charlie.terms.TermPrinter;
-import cora.trs.Rule;
+import charlie.trs.Rule;
 
 /**
  * An OutputModule is used to print Cora data to the user.  This class is meant to be implemented

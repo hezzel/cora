@@ -27,7 +27,7 @@ import charlie.types.TypeFactory;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.CoraParser;
 import charlie.terms.*;
-import cora.trs.*;
+import charlie.trs.*;
 
 public class CoraInputReaderTest {
   private Type type(String str) {

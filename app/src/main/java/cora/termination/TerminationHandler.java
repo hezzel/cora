@@ -15,7 +15,7 @@
 
 package cora.termination;
 
-import cora.trs.TRS;
+import charlie.trs.TRS;
 import cora.io.ProofObject;
 import cora.termination.horpo.Horpo;
 import cora.termination.dependency_pairs.DPFramework;

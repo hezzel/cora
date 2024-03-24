@@ -32,7 +32,7 @@ import charlie.parser.Parser.*;
 import charlie.parser.ITrsParser;
 import charlie.types.*;
 import charlie.terms.*;
-import cora.trs.*;
+import charlie.trs.*;
 
 /**
  * This class reads text from string or file written in the .itrs format that up until 2023 was used

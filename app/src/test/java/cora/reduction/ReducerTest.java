@@ -25,8 +25,8 @@ import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.position.Position;
 import charlie.terms.*;
-import cora.trs.Rule;
-import cora.trs.*;
+import charlie.trs.Rule;
+import charlie.trs.*;
 import cora.reader.CoraInputReader;
 
 public class ReducerTest {

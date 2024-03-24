@@ -30,8 +30,8 @@ import charlie.parser.Parser.*;
 import charlie.parser.CoraParser;
 import charlie.types.*;
 import charlie.terms.*;
-import cora.trs.*;
-import cora.trs.TrsFactory.TrsKind;
+import charlie.trs.*;
+import charlie.trs.TrsFactory.TrsKind;
 
 /**
  * This class reads text from string or file written in Cora's internal formalism(s).  Specific

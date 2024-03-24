@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TheoryFactory;
-import cora.trs.TRS;
+import charlie.trs.TRS;
 import cora.reader.CoraInputReader;
 
 public class HorpoTest {

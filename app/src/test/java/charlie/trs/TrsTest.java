@@ -13,9 +13,8 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.trs;
+package charlie.trs;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,14 +25,14 @@ import java.util.TreeSet;
 
 import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.parser.CoraParser;
 import charlie.terms.*;
-import cora.reader.CoraInputReader;
-import cora.trs.TrsProperties.*;
-import cora.trs.TRS.RuleScheme;
+import charlie.trs.TrsProperties.*;
+import charlie.trs.TRS.RuleScheme;
 
 public class TrsTest {
   private Type type(String txt) {
-    try { return CoraInputReader.readType(txt); }
+    try { return CoraParser.readType(txt); }
     catch (Exception e) { System.out.println(e); return null; }
   }
 

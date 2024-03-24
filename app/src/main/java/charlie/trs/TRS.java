@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.trs;
+package charlie.trs;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -28,7 +28,7 @@ import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
 import charlie.terms.position.Position;
-import cora.trs.TrsProperties.*;
+import charlie.trs.TrsProperties.*;
 
 /**
  * A TRS (term rewriting system), in essence, is a pair (T, →) of a set of terms and a reduction

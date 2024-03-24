@@ -25,8 +25,8 @@ import charlie.terms.TermPrinter;
 import charlie.terms.TermPrinter.Renaming;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
-import cora.trs.Rule;
-import cora.trs.TRS;
+import charlie.trs.Rule;
+import charlie.trs.TRS;
 
 public class DefaultOutputModule implements OutputModule {
   private TypePrinter _typePrinter;

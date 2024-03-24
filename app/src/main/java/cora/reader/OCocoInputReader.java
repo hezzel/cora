@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.OCocoParser;
 import charlie.parser.Parser.ParserProgram;
-import cora.trs.TRS;
+import charlie.trs.TRS;
 
 /**
  * This class reads text from string or file written in the .trs format that up until 2023 was used

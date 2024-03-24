@@ -31,7 +31,7 @@ import charlie.parser.Parser.*;
 import charlie.parser.OCocoParser;
 import charlie.types.*;
 import charlie.terms.*;
-import cora.trs.*;
+import charlie.trs.*;
 
 /**
  * This class reads text from string or file written in the .trs format that up until 2023 was used
