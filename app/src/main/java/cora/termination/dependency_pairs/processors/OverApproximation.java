@@ -5,7 +5,7 @@ import charlie.util.Pair;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
 import charlie.trs.TRS;
-import cora.theorytranslation.TermAnalyser;
+import charlie.theorytranslation.TermAnalyser;
 import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import org.jetbrains.annotations.NotNull;

@@ -24,7 +24,7 @@ import charlie.terms.*;
 import charlie.smt.*;
 import charlie.trs.*;
 import charlie.trs.TrsProperties.*;
-import cora.theorytranslation.TermSmtTranslator;
+import charlie.theorytranslation.TermSmtTranslator;
 import cora.config.Settings;
 
 /**

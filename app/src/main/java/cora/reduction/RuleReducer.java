@@ -20,7 +20,7 @@ import java.util.Map;
 import charlie.types.Type;
 import charlie.terms.*;
 import charlie.trs.Rule;
-import cora.theorytranslation.TermAnalyser;
+import charlie.theorytranslation.TermAnalyser;
 import cora.config.Settings;
 
 /**
