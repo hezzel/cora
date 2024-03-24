@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 import charlie.types.*;
 import charlie.terms.*;
 import charlie.smt.*;
-import cora.theorytranslation.TermSmtTranslator;
+import charlie.theorytranslation.TermSmtTranslator;
 import cora.io.OutputModule;
 import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;

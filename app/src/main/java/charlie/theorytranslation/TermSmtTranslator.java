@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.theorytranslation;
+package charlie.theorytranslation;
 
 import java.util.TreeMap;
 import charlie.exceptions.TypingError;

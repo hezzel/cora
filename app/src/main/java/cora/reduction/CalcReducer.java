@@ -17,7 +17,7 @@ package cora.reduction;
 
 import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;
-import cora.theorytranslation.TermAnalyser;
+import charlie.theorytranslation.TermAnalyser;
 
 /** This class implements the calculation rule scheme. */
 class CalcReducer implements ReduceObject {
