@@ -24,7 +24,7 @@ import java.util.TreeSet;
 import java.util.Stack;
 
 import charlie.exceptions.*;
-import cora.utils.LookupMap;
+import charlie.util.LookupMap;
 import cora.parser.lib.Token;
 import cora.parser.lib.ErrorCollector;
 import cora.parser.Parser;

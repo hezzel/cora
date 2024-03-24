@@ -23,10 +23,10 @@ import java.util.ArrayList;
 
 import charlie.exceptions.NullInitialisationError;
 import charlie.exceptions.TypingError;
+import charlie.util.LookupMap;
 import cora.types.*;
 import cora.terms.FunctionSymbol;
 import cora.terms.TermFactory;
-import cora.utils.LookupMap;
 
 public class AlphabetTest {
   private Type baseType(String name) {

@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import charlie.exceptions.*;
-import cora.utils.Pair;
+import charlie.util.Pair;
 import cora.types.Type;
 import cora.terms.position.Position;
 import cora.terms.position.MetaPos;

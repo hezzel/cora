@@ -15,15 +15,15 @@
 
 package cora.reader;
 
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
-import com.google.common.collect.ImmutableList;
 import charlie.exceptions.IllegalRuleError;
 import charlie.exceptions.ParseError;
 import charlie.exceptions.UnexpectedPatternError;
-import cora.utils.LookupMap;
+import charlie.util.LookupMap;
 import cora.parser.lib.Token;
 import cora.parser.lib.ErrorCollector;
 import cora.parser.Parser;

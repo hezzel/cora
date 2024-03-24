@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import charlie.exceptions.NullInitialisationError;
 import charlie.exceptions.IndexingError;
-import cora.utils.Pair;
+import charlie.util.Pair;
 
 public record Arrow(Type left, Type right) implements Type {
   public Arrow(Type left, Type right) {

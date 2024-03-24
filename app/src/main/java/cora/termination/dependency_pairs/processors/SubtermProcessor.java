@@ -1,6 +1,6 @@
 package cora.termination.dependency_pairs.processors;
 
-import cora.utils.Pair;
+import charlie.util.Pair;
 import cora.smt.*;
 import cora.io.OutputModule;
 import cora.config.Settings;

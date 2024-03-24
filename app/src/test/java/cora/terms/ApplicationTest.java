@@ -24,7 +24,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import charlie.exceptions.*;
-import cora.utils.Pair;
+import charlie.util.Pair;
 import cora.types.Type;
 import cora.terms.position.*;
 

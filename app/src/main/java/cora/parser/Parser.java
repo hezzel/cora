@@ -18,8 +18,8 @@ package cora.parser;
 import com.google.common.collect.ImmutableList;
 import java.util.TreeSet;
 
+import charlie.util.LookupMap;
 import cora.types.Type;
-import cora.utils.LookupMap;
 import cora.parser.lib.Token;
 
 /**
