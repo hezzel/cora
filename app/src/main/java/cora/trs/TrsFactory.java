@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import cora.exceptions.IllegalRuleError;
+import charlie.exceptions.IllegalRuleError;
 import cora.terms.Term;
 import cora.trs.TrsProperties.*;
 

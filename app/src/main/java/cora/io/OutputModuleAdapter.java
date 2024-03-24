@@ -16,7 +16,7 @@
 package cora.io;
 
 import java.util.List;
-import cora.exceptions.NullStorageError;
+import charlie.exceptions.NullStorageError;
 import cora.terms.TermPrinter;
 
 /**

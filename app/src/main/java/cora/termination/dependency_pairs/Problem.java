@@ -1,8 +1,8 @@
 package cora.termination.dependency_pairs;
 
 import cora.data.digraph.Digraph;
-import cora.exceptions.IllegalArgumentError;
-import cora.exceptions.NullInitialisationError;
+import charlie.exceptions.IllegalArgumentError;
+import charlie.exceptions.NullInitialisationError;
 import cora.trs.TRS;
 import cora.terms.FunctionSymbol;
 import cora.types.Type;

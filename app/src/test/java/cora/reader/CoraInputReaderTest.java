@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
-import cora.exceptions.ParseError;
+import charlie.exceptions.ParseError;
 import cora.types.Type;
 import cora.parser.lib.ErrorCollector;
 import cora.parser.CoraParser;

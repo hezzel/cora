@@ -22,9 +22,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
-import cora.exceptions.IllegalRuleError;
-import cora.exceptions.IllegalSymbolError;
-import cora.exceptions.NullInitialisationError;
+import charlie.exceptions.IllegalRuleError;
+import charlie.exceptions.IllegalSymbolError;
+import charlie.exceptions.NullInitialisationError;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;
@@ -123,11 +123,11 @@ public class TrsFactoryTrsCreationTest {
     Variable x = TermFactory.createVar("x");
     rules.add(TrsFactory.createRule(TermFactory.createApp(f, x, a), x));
 
-    assertThrows(cora.exceptions.IllegalSymbolError.class,
+    assertThrows(charlie.exceptions.IllegalSymbolError.class,
       () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.MSTRS));
 
     symbols.set(symbols.size()-1, TermFactory.createConstant("i", type("(a * b) → a")));
-    assertThrows(cora.exceptions.IllegalSymbolError.class,
+    assertThrows(charlie.exceptions.IllegalSymbolError.class,
       () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.CFS));
   }
 

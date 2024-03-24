@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.types.Type;
 import cora.types.TypeFactory;
 
@@ -333,7 +333,7 @@ public class MetaApplicationTestOld extends TermTestFoundation {
                   term.queryMetaArgument(2).queryVariable()));
   }
 
-  @Test(expected = NullCallError.class)
+  @Test(expected = NullPointerException.class)
   public void testNullMatch() {
     Variable x = new Binder("x", baseType("o"));
     Variable y = new Binder("y", baseType("o"));
@@ -344,7 +344,7 @@ public class MetaApplicationTestOld extends TermTestFoundation {
     t.match(null, subst);
   }
 
-  @Test(expected = NullCallError.class)
+  @Test(expected = NullPointerException.class)
   public void testNullSubst() {
     Variable x = new Binder("x", baseType("o"));
     Variable y = new Binder("y", baseType("o"));

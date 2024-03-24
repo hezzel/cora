@@ -38,6 +38,6 @@ public class BVarTest {
   @Test
   public void testEvaluate() {
     BVar x = new BVar(3);
-    assertThrows(cora.exceptions.SmtEvaluationError.class, () -> x.evaluate());
+    assertThrows(charlie.exceptions.SmtEvaluationError.class, () -> x.evaluate());
   }
 }

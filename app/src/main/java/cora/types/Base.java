@@ -2,8 +2,8 @@ package cora.types;
 
 import org.jetbrains.annotations.NotNull;
 
-import cora.exceptions.IndexingError;
-import cora.exceptions.NullInitialisationError;
+import charlie.exceptions.IndexingError;
+import charlie.exceptions.NullInitialisationError;
 
 public record Base(String name) implements Type {
   public Base {

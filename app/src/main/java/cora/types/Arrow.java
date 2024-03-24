@@ -2,8 +2,8 @@ package cora.types;
 
 import org.jetbrains.annotations.NotNull;
 
-import cora.exceptions.NullInitialisationError;
-import cora.exceptions.IndexingError;
+import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.IndexingError;
 import cora.utils.Pair;
 
 public record Arrow(Type left, Type right) implements Type {

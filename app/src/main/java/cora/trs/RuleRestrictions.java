@@ -18,7 +18,7 @@ package cora.trs;
 import java.util.Map;
 import java.util.List;
 import java.util.Collection;
-import cora.exceptions.IllegalRuleError;
+import charlie.exceptions.IllegalRuleError;
 import cora.utils.Pair;
 import cora.terms.Term;
 import cora.terms.Variable;

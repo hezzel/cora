@@ -1,7 +1,7 @@
 package cora.terms.position;
 
-import cora.exceptions.IllegalArgumentError;
-import cora.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.IllegalArgumentError;
+import charlie.exceptions.InappropriatePatternDataError;
 
 public record FinalPos(int chopcount) implements Position {
   public FinalPos(int chopcount) {

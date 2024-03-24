@@ -16,8 +16,7 @@
 package cora.terms;
 
 import java.util.Map;
-import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.NullCallError;
+import charlie.exceptions.InappropriatePatternDataError;
 import cora.types.Base;
 import cora.types.TypeFactory;
 
@@ -95,7 +94,6 @@ public abstract class ValueInherit extends LeafTermInherit implements Value {
    * description of the instantiation failure.
    */
   public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullCallError("ValueInherit", "match", "other term");
     if (equals(other)) return null;
     return "value " + toString() + " is not instantiated by " + other.toString() + ".";
   }

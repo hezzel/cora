@@ -1,8 +1,8 @@
 package cora.types;
 
 import com.google.common.collect.ImmutableList;
-import cora.exceptions.NullInitialisationError;
-import cora.exceptions.ProdTypeConstructionError;
+import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.IllegalArgumentError;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
@@ -43,8 +43,8 @@ class ProductTest {
     builder = ImmutableList.builder();
     builder.add(new Arrow(new Base("a"), new Base("b")));
     ImmutableList<Type> l1 = builder.build();
-    Assertions.assertThrows(ProdTypeConstructionError.class, () -> new Product(l0));
-    Assertions.assertThrows(ProdTypeConstructionError.class, () -> new Product(l1));
+    Assertions.assertThrows(IllegalArgumentError.class, () -> new Product(l0));
+    Assertions.assertThrows(IllegalArgumentError.class, () -> new Product(l1));
   }
 
   @Test

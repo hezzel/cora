@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022, 2023 Cynthia Kop
+ Copyright 2019--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -17,7 +17,7 @@ package cora.reader;
 
 import java.util.TreeMap;
 import java.util.TreeSet;
-import cora.exceptions.NullStorageError;
+import charlie.exceptions.NullStorageError;
 import cora.types.Type;
 import cora.terms.FunctionSymbol;
 import cora.terms.Variable;

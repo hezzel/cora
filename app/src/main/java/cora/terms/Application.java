@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.utils.Pair;
 import cora.types.Arrow;
 import cora.types.Type;
@@ -374,7 +374,7 @@ class Application extends TermInherit {
    * by this function.
    */
   public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullCallError("Application", "match", "argument term (other)");
+    if (other == null) throw new NullPointerException("Argument term in Application::match");
     if (!other.isApplication()) {
       return other.toString() + " does not instantiate " + toString() + " (not an application).";
     }   

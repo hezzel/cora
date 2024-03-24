@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.types.Type;
 import cora.types.TypeFactory;
 

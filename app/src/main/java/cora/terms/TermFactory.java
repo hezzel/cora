@@ -17,8 +17,8 @@ package cora.terms;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import cora.exceptions.ArityError;
-import cora.exceptions.IllegalArgumentError;
+import charlie.exceptions.ArityError;
+import charlie.exceptions.IllegalArgumentError;
 import cora.types.Arrow;
 import cora.types.Type;
 import cora.types.TypeFactory;

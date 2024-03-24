@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import cora.exceptions.ParseError;
+import charlie.exceptions.ParseError;
 import cora.types.TypeFactory;
 import cora.terms.Term;
 import cora.terms.Variable;

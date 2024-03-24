@@ -90,7 +90,7 @@ public class AdditionTest {
   @Test
   public void testQueryBadChild() {
     Addition plus = new Addition(new IValue(0), new IVar(2));
-    assertThrows(cora.exceptions.IndexingError.class, () -> plus.queryChild(0));
-    assertThrows(cora.exceptions.IndexingError.class, () -> plus.queryChild(3));
+    assertThrows(charlie.exceptions.IndexingError.class, () -> plus.queryChild(0));
+    assertThrows(charlie.exceptions.IndexingError.class, () -> plus.queryChild(3));
   }
 }

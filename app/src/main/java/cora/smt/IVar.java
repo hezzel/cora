@@ -15,7 +15,7 @@
 
 package cora.smt;
 
-import cora.exceptions.SmtEvaluationError;
+import charlie.exceptions.SmtEvaluationError;
 
 public final class IVar extends IntegerExpression {
   private int _index;

@@ -16,7 +16,7 @@
 package cora.smt;
 
 import java.util.ArrayList;
-import cora.exceptions.IndexingError;
+import charlie.exceptions.IndexingError;
 
 /** Shared inherit functionality for Conjunction and Disjunction; do not use on its own. */
 abstract sealed class Junction extends Constraint permits Conjunction, Disjunction {

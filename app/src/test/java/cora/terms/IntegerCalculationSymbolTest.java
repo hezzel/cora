@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
-import cora.exceptions.*;
+import charlie.exceptions.*;
 import cora.types.TypeFactory;
 import cora.types.Type;
 

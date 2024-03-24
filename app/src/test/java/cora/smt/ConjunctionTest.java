@@ -61,7 +61,7 @@ public class ConjunctionTest {
   @Test
   public void testQueryBadChild() {
     Conjunction conj = new Conjunction(new BVar(2), new Falsehood());
-    assertThrows(cora.exceptions.IndexingError.class, () -> conj.queryChild(0));
-    assertThrows(cora.exceptions.IndexingError.class, () -> conj.queryChild(3));
+    assertThrows(charlie.exceptions.IndexingError.class, () -> conj.queryChild(0));
+    assertThrows(charlie.exceptions.IndexingError.class, () -> conj.queryChild(3));
   }
 }

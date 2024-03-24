@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Stack;
 import java.util.TreeMap;
-import cora.exceptions.IllegalArgumentError;
+import charlie.exceptions.IllegalArgumentError;
 import cora.parser.lib.Token;
 import cora.parser.lib.ParsingStatus;
 import cora.parser.Parser.ParserTerm;

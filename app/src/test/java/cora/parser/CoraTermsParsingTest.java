@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import com.google.common.collect.ImmutableList;
 
-import cora.exceptions.ParseError;
+import charlie.exceptions.ParseError;
 import cora.utils.LookupMap;
 import cora.types.*;
 import cora.parser.lib.ErrorCollector;

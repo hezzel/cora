@@ -15,8 +15,8 @@
 
 package cora.terms;
 
-import cora.exceptions.IllegalArgumentError;
-import cora.exceptions.IncorrectStringException;
+import charlie.exceptions.IllegalArgumentError;
+import charlie.exceptions.IncorrectStringException;
 import cora.types.Base;
 import cora.types.Type;
 import cora.types.TypeFactory;

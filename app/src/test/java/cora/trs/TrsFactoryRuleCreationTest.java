@@ -19,9 +19,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import cora.exceptions.IllegalRuleError;
-import cora.exceptions.NullInitialisationError;
-import cora.exceptions.TypingError;
+import charlie.exceptions.IllegalRuleError;
+import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.TypingError;
 import cora.types.Type;
 import cora.types.TypeFactory;
 import cora.terms.*;

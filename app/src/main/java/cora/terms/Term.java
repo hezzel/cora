@@ -111,7 +111,7 @@ public interface Term {
 
   /**
    * If 1 <= i <= numberArguments, this returns the thus indexed argument.
-   * @throws cora.exceptions.IndexingError if i is negative or > numberArguments.
+   * @throws charlie.exceptions.IndexingError if i is negative or > numberArguments.
    */
   Term queryArgument(int i);
 
@@ -260,7 +260,7 @@ public interface Term {
    *
    * @param args a possibly empty list of terms, if <code>args</code> is an empty list then this
    *             method returns the calling object back
-   * @throws cora.exceptions.TypingError if the term cannot be constructed for typing reasons.
+   * @throws charlie.exceptions.TypingError if the term cannot be constructed for typing reasons.
    *
    */
   Term apply(List<Term> args);

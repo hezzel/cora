@@ -17,10 +17,9 @@ package cora.terms;
 
 import java.util.Map;
 import java.util.Set;
-import cora.exceptions.InappropriatePatternDataError;
-import cora.exceptions.IndexingError;
-import cora.exceptions.NullCallError;
-import cora.exceptions.NullInitialisationError;
+import charlie.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.IndexingError;
+import charlie.exceptions.NullInitialisationError;
 import cora.types.Type;
 
 /**
@@ -121,7 +120,7 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
 
   /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */
   public Term substitute(Substitution gamma) {
-    if (gamma == null) throw new NullCallError("Var", "substitute", "substitution gamma");
+    if (gamma == null) throw new NullPointerException("Substitution in Var::substitute");
     return gamma.getReplacement(this);
   }
 
@@ -131,11 +130,11 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
    * If this works, then null is returned.
    * If x is already mapped to the given other term, then nothing is done but null is returned.
    * If x is mapped to a different term, then an explanation of the match failure is returned.
-   * If other or gamma is null, then a NullCallError is thrown instead.
+   * If other or gamma is null, then a NullPointerException is thrown instead.
    */
   public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullCallError("Var", "match", "other (matched term)");
-    if (gamma == null) throw new NullCallError("Var", "match", "gamma (matching substitution");
+    if (other == null) throw new NullPointerException("Matched term in Var::match");
+    if (gamma == null) throw new NullPointerException("Substitution in Var::match");
 
     Term previous = gamma.get(this);
     

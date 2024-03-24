@@ -21,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.lang.Error;
 import java.util.ArrayList;
 
-import cora.exceptions.NullInitialisationError;
-import cora.exceptions.TypingError;
+import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.TypingError;
 import cora.types.*;
 import cora.terms.FunctionSymbol;
 import cora.terms.TermFactory;

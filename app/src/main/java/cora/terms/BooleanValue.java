@@ -17,7 +17,7 @@ package cora.terms;
 
 import java.util.Map;
 import java.util.Set;
-import cora.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.InappropriatePatternDataError;
 import cora.types.TypeFactory;
 
 /** BooleanValues are the function symbols true and false (which are both theory symbols). */
