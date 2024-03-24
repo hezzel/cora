@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import cora.terms.*;
 import cora.reader.CoraInputReader;
 import cora.trs.TrsProperties.*;

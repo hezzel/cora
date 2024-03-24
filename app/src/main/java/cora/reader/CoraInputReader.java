@@ -24,11 +24,11 @@ import java.util.TreeSet;
 
 import charlie.exceptions.*;
 import charlie.util.LookupMap;
-import cora.parser.lib.Token;
-import cora.parser.lib.ErrorCollector;
-import cora.parser.Parser.*;
-import cora.parser.CoraParser;
-import cora.types.*;
+import charlie.parser.lib.Token;
+import charlie.parser.lib.ErrorCollector;
+import charlie.parser.Parser.*;
+import charlie.parser.CoraParser;
+import charlie.types.*;
 import cora.terms.*;
 import cora.trs.*;
 import cora.trs.TrsFactory.TrsKind;

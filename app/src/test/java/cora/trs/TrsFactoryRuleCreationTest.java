@@ -22,8 +22,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import charlie.exceptions.IllegalRuleError;
 import charlie.exceptions.NullInitialisationError;
 import charlie.exceptions.TypingError;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import cora.terms.*;
 import cora.reader.CoraInputReader;
 

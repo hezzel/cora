@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.exceptions.ParseError;
-import cora.types.TypeFactory;
+import charlie.types.TypeFactory;
 import cora.terms.Term;
 import cora.terms.Variable;
 import cora.terms.FunctionSymbol;

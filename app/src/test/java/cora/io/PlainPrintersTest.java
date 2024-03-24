@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
-import cora.types.Type;
+import charlie.types.Type;
 import cora.terms.Term;
 import cora.trs.Rule;
 import cora.trs.TRS;

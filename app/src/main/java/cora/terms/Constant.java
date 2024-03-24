@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import charlie.exceptions.InappropriatePatternDataError;
 import charlie.exceptions.NullInitialisationError;
-import cora.types.Type;
+import charlie.types.Type;
 
 /**
  * Constants are the default kind of FunctionSymbol.

@@ -18,11 +18,11 @@ package cora.theorytranslation;
 import java.util.Random;
 
 import charlie.exceptions.UnsupportedTheoryError;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import cora.terms.*;
-import cora.smt.*;
-import cora.smt.SmtSolver.Answer;
+import charlie.smt.*;
+import charlie.smt.SmtSolver.Answer;
 
 /**
  * This class provides analysis functions on theory terms, by using a translation to SMT.

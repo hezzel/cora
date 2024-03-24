@@ -15,7 +15,7 @@
 
 package cora.io;
 
-import cora.types.TypePrinter;
+import charlie.types.TypePrinter;
 
 /** The PlainTermPrinter adapts the standard TermPrinter to avoid unicode symbols. */
 public class PlainTypePrinter extends TypePrinter {

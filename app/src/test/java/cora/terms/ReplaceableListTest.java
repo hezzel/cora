@@ -20,8 +20,8 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 
 public class ReplaceableListTest {
   private MetaVariable makeMetaVar(String name) {

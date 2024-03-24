@@ -20,7 +20,7 @@ import java.util.Set;
 import charlie.exceptions.InappropriatePatternDataError;
 import charlie.exceptions.IndexingError;
 import charlie.exceptions.NullInitialisationError;
-import cora.types.Type;
+import charlie.types.Type;
 
 /**
  * Non-binder variables are both used as parts of constraints, as generic expressions in terms, and

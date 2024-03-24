@@ -15,7 +15,7 @@
 
 package cora.terms;
 
-import cora.types.Type;
+import charlie.types.Type;
 
 /**
  * Meta-variables are used in matching.  They take zero or more arguments to create a

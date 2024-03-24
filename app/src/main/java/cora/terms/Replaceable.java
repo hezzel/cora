@@ -16,7 +16,7 @@
 package cora.terms;
 
 import java.lang.Comparable;
-import cora.types.Type;
+import charlie.types.Type;
 
 /**
  * Replaceable is a parent class for variables and meta-variables: objects that can be substituted,

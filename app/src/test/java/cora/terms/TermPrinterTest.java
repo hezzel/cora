@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
-import cora.types.*;
+import charlie.types.*;
 
 /**
  * Not too many tests here, because most testing is actually done through the toString() functions

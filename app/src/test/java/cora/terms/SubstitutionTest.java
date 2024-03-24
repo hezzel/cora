@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import charlie.exceptions.ArityError;
 import charlie.exceptions.NullStorageError;
 import charlie.exceptions.TypingError;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 
 public class SubstitutionTest {
   private Type baseType(String name) {

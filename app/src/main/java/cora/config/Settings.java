@@ -15,8 +15,8 @@
 
 package cora.config;
 
-import cora.smt.SmtSolver;
-import cora.smt.ExternalSmtSolver;
+import charlie.smt.SmtSolver;
+import charlie.smt.ExternalSmtSolver;
 
 /**
  * This class collects a number of settings that are global to the execution of Cora or any of its

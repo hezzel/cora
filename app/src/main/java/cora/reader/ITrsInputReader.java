@@ -25,12 +25,12 @@ import java.util.Stack;
 
 import charlie.exceptions.*;
 import charlie.util.LookupMap;
-import cora.parser.lib.Token;
-import cora.parser.lib.ErrorCollector;
-import cora.parser.Parser;
-import cora.parser.Parser.*;
-import cora.parser.ITrsParser;
-import cora.types.*;
+import charlie.parser.lib.Token;
+import charlie.parser.lib.ErrorCollector;
+import charlie.parser.Parser;
+import charlie.parser.Parser.*;
+import charlie.parser.ITrsParser;
+import charlie.types.*;
 import cora.terms.*;
 import cora.trs.*;
 

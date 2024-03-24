@@ -17,9 +17,9 @@ package cora.terms;
 
 import charlie.exceptions.IllegalArgumentError;
 import charlie.exceptions.IncorrectStringException;
-import cora.types.Base;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Base;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import cora.terms.CalculationSymbol.Kind;
 import cora.terms.CalculationSymbol.Associativity;
 

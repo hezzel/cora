@@ -8,8 +8,8 @@ import charlie.exceptions.NullInitialisationError;
 import cora.termination.dependency_pairs.processors.GraphProcessor;
 import cora.terms.Term;
 import cora.terms.TermFactory;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

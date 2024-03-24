@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import charlie.exceptions.*;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 
 public class VariableEnvironmentTest {
   private Type baseType(String name) {

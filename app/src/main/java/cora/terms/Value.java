@@ -15,7 +15,7 @@
 
 package cora.terms;
 
-import cora.types.Base;
+import charlie.types.Base;
 
 /**
  * Values are constants of a theory sorts that cannot be rewritten; they are the representations of

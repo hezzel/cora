@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2022, 2023 Cynthia Kop
+ Copyright 2019--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,7 +15,6 @@
 
 package cora.reader;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,11 +22,10 @@ import java.util.ArrayList;
 import java.util.TreeSet;
 
 import charlie.exceptions.ParseError;
-import cora.types.Type;
-import cora.parser.lib.ErrorCollector;
-import cora.parser.CoraParser;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
+import charlie.parser.lib.ErrorCollector;
+import charlie.parser.CoraParser;
 import cora.terms.*;
 import cora.trs.*;
 

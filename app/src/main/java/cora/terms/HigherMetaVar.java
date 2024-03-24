@@ -19,8 +19,8 @@ import com.google.common.collect.ImmutableList;
 import charlie.exceptions.IndexingError;
 import charlie.exceptions.IllegalArgumentError;
 import charlie.exceptions.NullInitialisationError;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 
 /**
  * This class is for Meta-variables of higher type; that is, arity ≥ 1.

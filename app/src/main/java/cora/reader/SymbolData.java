@@ -18,7 +18,7 @@ package cora.reader;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import charlie.exceptions.NullStorageError;
-import cora.types.Type;
+import charlie.types.Type;
 import cora.terms.FunctionSymbol;
 import cora.terms.Variable;
 import cora.terms.MetaVariable;

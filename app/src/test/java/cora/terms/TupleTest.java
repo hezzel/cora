@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.exceptions.*;
-import cora.types.Product;
-import cora.types.Type;
-import cora.types.TypeFactory;
+import charlie.types.Product;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import cora.terms.position.*;
 
 class TupleTest extends TermTestFoundation {

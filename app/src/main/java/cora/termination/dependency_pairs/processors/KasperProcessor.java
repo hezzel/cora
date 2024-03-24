@@ -3,9 +3,9 @@ package cora.termination.dependency_pairs.processors;
 import java.util.*;
 import java.util.function.Consumer;
 
-import cora.types.*;
+import charlie.types.*;
 import cora.terms.*;
-import cora.smt.*;
+import charlie.smt.*;
 import cora.theorytranslation.TermSmtTranslator;
 import cora.io.OutputModule;
 import cora.config.Settings;

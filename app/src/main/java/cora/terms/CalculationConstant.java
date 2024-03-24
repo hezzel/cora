@@ -18,7 +18,7 @@ package cora.terms;
 import java.util.Map;
 import java.util.Set;
 import charlie.exceptions.InappropriatePatternDataError;
-import cora.types.Type;
+import charlie.types.Type;
 
 /** A Constant that happens to be a Calculation Symbol. */
 public class CalculationConstant extends LeafTermInherit implements CalculationSymbol {

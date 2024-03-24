@@ -2,7 +2,7 @@ package cora.termination.dependency_pairs.processors;
 
 import charlie.exceptions.NullInitialisationError;
 import charlie.util.Pair;
-import cora.types.TypeFactory;
+import charlie.types.TypeFactory;
 import cora.terms.*;
 import cora.trs.TRS;
 import cora.theorytranslation.TermAnalyser;

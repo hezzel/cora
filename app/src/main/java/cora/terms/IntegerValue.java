@@ -18,7 +18,7 @@ package cora.terms;
 import java.util.Map;
 import java.util.Set;
 import charlie.exceptions.InappropriatePatternDataError;
-import cora.types.TypeFactory;
+import charlie.types.TypeFactory;
 
 /**
  * IntegerValues are the function symbols 0, 1, 2, ..., -1, -2, ...

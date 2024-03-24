@@ -21,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import charlie.exceptions.*;
-import cora.types.TypeFactory;
-import cora.types.Type;
+import charlie.types.TypeFactory;
+import charlie.types.Type;
 import cora.terms.position.*;
 
 public class CalculationTest extends TermTestFoundation {

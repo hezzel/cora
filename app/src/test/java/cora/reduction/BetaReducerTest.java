@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import cora.types.TypeFactory;
+import charlie.types.TypeFactory;
 import cora.terms.*;
 
 public class BetaReducerTest {
