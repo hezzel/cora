@@ -297,6 +297,7 @@ class MetaApplicationTest extends TermTestFoundation {
     assertTrue(lst.get(2).snd().toString().equals("!2.ε"));
     assertTrue(lst.get(3).fst() == term);
     assertTrue(lst.get(3).snd().toString().equals("ε"));
+    assertTrue(term.hasSubterm(lst.get(0).fst()));
   }
 
   @Test
@@ -310,6 +311,9 @@ class MetaApplicationTest extends TermTestFoundation {
     assertTrue(lst.get(2).snd().toString().equals("!2.ε"));
     assertTrue(lst.get(3).snd().toString().equals("1.ε"));
     assertTrue(lst.get(4).snd().toString().equals("ε"));
+    assertTrue(term.hasSubterm(lst.get(3).fst()));
+    assertTrue(term.hasSubterm(lst.get(4).fst()));
+    assertFalse(term.hasSubterm(TermFactory.createVar("x", baseType("b"))));
   }
 
   @Test

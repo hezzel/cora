@@ -273,6 +273,9 @@ class AbstractionTest extends TermTestFoundation {
     assertSame(subs.get(1).fst(), subs.get(2).fst().queryVariable());
     assertEquals("0.ε", subs.get(3).snd().toString());
     assertTrue(subs.get(4).snd().isEmpty());
+    // subterms below a binder are only acceptable if the bound variable does not occur free in them
+    assertFalse(term.hasSubterm(subs.get(3).fst()));
+    assertTrue(term.hasSubterm(subs.get(2).fst()));
   }
 
   @Test
