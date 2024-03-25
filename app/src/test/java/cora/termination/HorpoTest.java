@@ -15,8 +15,9 @@
 
 package cora.termination;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import cora.terms.FunctionSymbol;
 import cora.terms.TheoryFactory;
 import cora.trs.TRS;
@@ -59,9 +60,9 @@ public class HorpoTest {
                   "g :: Int -> Int -> Int\n" +
                   "g(x, y) -> g(x - 1, y) | x < -500\n" +
                   "f(x) → g(421, -300) | x > 12\n" +
-                  "f(901) → f(16)");
+                  "f(401) → f(16)");
     horpo = new Horpo(trs);
-    assertTrue(horpo.queryIntegerVariableBound() == 2000);
+    assertTrue(horpo.queryIntegerVariableBound() == 1000);
   }
 
   @Test
@@ -81,16 +82,17 @@ public class HorpoTest {
     assertTrue(horpo.getPrecedenceFor(f).queryIndex() == 1);
     assertTrue(horpo.getPrecedenceFor(g).queryIndex() == 3);
     assertTrue(horpo.getPrecedenceFor(minus).queryIndex() == 2);
+    System.out.println(horpo.toString());
     assertTrue(horpo.toString().equals(
-      "b1\n" +
       "b2\n" +
       "b3\n" +
+      "b4\n" +
       "(>= i1 0)\n" +
       "(> 0 i2)\n" +
       "(>= i3 0)\n" +
-      "  b1 => 0: g(x, y) ≻{x > 0} g(x - 1, y)\n" +
-      "  b2 => 1: f(x) ≻{x > 12} g(4211, -3000)\n" +
-      "  b3 => 2: f(4000) ≻{true} f(16)\n"));
+      "  b2 => 0: g(x, y) ≻{x > 0} g(x - 1, y)\n" +
+      "  b3 => 1: f(x) ≻{x > 12} g(4211, -3000)\n" +
+      "  b4 => 2: f(4000) ≻{true} f(16)\n"));
   }
 
   @Test
@@ -112,17 +114,17 @@ public class HorpoTest {
     assertTrue(horpo.getStatusFor(g).queryIndex() == 3);
     assertTrue(horpo.getStatusFor(plus).queryIndex() == 1);
     assertTrue(horpo.toString().equals(
-      "b1\n" +
       "b2\n" +
       "b3\n" +
+      "b4\n" +
       "(>= i1 1)\n" +
       "(>= 2 i1)\n" +
       "(>= i2 0)\n" +
       "(>= i3 1)\n" +
       "(>= 2 i3)\n" +
-      "  b1 => 0: g(x, y) ≻{x > 0} g(x - 1, y)\n" +
-      "  b2 => 1: f(x) ≻{x > 12} g(4211, -3000)\n" +
-      "  b3 => 2: f(4000) ≻{true} f(16)\n"));
+      "  b2 => 0: g(x, y) ≻{x > 0} g(x - 1, y)\n" +
+      "  b3 => 1: f(x) ≻{x > 12} g(4211, -3000)\n" +
+      "  b4 => 2: f(4000) ≻{true} f(16)\n"));
   }
 
   @Test
@@ -131,55 +133,56 @@ public class HorpoTest {
     TRS trs = makeTrs("a :: o b :: o a → b");
     Horpo horpo = new Horpo(trs);
     assertTrue(horpo.toString().equals(
-      "b1\n" +
-      "  b1 => 0: a ≻{true} b\n"));
+      "b2\n" +
+      "  b2 => 0: a ≻{true} b\n"));
     assertTrue(horpo.handleTodo());
     assertTrue(horpo.toString().equals(
-      "b1\n" +
-      "(or (not b1) b2 b3 b4 b5)\n" +
-      "  b2 => 0: a ≻{true} b by 2a\n" +
-      "  b3 => 0: a ≻{true} b by 2c\n" +
-      "  b4 => 0: a ≻{true} b by 2d\n" +
-      "  b5 => 0: a ≻{true} b by 2b\n"));
+      "b2\n" +
+      "(or (not b2) b3 b4 b5 b6)\n" +
+      "  b3 => 0: a ≻{true} b by 2a\n" +
+      "  b4 => 0: a ≻{true} b by 2c\n" +
+      "  b5 => 0: a ≻{true} b by 2d\n" +
+      "  b6 => 0: a ≻{true} b by 2b\n"));
     assertTrue(horpo.handleTodo());
     assertTrue(horpo.handleTodo());
     assertTrue(horpo.handleTodo());
     assertTrue(horpo.handleTodo());
     assertTrue(horpo.toString().equals(
-      "b1\n" +
-      "(or (not b1) b2 b3 b4 b5)\n" +
-      "(not b2)\n" +
+      "b2\n" +
+      "(or (not b2) b3 b4 b5 b6)\n" +
       "(not b3)\n" +
       "(not b4)\n" +
-      "(or (not b5) b6)\n" +
-      "  b6 => 0: a ▷{true} b\n"));
+      "(not b5)\n" +
+      "(or (not b6) b7)\n" +
+      "  b7 => 0: a ▷{true} b\n"));
     assertTrue(horpo.handleTodo());
     assertTrue(horpo.toString(-2, 0).equals(
-      "(or (not b5) b6)\n" +
-      "(or (not b6) b7 b8 b9 b10 b11 b12)\n" +
-      "  b7 => 0: a ▷{true} b by 3f\n" +
-      "  b8 => 0: a ▷{true} b by 3a\n" +
-      "  b9 => 0: a ▷{true} b by 3c\n" +
-      "  b10 => 0: a ▷{true} b by 3d\n" +
-      "  b11 => 0: a ▷{true} b by 3e\n" +
-      "  b12 => 0: a ▷{true} b by 3b\n"));
+      "(or (not b6) b7)\n" +
+      "(or (not b7) b8 b9 b10 b11 b12 b13)\n" +
+      "  b8 => 0: a ▷{true} b by 3f\n" +
+      "  b9 => 0: a ▷{true} b by 3a\n" +
+      "  b10 => 0: a ▷{true} b by 3c\n" +
+      "  b11 => 0: a ▷{true} b by 3d\n" +
+      "  b12 => 0: a ▷{true} b by 3e\n" +
+      "  b13 => 0: a ▷{true} b by 3b\n"));
     assertTrue(horpo.handleTodo());
     assertTrue(horpo.handleTodo());
     assertTrue(horpo.handleTodo());
     assertTrue(horpo.toString(-4, 0).equals(
-      "(not b8)\n" +
+      "(not b9)\n" +
       "(>= i1 0)\n" +
       "(>= i2 0)\n" +
-      "(or (not b9) (> i1 i2))\n" +
-      "  b10 => 0: a ▷{true} b by 3d\n" +
-      "  b11 => 0: a ▷{true} b by 3e\n" +
-      "  b12 => 0: a ▷{true} b by 3b\n"));
+      "(or (not b10) (> i1 i2))\n" +
+      "  b11 => 0: a ▷{true} b by 3d\n" +
+      "  b12 => 0: a ▷{true} b by 3e\n" +
+      "  b13 => 0: a ▷{true} b by 3b\n"));
     assertTrue(horpo.handleTodo());
     assertTrue(horpo.handleTodo());
     assertTrue(horpo.handleTodo());
     assertFalse(horpo.handleTodo());
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testSimplifyReductionToFreshVariable() {
     // additionally test splitting ≥ into parts, and 3a, 3f
@@ -247,6 +250,7 @@ public class HorpoTest {
     assertFalse(horpo.handleTodo());
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testIntegerComparison() {
     // test other cases of 3a and 3c, and 3b
@@ -366,6 +370,7 @@ public class HorpoTest {
     assertFalse(horpo.handleTodo());
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testIntegerComparisonUp() {
     TRS trs = makeTrs("f :: Int → Int f(x) → x + y | x < 100 ∧ y > 0");
@@ -381,6 +386,7 @@ public class HorpoTest {
       "  b19 => 0: x ≽{x < 100 ∧ y > 0} x + y by 1b\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testBooleanGeqStrict() {
     TRS trs = makeTrs("f :: Bool → Bool f(x) → x ∧ false | x");
@@ -395,6 +401,7 @@ public class HorpoTest {
       "  b19 => 0: x ≽{x} x ∧ false by 1b\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testBooleanGeqNonStrict() {
     TRS trs = makeTrs("f :: Bool → Bool f(x) → x ∧ true | x");
@@ -409,6 +416,7 @@ public class HorpoTest {
       "  b19 => 0: x ≽{x} x ∧ true by 1b\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testBooleanGeqFails() {
     TRS trs = makeTrs("f :: Bool → Bool f(x) → x ∨ true | ¬x");
@@ -424,6 +432,7 @@ public class HorpoTest {
       "  b19 => 0: x ≽{¬x} x ∨ true by 1b\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testTheoryComparisonWrongTheoryTypes() {
     TRS trs = makeTrs("f :: Int → Bool f(y) → false");
@@ -439,6 +448,7 @@ public class HorpoTest {
       "  b16 => 0: y ≽{true} false by 1b\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testLeftNotBounded() {
     TRS trs = makeTrs("f :: Int → Int f(x) → x - 1 | x != 0");
@@ -455,6 +465,7 @@ public class HorpoTest {
       "  b19 => 0: x ≽{x ≠ 0} x - 1 by 1b\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testDecreaseInTheoryIntegerArgument() {
     TRS trs = makeTrs("f :: Int → Int f(x) → f(x - 1) | x > 12");
@@ -482,6 +493,7 @@ public class HorpoTest {
       "  b22 => 0: f(x) ▷{x > 12} f(x - 1) by 3b\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testDecreaseInTheoryBooleanArgument() {
     TRS trs = makeTrs("f :: Bool → unit f(x) → f(¬x) | x");
@@ -496,6 +508,7 @@ public class HorpoTest {
       "  b14 => 0: x ≻{x} ¬x by 2c\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testFailedDecreaseInTheoryArgument() {
     TRS trs = makeTrs("f :: Int → Int f(x) → f(x + y) | x < 10 ∧ y ≥ 0");
@@ -513,6 +526,7 @@ public class HorpoTest {
       "  b14 => 0: x ≻{x < 10 ∧ y ≥ 0} x + y by 2c\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testFailedDecreaseInTheoryBooleanArgument() {
     TRS trs = makeTrs("f :: Bool → unit f(x) → f(false) | x ∨ ¬x");
@@ -528,6 +542,7 @@ public class HorpoTest {
       "  b14 => 0: x ≻{x ∨ ¬x} false by 2c\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testVartermDecrease() {
     TRS trs = makeTrs("f :: o → o a :: o b :: o c :: o {x :: o → o → o} f(x(a,b)) -> f(x(a, c))");
@@ -559,6 +574,7 @@ public class HorpoTest {
       "  b27 => 0: b ≻{true} c\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testAppWhenArgumentTypesDiffer() {
     TRS trs = makeTrs("f :: o → o g :: (o → o) → o h :: a → o a :: o b :: o → o " +
@@ -585,6 +601,7 @@ public class HorpoTest {
       "  b83 => 1: h ≽{true} f\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testLexWithDifferentArgumentCounts() {
     TRS trs = makeTrs("f :: o → o → o g :: o → o → o a :: o b :: o f(a) -> g(f(b,b))");
@@ -605,6 +622,7 @@ public class HorpoTest {
       "  b29 => 0: f(a) ▷{true} b\n"));
   }
 
+  // NOTE: this test is currently broken: all b{i} should be replaced by b{i+1}
   @Test
   public void testFullLex() {
     TRS trs = makeTrs("f :: o → o → o → o a :: o b :: o c :: o f(a,b,c) → f(b,c,a)");
@@ -703,7 +721,6 @@ public class HorpoTest {
     Horpo.HorpoAnswer answer = horpo.run(trs);
     assertTrue(answer == null);
   }
-
   */
 }
 

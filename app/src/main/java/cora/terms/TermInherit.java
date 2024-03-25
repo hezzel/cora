@@ -23,6 +23,7 @@ import java.util.TreeSet;
 import com.google.common.collect.ImmutableList;
 import cora.exceptions.*;
 import cora.utils.Pair;
+import cora.types.TypePrinter;
 import cora.terms.position.Position;
 import cora.terms.position.FinalPos;
 
@@ -269,26 +270,7 @@ abstract class TermInherit implements Term {
 
   /** This method returns a string representation of the current term. */
   public String toString() {
-    StringBuilder builder = new StringBuilder();
-    addToString(builder, _freeReplaceables.getUniqueNaming());
-    return builder.toString();
-  }
-
-  /** This function adds a representation of the current term to the given builder. */
-  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming) {
-    TreeSet<String> avoid = new TreeSet<String>();
-    if (renaming == null) renaming = new TreeMap<Replaceable,String>();
-    for (Replaceable x : _freeReplaceables) {
-      String name = x.queryName();
-      avoid.add(name);
-      if (renaming.containsKey(x)) avoid.add(renaming.get(x));
-    }
-    addToString(builder, renaming, avoid);
-  }
-
-  /** This function returns the default unique naming scheme for this term. */
-  public TreeMap<Replaceable,String> getUniqueNaming() {
-    return _freeReplaceables.getUniqueNaming();
+    return (new TermPrinter(new TypePrinter(), new TreeSet<String>())).print(this);
   }
 
   // the following functions are all default implementations of interface functions, to be

@@ -18,10 +18,10 @@ final class UniqueTypes {
   public static final Base stringSort = new Base("String");
 
   /** 
-   * Returns the unit sort.
+   * Returns the default sort.
    * This is not a theory sort, but used for instance as the one sort in unsorted first-order TRSs.
    */
-  public static final Base unitSort = new Base("o");
+  public static final Base defaultSort = new Base("o");
 
   static boolean isTheoryType(Type ty) {
     return

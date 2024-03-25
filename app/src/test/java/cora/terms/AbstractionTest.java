@@ -114,48 +114,6 @@ class AbstractionTest extends TermTestFoundation {
   }
 
   @Test
-  public void testRenaming() {
-    // λx.λy.λu.f(g(z2,u),z1,x) where x and u have the same name, and z1 and z2 too
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    Variable z1 = new Binder("z", baseType("o"));
-    Variable z2 = new Binder("z", baseType("o"));
-    Variable u = new Binder("x", baseType("o"));
-    Constant f = new Constant("f", arrowType(baseType("o"), arrowType(baseType("o"),
-      arrowType("o", "o"))));
-    Constant g = new Constant("g", arrowType(baseType("o"), arrowType("o", "o")));
-    Term main = (new Application(f, new Application(g, z2, u), z1)).apply(x);
-    Term abs = new Abstraction(x, new Abstraction(y, new Abstraction(u, main)));
-
-    StringBuilder builder = new StringBuilder();
-    TreeSet<String> set = new TreeSet<String>();
-    TreeMap<Replaceable,String> renaming = new TreeMap<Replaceable,String>();
-
-    assertEquals("λx.λy.λx1.f(g(z__2, x1), z__1, x)", abs.toString());
-
-    builder.setLength(0);
-    abs.addToString(builder, renaming, set);
-    assertEquals("λx.λy.λx1.f(g(z, x1), z, x)", builder.toString());
-    assertEquals(0, renaming.size());
-
-    builder.setLength(0);
-    set.add("x");
-    renaming.put(y, "yy");
-    abs.addToString(builder, renaming, set);
-    assertEquals("λx1.λy.λx2.f(g(z, x2), z, x1)", builder.toString());
-    assertEquals(0, renaming.size());
-
-    builder.setLength(0);
-    set.add("x");
-    set.add("x1");
-    set.add("x2");
-    set.add("y");
-    set.add("y1");
-    abs.addToString(builder, renaming, set);
-    assertEquals("λx3.λy2.λx4.f(g(z, x4), z, x3)", builder.toString());
-  }
-
-  @Test
   public void testToStringComplex() {
     Variable x1 = new Binder("x", baseType("o"));
     Variable x2 = new Binder("x", baseType("o"));
@@ -232,14 +190,14 @@ class AbstractionTest extends TermTestFoundation {
   public void testTheory() {
     // λx::Int.x + 1
     Variable x = new Binder("x", TypeFactory.intSort);
-    Term abs = new Abstraction(x, new Application(new PlusSymbol(), x, new IntegerValue(1)));
+    Term abs = new Abstraction(x, new Application(TheoryFactory.plusSymbol, x, new IntegerValue(1)));
     assertEquals("λx.x + 1", abs.toString());
     assertTrue(abs.isTheoryTerm());
     assertFalse(abs.isValue());
     assertNull(abs.toValue());
 
     // λy::o.0
-    Variable y = new Binder("y", TypeFactory.unitSort);
+    Variable y = new Binder("y", TypeFactory.defaultSort);
     abs = new Abstraction(y, new IntegerValue(0));
     assertFalse(abs.isTheoryTerm());
   }

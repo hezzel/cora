@@ -46,12 +46,6 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     return _name;
   }
 
-  /** Add a description of the current function symbol to the string; the type is not indicated. */
-  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
-                          Set<String> avoid) {
-    builder.append(_name);
-  }
-
   /** Returns the number of terms this constant may (at most) be applied to. */
   public int queryArity() {
     return queryType().queryArity();

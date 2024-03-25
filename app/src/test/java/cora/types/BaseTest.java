@@ -68,7 +68,7 @@ class BaseTest {
     assertTrue(UniqueTypes.isTheoryType(TypeFactory.intSort));
     assertTrue(TypeFactory.boolSort.isTheoryType());
     assertTrue(TypeFactory.stringSort.isTheoryType());
-    assertFalse(TypeFactory.unitSort.isTheoryType());
+    assertFalse(TypeFactory.defaultSort.isTheoryType());
     // despite the name, Int is only a theory type if it was created as such!
     assertFalse(intType().isTheoryType());
   }

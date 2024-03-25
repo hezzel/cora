@@ -26,7 +26,7 @@ public class EtaReducerTest {
   public void testBasicEtaReducer() {
     // λx.f(x) → f
     FunctionSymbol f = TermFactory.createConstant("f", 1);
-    Variable x = TermFactory.createBinder("x", TypeFactory.unitSort);
+    Variable x = TermFactory.createBinder("x", TypeFactory.defaultSort);
     Term s = TermFactory.createAbstraction(x, f.apply(x));
     EtaReducer eta = new EtaReducer();
     assertTrue(eta.applicable(s));
@@ -40,8 +40,8 @@ public class EtaReducerTest {
     FunctionSymbol f = TermFactory.createConstant("f", 3);
     FunctionSymbol a = TermFactory.createConstant("a", 0);
     FunctionSymbol b = TermFactory.createConstant("b", 0);
-    Variable x = TermFactory.createBinder("x", TypeFactory.unitSort);
-    Variable y = TermFactory.createBinder("y", TypeFactory.unitSort);
+    Variable x = TermFactory.createBinder("x", TypeFactory.defaultSort);
+    Variable y = TermFactory.createBinder("y", TypeFactory.defaultSort);
     Term abs = TermFactory.createAbstraction(x, TermFactory.createApp(f, y, x));
     Term s = TermFactory.createApp(abs, a, b);
     EtaReducer eta = new EtaReducer();
@@ -55,8 +55,8 @@ public class EtaReducerTest {
     // λx.(λy.f(x,y))(a, x)
     FunctionSymbol f = TermFactory.createConstant("f", 3);
     FunctionSymbol a = TermFactory.createConstant("a", 0);
-    Variable x = TermFactory.createBinder("x", TypeFactory.unitSort);
-    Variable y = TermFactory.createBinder("y", TypeFactory.unitSort);
+    Variable x = TermFactory.createBinder("x", TypeFactory.defaultSort);
+    Variable y = TermFactory.createBinder("y", TypeFactory.defaultSort);
     Term abs = TermFactory.createAbstraction(y, TermFactory.createApp(f, x, y));
       // λy.f(x,y)
     Term s = TermFactory.createAbstraction(x, TermFactory.createApp(abs, a, x));
@@ -70,8 +70,8 @@ public class EtaReducerTest {
     // (λx.f(y, x, x))(a)
     FunctionSymbol f = TermFactory.createConstant("f", 3);
     FunctionSymbol a = TermFactory.createConstant("a", 0);
-    Variable x = TermFactory.createBinder("x", TypeFactory.unitSort);
-    Variable y = TermFactory.createBinder("y", TypeFactory.unitSort);
+    Variable x = TermFactory.createBinder("x", TypeFactory.defaultSort);
+    Variable y = TermFactory.createBinder("y", TypeFactory.defaultSort);
     Term abs = TermFactory.createAbstraction(x, TermFactory.createApp(f, y, x).apply(x));
     Term s = abs.apply(a);
     EtaReducer eta = new EtaReducer();

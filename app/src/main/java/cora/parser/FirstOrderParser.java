@@ -134,7 +134,7 @@ abstract class FirstOrderParser implements Parser {
    * varlist ::= VARSDECSTART IDENTIFIER* BRACKETCLOSE
    *
    * When presented with a varlist, this function saves all the variables into the returned
-   * mapping, with the unit sort as their type (since varlists can only occur in UNSORTED TRSs).
+   * mapping, with the default sort as their type (since varlists can only occur in UNSORTED TRSs).
    * When presented with anything else, it returns null (and does not read anything).
    */
   protected LookupMap<ParserDeclaration> readVarList() {
@@ -149,7 +149,7 @@ abstract class FirstOrderParser implements Parser {
         if (ret.containsKey(name)) {
           _status.storeError("Double declaration of variable " + name, next);
         }
-        else ret.put(name, new ParserDeclaration(next, name, TypeFactory.unitSort));
+        else ret.put(name, new ParserDeclaration(next, name, TypeFactory.defaultSort));
       }
       else {
         // error handling for incorrect tokens

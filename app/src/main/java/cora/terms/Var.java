@@ -109,13 +109,6 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
     throw new IndexingError("Var", "queryInputType", index);
   }
 
-  /** Appends the name of te variable to the builder. */
-  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
-                          Set<String> avoid) {
-    if (renaming == null || !renaming.containsKey(this)) builder.append(_name);
-    else builder.append(renaming.get(this));
-  }
-
   /** @return this */
   public Variable queryVariable() {
     return this;

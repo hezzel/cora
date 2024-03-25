@@ -6,12 +6,14 @@ import java.util.Comparator;
 import java.util.TreeMap;
 import java.util.Map;
 import cora.exceptions.NotYetImplementedError;
-import cora.termination.dependency_pairs.certification.Informal;
+import cora.io.OutputModule;
+import cora.io.ProofObject;
 import cora.utils.Pair;
 import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;
 import cora.trs.TRS;
+import cora.config.Settings;
 
 public class AccessibilityChecker {
   private SmtProblem _problem;
@@ -36,9 +38,9 @@ public class AccessibilityChecker {
   private Constraint posGeq(Base iota, Type sigma) {
     switch (sigma) {
       case Base(String name):
-        return _problem.createGeq(getSortVariable(iota.toString()), getSortVariable(name));
+        return SmtFactory.createGeq(getSortVariable(iota.toString()), getSortVariable(name));
       case Arrow(Type left, Type right):
-        return _problem.createConjunction(minGre(iota, left), posGeq(iota, right));
+        return SmtFactory.createConjunction(minGre(iota, left), posGeq(iota, right));
       default:
         throw new NotYetImplementedError("accessibility has not yet been defined for product types");
     }
@@ -48,9 +50,9 @@ public class AccessibilityChecker {
   private Constraint minGre(Base iota, Type sigma) {
     switch (sigma) {
       case Base(String name):
-        return _problem.createGreater(getSortVariable(iota.toString()), getSortVariable(name));
+        return SmtFactory.createGreater(getSortVariable(iota.toString()), getSortVariable(name));
       case Arrow(Type left, Type right):
-        return _problem.createConjunction(posGeq(iota, left), minGre(iota, right));
+        return SmtFactory.createConjunction(posGeq(iota, left), minGre(iota, right));
       default:
         throw new NotYetImplementedError("accessibility has not yet been defined for product types");
     }
@@ -76,7 +78,7 @@ public class AccessibilityChecker {
     // a variable is definitely accessible in itself
     if (s.isVariable()) return;
     // abstractions are not supported, and non-patterns are not okay!
-    if (!s.isFunctionalTerm()) { _problem.require(_problem.createValue(false)); return; }
+    if (!s.isFunctionalTerm()) { _problem.require(SmtFactory.createValue(false)); return; }
     // okay, get the output type and argument types
     FunctionSymbol f = s.queryRoot();
     Type type = f.queryType();
@@ -122,43 +124,60 @@ public class AccessibilityChecker {
     return ret;
   }
 
-  private String buildSortOrderingExplanation(Valuation solution) {
-    // get all the sorts, and their calculated weights
-    ArrayList<Pair<String,Integer>> sorts = new ArrayList<Pair<String,Integer>>();
-    _sortVariables.forEach( (x, v) -> {
-      sorts.add(new Pair<String,Integer>(x, solution.queryAssignment(v)));
-    });
-    // sort them in decreasing order
-    Collections.sort(sorts, new Comparator<Pair<String,Integer>>() {
-      public int compare(Pair<String,Integer> p1, Pair<String,Integer> p2) {
-        return p2.snd() - p1.snd();
-      }
-    });
-    boolean allequal = true;
-    if (sorts.size() == 0) return "a sort ordering that equates all sorts";
-    StringBuilder ret = new StringBuilder("a sort ordering with ");
-    ret.append(sorts.get(0).fst());
-    for (int i = 1; i < sorts.size(); i++) {
-      if (sorts.get(i).snd() < sorts.get(i-1).snd()) {
-        allequal = false;
-        ret.append(" ≻ ");
-      }
-      else ret.append(" ≈ ");
-      ret.append(sorts.get(i).fst());
+  private class AccessibilityProofObject implements ProofObject {
+    private ArrayList<Pair<String,Integer>> _sorts;
+
+    private AccessibilityProofObject(Valuation solution) {
+      _sorts = new ArrayList<Pair<String,Integer>>();
+      _sortVariables.forEach( (x, v) -> {
+        _sorts.add(new Pair<String,Integer>(x, solution.queryAssignment(v)));
+      });
+      Collections.sort(_sorts, new Comparator<Pair<String,Integer>>() {
+        public int compare(Pair<String,Integer> p1, Pair<String,Integer> p2) {
+          return p2.snd() - p1.snd();
+        }
+      });
     }
-    if (allequal) return "a sort ordering that equates all sorts";
-    return ret.toString();
+
+    private AccessibilityProofObject() {
+      _sorts = null;
+    }
+
+    public Boolean queryAnswer() { return _sorts != null; }
+
+    public void justify(OutputModule module) {
+      if (_sorts == null) {
+        module.println("The system does not satisfy the preconditions to apply static " +
+                       "dependency pairs: it is not accessible function passing.");
+        return;
+      }
+      
+      module.print("The system is accessible function passing by ");
+
+      if (_sorts.size() == 0 ||
+          _sorts.get(0).snd().equals(_sorts.get(_sorts.size()-1).snd())) {
+        module.println("a sort ordering that equates all sorts.");
+        return;
+      }
+
+      module.print("a sort ordering with %s", _sorts.get(0).fst());
+      for (int i = 1; i < _sorts.size(); i++) {
+        if (_sorts.get(i).snd() < _sorts.get(i-1).snd()) module.print(" ≻ ");
+        else module.print(" = ");
+        module.print("%s", _sorts.get(i).fst());
+      }
+      module.println(".");
+    }
   }
 
-  public boolean checkAccessibility() {
+  public ProofObject checkAccessibility() {
     generateTrsConstraints();
-    Valuation solution = _problem.satisfy();
-    if (solution == null) { _result = ""; return false; }
-
-    Informal.getInstance().addProofStep("This system is accessible-function passing by " +
-      buildSortOrderingExplanation(solution) + ".\n");
-
-    return true;
+    switch (Settings.smtSolver.checkSatisfiability(_problem)) {
+      case SmtSolver.Answer.YES(Valuation solution):
+        return new AccessibilityProofObject(solution);
+      default:
+        return new AccessibilityProofObject();
+    }
   }
 
   public String querySortOrdering() {

@@ -15,7 +15,7 @@
 
 package cora.smt;
 
-public class Equal extends Comparison {
+public final class Equal extends Comparison {
   Equal(IntegerExpression left, IntegerExpression right) { super(left, right); }
   protected boolean evaluate(int l, int r) { return l == r; }
   protected String symbol() { return "="; }

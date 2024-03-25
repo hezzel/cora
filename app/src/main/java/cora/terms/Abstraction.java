@@ -209,28 +209,6 @@ class Abstraction extends TermInherit {
     return null;
   }
 
-  /**
-   * Appends a string representation of the current abstraction to the given string builder.
-   * The binder is renamed if its default name occurs in avoid.
-   */
-  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming, Set<String> avoid) {
-    String bname = _binder.queryName();
-    String name = bname;
-    for (int i = 1; avoid.contains(name); i++) name = bname + i;
-    renaming.put(_binder, name);
-    avoid.add(name);
-
-    builder.append("λ");
-    builder.append(renaming.get(_binder));
-    builder.append(".");
-    _subterm.addToString(builder, renaming, avoid);
-
-    avoid.remove(name);
-    renaming.remove(_binder);
-    // note that it is not possible that renaming[binder] was previously set, as this would violate
-    // the well-definedness constraint; hence, we do not have to restore anything here
-  }
-
   public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
     if (!term.isAbstraction()) return false;
     Variable x = _binder;

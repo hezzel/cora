@@ -85,7 +85,7 @@ public class OCocoParser extends FirstOrderParser implements Parser {
     next = _status.expect(OCocoTokenData.IDENTIFIER, "output sort");
     Base output;
     if (next != null) output = TypeFactory.createSort(next.getText());
-    else if (inputs.isEmpty()) output = TypeFactory.unitSort;
+    else if (inputs.isEmpty()) output = TypeFactory.defaultSort;
     else {
       output = inputs.get(inputs.size()-1);
       inputs.remove(inputs.size()-1);
@@ -107,7 +107,7 @@ public class OCocoParser extends FirstOrderParser implements Parser {
         _status.storeError("Cannot set arity below 0.", token);
         k = 0;
       }
-      return TypeFactory.createUnitArrow(k);
+      return TypeFactory.createDefaultArrow(k);
     }
     catch (NumberFormatException e) {
       _status.storeError("Unexpected identifier: " + text + ".  Expected an integer " +

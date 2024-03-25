@@ -1,11 +1,10 @@
 package cora.termination.dependency_pairs.processors;
 
+import cora.io.OutputModule;
 import cora.data.digraph.Digraph;
 import cora.data.digraph.SCC;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
-import cora.termination.dependency_pairs.certification.Informal;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class GraphProcessor implements Processor {
-
   @Override
   public boolean isApplicable(Problem dpp) { return true; }
 
@@ -62,33 +60,28 @@ public class GraphProcessor implements Processor {
     return subproblems;
   }
 
-  public Optional<List<Problem>> processDPP(Problem dpp) {
-    List<Problem> ret = computeAllSubproblems(dpp);
-    if (ret.size() == 1 && ret.get(0).getDPList().size() == dpp.getDPList().size()) {
-      return Optional.empty();
-    }
-
-    Informal.getInstance().addProofStep(
-      "***** Investigating the following DP problem using the graph processor:");
-    Informal.getInstance().addProofStep(dpp.toString());
-    if (ret.size() == 0) {
-      Informal.getInstance().addProofStep(
-        "As there are no SCCs, this DP problem is removed.");
-    }
-    else if (ret.size() == 1) {
-      Informal.getInstance().addProofStep(
-        "Using the graph processor, this DP problem is decreased to the following SCC:");
-      Informal.getInstance().addProofStep(ret.get(0).toString());
-    }
-    else {
-      Informal.getInstance().addProofStep(
-        "Using the graph processor, this DP problem is split into the following SCCs:");
-      for (int i = 0; i < ret.size(); i++) {
-        if (i > 0) Informal.getInstance().addProofStep("And:");
-        Informal.getInstance().addProofStep(ret.get(i).toString());
+  private class GraphProofObject extends ProcessorProofObject {
+    public GraphProofObject(Problem inp) { super(inp); }
+    public GraphProofObject(Problem inp, List<Problem> out) { super(inp, out); }
+    public String queryProcessorName() { return "Graph"; }
+    public void justify(OutputModule module) {
+      // TODO: actually print some representation of the graph
+      if (_output.size() == 0) module.println("As there are no SCCs, this DP problem is removed.");
+      else if (_output.size() == 1) {
+        module.println("There is only one SCC, so all DPs not inside the SCC can be removed:");
+      }
+      else {
+        module.println("Considering the " + _output.size() + " SCCs, this DP problem is split " +
+          "into the following new problems.");
       }
     }
+  }
 
-    return Optional.of(ret);
+  public ProcessorProofObject processDPP(Problem dpp) {
+    List<Problem> ret = computeAllSubproblems(dpp);
+    if (ret.size() == 1 && ret.get(0).getDPList().size() == dpp.getDPList().size()) {
+      return new GraphProofObject(dpp);
+    }
+    return new GraphProofObject(dpp, ret);
   }
 }

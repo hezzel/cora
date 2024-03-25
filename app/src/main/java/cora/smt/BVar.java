@@ -17,7 +17,7 @@ package cora.smt;
 
 import cora.exceptions.SmtEvaluationError;
 
-public class BVar extends Constraint {
+public final class BVar extends Constraint {
   private int _index;
 
   /** The constructor is hidden, since Constraints should be made through the SmtFactory. */

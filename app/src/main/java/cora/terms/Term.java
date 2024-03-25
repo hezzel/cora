@@ -300,24 +300,6 @@ public interface Term {
   String toString();
 
   /**
-   * Adds the string representation of the current term to the given string builder.
-   * The caller may rename some meta-variables and free variables by including those in "renaming";
-   * if the mapping for a (meta-)variable is not given, then its default name is used (but note
-   * that it is not guaranteed that different variables in the same Term have different names).
-   * Some free variables may be renamed; if the mapping for a variable is not given, then the
-   * default name for that variable is used.
-   * To get a suitable renaming, callers can use getUniqueNaming().  You can also supply null,
-   * which has the same effect as supplying an empty mapping: no free variables are renamed.)
-   */
-  void addToString(StringBuilder builder, Map<Replaceable,String> renaming);
-
-  /**
-   * This function returns a unique name for every variable and meta-variable occurring in the
-   * term.  For use in addToString.
-   */
-  Map<Replaceable,String> getUniqueNaming();
-
-  /**
    * Performs an equality check with the given other term.
    * Equality is modulo alpha (but this is only relevant for higher-order rewriting with lambdas).
    */
@@ -331,17 +313,6 @@ public interface Term {
    * terms are well-behaved.)
    */
   Term refreshBinders();
-
-  /**
-   * Adds the string representation of the current term to the given string builder.
-   * Some meta-variables and free variables may be renamed by incluing them in "renaming"; if the
-   * mapping for a (meta-)variable is not given, then the default name for that variable is used.
-   * For names of bound variables, none of the names in the "avoid" set are allowed to be used.
-   * The renaming and avoid set may not be null.
-   * (This function is primarily intended for the recursive definition of terms; for functions
-   * outside the terms package, it is recommended to use the other addToString function instead.)
-   */
-  void addToString(StringBuilder builder, Map<Replaceable,String> renaming, Set<String> avoid);
 
   /**
    * Returns the set of all variables that occur bound in the current term, cast as Replaceables.

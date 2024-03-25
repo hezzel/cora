@@ -15,7 +15,7 @@
 
 package cora.smt;
 
-public class Falsehood extends Constraint {
+public final class Falsehood extends Constraint {
   /** Private constructor, as Constraints should be made through the SmtFactory. */
   Falsehood() {}
 

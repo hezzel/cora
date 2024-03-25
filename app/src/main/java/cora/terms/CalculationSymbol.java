@@ -21,14 +21,19 @@ import java.util.Set;
 
 /** CalculationSymbols are symbols in the theory signature that can perform a computation. */
 public interface CalculationSymbol extends FunctionSymbol {
+  public enum Kind { AND, OR, GREATER, SMALLER, GEQ, LEQ, EQUALS, NEQ, NOT,
+                     PLUS, TIMES, DIV, MOD, MINUS }
+  public enum Associativity { ASSOC_LEFT, ASSOC_RIGHT, ASSOC_NONE, NOT_INFIX }
+
   public static int INFIX_ANDOR = 1;
   public static int INFIX_COMPARISON = 2;
-  public static int INFIX_NOT = 3;
-  public static int INFIX_PLUS = 4;
-  public static int INFIX_TIMES = 5;
-  public static int INFIX_DIVMOD = 5;
-  public static int INFIX_MINUS = 6;
+  public static int INFIX_PLUS = 3;
+  public static int INFIX_TIMES = 4;
+  public static int INFIX_DIVMOD = 4;
   public static int INFIX_NONE = 0;
+
+  /** Returns which of the in-built calculation symbols this represents. */
+  public Kind queryKind();
 
   /**
    * Used for printing: if symbols # and $ are printed infix (or otherwise in a special way), then
@@ -40,13 +45,8 @@ public interface CalculationSymbol extends FunctionSymbol {
   public int queryInfixPriority();
 
   /**
-   * If this is a function symbol that should be printed in infix notation for the given number of
-   * arguments, this function call will add the thus-printed term to the given string builder and
-   * return true.  If not, false will be returned.  The arguments will not be altered in any way.
-   * Objects calling this function should make sure the arguments fit the type of the function
-   * symbol.
+   * Returns the infix associativity of the function symbol.
    */
-  public boolean printInfix(StringBuilder builder, List<Term> args,
-                            Map<Replaceable,String> renaming, Set<String> avoid);
+  public Associativity queryAssociativity();
 }
 

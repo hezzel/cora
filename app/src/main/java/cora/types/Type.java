@@ -48,9 +48,6 @@ public sealed interface Type permits
   /** Returns true if and only if the type has a product type as subtype. */
   boolean hasProducts();
   
-  /** Returns a string representation of the current type. */
-  String toString();
-
   /** Returns whether the given Type is equal to us. */
   boolean equals(Type type);
 
@@ -79,12 +76,4 @@ public sealed interface Type permits
    * right) of the type.  Otherwise, an IndexingError is thrown.
    */
   Type subtype(int i);
-
-  /** Should not be called on anything but Arrow. */
-  @Deprecated
-  default Type queryArrowInputType() { return null; }
-
-  /** Should not be called on anything but Arrow. */
-  @Deprecated
-  default Type queryArrowOutputType(){ return null; }
 }

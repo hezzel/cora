@@ -30,11 +30,11 @@ public class TermFactory {
   }
 
   /**
-   * Create a non-binder variable with the given name and the unit sort, for use in unsorted
+   * Create a non-binder variable with the given name and the default sort, for use in unsorted
    * rewriting.
    */
   public static Variable createVar(String name) {
-    return new Var(name, TypeFactory.unitSort);
+    return new Var(name, TypeFactory.defaultSort);
   }
 
   /** Create a non-binder variable without a name; a name will be automatically generated. */
@@ -42,9 +42,9 @@ public class TermFactory {
     return new Var(type);
   }
 
-  /** Create a variable with auto-generated name and the unit sort, for unsorted rewriting. */
+  /** Create a variable with auto-generated name and the default sort, for unsorted rewriting. */
   public static Variable createVar() {
-    return new Var(TypeFactory.unitSort);
+    return new Var(TypeFactory.defaultSort);
   }
 
   /** Create a binder variable with the given default name and type. */
@@ -59,8 +59,8 @@ public class TermFactory {
 
   /** Create an essentially unsorted function symbol with the given name and arity. */
   public static FunctionSymbol createConstant(String name, int arity) {
-    Type type = TypeFactory.unitSort;
-    for (int i = 0; i < arity; i++) type = TypeFactory.createArrow(TypeFactory.unitSort, type);
+    Type type = TypeFactory.defaultSort;
+    for (int i = 0; i < arity; i++) type = TypeFactory.createArrow(TypeFactory.defaultSort, type);
     return new Constant(name, type);
   }
 

@@ -15,8 +15,9 @@
 
 package cora.smt;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 
 public class ConjunctionTest {
@@ -57,15 +58,10 @@ public class ConjunctionTest {
                                   // because and is evaluated left-to-right
   }
 
-  @Test(expected = cora.exceptions.IndexingError.class)
-  public void testQueryZeroChild() {
+  @Test
+  public void testQueryBadChild() {
     Conjunction conj = new Conjunction(new BVar(2), new Falsehood());
-    conj.queryChild(0);
-  }
-
-  @Test(expected = cora.exceptions.IndexingError.class)
-  public void testQueryTooLargeChild() {
-    Conjunction conj = new Conjunction(new BVar(2), new Falsehood());
-    conj.queryChild(3);
+    assertThrows(cora.exceptions.IndexingError.class, () -> conj.queryChild(0));
+    assertThrows(cora.exceptions.IndexingError.class, () -> conj.queryChild(3));
   }
 }

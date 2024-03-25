@@ -57,6 +57,6 @@ class SubtermProcessorTest {
     SubtermProcessor subProc = new SubtermProcessor();
     Problem p = DPGenerator.generateProblemFromTrs(trs);
     // TODO: do an assert with the output of this
-    if (ENABLE) assertTrue(subProc.processDPP(p).equals(Optional.empty()));
+    if (ENABLE) assertFalse(subProc.processDPP(p).applicable());
   }
 }

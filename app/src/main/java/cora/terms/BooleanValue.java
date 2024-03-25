@@ -35,12 +35,6 @@ class BooleanValue extends ValueInherit {
     else return "false";
   }
 
-  /** Add the boolean to the given string builder. */
-  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
-                          Set<String> avoid) {
-    builder.append(queryName());
-  }
-
   /** Returns the standard string representation of the symbol. */
   public String toUniqueString() {
     return queryName();

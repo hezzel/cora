@@ -15,8 +15,9 @@
 
 package cora.smt;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 
 public class MultiplicationTest {
@@ -47,15 +48,28 @@ public class MultiplicationTest {
     assertTrue(prod.evaluate() == -72);
   }
 
-  @Test(expected = cora.exceptions.IndexingError.class)
-  public void testQueryZeroChild() {
+  @Test
+  public void testQueryBadChild() {
     Multiplication prod = new Multiplication(new IValue(0), new IVar(2));
-    prod.queryChild(0);
+    assertThrows(cora.exceptions.IndexingError.class, () -> prod.queryChild(0));
+    assertThrows(cora.exceptions.IndexingError.class, () -> prod.queryChild(3));
   }
 
-  @Test(expected = cora.exceptions.IndexingError.class)
-  public void testQueryTooLargeChild() {
-    Multiplication prod = new Multiplication(new IValue(0), new IVar(2));
-    prod.queryChild(3);
+  @Test
+  public void testComparison() {
+    // a * b * c < b * d
+    // b * c < a * b * c
+    IntegerExpression a = new IVar(1);
+    IntegerExpression b = new IVar(2);
+    IntegerExpression c = new IVar(3);
+    IntegerExpression d = new IVar(4);
+    IntegerExpression abc = new Multiplication(a, new Multiplication(b, c));
+    IntegerExpression bd = new Multiplication(b, d);
+    IntegerExpression bc = new Multiplication(b, c);
+    assertTrue(abc.compareTo(bd) < 0);
+    assertTrue(bd.compareTo(abc) > 0);
+    assertTrue(bc.compareTo(abc) < 0);
+    assertTrue(abc.compareTo(bc) > 0);
+    assertTrue(abc.compareTo(abc) == 0);
   }
 }

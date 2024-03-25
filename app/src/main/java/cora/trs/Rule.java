@@ -17,12 +17,14 @@ package cora.trs;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 import cora.exceptions.IllegalRuleError;
 import cora.exceptions.NullInitialisationError;
 import cora.exceptions.TypingError;
 import cora.types.Type;
 import cora.types.TypeFactory;
+import cora.types.TypePrinter;
 import cora.terms.*;
 import cora.trs.TrsProperties.*;
 
@@ -147,16 +149,17 @@ public class Rule {
     return _properties.rootStatus().compareTo(Root.THEORY) <= 0;
   }
 
-  /** Gives a string representation of the current rule. */
+  /** Gives a string representation of the current rule (debug functionality). */
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    Map<Replaceable,String> renaming = _left.getUniqueNaming();
-    _left.addToString(builder, renaming);
+    TermPrinter printer = new TermPrinter(new TypePrinter(), Set.of());
+    TermPrinter.Renaming renaming = printer.generateUniqueNaming(_left, _right, _constraint);
+    printer.print(_left, renaming, builder);
     builder.append(" → ");
-    _right.addToString(builder, renaming);
+    printer.print(_right, renaming, builder);
     if (isConstrained()) {
       builder.append(" | ");
-      _constraint.addToString(builder, renaming);
+      printer.print(_constraint, renaming, builder);
     }
     return builder.toString();
   }
@@ -254,7 +257,7 @@ public class Rule {
           }
           else {
             throw new IllegalRuleError("right-hand side of rule [" + toString() + "] contains " +
-              "variable " + x.toString() + " of type " + x.queryType().toString() + " which does " +
+              "variable " + x.queryName() + " of type " + x.queryType().toString() + " which does " +
               "not occur on the left; only variables of theory sorts may occur fresh (and that " +
               "only in some kinds of TRSs).");
           }
@@ -271,7 +274,7 @@ public class Rule {
       }
       else {
         throw new IllegalRuleError("constraint of rule [" + toString() + "] contains variable " +
-          y.toString() + " of type " + y.queryType().toString() + " which is not a theory sort.");
+          y.queryName() + " of type " + y.queryType().toString() + " which is not a theory sort.");
       }
     }
     

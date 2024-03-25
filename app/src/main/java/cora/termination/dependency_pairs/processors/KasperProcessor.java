@@ -1,22 +1,23 @@
 package cora.termination.dependency_pairs.processors;
 
-import cora.types.TypeFactory;
+import java.util.*;
+import java.util.function.Consumer;
+
+import cora.types.*;
 import cora.terms.*;
 import cora.smt.*;
+import cora.theorytranslation.TermSmtTranslator;
+import cora.io.OutputModule;
+import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
-import cora.termination.dependency_pairs.certification.Informal;
-
-import java.util.*;
-import java.util.function.Consumer;
 
 public class KasperProcessor implements Processor {
 
   private SmtProblem _smt;
   private Map< FunctionSymbol, List<Variable> > _fnToFreshVar;
   private Map< FunctionSymbol, List<Term> > _candidates;
-  private Map<Replaceable,String> _varNaming;
 
   @Override
   public boolean isApplicable(Problem dpp) {
@@ -29,16 +30,17 @@ public class KasperProcessor implements Processor {
    */
   private Map<FunctionSymbol, List<Variable>> computeFreshVars(Problem dpp) {
     Set<FunctionSymbol> allSharps = dpp.getSharpHeads();
-    _varNaming = new TreeMap<Replaceable,String>();
 
     Map<FunctionSymbol, List<Variable>> ret = new TreeMap<>();
     allSharps
       .forEach( fSharp -> {
-        List<Variable> newVars = DPGenerator.generateVars(fSharp.queryType());
-        for (int i = 0; i < newVars.size(); i++) {
-          _varNaming.put(newVars.get(i), "arg_" + (i+1));
+        Type ty = fSharp.queryType();
+        ArrayList<Variable> newvars = new ArrayList<Variable>();
+        for (int i = 1; ty instanceof Arrow(Type left, Type right); i++) {
+          newvars.add(TermFactory.createVar("arg_" + i, left));
+          ty = right;
         }
-        ret.put(fSharp, newVars);
+        ret.put(fSharp, newvars);
       });
 
     return ret;
@@ -229,15 +231,15 @@ public class KasperProcessor implements Processor {
   private void requiresCtrs(Map<FunctionSymbol, IVar> intMap) {
     intMap.forEach( (f, ivar) -> {
       int upperBound = _candidates.get(f).size()-1;
-      _smt.require(SmtProblem.createLeq(SmtProblem.createValue(0), ivar));
-      _smt.require(SmtProblem.createLeq(ivar, SmtProblem.createValue(upperBound)));
+      _smt.require(SmtFactory.createLeq(SmtFactory.createValue(0), ivar));
+      _smt.require(SmtFactory.createLeq(ivar, SmtFactory.createValue(upperBound)));
     });
   }
 
   private void requireAtLeastOneStrict(Map<DP, BVar> boolMap) {
     ArrayList<Constraint> disj = new ArrayList<Constraint>();
     for (BVar b : boolMap.values()) disj.add(b);
-    _smt.require(SmtProblem.createDisjunction(disj));
+    _smt.require(SmtFactory.createDisjunction(disj));
   }
 
   private void putDpRequirements(Map<FunctionSymbol, IVar> intMap, Map<DP, BVar> boolMap, Problem dpp) {
@@ -257,27 +259,25 @@ public class KasperProcessor implements Processor {
           Term instRj = instantiateCandidate(_candidates.get(rhsHead).get(j), rhs);
 
           SmtProblem validityProblem = new SmtProblem();
+          TermSmtTranslator tst = new TermSmtTranslator(validityProblem);
 
           // translate the constraint and instantiated candidates to smt language
-          Constraint constraintTranslation =
-            TermSmtTranslator.translateConstraint(ctr, validityProblem);
-          IntegerExpression candLiExpr =
-            TermSmtTranslator.translateIntegerExpression(instLi, validityProblem);
-          IntegerExpression candRjExpr =
-            TermSmtTranslator.translateIntegerExpression(instRj, validityProblem);
+          Constraint constraintTranslation = tst.translateConstraint(ctr);
+          IntegerExpression candLiExpr = tst.translateIntegerExpression(instLi);
+          IntegerExpression candRjExpr = tst.translateIntegerExpression(instRj);
           
           // fSharpDisjunction = nu(leftroot) != i \/ nu(rightroot) != j
           Constraint fSharpDisjunction =
-            SmtProblem.createDisjunction (
-              SmtProblem.createUnequal(intMap.get(lhsHead), SmtProblem.createValue(i)),
-              SmtProblem.createUnequal(intMap.get(rhsHead), SmtProblem.createValue(j))
+            SmtFactory.createDisjunction (
+              SmtFactory.createUnequal(intMap.get(lhsHead), SmtFactory.createValue(i)),
+              SmtFactory.createUnequal(intMap.get(rhsHead), SmtFactory.createValue(j))
             );
 
           // check one: if left ≥ right doesn't even hold, then we can't have that choice of
           // candidates
           validityProblem
-            .requireImplication(constraintTranslation, SmtProblem.createGeq(candLiExpr, candRjExpr));
-          if (!validityProblem.isValid()) {
+            .requireImplication(constraintTranslation, SmtFactory.createGeq(candLiExpr, candRjExpr));
+          if (!Settings.smtSolver.checkValidity(validityProblem)) {
             _smt.require(fSharpDisjunction);
             continue;
           }
@@ -287,22 +287,22 @@ public class KasperProcessor implements Processor {
           validityProblem.clear();
           validityProblem.requireImplication (
             constraintTranslation,
-            SmtProblem.createConjunction (
-              SmtProblem.createGeq(candLiExpr, SmtProblem.createValue(0)),
-              SmtProblem.createGreater(candLiExpr, candRjExpr)
+            SmtFactory.createConjunction (
+              SmtFactory.createGeq(candLiExpr, SmtFactory.createValue(0)),
+              SmtFactory.createGreater(candLiExpr, candRjExpr)
             ));
 
-          if(validityProblem.isValid()) {
+          if (Settings.smtSolver.checkValidity(validityProblem)) {
             _smt.require(
-              SmtProblem.createDisjunction(
+              SmtFactory.createDisjunction(
                 fSharpDisjunction,
                 boolMap.get(dp)
               ));
           } else {
             _smt.require (
-              SmtProblem.createDisjunction(
+              SmtFactory.createDisjunction(
                 fSharpDisjunction,
-                SmtProblem.createNegation(boolMap.get(dp))
+                SmtFactory.createNegation(boolMap.get(dp))
               ));
           }
         }
@@ -311,7 +311,7 @@ public class KasperProcessor implements Processor {
   }
 
   @Override
-  public Optional<List<Problem>> processDPP(Problem dpp) {
+  public IntegerFunctionProof processDPP(Problem dpp) {
     _smt = new SmtProblem();
 
     _fnToFreshVar = computeFreshVars(dpp);
@@ -320,8 +320,7 @@ public class KasperProcessor implements Processor {
     addSimpleCandidates();
     addComplexCandidates(dpp);
     updateCandidates(dpp);
-    if (!everyFunctionHasAtLeastOneCandidate()) return Optional.empty();
-
+    if (!everyFunctionHasAtLeastOneCandidate()) return new IntegerFunctionProof(dpp);
 
     Map<FunctionSymbol, IVar> intMap = generateIVars(dpp);
     requiresCtrs(intMap);
@@ -329,9 +328,12 @@ public class KasperProcessor implements Processor {
     requireAtLeastOneStrict(boolMap);
     putDpRequirements(intMap, boolMap, dpp);
 
-    Valuation result = _smt.satisfy();
+    Valuation result = switch (Settings.smtSolver.checkSatisfiability(_smt)) {
+      case SmtSolver.Answer.YES(Valuation val) -> val;
+      default -> null;
+    };
 
-    if(result == null) return Optional.empty();
+    if (result == null) return new IntegerFunctionProof(dpp);
 
     // we found a solution! Store the information from the valuation
     TreeSet<Integer> indexOfOrientedDPs = new TreeSet<>();
@@ -349,40 +351,6 @@ public class KasperProcessor implements Processor {
       else { remainingDPs.add(dp); }
     }  
 
-    // now let's generate output to the user
-    Informal.getInstance().addProofStep(
-      "***** Investigating the following DP problem using the integer function processor:");
-    Informal.getInstance().addProofStep(dpp.toString());
-    Informal.getInstance().addProofStep("We use the following interpretation function.");
-    candFun.forEach(
-      (f, cand) -> {
-        StringBuilder builder = new StringBuilder("  J( " + f.toString() + " ) = ");
-        cand.addToString(builder, _varNaming);
-        Informal.getInstance().addProofStep(builder.toString());
-      });
-    Informal.getInstance().addProofStep("We thus have: ");
-    for (int index = 0; index < originalDPs.size(); index++) {
-      DP dp = originalDPs.get(index);
-      String left = instantiateCandidate(candFun.get(dp.lhs().queryRoot()), dp.lhs()).toString();
-      String right = instantiateCandidate(candFun.get(dp.rhs().queryRoot()), dp.rhs()).toString();
-      if (indexOfOrientedDPs.contains(index)) {
-        Informal.getInstance().addProofStep("  " + dp.constraint().toString() + " ⊨ " + left +
-          " > " + right + "  (and " + left + "≥ 0)    for the DP " + dp.toString());
-      }
-      else {
-        Informal.getInstance().addProofStep("  " + dp.constraint().toString() + " ⊨ " + left +
-          " ≥ " + right + "    for the DP " + dp.toString());
-      }
-    }
-    Informal.getInstance().addProofStep("And we remove all strictly oriented DPs.");
-    if (remainingDPs.size() == 0) {
-      Informal.getInstance().addProofStep(
-        "As there are no DPs left, the problem is removed altogether.\n");
-      return Optional.of(List.of());
-    }   
-    else {
-      Informal.getInstance().addProofStep("");  // end with an empty line
-      return Optional.of(List.of(new Problem(remainingDPs, dpp.getTRS())));
-    }
+    return new IntegerFunctionProof(dpp, indexOfOrientedDPs, _fnToFreshVar, candFun);
   }
 }

@@ -96,37 +96,4 @@ public class ReplaceableList implements Iterable<Replaceable> {
     }
     return ret;
   }
-
-  /** Returns a mapping with a unique name for every element in this list. */
-  public TreeMap<Replaceable,String> getUniqueNaming() {
-    // determine if any (meta-)variable names occur more than once
-    TreeMap<String,TreeSet<Replaceable>> map = new TreeMap<String,TreeSet<Replaceable>>();
-    for (Replaceable x : _elements) {
-      String name = x.queryName();
-      if (!map.containsKey(name)) {
-        TreeSet<Replaceable> tmp = new TreeSet<Replaceable>();
-        tmp.add(x);
-        map.put(name, tmp);
-      }
-      else map.get(name).add(x);  // element name occurs more than once!
-    }
-    TreeMap<Replaceable,String> renaming = new TreeMap<Replaceable,String>();
-    // for any that do, come up with new names; for any that don't, use the default name
-    for (TreeSet<Replaceable> set : map.values()) {
-      if (set.size() == 1) {
-        Replaceable x = set.first();
-        renaming.put(x, x.queryName());
-      }
-      else {
-        int counter = 1;
-        for (Replaceable x : set) {
-          String name = x.queryName() + "__" + counter;
-          counter++;
-          for (; map.containsKey(name); counter++) name = x.queryName() + "__" + counter;
-          renaming.put(x, name);
-        }
-      }
-    }
-    return renaming;
-  }
 }

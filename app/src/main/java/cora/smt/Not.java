@@ -15,7 +15,7 @@
 
 package cora.smt;
 
-public class Not extends Constraint {
+public final class Not extends Constraint {
   private Constraint _negated;
 
   /** The constructor is hidden, since Constraints should be made through the SmtFactory. */

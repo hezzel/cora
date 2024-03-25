@@ -173,7 +173,7 @@ public class ApplicationTest extends TermTestFoundation {
     Type i = zero.queryType();
     Term x = new Var("x", arrowType(i, i));
     Term y = new Binder("y", i);
-    Term t = new Application(new PlusSymbol(), x.apply(zero), y);
+    Term t = new Application(TheoryFactory.plusSymbol, x.apply(zero), y);
     assertTrue(t.isTheoryTerm());
     assertFalse(t.isValue());
     assertTrue(t.toValue() == null);
@@ -182,7 +182,7 @@ public class ApplicationTest extends TermTestFoundation {
     t = z.apply(zero);
     assertFalse(t.isTheoryTerm());
     // +(1, 2)
-    t = new Application(new PlusSymbol(), new IntegerValue(1), new IntegerValue(2));
+    t = new Application(TheoryFactory.plusSymbol, new IntegerValue(1), new IntegerValue(2));
     assertTrue(t.isTheoryTerm());
     assertFalse(t.isValue());
     assertTrue(t.toValue() == null);
@@ -1019,14 +1019,6 @@ public class ApplicationTest extends TermTestFoundation {
     Variable c = new Var("x", baseType("o"));
     Term combi = new Application(a, b, c);
     assertTrue(combi.toString().equals("x__3(x__1, x__2)"));
-    StringBuilder builder = new StringBuilder();
-    combi.addToString(builder, null);
-    assertTrue(builder.toString().equals("x(x, x)"));
-    TreeMap<Replaceable,String> naming = new TreeMap<Replaceable,String>();
-    naming.put(b, "y");
-    builder.setLength(0);
-    combi.addToString(builder, naming);
-    assertTrue(builder.toString().equals("x(y, x)"));
   }
 
   @Test

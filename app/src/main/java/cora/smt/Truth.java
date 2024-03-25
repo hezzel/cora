@@ -15,7 +15,7 @@
 
 package cora.smt;
 
-public class Truth extends Constraint {
+public final class Truth extends Constraint {
   /** Private constructor, as Constraints should be made through the SmtFactory. */
   Truth() {}
 

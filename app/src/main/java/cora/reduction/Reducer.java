@@ -81,4 +81,13 @@ public class Reducer {
     }
     return null;
   }
+
+  public Reduction normalise(Term s) {
+    ArrayList<Term> steps = new ArrayList<Term>();
+    do {
+      steps.add(s);
+      s = leftmostInnermostReduce(s);
+    } while (s != null);
+    return new Reduction(steps);
+  }
 }

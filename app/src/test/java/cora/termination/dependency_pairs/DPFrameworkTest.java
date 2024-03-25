@@ -2,8 +2,7 @@ package cora.termination.dependency_pairs;
 
 import cora.reader.CoraInputReader;
 import cora.trs.TRS;
-import cora.termination.Handler;
-import cora.termination.dependency_pairs.certification.Informal;
+import cora.termination.TerminationHandler;
 import cora.utils.Pair;
 import org.junit.jupiter.api.Test;
 
@@ -24,8 +23,6 @@ class DPFrameworkTest {
     Pair<Handler.Answer, Optional<String>> proof = dp.proveTermination(trs);
 
     System.out.println(proof.fst());
-
-    System.out.println(Informal.getInstance().getInformalProof());
 */
   }
 }

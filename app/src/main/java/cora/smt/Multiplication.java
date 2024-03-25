@@ -18,7 +18,7 @@ package cora.smt;
 import java.util.ArrayList;
 import cora.exceptions.IndexingError;
 
-public class Multiplication extends IntegerExpression {
+public final class Multiplication extends IntegerExpression {
   protected ArrayList<IntegerExpression> _children;
 
   protected void addChild(IntegerExpression child) {
@@ -68,14 +68,22 @@ public class Multiplication extends IntegerExpression {
     builder.append(")");
   }
 
-  public boolean equals(IntegerExpression other) {
-    if (!(other instanceof Multiplication)) return false;
-    Multiplication a = (Multiplication)other;
-    if (a.numChildren() != _children.size()) return false;
-    for (int i = 0; i < _children.size(); i++) {
-      if (!_children.get(i).equals(a.queryChild(i+1))) return false;
-    }
-    return true;
+  public int compareTo(IntegerExpression other) {
+    return switch (other) {
+      case IValue v -> 1;
+      case IVar x -> 1;
+      case ConstantMultiplication cm -> compareTo(cm.queryChild()) <= 0 ? -1 : 1;
+      case Addition a -> 1;
+      case Multiplication m -> {
+        for (int i = _children.size(), j = m.numChildren(); i > 0 && j > 0; i--, j--) {
+          int c = _children.get(i-1).compareTo(m.queryChild(j));
+          if (c != 0) yield c;
+        }
+        yield _children.size() - m.numChildren();
+      }
+      case Division d -> -1;
+      case Modulo m -> -1;
+    };
   }
 }
 

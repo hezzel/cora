@@ -15,8 +15,9 @@
 
 package cora.smt;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class IValueTest {
   @Test
@@ -24,13 +25,19 @@ public class IValueTest {
     IValue x = new IValue(-3);
     assertTrue(x.evaluate() == -3);
     assertTrue(x.toString().equals("(- 3)"));
+    assertTrue(x.multiply(5).equals(new IValue(-15)));
+    assertTrue(x.negate().equals(new IValue(3)));
   }
 
   @Test
-  public void testEquality() {
+  public void testComparison() {
     IValue x = new IValue(3);
+    assertTrue(x.compareTo(new IValue(3)) == 0);
     assertTrue(x.equals(new IValue(3)));
+    assertTrue(x.compareTo(new IValue(-3)) > 0);
     assertFalse(x.equals(new IValue(-3)));
-    assertFalse(x.equals(new Addition(new IValue(1), new IValue(2))));
+    assertTrue(x.compareTo(new IValue(4)) < 0);
+    assertFalse(x.equals(new IValue(4)));
+    assertTrue(x.compareTo(new ConstantMultiplication(1, new IValue(1))) < 0);
   }
 }

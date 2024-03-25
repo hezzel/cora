@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -17,10 +17,10 @@ package cora.smt;
 
 import cora.exceptions.SmtEvaluationError;
 
-public class IVar extends IntegerExpression {
+public final class IVar extends IntegerExpression {
   private int _index;
 
-  /** The constructor is hidden, since IntegerExpressions should be made through the SmtFactory. */
+  /** The constructor is hidden, since IntegerExpressions should be made through an SmtProblem. */
   IVar(int i) {
     _index = i;
   }
@@ -37,8 +37,16 @@ public class IVar extends IntegerExpression {
     builder.append("i" + _index);
   }
 
-  public boolean equals(IntegerExpression other) {
-    return (other instanceof IVar) && (((IVar)other).queryIndex() == _index);
+  public int compareTo(IntegerExpression other) {
+    return switch (other) {
+      case IValue v -> 1;
+      case IVar x -> _index  - x.queryIndex();
+      case ConstantMultiplication cm -> compareTo(cm.queryChild()) <= 0 ? -1 : 1;
+      case Addition a -> -1;
+      case Multiplication m -> -1;
+      case Division d -> -1;
+      case Modulo m -> -1;
+    };
   }
 }
 

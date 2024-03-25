@@ -15,9 +15,6 @@
 
 package cora.smt;
 
-import java.util.ArrayList;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,8 +30,9 @@ public class DivModTest {
 
   @Test
   public void testModuloBasics() {
-    Modulo modulo = new Modulo(new Minus(new IVar(2)), new Multiplication(new IValue(2), new IVar(3)));
-    assertTrue(modulo.queryNumerator().equals(new Minus(new IVar(2))));
+    Modulo modulo = new Modulo(new ConstantMultiplication(-1, new IVar(2)),
+      new Multiplication(new IValue(2), new IVar(3)));
+    assertTrue(modulo.queryNumerator().equals(new ConstantMultiplication(-1, new IVar(2))));
     assertTrue(modulo.queryDenominator().equals(new Multiplication(new IValue(2), new IVar(3))));
     assertTrue(modulo.toString().equals("(mod (- i2) (* 2 i3))"));
   }
@@ -62,18 +60,44 @@ public class DivModTest {
   }
 
   @Test
-  public void testEquality() {
-    IntegerExpression d1 = new Division(new IValue(3), new IVar(2));
-    IntegerExpression d2 = new Division(new IValue(3), new IVar(2));
-    IntegerExpression d3 = new Division(new IValue(3), new IVar(3));
-    IntegerExpression m1 = new Modulo(new IValue(3), new IVar(2));
-    IntegerExpression m2 = new Modulo(new IValue(3), new IVar(2));
-    IntegerExpression m3 = new Modulo(new IValue(3), new IVar(3));
-    assertTrue(d1.equals(d2));
-    assertTrue(m1.equals(m2));
-    assertFalse(d1.equals(d3));
-    assertFalse(m1.equals(m3));
-    assertFalse(d1.equals(m1));
-    assertFalse(m1.equals(d1));
+  public void testConstantMultiplication() {
+    IVar x = new IVar(7);
+    IValue c = new IValue(3);
+    IntegerExpression d = new Division(x, c);
+    IntegerExpression m = new Modulo(x, c);
+    assertTrue(d.negate().equals(new ConstantMultiplication(-1, d)));
+    assertTrue(m.multiply(3).equals(new ConstantMultiplication(3, m)));
+    assertTrue(d.multiply(1).equals(d));
+    assertTrue(m.multiply(0).equals(new IValue(0)));
+  }
+
+  @Test
+  public void testDivisionComparison() {
+    IntegerExpression a = new Division(new IValue(3), new IVar(2));
+    IntegerExpression b = new Division(new IValue(3), new IVar(2));
+    IntegerExpression c = new Division(new IValue(2), new IVar(3));
+    IntegerExpression d = new Division(new IValue(3), new IVar(1));
+    IntegerExpression e = new Division(new IValue(4), new IVar(2));
+    IntegerExpression f = new Division(new IValue(-3), new IVar(2));
+    assertTrue(a.compareTo(b) == 0);
+    assertTrue(a.compareTo(c) < 0);
+    assertTrue(a.compareTo(d) > 0);
+    assertTrue(a.compareTo(e) < 0);
+    assertTrue(a.compareTo(f) > 0);
+  }
+
+  @Test
+  public void testModuloComparison() {
+    IntegerExpression a = new Modulo(new IValue(3), new IVar(2));
+    IntegerExpression b = new Modulo(new IValue(3), new IVar(2));
+    IntegerExpression c = new Modulo(new IValue(2), new IVar(3));
+    IntegerExpression d = new Modulo(new IValue(3), new IVar(1));
+    IntegerExpression e = new Modulo(new IValue(4), new IVar(2));
+    IntegerExpression f = new Modulo(new IValue(-3), new IVar(2));
+    assertTrue(a.compareTo(b) == 0);
+    assertTrue(a.compareTo(c) < 0);
+    assertTrue(a.compareTo(d) > 0);
+    assertTrue(a.compareTo(e) < 0);
+    assertTrue(a.compareTo(f) > 0);
   }
 }

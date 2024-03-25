@@ -38,12 +38,6 @@ class IntegerValue extends ValueInherit {
     return "" + _value;
   }
 
-  /** Add the number to the given string builder. */
-  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
-                          Set<String> avoid) {
-    builder.append(_value);
-  }
-
   /** Returns the standard string representation of the symbol. */
   public String toUniqueString() {
     return "" + _value;

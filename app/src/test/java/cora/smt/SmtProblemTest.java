@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,35 +15,41 @@
 
 package cora.smt;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.TreeSet;
 
 public class SmtProblemTest {
-  @Test
-  public void testToString() {
+  private SmtProblem exampleProblem() {
     // x > 1 ∨ x < 0
     // y = 3 ∧ (y != x ∨ z)
     // y = 9
     SmtProblem problem = new SmtProblem();
-    IVar x = problem.createIntegerVariable(1);
-    IVar y = problem.createIntegerVariable(2);
-    BVar z = problem.createBooleanVariable(3);
-    problem.require(problem.createDisjunction(problem.createGreater(x, problem.createValue(1)),
-      problem.createSmaller(x, problem.createValue(0))));
-    problem.require(problem.createConjunction(problem.createEqual(y, problem.createValue(3)),
-      problem.createDisjunction(problem.createUnequal(y, x), z)));
-    problem.require(problem.createEqual(y, problem.createValue(9)));
+    IVar x = problem.createIntegerVariable();
+    IVar y = problem.createIntegerVariable();
+    BVar z = problem.createBooleanVariable();
+    problem.require(SmtFactory.createDisjunction(SmtFactory.createGreater(x,
+      SmtFactory.createValue(1)), SmtFactory.createSmaller(x, SmtFactory.createValue(0))));
+    problem.require(SmtFactory.createConjunction(SmtFactory.createEqual(y,
+      SmtFactory.createValue(3)), SmtFactory.createDisjunction(SmtFactory.createUnequal(y, x), z)));
+    problem.require(SmtFactory.createEqual(y, SmtFactory.createValue(9)));
+    return problem;
+  }
+
+  @Test
+  public void testToString() {
+    SmtProblem problem = exampleProblem();
     assertTrue(problem.toString().equals(
       "(or (> i1 1) (> 0 i1))\n" +
-      "(and (= i2 3) (or (distinct i2 i1) b3))\n" +
+      "(and (= i2 3) (or (distinct i2 i1) b1))\n" +
       "(= i2 9)\n"));
     assertTrue(problem.toString(1).equals(
       "(or (> i1 1) (> 0 i1))\n"));
     assertTrue(problem.toString(3).equals(problem.toString()));
     assertTrue(problem.toString(4).equals(problem.toString()));
     assertTrue(problem.toString(-2).equals(
-      "(and (= i2 3) (or (distinct i2 i1) b3))\n" +
+      "(and (= i2 3) (or (distinct i2 i1) b1))\n" +
       "(= i2 9)\n"));
     assertTrue(problem.toString(-3).equals(problem.toString()));
     assertTrue(problem.toString(-4).equals(problem.toString()));
@@ -51,22 +57,28 @@ public class SmtProblemTest {
   }
 
   @Test
-  public void testCreateWithoutIndex() {
+  public void testCombinedConstraint() {
+    SmtProblem problem = exampleProblem();
+    assertTrue(problem.queryCombinedConstraint().toString().equals("(and " +
+      "(or (> i1 1) (> 0 i1)) " +
+      "(= i2 3) " +
+      "(or (distinct i2 i1) b1) " +
+      "(= i2 9))"));
+  }
+
+  @Test
+  public void testCreateVariables() {
     SmtProblem problem = new SmtProblem();
     IVar a = problem.createIntegerVariable();
     IVar b = problem.createIntegerVariable();
     BVar c = problem.createBooleanVariable();
-    IVar d = problem.createIntegerVariable(5);
-    IVar e = problem.createIntegerVariable(-1);
-    IVar f = problem.createIntegerVariable();
-    BVar g = problem.createBooleanVariable();
+    IVar d = problem.createIntegerVariable();
+    BVar e = problem.createBooleanVariable();
     assertTrue(a.queryIndex() == 1);
     assertTrue(b.queryIndex() == 2);
     assertTrue(c.queryIndex() == 1);
-    assertTrue(d.queryIndex() == 5);
-    assertTrue(e.queryIndex() == -1);
-    assertTrue(f.queryIndex() == 6);
-    assertTrue(g.queryIndex() == 2);
+    assertTrue(d.queryIndex() == 3);
+    assertTrue(e.queryIndex() == 2);
   }
 }
 

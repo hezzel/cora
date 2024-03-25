@@ -143,30 +143,6 @@ public class ReplaceableListTest {
     assertTrue(overlap.size() == 2);
     assertTrue(overlap.contains(y));
     assertTrue(overlap.contains(u));
-   }
-
-  @Test
-  public void testRenaming() {
-    Type a = TypeFactory.createSort("a");
-    Type b = TypeFactory.createSort("b");
-    Type ab = TypeFactory.createArrow(a, b);
-    TreeSet<Replaceable> set = new TreeSet<Replaceable>();
-    Replaceable x1 = new Var("x", a); set.add(x1);
-    Replaceable x2 = new Var("x", a); set.add(x2);
-    Replaceable x3 = new Binder("x", b); set.add(x3);
-    Replaceable x4 = makeMetaVar("x"); set.add(x4);
-    Replaceable y = new Binder("y", b); set.add(y);
-    Replaceable z1 = new Binder("z", ab); set.add(z1);
-    Replaceable z2 = new Var("z", ab); set.add(z2);
-    ReplaceableList lst = new ReplaceableList(set);
-    TreeMap<Replaceable,String> naming = lst.getUniqueNaming();
-    assertTrue(naming.get(x1).equals("x__2"));
-    assertTrue(naming.get(x2).equals("x__3"));
-    assertTrue(naming.get(x3).equals("x__4"));
-    assertTrue(naming.get(x4).equals("x__1"));  // meta-variables come before variables
-    assertTrue(naming.get(y).equals("y"));
-    assertTrue(naming.get(z1).equals("z__2"));  // binders come after non-binders
-    assertTrue(naming.get(z2).equals("z__1"));
   }
 }
 

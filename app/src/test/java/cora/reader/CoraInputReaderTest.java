@@ -394,7 +394,7 @@ public class CoraInputReaderTest {
         "3:9: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
         "5:1: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
         "5:11: Expected term of type o, but got function symbol a which has type 3.\n" +
-        "6:1: right-hand side of rule [f(2) → 3] contains variable 3 of type nat which does " +
+        "6:1: right-hand side of rule [f(2) → _3] contains variable 3 of type nat which does " +
         "not occur on the left; only variables of theory sorts may occur fresh (and that only " +
         "in some kinds of TRSs).\n"));
       return;

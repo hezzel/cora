@@ -15,8 +15,9 @@
 
 package cora.smt;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 
 public class AdditionTest {
@@ -30,11 +31,43 @@ public class AdditionTest {
   }
 
   @Test
+  public void testMultiply() {
+    IVar x = new IVar(3);
+    IVar y = new IVar(5);
+    IntegerExpression xy = new Multiplication(x, y);
+    Addition plus = new Addition(new IValue(2), new Addition(x, new ConstantMultiplication(3, xy)));
+    assertTrue(plus.multiply(0).equals(new IValue(0)));
+    assertTrue(plus.multiply(1).equals(plus));
+    assertTrue(plus.multiply(5).equals(
+      new Addition(new IValue(10), new Addition(new ConstantMultiplication(5, x),
+      new ConstantMultiplication(15, xy)))));
+    assertTrue(plus.negate().equals(
+      new Addition(new IValue(-2), new Addition(new ConstantMultiplication(-1, x),
+      new ConstantMultiplication(-3, xy)))));
+  }
+
+  @Test
   public void testEquality() {
     IntegerExpression plus = new Addition(new IValue(1), new IValue(2));
     assertTrue(plus.equals(new Addition(new IValue(1), new IValue(2))));
     assertFalse(plus.equals(new Multiplication(new IValue(1), new IValue(2))));
     assertFalse(plus.equals(new IValue(3)));
+  }
+
+  @Test
+  public void testComparison() {
+    IntegerExpression x = new IVar(1);
+    IntegerExpression u = new IVar(2);
+    IntegerExpression y = new IVar(3);
+    IntegerExpression z = new IVar(4);
+    IntegerExpression o = new IValue(1);
+    IntegerExpression a = new Addition(o, new Addition(x, y)); // 1 + x + y
+    IntegerExpression b = new Addition(x, y);                  // x + y
+    assertTrue(a.compareTo(b) > 0);
+    assertTrue(b.compareTo(a) < 0);
+    assertTrue(a.compareTo(z) > 0);
+    assertTrue(a.compareTo(new Addition(x,z)) < 0);
+    assertTrue(a.compareTo(new Addition(y, new Addition(x, new IValue(1)))) != 0);
   }
 
   @Test
@@ -54,15 +87,10 @@ public class AdditionTest {
     assertTrue(plus.evaluate() == 13);
   }
 
-  @Test(expected = cora.exceptions.IndexingError.class)
-  public void testQueryZeroChild() {
+  @Test
+  public void testQueryBadChild() {
     Addition plus = new Addition(new IValue(0), new IVar(2));
-    plus.queryChild(0);
-  }
-
-  @Test(expected = cora.exceptions.IndexingError.class)
-  public void testQueryTooLargeChild() {
-    Addition plus = new Addition(new IValue(0), new IVar(2));
-    plus.queryChild(3);
+    assertThrows(cora.exceptions.IndexingError.class, () -> plus.queryChild(0));
+    assertThrows(cora.exceptions.IndexingError.class, () -> plus.queryChild(3));
   }
 }

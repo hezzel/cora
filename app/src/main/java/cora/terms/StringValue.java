@@ -80,12 +80,6 @@ class StringValue extends ValueInherit {
     return _escapedValue;
   }
 
-  /** Adds a readable (escaped) representation of the string to the builder. */
-  public void addToString(StringBuilder builder, Map<Replaceable,String> renaming,
-                          Set<String> avoid) {
-    builder.append(_escapedValue);
-  }
-
   /** Returns the standard string representation of the symbol. */
   public String toUniqueString() {
     return _escapedValue;

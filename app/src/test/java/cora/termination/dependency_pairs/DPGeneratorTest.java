@@ -90,11 +90,13 @@ class DPGeneratorTest {
     Term f = TermFactory.createConstant("f",arr);
     Term x = TermFactory.createVar(TypeFactory.boolSort);
 
-    System.out.println(f + ":" + f.queryType());
+    // TODO
 
-    System.out.println("fake eta result");
+    //System.out.println(f + ":" + f.queryType());
 
-    System.out.println(DPGenerator.fakeEta(f.apply(x)));
+    //System.out.println("fake eta result");
+
+    //System.out.println(DPGenerator.fakeEta(f.apply(x)));
   }
 
   @Test
@@ -104,9 +106,10 @@ class DPGeneratorTest {
         "Bool -> b -> c -> d -> e"
       );
     Term f = TermFactory.createConstant("f",arr);
-    System.out.println("Normal lhs: " + f + ":" + f.queryType());
-    System.out.println("DP lhs: " + DPGenerator.generateSharpEta(f));
-    System.out.println("With f : " + DPGenerator.generateSharpEta(f).queryRoot().queryType());
+    // TODO
+    //System.out.println("Normal lhs: " + f + ":" + f.queryType());
+    //System.out.println("DP lhs: " + DPGenerator.generateSharpEta(f));
+    //System.out.println("With f : " + DPGenerator.generateSharpEta(f).queryRoot().queryType());
   }
 
   @Test
@@ -122,10 +125,11 @@ class DPGeneratorTest {
     Term rhs = TermFactory.createApp(f, List.of(gc));
     Term eta = DPGenerator.fakeEta(rhs);
 
+    // TODO
     // Printing part
-    System.out.println("Original lhs: " + lhs + " : " + lhs.queryType());
-    System.out.println("Original rhs: " + rhs + " : " + rhs.queryType());
-    System.out.println("Fake eta expanded form: " + eta + " : " + eta.queryType());
+    //System.out.println("Original lhs: " + lhs + " : " + lhs.queryType());
+    //System.out.println("Original rhs: " + rhs + " : " + rhs.queryType());
+    //System.out.println("Fake eta expanded form: " + eta + " : " + eta.queryType());
 //    System.out.println(DPGenerator.genRightCandidates(eta));
 
 //    DP t = new DP(f, f);
