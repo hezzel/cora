@@ -177,12 +177,14 @@ public class ConstantTest extends TermTestFoundation {
     assertTrue(f.substitute(gamma).equals(f));
     assertTrue(f.freeReplaceables().size() == 0);
     assertTrue(f.boundVars().size() == 0);
+    assertTrue(f.hasSubterm(f));
     Term aa = new Constant("g", a);
     assertTrue(aa.isFirstOrder());
     assertTrue(aa.isPattern());
     assertTrue(f.refreshBinders() == f);
     String s = null;
     assertFalse(f.equals(s));
+    assertFalse(f.hasSubterm(aa));
   }
 
   @Test

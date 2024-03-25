@@ -192,6 +192,21 @@ abstract class TermInherit implements Term {
     return ret;
   }
 
+  /** Returns whether all alpha-equal variants of this have other as a subterm. */
+  public boolean hasSubterm(Term other) {
+    for (Pair<Term,Position> p : querySubterms()) {
+      if (p.fst().equals(other)) {
+        // check that other doesn't freely contain binder variables that are bound in us
+        for (Replaceable x : other.freeReplaceables()) {
+          if (x.queryReplaceableKind() == Replaceable.KIND_BINDER &&
+              !_freeReplaceables.contains(x)) return false;
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
   /** This function should handle querySubterm(pos), but may skip the case for an empty position. */
   protected abstract Term querySubtermMain(Position pos);
 
