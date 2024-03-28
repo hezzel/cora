@@ -192,6 +192,13 @@ public interface Term {
   boolean isApplicative();
 
   /**
+   * Returns true if the current term has other as a subterm.  Here,  subterms below an abstraction
+   * which contain the binder variable are not counted, since they are not guaranteed to be a
+   * subterm under alpha-conversion.
+   */
+  boolean hasSubterm(Term other);
+
+  /**
    * Returns the set of all full positions in the current Term, in leftmost innermost order.
    * Note that this set is non-empty as it always contains the empty position (representing the
    * current term), and does not contain partial positions (e.g., the position for f(x) in a term

@@ -143,9 +143,9 @@ public class TheoryArgumentsProcessor implements Processor {
       else module.println("We use the following theory arguments function:");
       module.startTable();
       for (FunctionSymbol f : _targs.keySet()) {
-        module.nextColumn("%s", f.toString());
+        module.nextColumn("%a", f.toString());
         module.nextColumn(":");
-        module.println("%s", _targs.get(f).toString());
+        module.println("%a", _targs.get(f).toString());
       }
       module.endTable();
       if (_output.size() == 1) module.println("This yields:");
