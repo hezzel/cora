@@ -23,6 +23,7 @@ public final class IVar extends IntegerExpression {
   /** The constructor is hidden, since IntegerExpressions should be made through an SmtProblem. */
   IVar(int i) {
     _index = i;
+    _simplified = true;
   }
 
   public int queryIndex() {
@@ -33,6 +34,10 @@ public final class IVar extends IntegerExpression {
     throw new SmtEvaluationError("i" + _index);
   }
 
+  public IntegerExpression simplify() {
+    return this;
+  }
+
   public void addToSmtString(StringBuilder builder) {
     builder.append("i" + _index);
   }
@@ -41,7 +46,7 @@ public final class IVar extends IntegerExpression {
     return switch (other) {
       case IValue v -> 1;
       case IVar x -> _index  - x.queryIndex();
-      case ConstantMultiplication cm -> compareTo(cm.queryChild()) <= 0 ? -1 : 1;
+      case CMult cm -> compareTo(cm.queryChild()) <= 0 ? -1 : 1;
       case Addition a -> -1;
       case Multiplication m -> -1;
       case Division d -> -1;

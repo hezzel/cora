@@ -52,7 +52,7 @@ public class SmtFactory {
 
   public static IntegerExpression createNegation(IntegerExpression arg) {
     if (arg == null) throw new NullInitialisationError("Negation", "argument");
-    return new ConstantMultiplication(-1, arg);
+    return new CMult(-1, arg);
   }
 
   public static IntegerExpression createDivision(IntegerExpression arg1, IntegerExpression arg2) {

@@ -17,7 +17,7 @@ package charlie.smt;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.ArrayList;
+import java.util.List;
 
 public class AdditionTest {
   @Test
@@ -34,15 +34,15 @@ public class AdditionTest {
     IVar x = new IVar(3);
     IVar y = new IVar(5);
     IntegerExpression xy = new Multiplication(x, y);
-    Addition plus = new Addition(new IValue(2), new Addition(x, new ConstantMultiplication(3, xy)));
+    Addition plus = new Addition(new IValue(2), new Addition(x, new CMult(3, xy)));
     assertTrue(plus.multiply(0).equals(new IValue(0)));
     assertTrue(plus.multiply(1).equals(plus));
     assertTrue(plus.multiply(5).equals(
-      new Addition(new IValue(10), new Addition(new ConstantMultiplication(5, x),
-      new ConstantMultiplication(15, xy)))));
+      new Addition(new IValue(10), new Addition(new CMult(5, x),
+      new CMult(15, xy)))));
     assertTrue(plus.negate().equals(
-      new Addition(new IValue(-2), new Addition(new ConstantMultiplication(-1, x),
-      new ConstantMultiplication(-3, xy)))));
+      new Addition(new IValue(-2), new Addition(new CMult(-1, x),
+      new CMult(-3, xy)))));
   }
 
   @Test
@@ -71,11 +71,7 @@ public class AdditionTest {
 
   @Test
   public void testToString() {
-    ArrayList<IntegerExpression> args = new ArrayList<IntegerExpression>();
-    args.add(new IValue(-3));
-    args.add(new IValue(7));
-    args.add(new IVar(0));
-    IntegerExpression plus = new Addition(args);
+    IntegerExpression plus = new Addition(List.of(new IValue(-3), new IValue(7), new IVar(0)));
     assertTrue(plus.toString().equals("(+ (- 3) 7 i0)"));
   }
 
@@ -91,5 +87,64 @@ public class AdditionTest {
     Addition plus = new Addition(new IValue(0), new IVar(2));
     assertThrows(charlie.exceptions.IndexingError.class, () -> plus.queryChild(0));
     assertThrows(charlie.exceptions.IndexingError.class, () -> plus.queryChild(3));
+  }
+
+  @Test
+  public void testSimplified() {
+    IntegerExpression x = new IVar(1);
+    IntegerExpression y = new IVar(2);
+    IntegerExpression k = new IValue(3);
+    IntegerExpression a;
+
+    a = new Addition(List.of(k, x, y));
+    assertTrue(a.isSimplified());
+    a = new Addition(List.of(x, k, y));
+    assertFalse(a.isSimplified());
+    a = new Addition(List.of(k, new CMult(-4, x), y));
+    assertTrue(a.isSimplified());
+    a = new Addition(List.of(x, x, y));
+    assertFalse(a.isSimplified());
+    a = new Addition(x, new Multiplication(k, y));
+    assertFalse(a.isSimplified());
+    a = new Addition(List.of(k, new IValue(7), x));
+    assertFalse(a.isSimplified());
+    a = new Addition(List.of(x, y, new CMult(3, y)));
+    assertFalse(a.isSimplified());
+    a = new Addition(new CMult(-2, y), new CMult(3, y));
+    assertFalse(a.isSimplified());
+  }
+
+  @Test
+  public void testSimplify() {
+    IntegerExpression x = new IVar(1);
+    IntegerExpression y = new IVar(2);
+    IntegerExpression one = new IValue(1);
+    IntegerExpression two = new IValue(2);
+    IntegerExpression three = new IValue(3);
+    IntegerExpression xy = new Multiplication(x, y);
+    IntegerExpression a, s;
+
+    a = new Addition(one, two);
+    assertTrue(a.simplify().equals(three));
+
+    a = new Addition(y, x);
+    assertTrue(a.simplify().equals(new Addition(x, y)));
+
+    a = new Addition(List.of(x, y, x));
+    assertTrue(a.simplify().equals(new Addition(new CMult(2, x), y)));
+
+    a = new Addition(List.of(new CMult(3, x), y, new CMult(2, x), new CMult(-1, y)));
+    assertTrue(a.simplify().equals(new CMult(5, x)));
+
+    a = new Addition(List.of(new CMult(2, xy), x, new CMult(-1, xy), new CMult(-3, x)));
+    s = a.simplify();
+    assertTrue(s.isSimplified());
+    assertTrue(s.equals(new Addition(new CMult(-2, x), xy)));
+
+    a = new Addition(x, new CMult(-1, x));
+    assertTrue(a.simplify().equals(new IValue(0)));
+
+    a = new Addition(List.of(x, new CMult(3, new Addition(x, one)), new IValue(-4)));
+    assertTrue(a.simplify().equals(new Addition(new IValue(-1), new CMult(4, x))));
   }
 }

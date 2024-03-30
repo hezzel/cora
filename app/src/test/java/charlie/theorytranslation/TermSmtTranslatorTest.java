@@ -69,7 +69,7 @@ public class TermSmtTranslatorTest {
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     Term t = TheoryFactory.minusSymbol.apply(x);
     IntegerExpression e = tst.translateIntegerExpression(t);
-    assertTrue(e instanceof ConstantMultiplication);
+    assertTrue(e instanceof CMult);
     assertTrue(e.toString().equals("(- i1)"));
   }
 

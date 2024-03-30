@@ -57,7 +57,7 @@ public class MixedCompareToTest {
     ArrayList<IntegerExpression> arr = createDifferentIntegerExpressions();
     for (int i = 0; i < arr.size(); i++) {
       IntegerExpression a = arr.get(i);
-      IntegerExpression ca = new ConstantMultiplication(2, a);
+      IntegerExpression ca = new CMult(2, a);
       assertTrue(a.compareTo(a) == 0);
       for (int j = 0; j < arr.size(); j++) {
         IntegerExpression b = arr.get(j);
@@ -73,7 +73,7 @@ public class MixedCompareToTest {
     ArrayList<IntegerExpression> arr = createDifferentIntegerExpressions();
     for (int i = 0; i < arr.size(); i++) {
       IntegerExpression a = arr.get(i);
-      IntegerExpression ca = new ConstantMultiplication(2, a);
+      IntegerExpression ca = new CMult(2, a);
       assertTrue(a.compareTo(a) == 0);
       for (int j = 0; j < arr.size(); j++) {
         IntegerExpression b = arr.get(j);
@@ -92,7 +92,7 @@ public class MixedCompareToTest {
       assertTrue(arr.get(i).compareTo(arr.get(0)) > 0);
     }
     IntegerExpression constant = new IValue(5);
-    IntegerExpression cmult = new ConstantMultiplication(-1, new IValue(-1));
+    IntegerExpression cmult = new CMult(-1, new IValue(-1));
     assertTrue(constant.compareTo(cmult) < 0);
     assertTrue(cmult.compareTo(constant) > 0);
   }

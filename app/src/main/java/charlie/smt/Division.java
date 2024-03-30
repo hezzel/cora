@@ -23,6 +23,7 @@ public final class Division extends IntegerExpression {
   Division(IntegerExpression n, IntegerExpression d) {
     _numerator = n;
     _denominator = d;
+    checkSimplified();
   }
 
   public IntegerExpression queryNumerator() {
@@ -39,15 +40,57 @@ public final class Division extends IntegerExpression {
    * _denominator returns in Java when negative values are concerned.
    */
   public int evaluate() {
-    int d = _denominator.evaluate();
+    return evaluateFor(_numerator.evaluate(), _denominator.evaluate());
+  }
+
+  private static int evaluateFor(int n, int d) {
     if (d == 0) return 0; // let's just make dividing by 0 return 0
-    int n = _numerator.evaluate();
     int sign = (n >= 0 && d >= 0) || (n < 0 && d < 0) ? 1 : -1;
     int abs_n = n >= 0 ? n : - n;
     int abs_d = d >= 0 ? d : - d;
     if (n >= 0) return sign * (abs_n / abs_d);
     else if (abs_n % abs_d == 0) return sign * (abs_n / abs_d);
     else return sign * (abs_n / abs_d + 1);
+  }
+
+  /**
+   * Helper function for the constructor: this sets _simplified to true if the division is
+   * currently presented in simplified form.
+   */
+  private void checkSimplified() {
+    if (_numerator instanceof IValue && _denominator instanceof IValue) return;
+    if (!_numerator.isSimplified() || !_denominator.isSimplified()) return;
+    if (_denominator instanceof IValue k) {
+      _simplified = k.queryValue() != 1 && k.queryValue() >= 0;
+    }   
+    else if (_denominator instanceof CMult cm) {
+      _simplified = cm.queryConstant() >= 2;
+    }   
+    else _simplified = true;
+  }
+
+  public IntegerExpression simplify() {
+    if (_simplified) return this;
+    IntegerExpression n = _numerator.simplify();
+    IntegerExpression d = _denominator.simplify();
+    switch (_denominator) {
+      case IValue k:
+        if (n instanceof IValue i) return new IValue(evaluateFor(i.queryValue(), k.queryValue()));
+        if (k.queryValue() == 1) return _numerator;
+        if (k.queryValue() == -1) return _numerator.multiply(-1); // a div -1 = -a
+        if (k.queryValue() < 0) { // a div -b = - (a div b)
+          IntegerExpression ret = new CMult(-1, new Division(n, k.multiply(-1)));
+          return ret.simplify();
+        }
+        return new Division(n, d);
+      case CMult cm:
+        if (cm.queryConstant() < 0) {
+          IntegerExpression ret = new CMult(-1, new Division(n, cm.multiply(-1)));
+          return ret.simplify();
+        }
+      default:
+        return new Division(n, d);
+    }
   }
 
   public void addToSmtString(StringBuilder builder) {
@@ -58,12 +101,11 @@ public final class Division extends IntegerExpression {
     builder.append(")");
   }
 
-
   public int compareTo(IntegerExpression other) {
     return switch (other) {
       case IValue v -> 1;
       case IVar x -> 1;
-      case ConstantMultiplication cm -> compareTo(cm.queryChild()) <= 0 ? -1 : 1;
+      case CMult cm -> compareTo(cm.queryChild()) <= 0 ? -1 : 1;
       case Addition a -> 1;
       case Multiplication m -> 1;
       case Division d -> {
