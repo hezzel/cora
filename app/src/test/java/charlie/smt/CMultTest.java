@@ -24,7 +24,8 @@ public class CMultTest {
     CMult cm =
       new CMult(-1, new Addition(new IValue(-4), new IVar(1)));
     assertTrue(cm.queryChild().equals(new Addition(new IValue(-4), new IVar(1))));
-    assertTrue(cm.toString().equals("(- (+ (- 4) i1))"));
+    assertTrue(cm.toSmtString().equals("(- (+ (- 4) i1))"));
+    assertTrue(cm.toString().equals("-(-4 + i1)"));
   }
 
   @Test
@@ -57,11 +58,26 @@ public class CMultTest {
     CMult c = new CMult(0, xy);
     CMult d = new CMult(1, xy);
     CMult e = new CMult(2, xy);
-    assertTrue(a.toString().equals("(* (- 2) (* i1 i2))"));
-    assertTrue(b.toString().equals("(- (* i1 i2))"));
-    assertTrue(c.toString().equals("(* 0 (* i1 i2))"));
-    assertTrue(d.toString().equals("(* 1 (* i1 i2))"));
-    assertTrue(e.toString().equals("(* 2 (* i1 i2))"));
+    assertTrue(a.toString().equals("-2 * i1 * i2"));
+    assertTrue(b.toString().equals("-(i1 * i2)"));
+    assertTrue(c.toString().equals("0 * i1 * i2"));
+    assertTrue(d.toString().equals("1 * i1 * i2"));
+    assertTrue(e.toString().equals("2 * i1 * i2"));
+  }
+
+  @Test
+  public void testToSmtString() {
+    IntegerExpression xy = new Multiplication(new IVar(1), new IVar(2));
+    CMult a = new CMult(-2, xy);
+    CMult b = new CMult(-1, xy);
+    CMult c = new CMult(0, xy);
+    CMult d = new CMult(1, xy);
+    CMult e = new CMult(2, xy);
+    assertTrue(a.toSmtString().equals("(* (- 2) (* i1 i2))"));
+    assertTrue(b.toSmtString().equals("(- (* i1 i2))"));
+    assertTrue(c.toSmtString().equals("(* 0 (* i1 i2))"));
+    assertTrue(d.toSmtString().equals("(* 1 (* i1 i2))"));
+    assertTrue(e.toSmtString().equals("(* 2 (* i1 i2))"));
   }
 
   @Test

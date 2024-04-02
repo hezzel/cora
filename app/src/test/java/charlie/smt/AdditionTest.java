@@ -18,6 +18,7 @@ package charlie.smt;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
+import charlie.util.Pair;
 
 public class AdditionTest {
   @Test
@@ -43,6 +44,32 @@ public class AdditionTest {
     assertTrue(plus.negate().equals(
       new Addition(new IValue(-2), new Addition(new CMult(-1, x),
       new CMult(-3, xy)))));
+  }
+
+  @Test
+  public void testAdd() {
+    IVar x = new IVar(3);
+    IVar y = new IVar(2);
+    Addition xy = new Addition(x, y);
+    assertTrue(xy.add(0).equals(xy));
+    assertTrue(xy.add(-4).equals(new Addition(new IValue(-4), xy)));
+    Addition oyx = new Addition(new IValue(1), new Addition(y, x));
+    assertTrue(oyx.add(5).equals(new Addition(List.of(new IValue(6), y, x))));
+    assertTrue(oyx.add(-2).isSimplified());
+    assertTrue(oyx.add(-1).isSimplified());
+    assertTrue(oyx.add(-1).equals(new Addition(y, x)));
+  }
+
+  @Test
+  public void testSplit() {
+    IVar x = new IVar(1);
+    IVar y = new IVar(2);
+    Addition a = new Addition(List.of(x, new IValue(3), new CMult(-1, y), new CMult(2, x),
+      new CMult(-7, x), new CMult(-3, new Multiplication(x, y)), new IValue(-4)));
+    Pair<IntegerExpression,IntegerExpression> p = a.split();
+    assertTrue(p.fst().equals(new Addition(List.of(x, new CMult(2, x)))));
+    assertTrue(p.snd().equals(new Addition(List.of(new IValue(1), y, new CMult(7, x),
+      new CMult(3, new Multiplication(x, y))))));
   }
 
   @Test
@@ -72,7 +99,8 @@ public class AdditionTest {
   @Test
   public void testToString() {
     IntegerExpression plus = new Addition(List.of(new IValue(-3), new IValue(7), new IVar(0)));
-    assertTrue(plus.toString().equals("(+ (- 3) 7 i0)"));
+    assertTrue(plus.toSmtString().equals("(+ (- 3) 7 i0)"));
+    assertTrue(plus.toString().equals("-3 + 7 + i0"));
   }
 
   @Test
@@ -111,6 +139,8 @@ public class AdditionTest {
     a = new Addition(List.of(x, y, new CMult(3, y)));
     assertFalse(a.isSimplified());
     a = new Addition(new CMult(-2, y), new CMult(3, y));
+    assertFalse(a.isSimplified());
+    a = new Addition(List.of(x));
     assertFalse(a.isSimplified());
   }
 

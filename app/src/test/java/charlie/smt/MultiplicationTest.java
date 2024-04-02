@@ -39,7 +39,8 @@ public class MultiplicationTest {
   public void testToString() {
     IntegerExpression prod =
       new Multiplication(List.of(new IValue(-3), new IValue(7), new IVar(0)));
-    assertTrue(prod.toString().equals("(* (- 3) 7 i0)"));
+    assertTrue(prod.toSmtString().equals("(* (- 3) 7 i0)"));
+    assertTrue(prod.toString().equals("-3 * 7 * i0"));
   }
 
   @Test
@@ -97,6 +98,8 @@ public class MultiplicationTest {
     assertFalse(m.isSimplified());
     m = new Multiplication(List.of(x, x, y));
     assertTrue(m.isSimplified());
+    m = new Multiplication(List.of(y));
+    assertFalse(m.isSimplified());
   }
 
   @Test

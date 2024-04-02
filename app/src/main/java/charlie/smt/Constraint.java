@@ -30,7 +30,13 @@ public sealed abstract class Constraint
   /** Equality check between Constraints */
   public abstract boolean equals(Constraint other);
 
-  public String toString() {
+  public final String toString() {
+    ConstraintPrinter printer = new ConstraintPrinter();
+    return printer.print(this);
+  }
+
+  /** Returns an smt-lib compliant presentation of the current constraint. */
+  public final String toSmtString() {
     StringBuilder builder = new StringBuilder();
     addToSmtString(builder);
     return builder.toString();

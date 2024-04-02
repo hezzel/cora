@@ -24,9 +24,9 @@ public class SmtProblemTest {
     // y = 3 ∧ (y != x ∨ z)
     // y = 9
     SmtProblem problem = new SmtProblem();
-    IVar x = problem.createIntegerVariable();
-    IVar y = problem.createIntegerVariable();
-    BVar z = problem.createBooleanVariable();
+    IVar x = problem.createIntegerVariable("x");
+    IVar y = problem.createIntegerVariable("y");
+    BVar z = problem.createBooleanVariable("z");
     problem.require(SmtFactory.createDisjunction(SmtFactory.createGreater(x,
       SmtFactory.createValue(1)), SmtFactory.createSmaller(x, SmtFactory.createValue(0))));
     problem.require(SmtFactory.createConjunction(SmtFactory.createEqual(y,
@@ -39,16 +39,16 @@ public class SmtProblemTest {
   public void testToString() {
     SmtProblem problem = exampleProblem();
     assertTrue(problem.toString().equals(
-      "(or (> i1 1) (> 0 i1))\n" +
-      "(and (= i2 3) (or (distinct i2 i1) b1))\n" +
-      "(= i2 9)\n"));
+      "([x] >= 2) or (0 >= 1 + [x])\n" +
+      "([y] = 3) and (([y] # [x]) or [z])\n" +
+      "[y] = 9\n"));
     assertTrue(problem.toString(1).equals(
-      "(or (> i1 1) (> 0 i1))\n"));
+      "([x] >= 2) or (0 >= 1 + [x])\n"));
     assertTrue(problem.toString(3).equals(problem.toString()));
     assertTrue(problem.toString(4).equals(problem.toString()));
     assertTrue(problem.toString(-2).equals(
-      "(and (= i2 3) (or (distinct i2 i1) b1))\n" +
-      "(= i2 9)\n"));
+      "([y] = 3) and (([y] # [x]) or [z])\n" +
+      "[y] = 9\n"));
     assertTrue(problem.toString(-3).equals(problem.toString()));
     assertTrue(problem.toString(-4).equals(problem.toString()));
     assertTrue(problem.toString(0).equals(""));
@@ -57,26 +57,31 @@ public class SmtProblemTest {
   @Test
   public void testCombinedConstraint() {
     SmtProblem problem = exampleProblem();
-    assertTrue(problem.queryCombinedConstraint().toString().equals("(and " +
-      "(or (> i1 1) (> 0 i1)) " +
-      "(= i2 3) " +
-      "(or (distinct i2 i1) b1) " +
-      "(= i2 9))"));
+    assertTrue(problem.queryCombinedConstraint().toString().equals(
+      "(([x] >= 2) or (0 >= 1 + [x])) and " +
+      "([y] = 3) and " +
+      "(([y] # [x]) or [z]) and " +
+      "([y] = 9)"));
   }
 
   @Test
   public void testCreateVariables() {
     SmtProblem problem = new SmtProblem();
     IVar a = problem.createIntegerVariable();
-    IVar b = problem.createIntegerVariable();
+    IVar b = problem.createIntegerVariable("x");
     BVar c = problem.createBooleanVariable();
-    IVar d = problem.createIntegerVariable();
-    BVar e = problem.createBooleanVariable();
+    IVar d = problem.createIntegerVariable("x");
+    BVar e = problem.createBooleanVariable("y");
     assertTrue(a.queryIndex() == 1);
     assertTrue(b.queryIndex() == 2);
     assertTrue(c.queryIndex() == 1);
     assertTrue(d.queryIndex() == 3);
     assertTrue(e.queryIndex() == 2);
+    assertTrue(a.queryName().equals("i1"));
+    assertTrue(b.queryName().equals("[x]"));
+    assertTrue(c.queryName().equals("b1"));
+    assertTrue(d.queryName().equals("[x]"));
+    assertTrue(e.queryName().equals("[y]"));
   }
 }
 

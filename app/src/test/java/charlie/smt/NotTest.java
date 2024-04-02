@@ -25,7 +25,8 @@ public class NotTest {
     IntegerExpression right = new IVar(4);
     Constraint comp = SmtFactory.createGreater(left, right);
     Constraint neg = SmtFactory.createNegation(comp);
-    assertTrue(neg.toString().equals("(not (> (+ 3 i7) i4))"));
+    assertTrue(neg.toSmtString().equals("(not (>= (+ 3 i7 (- 1) (- i4)) 0))"));
+    assertTrue(neg.toString().equals("not (2 + i7 >= i4)"));
   }
 
   @Test
@@ -48,6 +49,6 @@ public class NotTest {
   @Test
   public void testQueryChild() {
     Not n = new Not(SmtFactory.createGeq(new IVar(1), new IValue(3)));
-    assertTrue(n.queryChild().toString().equals("(>= i1 3)"));
+    assertTrue(n.queryChild().toString().equals("i1 >= 3"));
   }
 }

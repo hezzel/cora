@@ -24,7 +24,8 @@ public class DivModTest {
     Division division = new Division(new Addition(new IValue(-4), new IVar(1)), new IValue(5));
     assertTrue(division.queryNumerator().equals(new Addition(new IValue(-4), new IVar(1))));
     assertTrue(division.queryDenominator().equals(new IValue(5)));
-    assertTrue(division.toString().equals("(div (+ (- 4) i1) 5)"));
+    assertTrue(division.toSmtString().equals("(div (+ (- 4) i1) 5)"));
+    assertTrue(division.toString().equals("(-4 + i1) / 5"));
   }
 
   @Test
@@ -33,7 +34,8 @@ public class DivModTest {
       new Multiplication(new IValue(2), new IVar(3)));
     assertTrue(modulo.queryNumerator().equals(new CMult(-1, new IVar(2))));
     assertTrue(modulo.queryDenominator().equals(new Multiplication(new IValue(2), new IVar(3))));
-    assertTrue(modulo.toString().equals("(mod (- i2) (* 2 i3))"));
+    assertTrue(modulo.toSmtString().equals("(mod (- i2) (* 2 i3))"));
+    assertTrue(modulo.toString().equals("(-i2) % (2 * i3)"));
   }
   
   @Test

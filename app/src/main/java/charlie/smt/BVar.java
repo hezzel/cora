@@ -19,18 +19,29 @@ import charlie.exceptions.SmtEvaluationError;
 
 public final class BVar extends Constraint {
   private int _index;
+  private String _name;
 
-  /** The constructor is hidden, since Constraints should be made through the SmtFactory. */
+  /** The constructors are hidden, since Constraints should be made through the SmtFactory. */
   BVar(int i) {
     _index = i;
+    _name = "b" + _index;
+  }
+
+  BVar(int i, String name) {
+    _index = i;
+    _name = "[" + name + "]";
   }
 
   public int queryIndex() {
     return _index;
   }
 
+  public String queryName() {
+    return _name;
+  }
+
   public boolean evaluate() {
-    throw new SmtEvaluationError("b" + _index);
+    throw new SmtEvaluationError(_name);
   }
 
   public void addToSmtString(StringBuilder builder) {

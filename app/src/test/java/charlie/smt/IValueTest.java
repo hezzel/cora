@@ -23,7 +23,8 @@ public class IValueTest {
   public void testBasics() {
     IValue x = new IValue(-3);
     assertTrue(x.evaluate() == -3);
-    assertTrue(x.toString().equals("(- 3)"));
+    assertTrue(x.toString().equals("-3"));
+    assertTrue(x.toSmtString().equals("(- 3)"));
     assertTrue(x.multiply(5).equals(new IValue(-15)));
     assertTrue(x.negate().equals(new IValue(3)));
     assertTrue(x.isSimplified());

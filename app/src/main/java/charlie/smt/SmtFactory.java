@@ -88,37 +88,37 @@ public class SmtFactory {
   public static Constraint createGreater(IntegerExpression left, IntegerExpression right) {
     if (left == null) throw new NullInitialisationError("Greater", "left argument");
     if (right == null) throw new NullInitialisationError("Greater", "right argument");
-    return new Greater(left, right);
+    return new Geq0(left, new Addition(new IValue(1), right));
   }
 
   public static Constraint createSmaller(IntegerExpression left, IntegerExpression right) {
     if (left == null) throw new NullInitialisationError("Greater", "reversed right argument");
     if (right == null) throw new NullInitialisationError("Greater", "reversed left argument");
-    return new Greater(right, left);
+    return new Geq0(right, new Addition(new IValue(1), left));
   }
 
   public static Constraint createGeq(IntegerExpression left, IntegerExpression right) {
     if (left == null) throw new NullInitialisationError("Geq", "left argument");
     if (right == null) throw new NullInitialisationError("Geq", "right argument");
-    return new Geq(left, right);
+    return new Geq0(left, right);
   }
 
   public static Constraint createLeq(IntegerExpression left, IntegerExpression right) {
     if (left == null) throw new NullInitialisationError("Geq", "reversed right argument");
     if (right == null) throw new NullInitialisationError("Geq", "reversed left argument");
-    return new Geq(right, left);
+    return new Geq0(right, left);
   }
 
   public static Constraint createEqual(IntegerExpression left, IntegerExpression right) {
     if (left == null) throw new NullInitialisationError("Equal", "left argument");
     if (right == null) throw new NullInitialisationError("Equal", "right argument");
-    return new Equal(left, right);
+    return new Is0(left, right);
   }
 
   public static Constraint createUnequal(IntegerExpression left, IntegerExpression right) {
     if (left == null) throw new NullInitialisationError("Distinct", "left argument");
     if (right == null) throw new NullInitialisationError("Distinct", "right argument");
-    return new Distinct(left, right);
+    return new Neq0(left, right);
   }
 
   public static Constraint createNegation(Constraint c) {

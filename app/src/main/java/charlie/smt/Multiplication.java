@@ -82,7 +82,7 @@ public final class Multiplication extends IntegerExpression {
       if (child instanceof IValue || child instanceof Addition) return;
       if (i > 0 && _children.get(i-1).compareTo(child) > 0) return;
     }
-    _simplified = true;
+    _simplified = _children.size() >= 2;
   }
 
   /**

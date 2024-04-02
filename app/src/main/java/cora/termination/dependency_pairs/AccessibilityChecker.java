@@ -30,7 +30,7 @@ public class AccessibilityChecker {
 
   private IVar getSortVariable(String sort) {
     if (!_sortVariables.containsKey(sort)) {
-      _sortVariables.put(sort, _problem.createIntegerVariable());
+      _sortVariables.put(sort, _problem.createIntegerVariable(sort));
     }
     return _sortVariables.get(sort);
   }

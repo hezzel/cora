@@ -41,10 +41,28 @@ public class SmtProblem implements Iterable<Constraint> {
     return new IVar(_lastIntegerIndex);
   }
 
+  /**
+   * Creates an integer variable with an index that has not yet been used, and the given name to be
+   * used only for printing (and debugging) purposes.
+   */
+  public IVar createIntegerVariable(String name) {
+    _lastIntegerIndex++;
+    return new IVar(_lastIntegerIndex, name);
+  }
+
   /** Creates a boolean variable with an index that has not yet been used. */
   public BVar createBooleanVariable() {
     _lastBooleanIndex++;
     return new BVar(_lastBooleanIndex);
+  }
+
+  /**
+   * Creates a boolean variable with an index that has not yet been used, and the given name to be
+   * used only for printing (and debugging) purposes.
+   */
+  public BVar createBooleanVariable(String name) {
+    _lastBooleanIndex++;
+    return new BVar(_lastBooleanIndex, name);
   }
 
   /**
@@ -109,8 +127,9 @@ public class SmtProblem implements Iterable<Constraint> {
   /** Returns a string representation of all constraints in the problem, for debugging purposes */
   public String toString() {
     StringBuilder ret = new StringBuilder();
+    ConstraintPrinter printer = new ConstraintPrinter();
     for (int i = 0; i < _constraints.size(); i++) {
-      _constraints.get(i).addToSmtString(ret);
+      printer.print(_constraints.get(i), ret);
       ret.append("\n");
     }
     return ret.toString();
@@ -119,11 +138,12 @@ public class SmtProblem implements Iterable<Constraint> {
   /** Returns a string representation of the first n, or last -n constraints, for debugging. */
   public String toString(int num) {
     StringBuilder ret = new StringBuilder();
+    ConstraintPrinter printer = new ConstraintPrinter();
     int start = 0, end = _constraints.size();
     if (num > 0) { if (_constraints.size() > num) end = num; }
     else { start = _constraints.size() + num; if (start < 0) start = 0; }
     for (int i = start; i < end; i++) {
-      _constraints.get(i).addToSmtString(ret);
+      printer.print(_constraints.get(i), ret);
       ret.append("\n");
     }
     return ret.toString();

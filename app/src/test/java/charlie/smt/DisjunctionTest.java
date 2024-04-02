@@ -32,30 +32,34 @@ public class DisjunctionTest {
 
   @Test
   public void testEquality() {
-    Constraint disj = new Disjunction(new BVar(1), new Greater(new IValue(2), new IVar(3)));
-    assertTrue(disj.equals(new Disjunction(new BVar(1), new Greater(new IValue(2), new IVar(3)))));
-    assertFalse(disj.equals(new Conjunction(new BVar(1), new Greater(new IValue(2), new IVar(3)))));
-    assertFalse(
-      disj.equals(new Disjunction(new Greater(new IValue(2), new IVar(3)), new BVar(1))));
+    Constraint disj =
+      new Disjunction(new BVar(1), SmtFactory.createGreater(new IValue(2), new IVar(3)));
+    assertTrue(disj.equals(new Disjunction(new BVar(1),
+      SmtFactory.createGreater(new IValue(2), new IVar(3)))));
+    assertFalse(disj.equals(new Conjunction(new BVar(1),
+      SmtFactory.createGreater(new IValue(2), new IVar(3)))));
+    assertFalse(disj.equals(new Disjunction(
+      SmtFactory.createGreater(new IValue(2), new IVar(3)), new BVar(1))));
   }
 
   @Test
   public void testToString() {
     ArrayList<Constraint> args = new ArrayList<Constraint>();
     args.add(new Truth());
-    args.add(new Geq(new IValue(7), new IVar(12)));
-    args.add(new BVar(12));
+    args.add(SmtFactory.createGeq(new IValue(7), new IVar(12)));
+    args.add(new BVar(12, "x"));
     Constraint disj = new Disjunction(args);
-    assertTrue(disj.toString().equals("(or true (>= 7 i12) b12)"));
+    assertTrue(disj.toSmtString().equals("(or true (>= (+ 7 (- i12)) 0) b12)"));
+    assertTrue(disj.toString().equals("true or (7 >= i12) or [x]"));
   }
 
   @Test
   public void testEvaluate() {
-    Constraint disj = new Disjunction(new Greater(new IValue(3), new IValue(12)),
-      new Disjunction(new Falsehood(), new Geq(new IValue(0), new IValue(0))));
+    Constraint disj = new Disjunction(SmtFactory.createGreater(new IValue(3), new IValue(12)),
+      new Disjunction(new Falsehood(), SmtFactory.createGeq(new IValue(0), new IValue(0))));
     assertTrue(disj.evaluate());
-    disj = new Disjunction(new Greater(new IValue(3), new IValue(12)),
-      new Disjunction(new Falsehood(), new Geq(new IValue(0), new IValue(1))));
+    disj = new Disjunction(SmtFactory.createGreater(new IValue(3), new IValue(12)),
+      new Disjunction(new Falsehood(), SmtFactory.createGeq(new IValue(0), new IValue(1))));
     assertFalse(disj.evaluate());
     disj = new Disjunction(new Truth(), new BVar(7));
     assertTrue(disj.evaluate());

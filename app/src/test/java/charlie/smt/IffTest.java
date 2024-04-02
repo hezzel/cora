@@ -26,7 +26,8 @@ public class IffTest {
     Constraint comp = SmtFactory.createGreater(left, right);
     Constraint bvar = new BVar(9);
     Constraint iff = SmtFactory.createIff(comp, bvar);
-    assertTrue(iff.toString().equals("(= (> i7 (+ 3 i1)) b9)"));
+    assertTrue(iff.toSmtString().equals("(= (>= (+ i7 (- 1) (- 3) (- i1)) 0) b9)"));
+    assertTrue(iff.toString().equals("(i7 >= 4 + i1) == b9"));
   }
 
   @Test

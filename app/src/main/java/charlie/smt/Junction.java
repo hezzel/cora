@@ -36,8 +36,7 @@ abstract sealed class Junction extends Constraint permits Conjunction, Disjuncti
   }
 
   private void addChild(Constraint child) {
-    if ((child instanceof Junction) && (((Junction)child).symbol().equals(symbol()))) {
-      Junction j = (Junction)child;
+    if (child instanceof Junction j && j.symbol().equals(symbol())) {
       for (int i = 1; i <= j.numChildren(); i++) _children.add(j.queryChild(i));
     }
     else _children.add(child);

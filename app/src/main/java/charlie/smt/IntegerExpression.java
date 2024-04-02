@@ -100,6 +100,11 @@ public sealed abstract class IntegerExpression implements Comparable<IntegerExpr
   }
 
   public final String toString() {
+    IExpPrinter printer = new IExpPrinter();
+    return printer.print(this);
+  }
+
+  public final String toSmtString() {
     StringBuilder builder = new StringBuilder();
     addToSmtString(builder);
     return builder.toString();

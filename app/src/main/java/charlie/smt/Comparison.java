@@ -15,45 +15,44 @@
 
 package charlie.smt;
 
-/** Not a public class on purpose: use Constraint, or use Greater/Geq directly. */
-abstract sealed class Comparison extends Constraint
-    permits Greater, Geq, Equal, Distinct {
+import charlie.util.Pair;
 
-  protected IntegerExpression _left;
-  protected IntegerExpression _right;
+/** Not a public class on purpose: use Constraint, or use Geq0, Is0 or Neq0 directly. */
+abstract sealed class Comparison extends Constraint permits Geq0, Is0, Neq0 {
+  protected IntegerExpression _expr;
 
-  protected abstract boolean evaluate(int l, int r);
+  protected abstract boolean evaluate(int num);
   protected abstract String symbol();
 
-  protected Comparison(IntegerExpression left, IntegerExpression right) {
-    _left = left;
-    _right = right;
+  protected Comparison(IntegerExpression expr) {
+    _expr = expr;
   }
 
-  public IntegerExpression queryLeft() { return _left; }
-  public IntegerExpression queryRight() { return _right; }
+  /** Constructor used when comparing two numbers to each other, instead of one to 0. */
+  protected Comparison(IntegerExpression left, IntegerExpression right) {
+    _expr = new Addition(left, right.multiply(-1));
+  }
+
+  public IntegerExpression queryExpression() {
+    return _expr;
+  }
 
   public boolean evaluate() {
-    int x = _left.evaluate();
-    int y = _right.evaluate();
-    return evaluate(x, y);
+    return evaluate(_expr.evaluate());
   }
 
   public void addToSmtString(StringBuilder builder) {
     builder.append("(");
     builder.append(symbol());
     builder.append(" ");
-    _left.addToSmtString(builder);
-    builder.append(" ");
-    _right.addToSmtString(builder);
-    builder.append(")");
+    _expr.addToSmtString(builder);
+    builder.append(" 0)");
   }
 
   public boolean equals(Constraint other) {
     if (!(other instanceof Comparison)) return false;
     Comparison c = (Comparison)other;
-    return c.symbol().equals(symbol()) &&
-      _left.equals(c.queryLeft()) && _right.equals(c.queryRight());
+    return c.symbol().equals(symbol()) && _expr.equals(c.queryExpression());
   }
 }
 

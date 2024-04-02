@@ -53,7 +53,8 @@ class AccessibilityCheckerTest {
         "append(cons(x,y), z) -> cons(x, append(y,z))\n");
     AccessibilityChecker checker = new AccessibilityChecker(trs);
     // no requirement for z, but requirements for x and y
-    assertTrue(checker.printTrsConstraints().equals("(>= i1 i2)\n(>= i1 i1)\n"));
+    assertTrue(checker.printTrsConstraints().equals(
+      "[list] >= [Int]\n[list] >= [list]\n"));
     checkAccessible(checker, true);
     //System.out.println(checker.querySortOrdering());
   }
@@ -68,7 +69,8 @@ class AccessibilityCheckerTest {
         "map(F, cons(x,y)) -> cons(F(x), map(F, y))\n");
     AccessibilityChecker checker = new AccessibilityChecker(trs);
     // same as append: we only care about the arguments of strict subterms, and that's cons(x,y)
-    assertTrue(checker.printTrsConstraints().equals("(>= i1 i2)\n(>= i1 i1)\n"));
+    assertTrue(checker.printTrsConstraints().equals(
+      "[list] >= [Int]\n[list] >= [list]\n"));
   }
 
   @Test
@@ -82,8 +84,9 @@ class AccessibilityCheckerTest {
     AccessibilityChecker checker = new AccessibilityChecker(trs);
     // list > A, list ≥ A (for F), list ≥ list (for tl)
     assertTrue(checker.printTrsConstraints().toString().equals(
-      "(and (> i1 i2) (>= i1 i2))\n(>= i1 i1)\n"));
+      "([list] >= 1 + [A]) and ([list] >= [A])\n[list] >= [list]\n"));
     checkAccessible(checker, true);
+
     //System.out.println(checker.querySortOrdering());
   }
 
@@ -104,7 +107,7 @@ class AccessibilityCheckerTest {
     AccessibilityChecker checker = new AccessibilityChecker(trs);
     // ord ≥ ord (for x), ord ≥ ord, ord > nat (for H)
     assertTrue(checker.printTrsConstraints().toString().equals(
-      "(>= i1 i1)\n(and (> i1 i2) (>= i1 i1))\n"));
+      "[ord] >= [ord]\n([ord] >= 1 + [nat]) and ([ord] >= [ord])\n"));
     checkAccessible(checker, true);
     //System.out.println(checker.querySortOrdering());
   }
@@ -118,7 +121,7 @@ class AccessibilityCheckerTest {
     AccessibilityChecker checker = new AccessibilityChecker(trs);
     // term > term (for the input type term) and term ≥ term (for the output type)
     assertTrue(checker.printTrsConstraints().toString().equals(
-      "(and (> i1 i1) (>= i1 i1))\n"));
+      "([term] >= 1 + [term]) and ([term] >= [term])\n"));
     checkAccessible(checker, false);
   }
 }

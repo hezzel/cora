@@ -20,14 +20,14 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.ArrayList;
 import charlie.exceptions.IndexingError;
+import charlie.util.Pair;
 
 public final class Addition extends IntegerExpression {
-  protected ArrayList<IntegerExpression> _children;
+  private ArrayList<IntegerExpression> _children;
 
-  protected void addChild(IntegerExpression child) {
-    if (child instanceof Addition) {
-      Addition c = (Addition)child;
-      for (int i = 1; i <= c.numChildren(); i++) _children.add(c.queryChild(i));
+  private void addChild(IntegerExpression child) {
+    if (child instanceof Addition a) {
+      for (IntegerExpression c : a._children) _children.add(c);
     }
     else _children.add(child);
   }
@@ -47,21 +47,82 @@ public final class Addition extends IntegerExpression {
     checkSimplified();
   }
 
-  /** Private constructor for simplify() when the array does not need to be copied and checked. */
+  /** Private constructor when the array does not need to be copied and checked. */
   private Addition(ArrayList<IntegerExpression> args) {
     _children = args;
     _simplified = true;
   }
 
+  /**
+   * Adds a constant to the addition and returns the result.  If the Addition was simplified, then
+   * so is the result.
+   */
+  public IntegerExpression add(int constant) {
+    if (constant == 0) return this;
+    if (_children.size() == 0) return new IValue(constant);
+    if (_children.get(0) instanceof IValue k) {
+      if (k.queryValue() == -constant) {
+        if (_children.size() == 2) return _children.get(1);
+        else return new Addition(_children.subList(1, _children.size()));
+      }
+      _children.set(0, new IValue(k.queryValue() + constant));
+      Addition ret = new Addition((List<IntegerExpression>)_children);
+      _children.set(0, k);
+      return ret;
+    }
+    return new Addition(new IValue(constant), this);
+  }
+
+  /** Returns the number of children this Addition has */
   public int numChildren() {
     return _children.size();
   }
 
+  /** For 1 ≤ index ≤ numChildren(), returns the corresponding child. */
   public IntegerExpression queryChild(int index) {
     if (index <= 0 || index > _children.size()) {
       throw new IndexingError("Addition", "queryChild", index, 1, _children.size());
     }
     return _children.get(index-1);
+  }
+
+  /**
+   * Separates the positive components from the negated negative components, and returns both.
+   * This may be used to turn a R 0 into a1 R a2, for instance for pleasant readability.
+   */
+  public Pair<IntegerExpression,IntegerExpression> split() {
+    ArrayList<IntegerExpression> pos = new ArrayList<IntegerExpression>();
+    ArrayList<IntegerExpression> neg = new ArrayList<IntegerExpression>();
+
+    int constant = 0;
+    for (IntegerExpression e : _children) {
+      if (e instanceof IValue k) constant += k.queryValue();
+    }
+
+    if (constant > 0) pos.add(new IValue(constant));
+    else if (constant < 0) neg.add(new IValue(-constant));
+
+    for (int i = 0; i < _children.size(); i++) {
+      switch (_children.get(i)) {
+        case IValue k: continue;
+        case CMult cm:
+          if (cm.queryConstant() >= 0) pos.add(cm);
+          else neg.add(cm.multiply(-1));
+          break;
+        default:
+          pos.add(_children.get(i));
+      }
+    }
+
+    IntegerExpression p, n;
+    if (pos.size() == 0) p = new IValue(0);
+    else if (pos.size() == 1) p = pos.get(0);
+    else p = new Addition(pos);
+    if (neg.size() == 0) n = new IValue(0);
+    else if (neg.size() == 1) n = neg.get(0);
+    else n = new Addition(neg);
+
+    return new Pair<IntegerExpression,IntegerExpression>(p, n);
   }
 
   public int evaluate() {
@@ -88,7 +149,7 @@ public final class Addition extends IntegerExpression {
       };
       if (prevmain.compareTo(childmain) >= 0) return;
     }
-    _simplified = true;
+    _simplified = _children.size() >= 2;
   }
 
   /** Returns a simplified representation of the addition */
@@ -151,11 +212,11 @@ public final class Addition extends IntegerExpression {
       case IVar x -> 1;
       case CMult cm -> compareTo(cm.queryChild()) <= 0 ? -1 : 1;
       case Addition a -> {
-        for (int i = _children.size(), j = a.numChildren(); i > 0 && j > 0; i--, j--) {
-          int c = _children.get(i-1).compareTo(a.queryChild(j));
+        for (int i = _children.size()-1, j = a._children.size()-1; i >= 0 && j >= 0; i--, j--) {
+          int c = _children.get(i).compareTo(a._children.get(j));
           if (c != 0) yield c;
         }
-        yield _children.size() - a.numChildren();
+        yield _children.size() - a._children.size();
       }
       case Multiplication m -> -1;
       case Division m -> -1;

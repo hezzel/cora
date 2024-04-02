@@ -20,9 +20,20 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class IVarTest {
   @Test
-  public void testBasics() {
+  public void testBasicsNoName() {
     IVar x = new IVar(12);
+    assertTrue(x.queryName().equals("i12"));
     assertTrue(x.toString().equals("i12"));
+    assertTrue(x.toSmtString().equals("i12"));
+    assertTrue(x.isSimplified());
+  }
+
+  @Test
+  public void testBasicsWithName() {
+    IVar x = new IVar(12, "xx");
+    assertTrue(x.queryName().equals("[xx]"));
+    assertTrue(x.toString().equals("[xx]"));
+    assertTrue(x.toSmtString().equals("i12"));
     assertTrue(x.isSimplified());
   }
 
@@ -45,3 +56,4 @@ public class IVarTest {
     // we don't test here against other kinds; this is handled in CMultTest
   }
 }
+

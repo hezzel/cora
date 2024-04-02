@@ -27,8 +27,8 @@ public class ExternalSmtSolverTest {
     SmtProblem problem = new SmtProblem();
     // x > 1 => x > 0 is valid
     IVar x = problem.createIntegerVariable();
-    Constraint gr1 = new Greater(x, new IValue(1));
-    Constraint gr0 = new Greater(x, new IValue(0));
+    Constraint gr1 = SmtFactory.createGreater(x, new IValue(1));
+    Constraint gr0 = SmtFactory.createGreater(x, new IValue(0));
     problem.requireImplication(gr1, gr0);
     assertTrue(solver.checkValidity(problem));
     // x > 0 => x > 1 is not valid
@@ -47,9 +47,9 @@ public class ExternalSmtSolverTest {
     IVar y = problem.createIntegerVariable();
     IVar z = problem.createIntegerVariable();
     problem.createBooleanVariable();
-    Constraint le = new Greater(new IValue(0), z);
-    Constraint gr = new Greater(y, new IValue(12));
-    Constraint eq = new Equal(y, z);
+    Constraint le = SmtFactory.createGreater(new IValue(0), z);
+    Constraint gr = SmtFactory.createGreater(y, new IValue(12));
+    Constraint eq = SmtFactory.createEqual(y, z);
     problem.require(new Conjunction(x, new Conjunction(le, new Conjunction(gr, eq))));
     assertTrue(solver.checkSatisfiability(problem) instanceof Answer.NO);
     problem.clear();
@@ -66,7 +66,7 @@ public class ExternalSmtSolverTest {
     problem.clear();
     // x ∧ z > u, where u is a variable NOT in the problem
     IVar u = new IVar(100);
-    problem.require(new Conjunction(x, new Greater(z, u)));
+    problem.require(new Conjunction(x, SmtFactory.createGreater(z, u)));
     a = solver.checkSatisfiability(problem);
     if (a instanceof Answer.MAYBE(String reason)) {
       System.out.println(reason);

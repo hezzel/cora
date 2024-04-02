@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,9 +15,10 @@
 
 package charlie.smt;
 
-public final class Greater extends Comparison {
-  Greater(IntegerExpression left, IntegerExpression right) { super(left, right); }
-  protected boolean evaluate(int l, int r) { return l > r; }
-  protected String symbol() { return ">"; }
+public final class Neq0 extends Comparison {
+  Neq0(IntegerExpression expr) { super(expr); }
+  Neq0(IntegerExpression left, IntegerExpression right) { super(left, right); }
+  protected boolean evaluate(int num) { return num != 0; }
+  protected String symbol() { return "distinct"; }
 }
 
