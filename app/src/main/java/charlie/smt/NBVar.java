@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,31 +15,40 @@
 
 package charlie.smt;
 
-import java.util.ArrayList;
-import charlie.exceptions.IndexingError;
+import charlie.exceptions.SmtEvaluationError;
 
-public final class Disjunction extends Junction {
-  Disjunction(Constraint a, Constraint b) {
-    super(a, b);
+/** This class holds the negation of a boolean variable. */
+public final class NBVar extends Constraint {
+  private BVar _negated;
+
+  NBVar(BVar x) {
+    _negated = x;
   }
 
-  Disjunction(ArrayList<Constraint> args) {
-    super(args);
+  public int queryIndex() {
+    return _negated.queryIndex();
   }
 
-  protected String symbol() { return "or"; }
+  public String queryName() {
+    return _negated.queryName();
+  }
+
+  public BVar negate() {
+    return _negated;
+  }
 
   public boolean evaluate() {
-    for (int i = 0; i < _children.size(); i++) {
-      if (_children.get(i).evaluate()) return true;
-    }
-    return false;
+    throw new SmtEvaluationError("!" + _negated.queryName());
   }
 
-  public Conjunction negate() {
-    ArrayList<Constraint> arr = new ArrayList<Constraint>();
-    for (Constraint c : _children) arr.add(c.negate());
-    return new Conjunction(arr);
+  public void addToSmtString(StringBuilder builder) {
+    builder.append("(not ");
+    _negated.addToSmtString(builder);
+    builder.append(")");
+  }
+
+  public boolean equals(Constraint other) {
+    return (other instanceof NBVar n) && (_negated.queryIndex() == n.queryIndex());
   }
 }
 

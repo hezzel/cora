@@ -19,6 +19,8 @@ public final class Truth extends Constraint {
   /** Private constructor, as Constraints should be made through the SmtFactory. */
   Truth() {}
 
+  public Falsehood negate() { return new Falsehood(); }
+
   public boolean evaluate() { return true; }
 
   public void addToSmtString(StringBuilder builder) {

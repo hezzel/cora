@@ -103,6 +103,12 @@ public class SmtFactory {
     return new Geq0(left, right);
   }
 
+  /** Creates left ≥ 0 */
+  public static Constraint createGeq(IntegerExpression left) {
+    if (left == null) throw new NullInitialisationError("Geq", "left argument");
+    return new Geq0(left);
+  }
+
   public static Constraint createLeq(IntegerExpression left, IntegerExpression right) {
     if (left == null) throw new NullInitialisationError("Geq", "reversed right argument");
     if (right == null) throw new NullInitialisationError("Geq", "reversed left argument");
@@ -115,10 +121,22 @@ public class SmtFactory {
     return new Is0(left, right);
   }
 
+  /** Creates left = 0 */
+  public static Constraint createEqual(IntegerExpression left) {
+    if (left == null) throw new NullInitialisationError("Equal", "left argument");
+    return new Is0(left);
+  }
+
   public static Constraint createUnequal(IntegerExpression left, IntegerExpression right) {
     if (left == null) throw new NullInitialisationError("Distinct", "left argument");
     if (right == null) throw new NullInitialisationError("Distinct", "right argument");
     return new Neq0(left, right);
+  }
+
+  /** Creates left != 0 */
+  public static Constraint createUnequal(IntegerExpression left) {
+    if (left == null) throw new NullInitialisationError("Equal", "left argument");
+    return new Neq0(left);
   }
 
   public static Constraint createNegation(Constraint c) {

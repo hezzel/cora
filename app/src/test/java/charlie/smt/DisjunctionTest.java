@@ -64,4 +64,13 @@ public class DisjunctionTest {
     disj = new Disjunction(new Truth(), new BVar(7));
     assertTrue(disj.evaluate());
   }
+
+
+  @Test
+  public void testNegation() {
+    Disjunction disj = new Disjunction(new Geq0(new IVar(3), new IValue(7)),
+      new Conjunction(new BVar(2), new NBVar(new BVar(12))));
+    assertTrue(disj.negate().negate().equals(disj));
+    assertTrue(disj.negate().toString().equals("(6 >= i3) and (!b2 or b12)"));
+  }
 }

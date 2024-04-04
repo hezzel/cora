@@ -73,6 +73,22 @@ public class DivModTest {
   }
 
   @Test
+  public void testAdd() {
+    Division division = new Division(new Addition(new IValue(-4), new IVar(1)), new IValue(5));
+    IntegerExpression a = division.add(3);
+    IntegerExpression b = division.add(1);
+    IntegerExpression c = division.add(0);
+    assertTrue(a.toString().equals("3 + (-4 + i1) / 5"));
+    assertTrue(a.isSimplified());
+    assertTrue(b.toString().equals("1 + (-4 + i1) / 5"));
+    assertTrue(b.isSimplified());
+    assertTrue(c == division);
+    Modulo modulo = new Modulo(new IVar(3), new IValue(-2));
+    IntegerExpression d = modulo.add(3);
+    assertFalse(d.isSimplified());  // because modulo is not
+  }
+
+  @Test
   public void testDivisionComparison() {
     IntegerExpression a = new Division(new IValue(3), new IVar(2));
     IntegerExpression b = new Division(new IValue(3), new IVar(2));

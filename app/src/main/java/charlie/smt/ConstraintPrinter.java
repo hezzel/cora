@@ -51,12 +51,14 @@ public class ConstraintPrinter {
    * 
    * To define your own ConstraintPrinter, you can either override this method directly -- in which
    * case there is no need to override any of the other methods in the class -- or override (some
-   * of) the functions it calls directly, which are: printVar, printTruth, printFalsehood, printGeq,
-   * printEquals, printDistinct, printConjunction, printDisjunction, printNot.
+   * of) the functions it calls directly, which are: printVar, printNegatedVar, printTruth,
+   * printFalsehood, printGeq, printEquals, printDistinct, printConjunction, printDisjunction,
+   * printNot.
    */
   public void print(Constraint c, StringBuilder builder) {
     switch (c) {
       case BVar x: printVar(x, builder); break;
+      case NBVar x: printNegatedVar(x, builder); break;
       case Truth t: printTruth(builder); break;
       case Falsehood f: printFalsehood(builder); break;
       case Geq0 g: printGeq(g, builder); break;
@@ -74,6 +76,16 @@ public class ConstraintPrinter {
    * The default functionality is just to add the name to the string builder unmodified.
    */
   protected void printVar(BVar x, StringBuilder builder) {
+    builder.append(x.queryName());
+  }
+
+  /**
+   * Override this function to change how negations of boolean variables are printed (if print is left
+   * unmasked).  The default functionality is just to add ! followed by the name to the string
+   * builder.
+   */
+  protected void printNegatedVar(NBVar x, StringBuilder builder) {
+    builder.append("!");
     builder.append(x.queryName());
   }
 
@@ -145,6 +157,7 @@ public class ConstraintPrinter {
   protected final void printBracketed(Constraint constr, StringBuilder builder) {
     switch (constr) {
       case BVar x: printVar(x, builder); break;
+      case NBVar x: printNegatedVar(x, builder); break;
       case Truth t: printTruth(builder); break;
       case Falsehood f: printFalsehood(builder); break;
       default:

@@ -82,6 +82,15 @@ public sealed abstract class IntegerExpression implements Comparable<IntegerExpr
   }
 
   /**
+   * This returns an integer expression obtained from adding the given constant to the current
+   * expression.  If the current IntegerExpression is in simplifed form, then so is the result.
+   */
+  public IntegerExpression add(int constant) {
+    if (constant == 0) return this;
+    return new Addition(new IValue(constant), this);
+  }
+
+  /**
    * This returns an integer expression obtained from multiplying the current one by the given
    * constant.  If the current IntegerExpression is in simplified form, then so is the result.
    */

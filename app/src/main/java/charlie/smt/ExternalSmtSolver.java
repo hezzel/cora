@@ -50,7 +50,7 @@ public class ExternalSmtSolver implements SmtSolver {
     else lst.add(constraint);
     for (int i = 0; i < lst.size(); i++) {
       writer.write("(assert ");
-      writer.write(lst.get(i).toString());
+      writer.write(lst.get(i).toSmtString());
       writer.write(")");
       writer.newLine();
     }

@@ -37,5 +37,11 @@ public final class Conjunction extends Junction {
     }
     return true;
   }
+
+  public Disjunction negate() {
+    ArrayList<Constraint> arr = new ArrayList<Constraint>();
+    for (Constraint c : _children) arr.add(c.negate());
+    return new Disjunction(arr);
+  }
 }
 

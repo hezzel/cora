@@ -37,6 +37,24 @@ public final class Iff extends Constraint {
     return _left.evaluate() == _right.evaluate();
   }
 
+  /** Helper function for negate() */
+  private int queryConstraintKind(Constraint c) {
+    return switch(c) {
+      case BVar x -> 1;
+      case NBVar x -> 1;
+      case Iff x -> 2;
+      case Comparison x -> 3;
+      default -> 4;
+    };
+  }
+
+  public Iff negate() {
+    if (queryConstraintKind(_right) < queryConstraintKind(_left)) {
+      return new Iff(_left, _right.negate());
+    }
+    else return new Iff(_left.negate(), _right);
+  }
+
   public void addToSmtString(StringBuilder builder) {
     builder.append("(= ");
     _left.addToSmtString(builder);
@@ -46,9 +64,7 @@ public final class Iff extends Constraint {
   }
 
   public boolean equals(Constraint other) {
-    if (!(other instanceof Iff)) return false;
-    Iff o = (Iff)other;
-    return _left.equals(o.queryLeft()) && _right.equals(o.queryRight());
+    return (other instanceof Iff o) && (_left.equals(o._left)) && (_right.equals(o._right));
   }
 }
 

@@ -23,6 +23,7 @@ abstract sealed class Comparison extends Constraint permits Geq0, Is0, Neq0 {
 
   protected abstract boolean evaluate(int num);
   protected abstract String symbol();
+  public abstract Comparison negate();
 
   protected Comparison(IntegerExpression expr) {
     _expr = expr;

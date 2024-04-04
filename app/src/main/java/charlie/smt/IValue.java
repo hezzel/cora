@@ -36,6 +36,10 @@ public final class IValue extends IntegerExpression {
     return this;
   }
 
+  public IntegerExpression add(int value) {
+    return new IValue(value + _k);
+  }
+
   public IntegerExpression multiply(int value) {
     return new IValue(value * _k);
   }

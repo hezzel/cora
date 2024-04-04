@@ -18,28 +18,35 @@ package charlie.smt;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class IValueTest {
+public class NBVarTest {
   @Test
-  public void testBasics() {
-    IValue x = new IValue(-3);
-    assertTrue(x.evaluate() == -3);
-    assertTrue(x.toString().equals("-3"));
-    assertTrue(x.toSmtString().equals("(- 3)"));
-    assertTrue(x.multiply(5).equals(new IValue(-15)));
-    assertTrue(x.add(5).equals(new IValue(2)));
-    assertTrue(x.negate().equals(new IValue(3)));
-    assertTrue(x.isSimplified());
+  public void testBasicsName() {
+    BVar x = new BVar(12);
+    NBVar nx = new NBVar(x);
+    assertTrue(nx.queryIndex() == 12);
+    assertTrue(nx.queryName().equals("b12"));
+    assertTrue(nx.toString().equals("!b12"));
+    assertTrue(nx.toSmtString().equals("(not b12)"));
+    assertTrue(nx.negate() == x);
+    BVar y = new BVar(12, "xx");
+    NBVar ny = new NBVar(y);
+    assertTrue(ny.toString().equals("![xx]"));
   }
 
   @Test
-  public void testComparison() {
-    IValue x = new IValue(3);
-    assertTrue(x.compareTo(new IValue(3)) == 0);
-    assertTrue(x.equals(new IValue(3)));
-    assertTrue(x.compareTo(new IValue(-3)) > 0);
-    assertFalse(x.equals(new IValue(-3)));
-    assertTrue(x.compareTo(new IValue(4)) < 0);
-    assertFalse(x.equals(new IValue(4)));
-    assertTrue(x.compareTo(new CMult(1, new IValue(1))) < 0);
+  public void testEquality() {
+    BVar x = new BVar(12);
+    NBVar y = new NBVar(x);
+    assertFalse(x.equals(y));
+    assertFalse(y.equals(x));
+    assertTrue(y.equals(new NBVar(new BVar(12))));
+    assertFalse(y.equals(new NBVar(new BVar(13))));
+  }
+
+  @Test
+  public void testEvaluate() {
+    BVar x = new BVar(3);
+    NBVar nx = new NBVar(x);
+    assertThrows(charlie.exceptions.SmtEvaluationError.class, () -> nx.evaluate());
   }
 }

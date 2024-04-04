@@ -31,6 +31,10 @@ public final class Not extends Constraint {
     return !(_negated.evaluate());
   }
 
+  public Constraint negate() {
+    return _negated;
+  }
+
   public void addToSmtString(StringBuilder builder) {
     builder.append("(not ");
     _negated.addToSmtString(builder);

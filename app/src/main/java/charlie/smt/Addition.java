@@ -48,9 +48,9 @@ public final class Addition extends IntegerExpression {
   }
 
   /** Private constructor when the array does not need to be copied and checked. */
-  private Addition(ArrayList<IntegerExpression> args) {
+  private Addition(ArrayList<IntegerExpression> args, boolean simpl) {
     _children = args;
-    _simplified = true;
+    _simplified = simpl;
   }
 
   /**
@@ -65,12 +65,22 @@ public final class Addition extends IntegerExpression {
         if (_children.size() == 2) return _children.get(1);
         else return new Addition(_children.subList(1, _children.size()));
       }
-      _children.set(0, new IValue(k.queryValue() + constant));
-      Addition ret = new Addition((List<IntegerExpression>)_children);
-      _children.set(0, k);
-      return ret;
+      if (_simplified) {
+        ArrayList<IntegerExpression> ret = new ArrayList<IntegerExpression>(_children);
+        ret.set(0, new IValue(k.queryValue() + constant));
+        return new Addition(ret, true);
+      }
+      else {
+        _children.set(0, new IValue(k.queryValue() + constant));
+        Addition ret = new Addition(_children);
+        _children.set(0, k);
+        return ret;
+      }
     }
-    return new Addition(new IValue(constant), this);
+    ArrayList<IntegerExpression> parts = new ArrayList<IntegerExpression>();
+    parts.add(new IValue(constant));
+    parts.addAll(_children);
+    return new Addition(parts, _simplified);
   }
 
   /** Returns the number of children this Addition has */
@@ -186,7 +196,7 @@ public final class Addition extends IntegerExpression {
     // return the result
     if (ret.size() == 0) return new IValue(0);
     if (ret.size() == 1) return ret.get(0);
-    return new Addition(ret);
+    return new Addition(ret, true);
   }
 
   public IntegerExpression multiply(int constant) {
@@ -194,7 +204,7 @@ public final class Addition extends IntegerExpression {
     if (constant == 1) return this;
     ArrayList<IntegerExpression> cs = new ArrayList<IntegerExpression>();
     for (int i = 0; i < _children.size(); i++) cs.add(_children.get(i).multiply(constant));
-    return new Addition(cs);
+    return new Addition(cs, _simplified);
   }
 
   public void addToSmtString(StringBuilder builder) {

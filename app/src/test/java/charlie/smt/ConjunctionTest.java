@@ -68,4 +68,12 @@ public class ConjunctionTest {
     assertThrows(charlie.exceptions.IndexingError.class, () -> conj.queryChild(0));
     assertThrows(charlie.exceptions.IndexingError.class, () -> conj.queryChild(3));
   }
+
+  @Test
+  public void testNegation() {
+    Conjunction conj = new Conjunction(new Geq0(new IVar(3), new IValue(7)),
+      new Conjunction(new BVar(2), new NBVar(new BVar(12))));
+    assertTrue(conj.negate().negate().equals(conj));
+    assertTrue(conj.negate().toString().equals("(6 >= i3) or !b2 or b12"));
+  }
 }

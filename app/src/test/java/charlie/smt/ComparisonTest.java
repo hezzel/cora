@@ -28,6 +28,9 @@ public class ComparisonTest {
     assertTrue(comp.queryExpression().equals(new Addition(List.of(
       new IValue(3), new IVar(7), new IValue(-1), new CMult(-1, new IVar(4))))));
     assertTrue(SmtFactory.createSmaller(right, left).equals(comp));
+    assertTrue(comp.negate().negate().equals(comp));
+    assertTrue(comp.negate().equals(new Geq0(new Addition(List.of(
+      new IValue(-4), new CMult(-1, new IVar(7)), new IValue(1), new IVar(4))))));
   }
 
   @Test
@@ -38,6 +41,19 @@ public class ComparisonTest {
     assertTrue(comp.queryExpression().toString().equals("3 + i7 + -i4"));
     assertTrue(comp.toString().equals("3 + i7 >= i4"));
     assertTrue(SmtFactory.createLeq(left, right).toString().equals("i4 >= 3 + i7"));
+  }
+
+  @Test
+  public void testEqualUnequalBasics() {
+    IntegerExpression expr = new Addition(new IValue(-1), new IVar(2));
+    Comparison comp = (Comparison)SmtFactory.createEqual(expr);
+    Comparison neqcomp = comp.negate();
+    assertTrue(neqcomp.equals(SmtFactory.createUnequal(expr)));
+    assertTrue(neqcomp.negate().equals(comp));
+    assertTrue(comp.toString().equals("i2 = 1"));
+    assertTrue(neqcomp.toString().equals("i2 # 1"));
+    assertTrue(comp.toSmtString().equals("(= (+ (- 1) i2) 0)"));
+    assertTrue(neqcomp.toSmtString().equals("(distinct (+ (- 1) i2) 0)"));
   }
 
   @Test

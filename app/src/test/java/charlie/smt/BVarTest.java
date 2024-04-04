@@ -38,6 +38,17 @@ public class BVarTest {
   }
 
   @Test
+  public void testNegate() {
+    BVar x = new BVar(12);
+    assertTrue(x.negate().equals(new NBVar(x)));
+    assertTrue(x.negate().toString().equals("!b12"));
+    assertTrue(x.negate().toSmtString().equals("(not b12)"));
+    BVar y = new BVar(13, "x");
+    assertTrue(y.negate().toString().equals("![x]"));
+    assertTrue(y.negate().toSmtString().equals("(not b13)"));
+  }
+
+  @Test
   public void testEquality() {
     BVar x = new BVar(12);
     assertTrue(x.equals(new BVar(12)));

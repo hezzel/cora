@@ -17,7 +17,7 @@ package charlie.smt;
 
 /** Boolean constraints, to be sent to an SMT solver. */
 public sealed abstract class Constraint
-  permits BVar, Truth, Falsehood, Comparison, Junction, Not, Iff {
+  permits BVar, NBVar, Truth, Falsehood, Comparison, Junction, Not, Iff {
   /**
    * Assuming the current constraint has no variables, this function evaluates it to its boolean
    * value.  If there is a variable in it, an SmtEvaluationError will be thrown instead.
@@ -29,6 +29,9 @@ public sealed abstract class Constraint
 
   /** Equality check between Constraints */
   public abstract boolean equals(Constraint other);
+
+  /** Returns the negation of the current constraint */
+  public abstract Constraint negate();
 
   public final String toString() {
     ConstraintPrinter printer = new ConstraintPrinter();

@@ -17,6 +17,7 @@ package charlie.smt;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
 
 public class IffTest {
   @Test
@@ -61,4 +62,43 @@ public class IffTest {
     assertTrue(i.queryLeft().equals(a));
     assertTrue(i.queryRight().equals(n));
   }
+
+  @Test
+  public void testNegate() {
+    IntegerExpression complex =
+      new Addition(List.of(new IValue(3), new IVar(1), new CMult(-2, new IVar(7))));
+    Constraint b7 = new BVar(7);
+    Constraint b9 = new BVar(9);
+    Constraint nb7 = new NBVar(new BVar(7));
+    Constraint nb9 = new NBVar(new BVar(9));
+    Constraint comp = new Is0(complex);
+    Constraint ncomp = new Neq0(complex);
+    Constraint iff = new Iff(nb7, b9);
+    Constraint conj = new Conjunction(b7, comp);
+
+    Iff a;
+
+    a = new Iff(b9, b7);
+    assertTrue(a.negate().equals(new Iff(nb9, b7)));
+    a = new Iff(nb7, b9);
+    assertTrue(a.negate().equals(new Iff(b7, b9)));
+    a = new Iff(nb7, conj);
+    assertTrue(a.negate().equals(new Iff(b7, conj)));
+    a = new Iff(conj, b9);
+    assertTrue(a.negate().equals(new Iff(conj, nb9)));
+    a = new Iff(comp, nb7);
+    assertTrue(a.negate().equals(new Iff(comp, b7)));
+    a = new Iff(comp, conj);
+    assertTrue(a.negate().equals(new Iff(ncomp, conj)));
+    a = new Iff(conj, comp);
+    assertTrue(a.negate().equals(new Iff(conj, ncomp)));
+    a = new Iff(conj, iff);
+    assertTrue(a.negate().equals(new Iff(conj, new Iff(b7, b9))));
+    a = new Iff(comp, iff);
+    assertTrue(a.negate().equals(new Iff(comp, new Iff(b7, b9))));
+    a = new Iff(conj, conj);
+    assertTrue(a.negate().equals(new Iff(new Disjunction(nb7, ncomp), conj)));
+    assertTrue(a.negate().negate().equals(a));
+  }
 }
+

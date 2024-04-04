@@ -40,6 +40,10 @@ public final class BVar extends Constraint {
     return _name;
   }
 
+  public NBVar negate() {
+    return new NBVar(this);
+  }
+
   public boolean evaluate() {
     throw new SmtEvaluationError(_name);
   }
