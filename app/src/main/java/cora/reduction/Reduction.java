@@ -52,7 +52,7 @@ class Reduction implements ProofObject {
     boolean first = true;
     for (Term t : _steps) {
       out.nextColumn(first ? "" : "%{ruleArrow}");
-      out.println("%t", new Pair<Term,Renaming>(t, naming));
+      out.println("%a", new Pair<Term,Renaming>(t, naming));
       first = false;
     }
     out.endTable();
