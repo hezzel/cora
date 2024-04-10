@@ -103,7 +103,7 @@ public class CoraParser {
   }
 
   /**
-   * nonarrowtype ::= basictype_1 TIMES...TIMES basictype_n with n ≥ 1
+   * nonarrowtype ::= basictype_1 PRODUCT...PRODUCT basictype_n with n ≥ 1
    *
    * This function reads a non-arrow type and returns it.  The input is expected to actually start
    * with a non-arrow type.  If this is not the case, then an error is stored and either null is
@@ -111,13 +111,13 @@ public class CoraParser {
    */
   private Type readNonArrowType() {
     Type start = readBasicType();
-    if (!tryReadTimes()) return start;
+    if (_status.readNextIf(CoraTokenData.PRODUCT) == null) return start;
     ImmutableList.Builder<Type> builder = ImmutableList.<Type>builder();
     if (start != null) builder.add(start);
     do {
       Type next = readBasicType();
       if (next != null) builder.add(next);
-    } while (tryReadTimes());
+    } while (_status.readNextIf(CoraTokenData.PRODUCT) != null);
     return TypeFactory.createProduct(builder.build());
   }
 
@@ -140,20 +140,6 @@ public class CoraParser {
     Type ret = readType();
     _status.expect(CoraTokenData.BRACKETCLOSE, "closing bracket");
     return ret;
-  }
-
-  /**
-   * Product types may be indicated using * or × separators.  While × is the special PRODUCT token,
-   * the symbol * is also used for multiplication in constrained formalisms.  Hence, in constrained
-   * systems this is NOT marked as the PRODUCT symbol, but when it occurs in the context of a type
-   * it clearly indicates a product separator.
-   * This method checks if the next token is * or × and if so, reads it and returns true; if not,
-   * nothing is read and false is returned.
-   */
-  private boolean tryReadTimes() {
-    if (_status.readNextIf(CoraTokenData.PRODUCT) != null) return true;
-    if (_status.readNextIf(CoraTokenData.TIMES) != null) return true;
-    return false;
   }
 
   // ======================================== READING TERMS =======================================
@@ -840,7 +826,7 @@ public class CoraParser {
   }
 
   /**
-   * Reads a full TRS, in the expected format for the current paser, from the given file.
+   * Reads a full TRS, in the expected format for the current parser, from the given file.
    * @throws charlie.exceptions.ParseError
    */
   public static ParserProgram readProgramFromFile(String filename, boolean constrained,

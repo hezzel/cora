@@ -127,8 +127,8 @@ public class TrsTest {
   @Test
   public void testTermsAllowedTuples() {
     setupTRSs();
-    Term x = TermFactory.createVar("x", type("a * b"));
-    Term z = TermFactory.createVar("y", type("(a * b) -> c"));
+    Term x = TermFactory.createVar("x", type("a × b"));
+    Term z = TermFactory.createVar("y", type("(a × b) -> c"));
     Term zx = z.apply(x);
     assertFalse(_mstrs.termAllowed(x));
     assertFalse(_lctrs.termAllowed(x));

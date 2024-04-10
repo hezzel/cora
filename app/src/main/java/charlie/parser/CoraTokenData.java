@@ -71,8 +71,7 @@ class CoraTokenData {
 
   /** Unconstrained TRSs admit a more broad range of identifiers. */
   private static String[] utokens = new String[] {
-    "\\*"                                     , PRODUCT,
-    "([^\\s()\\[\\]⟨⟩\\{\\}⦇⦈\"',:λ×\\.\\*\\\\\\.→/-]|(-(?!>))|(/(?!\\*))|(\\*(?!/)))+" , IDENTIFIER,
+    "([^\\s()\\[\\]⟨⟩\\{\\}⦇⦈\"',:λ×\\.\\*\\\\\\.→/-]|(:(?!:))|(-(?!>))|(/(?!\\*))|(\\*(?!/)))+" , IDENTIFIER,
       // identifiers are built from any characters other than whitespace, brackets (of any kind),
       // braces, quotes, commas, colons, lambda, backslash, dot, × or unicode arrows
       // they also may not contain -> or /* or */
@@ -90,6 +89,7 @@ class CoraTokenData {
     "-"                                       , MINUS,
     "\\*"                                     , TIMES,
     "\\|"                                     , MID,
+    ":"                                       , COLON,
     "/"                                       , DIV,
     "%"                                       , MOD,
     ">"                                       , GREATER,
@@ -128,7 +128,6 @@ class CoraTokenData {
     "\\["                                     , METAOPEN,
     "\\]"                                     , METACLOSE,
     ","                                       , COMMA,
-    ":"                                       , COLON,
     "::"                                      , DECLARE,
     "λ"                                       , LAMBDA,
     "\\\\"                                    , LAMBDA,
