@@ -254,7 +254,7 @@ class Application extends TermInherit {
   }
 
   /**
-   * Returns true if this application is a functional or variable term whose variable
+   * Returns true if this application is a functional term, or variable term whose variable
    * is a binder,
    * and the arguments are all patterns.
    */
