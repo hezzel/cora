@@ -102,6 +102,7 @@ public class TRS {
     _level = trsLevel;
     _alphabet = alphabet;
     _schemes = schemes;
+    _trsKind = trsKindName;
     if (privateSymbols == null) _private = new TreeSet<String>();
     else _private = new TreeSet<String>(privateSymbols);
     _defined = new TreeSet<FunctionSymbol>();
@@ -182,6 +183,11 @@ public class TRS {
       throw new IndexingError("TRS", "queryScheme", index, 0, querySchemeCount()-1);
     }
     return _schemes.get(index);
+  }
+
+  /** Returns the kind of TRS this is (e.g., MSTRS, CFS */
+  public String queryTrsKind() {
+    return _trsKind;
   }
 
   /** Returns a copy of the set of defined symbols. */

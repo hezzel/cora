@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import charlie.exceptions.UnexpectedPatternError;
 import charlie.exceptions.IllegalArgumentError;
-import charlie.types.TypePrinter;
 
 /**
  * TermPrinters are used in the overall output process of the tool.  This class provides a default
@@ -31,7 +30,6 @@ import charlie.types.TypePrinter;
  * to use unicode symbols, ascii-art, html, print smt-style or whatever is needed.
  */
 public class TermPrinter {
-  private TypePrinter _typePrinter;       // the printer for types (in abstractions)
   private TreeSet<String> _blockedNames;  // the names that may not be used as variable names
 
   /** A Renaming is used to assign a new name to (meta-)variables in a term. */
@@ -58,9 +56,8 @@ public class TermPrinter {
    * @param avoid names in this set will not be used as generated variable names in the default
    *   functionality (this is intended to be used for instance by the symbols in the alphabet)
    */
-  public TermPrinter(TypePrinter types, Set<String> avoid) {
+  public TermPrinter(Set<String> avoid) {
     _blockedNames = new TreeSet<String>(avoid);
-    _typePrinter = types;
   }
 
   /**
@@ -522,7 +519,7 @@ public class TermPrinter {
 
     // print term
     builder.append(queryLambda());
-    builder.append(name);
+    printAbstractionBinder(binder, name, builder);
     builder.append(".");
     print(term.queryAbstractionSubterm(), naming, builder);
 
@@ -530,6 +527,14 @@ public class TermPrinter {
     if (backup == null) naming._map.remove(binder);
     else naming._map.put(binder, backup);
     naming._avoid.remove(name);
+  }
+
+  /**
+   * Called by printAbstraction() to print the binder variable in an abstraction.
+   * The default functionality just prints the chosen name.
+   */
+  protected void printAbstractionBinder(Variable binder, String chosenName, StringBuilder builder) {
+    builder.append(chosenName);
   }
 
   /**

@@ -38,7 +38,7 @@ public class TermPrinterTest {
     Variable y = new Binder("y", b);
     Variable z1 = new Binder("z", ab);
     Variable z2 = new Var("z", ab);
-    TermPrinter printer = new TermPrinter(new TypePrinter(), Set.of());
+    TermPrinter printer = new TermPrinter(Set.of());
     TermPrinter.Renaming naming = printer.generateUniqueNaming(x1, x2, x3, x4, y, z1, z2);
     assertTrue(naming.get(x1).equals("x__2"));
     assertTrue(naming.get(x2).equals("x__3"));
@@ -51,8 +51,7 @@ public class TermPrinterTest {
 
   @Test
   public void testBannedOverlap() {
-    TermPrinter printer = new TermPrinter(new TypePrinter(),
-                                          Set.of("x", "y__1", "z", "z__1", "u", "v__1"));
+    TermPrinter printer = new TermPrinter(Set.of("x", "y__1", "z", "z__1", "u", "v__1"));
     Type o = TypeFactory.defaultSort;
     Variable x = new Var("x", o);
     Variable y1 = new Var("y", o);
@@ -94,7 +93,7 @@ public class TermPrinterTest {
       TermFactory.createConstant("f", TypeFactory.createArrow(oo, TypeFactory.createArrow(oo, o)));
     Term term = TermFactory.createApp(f, abs1, abs2); // f(λx.x, λy.y)
 
-    TermPrinter printer = new TermPrinter(new TypePrinter(), Set.of());
+    TermPrinter printer = new TermPrinter(Set.of());
     TermPrinter.Renaming naming = printer.generateUniqueNaming(term, x);
     assertTrue(naming.get(x).equals("x"));
     assertTrue(naming.get(y) == null);
@@ -124,7 +123,7 @@ public class TermPrinterTest {
     Term main = (new Application(f, new Application(g, z2, u), z1)).apply(x);
     Term abs = new Abstraction(x, new Abstraction(y, new Abstraction(u, main)));
 
-    TermPrinter printer = new TermPrinter(new TypePrinter(), Set.of());
+    TermPrinter printer = new TermPrinter(Set.of());
     TermPrinter.Renaming naming = printer.generateUniqueNaming(abs);
 
     StringBuilder builder = new StringBuilder();

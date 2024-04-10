@@ -54,6 +54,7 @@ public class DefaultOutputModule implements OutputModule {
     codes.add(new Pair<String,String>("%{Vdash}", "|="));
     codes.add(new Pair<String,String>("%{forall}", "FORALL"));
     codes.add(new Pair<String,String>("%{exists}", "EXISTS"));
+    codes.add(new Pair<String,String>("%{emptyset}", "{}"));
     codes.add(new Pair<String,String>("%{sqsupset}", "[>]"));
     codes.add(new Pair<String,String>("%{sqsupseteq}", "[>=]"));
     codes.add(new Pair<String,String>("%{succ}", "(>)"));
@@ -93,7 +94,7 @@ public class DefaultOutputModule implements OutputModule {
     codes.add(new Pair<String,String>("%{chi}", "chi"));
     codes.add(new Pair<String,String>("%{psi}", "psi"));
     codes.add(new Pair<String,String>("%{omega}", "omega"));
-    return new DefaultOutputModule(typr, new PlainTermPrinter(typr,avoid), Style.Plain, codes);
+    return new DefaultOutputModule(typr, new PlainTermPrinter(avoid), Style.Plain, codes);
   }
 
   /** This creates a module with Unicode style (pure text, but unicode symbols are allowed). */
@@ -113,6 +114,7 @@ public class DefaultOutputModule implements OutputModule {
     codes.add(new Pair<String,String>("%{Vdash}", "⊨"));
     codes.add(new Pair<String,String>("%{forall}", "∀"));
     codes.add(new Pair<String,String>("%{exists}", "∃"));
+    codes.add(new Pair<String,String>("%{emptyset}", "ø"));
     codes.add(new Pair<String,String>("%{sqsupset}", "⊐"));
     codes.add(new Pair<String,String>("%{sqsupseteq}", "⊒"));
     codes.add(new Pair<String,String>("%{succ}", "≻"));
@@ -152,7 +154,7 @@ public class DefaultOutputModule implements OutputModule {
     codes.add(new Pair<String,String>("%{chi}", "χ"));
     codes.add(new Pair<String,String>("%{psi}", "ψ"));
     codes.add(new Pair<String,String>("%{omega}", "ω"));
-    return new DefaultOutputModule(typr, new TermPrinter(typr,avoid), Style.Unicode, codes);
+    return new DefaultOutputModule(typr, new TermPrinter(avoid), Style.Unicode, codes);
   }
 
   /** This creates a standard module for printing. */
@@ -378,6 +380,38 @@ public class DefaultOutputModule implements OutputModule {
       return ret.toString();
     }
     return ob.toString();
+  }
+
+  public void printTrs(TRS trs) {
+    print("%a with ", trs.queryTrsKind());
+    if (trs.querySchemeCount() == 0) println("no additional rule schemes:");
+    else if (trs.querySchemeCount() == 1) println("only rule scheme " + trs.queryScheme(0) + ":");
+    else {
+      print("rule schemes ");
+      for (int i = 0; i < trs.querySchemeCount() - 1; i++) print("%a, ", trs.queryScheme(i));
+      println("and %a:", trs.queryScheme(trs.querySchemeCount()-1));
+    }
+    startTable();
+    nextColumn("Signature:");
+    boolean printedAny = false;
+    for (FunctionSymbol f : trs.queryAlphabet().getSymbols()) {
+      if (printedAny) nextColumn(" ");
+      else printedAny = true;
+      nextColumn("%a", f.queryName());
+      nextColumn("::");
+      println("%a", f.queryType());
+    }
+    if (!printedAny) println("(empty)");
+    endTable(); startTable();
+    printedAny = false;
+    nextColumn("Rules:");
+    for (int i = 0; i < trs.queryRuleCount(); i++) {
+      if (printedAny) nextColumn(" ");
+      else printedAny = true;
+      println("%a", trs.queryRule(i));
+    }
+    if (!printedAny) println("(empty)");
+    endTable();
   }
 }
 
