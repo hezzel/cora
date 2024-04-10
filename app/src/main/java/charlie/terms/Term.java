@@ -175,16 +175,16 @@ public interface Term {
   boolean isFirstOrder();
 
   /**
-   * Returns true if this term is a pattern (so: non-binder variables are not applied at all,
-   * meta-variables only take distinct bound variables as arguments, and meta-applications are not
-   * applied to anything).
+   * Returns true if this term is a pattern (so: non-binder variables, abstractions and
+   * meta-applications are not applied at all, and meta-variables only take distinct bound
+   * variables as arguments).
    */
   boolean isPattern();
 
   /**
    * Returns true if this term is a semi-pattern (so: meta-variables only take distinct bound
-   * variables as arguments, but it is allowed for meta-variables and variables to appear at the
-   * head of an application). Note that any true term is a semi-pattern.
+   * variables as arguments, but it is allowed for meta-variables, abstractions and variables to
+   * appear at the head of an application). Note that any true term is a semi-pattern.
    */
   boolean isSemiPattern();
 
