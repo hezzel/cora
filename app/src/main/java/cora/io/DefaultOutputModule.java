@@ -40,7 +40,7 @@ public class DefaultOutputModule implements OutputModule {
   /** This creates a module with Plain style (pure text, no unicode). */
   public static OutputModule createPlainModule(TRS trs) {
     TypePrinter typr = new PlainTypePrinter();
-    Set<String> avoid = trs.queryAlphabet().getSymbols().stream()
+    Set<String> avoid = trs == null ? Set.of() : trs.queryAlphabet().getSymbols().stream()
                            .map(FunctionSymbol::queryName).collect(Collectors.toSet());
     ArrayList<Pair<String,String>> codes = new ArrayList<Pair<String,String>>();
     codes.add(new Pair<String,String>("%{ruleArrow}", "->"));
@@ -97,10 +97,17 @@ public class DefaultOutputModule implements OutputModule {
     return new DefaultOutputModule(typr, new PlainTermPrinter(avoid), Style.Plain, codes);
   }
 
+  /**
+   * Like createPlainModule, but does not require a TRS.  Note that this means that terms may not
+   * be printed correctly (it is possible that variables and function symbols end up with the same
+   * name).
+   */
+  public static OutputModule createPlainModule() { return createPlainModule(null); }
+
   /** This creates a module with Unicode style (pure text, but unicode symbols are allowed). */
   public static OutputModule createUnicodeModule(TRS trs) {
     TypePrinter typr = new TypePrinter();
-    Set<String> avoid = trs.queryAlphabet().getSymbols().stream()
+    Set<String> avoid = trs == null ? Set.of() : trs.queryAlphabet().getSymbols().stream()
                            .map(FunctionSymbol::queryName).collect(Collectors.toSet());
     ArrayList<Pair<String,String>> codes = new ArrayList<Pair<String,String>>();
     codes.add(new Pair<String,String>("%{ruleArrow}", "→"));
@@ -157,11 +164,25 @@ public class DefaultOutputModule implements OutputModule {
     return new DefaultOutputModule(typr, new TermPrinter(avoid), Style.Unicode, codes);
   }
 
+  /**
+   * Like createUnicodeModule, but does not require a TRS.  Note that this means that terms may not
+   * be printed correctly (it is possible that variables and function symbols end up with the same
+   * name).
+   */
+  public static OutputModule createUnicodeModule() { return createUnicodeModule(null); }
+
   /** This creates a standard module for printing. */
   public static OutputModule createDefaultModule(TRS trs) {
     TypePrinter typr = new PlainTypePrinter();
     return createUnicodeModule(trs);
   }
+
+  /**
+   * Like createDefaultModule, but does not require a TRS.  Note that this means that terms may not
+   * be printed correctly (it is possible that variables and function symbols end up with the same
+   * name).
+   */
+  public static OutputModule createDefaultModule() { return createDefaultModule(null); }
 
   private DefaultOutputModule(TypePrinter types, TermPrinter terms, Style style,
                               ArrayList<Pair<String,String>> codes) {
