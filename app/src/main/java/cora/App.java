@@ -39,6 +39,7 @@ public class App {
       Request req = parameters.queryRequest();
       TRS trs = readTRS(parameters.querySingleFile());
       ProofObject pobject = executeRequest(req, trs, parameters.queryModuleInput());
+      if (pobject == null) System.exit(1);
       System.out.println(pobject.queryAnswer());
       OutputModule om = parameters.queryOutputModule(trs);
       pobject.justify(om);
@@ -98,20 +99,26 @@ public class App {
     return switch (request) {
       case Horpo -> TerminationHandler.proveHorpoTermination(trs);
       case Print -> new ProofObject() {
-        public Object queryAnswer() { return true; }
+        public Object queryAnswer() { return ""; }
         public void justify(OutputModule o) { o.printTrs(trs); }
       };
       case Termination -> TerminationHandler.proveTermination(trs);
-      case Reduce -> {
-        if (moduleInput.size() != 1) {
-          System.out.println("WRONG ARGUMENTS: To reduce, one term should be given as input.");
-          System.exit(1);
-        }
-        Term start = CoraInputReader.readTerm(moduleInput.get(0), trs);
-        Reducer reducer = new Reducer(trs);
-        yield reducer.normalise(start);
-      }
+      case Reduce -> executeReduce(trs, moduleInput);
     };
+  }
+
+  /** Helper function for executeRequest: executes a Reduce request */
+  private static ProofObject executeReduce(TRS trs, List<String> moduleInput) {
+    if (moduleInput.size() != 1) throw new Error("Parameters did not supply an input term!");
+    String txt = moduleInput.get(0);
+    Term start;
+    try { start = CoraInputReader.readTerm(txt, trs); }
+    catch (ParseError e) {
+      System.out.println("Error reading input term " + txt + ":\n" + e.getMessage());
+      return null;
+    }
+    Reducer reducer = new Reducer(trs);
+    return reducer.normalise(start);
   }
 }
 
