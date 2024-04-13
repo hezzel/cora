@@ -20,18 +20,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
+import cora.config.Settings;
 
 class ParametersTest {
-  @Test
-  public void testRequestHorpo() {
-    Parameters param = new Parameters(new String[] { "myfile", "--horpo" });
-    assertTrue(param.queryRequest() == Parameters.Request.Horpo);
-    assertTrue(param.querySingleFile().equals("myfile"));
-    param = new Parameters(new String[] { "-h", "myfile.txt" });
-    assertTrue(param.queryRequest() == Parameters.Request.Horpo);
-    assertTrue(param.querySingleFile().equals("myfile.txt"));
-  }
-
   @Test
   public void testRequestTermination() {
     Parameters param = new Parameters(new String[] { "-y", "plain", "--termination", "xx" });
@@ -107,7 +98,7 @@ class ParametersTest {
 
   @Test
   public void testFileRequests() {
-    Parameters param = new Parameters(new String[] { "--horpo" }); // no files
+    Parameters param = new Parameters(new String[] { "--termination" }); // no files
     assertThrows(Parameters.WrongParametersError.class, () -> param.querySingleFile());
     assertTrue(param.queryFiles().size() == 0);
     Parameters param2 = new Parameters(new String[] { "file1", "--print", "file2" }); // two files
@@ -121,6 +112,23 @@ class ParametersTest {
   public void testIllegalParameters() {
     assertThrows(Parameters.WrongParametersError.class, () ->
       new Parameters(new String[] { "--style", "plain", "-myfile.txt" }));
+  }
+
+  @Test
+  public void testDisable() {
+    Parameters param = new Parameters(new String[] {
+      "myfile", "-d", "dp,graph", "--disable", "dp,ifun" });
+    param.setupSettings();
+    assertTrue(Settings.disabled.size() == 3);
+    assertTrue(Settings.disabled.contains("dp"));
+    assertTrue(Settings.disabled.contains("graph"));
+    assertTrue(Settings.disabled.contains("ifun"));
+  }
+
+  @Test
+  public void testIllegalDisable() {
+    Parameters param = new Parameters(new String[] { "myfile", "-d", "dp,extra,graph" });
+    assertThrows(Parameters.WrongParametersError.class, () -> param.setupSettings());
   }
 }
 

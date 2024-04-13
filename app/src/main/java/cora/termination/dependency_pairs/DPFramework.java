@@ -14,6 +14,10 @@ import java.util.Stack;
 import static cora.termination.TerminationAnswer.*;
 
 public class DPFramework {
+  public static String queryDisabledCode() {
+    return "dp";
+  }
+
   private ProofObject isTRSApplicable(TRS trs) {
     if (!trs.verifyProperties(Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED,
                               Lhs.PATTERN, Root.FUNCTION)) {
@@ -52,12 +56,18 @@ public class DPFramework {
 
     // we start with the processors that preserve the "public" nature of a chain
     ProcessorProofObject tmp;
-    tmp = splitProcessor.transform(initialProblem);
-    if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
-    tmp = targProcessor.transform(initialProblem);
-    if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
-    tmp = reachProcessor.transform(initialProblem);
-    if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
+    if (splitProcessor.isApplicable(initialProblem)) {
+      tmp = splitProcessor.transform(initialProblem);
+      if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
+    }
+    if (targProcessor.isApplicable(initialProblem)) {
+      tmp = targProcessor.transform(initialProblem);
+      if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
+    }
+    if (reachProcessor.isApplicable(initialProblem)) {
+      tmp = reachProcessor.transform(initialProblem);
+      if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
+    }
 
     // At this point, we are looking for the absence of any chains, not just public chains;
     // this is handled by the main loop.
@@ -70,6 +80,7 @@ public class DPFramework {
       Problem p = toBeSolved.removeFirst();
       boolean success = false;
       for (Processor proc : proclist) {
+        if (!proc.isApplicable(p)) continue;
         ProcessorProofObject ppo = proc.processDPP(p);
         if (ppo.applicable()) {
           toBeSolved.addAll(ppo.queryResults());

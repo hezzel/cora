@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.File;
 import java.nio.file.*;
 import java.util.List;
+import java.util.TreeSet;
 
 /** Basic entry class: this reads a TRS and asks the user for a term, then reduces this term. */
 public class App {
@@ -36,6 +37,7 @@ public class App {
   public static void main(String[] args) {
     try {
       Parameters parameters = new Parameters(args);
+      parameters.setupSettings();
       Request req = parameters.queryRequest();
       TRS trs = readTRS(parameters.querySingleFile());
       ProofObject pobject = executeRequest(req, trs, parameters.queryModuleInput());
@@ -97,7 +99,6 @@ public class App {
    */
   private static ProofObject executeRequest(Request request, TRS trs, List<String> moduleInput) {
     return switch (request) {
-      case Horpo -> TerminationHandler.proveHorpoTermination(trs);
       case Print -> new ProofObject() {
         public Object queryAnswer() { return ""; }
         public void justify(OutputModule o) { o.printTrs(trs); }

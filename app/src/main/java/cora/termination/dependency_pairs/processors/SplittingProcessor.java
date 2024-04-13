@@ -18,6 +18,7 @@ package cora.termination.dependency_pairs.processors;
 import charlie.util.Pair;
 import charlie.terms.*;
 import cora.io.OutputModule;
+import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
 import java.util.Optional;
@@ -28,8 +29,11 @@ import java.util.*;
 public class SplittingProcessor implements Processor {
   private boolean _anythingChanged;
 
+  /** This technique can be disabled by runtime arguments. */
+  public static String queryDisabledCode() { return "split"; }
+
   @Override
-  public boolean isApplicable(Problem dp) { return true; }
+  public boolean isApplicable(Problem dp) { return !Settings.isDisabled(queryDisabledCode()); }
   
   /**
    * For C1 o...o Cn, where Ci does not have o as a root symbol, this appends [C1,...,Cn] to sofar.

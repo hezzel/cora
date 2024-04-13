@@ -1,6 +1,7 @@
 package cora.termination.dependency_pairs.processors;
 
 import cora.io.OutputModule;
+import cora.config.Settings;
 import cora.data.digraph.Digraph;
 import cora.data.digraph.Reachability;
 import cora.termination.dependency_pairs.DP;
@@ -10,10 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ReachabilityProcessor implements Processor {
+  /** This technique can be disabled by runtime arguments. */
+  public static String queryDisabledCode() { return "reach"; }
+
   @Override
-  public boolean isApplicable(Problem dpp) {
-    return true;
-  }
+  public boolean isApplicable(Problem dp) { return !Settings.isDisabled(queryDisabledCode()); }
 
   private class ReachabilityProofObject extends ProcessorProofObject {
     public ReachabilityProofObject(Problem inp) { super(inp); }

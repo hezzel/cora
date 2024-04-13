@@ -3,8 +3,8 @@
 [![DOI](https://zenodo.org/badge/207259740.svg)](https://zenodo.org/doi/10.5281/zenodo.10460327)
 
 Cora is an analysis tool for constrained higher-order term rewriting.
-At the moment only one technique is implemented (constrained HORPO), but this is
-planned to be expanded in the future.
+At the moment several techniques for termination analysis are implemented, and
+in the future we hope to expand to other properties.
 
 ## Folder structure
 

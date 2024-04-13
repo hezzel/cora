@@ -1,6 +1,7 @@
 package cora.termination.dependency_pairs.processors;
 
 import cora.io.OutputModule;
+import cora.config.Settings;
 import cora.data.digraph.Digraph;
 import cora.data.digraph.SCC;
 import cora.termination.dependency_pairs.DP;
@@ -12,8 +13,11 @@ import java.util.List;
 import java.util.Optional;
 
 public class GraphProcessor implements Processor {
+  /** This technique can be disabled by runtime arguments. */
+  public static String queryDisabledCode() { return "graph"; }
+
   @Override
-  public boolean isApplicable(Problem dpp) { return true; }
+  public boolean isApplicable(Problem dp) { return !Settings.isDisabled(queryDisabledCode()); }
 
   private List<Problem> computeAllSubproblems(@NotNull Problem dpp) {
     Digraph graphOfDPP = Approximator.problemToGraph(dpp);

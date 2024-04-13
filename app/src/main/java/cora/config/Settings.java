@@ -17,6 +17,7 @@ package cora.config;
 
 import charlie.smt.SmtSolver;
 import charlie.smt.ExternalSmtSolver;
+import java.util.Set;
 
 /**
  * This class collects a number of settings that are global to the execution of Cora or any of its
@@ -25,5 +26,10 @@ import charlie.smt.ExternalSmtSolver;
  */
 public class Settings {
   public static SmtSolver smtSolver = new ExternalSmtSolver();
+  public static Set<String> disabled = Set.of();
+
+  public static boolean isDisabled(String technique) {
+    return disabled.contains(technique);
+  }
 }
 

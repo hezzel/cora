@@ -10,15 +10,17 @@ import charlie.terms.FunctionSymbol;
 import charlie.terms.Variable;
 import charlie.terms.Term;
 import cora.io.OutputModule;
+import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
 
 public class TheoryArgumentsProcessor implements Processor {
   private TreeMap<FunctionSymbol,TreeSet<Integer>> _targs;
 
-  public boolean isApplicable(Problem dpp) {
-    return true;
-  }
+  /** This technique can be disabled by runtime arguments. */
+  public static String queryDisabledCode() { return "tharg"; }
+
+  public boolean isApplicable(Problem dp) { return !Settings.isDisabled(queryDisabledCode()); }
 
   /**
    * Sets up _targs to map each f in Heads(dpp) to the set of all argument positions of theory

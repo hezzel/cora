@@ -13,11 +13,13 @@ import java.util.Optional;
 import java.util.*;
 
 public class SubtermProcessor implements Processor {
-
   private SmtProblem _smt;
 
+  /** This technique can be disabled by runtime arguments. */
+  public static String queryDisabledCode() { return "subcrit"; }
+
   @Override
-  public boolean isApplicable(Problem dp) { return true; }
+  public boolean isApplicable(Problem dp) { return !Settings.isDisabled(queryDisabledCode()); }
 
   /**
    * Generates an Integer variable, i.e.,
