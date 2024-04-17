@@ -171,6 +171,7 @@ class OverApproximation {
         todo.push(new Pair<Term,Term>(a, b));
       }
     }
-    return TermAnalyser.satisfy(requirements, Settings.smtSolver) != null;
+    return !(TermAnalyser.satisfy(requirements, Settings.smtSolver)
+             instanceof TermAnalyser.Result.NO);
   }
 }

@@ -61,7 +61,7 @@ class RuleReducer implements ReduceObject {
     }
     Term csub = _rule.queryConstraint().substitute(subst);
     if (csub.isGround()) return TermAnalyser.evaluate(csub).getBool();
-    else return TermAnalyser.satisfy(csub, Settings.smtSolver) != null;
+    else return TermAnalyser.satisfy(csub, Settings.smtSolver) instanceof TermAnalyser.Result.YES;
   }
 
   /**
@@ -85,8 +85,12 @@ class RuleReducer implements ReduceObject {
       if (!TermAnalyser.evaluate(csub).getBool()) return null;
     }
     else {
-      Substitution result = TermAnalyser.satisfy(csub, Settings.smtSolver);
-      if (result == null) return null;
+      Substitution result = null;
+      switch (TermAnalyser.satisfy(csub, Settings.smtSolver)) {
+        case TermAnalyser.Result.NO(): return null;
+        case TermAnalyser.Result.MAYBE(String reason): return null;
+        case TermAnalyser.Result.YES(Substitution gamma): result = gamma;
+      };
       for (Variable x : csub.vars()) {
         if (!subst.extend(x, result.get(x))) return null;
       }

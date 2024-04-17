@@ -1,0 +1,17 @@
+nil :: List
+cons :: Int -> List -> List
+
+gcd :: Int -> Int -> Int
+gcd(n, m) -> gcd(-n, m)    | n < 0
+gcd(n, m) -> gcd(n, -m)    | n >= 0 /\ n < 0
+gcd(n, m) -> gcd(m, n)     | n >= 0 /\ m > n
+gcd(n, 0) -> n
+gcd(n, m) -> gcd(m, n % m) | m > 0 /\ n >= m
+
+fold :: (Int -> Int -> Int) -> Int -> List -> Int
+fold(F, n, nil) -> n
+fold(F, n, cons(x, y)) -> F(x, fold(F, n, y))
+
+gcdlist :: List -> Int
+gcdlist(l) -> fold(gcd, 0, l)
+

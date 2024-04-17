@@ -48,8 +48,9 @@ public class DPFramework {
     KasperProcessor  kasperProcessor  = new KasperProcessor();
     TheoryArgumentsProcessor targProcessor = new TheoryArgumentsProcessor();
     SplittingProcessor splitProcessor = new SplittingProcessor();
+    HorpoProcessor horpoProcessor = new HorpoProcessor();
     List<Processor> proclist =
-      List.of(graphProcessor, subtermProcessor, targProcessor, kasperProcessor);
+      List.of(graphProcessor, subtermProcessor, targProcessor, kasperProcessor, horpoProcessor);
 
     Problem initialProblem = DPFramework.computeInitialProblem(trs);
     DPProofObject ret = new DPProofObject(appl, initialProblem);

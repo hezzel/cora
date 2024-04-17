@@ -13,43 +13,49 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.termination.horpo;
+package cora.termination.reduction_pairs;
 
 import java.util.TreeMap;
-import charlie.terms.*;
-import charlie.trs.*;
+import java.util.Set;
+import charlie.terms.FunctionSymbol;
 import cora.io.OutputModule;
-import cora.io.ProofObject;
-import cora.termination.TerminationAnswer;
 
 /**
- * A HorpoResult contains the information needed to show that all left-hand sides are bigger than
- * all right-hand sides in a given TRS, using Constrained Horpo.
+ * A HorpoResult contains the information needed to show that an OrderingProblem was satisfied
+ * using Constrained Horpo.  It also tells us which of the "Either" inequalities were oriented
+ * strictly.
  *
  * Alternatively, if no such proof could be found, it contains that information too.
  */
-class HorpoResult implements ProofObject {
+class HorpoResult extends ReductionPairProofObject {
   private final TreeMap<String,Integer> _pred;
   private final TreeMap<String,Integer> _stat;
   private int _bound;
   private String _failReason;
 
-  HorpoResult(String reason) {
+  /** Create a failed proof (which will return MAYBE) */
+  HorpoResult(OrderingProblem problem, String reason) {
+    super(problem);
     _pred = null;
     _stat = null;
     _failReason = reason;
   }
 
-  HorpoResult(TreeMap<String,Integer> precedence, TreeMap<String,Integer> status, int bound) {
+  /**
+   * Initialise a successful proof, for the given problem, with the given indexes within the problem
+   * being oriented strictly (and the rest weakly).
+   * The other arguments are the precedence (a value for each function symbol, such that f |> g if
+   * precedence[f] > precedence[g]); the status (an integer for each function symbol, with 0 meaning
+   * Lexicographical status and a higher value multiset_{status[f]}), and a bound for the integer
+   * comparison.
+   */
+  HorpoResult(OrderingProblem problem, Set<Integer> strict,
+              TreeMap<String,Integer> precedence, TreeMap<String,Integer> status, int bound) {
+    super(problem, strict);
     _pred = new TreeMap<String,Integer>(precedence);
     _stat = new TreeMap<String,Integer>(status);
     _bound = bound;
     _failReason = null;
-  }
-
-  public TerminationAnswer queryAnswer() {
-    if (_pred == null) return TerminationAnswer.MAYBE;
-    else return TerminationAnswer.YES;
   }
 
   /**
@@ -75,11 +81,11 @@ class HorpoResult implements ProofObject {
     return "Mul_" + _stat.get(f.toString());
   }
 
-  public String integerOrdering() {
-    String ret = "{(x,y) | ";
-    if (_bound <= 0) ret += "x %{greater} " + _bound + " %{and} x %{greater} y }";
-    else ret += "x %{smaller} " + _bound + " %{and} x %{smaller} y }";
-    return ret;
+  /** Prints a string representation of the current integer ordering to the output module. */
+  private void printIntegerOrdering(OutputModule module) {
+    module.print("{(x,y) | ");
+    if (_bound <= 0) module.print("x %{greater} %a %{and} x %{greater} y }", _bound);
+    else module.print("x %{smaller} %a %{and} x %{smaller} y }", _bound);
   }
 
   public void justify(OutputModule o) {
@@ -88,7 +94,9 @@ class HorpoResult implements ProofObject {
       return;
     }
 
-    o.println("Constrained HORPO succeedings in orienting all rules, using the following settings:");
+    o.println("Constrained HORPO yields:");
+    printOrderingProblem(o);
+    o.println("We do this using the following settings:");
     o.println("* Precedence (all non-mentioned symbols have precedence -1 for theory symbols and " +
       "0 for other symbols):");
     o.startTable();
@@ -113,7 +121,8 @@ class HorpoResult implements ProofObject {
     o.println("{(true,false)}");
     o.nextColumn("%{sqsupset}_{Int}");
     o.nextColumn("=");
-    o.println(integerOrdering());
+    printIntegerOrdering(o);
+    o.println();
     o.endTable();
   }
 }

@@ -18,7 +18,7 @@ package cora.termination;
 import charlie.trs.TRS;
 import cora.io.ProofObject;
 import cora.config.Settings;
-import cora.termination.horpo.Horpo;
+import cora.termination.reduction_pairs.Horpo;
 import cora.termination.dependency_pairs.DPFramework;
 
 import java.util.Optional;
@@ -27,6 +27,6 @@ public class TerminationHandler {
   public static ProofObject proveTermination(TRS trs) {
     DPFramework dpF = new DPFramework();
     if (!Settings.isDisabled(dpF.queryDisabledCode())) return dpF.proveTermination(trs);
-    return Horpo.run(trs);
+    return Horpo.proveTermination(trs);
   }
 }

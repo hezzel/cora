@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.termination.horpo;
+package cora.termination.reduction_pairs;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -27,33 +27,39 @@ import charlie.trs.TrsProperties.*;
 import charlie.theorytranslation.TermSmtTranslator;
 import cora.config.Settings;
 
-/**
- * This is an implementation of a basic version of Horpo for LCSTRSs (so with constraints).
- */
+/** This is an implementation of a basic version of Horpo for LCSTRSs (so with constraints). */
 public class Horpo {
+  private OrderingProblem _orderingProblem;
+
+  /** This technique can be disabled by runtime arguments. */
+  public static String queryDisabledCode() { return "horpo"; }
+
   /**
-   * This function returns whether this termination analyser can be applied to the given TRS.
+   * This function returns whether this reduction pair can be applied to the given TRS at all.
    * This is the case if it's an LCSTRS: an applicative constrained system where left-hand sides
    * are not theory terms.
    */
-  private static boolean applicable(TRS trs) {
-    return trs.verifyProperties(Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED,
+  public static boolean applicable(TRS trs) {
+    return !Settings.isDisabled(queryDisabledCode()) &&
+           trs.verifyProperties(Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED,
                                 Lhs.NONPATTERN, Root.ANY);
   }
 
   /**
    * Given a TRS, this checks if it can be proved terminating using Horpo, and if so, returns a
-   * HorpoResult describing the Horpo proof.  If not, null is returned instead.  (In this case
-   * the termination couldn't be proved; we cannot conclude non-termination from this.)
+   * HorpoResult describing the Horpo proof.  If not, a HorpoResult describing failure is returned
+   * instead.  (In this case the termination couldn't be proved; we cannot conclude non-termination
+   * from this.)
    */
-  public static HorpoResult run(TRS trs) {
+  public static HorpoResult proveTermination(TRS trs) {
+    OrderingProblem problem = OrderingProblem.createStrictProblem(trs);
     if (!applicable(trs)) {
-      return new HorpoResult("The current implementation of HORPO can only be applied on " +
+      return new HorpoResult(problem,
+                             "The current implementation of HORPO can only be applied on " +
                              "systems with applicative term formation and no tuples.");
     }
-    Horpo horpo = new Horpo(trs);
-    while (horpo.handleTodo());
-    return horpo.solve();
+    Horpo horpo = new Horpo(problem, true);
+    return horpo.orient();
   }
 
   /***********************************************************************************************/
@@ -79,33 +85,23 @@ public class Horpo {
   private final BVar _down;
   private int _M;
 
-  class HorpoRequirement {
-    final Term left;
-    final Term right;
-    final Term constraint;
-    final int relation; // one of GREATER, GEQ or RPO
-    final int rule;
-    final String clause;
-    final BVar variable;
-  
-    HorpoRequirement(int rl, Term l, int rel, Term r, Term c, String cl, BVar x) {
-      left = l;
-      right = r;
-      constraint = c;
-      relation = rel;
-      rule = rl;
-      clause = cl;
-      variable = x;
-    }
-
+  private record HorpoRequirement(int reqnr, Term left, int relation, Term right,
+                                  Term constraint, String clause, BVar variable) {
+    /** A toString() function to supply debug information */
     public String toString() {
       return variable.toString() + " => " +
-             reqToString(rule, left, relation, right, constraint, clause);
+             reqToString(reqnr, left, relation, right, constraint, clause);
     }
   }
 
-  /** Default only for the sake of unit testing; this should be created by the static functions. */
-  Horpo(TRS trs) {
+  /**
+   * Sets up a Horpo solver for the given ordering problem.
+   * If "strong" is set to true, then the reduction pair we search for must be strongly monotonic;
+   * if not, then it is allowed to be weakly monotonic.
+   */
+  public Horpo(OrderingProblem problem, boolean strong) {
+    _orderingProblem = problem;
+
     _problem = new SmtProblem();
     _todo = new LinkedList<HorpoRequirement>();
     _varCache = new TreeMap<String,BVar>();
@@ -113,28 +109,26 @@ public class Horpo {
     _status = new TreeMap<String,IVar>();
     _down = _problem.createBooleanVariable();
 
-    computeIntegerVariableBound(trs);
+    computeIntegerVariableBound();
 
-    for (int i = 0; i < trs.queryRuleCount(); i++) {
-      Rule rule = trs.queryRule(i);
-      Term left = rule.queryLeftSide(), right = rule.queryRightSide();
-      Term constraint = fixConstraint(left, right, rule.queryConstraint());
-      _problem.require(getVariableFor(i, left, GREATER, right, constraint, null));
+    for (int i = 0; i < problem.reqs().size(); i++) {
+      OrderingRequirement req = problem.reqs().get(i);
+      int rel = (req.rel() == OrderingRequirement.Relation.Weak) ? GEQ : GREATER;
+      _problem.require(getVariableFor(i, req.left(), rel, req.right(), req.constraint(), null));
     }
   }
 
   /**
-   * We set M to twice the largest integer value occurring in the program (or just to 1000 if that
-   * is bigger).
+   * We set M to twice the largest integer value occurring in the OrderingProblem (or just to 1000
+   * if that is bigger).
    */
-  private void computeIntegerVariableBound(TRS trs) {
+  private void computeIntegerVariableBound() {
     _M = 500;
     LinkedList<Term> parts = new LinkedList<Term>();
-    for (int i = 0; i < trs.queryRuleCount(); i++) {
-      Rule rule = trs.queryRule(i);
-      parts.push(rule.queryLeftSide());
-      parts.push(rule.queryRightSide());
-      parts.push(rule.queryConstraint());
+    for (OrderingRequirement req : _orderingProblem.reqs()) {
+      parts.push(req.left());
+      parts.push(req.right());
+      parts.push(req.constraint());
     }
     while (!parts.isEmpty()) {
       Term part = parts.pop();
@@ -180,28 +174,31 @@ public class Horpo {
     return x;
   }
 
-  /** We add variables from FV(right) \ FV(left) into the given constraint. */
-  private Term fixConstraint(Term left, Term right, Term constraint) {
-    Environment<Variable> lvars = left.vars();
-    Environment<Variable> rvars = right.vars();
-    Environment<Variable> cvars = constraint.vars();
-    for (Variable x : rvars) {
-      if (lvars.contains(x)) continue;
-      if (cvars.contains(x)) continue;
-      constraint = TermFactory.createApp(TheoryFactory.andSymbol, constraint,
-        TermFactory.createApp(TheoryFactory.equalSymbol, x, x));
-    }
-    return constraint;
+  /**
+   * We find the unique variable associated to the given requirement.  If it was used before, this
+   * comes from the cache; otherwise we generate a new variable and put the requirement to define
+   * it into the _todo list.
+   */
+  private BVar getVariableFor(int reqnr, Term left, int rel, Term right, Term constraint,
+                              String clause) {
+    String str = reqToString(reqnr, left, rel, right, constraint, clause);
+    BVar ret =  _varCache.get(str);
+    if (ret != null) return ret;
+    ret = _problem.createBooleanVariable();
+    _varCache.put(str, ret);
+    HorpoRequirement req = new HorpoRequirement(reqnr, left, rel, right, constraint, clause, ret);
+    _todo.add(req);
+    return ret;
   }
 
   /**
    * To be able to recognise repeated occurrences of the same requirement left rel{constr} right,
    * we print them to string, and cache the requirements based on their string representation.
    */
-  private String reqToString(int rule, Term left, int rel, Term right, Term constraint,
-                             String clause) {
+  private static String reqToString(int reqIndex, Term left, int rel, Term right, Term constraint,
+                                    String clause) {
     StringBuilder ret = new StringBuilder();
-    ret.append("" + rule + ": ");
+    ret.append("" + reqIndex + ": ");
     ret.append(left.toString());
     if (rel == GREATER) ret.append(" ≻");
     if (rel == GEQ) ret.append(" ≽");
@@ -212,23 +209,6 @@ public class Horpo {
     ret.append(right.toString());
     if (clause != null) ret.append(" by " + clause);
     return ret.toString();
-  }
-
-  /**
-   * We find the unique variable associated to the given requirement.  If it was used before, this
-   * comes from the cache; otherwise we generate a new variable and put the requirement to define
-   * it into the _todo list.
-   */
-  private BVar getVariableFor(int rule, Term left, int rel, Term right, Term constraint,
-                              String clause) {
-    String str = reqToString(rule, left, rel, right, constraint, clause);
-    BVar ret =  _varCache.get(str);
-    if (ret != null) return ret;
-    ret = _problem.createBooleanVariable();
-    _varCache.put(str, ret);
-    HorpoRequirement req = new HorpoRequirement(rule, left, rel, right, constraint, clause, ret);
-    _todo.add(req);
-    return ret;
   }
 
   /**
@@ -249,6 +229,46 @@ public class Horpo {
       case Product _ -> false;
     };
   }
+
+  /**
+   * After creating a Horpo solver, call this function to execute it.  This will build an
+   * SmtProblem, run the solver, and determine a sHorpoResult.
+   *
+   * Note that queryAnswer() in the returned HorpoResult either returns YES (if the problem could be
+   * oriented), or MAYBE (if not).  In the case of YES, it can be queried for which of the "Either"
+   * requirements were oriented strictly.  A YES does not immediately imply termination!
+   */
+  public HorpoResult orient() {
+    while (handleTodo());
+    return solve();
+  }
+
+  private HorpoResult solve() {
+    Valuation valuation = null;
+    switch (Settings.smtSolver.checkSatisfiability(_problem)) {
+      case SmtSolver.Answer.YES(Valuation val): valuation = val; break;
+      default:  // no solution => let's return a MAYBE
+        return new HorpoResult(_orderingProblem, "Could not find a HORPO proof.");
+    };
+    TreeMap<String,Integer> pred = new TreeMap<String,Integer>();
+    for (String symbol : _precedence.keySet()) {
+      pred.put(symbol, valuation.queryAssignment(_precedence.get(symbol)));
+    }
+    TreeMap<String,Integer> stat = new TreeMap<String,Integer>();
+    for (String symbol : _status.keySet()) {
+      stat.put(symbol, valuation.queryAssignment(_status.get(symbol)));
+    }
+    int bound = _M;
+    if (valuation.queryAssignment(_down)) bound = -_M;
+    TreeSet<Integer> allIndexes = new TreeSet<Integer>();
+    for (int i = 0; i < _orderingProblem.reqs().size(); i++) {
+      if (_orderingProblem.reqs().get(i).rel() != OrderingRequirement.Relation.Weak) {
+        allIndexes.add(i);
+      }
+    }
+    return new HorpoResult(_orderingProblem, allIndexes, pred, stat, bound);
+  }
+
 
   /**
    * This function takes a single item from the _todo list, and handles it, potentially adding more
@@ -272,10 +292,10 @@ public class Horpo {
 
     if (req.clause == null) {
       ArrayList<Constraint> lst = new ArrayList<Constraint>();
-      lst.add(getVariableFor(req.rule, l, GEQ, r, c, "1c"));
-      lst.add(getVariableFor(req.rule, l, GEQ, r, c, "1a"));
-      lst.add(getVariableFor(req.rule, l, GEQ, r, c, "1b"));
-      lst.add(getVariableFor(req.rule, l, GEQ, r, c, "1d"));
+      lst.add(getVariableFor(req.reqnr, l, GEQ, r, c, "1c"));
+      lst.add(getVariableFor(req.reqnr, l, GEQ, r, c, "1a"));
+      lst.add(getVariableFor(req.reqnr, l, GEQ, r, c, "1b"));
+      lst.add(getVariableFor(req.reqnr, l, GEQ, r, c, "1d"));
       Constraint combi = SmtFactory.createDisjunction(lst);
       _problem.requireImplication(req.variable, combi);
     }
@@ -373,7 +393,7 @@ public class Horpo {
     // for theory terms, > never succeeds where the other rules for ≥ fail
     if (req.left.isTheoryTerm()) _problem.require(SmtFactory.createNegation(req.variable));
     else {
-       BVar x = getVariableFor(req.rule, req.left, GREATER, req.right, req.constraint, null);
+       BVar x = getVariableFor(req.reqnr, req.left, GREATER, req.right, req.constraint, null);
       _problem.requireImplication(req.variable, x);
     }
   }
@@ -393,8 +413,8 @@ public class Horpo {
       Term ra = r.queryImmediateHeadSubterm(r.numberArguments()-1);
       Term rb = r.queryArgument(r.numberArguments());
       if (sameTypeStructure(lb.queryType(), rb.queryType())) {
-        BVar x = getVariableFor(req.rule, la, GEQ, ra, req.constraint, null);
-        BVar y = getVariableFor(req.rule, lb, GEQ, rb, req.constraint, null);
+        BVar x = getVariableFor(req.reqnr, la, GEQ, ra, req.constraint, null);
+        BVar y = getVariableFor(req.reqnr, lb, GEQ, rb, req.constraint, null);
         _problem.requireImplication(req.variable, x);
         _problem.requireImplication(req.variable, y);
         return;
@@ -410,10 +430,10 @@ public class Horpo {
 
     if (req.clause == null) {
       ArrayList<Constraint> lst = new ArrayList<Constraint>();
-      lst.add(getVariableFor(req.rule, l, GREATER, r, c, "2a"));
-      lst.add(getVariableFor(req.rule, l, GREATER, r, c, "2c"));
-      lst.add(getVariableFor(req.rule, l, GREATER, r, c, "2d"));
-      lst.add(getVariableFor(req.rule, l, GREATER, r, c, "2b"));
+      lst.add(getVariableFor(req.reqnr, l, GREATER, r, c, "2a"));
+      lst.add(getVariableFor(req.reqnr, l, GREATER, r, c, "2c"));
+      lst.add(getVariableFor(req.reqnr, l, GREATER, r, c, "2d"));
+      lst.add(getVariableFor(req.reqnr, l, GREATER, r, c, "2b"));
       Constraint combi = SmtFactory.createDisjunction(lst);
       _problem.requireImplication(req.variable, combi);
     }
@@ -430,7 +450,7 @@ public class Horpo {
       _problem.require(SmtFactory.createNegation(req.variable));
     }
     else {
-      BVar x = getVariableFor(req.rule, req.left, RPO, req.right, req.constraint, null);
+      BVar x = getVariableFor(req.reqnr, req.left, RPO, req.right, req.constraint, null);
       _problem.requireImplication(req.variable, x);
     }
   }
@@ -440,10 +460,10 @@ public class Horpo {
     Term r = req.right;
     ArrayList<Constraint> onestrict = new ArrayList<Constraint>();
     for (int i = 1; i <= l.numberArguments(); i++) {
-      BVar x = getVariableFor(req.rule, l.queryArgument(i), GEQ, r.queryArgument(i),
+      BVar x = getVariableFor(req.reqnr, l.queryArgument(i), GEQ, r.queryArgument(i),
                               req.constraint, null);
       _problem.requireImplication(req.variable, x);
-      onestrict.add(getVariableFor(req.rule, l.queryArgument(i), GREATER, r.queryArgument(i),
+      onestrict.add(getVariableFor(req.reqnr, l.queryArgument(i), GREATER, r.queryArgument(i),
                                    req.constraint, null));
     }
     _problem.requireImplication(req.variable, SmtFactory.createDisjunction(onestrict));
@@ -475,12 +495,12 @@ public class Horpo {
 
     if (req.clause == null) {
       ArrayList<Constraint> combi = new ArrayList<Constraint>();
-      combi.add(getVariableFor(req.rule, l, RPO, r, c, "3f"));
-      combi.add(getVariableFor(req.rule, l, RPO, r, c, "3a"));
-      combi.add(getVariableFor(req.rule, l, RPO, r, c, "3c"));
-      combi.add(getVariableFor(req.rule, l, RPO, r, c, "3d"));
-      combi.add(getVariableFor(req.rule, l, RPO, r, c, "3e"));
-      combi.add(getVariableFor(req.rule, l, RPO, r, c, "3b"));
+      combi.add(getVariableFor(req.reqnr, l, RPO, r, c, "3f"));
+      combi.add(getVariableFor(req.reqnr, l, RPO, r, c, "3a"));
+      combi.add(getVariableFor(req.reqnr, l, RPO, r, c, "3c"));
+      combi.add(getVariableFor(req.reqnr, l, RPO, r, c, "3d"));
+      combi.add(getVariableFor(req.reqnr, l, RPO, r, c, "3e"));
+      combi.add(getVariableFor(req.reqnr, l, RPO, r, c, "3b"));
       _problem.requireImplication(req.variable, SmtFactory.createDisjunction(combi));
     }
     else if (req.clause.equals("3a")) handleRpoA(req);
@@ -503,7 +523,7 @@ public class Horpo {
     else {
       ArrayList<Constraint> vars = new ArrayList<Constraint>();
       for (int i = 0; i < args.size(); i++) {
-        vars.add(getVariableFor(req.rule, args.get(i), GEQ, req.right, req.constraint, null));
+        vars.add(getVariableFor(req.reqnr, args.get(i), GEQ, req.right, req.constraint, null));
       }
       _problem.requireImplication(req.variable, SmtFactory.createDisjunction(vars));
     }
@@ -518,9 +538,9 @@ public class Horpo {
     Term a = r.queryImmediateHeadSubterm(r.numberArguments()-1);
     Term b = r.queryArgument(r.numberArguments());
     _problem.requireImplication(req.variable,
-      getVariableFor(req.rule, req.left, RPO, a, req.constraint, null));
+      getVariableFor(req.reqnr, req.left, RPO, a, req.constraint, null));
     _problem.requireImplication(req.variable,
-      getVariableFor(req.rule, req.left, RPO, b, req.constraint, null));
+      getVariableFor(req.reqnr, req.left, RPO, b, req.constraint, null));
   }
 
   private void handleRpoC(HorpoRequirement req) {
@@ -538,7 +558,7 @@ public class Horpo {
       _problem.requireImplication(req.variable, SmtFactory.createGreater(predf, predg));
       for (int i = 1; i <= r.numberArguments(); i++) {
         _problem.requireImplication(req.variable,
-          getVariableFor(req.rule, l, RPO, r.queryArgument(i), req.constraint, null));
+          getVariableFor(req.reqnr, l, RPO, r.queryArgument(i), req.constraint, null));
       }
     }
   }
@@ -562,7 +582,7 @@ public class Horpo {
     if (m == 0) _problem.require(SmtFactory.createNegation(req.variable));
     else {
       if (m == 1) {
-        BVar x = getVariableFor(req.rule, l.queryArgument(1), GREATER,
+        BVar x = getVariableFor(req.reqnr, l.queryArgument(1), GREATER,
                                 r.queryArgument(1), req.constraint, null);
         _problem.requireImplication(req.variable, x);
       }
@@ -572,7 +592,7 @@ public class Horpo {
         _problem.require(SmtFactory.createLeq(index, SmtFactory.createValue(m)));
         for (int i = 1; i < m; i++) {
           // create constraint: index > i → l_i ≽ r_i
-          BVar ligeqri = getVariableFor(req.rule, l.queryArgument(i), GEQ, r.queryArgument(i),
+          BVar ligeqri = getVariableFor(req.reqnr, l.queryArgument(i), GEQ, r.queryArgument(i),
                                         req.constraint, null);
           Constraint constraint = SmtFactory.createImplication(
             SmtFactory.createGreater(index, SmtFactory.createValue(i)), ligeqri);
@@ -580,7 +600,7 @@ public class Horpo {
         }
         for (int i = 1; i <= m; i++) {
           // create constraint: index = i → l_i ≻ r_i
-          BVar ligreri = getVariableFor(req.rule, l.queryArgument(i), GREATER, r.queryArgument(i),
+          BVar ligreri = getVariableFor(req.reqnr, l.queryArgument(i), GREATER, r.queryArgument(i),
                                         req.constraint, null);
           Constraint constraint = SmtFactory.createImplication(
             SmtFactory.createEqual(index, SmtFactory.createValue(i)), ligreri);
@@ -588,7 +608,7 @@ public class Horpo {
         }
       }
       for (int i = 2; i <= r.numberArguments(); i++) {
-        BVar x = getVariableFor(req.rule, l, RPO, r.queryArgument(i), req.constraint, null);
+        BVar x = getVariableFor(req.reqnr, l, RPO, r.queryArgument(i), req.constraint, null);
         _problem.requireImplication(req.variable, x);
       }
     }
@@ -607,7 +627,7 @@ public class Horpo {
     // [req] → k > 1 (as k = 1 implies a Lex step)
     _problem.requireImplication(req.variable, SmtFactory.createGreater(status,
         SmtFactory.createValue(1)));
-    
+
     // [req] → k ≤ m (we only require this if f r1 ... rm does not have base type, since otherwise
     // it is already covered by the constraint on the creation of the status variable k)
     if (r.queryType().isArrowType()) {
@@ -619,7 +639,7 @@ public class Horpo {
     // always imply this (for i > 2, it could be that k = 2, and then these are not required)
     for (int i = 3; i <= m; i++) {
       _problem.requireImplication(req.variable,
-        getVariableFor(req.rule, req.left, RPO, r.queryArgument(i), req.constraint, null));
+        getVariableFor(req.reqnr, req.left, RPO, r.queryArgument(i), req.constraint, null));
     }
   }
 
@@ -760,14 +780,14 @@ public class Horpo {
         Constraint pinotj = SmtFactory.createUnequal(SmtFactory.createValue(j), pi.get(i));
         Constraint notstrict = SmtFactory.createNegation(strict.get(j));
         // if [req] ∧ i ≤ status ∧ π(i) = j ∧ strict_j then s_i > t_j
-        BVar gr = getVariableFor(req.rule, l.queryArgument(j), GREATER, r.queryArgument(i),
+        BVar gr = getVariableFor(req.reqnr, l.queryArgument(j), GREATER, r.queryArgument(i),
                                  req.constraint, null);
         Constraint c = SmtFactory.createDisjunction(
           SmtFactory.createDisjunction(itoobig, pinotj),
           SmtFactory.createDisjunction(notstrict, gr));
         _problem.requireImplication(req.variable, c);
         // if [req] ∧ i ≤ status ∧ π(i) = j ∧ ¬strict_j then s_i ≥ t_j
-        BVar geq = getVariableFor(req.rule, l.queryArgument(j), GEQ, r.queryArgument(i),
+        BVar geq = getVariableFor(req.reqnr, l.queryArgument(j), GEQ, r.queryArgument(i),
                                   req.constraint, null);
         c = SmtFactory.createDisjunction(
           SmtFactory.createDisjunction(itoobig, pinotj),
@@ -784,24 +804,6 @@ public class Horpo {
     _problem.require(SmtFactory.createNegation(req.variable));
   }
 
-  private HorpoResult solve() {
-    Valuation valuation = null;
-    switch (Settings.smtSolver.checkSatisfiability(_problem)) {
-      case SmtSolver.Answer.YES(Valuation val): valuation = val; break;
-      default: return new HorpoResult("Could not find a HORPO proof."); // we are returning MAYBE
-    };
-    TreeMap<String,Integer> pred = new TreeMap<String,Integer>();
-    for (String symbol : _precedence.keySet()) {
-      pred.put(symbol, valuation.queryAssignment(_precedence.get(symbol)));
-    }
-    TreeMap<String,Integer> stat = new TreeMap<String,Integer>();
-    for (String symbol : _status.keySet()) {
-      stat.put(symbol, valuation.queryAssignment(_status.get(symbol)));
-    }
-    int bound = _M;
-    if (valuation.queryAssignment(_down)) bound = -_M;
-    return new HorpoResult(pred, stat, bound);
-  }
 
   /** For use in unit testing */
   String toString(int num1, int num2) {
@@ -826,3 +828,4 @@ public class Horpo {
     return _M;
   }
 }
+
