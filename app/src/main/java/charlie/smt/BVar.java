@@ -44,8 +44,9 @@ public final class BVar extends Constraint {
     return new NBVar(this);
   }
 
-  public boolean evaluate() {
-    throw new SmtEvaluationError(_name);
+  public boolean evaluate(Valuation val) {
+    if (val == null) throw new SmtEvaluationError("b" + _index + " (" + _name + ")");
+    else return val.queryBoolAssignment(_index);
   }
 
   public void addToSmtString(StringBuilder builder) {

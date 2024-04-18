@@ -77,3 +77,4 @@ class FileLexer implements Lexer {
     return lastEof;
   }
 }
+

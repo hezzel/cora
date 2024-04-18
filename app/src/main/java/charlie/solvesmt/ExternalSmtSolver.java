@@ -13,19 +13,21 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.smt;
+package charlie.solvesmt;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+import charlie.exceptions.ParseError;
+import charlie.smt.*;
 
 /**
- * An SmtSolver is an object that takes a Constraint and determines its satisfiability.
- * At the moment, we do this by writing a file and calling a fixed external SMT solver, but
- * this may become setting-dependent in the future.
+ * An ExternalSmtSolver is a solver that operates by writing a file and calling a fixed external
+ * SMT solver.  The output file of the solver is read to find the valuation.
  *
- * NOTE: this is a first draft of the idea.  There is still hacky behaviour in there; the exact
- * workings of the SMT module are yet to be determined, based on what exactly we need.
+ * Note: the idea of calling an external program directly through the "Runtime" caller is outdated
+ * and is planned to be phased out in the future.
  */
 public class ExternalSmtSolver implements SmtSolver {
  /**
@@ -74,49 +76,6 @@ public class ExternalSmtSolver implements SmtSolver {
   }
 
   /**
-   * This extends the given valuation by the next model assignment in the SMT output file that is
-   * read by reader.  Returns null if everything went well, and a failure message if not.
-   *
-   * We expect one of the following formats:
-   * - (= varname value)
-   * - (define-fun varname () type value)
-   */
-  private String addModelAssignment(Valuation val, Scanner reader) {
-    String style = reader.next();
-    if (!style.equals("=") && !style.equals("define-fun")) {
-      return "Unexpected token in result file: " + style;
-    }
-    if (!reader.hasNext()) return "Result file ended unexpectedly after " + style;
-    String varname = reader.next();
-    int kind = 0;
-    if (varname.substring(0,1).equals("b")) kind = 1;
-    else if (varname.substring(0,1).equals("i")) kind = 2;
-    if (kind == 0) return "Unexpected variable: " + varname + ".";
-    int index;
-    try { index = Integer.parseInt(varname.substring(1)); }
-    catch (NumberFormatException e) { return "Unexpected variable: " + varname + "."; }
-    if (!reader.hasNext()) return "Result file ended unexpectedly after " + varname + ".";
-
-    if (style.equals("define-fun")) reader.next();  // skip over the type
-
-    int multiplier = 1;
-    String value = reader.next();
-    if (value.equals("-")) { multiplier *= -1; value = reader.next(); }
-    if (kind == 1) {
-      if (value.equals("true")) val.setBool(index, true);
-      else if (value.equals("false")) val.setBool(index, false);
-      else return "Unexpected value for boolean variable " + varname + ": " + value + ".";
-    }
-    else {
-      try { int v = Integer.parseInt(value); val.setInt(index, multiplier * v); }
-      catch (NumberFormatException e) {
-        return "Unexpected value for integer variable " + varname + ": " + value + ".";
-      }
-    }
-    return null;
-  }
-
-  /**
    * This reads the answer the SMT solver printed to the result file.  It will be either sat,
    * unsat, or a different string which should be expected to correspond to "maybe".  If the file
    * cannot be read ,then null is returned or an IOException thrown, as appropriate.
@@ -140,21 +99,85 @@ public class ExternalSmtSolver implements SmtSolver {
    * be determined.  If the result is not satisfiable, then NO is returned.
    */
   private Answer readSmtFile() throws IOException {
-    File file = new File("result");
-    Scanner reader = new Scanner(file);
-    if (!reader.hasNextLine()) return new Answer.MAYBE("Could not read result file.");
-    String answer = reader.nextLine();
-    if (answer.toLowerCase().equals("unsat")) return new Answer.NO();
-    if (!answer.toLowerCase().equals("sat")) {
-      return new Answer.MAYBE("SMT solver returned: " + answer);
+    List<SExpression> exprs = SmtParser.readExpressionsFromFile("result");
+    if (exprs.size() == 0) return new Answer.MAYBE("SMT solver returned empty expression list");
+    switch (exprs.get(0)) {
+      case SExpression.Symbol(String answer):
+        if (answer.toLowerCase().equals("unsat")) return new Answer.NO();
+        if (!answer.toLowerCase().equals("sat")) {
+          return new Answer.MAYBE("SMT solver returned: " + answer);
+        }
+        break;
+      default:
+        return new Answer.MAYBE("SMT solver returned expression rather than sat/unsat: " +
+          exprs.get(0).toString());
     }
-    reader.useDelimiter("[\\s()]+");
     Valuation val = new Valuation();
-    while (reader.hasNext()) {
-      String warning = addModelAssignment(val, reader);
-      if (warning != null) return new Answer.MAYBE(warning);
-    }
+    for (SExpression e : exprs.subList(1, exprs.size())) addAssignments(e, val);
     return new Answer.YES(val);
+  }
+
+  /** Helper function for readSmtFile: finds all assignments in a given answer from an SMT tool. */
+  private void addAssignments(SExpression expr, Valuation val) {
+    String varname = null;
+    SExpression value = null;
+
+    switch (expr) {
+      case SExpression.Symbol _:
+      case SExpression.Numeral _:
+        return; // nothing to do
+      case SExpression.SExpList(List<SExpression> lst):
+        if (lst.size() == 3 && lst.get(0) instanceof SExpression.Symbol(String symb) &&
+            symb.equals("=")) {
+          if (lst.get(1) instanceof SExpression.Symbol(String name)) {
+            addAssignment(name, lst.get(2), val); return;
+          }
+          if (lst.get(2) instanceof SExpression.Symbol(String name)) {
+            addAssignment(name, lst.get(1), val); return;
+          }
+        }
+        else if (lst.size() == 5 && lst.get(0) instanceof SExpression.Symbol(String symb) &&
+                 symb.equals("define-fun") && lst.get(1) instanceof SExpression.Symbol(String n)) {
+          addAssignment(n, lst.get(4), val); return;
+        }
+        else {
+          for (SExpression e : lst) addAssignments(e, val);
+          return;
+        }
+    }
+  }
+
+  /**
+   * Helper function for readSmtFile: adds the given varname ⇒ value pair to the Valuation, if it
+   * makes sense to do so.
+   */
+  private void addAssignment(String varname, SExpression result, Valuation val) {
+    if (varname.equals("")) return;
+    int kind = 0;
+    if (varname.charAt(0) == 'b') kind = 1;
+    else if (varname.charAt(0) == 'i') kind = 2;
+    else return;
+    int index;
+    try { index = Integer.parseInt(varname.substring(1)); }
+    catch (NumberFormatException e) { return; }
+
+    if (kind == 1) {
+      if (result instanceof SExpression.Symbol(String str) && str.equals("true")) {
+        val.setBool(index, true);
+      }
+      else if (result instanceof SExpression.Symbol(String str) && str.equals("false")) {
+        val.setBool(index, false);
+      }
+    }
+    else {
+      if (result instanceof SExpression.Numeral(int i)) val.setInt(index, i);
+      if (result instanceof SExpression.SExpList(List<SExpression> lst)) {
+        if (lst.size() == 2 && lst.get(0) instanceof SExpression.Symbol(String name) &&
+            name.equals("-") && lst.get(1) instanceof SExpression.Numeral(int k)) {
+          val.setInt(index, -k);
+        }
+      }
+    }
   }
 
   /**
@@ -163,9 +186,9 @@ public class ExternalSmtSolver implements SmtSolver {
    * that no proof can be found.
    */
   public Answer checkSatisfiability(SmtProblem problem) {
+    Constraint combi = problem.queryCombinedConstraint();
     try {
-      createSmtFile(problem.numberBooleanVariables(), problem.numberIntegerVariables(),
-                    problem.queryCombinedConstraint());
+      createSmtFile(problem.numberBooleanVariables(), problem.numberIntegerVariables(), combi);
     }
     catch (IOException e) {
       return new Answer.MAYBE("Could not create SMT file: " + e.getMessage());
@@ -181,9 +204,21 @@ public class ExternalSmtSolver implements SmtSolver {
                               "background.  If so, you may need to kill it.\n");
     }
 
-    try { return readSmtFile(); }
+    Answer ret;
+    try { ret = readSmtFile(); }
     catch (IOException e) {
       return new Answer.MAYBE("Error reading result file: " + e.getMessage());
+    }
+    catch (ParseError e) {
+      return new Answer.MAYBE("Parsing error reading result file:\n" + e.getMessage());
+    }
+
+    switch (ret) {
+      case Answer.YES(Valuation val):
+        if (!combi.evaluate(val)) return new Answer.MAYBE("Valuation read from external solver " +
+          "does not satisfy the constraint!");
+      default:
+        return ret;
     }
   }
 
@@ -193,7 +228,7 @@ public class ExternalSmtSolver implements SmtSolver {
    * valuation is read; we trust the answer of the SMT solver.
    */
   public boolean checkValidity(SmtProblem problem) {
-    Constraint negated = new Not(problem.queryCombinedConstraint());
+    Constraint negated = SmtFactory.createNegation(problem.queryCombinedConstraint());
     try {
       createSmtFile(problem.numberBooleanVariables(), problem.numberIntegerVariables(), negated);
       runSmtSolver();

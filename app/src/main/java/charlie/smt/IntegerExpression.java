@@ -42,10 +42,10 @@ public sealed abstract class IntegerExpression implements Comparable<IntegerExpr
   }
 
   /**
-   * Assuming the current expression has no variables, this function evaluates it to its integer
-   * value.  If there is a variable in it, an SmtEvaluationError will be thrown instead.
+   * This evaluates the current expression, taking the values for all variables from the given
+   * valuation.
    */
-  public abstract int evaluate();
+  public abstract int evaluate(Valuation val);
 
   /** Adds the SMT description of the current expression to the given string builder. */
   public abstract void addToSmtString(StringBuilder builder);
@@ -99,6 +99,12 @@ public sealed abstract class IntegerExpression implements Comparable<IntegerExpr
     if (constant == 1) return this;
     return new CMult(constant, this);
   }
+
+  /**
+   * Assuming the current expression has no variables, this function evaluates it to its integer
+   * value.  If there is a variable in it, an SmtEvaluationError will be thrown instead.
+   */
+  public final int evaluate() { return evaluate(null); }
 
   /**
    * This returns an integer expression obtained from multiplying the current one by -1.  If the

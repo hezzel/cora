@@ -71,7 +71,6 @@ public class ReductionPairProofObjectTest {
     ReductionPairProofObject rppo = new MyClass(createProblem(), Set.of(1));
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     rppo.justify(module);
-    System.out.println(module.toString());
     assertTrue(module.toString().equals(
       "RPPO for the problem:\n\n" +
       "  9 ≽ 7 | false\n" +

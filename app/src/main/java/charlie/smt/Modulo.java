@@ -40,8 +40,8 @@ public final class Modulo extends IntegerExpression {
    * (this is *not* the same as what _numerator % _denominator returns in Java when negative
    * values are concerned).
    */
-  public int evaluate() {
-    return evaluateFor(_numerator.evaluate(), _denominator.evaluate());
+  public int evaluate(Valuation val) {
+    return evaluateFor(_numerator.evaluate(val), _denominator.evaluate(val));
   }
 
   private static int evaluateFor(int n, int d) {

@@ -5,7 +5,7 @@
  in compliance with the License.
  You may obtain a copy of the License at
 
- http://www.apache.org/licenses/LICENSE-2.0
+     http://www.apache.org/licenses/LICENSE-2.0
 
  Unless required by applicable law or agreed to in writing, software distributed under the
  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
@@ -13,23 +13,23 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.config;
+package charlie.solvesmt;
 
-import charlie.smt.SmtSolver;
-import charlie.solvesmt.ExternalSmtSolver;
-import java.util.Set;
+import java.util.List;
 
 /**
- * This class collects a number of settings that are global to the execution of Cora or any of its
- * submodules.  The values are meant to be set by the main class (with defaults provided for
- * settings that are not set), and can be queried from any class outside of the cora library.
+ * This is a sealed class collecting an EXTREMELY LIMITED subset of the SMTLIB language.
+ * It is very possible that more options will be added in the future, so treat with caution.
  */
-public class Settings {
-  public static SmtSolver smtSolver = new ExternalSmtSolver();
-  public static Set<String> disabled = Set.of();
-
-  public static boolean isDisabled(String technique) {
-    return disabled.contains(technique);
+public sealed interface SExpression {
+  public record Numeral(int num) implements SExpression {
+    public String toString() { return "" + num; }
+  }
+  public record Symbol(String name) implements SExpression {
+    public String toString() { return name; }
+  }
+  public record SExpList(List<SExpression> lst) implements SExpression {
+    public String toString() { return lst.toString(); }
   }
 }
 

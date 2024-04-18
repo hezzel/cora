@@ -29,9 +29,9 @@ public final class Disjunction extends Junction {
 
   protected String symbol() { return "or"; }
 
-  public boolean evaluate() {
+  public boolean evaluate(Valuation val) {
     for (int i = 0; i < _children.size(); i++) {
-      if (_children.get(i).evaluate()) return true;
+      if (_children.get(i).evaluate(val)) return true;
     }
     return false;
   }

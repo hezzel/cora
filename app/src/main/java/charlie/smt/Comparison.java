@@ -38,8 +38,8 @@ abstract sealed class Comparison extends Constraint permits Geq0, Is0, Neq0 {
     return _expr;
   }
 
-  public boolean evaluate() {
-    return evaluate(_expr.evaluate());
+  public boolean evaluate(Valuation val) {
+    return evaluate(_expr.evaluate(val));
   }
 
   public void addToSmtString(StringBuilder builder) {

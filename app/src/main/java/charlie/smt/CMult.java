@@ -37,8 +37,8 @@ public final class CMult extends IntegerExpression {
     return _main;
   }
 
-  public int evaluate() {
-    return _constant * _main.evaluate();
+  public int evaluate(Valuation val) {
+    return _constant * _main.evaluate(val);
   }
 
   public IntegerExpression simplify() {

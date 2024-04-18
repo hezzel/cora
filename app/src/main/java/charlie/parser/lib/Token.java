@@ -48,7 +48,7 @@ public class Token {
     if (text == null) _text = "";
   }
 
-  /** For use inside the package: returns the ParsePosition unerlying this token. */
+  /** For use inside the package: returns the ParsePosition underlying this token. */
   ParsePosition getRealPosition() {
     return _position;
   }
@@ -79,6 +79,11 @@ public class Token {
   /** Returns a copy of this token, but with getText() updated to return the given text. */
   public Token updateText(String newtext) {
     return new Token(_position, _name, newtext);
+  }
+
+  /** Returns a token at the same position as us, but with different name and text. */
+  public Token samePositionToken(String newname, String newtext) {
+    return new Token(_position, newname, newtext);
   }
 
   /** Returns whether or not the current token is the end-of-input token. */

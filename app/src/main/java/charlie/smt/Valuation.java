@@ -20,14 +20,15 @@ import java.util.TreeMap;
 
 /**
  * A valuation is an assignment of booleans to BVars, and integers to IVars.
- * It is in principle immutable, except that it may be updated during its creation; this is
- * only permitted from within the package.
+ * A Valuation is in principle mutable, so be careful how you use it! (It needs to be mutual to
+ * support gradual creation.)
  */
 public class Valuation {
   private TreeSet<Integer> _trueBVars;
   private TreeMap<Integer,Integer> _iVarValues;
 
-  Valuation() {
+  /** Creates a new valuation with all booleans set to false, and no integer values set. */
+  public Valuation() {
     _trueBVars = new TreeSet<Integer>();
     _iVarValues = new TreeMap<Integer,Integer>();
   }
@@ -53,14 +54,14 @@ public class Valuation {
     return queryIntAssignment(x.queryIndex());
   }
 
-  /** Default rather than private, so that the SmtSolver can call it during creation. */
-  void setBool(int index, boolean value) {
+  /** Set a boolean variable to the given value. */
+  public void setBool(int index, boolean value) {
     if (value) _trueBVars.add(index);
     else _trueBVars.remove(index);
   }
 
-  /** Default rather than private, so that the SmtSolver can call it during creation. */
-  void setInt(int index, int value) {
+  /** Set an integer variable to the given value. */
+  public void setInt(int index, int value) {
     _iVarValues.put(index, value);
   }
 

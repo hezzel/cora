@@ -31,9 +31,9 @@ public final class Conjunction extends Junction {
     return "and";
   }
 
-  public boolean evaluate() {
+  public boolean evaluate(Valuation val) {
     for (int i = 0; i < _children.size(); i++) {
-      if (!_children.get(i).evaluate()) return false;
+      if (!_children.get(i).evaluate(val)) return false;
     }
     return true;
   }

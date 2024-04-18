@@ -43,8 +43,9 @@ public final class IVar extends IntegerExpression {
     return _name;
   }
 
-  public int evaluate() {
-    throw new SmtEvaluationError(_name);
+  public int evaluate(Valuation val) {
+    if (val == null) throw new SmtEvaluationError("i" + _index + " (" + _name + ")");
+    else return val.queryIntAssignment(_index);
   }
 
   public IntegerExpression simplify() {

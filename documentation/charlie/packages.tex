@@ -49,6 +49,10 @@ on B if there is a path from B to A following the arrow directions.  For example
 \node [veld] (trs) [below of=terms, node distance=10mm] {trs};
 \draw (terms) -- (trs);
 
+\node [veld] (smtsolvers) [below of=trs, node distance=10mm] {smtsolvers};
+\draw (parserlib) -- (smtsolvers);
+\draw (smt) -- (smtsolvers);
+
 \node [veld] (reader) [below of=parser, node distance=20mm] {reader};
 \draw (parser) -- (reader);
 \draw (trs) -- (reader);

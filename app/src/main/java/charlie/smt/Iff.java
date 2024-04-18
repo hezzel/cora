@@ -33,8 +33,8 @@ public final class Iff extends Constraint {
     return _right;
   }
 
-  public boolean evaluate() {
-    return _left.evaluate() == _right.evaluate();
+  public boolean evaluate(Valuation val) {
+    return _left.evaluate(val) == _right.evaluate(val);
   }
 
   /** Helper function for negate() */

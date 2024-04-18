@@ -135,9 +135,9 @@ public final class Addition extends IntegerExpression {
     return new Pair<IntegerExpression,IntegerExpression>(p, n);
   }
 
-  public int evaluate() {
+  public int evaluate(Valuation val) {
     int ret = 0;
-    for (int i = 0; i < _children.size(); i++) ret += _children.get(i).evaluate();
+    for (int i = 0; i < _children.size(); i++) ret += _children.get(i).evaluate(val);
     return ret;
   }
 

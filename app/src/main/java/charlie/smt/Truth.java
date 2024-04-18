@@ -21,7 +21,7 @@ public final class Truth extends Constraint {
 
   public Falsehood negate() { return new Falsehood(); }
 
-  public boolean evaluate() { return true; }
+  public boolean evaluate(Valuation val) { return true; }
 
   public void addToSmtString(StringBuilder builder) {
     builder.append("true");

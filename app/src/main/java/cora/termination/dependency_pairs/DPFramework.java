@@ -50,7 +50,7 @@ public class DPFramework {
     SplittingProcessor splitProcessor = new SplittingProcessor();
     HorpoProcessor horpoProcessor = new HorpoProcessor();
     List<Processor> proclist =
-      List.of(graphProcessor, subtermProcessor, targProcessor, kasperProcessor, horpoProcessor);
+      List.of(graphProcessor, subtermProcessor, kasperProcessor, targProcessor, horpoProcessor);
 
     Problem initialProblem = DPFramework.computeInitialProblem(trs);
     DPProofObject ret = new DPProofObject(appl, initialProblem);

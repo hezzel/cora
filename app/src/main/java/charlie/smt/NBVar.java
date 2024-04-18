@@ -37,8 +37,9 @@ public final class NBVar extends Constraint {
     return _negated;
   }
 
-  public boolean evaluate() {
-    throw new SmtEvaluationError("!" + _negated.queryName());
+  public boolean evaluate(Valuation val) {
+    if (val == null) throw new SmtEvaluationError("!" + _negated.queryName());
+    else return !val.queryBoolAssignment(_negated.queryIndex());
   }
 
   public void addToSmtString(StringBuilder builder) {

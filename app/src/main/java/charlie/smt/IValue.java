@@ -28,7 +28,7 @@ public final class IValue extends IntegerExpression {
     return _k;
   }
 
-  public int evaluate() {
+  public int evaluate(Valuation val) {
     return _k;
   }
 

@@ -179,19 +179,27 @@ public class TheoryArgumentsProcessor implements Processor {
     return new TAProofObject(dpp, ret);
   }
 
-  public TAProofObject processDPP(Problem dpp) {
-    setupInitialArgumentsFunction(dpp);
-    imposeMinimalLimitations(dpp);
-    imposeConsistencyLimitations(dpp);
+  private int getNumFixed(Problem dpp) {
     int numfixed = 0;
     for (DP dp : dpp.getDPList()) {
       if (checkFixes(dp)) numfixed++;
     }
+    return numfixed;
+  }
+  
+  public TAProofObject processDPP(Problem dpp) {
+    setupInitialArgumentsFunction(dpp);
+    imposeMinimalLimitations(dpp);
+    imposeConsistencyLimitations(dpp);
+    int numfixed = getNumFixed(dpp);
     if (numfixed == dpp.getDPList().size()) return new TAProofObject(dpp); // can't improve on that!
     if (numfixed == 0) {
-      // It is very possible that we could improve in this case, but then we'd have to start trying
-      // out different DPs to fix.  For now, we have not implemented this.
-      return new TAProofObject(dpp);
+      ensureFixes(dpp.getDPList().get(0));
+      imposeConsistencyLimitations(dpp);
+      numfixed = getNumFixed(dpp);
+      if (numfixed == dpp.getDPList().size() || numfixed == 0) return new TAProofObject(dpp);
+      // It is very possible that we could improve by choosing a different DP to fix, but for now
+      // we just pick the first rather than iterating over all of them
     }
     ArrayList<DP> newdpsA = new ArrayList<DP>();
     ArrayList<DP> newdpsB = new ArrayList<DP>();
