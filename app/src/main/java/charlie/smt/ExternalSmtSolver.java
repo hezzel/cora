@@ -42,18 +42,21 @@ public class ExternalSmtSolver implements SmtSolver {
     for (int i = 1; i <= numint; i++) {
       writer.write("(declare-fun i" + i + "() Int)"); writer.newLine();
     }
+
     ArrayList<Constraint> lst = new ArrayList<Constraint>();
     if (constraint instanceof Conjunction) {
       Conjunction c = (Conjunction)constraint;
       for (int i = 1; i <= c.numChildren(); i++) lst.add(c.queryChild(i));
     }
     else lst.add(constraint);
+
     for (int i = 0; i < lst.size(); i++) {
       writer.write("(assert ");
       writer.write(lst.get(i).toString());
       writer.write(")");
       writer.newLine();
     }
+
     writer.write("(check-sat)"); writer.newLine();
     writer.write("(get-model)"); writer.newLine();
     writer.write("(exit)");      writer.newLine();
@@ -201,4 +204,3 @@ public class ExternalSmtSolver implements SmtSolver {
     catch (Exception e) { return false; } // we could not conclude validity
   }
 }
-
