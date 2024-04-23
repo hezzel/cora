@@ -67,7 +67,7 @@ public class HorpoParametersTest {
     FunctionSymbol g = TermFactory.createConstant("g", type("Int -> Int -> Int"));
     FunctionSymbol plus = TheoryFactory.plusSymbol;
     HorpoParameters horpo = new HorpoParameters(3000, true);
-    assertTrue(horpo.getStatusFor(f) == null);
+    assertTrue(horpo.getStatusFor(f).toString().equals("1"));
     assertTrue(horpo.getStatusFor(g) == horpo.getStatusFor(g));
     assertTrue(horpo.getStatusFor(plus) != null);
     assertTrue(horpo.queryProblem().toString().equals(

@@ -87,15 +87,16 @@ class HorpoParameters {
   /**
    * The status is represented by an integer: a number 1 for Lex status, and k ≥ 2 for Mul_k.
    *
-   * This function either returns an integer variable associated to the given symbol, or null.
-   * In case the arity is 0 or 1, null is returned, because status is entirely irrelevant in this
-   * case (so we may as well default to Lex).
+   * This function either returns an integer variable associated to the given symbol, or the value
+   * 1.
+   * In case the arity is 0 or 1, the value 1 is returned, because status is entirely irrelevant in
+   * this case (so we may as well default to Lex).
    * Otherwise, an integer variable is returned that ranges over 1..ar(f).  It may be creaed first
    * in the underlying SMT problem if we hadn't done so yet; but it will always give the same
    * variable for the same function symbol.
    */
-  public IVar getStatusFor(FunctionSymbol f) {
-    if (f.queryArity() <= 1) return null;
+  public IntegerExpression getStatusFor(FunctionSymbol f) {
+    if (f.queryArity() <= 1) return SmtFactory.createValue(1);
     String name = f.queryName();
     if (_status.containsKey(name)) return _status.get(name);
     IVar x = _problem.createIntegerVariable("stat(" + name + ")");

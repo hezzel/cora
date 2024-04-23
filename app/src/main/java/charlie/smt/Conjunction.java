@@ -15,6 +15,7 @@
 
 package charlie.smt;
 
+import java.util.List;
 import java.util.ArrayList;
 import charlie.exceptions.IndexingError;
 
@@ -23,7 +24,7 @@ public final class Conjunction extends Junction {
     super(a, b);
   }
 
-  Conjunction(ArrayList<Constraint> args) {
+  Conjunction(List<Constraint> args) {
     super(args);
   }
 

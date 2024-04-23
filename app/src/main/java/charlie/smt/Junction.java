@@ -16,6 +16,7 @@
 package charlie.smt;
 
 import java.util.ArrayList;
+import java.util.List;
 import charlie.exceptions.IndexingError;
 
 /** Shared inherit functionality for Conjunction and Disjunction; do not use on its own. */
@@ -30,7 +31,7 @@ abstract sealed class Junction extends Constraint permits Conjunction, Disjuncti
     addChild(b);
   }
 
-  Junction(ArrayList<Constraint> args) {
+  Junction(List<Constraint> args) {
     _children = new ArrayList<Constraint>();
     for (int i = 0; i < args.size(); i++) addChild(args.get(i));
   }
