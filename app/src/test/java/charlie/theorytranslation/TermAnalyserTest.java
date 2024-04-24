@@ -80,9 +80,13 @@ public class TermAnalyserTest {
     // +(x, y) > 12
     Term t = TheoryFactory.plusSymbol.apply(x).apply(y);
     Term c = TheoryFactory.greaterSymbol.apply(t).apply(TheoryFactory.createValue(12));
-    Substitution subst = TermAnalyser.satisfy(c, new ExternalSmtSolver()); // TODO spot
-    assertTrue(subst.get(x).toValue().getInt() +
-               subst.get(y).toValue().getInt() > 12);
+    switch (TermAnalyser.satisfy(c, new ExternalSmtSolver())) { // TODO spot
+      case TermAnalyser.Result.YES(Substitution subst):
+        assertTrue(subst.get(x).toValue().getInt() + subst.get(y).toValue().getInt() > 12);
+        break;
+      case TermAnalyser.Result.NO _: assertTrue(false);
+      case TermAnalyser.Result.MAYBE _: assertTrue(false);
+    }
   }
 }
 

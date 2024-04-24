@@ -31,11 +31,17 @@ public final class Conjunction extends Junction {
     return "and";
   }
 
-  public boolean evaluate() {
+  public boolean evaluate(Valuation val) {
     for (int i = 0; i < _children.size(); i++) {
-      if (!_children.get(i).evaluate()) return false;
+      if (!_children.get(i).evaluate(val)) return false;
     }
     return true;
+  }
+
+  public Disjunction negate() {
+    ArrayList<Constraint> arr = new ArrayList<Constraint>();
+    for (Constraint c : _children) arr.add(c.negate());
+    return new Disjunction(arr);
   }
 }
 

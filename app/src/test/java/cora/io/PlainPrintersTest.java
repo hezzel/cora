@@ -28,7 +28,7 @@ import charlie.reader.CoraInputReader;
 public class PlainPrintersTest {
   private TRS exampleTrs() {
     return CoraInputReader.readTrsFromString("f :: Int -> Int -> Int\na::Int -> Int\n" +
-                                             "g :: ((Int -> Int) -> Int) -> (Int * Bool) -> A");
+                                             "g :: ((Int -> Int) -> Int) -> (Int × Bool) -> A");
   }
 
   @Test
@@ -41,7 +41,7 @@ public class PlainPrintersTest {
   @Test
   public void testPrintComplexTerm() {
     TRS trs = exampleTrs();
-    PlainTermPrinter p = new PlainTermPrinter(new PlainTypePrinter(), Set.of("z"));
+    PlainTermPrinter p = new PlainTermPrinter(Set.of("z"));
     Term term = CoraInputReader.readTerm("g(λx::Int→Int.f(Z⟨x⟩,y), ⦇1,true∧z⦈)", trs);
     assertTrue(p.print(term).equals("g(\\x.f(Z[x], y), (|1, true /\\ z__1|))"));
   }
@@ -49,7 +49,7 @@ public class PlainPrintersTest {
   @Test
   public void testPrintConstraint() {
     TRS trs = exampleTrs();
-    PlainTermPrinter p = new PlainTermPrinter(new PlainTypePrinter(), Set.of("z"));
+    PlainTermPrinter p = new PlainTermPrinter(Set.of("z"));
     Term term = CoraInputReader.readTerm(
       "x % (9 - z) > y / 2 ∧ -x < y ∧ ¬(x ≥ y) ∧ (x ≤ y ∨ 1 / a(x) != 2)", trs);
     assertTrue(p.print(term).equals(

@@ -30,6 +30,12 @@ import charlie.smt.SmtSolver.Answer;
 public class TermAnalyser {
   private static Random _rnd = new Random();
 
+  public sealed interface Result {
+    public record YES(Substitution subts) implements Result {}
+    public record NO() implements Result {}
+    public record MAYBE(String reason) implements Result {}
+  }
+
   /** Returns a randomly selected value of the given type */
   public static Value chooseRandomValue(Type type) {
     int r = _rnd.nextInt();
@@ -73,26 +79,27 @@ public class TermAnalyser {
   /**
    * Given a theory term of type Bool, this function tries to find an assignment for the variables
    * in it that makes the term evaluate to true.  If successful, this substitution is returned; if
-   * not, null is returned.
+   * not, MAYBE or NO is returned.
    */
-  public static Substitution satisfy(Term t, SmtSolver solver) {
+  public static Result satisfy(Term t, SmtSolver solver) {
     TermSmtTranslator translator = new TermSmtTranslator();
     translator.require(t);
-    switch (solver.checkSatisfiability(translator.queryProblem())) {
-      case Answer.YES(Valuation val):
-        Substitution ret = TermFactory.createEmptySubstitution();
-        for (Variable x : t.vars()) {
-          if (x.queryType().equals(TypeFactory.boolSort)) {
-            ret.extend(x, TheoryFactory.createValue(val.queryBoolAssignment(x.queryIndex())));
+    return switch (solver.checkSatisfiability(translator.queryProblem())) {
+      case Answer.YES(Valuation val) -> {
+          Substitution ret = TermFactory.createEmptySubstitution();
+          for (Variable x : t.vars()) {
+            if (x.queryType().equals(TypeFactory.boolSort)) {
+              ret.extend(x, TheoryFactory.createValue(val.queryBoolAssignment(x.queryIndex())));
+            }
+            else if (x.queryType().equals(TypeFactory.intSort)) {
+              ret.extend(x, TheoryFactory.createValue(val.queryIntAssignment(x.queryIndex())));
+            }
           }
-          else if (x.queryType().equals(TypeFactory.intSort)) {
-            ret.extend(x, TheoryFactory.createValue(val.queryIntAssignment(x.queryIndex())));
-          }
+          yield new Result.YES(ret);
         }
-        return ret;
-      default:
-        return null;
-    }
+      case Answer.MAYBE(String reason) -> new Result.MAYBE(reason);
+      case Answer.NO() -> new Result.NO();
+    };
   }
 }
 

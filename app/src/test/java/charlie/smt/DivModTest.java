@@ -24,16 +24,18 @@ public class DivModTest {
     Division division = new Division(new Addition(new IValue(-4), new IVar(1)), new IValue(5));
     assertTrue(division.queryNumerator().equals(new Addition(new IValue(-4), new IVar(1))));
     assertTrue(division.queryDenominator().equals(new IValue(5)));
-    assertTrue(division.toString().equals("(div (+ (- 4) i1) 5)"));
+    assertTrue(division.toSmtString().equals("(div (+ (- 4) i1) 5)"));
+    assertTrue(division.toString().equals("(-4 + i1) / 5"));
   }
 
   @Test
   public void testModuloBasics() {
-    Modulo modulo = new Modulo(new ConstantMultiplication(-1, new IVar(2)),
+    Modulo modulo = new Modulo(new CMult(-1, new IVar(2)),
       new Multiplication(new IValue(2), new IVar(3)));
-    assertTrue(modulo.queryNumerator().equals(new ConstantMultiplication(-1, new IVar(2))));
+    assertTrue(modulo.queryNumerator().equals(new CMult(-1, new IVar(2))));
     assertTrue(modulo.queryDenominator().equals(new Multiplication(new IValue(2), new IVar(3))));
-    assertTrue(modulo.toString().equals("(mod (- i2) (* 2 i3))"));
+    assertTrue(modulo.toSmtString().equals("(mod (- i2) (* 2 i3))"));
+    assertTrue(modulo.toString().equals("(-i2) % (2 * i3)"));
   }
   
   @Test
@@ -59,15 +61,31 @@ public class DivModTest {
   }
 
   @Test
-  public void testConstantMultiplication() {
+  public void testCMult() {
     IVar x = new IVar(7);
     IValue c = new IValue(3);
     IntegerExpression d = new Division(x, c);
     IntegerExpression m = new Modulo(x, c);
-    assertTrue(d.negate().equals(new ConstantMultiplication(-1, d)));
-    assertTrue(m.multiply(3).equals(new ConstantMultiplication(3, m)));
+    assertTrue(d.negate().equals(new CMult(-1, d)));
+    assertTrue(m.multiply(3).equals(new CMult(3, m)));
     assertTrue(d.multiply(1).equals(d));
     assertTrue(m.multiply(0).equals(new IValue(0)));
+  }
+
+  @Test
+  public void testAdd() {
+    Division division = new Division(new Addition(new IValue(-4), new IVar(1)), new IValue(5));
+    IntegerExpression a = division.add(3);
+    IntegerExpression b = division.add(1);
+    IntegerExpression c = division.add(0);
+    assertTrue(a.toString().equals("3 + (-4 + i1) / 5"));
+    assertTrue(a.isSimplified());
+    assertTrue(b.toString().equals("1 + (-4 + i1) / 5"));
+    assertTrue(b.isSimplified());
+    assertTrue(c == division);
+    Modulo modulo = new Modulo(new IVar(3), new IValue(-2));
+    IntegerExpression d = modulo.add(3);
+    assertFalse(d.isSimplified());  // because modulo is not
   }
 
   @Test
@@ -98,5 +116,123 @@ public class DivModTest {
     assertTrue(a.compareTo(d) > 0);
     assertTrue(a.compareTo(e) < 0);
     assertTrue(a.compareTo(f) > 0);
+  }
+
+  private IntegerExpression make(IntegerExpression d, IntegerExpression n, boolean div) {
+    if (div) return new Division(d, n);
+    else return new Modulo(d, n);
+  }
+
+  @Test
+  public void testQuerySimplified() {
+    IntegerExpression x = new IVar(1);
+    IntegerExpression y = new IVar(2);
+
+    for (int i = 0; i < 2; i++) {
+      boolean div = i == 0;
+
+      IntegerExpression e = make(new Addition(x, y), new CMult(3, y), div);
+      assertTrue(e.isSimplified());
+      
+      e = make(new Addition(x, x), y, div);
+      assertFalse(e.isSimplified());
+
+      e = make(x, new Addition(y, y), div);
+      assertFalse(e.isSimplified());
+
+      e = make(x, new IValue(1), div);
+      assertFalse(e.isSimplified());
+
+      e = make(x, new IValue(0), div);
+      assertTrue(e.isSimplified());
+
+      e = make(x, new IValue(-1), div);
+      assertFalse(e.isSimplified());
+
+      e = make(x, new CMult(-2, y), div);
+      assertFalse(e.isSimplified());
+
+      e = make(new IValue(8), new IValue(5), div);
+      assertFalse(e.isSimplified());
+    }
+  }
+
+  @Test
+  public void testSimplifyBasics() {
+    IntegerExpression x = new IVar(1);
+    IntegerExpression y = new IVar(2);
+    IntegerExpression m = new IValue(-3);
+    IntegerExpression o = new IValue(1);
+    IntegerExpression e;
+
+    e = new Division(m, y);
+    assertTrue(e.isSimplified());
+    assertTrue(e.simplify() == e);
+
+    e = new Modulo(m, y);
+    assertTrue(e.isSimplified());
+    assertTrue(e.simplify() == e);
+
+    e = new Division(x, new Division(y, o));
+    assertTrue(e.simplify().equals(new Division(x, y)));
+
+    e = new Modulo(x, new Division(y, o));
+    assertTrue(e.simplify().equals(new Modulo(x, y)));
+
+    e = new Division(new IValue(5), new IValue(-3));
+    assertTrue(e.simplify().equals(new IValue(-1)));
+    e = new Modulo(new IValue(5), new IValue(-3));
+    assertTrue(e.simplify().equals(new IValue(2)));
+  }
+
+  @Test
+  public void testSimplifyDivisionByOne() {
+    IntegerExpression x = new IVar(1);
+    IntegerExpression y = new IVar(2);
+    IntegerExpression o = new IValue(1);
+    IntegerExpression u = new IValue(-1);
+    IntegerExpression e;
+ 
+    e = new Division(x, o);
+    assertTrue(e.simplify().equals(x));
+
+    e = new Modulo(x, o);
+    assertTrue(e.simplify().equals(new IValue(0)));
+
+    e = new Division(new Addition(x, y), u);
+    assertTrue(e.simplify().equals(new Addition(new CMult(-1, x),
+                                                new CMult(-1, y))));
+
+    e = new Modulo(new Addition(x, y), u);
+    assertTrue(e.simplify().equals(new IValue(0)));
+  }
+
+  @Test
+  public void simplifyNegative() {
+    IntegerExpression x = new IVar(1);
+    IntegerExpression y = new IVar(2);
+    IntegerExpression k = new IValue(3);
+    IntegerExpression m = new IValue(-3);
+    IntegerExpression e;
+
+    // a div -b = -(a div b) and a mod -b = a mod b:
+    // -b * (- (a div b)) + (a mod b) = b * (a div b) + a mod b = a
+    e = new Division(x, m);
+    assertTrue(e.simplify().equals(new CMult(-1, new Division(x, k))));
+
+    e = new Modulo(x, m);
+    assertTrue(e.simplify().equals(new Modulo(x, k)));
+
+    e = new Division(x, new CMult(2, y));
+    IntegerExpression f = (new Division(x, new CMult(-2, y))).simplify();
+    assertTrue(e.simplify() == e);
+    assertTrue(f.isSimplified());
+    assertTrue(f.equals(new CMult(-1, e)));
+
+    e = new Modulo(x, new CMult(2, y));
+    f = (new Modulo(x, new CMult(-2, y))).simplify();
+    assertTrue(e.simplify() == e);
+    assertTrue(f.isSimplified());
+    assertTrue(f.equals(e));
   }
 }

@@ -39,6 +39,6 @@ public class BValueTest {
     assertTrue(y.equals(new Falsehood()));
     assertTrue(y.equals(y));
     assertFalse(y.equals(x));
-    assertFalse(y.equals(new Greater(new IValue(1), new IValue(2))));
+    assertFalse(y.equals(new Geq0(new IValue(1), new IValue(2))));
   }
 }

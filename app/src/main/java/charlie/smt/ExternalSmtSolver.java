@@ -52,7 +52,7 @@ public class ExternalSmtSolver implements SmtSolver {
 
     for (int i = 0; i < lst.size(); i++) {
       writer.write("(assert ");
-      writer.write(lst.get(i).toString());
+      writer.write(lst.get(i).toSmtString());
       writer.write(")");
       writer.newLine();
     }
@@ -129,6 +129,7 @@ public class ExternalSmtSolver implements SmtSolver {
     Scanner reader = new Scanner(file);
     if (!reader.hasNextLine()) return null;
     String answer = reader.nextLine();
+    reader.close();
     if (answer.toLowerCase().equals("unsat")) return "unsat";
     if (!answer.toLowerCase().equals("sat")) return "sat";
     return answer;
@@ -190,9 +191,9 @@ public class ExternalSmtSolver implements SmtSolver {
   }
 
   /**
-   * Convenience function.  This uses checkSatiability on the negation of the constraint obtained
-   * from checkSatisfiability to determine if the conjunction of the formulas in SmtProblem is
-   * valid.
+   * This checks the satisfiability of the negation of the constraint obtained from the given
+   * SmtProblem, since unsatisfiability implies that the original constraint is valid.  No
+   * valuation is read; we trust the answer of the SMT solver.
    */
   public boolean checkValidity(SmtProblem problem) {
     Constraint negated = new Not(problem.queryCombinedConstraint());

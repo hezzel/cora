@@ -19,10 +19,9 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.Set;
 import charlie.exceptions.*;
 import charlie.util.Pair;
-import charlie.types.TypePrinter;
 import charlie.terms.position.Position;
 import charlie.terms.position.FinalPos;
 
@@ -284,7 +283,7 @@ abstract class TermInherit implements Term {
 
   /** This method returns a string representation of the current term. */
   public String toString() {
-    return (new TermPrinter(new TypePrinter(), new TreeSet<String>())).print(this);
+    return (new TermPrinter(Set.of())).print(this);
   }
 
   // the following functions are all default implementations of interface functions, to be

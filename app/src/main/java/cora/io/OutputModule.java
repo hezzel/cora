@@ -18,6 +18,7 @@ package cora.io;
 import java.util.List;
 import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
+import charlie.trs.TRS;
 
 /**
  * An OutputModule is used to print Cora data to the user.  This class is meant to be implemented
@@ -63,7 +64,7 @@ public interface OutputModule {
    * codes should be supported in any implementation of OutputModule:
    *   %{ruleArrow}, %{typeArrow}, %{mapsto}, %{thickArrow}, %{longArrow}, %{downArrow},
    *   %{revRuleArrow}
-   *   %{vdash}, %{Vdash}, %{forall}, %{exists},
+   *   %{vdash}, %{Vdash}, %{forall}, %{exists}, %{emptyset},
    *   %{sqSupset}, %{sqSupseteq}, %{succ}, %{succeq},
    *   %{subterm}, %{subtermeq}, %{supterm}, %{suptermeq},
    *   %{greater}, %{smaller}, %{geq}, %{leq}, %{and}, %{or}, %{not}, %{implies}, %{distinct},
@@ -159,6 +160,9 @@ public interface OutputModule {
     for (Rule rule : rules) { println("%a", rule); }
     endTable();
   }
+
+  /** This prints the given TRS to the output module. */
+  void printTrs(TRS trs);
 
   /**
    * This prints the current status of the OutputModule to StdOut.

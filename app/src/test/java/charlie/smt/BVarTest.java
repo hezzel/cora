@@ -20,10 +20,32 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class BVarTest {
   @Test
-  public void testBasics() {
+  public void testBasicsNoName() {
     BVar x = new BVar(12);
     assertTrue(x.queryIndex() == 12);
+    assertTrue(x.queryName().equals("b12"));
     assertTrue(x.toString().equals("b12"));
+    assertTrue(x.toSmtString().equals("b12"));
+  }
+
+  @Test
+  public void testBasicsWithName() {
+    BVar x = new BVar(12, "z");
+    assertTrue(x.queryIndex() == 12);
+    assertTrue(x.queryName().equals("[z]"));
+    assertTrue(x.toString().equals("[z]"));
+    assertTrue(x.toSmtString().equals("b12"));
+  }
+
+  @Test
+  public void testNegate() {
+    BVar x = new BVar(12);
+    assertTrue(x.negate().equals(new NBVar(x)));
+    assertTrue(x.negate().toString().equals("!b12"));
+    assertTrue(x.negate().toSmtString().equals("(not b12)"));
+    BVar y = new BVar(13, "x");
+    assertTrue(y.negate().toString().equals("![x]"));
+    assertTrue(y.negate().toSmtString().equals("(not b13)"));
   }
 
   @Test

@@ -18,6 +18,7 @@ package cora.io;
 import java.util.List;
 import charlie.exceptions.NullStorageError;
 import charlie.terms.TermPrinter;
+import charlie.trs.TRS;
 
 /**
  * An OutputModuleAdapter is used to add functionality to an existing OutputModule.  In particular,
@@ -44,6 +45,7 @@ public class OutputModuleAdapter implements OutputModule {
   public void nextColumn() { _module.nextColumn(); }
   public void endTable() { _module.endTable(); }
   public void printToStdout() { _module.printToStdout(); }
+  public void printTrs(TRS trs) { _module.printTrs(trs); }
 
   public void print(String text, Object ...objects) {
     for (int i = 0; i < objects.length; i++) {

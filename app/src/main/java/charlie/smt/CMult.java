@@ -15,14 +15,18 @@
 
 package charlie.smt;
 
-public final class ConstantMultiplication extends IntegerExpression {
+/** A multiplication by a constant */
+public final class CMult extends IntegerExpression {
   private int _constant;
   private IntegerExpression _main;
 
   /** The constructor is hidden, since IntegerExpressions should be made through the SmtFactory. */
-  ConstantMultiplication(int k, IntegerExpression e) {
+  CMult(int k, IntegerExpression e) {
     _constant = k;
     _main = e;
+    if (_main.isSimplified() && !(_main instanceof IValue) &&
+        !(_main instanceof CMult) && !(_main instanceof Addition) &&
+        _constant != 0 && _constant != 1) _simplified = true;
   }
 
   public int queryConstant() {
@@ -33,8 +37,15 @@ public final class ConstantMultiplication extends IntegerExpression {
     return _main;
   }
 
-  public int evaluate() {
-    return _constant * _main.evaluate();
+  public int evaluate(Valuation val) {
+    return _constant * _main.evaluate(val);
+  }
+
+  public IntegerExpression simplify() {
+    if (_simplified) return this;
+    if (_constant == 0) return new IValue(0);
+    if (_constant == 1) return _main.simplify();
+    return _main.simplify().multiply(_constant);
   }
 
   public IntegerExpression multiply(int constant) {
@@ -42,7 +53,7 @@ public final class ConstantMultiplication extends IntegerExpression {
     if (newconstant == 0) return new IValue(0);
     if (newconstant == 1) return _main;
     if (constant == 1) return this;
-    return new ConstantMultiplication(newconstant, _main);
+    return new CMult(newconstant, _main);
   }
 
   public void addToSmtString(StringBuilder builder) {
@@ -56,7 +67,7 @@ public final class ConstantMultiplication extends IntegerExpression {
   public int compareTo(IntegerExpression other) {
     return switch (other) {
       case IValue v -> 1;
-      case ConstantMultiplication cm -> {
+      case CMult cm -> {
         int c = _main.compareTo(cm.queryChild());
         if (c != 0) yield c;
         else yield _constant - cm.queryConstant();

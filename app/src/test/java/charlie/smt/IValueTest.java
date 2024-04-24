@@ -23,9 +23,12 @@ public class IValueTest {
   public void testBasics() {
     IValue x = new IValue(-3);
     assertTrue(x.evaluate() == -3);
-    assertTrue(x.toString().equals("(- 3)"));
+    assertTrue(x.toString().equals("-3"));
+    assertTrue(x.toSmtString().equals("(- 3)"));
     assertTrue(x.multiply(5).equals(new IValue(-15)));
+    assertTrue(x.add(5).equals(new IValue(2)));
     assertTrue(x.negate().equals(new IValue(3)));
+    assertTrue(x.isSimplified());
   }
 
   @Test
@@ -37,6 +40,6 @@ public class IValueTest {
     assertFalse(x.equals(new IValue(-3)));
     assertTrue(x.compareTo(new IValue(4)) < 0);
     assertFalse(x.equals(new IValue(4)));
-    assertTrue(x.compareTo(new ConstantMultiplication(1, new IValue(1))) < 0);
+    assertTrue(x.compareTo(new CMult(1, new IValue(1))) < 0);
   }
 }

@@ -34,7 +34,7 @@ public class TermSmtTranslatorTest {
     Term t = TheoryFactory.createValue(-37);
     IntegerExpression e = tst.translateIntegerExpression(t);
     assertTrue(e instanceof IValue);
-    assertTrue(e.toString().equals("(- 37)"));
+    assertTrue(e.toString().equals("-37"));
     assertTrue(tst.queryProblem().numberIntegerVariables() == 0);
     assertTrue(tst.queryProblem().numberBooleanVariables() == 0);
   }
@@ -59,7 +59,7 @@ public class TermSmtTranslatorTest {
       TheoryFactory.plusSymbol.apply(x).apply(TheoryFactory.createValue(3)));
     IntegerExpression e = tst.translateIntegerExpression(t);
     assertTrue(e instanceof Addition);
-    assertTrue(e.toString().equals("(+ 1 i1 3)"));
+    assertTrue(e.toString().equals("1 + i1 + 3"));
   }
 
   @Test
@@ -69,8 +69,8 @@ public class TermSmtTranslatorTest {
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     Term t = TheoryFactory.minusSymbol.apply(x);
     IntegerExpression e = tst.translateIntegerExpression(t);
-    assertTrue(e instanceof ConstantMultiplication);
-    assertTrue(e.toString().equals("(- i1)"));
+    assertTrue(e instanceof CMult);
+    assertTrue(e.toString().equals("-i1"));
   }
 
   @Test
@@ -85,7 +85,7 @@ public class TermSmtTranslatorTest {
     ).apply(y);
     IntegerExpression e = tst.translateIntegerExpression(t);
     assertTrue(e instanceof Multiplication);
-    assertTrue(e.toString().equals("(* 3 (+ i1 1) i2)"));
+    assertTrue(e.toString().equals("3 * (i1 + 1) * i2"));
   }
 
   @Test
@@ -99,7 +99,7 @@ public class TermSmtTranslatorTest {
       TheoryFactory.modSymbol.apply(TheoryFactory.createValue(4)).apply(y))));
     IntegerExpression e = tst.translateIntegerExpression(t);
     assertTrue(e instanceof Division);
-    assertTrue(e.toString().equals("(div 3 (+ i1 (- (mod 4 i2))))"));
+    assertTrue(e.toString().equals("3 / (i1 + -(4 % i2))"));
   }
 
   @Test
@@ -112,7 +112,7 @@ public class TermSmtTranslatorTest {
       TheoryFactory.plusSymbol.apply(TheoryFactory.createValue(-1)).apply(
       TheoryFactory.minusSymbol.apply(y))));
     IntegerExpression e = tst.translateIntegerExpression(t);
-    assertTrue(e.toString().equals("(+ i1 (- (+ (- 1) (- i2))))"));
+    assertTrue(e.toString().equals("i1 + -(-1 + -i2)"));
   }
 
   @Test
@@ -140,7 +140,7 @@ public class TermSmtTranslatorTest {
     Variable x = TheoryFactory.createVar("x", TypeFactory.boolSort);
     Term t = TheoryFactory.andSymbol.apply(x).apply(TheoryFactory.createValue(true));
     Constraint c = tst.translateConstraint(t);
-    assertTrue(c.toString().equals("(and b1 true)"));
+    assertTrue(c.toString().equals("b1 and true"));
   }
 
   @Test
@@ -150,7 +150,7 @@ public class TermSmtTranslatorTest {
     Term t = TheoryFactory.orSymbol.apply(TheoryFactory.createValue(true)).apply(
       TheoryFactory.createValue(false));
     Constraint c = tst.translateConstraint(t);
-    assertTrue(c.toString().equals("(or true false)"));
+    assertTrue(c.toString().equals("true or false"));
   }
 
   @Test
@@ -160,7 +160,7 @@ public class TermSmtTranslatorTest {
     Variable x = TheoryFactory.createVar("x", TypeFactory.boolSort);
     Term t = TheoryFactory.notSymbol.apply(x);
     Constraint c = tst.translateConstraint(t);
-    assertTrue(c.toString().equals("(not b1)"));
+    assertTrue(c.toString().equals("not b1"));
   }
 
   @Test
@@ -170,7 +170,7 @@ public class TermSmtTranslatorTest {
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     Term t = TheoryFactory.greaterSymbol.apply(TheoryFactory.createValue(1)).apply(x);
     Constraint c = tst.translateConstraint(t);
-    assertTrue(c.toString().equals("(> 1 i1)"));
+    assertTrue(c.toString().equals("0 >= i1"));
   }
 
   @Test
@@ -180,7 +180,7 @@ public class TermSmtTranslatorTest {
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     Term t = TheoryFactory.smallerSymbol.apply(TheoryFactory.createValue(1)).apply(x);
     Constraint c = tst.translateConstraint(t);
-    assertTrue(c.toString().equals("(> i1 1)"));
+    assertTrue(c.toString().equals("i1 >= 2"));
   }
 
   @Test
@@ -190,7 +190,7 @@ public class TermSmtTranslatorTest {
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     Term t = TheoryFactory.geqSymbol.apply(x).apply(TheoryFactory.createValue(2));
     Constraint c = tst.translateConstraint(t);
-    assertTrue(c.toString().equals("(>= i1 2)"));
+    assertTrue(c.toString().equals("i1 >= 2"));
   }
 
   @Test
@@ -200,7 +200,7 @@ public class TermSmtTranslatorTest {
     Term t = TheoryFactory.leqSymbol.apply(TheoryFactory.createValue(3)).apply(
       TheoryFactory.createValue(2));
     Constraint c = tst.translateConstraint(t);
-    assertTrue(c.toString().equals("(>= 2 3)"));
+    assertTrue(c.toString().equals("0 >= 1"));
   }
 
   @Test
@@ -216,7 +216,7 @@ public class TermSmtTranslatorTest {
       TheoryFactory.createValue(true));
     Term t = TheoryFactory.andSymbol.apply(t1).apply(t3);
     Constraint c = tst.translateConstraint(t);
-    assertTrue(c.toString().equals("(and (> i1 3) (or (>= 5 2) b1) true)"));
+    assertTrue(c.toString().equals("(i1 >= 4) and ((3 >= 0) or b1) and true"));
   }
 
   @Test

@@ -78,13 +78,18 @@ public class CoraUnconstrainedTokensTest {
     assertTrue(lexer.nextToken().isEof());
 
     lexer = createLexer(":");
-    verifyToken(lexer.nextToken(), CoraTokenData.COLON, ":");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, ":");
     assertTrue(lexer.nextToken().isEof());
 
     lexer = createLexer(":::");
     verifyToken(lexer.nextToken(), CoraTokenData.DECLARE, "::");
-    verifyToken(lexer.nextToken(), CoraTokenData.COLON, ":");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, ":");
     assertTrue(lexer.nextToken().isEof());
+
+    lexer = createLexer("a::b");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "a");
+    verifyToken(lexer.nextToken(), CoraTokenData.DECLARE, "::");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "b");
   }
 
   @Test
@@ -114,8 +119,7 @@ public class CoraUnconstrainedTokensTest {
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETOPEN, "(");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETCLOSE, ")");
     verifyToken(lexer.nextToken(), CoraTokenData.DECLARE, "::");
-    verifyToken(lexer.nextToken(), CoraTokenData.COLON, ":");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "a");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, ":a");
     verifyToken(lexer.nextToken(), CoraTokenData.METAOPEN, "[");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "b");
     verifyToken(lexer.nextToken(), CoraTokenData.ARROW, "→");
@@ -192,9 +196,9 @@ public class CoraUnconstrainedTokensTest {
   }
 
   @Test
-  public void testStarAllowedAsProduct() throws LexerException {
+  public void testStarAllowedAsIdentifier() throws LexerException {
     Lexer lexer = createLexer("*");
-    verifyToken(lexer.nextToken(), CoraTokenData.PRODUCT, "*");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "*");
     assertTrue(lexer.nextToken().isEof());
   }
 
@@ -228,7 +232,7 @@ public class CoraUnconstrainedTokensTest {
     Lexer lexer = createLexer("asd****/*");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "asd***");
     assertTrue(checkExceptionOnNextToken(lexer, "1:7:"));
-    verifyToken(lexer.nextToken(), CoraTokenData.PRODUCT, "*");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "*");
     assertTrue(lexer.nextToken().isEof());
   }
 

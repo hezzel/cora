@@ -116,6 +116,10 @@ void htmlify_input_file(int number) {
   execute("cp " + files[number] + " evaluation/details/" + filename + ".txt");
 }
 
+bool interesting_result(string answer) {
+  return true;
+}
+
 void make_page() {
   int i, j;
 
@@ -191,7 +195,7 @@ void make_page() {
       string result = test_results[i][j];
       string time = print_time(test_times[i][j]);
       page += "        <td>";
-      if (result == "YES" || result == "NO") {
+      if (interesting_result(result)) {
         page += "<a class=\"" + lower_case(result) +
           "\" href=\"details/" + test_result_files[i][j] + "\">" +
           result + " " + time + "</a>";
@@ -412,8 +416,7 @@ int main(int argc, char **argv) {
       string result = run_test(files[i], setup_args[j], filename, time);
       test_result.push_back(result);
       test_time.push_back(time);
-      if (result == "YES" || result == "NO")
-        test_result_file.push_back(filename);
+      if (interesting_result(result)) test_result_file.push_back(filename);
       else test_result_file.push_back("");
     }
     test_results.push_back(test_result);

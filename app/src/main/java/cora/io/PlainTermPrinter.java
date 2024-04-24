@@ -16,15 +16,14 @@
 package cora.io;
 
 import java.util.Set;
-import charlie.types.TypePrinter;
 import charlie.terms.TermPrinter;
 import charlie.terms.CalculationSymbol;
 import charlie.terms.CalculationSymbol.Kind;
 
 /** The PlainTermPrinter adapts the standard TermPrinter to avoid unicode symbols. */
 public class PlainTermPrinter extends TermPrinter {
-  public PlainTermPrinter(TypePrinter typr, Set<String> avoid) {
-    super(typr, avoid);
+  public PlainTermPrinter(Set<String> avoid) {
+    super(avoid);
   }
 
   protected String queryTupleOpenBracket() { return "(|"; }

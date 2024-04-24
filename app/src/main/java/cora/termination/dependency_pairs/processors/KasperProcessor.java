@@ -19,10 +19,11 @@ public class KasperProcessor implements Processor {
   private Map< FunctionSymbol, List<Variable> > _fnToFreshVar;
   private Map< FunctionSymbol, List<Term> > _candidates;
 
+  /** This technique can be disabled by runtime arguments. */
+  public static String queryDisabledCode() { return "ifun"; }
+
   @Override
-  public boolean isApplicable(Problem dpp) {
-    return true;
-  }
+  public boolean isApplicable(Problem dp) { return !Settings.isDisabled(queryDisabledCode()); }
 
   /**
    * For a DPP problem {@code dpp}, returns a mapping of each f# : A1 => ... => An => DP_SORT

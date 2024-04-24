@@ -37,6 +37,7 @@ class FileLexer implements Lexer {
    */
   FileLexer(TokenFinder finder, String filename) throws IOException {
     _tokenfinder = finder;
+    _filename = filename;
     _reader = new BufferedReader(new FileReader(filename));
     _currentLine = 0;
     setupNextLexer();
@@ -70,7 +71,10 @@ class FileLexer implements Lexer {
         throw new LexerException(lastEof, e.getMessage());
       }
     }
-    if (lastEof == null) lastEof = Token.eofToken(new ParsePosition(_currentLine + 1, 1));
+    if (lastEof == null) {
+      lastEof = Token.eofToken(new ParsePosition(_filename, _currentLine + 1, 1));
+    }
     return lastEof;
   }
 }
+

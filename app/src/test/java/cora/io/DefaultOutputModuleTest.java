@@ -19,13 +19,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.Term;
 import charlie.terms.TermFactory;
 import charlie.terms.TermPrinter.Renaming;
-import charlie.trs.Rule;
-import charlie.trs.TRS;
+import charlie.trs.*;
 import charlie.reader.CoraInputReader;
 
 public class DefaultOutputModuleTest {
@@ -227,6 +227,30 @@ public class DefaultOutputModuleTest {
     o.println("Test 1: %a, %a, %a", "a", "b");
     assertTrue(o.toString().equals("Test 1: a, b, %a\n\n"));
     assertThrows(IllegalPrintError.class, () -> o.print("Test 2: %a, %a", "a", "b", "c"));
+  }
+
+  @Test
+  public void testPrintTrs() {
+    TRS trs = exampleTrs();
+    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    o.printTrs(trs);
+    assertTrue(o.toString().equals(
+      "Cora-TRS with rule schemes Beta, Calc, and Projection:\n\n" +
+      "  Signature: a :: Int → Int\n" +
+      "             f :: Int → Int → Int\n\n" +
+      "  Rules: f(x, y) → f(y, x) | x > y\n" +
+      "         a(x) → 3\n\n"));
+  }
+
+  @Test
+  public void testPrintEmptyTrs() {
+    TRS trs = TrsFactory.createTrs(new Alphabet(List.of()), List.of(), TrsFactory.AMS);
+    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    o.printTrs(trs);
+    assertTrue(o.toString().equals(
+      "AMS with only rule scheme Beta:\n\n" +
+      "  Signature: (empty)\n\n" +
+      "  Rules: (empty)\n\n"));
   }
 }
 

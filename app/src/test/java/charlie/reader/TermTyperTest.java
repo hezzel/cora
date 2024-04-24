@@ -393,7 +393,7 @@ public class TermTyperTest {
 
   @Test
   public void testAbstractionWithNonArrowTypeExpected() {
-    Term t = readTerm("λx::a.x", "b * b", false, null,
+    Term t = readTerm("λx::a.x", "b × b", false, null,
       "1:2: Type error: expected subterm of type b × b, but got abstraction, which " +
       "necessarily has an arrow type.\n");
     assertTrue(t.toString().equals("abs(λx.x)"));
@@ -484,20 +484,20 @@ public class TermTyperTest {
 
   @Test
   public void testGoodTupleWithCorrectType() {
-    Term t = readTerm("⦇ x, true, 4 |)", "(a → b) * Bool * Int", true, null, "");
+    Term t = readTerm("⦇ x, true, 4 |)", "(a → b) × Bool × Int", true, null, "");
     assertTrue(t.isTuple());
   }
 
   @Test
   public void testTupleWithIncorrectType() {
-    Term t = readTerm("⦇ aa, true ⦈", "(a → b) * Bool", true, null,
+    Term t = readTerm("⦇ aa, true ⦈", "(a → b) × Bool", true, null,
       "1:3: Expected term of type a → b, but got function symbol aa which has type a.\n");
     assertTrue(t.isTuple());
   }
 
   @Test
   public void testTupleWithIncorrectLength() {
-    Term t = readTerm("⦇ aa, true ⦈", "(a → b) * Bool * Int", true, null,
+    Term t = readTerm("⦇ aa, true ⦈", "(a → b) × Bool × Int", true, null,
       "1:1: Type error: expected a term of type (a → b) × Bool × Int but got a tuple " +
       "of length 2.\n");
     assertFalse(t.isTuple());

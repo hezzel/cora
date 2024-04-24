@@ -30,7 +30,7 @@ public class AccessibilityChecker {
 
   private IVar getSortVariable(String sort) {
     if (!_sortVariables.containsKey(sort)) {
-      _sortVariables.put(sort, _problem.createIntegerVariable());
+      _sortVariables.put(sort, _problem.createIntegerVariable(sort));
     }
     return _sortVariables.get(sort);
   }
@@ -161,11 +161,11 @@ public class AccessibilityChecker {
         return;
       }
 
-      module.print("a sort ordering with %s", _sorts.get(0).fst());
+      module.print("a sort ordering with %a", _sorts.get(0).fst());
       for (int i = 1; i < _sorts.size(); i++) {
         if (_sorts.get(i).snd() < _sorts.get(i-1).snd()) module.print(" ≻ ");
         else module.print(" = ");
-        module.print("%s", _sorts.get(i).fst());
+        module.print("%a", _sorts.get(i).fst());
       }
       module.println(".");
     }

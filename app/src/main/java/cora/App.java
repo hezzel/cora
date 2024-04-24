@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019, 2023 Cynthia Kop
+ Copyright 2019--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,99 +16,44 @@
 package cora;
 
 import charlie.exceptions.ParseError;
-import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.trs.TRS;
-import charlie.reader.OCocoInputReader;
-import charlie.reader.ITrsInputReader;
-import charlie.reader.CoraInputReader;
-import cora.io.*;
-import cora.config.Settings;
+import charlie.reader.*;
+import cora.io.OutputModule;
+import cora.io.ProofObject;
 import cora.reduction.Reducer;
 import cora.termination.TerminationHandler;
+import cora.Parameters.Request;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.Optional;
+import java.io.IOException;
+import java.io.File;
+import java.nio.file.*;
+import java.util.List;
+import java.util.TreeSet;
 
 /** Basic entry class: this reads a TRS and asks the user for a term, then reduces this term. */
 public class App {
-  private static String _inputFile;
-  private static String _request;
-  
-  private static void readParameters(String[] args) {
-    _inputFile = null;
-    _request = null;
-    for (int i = 0; i < args.length; i++) {
-      if (args[i].equals("-r") && i+1 < args.length) {
-        _request = args[i+1];
-        i++;
-      }
-      else if (args[i].length() > 10 && args[i].substring(0,10).equals("--request=")) {
-        _request = args[i].substring(10);
-      }
-      else if (args[i].charAt(0) == '-') {
-        System.out.println("Unknown option: " + args[i]);
-      }
-      else if (_inputFile != null) {
-        System.out.println("Only one input file should be given (received both " + _inputFile +
-          " and " + args[i] + ").");
-      }
-      else _inputFile = args[i];
-    }
-  }
-
-  private static String getExtension(String filename) {
-    int i = filename.lastIndexOf('.');
-    if (i >= 0) return filename.substring(i+1).toLowerCase();
-    return "";
-  }
-
-  private static TRS readInput(String file) throws Exception {
-    String extension = getExtension(file);
-    if (extension.equals("trs")) return OCocoInputReader.readTrsFromFile(file);
-    else if (extension.equals("itrs")) return ITrsInputReader.readTrsFromFile(file);
-    else return CoraInputReader.readTrsFromFile(file);
-  }
-
-  private static ProofObject executeRequest(TRS trs) {
-    if (_request == null || _request.toLowerCase().equals("termination")) {
-      return TerminationHandler.proveTermination(trs);
-    }
-    else if (_request.toLowerCase().equals("horpo")) {
-      return TerminationHandler.proveHorpoTermination(trs);
-    }
-    else if (_request.length() > 6 && _request.toLowerCase().substring(0,6).equals("reduce")) {
-      String reduceme = _request.substring(7);
-      Term start = CoraInputReader.readTerm(reduceme, trs);
-      Reducer reducer = new Reducer(trs);
-      return reducer.normalise(start);
-    }
-    return null;
-  }
-
+  /** Main function: parses the parameters and starts up the program flow. */
   public static void main(String[] args) {
-    readParameters(args);
-    if (_inputFile == null) {
-      System.out.println("Please supply an input file.");
-      return;
-    }
-
     try {
-      TRS trs = readInput(_inputFile);
-      if (trs == null) return;
-      ProofObject pobject = executeRequest(trs);
+      Parameters parameters = new Parameters(args);
+      parameters.setupSettings();
+      Request req = parameters.queryRequest();
+      TRS trs = readTRS(parameters.querySingleFile());
+      ProofObject pobject = executeRequest(req, trs, parameters.queryModuleInput());
+      if (pobject == null) System.exit(1);
       System.out.println(pobject.queryAnswer());
-      OutputModule om = DefaultOutputModule.createDefaultModule(trs);
+      OutputModule om = parameters.queryOutputModule(trs);
       pobject.justify(om);
       om.printToStdout();
     }
-    catch (Exception e) {
+    catch (Parameters.WrongParametersError e) {
       System.out.println(e.getMessage());
-      System.exit(1);
+      System.exit(0);
     }
-    catch (ParseError e) {
-      System.out.println(e.getMessage());
+    catch (Exception e) {
+      System.out.println("Encountered an error:\n" + e.getMessage());
+      e.printStackTrace();
       System.exit(1);
     }
     catch (Error e) {
@@ -117,31 +62,64 @@ public class App {
       System.exit(1);
     }
   }
-/*
-            // Build a request object requesting DP method to be used
-            Request req = new Request(trs, _technique);
-            Handler handler = new Handler(req);
 
-            Informal.getInstance().addProofStep("We want to prove termination of the following system:");
-            Informal.getInstance().addProofStep(trs.toString());
-
-            Pair<Answer, Optional<String>> response = handler.getResponse();
-            System.out.println(response.fst() + "\n");
-
-            response.snd().ifPresent(System.out::println);
-            // TODO: write output proof to file if an output file is given
-            System.exit(0);
-
-        catch (Exception e) {
-            System.out.println("Encountered an exception:\n" + e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
-        }
-        catch (Error e) {
-            System.out.println("Encountered an error:\n" + e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
-        }
+  /** Reads the given file as a TRS, and handles errors if they should arise. */
+  private static TRS readTRS(String file) {
+    try { return readInput(file); }
+    catch (IOException e) {
+      System.out.println(e.getMessage());
+      System.exit(1);
     }
-*/
+    catch (ParseError e) {
+      System.out.println(e.getMessage());
+      System.exit(1);
+    }
+    return null;
+  }
+
+  /** Reads the given file as a TRS */
+  public static TRS readInput(String file) throws IOException {
+    String extension = getExtension(file);
+    if (extension.equals("trs")) return OCocoInputReader.readTrsFromFile(file);
+    else if (extension.equals("itrs")) return ITrsInputReader.readTrsFromFile(file);
+    else return CoraInputReader.readTrsFromFile(file);
+  }
+
+  /** Determines the extension of a given filename ("" if it has no extension) */
+  private static String getExtension(String filename) {
+    int i = filename.lastIndexOf('.');
+    if (i >= 0) return filename.substring(i+1).toLowerCase();
+    return "";
+  }
+
+  /**
+   * This function executes the given request on the given TRS, and returns the resulting proof
+   * object.
+   * (This only considers the requests that take a TRS as argument and return a Proof Object.)
+   */
+  private static ProofObject executeRequest(Request request, TRS trs, List<String> moduleInput) {
+    return switch (request) {
+      case Print -> new ProofObject() {
+        public Object queryAnswer() { return ""; }
+        public void justify(OutputModule o) { o.printTrs(trs); }
+      };
+      case Termination -> TerminationHandler.proveTermination(trs);
+      case Reduce -> executeReduce(trs, moduleInput);
+    };
+  }
+
+  /** Helper function for executeRequest: executes a Reduce request */
+  private static ProofObject executeReduce(TRS trs, List<String> moduleInput) {
+    if (moduleInput.size() != 1) throw new Error("Parameters did not supply an input term!");
+    String txt = moduleInput.get(0);
+    Term start;
+    try { start = CoraInputReader.readTerm(txt, trs); }
+    catch (ParseError e) {
+      System.out.println("Error reading input term " + txt + ":\n" + e.getMessage());
+      return null;
+    }
+    Reducer reducer = new Reducer(trs);
+    return reducer.normalise(start);
+  }
 }
+

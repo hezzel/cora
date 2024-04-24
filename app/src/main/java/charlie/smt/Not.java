@@ -27,8 +27,12 @@ public final class Not extends Constraint {
     return _negated;
   }
 
-  public boolean evaluate() {
-    return !(_negated.evaluate());
+  public boolean evaluate(Valuation val) {
+    return !(_negated.evaluate(val));
+  }
+
+  public Constraint negate() {
+    return _negated;
   }
 
   public void addToSmtString(StringBuilder builder) {

@@ -19,18 +19,37 @@ import charlie.exceptions.SmtEvaluationError;
 
 public final class IVar extends IntegerExpression {
   private int _index;
+  private String _name;
 
-  /** The constructor is hidden, since IntegerExpressions should be made through an SmtProblem. */
+  /** The constructors are hidden, since IntegerExpressions should be made through an SmtProblem. */
   IVar(int i) {
     _index = i;
+    _name = "i" + _index;
+    _simplified = true;
+  }
+
+  /** The constructors are hidden, since IntegerExpressions should be made through an SmtProblem. */
+  IVar(int i, String name) {
+    _index = i;
+    _name = "[" + name + "]";
+    _simplified = true;
   }
 
   public int queryIndex() {
     return _index;
   }
 
-  public int evaluate() {
-    throw new SmtEvaluationError("i" + _index);
+  public String queryName() {
+    return _name;
+  }
+
+  public int evaluate(Valuation val) {
+    if (val == null) throw new SmtEvaluationError("i" + _index + " (" + _name + ")");
+    else return val.queryIntAssignment(_index);
+  }
+
+  public IntegerExpression simplify() {
+    return this;
   }
 
   public void addToSmtString(StringBuilder builder) {
@@ -41,7 +60,7 @@ public final class IVar extends IntegerExpression {
     return switch (other) {
       case IValue v -> 1;
       case IVar x -> _index  - x.queryIndex();
-      case ConstantMultiplication cm -> compareTo(cm.queryChild()) <= 0 ? -1 : 1;
+      case CMult cm -> compareTo(cm.queryChild()) <= 0 ? -1 : 1;
       case Addition a -> -1;
       case Multiplication m -> -1;
       case Division d -> -1;

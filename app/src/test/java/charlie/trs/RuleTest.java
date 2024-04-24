@@ -112,7 +112,7 @@ public class RuleTest {
     Term f = TermFactory.createVar("f", type("(o → o) → o"));
     Variable x = TermFactory.createBinder("x", type("o"));
     MetaVariable z = TermFactory.createMetaVar("Z", type("o → o"), 1);
-    Term g = TermFactory.createConstant("g", type("Int * Int → o"));
+    Term g = TermFactory.createConstant("g", type("Int × Int → o"));
     Term tuple =
       TermFactory.createTuple(TheoryFactory.createValue(1), TheoryFactory.createValue(2));
     Term left = f.apply(TermFactory.createAbstraction(x, TermFactory.createMeta(z, x)));

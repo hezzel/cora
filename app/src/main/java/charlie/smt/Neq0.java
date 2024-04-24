@@ -15,9 +15,11 @@
 
 package charlie.smt;
 
-public final class Distinct extends Comparison {
-  Distinct(IntegerExpression left, IntegerExpression right) { super(left, right); }
-  protected boolean evaluate(int l, int r) { return l != r; }
+public final class Neq0 extends Comparison {
+  Neq0(IntegerExpression expr) { super(expr); }
+  Neq0(IntegerExpression left, IntegerExpression right) { super(left, right); }
+  public Is0 negate() { return new Is0(_expr); }
+  protected boolean evaluate(int num) { return num != 0; }
   protected String symbol() { return "distinct"; }
 }
 

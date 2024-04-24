@@ -1,0 +1,24 @@
+Todo: update the documentation to make it clear how to invoke Cora.
+Current runtime arguments:
+
+Cora should be given a single file, which represents a TRS following the documentation.
+In addition, some of the following parameters may be supplied to indicate what Cora
+should do.  Supplying no parameters beyond the input file is the same as supplying
+--terminate.
+
+-p / --print: print the given TRS
+-r <term> / --reduce <term>: parse the given term, and reduce it under the given TRS; no further parameters can be given after this, as they will be considered part of the term
+-t / --terminate: try to prove or disprove termination
+
+Additional commands affect Cora's execution:
+
+- y <style>: use the given style for printing; currently supported styles are "plain" and "unicode"
+-d <technique_1,...,technique_n>: disable the given techniques from being used by Cora. Disableable techniques are:
+  * dp: the DP framework (for termination, non-termination and universal computability); if disabled, HORPO is used for termination proofs instead
+  * graph: the graph processor in the DP framework
+  * ifun: the integer function processor in the DP framework
+  * reach: the reachability processor in the DP framework (when using public functions)
+  * split: the splitting processor in the DP framework
+  * subcrit: the subterm criterion processor in the DP framework
+  * tharg: the theory arguments processor in the DP framework
+

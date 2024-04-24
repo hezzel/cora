@@ -21,14 +21,23 @@ public final class IValue extends IntegerExpression {
   /** The constructor is hidden, since IntegerExpressions should be made through the SmtFactory. */
   IValue(int i) {
     _k = i;
+    _simplified = true;
   }
 
   public int queryValue() {
     return _k;
   }
 
-  public int evaluate() {
+  public int evaluate(Valuation val) {
     return _k;
+  }
+
+  public IntegerExpression simplify() {
+    return this;
+  }
+
+  public IntegerExpression add(int value) {
+    return new IValue(value + _k);
   }
 
   public IntegerExpression multiply(int value) {

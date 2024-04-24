@@ -24,7 +24,6 @@ import charlie.exceptions.NullInitialisationError;
 import charlie.exceptions.TypingError;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
-import charlie.types.TypePrinter;
 import charlie.terms.*;
 import charlie.trs.TrsProperties.*;
 
@@ -152,7 +151,7 @@ public class Rule {
   /** Gives a string representation of the current rule (debug functionality). */
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    TermPrinter printer = new TermPrinter(new TypePrinter(), Set.of());
+    TermPrinter printer = new TermPrinter(Set.of());
     TermPrinter.Renaming renaming = printer.generateUniqueNaming(_left, _right, _constraint);
     printer.print(_left, renaming, builder);
     builder.append(" → ");

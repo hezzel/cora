@@ -15,9 +15,11 @@
 
 package charlie.smt;
 
-public final class Geq extends Comparison {
-  Geq(IntegerExpression left, IntegerExpression right) { super(left, right); }
-  protected boolean evaluate(int l, int r) { return l >= r; }
+public final class Geq0 extends Comparison {
+  Geq0(IntegerExpression expr) { super(expr); }
+  Geq0(IntegerExpression left, IntegerExpression right) { super(left, right); }
+  public Geq0 negate() { return new Geq0(_expr.negate().add(-1)); }
+  protected boolean evaluate(int num) { return num >= 0; }
   protected String symbol() { return ">="; }
 }
 
