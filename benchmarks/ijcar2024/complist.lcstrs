@@ -2,6 +2,6 @@ fnil :: funlist
 fcons :: (Int -> Int) -> funlist -> funlist
 
 complist :: funlist -> Int -> Int
-complist(nil, x) -> x
+complist(fnil, x) -> x
 complist(fcons(F, t), x) -> complist(t, F(x))
 
