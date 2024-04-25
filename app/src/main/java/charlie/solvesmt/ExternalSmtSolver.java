@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Scanner;
 import charlie.exceptions.ParseError;
 import charlie.smt.*;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An ExternalSmtSolver is a solver that operates by writing a file and calling a fixed external
@@ -185,7 +186,7 @@ public class ExternalSmtSolver implements SmtSolver {
    * SMT solver on it, and reads the result file to obtain a suitable Valuation -- or concludes
    * that no proof can be found.
    */
-  public Answer checkSatisfiability(SmtProblem problem) {
+  public Answer checkSatisfiability(@NotNull SmtProblem problem) {
     Constraint combi = problem.queryCombinedConstraint();
     try {
       createSmtFile(problem.numberBooleanVariables(), problem.numberIntegerVariables(), combi);
@@ -237,4 +238,3 @@ public class ExternalSmtSolver implements SmtSolver {
     catch (Exception e) { return false; } // we could not conclude validity
   }
 }
-

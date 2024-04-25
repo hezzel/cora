@@ -1,10 +1,20 @@
-package charlie.smt;
+package charlie.solvesmt;
+
+import charlie.smt.Conjunction;
+import charlie.smt.Constraint;
+import charlie.smt.SmtProblem;
 
 import java.util.ArrayList;
 
+/**
+ * <p>This class helps with the construction of a smtlib2-compliant representation of a {@link SmtProblem} object.</p>
+ * <p>The main method to be called is {@link #buildSmtlibString }. </p>
+ */
 public class SMTLibString {
 
+
   public enum Version { V25   , V26   }
+
   public enum Logic   { QFLIA , QFNIA }
 
   private Version _version;
@@ -41,9 +51,11 @@ public class SMTLibString {
     return STR."(set-logic \{SMTLibString.logicToString(this.getLogic())})";
   }
 
-  public String buildSmtlibString(SmtProblem problem) {
-    int boolsCounter = problem.numberBooleanVariables();
-    int intCounter = problem.numberIntegerVariables();
+  /**
+   * Returns the smtlib string representation of the problem given as input.
+   * @param {@link SmtProblem} problem
+   */
+  public String buildSmtlibString(int boolCounter, int intCounter, Constraint constraint) {
     StringBuilder ret = new StringBuilder();
 
     // Create the SMTLIB file header.
@@ -52,7 +64,7 @@ public class SMTLibString {
 
     // Next, we collect all booleans and integer definitions.
     // Booleans
-    for (int i = 1; i <= boolsCounter; i++) {
+    for (int i = 1; i <= boolCounter; i++) {
       ret.append("(declare-fun b").append(i).append("() Bool)").append(System.lineSeparator());
     }
 
@@ -61,9 +73,6 @@ public class SMTLibString {
       ret.append("(declare-fun i").append(i).append("() Int)").append(System.lineSeparator());
     }
 
-    // Split the conjunctions into individual constraints and put them
-    // in an accumulator list
-    Constraint constraint = problem.queryCombinedConstraint();
     ArrayList<Constraint> acc = new ArrayList<>();
     if (constraint instanceof Conjunction) {
       Conjunction c = (Conjunction) constraint;
@@ -74,7 +83,7 @@ public class SMTLibString {
 
     // Add to the file string the assertions of each one of those constraints
     for (Constraint c : acc) {
-      ret.append("(assert ").append(c.toString()).append(")").append(System.lineSeparator());
+      ret.append("(assert ").append(c.toSmtString()).append(")").append(System.lineSeparator());
     }
 
     // Check for satisfiability and asks for the file model
@@ -83,6 +92,14 @@ public class SMTLibString {
     ret.append("(exit)").append(System.lineSeparator());
 
     return ret.toString();
+  }
+
+  public String buildSmtlibString(SmtProblem problem) {
+    return buildSmtlibString(
+      problem.numberBooleanVariables(),
+      problem.numberIntegerVariables(),
+      problem.queryCombinedConstraint()
+    );
   }
 
 }

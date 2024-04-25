@@ -12,7 +12,6 @@ all:
 
 install:
 	mkdir -p ~/.cora
-	cp ./cora_distribution/smtsolver ~/.cora
 	cp -R ./cora_distribution/bin ~/.cora
 	cp -R ./cora_distribution/lib ~/.cora
 

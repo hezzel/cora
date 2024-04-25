@@ -72,7 +72,7 @@ set CLASSPATH=%APP_HOME%\lib\app.jar;%APP_HOME%\lib\annotations-24.0.0.jar;%APP_
 
 
 @rem Execute app
-"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %APP_OPTS%  -classpath "%CLASSPATH%" cora.App %*
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %APP_OPTS%  -classpath "%CLASSPATH%" cora.Cora %*
 
 :end
 @rem End local scope for the variables with windows NT shell
