@@ -134,6 +134,7 @@ public class Horpo {
   private TreeMap<Integer,BVar> setupConstraintList(HorpoConstraintList lst, SmtProblem sprob,
                                                     OrderingProblem problem) {
     TreeMap<Integer,BVar> ret = new TreeMap<Integer,BVar>();
+    ArrayList<Constraint> oneof = new ArrayList<Constraint>();
     for (int i = 0; i < problem.reqs().size(); i++) {
       OrderingRequirement req = problem.reqs().get(i);
       BVar bvar;
@@ -143,6 +144,7 @@ public class Horpo {
                              req.right(), req.constraint(), req.tvar());
           sprob.require(z);
           ret.put(i, z);
+          oneof = null;
           break;
         case OrderingRequirement.Relation.Weak:
           sprob.require(lst.store(req.left(), HorpoConstraintList.StartRelation.Geq,
@@ -155,9 +157,10 @@ public class Horpo {
                              req.constraint(), req.tvar());
           sprob.require(SmtFactory.createDisjunction(x, y));
           ret.put(i, x);
-          break;
+          if (oneof != null) oneof.add(x);
       }
     }
+    if (oneof != null && oneof.size() != 0) sprob.require(SmtFactory.createDisjunction(oneof));
     return ret;
   }
 
@@ -168,6 +171,7 @@ public class Horpo {
   private HorpoResult solve(OrderingProblem orderingProblem, TreeMap<Integer,BVar> choices,
                             HorpoParameters param, HorpoConstraintList lst) {
     Valuation valuation = null;
+System.out.println(param.queryProblem());
     switch (Settings.smtSolver.checkSatisfiability(param.queryProblem())) {
       case SmtSolver.Answer.YES(Valuation val): valuation = val; break;
       default:  // no solution => let's return a MAYBE

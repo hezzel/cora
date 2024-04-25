@@ -153,6 +153,7 @@ class HorpoResult extends ReductionPairProofObject {
       }
       o.println();
     }
+    o.endTable();
   }
 
   public void justify(OutputModule o) {
