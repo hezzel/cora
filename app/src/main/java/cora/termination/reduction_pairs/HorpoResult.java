@@ -112,7 +112,15 @@ class HorpoResult extends ReductionPairProofObject {
         o.print("(status: %a)", data.get(index-1).stat() == 1 ? "Lex" : "Mul_" +
           data.get(index-1).stat());
         o.nextColumn();
-        if (index < data.size()) o.println("%{greater}");
+        // Lex and Mul symbols cannot be equal (even if they are sometimes accidentally mapped to
+        // the same integer because they are never compared), but two Mul symbols with different
+        // counts *can* be equated
+        if (index < data.size()) {
+          if (data.get(index).prec() != data.get(index-1).prec() ||
+              data.get(index-1).stat() == 1)
+          o.println("%{greater}");
+        }
+        else o.println("=");
       }
       else o.print("= ");
       if (index < data.size()) o.print("%a ", data.get(index).symbol());
