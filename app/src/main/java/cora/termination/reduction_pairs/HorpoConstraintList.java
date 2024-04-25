@@ -43,10 +43,10 @@ import cora.config.Settings;
  */
 class HorpoConstraintList {
   /** Default only for the sake of unit testing */
-  enum Relation { GREATER, GREATERTHEORY, GREATERRPO, GREATERMONO,
-                  GEQ, GEQTHEORY, GEQMONO,
-                  GEQNOGR, GEQNOGRTHEORY, GEQNOGRMONO,
-                  RPO, RPOSELECT, RPOAPPL, RPOCOPY, RPOLEX, RPOMUL, RPOTHTERM };
+  enum Relation { GREATER, GREATERTHEORY, GREATERMONO, GREATERARGS, GREATERRPO,
+                  GEQ, GEQTHEORY, GEQEQUAL, GEQMONO, GEQARGS,
+                  GEQNOGR, GEQNOGRTHEORY, GEQNOGREQUAL, GEQNOGRMONO, GEQNOGRARGS,
+                  RPO, RPOSELECT, RPOAPPL, RPOCOPY, RPOLEX, RPOMUL, RPOTH };
   public enum StartRelation { Greater, Geq, GeqNoGr };
 
   /**
@@ -161,21 +161,26 @@ class HorpoConstraintList {
     builder.append(switch(relation) {
       case Relation.GREATER       -> " ≻ ";
       case Relation.GREATERTHEORY -> " ≻{theory} ";
-      case Relation.GREATERRPO    -> " ≻{rpo} ";
       case Relation.GREATERMONO   -> " ≻{mono} ";
+      case Relation.GREATERARGS   -> " ≻{args} ";
+      case Relation.GREATERRPO    -> " ≻{rpo} ";
       case Relation.GEQ           -> " ≽ ";
       case Relation.GEQTHEORY     -> " ≽{theory} ";
+      case Relation.GEQEQUAL      -> " ≽{equal} ";
       case Relation.GEQMONO       -> " ≽{mono} ";
+      case Relation.GEQARGS       -> " ≽{args} ";
       case Relation.GEQNOGR       -> " ≈ ";
       case Relation.GEQNOGRTHEORY -> " ≈{theory} ";
+      case Relation.GEQNOGREQUAL  -> " ≈{equal} ";
       case Relation.GEQNOGRMONO   -> " ≈{mono} ";
+      case Relation.GEQNOGRARGS   -> " ≈{args} ";
       case Relation.RPO           -> " ▷ ";
       case Relation.RPOSELECT     -> " ▷{select} ";
       case Relation.RPOAPPL       -> " ▷{appl} ";
       case Relation.RPOCOPY       -> " ▷{copy} ";
       case Relation.RPOLEX        -> " ▷{lex} ";
       case Relation.RPOMUL        -> " ▷{mul} ";
-      case Relation.RPOTHTERM     -> " ▷{thterm} ";
+      case Relation.RPOTH     -> " ▷{th} ";
     });
     _printer.print(right, naming, builder);
     builder.append(" | ");
@@ -220,21 +225,26 @@ class HorpoConstraintList {
     switch (req.relation) {
       case Relation.GREATER:       handleGreater(req); break;
       case Relation.GREATERTHEORY: handleTheory(req); break;
+      case Relation.GREATERMONO:   handleGreaterMono(req); break;
+      case Relation.GREATERARGS:   handleArgs(req); break;
       case Relation.GREATERRPO:    handleGreaterRpo(req); break;
-      case Relation.GREATERMONO:   handleMono(req); break;
       case Relation.GEQ:           handleGeq(req); break;
       case Relation.GEQTHEORY:     handleTheory(req); break;
+      case Relation.GEQEQUAL:      handleEqual(req); break;
       case Relation.GEQMONO:       handleMono(req); break;
+      case Relation.GEQARGS:       handleArgs(req); break;
       case Relation.GEQNOGR:       handleGeqNoGr(req); break;
       case Relation.GEQNOGRTHEORY: handleTheory(req); break;
+      case Relation.GEQNOGREQUAL:  handleEqual(req); break;
       case Relation.GEQNOGRMONO:   handleMono(req); break;
+      case Relation.GEQNOGRARGS:   handleArgs(req); break;
       case Relation.RPO:           handleRpo(req); break;
       case Relation.RPOSELECT:     handleSelect(req); break;
       case Relation.RPOAPPL:       handleAppl(req); break;
       case Relation.RPOCOPY:       handleCopy(req); break;
       case Relation.RPOLEX:        handleLex(req); break;
       case Relation.RPOMUL:        handleMul(req); break;
-      case Relation.RPOTHTERM:     handleRpoTheory(req); break;
+      case Relation.RPOTH:         handleRpoTheory(req); break;
     }
   }
 
@@ -276,9 +286,14 @@ class HorpoConstraintList {
     Term c = req.constraint();
     TreeSet<Variable> v = req.theoryVariables();
     ArrayList<Constraint> lst = new ArrayList<Constraint>();
-    lst.add(getVariableFor(l, Relation.GREATERTHEORY, r, c, v));
-    lst.add(getVariableFor(l, Relation.GREATERRPO, r, c, v));
-    lst.add(getVariableFor(l, Relation.GREATERMONO, r, c, v));
+    // for theory terms, only Relation.GREATERTHEORY applies; for non-theory terms, only the
+    // other options apply
+    if (l.isTheoryTerm()) lst.add(getVariableFor(l, Relation.GREATERTHEORY, r, c, v));
+    else {
+      lst.add(getVariableFor(l, Relation.GREATERRPO, r, c, v));
+      lst.add(getVariableFor(l, Relation.GREATERMONO, r, c, v));
+      lst.add(getVariableFor(l, Relation.GREATERARGS, r, c, v));
+    }
     Constraint combi = SmtFactory.createDisjunction(lst);
     _problem.requireImplication(req.variable, combi);
   }
@@ -298,9 +313,17 @@ class HorpoConstraintList {
     Term c = req.constraint();
     TreeSet<Variable> v = req.theoryVariables();
     ArrayList<Constraint> lst = new ArrayList<Constraint>();
-    lst.add(getVariableFor(l, Relation.GEQTHEORY, r, c, v));
-    lst.add(getVariableFor(l, Relation.GREATERRPO, r, c, v));
-    lst.add(getVariableFor(l, Relation.GEQMONO, r, c, v));
+    // for theory terms, only GEQTHEORY and GEQEQUAL apply; for non-theory terms, only the other
+    // options apply
+    if (l.isTheoryTerm()) {
+      lst.add(getVariableFor(l, Relation.GEQTHEORY, r, c, v));
+      lst.add(getVariableFor(l, Relation.GEQEQUAL, r, c, v));
+    }
+    else {
+      lst.add(getVariableFor(l, Relation.GREATERRPO, r, c, v));
+      lst.add(getVariableFor(l, Relation.GEQMONO, r, c, v));
+      lst.add(getVariableFor(l, Relation.GEQARGS, r, c, v));
+    }
     Constraint combi = SmtFactory.createDisjunction(lst);
     _problem.requireImplication(req.variable, combi);
   }
@@ -320,8 +343,16 @@ class HorpoConstraintList {
     Term c = req.constraint();
     TreeSet<Variable> v = req.theoryVariables();
     ArrayList<Constraint> lst = new ArrayList<Constraint>();
-    lst.add(getVariableFor(l, Relation.GEQNOGRTHEORY, r, c, v));
-    lst.add(getVariableFor(l, Relation.GEQNOGRMONO, r, c, v));
+    // for theory terms, only GEQTHEORY and GEQEQUAL apply; for non-theory terms, only the other
+    // options apply
+    if (l.isTheoryTerm()) {
+      lst.add(getVariableFor(l, Relation.GEQNOGRTHEORY, r, c, v));
+      lst.add(getVariableFor(l, Relation.GEQNOGREQUAL, r, c, v));
+    }
+    else {
+      lst.add(getVariableFor(l, Relation.GEQNOGRMONO, r, c, v));
+      lst.add(getVariableFor(l, Relation.GEQNOGRARGS, r, c, v));
+    }
     Constraint combi = SmtFactory.createDisjunction(lst);
     _problem.requireImplication(req.variable, combi);
   }
@@ -338,7 +369,7 @@ class HorpoConstraintList {
     Term c = req.constraint();
     TreeSet<Variable> v = req.theoryVariables();
     ArrayList<Constraint> lst = new ArrayList<Constraint>();
-    lst.add(getVariableFor(l, Relation.RPOTHTERM, r, c, v));
+    lst.add(getVariableFor(l, Relation.RPOTH, r, c, v));
     lst.add(getVariableFor(l, Relation.RPOSELECT, r, c, v));
     lst.add(getVariableFor(l, Relation.RPOCOPY, r, c, v));
     lst.add(getVariableFor(l, Relation.RPOLEX, r, c, v));
@@ -358,6 +389,9 @@ class HorpoConstraintList {
    *
    * We specifically use <--> instead of the usual --> here because in this case, it is easy to do,
    * and it is needed for the GeqNoGr case.
+   *
+   * Note: by construction, any HorpoRequirements with one of these shapes necessarily have a
+   * theory term as left-hand side.
    */
   private void handleTheory(HorpoRequirement req) {
     Term l = req.left();
@@ -467,56 +501,88 @@ class HorpoConstraintList {
     else _problem.require(x.negate());
   }
 
+  private void handleEqual(HorpoRequirement req) {
+    if (req.left.equals(req.right)) _problem.require(req.variable);
+    else _problem.require(req.variable.negate());
+  }
+
+  /**
+   * For now, this method simply adds a constraint that the given requirement is not satisfied.
+   * In the future, this may be used for NON-FILTERING reduction pairs to allow a strict decrease
+   * in a varterm.
+   * TODO
+   */
+  private void handleGreaterMono(HorpoRequirement req) {
+    _problem.require(req.variable.negate());
+  }
+
   /**
    * This adds the defining constraints for mono requirements:
-   * - a(s1,...,sn) ≽{mono} a(t1,...,tn) if each unfiltered si ≽ ti
-   * - a(s1,...,sn) ≻{mono} a(t1,...,tn) if each unfiltered si ≽ ti and some unfiltered si ≻ ti
-   * - a(s1,...,sn) ≈{mono} a(t1,...,tn) if each unfiltered si ≈ ti
-   * Here, position i is unfiltered if either a is a variable, or a is a function symbol that
-   * regards position i.
+   * - x(s1,...,sn) ≽{mono} x(t1,...,tn) if each si ≽ ti
+   * - x(s1,...,sn) ≈{mono} x(t1,...,tn) if each si ≈ ti
+   *
+   * Note: by construction, any HorpoRequirements with one of these shapes necessarily have a
+   * non-theory term as left-hand side.
    */
   private void handleMono(HorpoRequirement req) {
     Term left = req.left;
     Term right = req.right;
-    if (left.isTheoryTerm() || left.numberArguments() != right.numberArguments() ||
+
+    if (!left.isVarTerm() || left.numberArguments() != right.numberArguments() ||
         !left.queryHead().equals(right.queryHead())) {
       _problem.require(req.variable.negate());
       return;
     }
 
-    // both sides are equal!
-    if (!left.isApplication()) {
-      _problem.require(switch(req.relation) {
-        case GEQMONO -> req.variable;
-        case GEQNOGRMONO -> req.variable;
-        default -> req.variable().negate();
-      });
-      return;
-    }
-
     Relation subrel = req.relation == Relation.GEQNOGRMONO ? Relation.GEQNOGR : Relation.GEQ;
-    FunctionSymbol f = left.isFunctionalTerm() ? left.queryRoot() : null;
     for (int i = 1; i <= left.numberArguments(); i++) {
       BVar x = getVariableFor(left.queryArgument(i), subrel, right.queryArgument(i),
                               req.constraint, req.theoryVariables);
-      if (f == null) _problem.requireImplication(req.variable, x);
-      else {
-        BVar regards = _parameters.getRegardsVariableFor(f, i);
-        _problem.requireImplication(req.variable, SmtFactory.createDisjunction(
-          regards.negate(), x));
-      }
+      _problem.requireImplication(req.variable, x);
+    }
+  }
+
+  /**
+   * This adds the defining constraints for args requirements:
+   * - f(s1,...,sn) ≽{args} f(t1,...,tn) if each unfiltered si ≽ ti
+   * - f(s1,...,sn) ≻{args} f(t1,...,tn) if each unfiltered si ≽ ti and some unfiltered si ≻ ti
+   * - f(s1,...,sn) ≈{args} f(t1,...,tn) if each unfiltered si ≈ ti
+   * Here, position i is unfiltered if either a is a variable, or a is a function symbol that
+   * regards position i.
+   *
+   * Note: by construction, any HorpoRequirements with one of these shapes necessarily have a
+   * non-theory term as left-hand side.
+   *
+   * TODO: this needs to be updated to take equivalent function symbols (with the same filter list)
+   * into account
+   */
+  private void handleArgs(HorpoRequirement req) {
+    Term left = req.left;
+    Term right = req.right;
+
+    if (!left.isFunctionalTerm() || left.numberArguments() != right.numberArguments() ||
+        !left.queryHead().equals(right.queryHead())) {
+      _problem.require(req.variable.negate());
+      return;
     }
 
-    if (req.relation == Relation.GREATERMONO) {
+    Relation subrel = req.relation == Relation.GEQNOGRARGS ? Relation.GEQNOGR : Relation.GEQ;
+    FunctionSymbol f = left.queryRoot();
+    for (int i = 1; i <= left.numberArguments(); i++) {
+      BVar x = getVariableFor(left.queryArgument(i), subrel, right.queryArgument(i),
+                              req.constraint, req.theoryVariables);
+      BVar regards = _parameters.getRegardsVariableFor(f, i);
+      _problem.requireImplication(req.variable, SmtFactory.createDisjunction(
+        regards.negate(), x));
+    }
+
+    if (req.relation == Relation.GREATERARGS) {
       ArrayList<Constraint> onestrict = new ArrayList<Constraint>();
       for (int i = 1; i <= left.numberArguments(); i++) {
-        BVar x = getVariableFor(left.queryArgument(i), req.relation, right.queryArgument(i),
+        BVar x = getVariableFor(left.queryArgument(i), Relation.GREATER, right.queryArgument(i),
                                 req.constraint, req.theoryVariables);
-        if (f == null) onestrict.add(x);
-        else {
-          BVar regards = _parameters.getRegardsVariableFor(f, i);
-          onestrict.add(SmtFactory.createConjunction(regards, x));
-        }
+        BVar regards = _parameters.getRegardsVariableFor(f, i);
+        onestrict.add(SmtFactory.createConjunction(regards, x));
       }
       _problem.requireImplication(req.variable, SmtFactory.createDisjunction(onestrict));
     }
@@ -531,6 +597,13 @@ class HorpoConstraintList {
       _problem.require(req.variable.negate());
     }
     else {
+      if (req.left.queryType().isArrowType()) {
+        FunctionSymbol f = req.left.queryRoot();
+        int m = f.queryArity();
+        for (int i = req.left.numberArguments() + 1; i <= m; i++) {
+          _problem.requireImplication(req.variable, _parameters.getRegardsVariableFor(f, i));
+        }
+      }
       BVar x = getVariableFor(req.left,Relation.RPO,req.right,req.constraint,req.theoryVariables);
       _problem.requireImplication(req.variable, x);
     }

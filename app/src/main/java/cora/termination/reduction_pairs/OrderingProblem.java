@@ -37,20 +37,6 @@ import cora.termination.reduction_pairs.OrderingRequirement.Relation;
  * are not directly used.
  */
 public record OrderingProblem(ImmutableList<OrderingRequirement> reqs, TRS trs) {
-  /** Add variables from FV(right) \ FV(left) into the given constraint. */
-  private static Term fixConstraint(Term left, Term right, Term constraint) {
-    Environment<Variable> lvars = left.vars();
-    Environment<Variable> rvars = right.vars();
-    Environment<Variable> cvars = constraint.vars();
-    for (Variable x : rvars) {
-      if (lvars.contains(x)) continue;
-      if (cvars.contains(x)) continue;
-      constraint = TermFactory.createApp(TheoryFactory.andSymbol, constraint,
-        TermFactory.createApp(TheoryFactory.equalSymbol, x, x));
-    }   
-    return constraint;
-  }
-
   /**
    * Helper function: updates the given immutable list builder with requirements l [rel] r | φ for
    * all rules l → r | φ in the given TRS.
@@ -58,11 +44,8 @@ public record OrderingProblem(ImmutableList<OrderingRequirement> reqs, TRS trs) 
   private static void orient(TRS trs, Relation rel, ImmutableList.Builder<OrderingRequirement> b) {
     for (int i = 0; i < trs.queryRuleCount(); i++) {
       Rule rule = trs.queryRule(i);
-      Term left = rule.queryLeftSide();
-      Term right = rule.queryRightSide();
-      Term constr = fixConstraint(left, right, rule.queryConstraint());
-      OrderingRequirement req = new OrderingRequirement(left, right, constr, rel);
-      b.add(req);
+      b.add(new OrderingRequirement(rule.queryLeftSide(), rule.queryRightSide(),
+        rule.queryConstraint(), rel, rule.queryLVars()));
     }
   }
 
@@ -89,7 +72,7 @@ public record OrderingProblem(ImmutableList<OrderingRequirement> reqs, TRS trs) 
   public static OrderingProblem createWeakProblem(TRS trs, List<OrderingRequirement> extra) {
     ImmutableList.Builder<OrderingRequirement> b = ImmutableList.<OrderingRequirement>builder();
     for (OrderingRequirement req : extra) b.add(req);
-    orient(trs, Relation.Either, b);
+    orient(trs, Relation.Weak, b);
     return new OrderingProblem(b.build(), trs);
   }
 

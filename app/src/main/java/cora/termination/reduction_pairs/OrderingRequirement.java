@@ -15,11 +15,14 @@
 
 package cora.termination.reduction_pairs;
 
-import com.google.common.collect.ImmutableList;
+import java.util.Set;
 import java.util.List;
+import java.util.TreeSet;
+import java.util.Collections;
 
 import charlie.util.Pair;
 import charlie.terms.Term;
+import charlie.terms.Variable;
 import charlie.terms.TermPrinter.Renaming;
 import cora.io.OutputModule;
 
@@ -27,8 +30,13 @@ import cora.io.OutputModule;
  * An OrderingRequirement is a conditional requirement left R right [constraint], where R is one of
  * ≻, ≽ or "either".  It is particularly used in an OrderingProblem.
  */
-public record OrderingRequirement(Term left, Term right, Term constraint, Relation rel) {
+public record OrderingRequirement(Term left, Term right, Term constraint, Relation rel,
+                                  Set<Variable> tvar) {
   public enum Relation { Strict, Weak, Either }
+
+  public OrderingRequirement(Term l, Term r, Term co, Relation relation, List<Variable> tv) {
+    this(l, r, co, relation, Collections.unmodifiableSet(new TreeSet<Variable>(tv)));
+  }
 
   /**
    * Prints the current requirement to the given module (within the current paragraph or column;
@@ -44,15 +52,34 @@ public record OrderingRequirement(Term left, Term right, Term constraint, Relati
     Pair<Term,Renaming> l = new Pair<Term,Renaming>(left, naming);
     Pair<Term,Renaming> r = new Pair<Term,Renaming>(right, naming);
     Pair<Term,Renaming> c = new Pair<Term,Renaming>(constraint, naming);
-    if (constraint.isValue() && constraint.toValue().getBool()) {
-      module.print("%a " + relation + " %a", l, r);
+    module.print("%a " + relation + " %a", l, r);
+    if (!constraint.isValue() || !constraint.toValue().getBool()) module.print(" | %a", c);
+    // print the extra variables only if necessary
+    boolean allvarsinconstraint = true;
+    for (Variable x : tvar) {
+      if (!constraint.vars().contains(x)) {
+        if (left.vars().contains(x) || right.vars().contains(x)) {
+          allvarsinconstraint = false;
+          break;
+        }
+      }
     }
-    else module.print("%a " + relation + " %a | %a", l, r, c);
+    if (!allvarsinconstraint) {
+      module.print(" { ");
+      for (Variable x : tvar) {
+        // only show the variables that actually occur
+        if (!left.vars().contains(x) && !right.vars().contains(x) &&
+            !constraint.vars().contains(x)) continue;
+        module.print("%a ", new Pair<Term,Renaming>(x, naming));
+      }
+      module.print("}");
+    }
   }
   
-  /** Should only be used for debug output (and is deliberately ugly to make that clera) */
+  /** Should only be used for debug output (and is deliberately ugly to make that clear) */
   public String toString() {
-    return left.toString() + " " + rel + " " + right.toString() + " | " + constraint.toString();
+    return left.toString() + " " + rel + " " + right.toString() + " | " + constraint.toString() +
+      " {" + tvar.toString() + " }";
   }
 }
 

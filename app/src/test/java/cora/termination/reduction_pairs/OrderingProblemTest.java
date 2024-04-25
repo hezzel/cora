@@ -55,14 +55,16 @@ public class OrderingProblemTest {
     Term r = TheoryFactory.createValue(7);
     Term c1 = TheoryFactory.createValue(false);
     Term c2 = TheoryFactory.createValue(true);
-    OrderingRequirement req1 = new OrderingRequirement(l,r,c1, OrderingRequirement.Relation.Either);
-    OrderingRequirement req2 = new OrderingRequirement(l,r,c2, OrderingRequirement.Relation.Strict);
+    OrderingRequirement req1 =
+      new OrderingRequirement(l,r,c1, OrderingRequirement.Relation.Either, List.of());
+    OrderingRequirement req2 =
+      new OrderingRequirement(l,r,c2, OrderingRequirement.Relation.Strict, List.of());
     OrderingProblem problem = OrderingProblem.createWeakProblem(trs, List.of(req1, req2));
     assertTrue(problem.toString().equals(
       "  9 ≻? 7 | false\n" +
       "  9 ≻ 7\n" +
-      "  sum(0) ≻? 0\n" +
-      "  sum(x) ≻? x + sum(x - 1) | x ≠ 0\n\n"));
+      "  sum(0) ≽ 0\n" +
+      "  sum(x) ≽ x + sum(x - 1) | x ≠ 0\n\n"));
   }
 }
 

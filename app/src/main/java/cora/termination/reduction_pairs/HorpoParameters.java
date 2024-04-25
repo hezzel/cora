@@ -15,7 +15,11 @@
 
 package cora.termination.reduction_pairs;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.TreeMap;
+import java.util.Collections;
+import charlie.util.Pair;
 import charlie.terms.FunctionSymbol;
 import charlie.smt.*;
 
@@ -103,6 +107,8 @@ class HorpoParameters {
     _status.put(name, x);
     _problem.require(SmtFactory.createGeq(x, SmtFactory.createValue(1)));
     _problem.require(SmtFactory.createLeq(x, SmtFactory.createValue(f.queryArity())));
+    // ensure that a precedence variable also exists, since these are returned together
+    getPrecedenceFor(f);
     return x;
   }
 
@@ -155,6 +161,44 @@ class HorpoParameters {
    */
   public int queryIntegerBound() {
     return _M;
+  }
+
+  public record SymbolData(String symbol, int prec, int stat) {}
+  /**
+   * For the given valuation, returns the precedence and status of all the function symbols where
+   * the precedence was queried, ordered from large to small.
+   */
+  public ArrayList<SymbolData> getSymbolData(Valuation valuation) {
+    ArrayList<SymbolData> info = new ArrayList<SymbolData>();
+    for (String symbol : _precedence.keySet()) {
+      int p = valuation.queryAssignment(_precedence.get(symbol));
+      IVar i = _status.get(symbol);
+      int s = (i == null) ? 1 : valuation.queryAssignment(i);
+      info.add(new SymbolData(symbol, p, s));
+    }
+    Collections.sort(info, new Comparator<SymbolData>() {
+      public int compare(SymbolData inf1, SymbolData inf2) {
+        if (inf1.prec != inf2.prec) return inf2.prec - inf1.prec;
+        if (inf1.stat != inf2.stat) return inf2.stat - inf1.stat;
+        return inf1.symbol.compareTo(inf2.symbol);
+      }
+    });
+    return info;
+  }
+
+  /**
+   * For the given valuation, returns a list of arguments that were not regarded at all.
+   */
+  public ArrayList<Pair<String,Integer>> getDisregardedArguments(Valuation valuation) {
+    ArrayList<Pair<String,Integer>> ret = new ArrayList<Pair<String,Integer>>();
+    for (String symbol : _regards.keySet()) {
+      TreeMap<Integer,BVar> map = _regards.get(symbol);
+      for (Integer i : map.keySet()) {
+        BVar x = map.get(i);
+        if (!valuation.queryAssignment(x)) ret.add(new Pair<String,Integer>(symbol, i));
+      }
+    }
+    return ret;
   }
 }
 

@@ -120,20 +120,37 @@ public class HorpoConstraintListTest {
                          "f :: Int -> Int -> Int g :: Int -> Int -> Int d :: Int -> Int");
   }
 
+  /**
+   * This sets up a simplification problem of the form x+3 REL x+1 | x > 0 { x },
+   * and does a single simplification step.  Here, REL is the given relation.
+   * Both the resulting list and the corresponding state of the SmtPorblem are returned.
+   */
+  private Pair<HorpoConstraintList,SmtProblem> setupTheorySimplify(Relation relation) {
+    return setupSimplify("x+3", "Int", "x+1", "Int", "Int", "x > 0", relation, "");
+  }
+
   @Test
   public void testSimplifyGreater() {
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify(Relation.GREATER);
     assertTrue(pair.fst().toString().equals(
       "$ [f(x, d(y)) ≻ g(x, x) | y > 0 { y }]\n" +
-      "@ [f(x, d(y)) ≻{theory} g(x, x) | y > 0 { y }]\n" +
       "@ [f(x, d(y)) ≻{rpo} g(x, x) | y > 0 { y }]\n" +
-      "@ [f(x, d(y)) ≻{mono} g(x, x) | y > 0 { y }]\n"));
+      "@ [f(x, d(y)) ≻{mono} g(x, x) | y > 0 { y }]\n" +
+      "@ [f(x, d(y)) ≻{args} g(x, x) | y > 0 { y }]\n"));
     assertTrue(pair.snd().toString().equals(
       "[alwaystrue]\n" +
       "(not [f(x, d(y)) ≻ g(x, x) | y > 0 { y }]) or " +
-      "[f(x, d(y)) ≻{theory} g(x, x) | y > 0 { y }] or " +
       "[f(x, d(y)) ≻{rpo} g(x, x) | y > 0 { y }] or " +
-      "[f(x, d(y)) ≻{mono} g(x, x) | y > 0 { y }]\n"));
+      "[f(x, d(y)) ≻{mono} g(x, x) | y > 0 { y }] or "+
+      "[f(x, d(y)) ≻{args} g(x, x) | y > 0 { y }]\n"));
+    pair = setupTheorySimplify(Relation.GREATER);
+    assertTrue(pair.fst().toString().equals(
+      "$ [x + 3 ≻ x + 1 | x > 0 { x }]\n" +
+      "@ [x + 3 ≻{theory} x + 1 | x > 0 { x }]\n"));
+    assertTrue(pair.snd().toString().equals(
+      "[alwaystrue]\n" +
+      "(not [x + 3 ≻ x + 1 | x > 0 { x }]) or " +
+      "[x + 3 ≻{theory} x + 1 | x > 0 { x }]\n"));
   }
 
   @Test
@@ -141,15 +158,25 @@ public class HorpoConstraintListTest {
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify(Relation.GEQ);
     assertTrue(pair.fst().toString().equals(
       "$ [f(x, d(y)) ≽ g(x, x) | y > 0 { y }]\n" +
-      "@ [f(x, d(y)) ≽{theory} g(x, x) | y > 0 { y }]\n" +
       "@ [f(x, d(y)) ≻{rpo} g(x, x) | y > 0 { y }]\n" +
-      "@ [f(x, d(y)) ≽{mono} g(x, x) | y > 0 { y }]\n"));
+      "@ [f(x, d(y)) ≽{mono} g(x, x) | y > 0 { y }]\n" +
+      "@ [f(x, d(y)) ≽{args} g(x, x) | y > 0 { y }]\n"));
     assertTrue(pair.snd().toString().equals(
       "[alwaystrue]\n" +
       "(not [f(x, d(y)) ≽ g(x, x) | y > 0 { y }]) or " +
-      "[f(x, d(y)) ≽{theory} g(x, x) | y > 0 { y }] or " +
       "[f(x, d(y)) ≻{rpo} g(x, x) | y > 0 { y }] or " +
-      "[f(x, d(y)) ≽{mono} g(x, x) | y > 0 { y }]\n"));
+      "[f(x, d(y)) ≽{mono} g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ≽{args} g(x, x) | y > 0 { y }]\n"));
+    pair = setupTheorySimplify(Relation.GEQ);
+    assertTrue(pair.fst().toString().equals(
+      "$ [x + 3 ≽ x + 1 | x > 0 { x }]\n" +
+      "@ [x + 3 ≽{theory} x + 1 | x > 0 { x }]\n" +
+      "@ [x + 3 ≽{equal} x + 1 | x > 0 { x }]\n"));
+    assertTrue(pair.snd().toString().equals(
+      "[alwaystrue]\n" +
+      "(not [x + 3 ≽ x + 1 | x > 0 { x }]) or " +
+      "[x + 3 ≽{theory} x + 1 | x > 0 { x }] or " +
+      "[x + 3 ≽{equal} x + 1 | x > 0 { x }]\n"));
   }
 
   @Test
@@ -157,21 +184,31 @@ public class HorpoConstraintListTest {
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify(Relation.GEQNOGR);
     assertTrue(pair.fst().toString().equals(
       "$ [f(x, d(y)) ≈ g(x, x) | y > 0 { y }]\n" +
-      "@ [f(x, d(y)) ≈{theory} g(x, x) | y > 0 { y }]\n" +
-      "@ [f(x, d(y)) ≈{mono} g(x, x) | y > 0 { y }]\n"));
+      "@ [f(x, d(y)) ≈{mono} g(x, x) | y > 0 { y }]\n" +
+      "@ [f(x, d(y)) ≈{args} g(x, x) | y > 0 { y }]\n"));
     assertTrue(pair.snd().toString().equals(
       "[alwaystrue]\n" +
       "(not [f(x, d(y)) ≈ g(x, x) | y > 0 { y }]) or " +
-      "[f(x, d(y)) ≈{theory} g(x, x) | y > 0 { y }] or " +
-      "[f(x, d(y)) ≈{mono} g(x, x) | y > 0 { y }]\n"));
-  }
+      "[f(x, d(y)) ≈{mono} g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ≈{args} g(x, x) | y > 0 { y }]\n"));
+    pair = setupTheorySimplify(Relation.GEQNOGR);
+    assertTrue(pair.fst().toString().equals(
+      "$ [x + 3 ≈ x + 1 | x > 0 { x }]\n" +
+      "@ [x + 3 ≈{theory} x + 1 | x > 0 { x }]\n" +
+      "@ [x + 3 ≈{equal} x + 1 | x > 0 { x }]\n"));
+      assertTrue(pair.snd().toString().equals(
+      "[alwaystrue]\n" +
+      "(not [x + 3 ≈ x + 1 | x > 0 { x }]) or " +
+      "[x + 3 ≈{theory} x + 1 | x > 0 { x }] or " +
+      "[x + 3 ≈{equal} x + 1 | x > 0 { x }]\n"));
+}
 
   @Test
   public void testSimplifyRpo() {
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify(Relation.RPO);
     assertTrue(pair.fst().toString().equals(
       "$ [f(x, d(y)) ▷ g(x, x) | y > 0 { y }]\n" +
-      "@ [f(x, d(y)) ▷{thterm} g(x, x) | y > 0 { y }]\n" +
+      "@ [f(x, d(y)) ▷{th} g(x, x) | y > 0 { y }]\n" +
       "@ [f(x, d(y)) ▷{select} g(x, x) | y > 0 { y }]\n" +
       "@ [f(x, d(y)) ▷{copy} g(x, x) | y > 0 { y }]\n" +
       "@ [f(x, d(y)) ▷{lex} g(x, x) | y > 0 { y }]\n" +
@@ -180,7 +217,7 @@ public class HorpoConstraintListTest {
     assertTrue(pair.snd().toString().equals(
       "[alwaystrue]\n" +
       "(not [f(x, d(y)) ▷ g(x, x) | y > 0 { y }]) or " +
-      "[f(x, d(y)) ▷{thterm} g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ▷{th} g(x, x) | y > 0 { y }] or " +
       "[f(x, d(y)) ▷{select} g(x, x) | y > 0 { y }] or " +
       "[f(x, d(y)) ▷{copy} g(x, x) | y > 0 { y }] or " +
       "[f(x, d(y)) ▷{lex} g(x, x) | y > 0 { y }] or " +
@@ -211,17 +248,17 @@ public class HorpoConstraintListTest {
                                                               "x > 0", Relation.GEQNOGR, trs);
     assertTrue(pair.snd().toString().equals(
       "[alwaystrue]\n(not [f(x) ≈ g(x) | x > 0 { x }]) or " +
-      "[f(x) ≈{theory} g(x) | x > 0 { x }] or [f(x) ≈{mono} g(x) | x > 0 { x }]\n"));
+      "[f(x) ≈{mono} g(x) | x > 0 { x }] or [f(x) ≈{args} g(x) | x > 0 { x }]\n"));
     pair = setupSimplify("f(x)", "A", "g(x)", "B", "Int", "x > 0", Relation.GEQ, trs);
     assertTrue(pair.snd().toString().equals(
       "[alwaystrue]\n(not [f(x) ≽ g(x) | x > 0 { x }]) or " +
-      "[f(x) ≽{theory} g(x) | x > 0 { x }] or [f(x) ≻{rpo} g(x) | x > 0 { x }] or " +
-      "[f(x) ≽{mono} g(x) | x > 0 { x }]\n"));
+      "[f(x) ≻{rpo} g(x) | x > 0 { x }] or [f(x) ≽{mono} g(x) | x > 0 { x }] or " +
+      "[f(x) ≽{args} g(x) | x > 0 { x }]\n"));
     pair = setupSimplify("f(x)", "A", "g(x)", "B", "Int", "x > 0", Relation.GREATER, trs);
     assertTrue(pair.snd().toString().equals(
       "[alwaystrue]\n(not [f(x) ≻ g(x) | x > 0 { x }]) or " +
-      "[f(x) ≻{theory} g(x) | x > 0 { x }] or [f(x) ≻{rpo} g(x) | x > 0 { x }] or " +
-      "[f(x) ≻{mono} g(x) | x > 0 { x }]\n"));
+      "[f(x) ≻{rpo} g(x) | x > 0 { x }] or [f(x) ≻{mono} g(x) | x > 0 { x }] or " +
+      "[f(x) ≻{args} g(x) | x > 0 { x }]\n"));
   }
 
   @Test
@@ -380,7 +417,7 @@ public class HorpoConstraintListTest {
   }
 
   @Test
-  public void testMonoWithFunction() {
+  public void testArgs() {
     TRS trs = makeTrs("f :: Int -> A -> A -> Unit\na :: A\nb :: A\n" +
                       "f(x, a, y) -> f(x+1, b, a) | x >= 0");
     // get components for ordering requirements
@@ -393,46 +430,46 @@ public class HorpoConstraintListTest {
     for (Variable x : constraint.vars()) tvar.add(x);
 
     // store all three kinds of requirements, and handle them
-    lst.getVariableFor(left, Relation.GREATERMONO, right, constraint, tvar);
-    lst.getVariableFor(left, Relation.GEQNOGRMONO, right, constraint, tvar);
-    lst.getVariableFor(left, Relation.GEQMONO, right, constraint, tvar);
+    lst.getVariableFor(left, Relation.GREATERARGS, right, constraint, tvar);
+    lst.getVariableFor(left, Relation.GEQNOGRARGS, right, constraint, tvar);
+    lst.getVariableFor(left, Relation.GEQARGS, right, constraint, tvar);
     lst.simplify();
     lst.simplify();
     lst.simplify();
 
     assertTrue(lst.toString().equals(
-      "$ [f(x, a, y) ≻{mono} f(x + 1, b, a) | x ≥ 0 { x }]\n" +
-      "$ [f(x, a, y) ≈{mono} f(x + 1, b, a) | x ≥ 0 { x }]\n" +
-      "$ [f(x, a, y) ≽{mono} f(x + 1, b, a) | x ≥ 0 { x }]\n" +
+      "$ [f(x, a, y) ≻{args} f(x + 1, b, a) | x ≥ 0 { x }]\n" +
+      "$ [f(x, a, y) ≈{args} f(x + 1, b, a) | x ≥ 0 { x }]\n" +
+      "$ [f(x, a, y) ≽{args} f(x + 1, b, a) | x ≥ 0 { x }]\n" +
       "@ [x ≽ x + 1 | x ≥ 0 { x }]\n" +
       "@ [a ≽ b | x ≥ 0 { }]\n" +
       "@ [y ≽ a | x ≥ 0 { }]\n" +
-      "@ [x ≻{mono} x + 1 | x ≥ 0 { x }]\n" +
-      "@ [a ≻{mono} b | x ≥ 0 { }]\n" +
-      "@ [y ≻{mono} a | x ≥ 0 { }]\n" +
+      "@ [x ≻ x + 1 | x ≥ 0 { x }]\n" +
+      "@ [a ≻ b | x ≥ 0 { }]\n" +
+      "@ [y ≻ a | x ≥ 0 { }]\n" +
       "@ [x ≈ x + 1 | x ≥ 0 { x }]\n" +
       "@ [a ≈ b | x ≥ 0 { }]\n" +
       "@ [y ≈ a | x ≥ 0 { }]\n"));
 
     assertTrue(param.queryProblem().toString().equals(
       "[alwaystrue]\n" +
-      "(not [f(x, a, y) ≻{mono} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,1)] or [x ≽ x + 1 | x ≥ 0 { x }]\n" +
-      "(not [f(x, a, y) ≻{mono} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,2)] or [a ≽ b | x ≥ 0 { }]\n" +
-      "(not [f(x, a, y) ≻{mono} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,3)] or [y ≽ a | x ≥ 0 { }]\n" +
-      "(not [f(x, a, y) ≻{mono} f(x + 1, b, a) | x ≥ 0 { x }]) or " +
-        "([regards(f,1)] and [x ≻{mono} x + 1 | x ≥ 0 { x }]) or " +
-        "([regards(f,2)] and [a ≻{mono} b | x ≥ 0 { }]) or " +
-        "([regards(f,3)] and [y ≻{mono} a | x ≥ 0 { }])\n" +
-      "(not [f(x, a, y) ≈{mono} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,1)] or [x ≈ x + 1 | x ≥ 0 { x }]\n" +
-      "(not [f(x, a, y) ≈{mono} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,2)] or [a ≈ b | x ≥ 0 { }]\n" +
-      "(not [f(x, a, y) ≈{mono} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,3)] or [y ≈ a | x ≥ 0 { }]\n" +
-      "(not [f(x, a, y) ≽{mono} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,1)] or [x ≽ x + 1 | x ≥ 0 { x }]\n" +
-      "(not [f(x, a, y) ≽{mono} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,2)] or [a ≽ b | x ≥ 0 { }]\n" +
-      "(not [f(x, a, y) ≽{mono} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,3)] or [y ≽ a | x ≥ 0 { }]\n"));
+      "(not [f(x, a, y) ≻{args} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,1)] or [x ≽ x + 1 | x ≥ 0 { x }]\n" +
+      "(not [f(x, a, y) ≻{args} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,2)] or [a ≽ b | x ≥ 0 { }]\n" +
+      "(not [f(x, a, y) ≻{args} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,3)] or [y ≽ a | x ≥ 0 { }]\n" +
+      "(not [f(x, a, y) ≻{args} f(x + 1, b, a) | x ≥ 0 { x }]) or " +
+        "([regards(f,1)] and [x ≻ x + 1 | x ≥ 0 { x }]) or " +
+        "([regards(f,2)] and [a ≻ b | x ≥ 0 { }]) or " +
+        "([regards(f,3)] and [y ≻ a | x ≥ 0 { }])\n" +
+      "(not [f(x, a, y) ≈{args} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,1)] or [x ≈ x + 1 | x ≥ 0 { x }]\n" +
+      "(not [f(x, a, y) ≈{args} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,2)] or [a ≈ b | x ≥ 0 { }]\n" +
+      "(not [f(x, a, y) ≈{args} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,3)] or [y ≈ a | x ≥ 0 { }]\n" +
+      "(not [f(x, a, y) ≽{args} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,1)] or [x ≽ x + 1 | x ≥ 0 { x }]\n" +
+      "(not [f(x, a, y) ≽{args} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,2)] or [a ≽ b | x ≥ 0 { }]\n" +
+      "(not [f(x, a, y) ≽{args} f(x + 1, b, a) | x ≥ 0 { x }]) or ![regards(f,3)] or [y ≽ a | x ≥ 0 { }]\n"));
   }
 
   @Test
-  public void testMonoWithVariable() {
+  public void testMono() {
     TRS trs = makeTrs("Q :: A -> A\na :: A\nb :: A\nc :: Int -> A" +
                       "{ F :: A -> A -> A } Q(F(c(x), a)) -> Q(F(b, c(x))) | x = 0");
     // get components for ordering requirements
@@ -456,18 +493,14 @@ public class HorpoConstraintListTest {
       "$ [F(c(x), a) ≻{mono} F(b, c(x)) | x = 0 { x }]\n" +
       "$ [F(c(x), a) ≈{mono} F(b, c(x)) | x = 0 { x }]\n" +
       "$ [F(c(x), a) ≽{mono} F(b, c(x)) | x = 0 { x }]\n" +
-      "@ [c(x) ≽ b | x = 0 { x }]\n" +
-      "@ [a ≽ c(x) | x = 0 { x }]\n" +
-      "@ [c(x) ≻{mono} b | x = 0 { x }]\n" +
-      "@ [a ≻{mono} c(x) | x = 0 { x }]\n" +
       "@ [c(x) ≈ b | x = 0 { x }]\n" +
-      "@ [a ≈ c(x) | x = 0 { x }]\n"));
+      "@ [a ≈ c(x) | x = 0 { x }]\n" +
+      "@ [c(x) ≽ b | x = 0 { x }]\n" +
+      "@ [a ≽ c(x) | x = 0 { x }]\n"));
 
     assertTrue(param.queryProblem().toString().equals(
       "[alwaystrue]\n" +
-      "(not [F(c(x), a) ≻{mono} F(b, c(x)) | x = 0 { x }]) or [c(x) ≽ b | x = 0 { x }]\n" +
-      "(not [F(c(x), a) ≻{mono} F(b, c(x)) | x = 0 { x }]) or [a ≽ c(x) | x = 0 { x }]\n" +
-      "(not [F(c(x), a) ≻{mono} F(b, c(x)) | x = 0 { x }]) or [c(x) ≻{mono} b | x = 0 { x }] or [a ≻{mono} c(x) | x = 0 { x }]\n" +
+      "![F(c(x), a) ≻{mono} F(b, c(x)) | x = 0 { x }]\n" +
       "(not [F(c(x), a) ≈{mono} F(b, c(x)) | x = 0 { x }]) or [c(x) ≈ b | x = 0 { x }]\n" +
       "(not [F(c(x), a) ≈{mono} F(b, c(x)) | x = 0 { x }]) or [a ≈ c(x) | x = 0 { x }]\n" +
       "(not [F(c(x), a) ≽{mono} F(b, c(x)) | x = 0 { x }]) or [c(x) ≽ b | x = 0 { x }]\n" +
@@ -475,25 +508,20 @@ public class HorpoConstraintListTest {
   }
 
   @Test
-  public void testUnappliedMono() {
+  public void testEquality() {
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f", "A -> A", "f", "A -> A", "Int",
-                                                         "true", Relation.GEQMONO, "f :: A -> A");
-    assertTrue(pair.fst().toString().equals("$ [f ≽{mono} f | true { }]\n"));
-    assertTrue(pair.snd().toString().equals("[alwaystrue]\n[f ≽{mono} f | true { }]\n"));
-
-    pair = setupSimplify("f", "A -> A", "f", "A -> A", "Int", "true", Relation.GREATERMONO,
-                         "f :: A -> A");
-    assertTrue(pair.fst().toString().equals("$ [f ≻{mono} f | true { }]\n"));
-    assertTrue(pair.snd().toString().equals("[alwaystrue]\n![f ≻{mono} f | true { }]\n"));
+                                                         "true", Relation.GEQEQUAL, "f :: A -> A");
+    assertTrue(pair.fst().toString().equals("$ [f ≽{equal} f | true { }]\n"));
+    assertTrue(pair.snd().toString().equals("[alwaystrue]\n[f ≽{equal} f | true { }]\n"));
 
     HorpoParameters param = new HorpoParameters(1000, true);
     HorpoConstraintList lst = makeList(param, makeTrs(""));
     Term x = TermFactory.createVar("x");
-    lst.getVariableFor(x, Relation.GEQNOGRMONO, x, TheoryFactory.createValue(true),
+    lst.getVariableFor(x, Relation.GEQNOGREQUAL, x, TheoryFactory.createValue(true),
                        new TreeSet<Variable>());
     lst.simplify();
-    assertTrue(lst.toString().equals("$ [x ≈{mono} x | true { }]\n"));
-    assertTrue(param.queryProblem().toString().equals("[alwaystrue]\n[x ≈{mono} x | true { }]\n"));
+    assertTrue(lst.toString().equals("$ [x ≈{equal} x | true { }]\n"));
+    assertTrue(param.queryProblem().toString().equals("[alwaystrue]\n[x ≈{equal} x | true { }]\n"));
   }
 
   @Test
@@ -509,6 +537,12 @@ public class HorpoConstraintListTest {
                                   "true", Relation.GREATERRPO, "f :: Int -> Int g :: Int -> Int");
     assertTrue(pair.snd().toString().equals("[alwaystrue]\n" +
       "(not [f(1) ≻{rpo} g(2) | true { }]) or [f(1) ▷ g(2) | true { }]\n"));
+    pair = setupSimplify("f(1)", "Int -> Int -> Int", "3", "Int", "Int", "true",
+                         Relation.GREATERRPO, "f :: Int -> Int -> Int -> Int");
+    assertTrue(pair.snd().toString().equals("[alwaystrue]\n" +
+      "(not [f(1) ≻{rpo} 3 | true { }]) or [regards(f,2)]\n" +
+      "(not [f(1) ≻{rpo} 3 | true { }]) or [regards(f,3)]\n" +
+      "(not [f(1) ≻{rpo} 3 | true { }]) or [f(1) ▷ 3 | true { }]\n"));
     pair = setupSimplify("x + 3", "Int", "x", "Int", "Int", "x > 0", Relation.GREATERRPO, "");
     assertTrue(pair.snd().toString().equals("[alwaystrue]\n![x + 3 ≻{rpo} x | x > 0 { x }]\n"));
   }
@@ -517,15 +551,15 @@ public class HorpoConstraintListTest {
   public void testRpoTheory() {
     // values
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("a", "Int", "true", "Bool", "Int",
-                                                         "true", Relation.RPOTHTERM, "a :: Int");
-    assertTrue(pair.snd().toString().equals("[alwaystrue]\n[a ▷{thterm} true | true { }]\n"));
+                                                         "true", Relation.RPOTH, "a :: Int");
+    assertTrue(pair.snd().toString().equals("[alwaystrue]\n[a ▷{th} true | true { }]\n"));
     // complex expressions with variable in theory
-    pair = setupSimplify("a", "A", "x + y/2", "Int", "Int", "x > 0", Relation.RPOTHTERM, "a :: A");
+    pair = setupSimplify("a", "A", "x + y/2", "Int", "Int", "x > 0", Relation.RPOTH, "a :: A");
     assertTrue(pair.snd().toString().equals("[alwaystrue]\n" +
-      "[a ▷{thterm} x + y / 2 | x > 0 { x y }]\n"));
+      "[a ▷{th} x + y / 2 | x > 0 { x y }]\n"));
     // non-example: a variable that is not in the theory
-    pair = setupSimplify("a", "A", "x", "Int", "Int", "y > 0", Relation.RPOTHTERM, "a :: A");
-    assertTrue(pair.snd().toString().equals("[alwaystrue]\n![a ▷{thterm} x | y > 0 { }]\n"));
+    pair = setupSimplify("a", "A", "x", "Int", "Int", "y > 0", Relation.RPOTH, "a :: A");
+    assertTrue(pair.snd().toString().equals("[alwaystrue]\n![a ▷{th} x | y > 0 { }]\n"));
   }
 
   @Test

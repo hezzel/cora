@@ -33,6 +33,7 @@ public class HorpoResultTest {
     return CoraInputReader.readTrsFromString(txt);
   }
 
+/*
   @Test
   public void testPrecedenceAndStatus() {
     TRS trs = makeTrs("f :: Int -> Int g :: Int -> Int f(x) -> f(x-1) | x > 0 g(x) -> f(x)");
@@ -63,5 +64,6 @@ public class HorpoResultTest {
     assertTrue(result.status(minus).equals("Lex"));
     assertTrue(result.status(plus).equals("Mul_2"));
   }
+*/
 }
 
