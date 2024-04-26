@@ -1,0 +1,6 @@
+f :: Int -> A
+g :: Int -> A
+
+f(x) -> g(x -1)
+g(x) -> f(x) | x > 0
+

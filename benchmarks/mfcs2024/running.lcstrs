@@ -1,0 +1,14 @@
+nil :: intlist
+cons :: Int -> intlist -> intlist
+
+init :: (Int -> Int) -> intlist -> intlist
+init(F) -> map([+](fsum(F,10)))
+
+map :: (Int -> Int) -> intlist -> intlist
+map(F, nil) -> nil
+map(F, cons(H, T)) -> cons(F(H), map(F, T))
+
+private fsum :: (Int -> Int) -> Int -> Int
+fsum(F, 0) -> 0
+fsum(F, N) -> F(N) + fsum(F, N-1) | N != 0
+

@@ -1,0 +1,4 @@
+app :: o -> o -> o
+lam :: (o -> o) -> o
+app(lam(F),X) -> F(X)
+
