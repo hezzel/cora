@@ -171,7 +171,6 @@ public class Horpo {
   private HorpoResult solve(OrderingProblem orderingProblem, TreeMap<Integer,BVar> choices,
                             HorpoParameters param, HorpoConstraintList lst) {
     Valuation valuation = null;
-System.out.println(param.queryProblem());
     switch (Settings.smtSolver.checkSatisfiability(param.queryProblem())) {
       case SmtSolver.Answer.YES(Valuation val): valuation = val; break;
       default:  // no solution => let's return a MAYBE

@@ -117,10 +117,9 @@ class HorpoResult extends ReductionPairProofObject {
         // counts *can* be equated
         if (index < data.size()) {
           if (data.get(index).prec() != data.get(index-1).prec() ||
-              data.get(index-1).stat() == 1)
-          o.println("%{greater}");
+              data.get(index).stat() == 1) o.println("%{greater}");
+          else o.println("=");
         }
-        else o.println("=");
       }
       else o.print("= ");
       if (index < data.size()) o.print("%a ", data.get(index).symbol());

@@ -20,7 +20,7 @@ public class KasperProcessor implements Processor {
   private Map< FunctionSymbol, List<Term> > _candidates;
 
   /** This technique can be disabled by runtime arguments. */
-  public static String queryDisabledCode() { return "ifun"; }
+  public static String queryDisabledCode() { return "imap"; }
 
   @Override
   public boolean isApplicable(Problem dp) { return !Settings.isDisabled(queryDisabledCode()); }
@@ -312,7 +312,7 @@ public class KasperProcessor implements Processor {
   }
 
   @Override
-  public IntegerFunctionProof processDPP(Problem dpp) {
+  public IntegerMappingProof processDPP(Problem dpp) {
     _smt = new SmtProblem();
 
     _fnToFreshVar = computeFreshVars(dpp);
@@ -321,7 +321,7 @@ public class KasperProcessor implements Processor {
     addSimpleCandidates();
     addComplexCandidates(dpp);
     updateCandidates(dpp);
-    if (!everyFunctionHasAtLeastOneCandidate()) return new IntegerFunctionProof(dpp);
+    if (!everyFunctionHasAtLeastOneCandidate()) return new IntegerMappingProof(dpp);
 
     Map<FunctionSymbol, IVar> intMap = generateIVars(dpp);
     requiresCtrs(intMap);
@@ -334,7 +334,7 @@ public class KasperProcessor implements Processor {
       default -> null;
     };
 
-    if (result == null) return new IntegerFunctionProof(dpp);
+    if (result == null) return new IntegerMappingProof(dpp);
 
     // we found a solution! Store the information from the valuation
     TreeSet<Integer> indexOfOrientedDPs = new TreeSet<>();
@@ -352,6 +352,6 @@ public class KasperProcessor implements Processor {
       else { remainingDPs.add(dp); }
     }  
 
-    return new IntegerFunctionProof(dpp, indexOfOrientedDPs, _fnToFreshVar, candFun);
+    return new IntegerMappingProof(dpp, indexOfOrientedDPs, _fnToFreshVar, candFun);
   }
 }

@@ -640,13 +640,13 @@ class HorpoConstraintList {
 
   /**
    * Helper function: this requires that req.left ▷ t_i for every regarded argument t_i of
-   * req.right.  Here, req.right is required to be a functional term.
+   * req.right with i ≥ start.  Here, req.right is required to be a functional term.
    */
-  private void requireLeftGreaterRightArguments(HorpoRequirement req) {
+  private void requireLeftGreaterRightArguments(HorpoRequirement req, int start) {
     Term l = req.left;
     Term r = req.right;
     FunctionSymbol g = r.queryRoot();
-    for (int i = 1; i <= r.numberArguments(); i++) {
+    for (int i = start; i <= r.numberArguments(); i++) {
       BVar subreq = getVariableFor(l, Relation.RPO, r.queryArgument(i), req.constraint,
                                    req.theoryVariables);
       BVar regards = _parameters.getRegardsVariableFor(g, i);
@@ -668,14 +668,14 @@ class HorpoConstraintList {
       IVar predf = _parameters.getPrecedenceFor(f);
       IVar predg = _parameters.getPrecedenceFor(g);
       _problem.requireImplication(req.variable, SmtFactory.createGreater(predf, predg));
-      requireLeftGreaterRightArguments(req);
+      requireLeftGreaterRightArguments(req, 1);
     }
   }
 
   private void handleLex(HorpoRequirement req) {
     Term l = req.left;
     Term r = req.right;
-    if (!l.isFunctionalTerm() || !r.isFunctionalTerm()) {
+    if (!r.isFunctionalTerm()) {
       _problem.require(req.variable.negate());
       return; 
     }
@@ -741,12 +741,105 @@ class HorpoConstraintList {
           r.queryArgument(i), req.constraint, req.theoryVariables))));
     }
     // for every i: if t_i is regarded, then l ▷ t_i
-    requireLeftGreaterRightArguments(req);
+    // (we ignore the first argument, because that is definitely covered by the lex requirements)
+    requireLeftGreaterRightArguments(req, 2);
   }
 
   private void handleMul(HorpoRequirement req) {
-    // TODO
-    _problem.require(req.variable.negate());
+    Term l = req.left;
+    Term r = req.right;
+    // TODO: we're being very minimalistic here, and only allowing Mul if both sides have the same
+    // root; once we add support for different variables being compared, we should also require that
+    // f _can_ take at least two arguments below (and/or: abort if we get the constant 1 from the
+    // parameters as status(f))
+    FunctionSymbol f = l.queryRoot();
+    if (!r.isFunctionalTerm() || !r.queryRoot().equals(f) || r.numberArguments() <= 1 ||
+        l.numberArguments() == 0) {
+      _problem.require(req.variable.negate());
+      return; 
+    }
+    FunctionSymbol g = r.queryRoot();
+    int n = l.numberArguments(), m = r.numberArguments();
+    if (n > m) n = m;
+    // we let l = f l1 ... ln (perhaps with more arguments added, but these
+    // cannot possibly contribute to the mul relation) and r = f r1 ... rm
+    // note that m is at least 2; n may also be 1
+
+    // to apply mul, status(f) should be Mul_k, which we represent as k > 1
+    IntegerExpression status = _parameters.getStatusFor(f);
+    handleMulBasics(req, status);
+    TreeMap<Integer,TreeSet<Integer>> comparable = createComparable(l, n, r, m);
+    TreeMap<Integer,BVar> strict = createStrict(req.variable, f, status, n);
+    TreeMap<Integer,IVar> pi = createProjection(req.variable, f, status, n, m, comparable);
+    requirePiEqualityForNonStrict(req.variable, status, n, m, comparable, strict, pi);
+
+    for (int i = 1; i <= m; i++) {
+      Constraint itoobig = SmtFactory.createGreater(SmtFactory.createValue(i), status);
+      TreeSet<Integer> ok = comparable.get(i);
+      for (int j = 1; j <= n; j++) {
+        if (!ok.contains(j)) continue;
+        Constraint pinotj = SmtFactory.createUnequal(SmtFactory.createValue(j), pi.get(i));
+        Constraint notstrict = SmtFactory.createNegation(strict.get(j));
+        // if [req] ∧ i ≤ status ∧ π(i) = j ∧ strict_j then s_i > t_j
+        BVar gr = getVariableFor(l.queryArgument(j), Relation.GREATER, r.queryArgument(i),
+                                 req.constraint, req.theoryVariables);
+        Constraint c = SmtFactory.createDisjunction(
+          SmtFactory.createDisjunction(itoobig, pinotj),
+          SmtFactory.createDisjunction(notstrict, gr));
+        _problem.requireImplication(req.variable, c);
+        // if [req] ∧ i ≤ status ∧ π(i) = j ∧ ¬strict_j then s_i ≥ t_j
+        BVar geq = getVariableFor(l.queryArgument(j), Relation.GEQ, r.queryArgument(i),
+                                  req.constraint, req.theoryVariables);
+        c = SmtFactory.createDisjunction(
+          SmtFactory.createDisjunction(itoobig, pinotj),
+          SmtFactory.createDisjunction(strict.get(j), geq));
+        _problem.requireImplication(req.variable, c);
+      }
+    }
+  }
+
+  /**
+   * Given a requirement f l1...ln ▷{φ} f r1...rm by Rpo-mul, this adds the constraints that for
+   * this requirement to hold, we need status(f) = Mul_k with k ≤ m, and that f l1...ln ▷{φ} for
+   * all unfiltered ri where this is not already automatically implied by the multiset requirements
+   */
+  private void handleMulBasics(HorpoRequirement req, IntegerExpression status) {
+    Term r = req.right;
+    int m = r.numberArguments();
+
+    // [req] → k > 1 (as k = 1 implies a Lex step)
+    _problem.requireImplication(req.variable, SmtFactory.createGreater(status,
+        SmtFactory.createValue(1)));
+
+    // [req] → k ≤ m (we only require this if f r1 ... rm does not have base type, since otherwise
+    // it is already covered by the constraint on the creation of the status variable k)
+    if (r.queryType().isArrowType()) {
+      _problem.requireImplication(req.variable,
+        SmtFactory.createLeq(status, SmtFactory.createValue(m)));
+    }
+
+    // [req] → l ▷{φ} r_i for all arguments i; however, we omit 1,2 since the multiset constraints
+    // always imply this (for i > 2, it could be that k = 2, and then these are not required)
+    requireLeftGreaterRightArguments(req, 3);
+  }
+
+  /**
+   * Given a requirement f l1...ln ▷{φ} f r1...rm by 1e, this returns which variables ri and lj can
+   * be compared (typewise).
+   */
+  private TreeMap<Integer,TreeSet<Integer>> createComparable(Term left, int n, Term right, int m) {
+    TreeMap<Integer,TreeSet<Integer>> ret = new TreeMap<Integer,TreeSet<Integer>>();
+    for (int i = 1; i <= m; i++) {
+      TreeSet<Integer> comp = new TreeSet<Integer>();
+      for (int j = 1; j <= n; j++) {
+        if (sameTypeStructure(left.queryArgument(j).queryType(),
+                              right.queryArgument(i).queryType())) {
+          comp.add(j);
+        }
+      }
+      ret.put(i, comp);
+    }
+    return ret;
   }
 
   /**
@@ -763,6 +856,110 @@ class HorpoConstraintList {
     }
     if (isgood) _problem.require(req.variable);
     else _problem.require(req.variable.negate());
+  }
+
+  /**
+   * Given a requirement f l1...ln ▷{φ} f r1...rm by 1e, this creates variables strict_1...strict_n
+   * and (conditional on the main requirement holding) requires that at least one of those, which
+   * is smaller than status and unfiltered, is true.
+   */
+  private TreeMap<Integer,BVar> createStrict(BVar reqvar, FunctionSymbol root,
+                                             IntegerExpression status, int n) {
+    TreeMap<Integer,BVar> ret = new TreeMap<Integer,BVar>();
+    ArrayList<Constraint> oneof = new ArrayList<Constraint>();
+    for (int j = 1; j <= n; j++) {
+      BVar strict_j = _problem.createBooleanVariable();
+      _problem.requireImplication(reqvar, SmtFactory.createDisjunction(strict_j.negate(),
+        _parameters.getRegardsVariableFor(root, j)));
+      ret.put(j, strict_j);
+      oneof.add(strict_j);
+      if (j > 2) {
+        // [req] → ([strict_j] → k ≥ j)
+        Constraint constr = SmtFactory.createImplication(strict_j,
+          SmtFactory.createGeq(status, SmtFactory.createValue(j)));
+        _problem.requireImplication(reqvar, constr);
+      }
+    }
+
+    // [req] → [strict_1] ∨ ... ∨ [strict_n]
+    _problem.requireImplication(reqvar, SmtFactory.createDisjunction(oneof));
+    return ret;
+  }
+
+  /**
+   * Given a requirement f l1...ln ▷{φ} f r1...rm by 1e, this creates variables π(i) ∈ {1..n}
+   * for all i ∈ {1,..,m}.  It also adds the requirement that each unfiltered i ≤ status is
+   * mapped to some unfiltered j ≤ status.
+   */
+  private TreeMap<Integer,IVar> createProjection(BVar reqvar, FunctionSymbol root, IntegerExpression
+                              status, int n, int m, TreeMap<Integer,TreeSet<Integer>> comparable ) {
+    // create variables π(i)
+    TreeMap<Integer,IVar> pi = new TreeMap<Integer,IVar>();
+    for (int i = 1; i <= m; i++) pi.put(i, _problem.createIntegerVariable());
+    // require that, for 1 ≤ i ≤ status with i regarded
+    // - 1 ≤ π(i) ≤ status
+    // - π(i) ≤ n
+    // - π(i) is regarded
+    for (int i = 1; i <= m; i++) {
+      IVar pi_i = pi.get(i);
+      Constraint reqdoesnothold = reqvar.negate();
+      Constraint idisregarded = _parameters.getRegardsVariableFor(root, i).negate();
+      Constraint inotinrange = SmtFactory.createGreater(SmtFactory.createValue(i), status);
+      Constraint irrelevant =
+        SmtFactory.createDisjunction(List.of(reqdoesnothold, idisregarded, inotinrange));
+      // 1 ≤ π(i)
+      Constraint atleastone = SmtFactory.createGeq(pi_i, SmtFactory.createValue(1));
+      _problem.require(SmtFactory.createDisjunction(irrelevant, atleastone));
+      // π(i) ≤ status
+      Constraint atmostk = SmtFactory.createLeq(pi_i, status);
+      _problem.require(SmtFactory.createDisjunction(irrelevant, atmostk));
+      // π(i) ≤ n
+      Constraint atmostn = SmtFactory.createLeq(pi_i, SmtFactory.createValue(n));
+      _problem.require(SmtFactory.createDisjunction(irrelevant, atmostn));
+      // π(i) is regarded
+      for (int j = 1; j <= n; j++) {
+        // irrelevant OR π(i) != j OR j is regarded
+        Constraint pi_i_not_j = SmtFactory.createUnequal(pi_i, SmtFactory.createValue(j));
+        _problem.require(SmtFactory.createDisjunction(List.of(irrelevant, pi_i_not_j,
+          _parameters.getRegardsVariableFor(root, j))));
+      }
+    }
+    // require that π(i) != j if l_j and r_i do not have the same type structure
+    for (int i = 1; i <= m; i++) {
+      TreeSet<Integer> ok = comparable.get(i);
+      IVar pi_i = pi.get(i);
+      for (int j = 1; j <= n; j++) {
+        if (!ok.contains(j)) {
+          _problem.requireImplication(reqvar, SmtFactory.createUnequal(pi_i, SmtFactory.createValue(j)));
+        }
+      }
+    }
+    return pi;
+  }
+
+  private void requirePiEqualityForNonStrict(BVar reqvar, IntegerExpression status, int n, int m,
+                                             TreeMap<Integer,TreeSet<Integer>> comparable,
+                                             TreeMap<Integer,BVar> strict,
+                                             TreeMap<Integer,IVar> pi) {
+    // require that if π(i) = j ∧ pi(i') = j then strict_j
+    for (int i1 = 1; i1 < m; i1++) {
+      for (int i2 = i1+1; i2 <= m; i2++) {
+        for (int j = 1; j <= n; j++) {
+          if (!comparable.get(i1).contains(j)) continue;
+          if (!comparable.get(i2).contains(j)) continue;
+          // create: pi(i1) != j
+          Constraint c1 = SmtFactory.createUnequal(pi.get(i1), SmtFactory.createValue(j));
+          // create: pi(i2) != j
+          Constraint c2 = SmtFactory.createUnequal(pi.get(i2), SmtFactory.createValue(j));
+          // create: strict_j
+          Constraint c3 = strict.get(j);
+          // combine them
+          Constraint d = SmtFactory.createDisjunction(SmtFactory.createDisjunction(c1, c2), c3);
+          // and require for this clause to hold if req holds
+          _problem.requireImplication(reqvar, d);
+        }
+      }
+    }
   }
 }
 

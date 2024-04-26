@@ -684,8 +684,7 @@ public class HorpoConstraintListTest {
       "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (3 # i5) or [regards(f,3)]\n" +
       "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (3 # i5) or [regards(g,3)]\n" +
       "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (3 # i5) or [c ≻ w | true { }]\n" +
-      // left ▷ each right argument that is regarded
-      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ![regards(g,1)] or [f(a, b, c) ▷ u | true { }]\n" +
+      // left ▷ each right argument that is regarded (not including the first, because that one's covered)
       "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ![regards(g,2)] or [f(a, b, c) ▷ v | true { }]\n" +
       "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ![regards(g,3)] or [f(a, b, c) ▷ w | true { }]\n" +
       "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ![regards(g,4)] or [f(a, b, c) ▷ x | true { }]\n" ));
