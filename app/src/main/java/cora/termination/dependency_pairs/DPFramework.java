@@ -38,7 +38,7 @@ public class DPFramework {
     return DPGenerator.generateProblemFromTrs(trs);
   }
 
-  public DPProofObject proveTermination(TRS trs) {
+  public DPProofObject proveTermination(TRS trs, boolean ruleExtensionPresent) {
     ProofObject appl = isTRSApplicable(trs);
     if (!((Boolean)appl.queryAnswer()).booleanValue()) return new DPProofObject(appl);
 
@@ -49,8 +49,12 @@ public class DPFramework {
     TheoryArgumentsProcessor targProcessor = new TheoryArgumentsProcessor();
     SplittingProcessor splitProcessor = new SplittingProcessor();
     HorpoProcessor horpoProcessor = new HorpoProcessor();
-    List<Processor> proclist =
-      List.of(graphProcessor, subtermProcessor, kasperProcessor, targProcessor, horpoProcessor);
+    List<Processor> proclist;
+    if (!ruleExtensionPresent) {
+      proclist = List.of(graphProcessor, subtermProcessor, kasperProcessor, targProcessor,
+                         horpoProcessor);
+    }
+    else proclist = List.of(graphProcessor, subtermProcessor, kasperProcessor, targProcessor);
 
     Problem initialProblem = DPFramework.computeInitialProblem(trs);
     DPProofObject ret = new DPProofObject(appl, initialProblem);
@@ -98,6 +102,14 @@ public class DPFramework {
     }
     ret.setTerminating();
     return ret;
+  }
+
+  public DPProofObject proveTermination(TRS trs) {
+    return proveTermination(trs, false);
+  }
+
+  public DPProofObject proveComputability(TRS trs) {
+    return proveTermination(trs, true);
   }
 }
 

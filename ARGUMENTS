@@ -16,7 +16,7 @@ Additional commands affect Cora's execution:
 -d <technique_1,...,technique_n>: disable the given techniques from being used by Cora. Disableable techniques are:
   * dp: the DP framework (for termination, non-termination and universal computability); if disabled, HORPO is used for termination proofs instead
   * graph: the graph processor in the DP framework
-  * ifun: the integer function processor in the DP framework
+  * imap: the integer function processor in the DP framework
   * reach: the reachability processor in the DP framework (when using public functions)
   * split: the splitting processor in the DP framework
   * subcrit: the subterm criterion processor in the DP framework

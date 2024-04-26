@@ -34,7 +34,7 @@ public class Parameters {
   private OutputModule.Style _style;
   private Request _request;
 
-  public enum Request { Print, Reduce, Termination };
+  public enum Request { Print, Reduce, Termination, Computability };
   public class WrongParametersError extends Error {
     public WrongParametersError(String reason) { super("PARAMETERS ERROR: " + reason); }
   }
@@ -99,6 +99,9 @@ public class Parameters {
     String arg = args[index];
 
     switch (arg) {
+      case "-c": case "--computability":
+        setRequest(Request.Computability);
+        return index+1;
       case "-d": case "--disable":
         if (index + 1 == args.length) {
           throw new WrongParametersError("Parameter " + arg + " without anything to disable!");

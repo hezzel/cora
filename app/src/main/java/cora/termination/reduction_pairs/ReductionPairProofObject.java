@@ -96,7 +96,8 @@ public abstract class ReductionPairProofObject implements ProofObject {
         case Relation.Weak -> req;
         case Relation.Either ->
           new OrderingRequirement(req.left(), req.right(), req.constraint(),
-                                  _strictlyOriented.contains(i) ? Relation.Strict : Relation.Weak);
+                                  _strictlyOriented.contains(i) ? Relation.Strict : Relation.Weak,
+                                  req.tvar());
       };
       r.printTo(module);
       module.println();

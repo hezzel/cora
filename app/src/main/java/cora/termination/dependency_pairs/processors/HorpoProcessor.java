@@ -49,11 +49,11 @@ public class HorpoProcessor implements Processor {
     List<DP> dps = dpp.getDPList();
     for (DP dp : dps) {
       reqs.add(new OrderingRequirement(dp.lhs(), dp.rhs(), dp.constraint(), 
-                                       OrderingRequirement.Relation.Either));
+                                       OrderingRequirement.Relation.Either, dp.vars()));
     }
     OrderingProblem problem = OrderingProblem.createWeakProblem(dpp.getTRS(), reqs);
-    Horpo horpo = new Horpo(problem, false);
-    ReductionPairProofObject result = horpo.orient();
+    Horpo horpo = new Horpo(false);
+    ReductionPairProofObject result = horpo.orient(problem);
     if (result.queryAnswer() == TerminationAnswer.YES) {
       ArrayList<DP> lst = new ArrayList<DP>();
       for (int i = 0; i < dps.size(); i++) {

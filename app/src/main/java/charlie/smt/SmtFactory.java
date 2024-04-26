@@ -15,7 +15,7 @@
 
 package charlie.smt;
 
-import java.util.ArrayList;
+import java.util.List;
 import charlie.exceptions.NullInitialisationError;
 
 /**
@@ -156,7 +156,7 @@ public class SmtFactory {
     return new Disjunction(a, b);
   }
 
-  public static Constraint createDisjunction(ArrayList<Constraint> args) {
+  public static Constraint createDisjunction(List<Constraint> args) {
     if (args == null) throw new NullInitialisationError("Disjunction", "argument list");
     for (int i = 0; i < args.size(); i++) {
       if (args.get(i) == null) {

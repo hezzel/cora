@@ -99,6 +99,7 @@ public class App {
    */
   private static ProofObject executeRequest(Request request, TRS trs, List<String> moduleInput) {
     return switch (request) {
+      case Computability -> TerminationHandler.proveComputability(trs);
       case Print -> new ProofObject() {
         public Object queryAnswer() { return ""; }
         public void justify(OutputModule o) { o.printTrs(trs); }

@@ -117,12 +117,12 @@ class ParametersTest {
   @Test
   public void testDisable() {
     Parameters param = new Parameters(new String[] {
-      "myfile", "-d", "dp,graph", "--disable", "dp,ifun" });
+      "myfile", "-d", "dp,graph", "--disable", "dp,imap" });
     param.setupSettings();
     assertTrue(Settings.disabled.size() == 3);
     assertTrue(Settings.disabled.contains("dp"));
     assertTrue(Settings.disabled.contains("graph"));
-    assertTrue(Settings.disabled.contains("ifun"));
+    assertTrue(Settings.disabled.contains("imap"));
   }
 
   @Test

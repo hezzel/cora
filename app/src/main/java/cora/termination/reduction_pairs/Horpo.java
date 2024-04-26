@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.Map;
 import charlie.types.*;
 import charlie.terms.*;
 import charlie.smt.*;
@@ -29,7 +30,7 @@ import cora.config.Settings;
 
 /** This is an implementation of a basic version of Horpo for LCSTRSs (so with constraints). */
 public class Horpo {
-  private OrderingProblem _orderingProblem;
+  private boolean _strict;
 
   /** This technique can be disabled by runtime arguments. */
   public static String queryDisabledCode() { return "horpo"; }
@@ -58,74 +59,41 @@ public class Horpo {
                              "The current implementation of HORPO can only be applied on " +
                              "systems with applicative term formation and no tuples.");
     }
-    Horpo horpo = new Horpo(problem, true);
-    return horpo.orient();
-  }
-
-  /***********************************************************************************************/
-  /* An instance of HORPO keeps track of:                                                        */
-  /* - a list of requirements <left rel{constraint} right>, each with a corresponding boolean    */
-  /*   variable; this list is split up into:                                                     */
-  /*   + the requirements for which we have already added a formula to the smt problem           */
-  /*   + a list of requirements that we still need to handle                                     */
-  /* - an SmtProblem representing the list of implications var → constraint that we need to      */
-  /*   satisfy for the requirements to be satisfied                                              */
-  /* - a mapping of requirement string → variable, so we don't add the same formulas multiple    */
-  /*   times                                                                                     */
-  /***********************************************************************************************/
-
-  private static final int GREATER = 1;
-  private static final int GEQ = 2;
-  private static final int RPO = 3;
-  private final SmtProblem _problem;
-  private final TreeMap<String,IVar> _precedence;
-  private final TreeMap<String,IVar> _status;
-  private final LinkedList<HorpoRequirement> _todo;
-  private final TreeMap<String,BVar> _varCache;
-  private final BVar _down;
-  private int _M;
-
-  private record HorpoRequirement(int reqnr, Term left, int relation, Term right,
-                                  Term constraint, String clause, BVar variable) {
-    /** A toString() function to supply debug information */
-    public String toString() {
-      return variable.toString() + " => " +
-             reqToString(reqnr, left, relation, right, constraint, clause);
-    }
+    Horpo horpo = new Horpo(true);
+    return horpo.orient(problem);
   }
 
   /**
-   * Sets up a Horpo solver for the given ordering problem.
-   * If "strong" is set to true, then the reduction pair we search for must be strongly monotonic;
-   * if not, then it is allowed to be weakly monotonic.
+   * Constructor: sets up Horpo either as a strongly monotonic reduction pair, or as a weakly
+   * monotonic reduction pair.
    */
-  public Horpo(OrderingProblem problem, boolean strong) {
-    _orderingProblem = problem;
-
-    _problem = new SmtProblem();
-    _todo = new LinkedList<HorpoRequirement>();
-    _varCache = new TreeMap<String,BVar>();
-    _precedence = new TreeMap<String,IVar>();
-    _status = new TreeMap<String,IVar>();
-    _down = _problem.createBooleanVariable();
-
-    computeIntegerVariableBound();
-
-    for (int i = 0; i < problem.reqs().size(); i++) {
-      OrderingRequirement req = problem.reqs().get(i);
-      int rel = (req.rel() == OrderingRequirement.Relation.Weak) ? GEQ : GREATER;
-      _problem.require(getVariableFor(i, req.left(), rel, req.right(), req.constraint(), null));
-    }
+  public Horpo(boolean strict) {
+    _strict = strict;
   }
 
   /**
-   * We set M to twice the largest integer value occurring in the OrderingProblem (or just to 1000
-   * if that is bigger).
+   * The main reduction pair access function.  Tries to orient the given OrderingProblem, and
+   * returns a proof object to represent the result of this attempt.
    */
-  private void computeIntegerVariableBound() {
-    _M = 500;
+  public HorpoResult orient(OrderingProblem problem) {
+    int bound = computeIntegerVariableBound(problem);
+    HorpoParameters param = new HorpoParameters(bound, _strict);
+    TreeSet<String> avoid = getFunctionSymbols(problem);
+    TermPrinter printer = new TermPrinter(avoid);
+    HorpoConstraintList lst = new HorpoConstraintList(param, printer);
+    TreeMap<Integer,BVar> choices = setupConstraintList(lst, param.queryProblem(), problem);
+    while (!lst.isFullySimplified()) lst.simplify();
+    return solve(problem, choices, param, lst);
+  }
+
+  /**
+   * Returns twice the largest integer value occurring in the given OrderingProblem, or 1000 if
+   * that is bigger.
+   */
+  private int computeIntegerVariableBound(OrderingProblem problem) {
+    int ret = 500;
     LinkedList<Term> parts = new LinkedList<Term>();
-    for (OrderingRequirement req : _orderingProblem.reqs()) {
+    for (OrderingRequirement req : problem.reqs()) {
       parts.push(req.left());
       parts.push(req.right());
       parts.push(req.constraint());
@@ -134,698 +102,86 @@ public class Horpo {
       Term part = parts.pop();
       if (part.isValue() && part.queryType().equals(TypeFactory.intSort)) {
         Value value = part.toValue();
-        if (value.getInt() > _M) _M = value.getInt();
-        if (- value.getInt() > _M) _M = - value.getInt();
+        if (value.getInt() > ret) ret = value.getInt();
+        if (- value.getInt() > ret) ret = - value.getInt();
       }
       if (part.isApplication()) {
         for (int i = 1; i <= part.numberArguments(); i++) parts.push(part.queryArgument(i));
       }
     }
-    _M *= 2;
+    return ret * 2;
   }
 
-  /**
-   * Returns the precedence variable for a symbol f, creating it first if necessary.
-   * Default for the sake of unit testing, but otherwise private.
-   */
-  IVar getPrecedenceFor(FunctionSymbol f) {
-    if (_precedence.containsKey(f.toString())) return _precedence.get(f.toString());
-    IVar x = _problem.createIntegerVariable();
-    // theory symbols have values < 0, non-theory symbols ≥ 0
-    if (f.isTheorySymbol()) _problem.require(SmtFactory.createSmaller(x, SmtFactory.createValue(0)));
-    else _problem.require(SmtFactory.createGeq(x, SmtFactory.createValue(0)));
-    _precedence.put(f.toString(), x);
-    return x;
-  }
-
-  /**
-   * Returns the status variable for a symbol f, creating it first if necessary.
-   * We only create status variables for symbols with arity > 1; anything else automatically gets
-   * lex (in which case null is returned).  The status is either 1 (for Lex), or i for m_i.
-   * Default for the sake of unit testing, but otherwise private.
-   */
-  IVar getStatusFor(FunctionSymbol f) {
-    if (f.queryArity() <= 1) return null;
-    if (_status.containsKey(f.toString())) return _status.get(f.toString());
-    IVar x = _problem.createIntegerVariable();
-    _status.put(f.toString(), x);
-    _problem.require(SmtFactory.createGeq(x, SmtFactory.createValue(1)));
-    _problem.require(SmtFactory.createLeq(x, SmtFactory.createValue(f.queryArity())));
-    return x;
-  }
-
-  /**
-   * We find the unique variable associated to the given requirement.  If it was used before, this
-   * comes from the cache; otherwise we generate a new variable and put the requirement to define
-   * it into the _todo list.
-   */
-  private BVar getVariableFor(int reqnr, Term left, int rel, Term right, Term constraint,
-                              String clause) {
-    String str = reqToString(reqnr, left, rel, right, constraint, clause);
-    BVar ret =  _varCache.get(str);
-    if (ret != null) return ret;
-    ret = _problem.createBooleanVariable();
-    _varCache.put(str, ret);
-    HorpoRequirement req = new HorpoRequirement(reqnr, left, rel, right, constraint, clause, ret);
-    _todo.add(req);
+  /** Returns a set with all the function symbols occurring in the given problem. */
+  private TreeSet<String> getFunctionSymbols(OrderingProblem problem) {
+    TreeSet<FunctionSymbol> symbs = new TreeSet<FunctionSymbol>();
+    for (OrderingRequirement req : problem.reqs()) {
+      req.left().storeFunctionSymbols(symbs);
+      req.right().storeFunctionSymbols(symbs);
+      req.constraint().storeFunctionSymbols(symbs);
+    }
+    TreeSet<String> ret = new TreeSet<String>();
+    for (FunctionSymbol f : symbs) ret.add(f.queryName());
     return ret;
   }
 
   /**
-   * To be able to recognise repeated occurrences of the same requirement left rel{constr} right,
-   * we print them to string, and cache the requirements based on their string representation.
+   * This function adds the requirements of the given list into the given ordering problem,
+   * adds clauses to the requirement to ensure that the ordering problem is satisfied, and returns
+   * a map that indicates, for each EITHER entry in the ordering problem, the BVar that will
+   * eventually indicate if it is ordered strictly.
    */
-  private static String reqToString(int reqIndex, Term left, int rel, Term right, Term constraint,
-                                    String clause) {
-    StringBuilder ret = new StringBuilder();
-    ret.append("" + reqIndex + ": ");
-    ret.append(left.toString());
-    if (rel == GREATER) ret.append(" ≻");
-    if (rel == GEQ) ret.append(" ≽");
-    if (rel == RPO) ret.append(" ▷");
-    ret.append("{");
-    ret.append(constraint.toString());
-    ret.append("} ");
-    ret.append(right.toString());
-    if (clause != null) ret.append(" by " + clause);
-    return ret.toString();
-  }
-
-  /**
-   * Returns whether or not a and b are equal modulo renaming of base types.
-   * Here, we treat product types as unequal to anything, even themselves, as the theory has not
-   * yet been defined for product types.
-   */
-  private boolean sameTypeStructure(Type a, Type b) {
-    return switch (a) {
-      case Base(_) -> switch (b) {
-        case Base _ -> true;
-        case Arrow _, Product _ -> false;
-      };
-      case Arrow(Type in1, Type out1) -> switch (b) {
-        case Base _, Product _ -> false;
-        case Arrow(Type in2, Type out2) -> sameTypeStructure(in1, in2) && sameTypeStructure(out1, out2);
-      };
-      case Product _ -> false;
-    };
-  }
-
-  /**
-   * After creating a Horpo solver, call this function to execute it.  This will build an
-   * SmtProblem, run the solver, and determine a sHorpoResult.
-   *
-   * Note that queryAnswer() in the returned HorpoResult either returns YES (if the problem could be
-   * oriented), or MAYBE (if not).  In the case of YES, it can be queried for which of the "Either"
-   * requirements were oriented strictly.  A YES does not immediately imply termination!
-   */
-  public HorpoResult orient() {
-    while (handleTodo());
-    return solve();
-  }
-
-  private HorpoResult solve() {
-    Valuation valuation = null;
-    switch (Settings.smtSolver.checkSatisfiability(_problem)) {
-      case SmtSolver.Answer.YES(Valuation val): valuation = val; break;
-      default:  // no solution => let's return a MAYBE
-        return new HorpoResult(_orderingProblem, "Could not find a HORPO proof.");
-    };
-    TreeMap<String,Integer> pred = new TreeMap<String,Integer>();
-    for (String symbol : _precedence.keySet()) {
-      pred.put(symbol, valuation.queryAssignment(_precedence.get(symbol)));
-    }
-    TreeMap<String,Integer> stat = new TreeMap<String,Integer>();
-    for (String symbol : _status.keySet()) {
-      stat.put(symbol, valuation.queryAssignment(_status.get(symbol)));
-    }
-    int bound = _M;
-    if (valuation.queryAssignment(_down)) bound = -_M;
-    TreeSet<Integer> allIndexes = new TreeSet<Integer>();
-    for (int i = 0; i < _orderingProblem.reqs().size(); i++) {
-      if (_orderingProblem.reqs().get(i).rel() != OrderingRequirement.Relation.Weak) {
-        allIndexes.add(i);
-      }
-    }
-    return new HorpoResult(_orderingProblem, allIndexes, pred, stat, bound);
-  }
-
-
-  /**
-   * This function takes a single item from the _todo list, and handles it, potentially adding more
-   * todo items in the process.  If there are no _todo items left, then false is returned.
-   *
-   * Default rather than private only for the sake of unit testing.
-   */
-  boolean handleTodo() {
-    if (_todo.isEmpty()) return false;
-    HorpoRequirement req = _todo.pop();
-    if (req.relation == GREATER) handleGreater(req);
-    else if (req.relation == GEQ) handleGeq(req);
-    else handleRpo(req);
-    return true;
-  }
-
-  private void handleGeq(HorpoRequirement req) {
-    Term l = req.left;
-    Term r = req.right;
-    Term c = req.constraint;
-
-    if (req.clause == null) {
-      ArrayList<Constraint> lst = new ArrayList<Constraint>();
-      lst.add(getVariableFor(req.reqnr, l, GEQ, r, c, "1c"));
-      lst.add(getVariableFor(req.reqnr, l, GEQ, r, c, "1a"));
-      lst.add(getVariableFor(req.reqnr, l, GEQ, r, c, "1b"));
-      lst.add(getVariableFor(req.reqnr, l, GEQ, r, c, "1d"));
-      Constraint combi = SmtFactory.createDisjunction(lst);
-      _problem.requireImplication(req.variable, combi);
-    }
-    else if (req.clause.equals("1a")) {
-      handleTheoryComparison(req.left, req.right, req.constraint, req.variable, false);
-    }
-    else if (req.clause.equals("1b")) handleGeqB(req);
-    else if (req.clause.equals("1c")) handleGeqC(req);
-    else if (req.clause.equals("1d")) handleGeqD(req);
-  }
-
-  /** Returns whether we are even allowed to apply case 1a or 2a */
-  private boolean theoryAllowed(Term l, Term r, Term phi) {
-    if (!l.isTheoryTerm() || !r.isTheoryTerm() || !l.queryType().isBaseType() ||
-        !l.queryType().isTheoryType() || !l.queryType().equals(r.queryType())) {
-      return false;
-    }
-    ReplaceableList lvars = l.freeReplaceables();
-    ReplaceableList rvars = r.freeReplaceables();
-    ReplaceableList cvars = phi.freeReplaceables();
-    for (Replaceable x : lvars) if (!cvars.contains(x)) return false;
-    for (Replaceable x : rvars) if (!cvars.contains(x)) return false;
-    return true;
-  }
-
-  /**
-   * To handle an integer comparison, we check whether φ → l > -M ∧ l > r is valid, and if not,
-   * require that variable ∧ countDown cannot both hold; then we check the same for φ → l < M ∧
-   * l < r and if not, require that variable ∧ ¬countDown cannot both hold.  If strict = false,
-   * we also allow the option l = r in both cases.
-   * We use a separate SMT problem to do the validity check, as it should not be a part of the
-   * satisfiability problem.
-   */
-  private void handleIntComparison(Term l, Term r, Term phi, BVar variable, boolean strict) {
-    SmtProblem validityProblem = new SmtProblem();
-    TermSmtTranslator tst = new TermSmtTranslator(validityProblem);
-    IntegerExpression el = tst.translateIntegerExpression(l);
-    IntegerExpression er = tst.translateIntegerExpression(r);
-    Constraint c = tst.translateConstraint(phi);
-    Constraint equal = SmtFactory.createEqual(el, er);
-
-    IntegerExpression eMM = SmtFactory.createValue(-_M);
-    Constraint decrease = SmtFactory.createConjunction(  // l > -M ∧ l > r
-      SmtFactory.createGreater(el, eMM),
-      SmtFactory.createGreater(el, er));
-    if (!strict) decrease = SmtFactory.createDisjunction(equal, decrease);  // l = r ∨ above
-    validityProblem.requireImplication(c, decrease);
-    if (!Settings.smtSolver.checkValidity(validityProblem)) {
-      _problem.requireImplication(variable, SmtFactory.createNegation(_down));
-    }
-
-    validityProblem.clear();
-    IntegerExpression eM = SmtFactory.createValue(_M);
-    Constraint increase = SmtFactory.createConjunction(  // l < M ∧ l < r
-      SmtFactory.createSmaller(el, eM),
-      SmtFactory.createSmaller(el, er));
-    if (!strict) increase = SmtFactory.createDisjunction(equal, increase);
-    validityProblem.requireImplication(c, increase);
-    if (!Settings.smtSolver.checkValidity(validityProblem)) {
-      _problem.requireImplication(variable, _down);
-    }
-  }
-
-  private void handleBoolComparison(Term l, Term r, Term phi, BVar variable, boolean strict) {
-    SmtProblem validityProblem = new SmtProblem();
-    TermSmtTranslator tst = new TermSmtTranslator(validityProblem);
-    Constraint cl = tst.translateConstraint(l);
-    Constraint cr = tst.translateConstraint(r);
-    Constraint cp = tst.translateConstraint(phi);
-    Constraint negr = SmtFactory.createNegation(cr);
-
-    // we fix the comparison true ⊐ false (as this case rarely occurs anyway)
-    Constraint constr;
-    if (strict) constr = SmtFactory.createConjunction(cl, negr);
-    else constr = SmtFactory.createDisjunction(cl, negr);
-    validityProblem.requireImplication(cp, constr);
-
-    if (!Settings.smtSolver.checkValidity(validityProblem)) {
-      _problem.require(SmtFactory.createNegation(variable));
-    }
-  }
-
-  private void handleTheoryComparison(Term l, Term r, Term phi, BVar variable, boolean strict) {
-    if (!theoryAllowed(l, r, phi)) _problem.require(SmtFactory.createNegation(variable));
-    else if (l.queryType().equals(TypeFactory.intSort)) {
-      handleIntComparison(l, r, phi, variable, strict);
-    }
-    else if (l.queryType().equals(TypeFactory.boolSort)) {
-      handleBoolComparison(l, r, phi, variable, strict);
-    }
-    else _problem.require(SmtFactory.createNegation(variable));
-  }
-
-  private void handleGeqB(HorpoRequirement req) {
-    // for theory terms, > never succeeds where the other rules for ≥ fail
-    if (req.left.isTheoryTerm()) _problem.require(SmtFactory.createNegation(req.variable));
-    else {
-       BVar x = getVariableFor(req.reqnr, req.left, GREATER, req.right, req.constraint, null);
-      _problem.requireImplication(req.variable, x);
-    }
-  }
-
-  private void handleGeqC(HorpoRequirement req) {
-    // this case is actually only relevant if both sides are equal: if they are theory terms we
-    // have l ≥ r by 1a, and if they are applications we have l ≥ r by 1d
-    if (!req.left.equals(req.right)) _problem.require(SmtFactory.createNegation(req.variable));
-  }
-
-  private void handleGeqD(HorpoRequirement req) {
-    Term l = req.left;
-    Term r = req.right;
-    if (l.isApplication() && r.isApplication()) {
-      Term la = l.queryImmediateHeadSubterm(l.numberArguments()-1);
-      Term lb = l.queryArgument(l.numberArguments());
-      Term ra = r.queryImmediateHeadSubterm(r.numberArguments()-1);
-      Term rb = r.queryArgument(r.numberArguments());
-      if (sameTypeStructure(lb.queryType(), rb.queryType())) {
-        BVar x = getVariableFor(req.reqnr, la, GEQ, ra, req.constraint, null);
-        BVar y = getVariableFor(req.reqnr, lb, GEQ, rb, req.constraint, null);
-        _problem.requireImplication(req.variable, x);
-        _problem.requireImplication(req.variable, y);
-        return;
-      }
-    }
-    _problem.require(SmtFactory.createNegation(req.variable));
-  }
-
-  private void handleGreater(HorpoRequirement req) {
-    Term l = req.left;
-    Term r = req.right;
-    Term c = req.constraint;
-
-    if (req.clause == null) {
-      ArrayList<Constraint> lst = new ArrayList<Constraint>();
-      lst.add(getVariableFor(req.reqnr, l, GREATER, r, c, "2a"));
-      lst.add(getVariableFor(req.reqnr, l, GREATER, r, c, "2c"));
-      lst.add(getVariableFor(req.reqnr, l, GREATER, r, c, "2d"));
-      lst.add(getVariableFor(req.reqnr, l, GREATER, r, c, "2b"));
-      Constraint combi = SmtFactory.createDisjunction(lst);
-      _problem.requireImplication(req.variable, combi);
-    }
-    else if (req.clause.equals("2a")) {
-      handleTheoryComparison(req.left, req.right, req.constraint, req.variable, true);
-    }
-    else if (req.clause.equals("2b")) handleGreaterB(req);
-    else if (req.clause.equals("2c")) handleGreaterC(req);
-    else if (req.clause.equals("2d")) handleGreaterD(req);
-  }
-
-  private void handleGreaterB(HorpoRequirement req) {
-    if (!req.left.isFunctionalTerm() || req.left.isTheoryTerm()) {
-      _problem.require(SmtFactory.createNegation(req.variable));
-    }
-    else {
-      BVar x = getVariableFor(req.reqnr, req.left, RPO, req.right, req.constraint, null);
-      _problem.requireImplication(req.variable, x);
-    }
-  }
-
-  private void handleGreaterArguments(HorpoRequirement req) {
-    Term l = req.left;
-    Term r = req.right;
-    ArrayList<Constraint> onestrict = new ArrayList<Constraint>();
-    for (int i = 1; i <= l.numberArguments(); i++) {
-      BVar x = getVariableFor(req.reqnr, l.queryArgument(i), GEQ, r.queryArgument(i),
-                              req.constraint, null);
-      _problem.requireImplication(req.variable, x);
-      onestrict.add(getVariableFor(req.reqnr, l.queryArgument(i), GREATER, r.queryArgument(i),
-                                   req.constraint, null));
-    }
-    _problem.requireImplication(req.variable, SmtFactory.createDisjunction(onestrict));
-  }
-
-  private void handleGreaterC(HorpoRequirement req) {
-    if (!req.left.isFunctionalTerm() || !req.right.isFunctionalTerm() ||
-        req.left.numberArguments() != req.right.numberArguments() ||
-        !req.left.queryRoot().equals(req.right.queryRoot())) {
-      _problem.require(SmtFactory.createNegation(req.variable));
-    }
-    else handleGreaterArguments(req);
-  }
-
-  private void handleGreaterD(HorpoRequirement req) {
-    if (!req.left.isVarTerm() || !req.right.isVarTerm() ||
-        req.left.numberArguments() != req.right.numberArguments() ||
-        !req.left.queryVariable().equals(req.right.queryVariable())) {
-      _problem.require(SmtFactory.createNegation(req.variable));
-    }
-    else handleGreaterArguments(req);
-  }
-
-  private void handleRpo(HorpoRequirement req) {
-    Term l = req.left;
-    Term r = req.right;
-    Term c = req.constraint;
-    FunctionSymbol f = l.queryRoot();
-
-    if (req.clause == null) {
-      ArrayList<Constraint> combi = new ArrayList<Constraint>();
-      combi.add(getVariableFor(req.reqnr, l, RPO, r, c, "3f"));
-      combi.add(getVariableFor(req.reqnr, l, RPO, r, c, "3a"));
-      combi.add(getVariableFor(req.reqnr, l, RPO, r, c, "3c"));
-      combi.add(getVariableFor(req.reqnr, l, RPO, r, c, "3d"));
-      combi.add(getVariableFor(req.reqnr, l, RPO, r, c, "3e"));
-      combi.add(getVariableFor(req.reqnr, l, RPO, r, c, "3b"));
-      _problem.requireImplication(req.variable, SmtFactory.createDisjunction(combi));
-    }
-    else if (req.clause.equals("3a")) handleRpoA(req);
-    else if (req.clause.equals("3b")) handleRpoB(req);
-    else if (req.clause.equals("3c")) handleRpoC(req);
-    else if (req.clause.equals("3d")) handleRpoD(req);
-    else if (req.clause.equals("3e")) handleRpoE(req);
-    else if (req.clause.equals("3f")) handleRpoF(req);
-  }
-
-  private void handleRpoA(HorpoRequirement req) {
-    Term l = req.left;
-    Type rtype = req.right.queryType();
-    ArrayList<Term> args = new ArrayList<Term>();
-    for (int i = 1; i <= l.numberArguments(); i++) {
-      Term a = l.queryArgument(i);
-      if (sameTypeStructure(a.queryType(), rtype)) args.add(a);
-    }
-    if (args.size() == 0) _problem.require(SmtFactory.createNegation(req.variable));
-    else {
-      ArrayList<Constraint> vars = new ArrayList<Constraint>();
-      for (int i = 0; i < args.size(); i++) {
-        vars.add(getVariableFor(req.reqnr, args.get(i), GEQ, req.right, req.constraint, null));
-      }
-      _problem.requireImplication(req.variable, SmtFactory.createDisjunction(vars));
-    }
-  }
-
-  private void handleRpoB(HorpoRequirement req) {
-    Term r = req.right;
-    if (r.numberArguments() == 0) {
-      _problem.require(SmtFactory.createNegation(req.variable));
-      return;
-    }
-    Term a = r.queryImmediateHeadSubterm(r.numberArguments()-1);
-    Term b = r.queryArgument(r.numberArguments());
-    _problem.requireImplication(req.variable,
-      getVariableFor(req.reqnr, req.left, RPO, a, req.constraint, null));
-    _problem.requireImplication(req.variable,
-      getVariableFor(req.reqnr, req.left, RPO, b, req.constraint, null));
-  }
-
-  private void handleRpoC(HorpoRequirement req) {
-    Term l = req.left;
-    Term r = req.right;
-    FunctionSymbol f = l.queryRoot();
-    if (!r.isFunctionalTerm() || r.queryRoot().equals(f) || r.isValue()) {
-      // values are excluded here because this case is already covered by 3f
-      _problem.require(SmtFactory.createNegation(req.variable));
-    }
-    else {
-      FunctionSymbol g = r.queryRoot();
-      IVar predf = getPrecedenceFor(f);
-      IVar predg = getPrecedenceFor(g);
-      _problem.requireImplication(req.variable, SmtFactory.createGreater(predf, predg));
-      for (int i = 1; i <= r.numberArguments(); i++) {
-        _problem.requireImplication(req.variable,
-          getVariableFor(req.reqnr, l, RPO, r.queryArgument(i), req.constraint, null));
-      }
-    }
-  }
-
-  private void handleRpoD(HorpoRequirement req) {
-    Term l = req.left, r = req.right;
-    FunctionSymbol f = l.queryRoot();
-    if (!r.isFunctionalTerm() || !r.queryRoot().equals(f)) {
-      _problem.require(SmtFactory.createNegation(req.variable));
-      return;
-    }
-    // to apply lex, status(f) should be Lex, which we represent as 1
-    IVar status = getStatusFor(f);
-    if (status != null) {   // in the null case, status is automatically lex
-      _problem.requireImplication(req.variable, SmtFactory.createEqual(getStatusFor(f),
-        SmtFactory.createValue(1)));
-    }
-    int m = l.numberArguments();
-    if (r.numberArguments() < m) m = r.numberArguments();
-    // in the case some side has 0 arguments, this case cannot occur
-    if (m == 0) _problem.require(SmtFactory.createNegation(req.variable));
-    else {
-      if (m == 1) {
-        BVar x = getVariableFor(req.reqnr, l.queryArgument(1), GREATER,
-                                r.queryArgument(1), req.constraint, null);
-        _problem.requireImplication(req.variable, x);
-      }
-      else {
-        IVar index = _problem.createIntegerVariable();
-        _problem.require(SmtFactory.createGeq(index, SmtFactory.createValue(1)));
-        _problem.require(SmtFactory.createLeq(index, SmtFactory.createValue(m)));
-        for (int i = 1; i < m; i++) {
-          // create constraint: index > i → l_i ≽ r_i
-          BVar ligeqri = getVariableFor(req.reqnr, l.queryArgument(i), GEQ, r.queryArgument(i),
-                                        req.constraint, null);
-          Constraint constraint = SmtFactory.createImplication(
-            SmtFactory.createGreater(index, SmtFactory.createValue(i)), ligeqri);
-          _problem.requireImplication(req.variable, constraint);
-        }
-        for (int i = 1; i <= m; i++) {
-          // create constraint: index = i → l_i ≻ r_i
-          BVar ligreri = getVariableFor(req.reqnr, l.queryArgument(i), GREATER, r.queryArgument(i),
-                                        req.constraint, null);
-          Constraint constraint = SmtFactory.createImplication(
-            SmtFactory.createEqual(index, SmtFactory.createValue(i)), ligreri);
-          _problem.requireImplication(req.variable, constraint);
-        }
-      }
-      for (int i = 2; i <= r.numberArguments(); i++) {
-        BVar x = getVariableFor(req.reqnr, l, RPO, r.queryArgument(i), req.constraint, null);
-        _problem.requireImplication(req.variable, x);
-      }
-    }
-  }
-
-  /**
-   * Given a requirement f l1...ln ▷{φ} f r1...rm by 1e (so a mul step), this adds the constraints
-   * that for this requirement to hold, we need status(f) = Mul_k with k ≤ m, and that
-   * f l1...ln ▷{φ} for all ri where this is not already automatically implied by the multiset
-   * requirements
-   */
-  private void handleMulBasics(HorpoRequirement req, IVar status) {
-    Term r = req.right;
-    int m = r.numberArguments();
-
-    // [req] → k > 1 (as k = 1 implies a Lex step)
-    _problem.requireImplication(req.variable, SmtFactory.createGreater(status,
-        SmtFactory.createValue(1)));
-
-    // [req] → k ≤ m (we only require this if f r1 ... rm does not have base type, since otherwise
-    // it is already covered by the constraint on the creation of the status variable k)
-    if (r.queryType().isArrowType()) {
-      _problem.requireImplication(req.variable,
-        SmtFactory.createLeq(status, SmtFactory.createValue(m)));
-    }
-
-    // [req] → l ▷{φ} r_i for all arguments i; however, we omit 1,2 since the multiset constraints
-    // always imply this (for i > 2, it could be that k = 2, and then these are not required)
-    for (int i = 3; i <= m; i++) {
-      _problem.requireImplication(req.variable,
-        getVariableFor(req.reqnr, req.left, RPO, r.queryArgument(i), req.constraint, null));
-    }
-  }
-
-  /**
-   * Given a requirement f l1...ln ▷{φ} f r1...rm by 1e, this returns which variables ri and lj can
-   * be compared (typewise).
-   */
-  private TreeMap<Integer,TreeSet<Integer>> createComparable(Term left, int n, Term right, int m) {
-    TreeMap<Integer,TreeSet<Integer>> ret = new TreeMap<Integer,TreeSet<Integer>>();
-    for (int i = 1; i <= m; i++) {
-      TreeSet<Integer> comp = new TreeSet<Integer>();
-      for (int j = 1; j <= n; j++) {
-        if (sameTypeStructure(left.queryArgument(j).queryType(),
-                              right.queryArgument(i).queryType())) {
-          comp.add(j);
-        }
-      }
-      ret.put(i, comp);
-    }
-    return ret;
-  }
-
-  /**
-   * Given a requirement f l1...ln ▷{φ} f r1...rm by 1e, this creates variables strict_1...strict_n
-   * and (conditional on the main requirement holding) requires that at least one of those, which
-   * is smaller than status, is true.
-   */
-  private TreeMap<Integer,BVar> createStrict(BVar reqvar, IVar status, int n) {
+  private TreeMap<Integer,BVar> setupConstraintList(HorpoConstraintList lst, SmtProblem sprob,
+                                                    OrderingProblem problem) {
     TreeMap<Integer,BVar> ret = new TreeMap<Integer,BVar>();
     ArrayList<Constraint> oneof = new ArrayList<Constraint>();
-    for (int j = 1; j <= n; j++) {
-      BVar strict_j = _problem.createBooleanVariable();
-      ret.put(j, strict_j);
-      oneof.add(strict_j);
-      if (j > 2) {
-        // [req] → ([strict_j] → k ≥ j)
-        Constraint constr = SmtFactory.createImplication(strict_j,
-          SmtFactory.createGeq(status, SmtFactory.createValue(j)));
-        _problem.requireImplication(reqvar, constr);
+    for (int i = 0; i < problem.reqs().size(); i++) {
+      OrderingRequirement req = problem.reqs().get(i);
+      BVar bvar;
+      switch (req.rel()) {
+        case OrderingRequirement.Relation.Strict:
+          BVar z = lst.store(req.left(), HorpoConstraintList.StartRelation.Greater,
+                             req.right(), req.constraint(), req.tvar());
+          sprob.require(z);
+          ret.put(i, z);
+          oneof = null;
+          break;
+        case OrderingRequirement.Relation.Weak:
+          sprob.require(lst.store(req.left(), HorpoConstraintList.StartRelation.Geq,
+                        req.right(), req.constraint(), req.tvar()));
+          break;
+        case OrderingRequirement.Relation.Either:
+          BVar x = lst.store(req.left(), HorpoConstraintList.StartRelation.Greater, req.right(),
+                             req.constraint(), req.tvar());
+          BVar y = lst.store(req.left(), HorpoConstraintList.StartRelation.GeqNoGr, req.right(),
+                             req.constraint(), req.tvar());
+          sprob.require(SmtFactory.createDisjunction(x, y));
+          ret.put(i, x);
+          if (oneof != null) oneof.add(x);
       }
     }
-
-    // [req] → [strict_1] ∨ ... ∨ [strict_n]
-    _problem.requireImplication(reqvar, SmtFactory.createDisjunction(oneof));
+    if (oneof != null && oneof.size() != 0) sprob.require(SmtFactory.createDisjunction(oneof));
     return ret;
   }
 
   /**
-   * Given a requirement f l1...ln ▷{φ} f r1...rm by 1e, this creates variables π(i) ∈ {1..n}
-   * for all i ∈ {1,..,m}.  It also adds the requirement that each i ≤ status is mapped to
-   * some j ≤ status.
+   * This function serves to finish up: once the constraint list has been simplified, we ask the
+   * SmtSolver to solve the resulting SMT problem, and we generate a HorpoResult for that.
    */
-  private TreeMap<Integer,IVar> createProjection(BVar reqvar, IVar status, int n, int m,
-                                                 TreeMap<Integer,TreeSet<Integer>> comparable ) {
-    // create variables π(i)
-    TreeMap<Integer,IVar> pi = new TreeMap<Integer,IVar>();
-    for (int i = 1; i <= m; i++) pi.put(i, _problem.createIntegerVariable());
-    // require that, for 1 ≤ i ≤ status, 1 ≤ π(i) ≤ status and π(i) ≤ n
-    for (int i = 1; i <= m; i++) {
-      IVar pi_i = pi.get(i);
-      Constraint inotinrange = SmtFactory.createGreater(SmtFactory.createValue(i), status);
-      Constraint atleastone = SmtFactory.createGeq(pi_i, SmtFactory.createValue(1));
-      Constraint atmostn = SmtFactory.createLeq(pi_i, SmtFactory.createValue(n));
-      Constraint atmostk = SmtFactory.createLeq(pi_i, status);
-      _problem.requireImplication(reqvar, SmtFactory.createDisjunction(inotinrange, atleastone));
-      _problem.requireImplication(reqvar, SmtFactory.createDisjunction(inotinrange, atmostn));
-      _problem.requireImplication(reqvar, SmtFactory.createDisjunction(inotinrange, atmostk));
+  private HorpoResult solve(OrderingProblem orderingProblem, TreeMap<Integer,BVar> choices,
+                            HorpoParameters param, HorpoConstraintList lst) {
+    Valuation valuation = null;
+    switch (Settings.smtSolver.checkSatisfiability(param.queryProblem())) {
+      case SmtSolver.Answer.YES(Valuation val): valuation = val; break;
+      default:  // no solution => let's return a MAYBE
+        return new HorpoResult(orderingProblem, "Could not find a HORPO proof.");
+    };
+    TreeSet<Integer> strict = new TreeSet<Integer>();
+    for (Map.Entry<Integer,BVar> entry : choices.entrySet()) {
+      BVar x = entry.getValue();
+      if (valuation.queryBoolAssignment(x.queryIndex())) strict.add(entry.getKey());
     }
-    // require that π(i) != j if l_j and r_i do not have the same type structure
-    for (int i = 1; i <= m; i++) {
-      TreeSet<Integer> ok = comparable.get(i);
-      IVar pi_i = pi.get(i);
-      for (int j = 1; j <= n; j++) {
-        if (!ok.contains(j)) {
-          _problem.requireImplication(reqvar, SmtFactory.createUnequal(pi_i, SmtFactory.createValue(j)));
-        }
-      }
-    }
-    return pi;
-  }
-
-  private void requirePiEqualityForNonStrict(BVar reqvar, IVar status, int n, int m,
-                                             TreeMap<Integer,TreeSet<Integer>> comparable,
-                                             TreeMap<Integer,BVar> strict,
-                                             TreeMap<Integer,IVar> pi) {
-    // require that if π(i) = j ∧ pi(i') = j then strict_j
-    for (int i1 = 1; i1 < m; i1++) {
-      for (int i2 = i1+1; i2 <= m; i2++) {
-        for (int j = 1; j <= n; j++) {
-          if (!comparable.get(i1).contains(j)) continue;
-          if (!comparable.get(i2).contains(j)) continue;
-          // create: pi(i1) != j
-          Constraint c1 = SmtFactory.createUnequal(pi.get(i1), SmtFactory.createValue(j));
-          // create: pi(i2) != j
-          Constraint c2 = SmtFactory.createUnequal(pi.get(i2), SmtFactory.createValue(j));
-          // create: strict_j
-          Constraint c3 = strict.get(j);
-          // combine them
-          Constraint d = SmtFactory.createDisjunction(SmtFactory.createDisjunction(c1, c2), c3);
-          // and require for this clause to hold if req holds
-          _problem.requireImplication(reqvar, d);
-        }
-      }
-    }
-  }
-
-  private void handleRpoE(HorpoRequirement req) {
-    Term l = req.left, r = req.right;
-    FunctionSymbol f = l.queryRoot();
-    if (!r.isFunctionalTerm() || !r.queryRoot().equals(f) || r.numberArguments() <= 1 ||
-        l.numberArguments() == 0) {
-      _problem.require(SmtFactory.createNegation(req.variable));
-      return;
-    }
-    int n = l.numberArguments(), m = r.numberArguments();
-    if (n > m) n = m;
-    // we let l = f l1 ... ln (perhaps with more arguments added, but these
-    // cannot possibly contribute to the mul relation) and r = f r1 ... rm
-    // note that m is at least 2; n may also be 1
-
-    // to apply mul, status(f) should be Mul_k, which we represent as k > 1
-    IVar status = getStatusFor(f);
-    if (status == null) {   // in the null case, status is automatically lex
-      _problem.require(SmtFactory.createNegation(req.variable));
-      return;
-    }
-    handleMulBasics(req, status);
-    TreeMap<Integer,TreeSet<Integer>> comparable = createComparable(l, n, r, m);
-    TreeMap<Integer,BVar> strict = createStrict(req.variable, status, n);
-    TreeMap<Integer,IVar> pi = createProjection(req.variable, status, n, m, comparable);
-    requirePiEqualityForNonStrict(req.variable, status, n, m, comparable, strict, pi);
-
-    for (int i = 1; i <= m; i++) {
-      Constraint itoobig = SmtFactory.createGreater(SmtFactory.createValue(i), status);
-      TreeSet<Integer> ok = comparable.get(i);
-      for (int j = 1; j <= n; j++) {
-        if (!ok.contains(j)) continue;
-        Constraint pinotj = SmtFactory.createUnequal(SmtFactory.createValue(j), pi.get(i));
-        Constraint notstrict = SmtFactory.createNegation(strict.get(j));
-        // if [req] ∧ i ≤ status ∧ π(i) = j ∧ strict_j then s_i > t_j
-        BVar gr = getVariableFor(req.reqnr, l.queryArgument(j), GREATER, r.queryArgument(i),
-                                 req.constraint, null);
-        Constraint c = SmtFactory.createDisjunction(
-          SmtFactory.createDisjunction(itoobig, pinotj),
-          SmtFactory.createDisjunction(notstrict, gr));
-        _problem.requireImplication(req.variable, c);
-        // if [req] ∧ i ≤ status ∧ π(i) = j ∧ ¬strict_j then s_i ≥ t_j
-        BVar geq = getVariableFor(req.reqnr, l.queryArgument(j), GEQ, r.queryArgument(i),
-                                  req.constraint, null);
-        c = SmtFactory.createDisjunction(
-          SmtFactory.createDisjunction(itoobig, pinotj),
-          SmtFactory.createDisjunction(strict.get(j), geq));
-        _problem.requireImplication(req.variable, c);
-      }
-    }
-  }
-
-  private void handleRpoF(HorpoRequirement req) {
-    Term r = req.right;
-    if (r.isValue()) return;    // nothing to require, the variable can be set to true
-    if (r.isVariable() && req.constraint.vars().contains(r.queryVariable())) return; // same
-    _problem.require(SmtFactory.createNegation(req.variable));
-  }
-
-
-  /** For use in unit testing */
-  String toString(int num1, int num2) {
-    StringBuilder ret = new StringBuilder();
-    if (num1 == 0) ret.append(_problem.toString());
-    else ret.append(_problem.toString(num1));
-    int start = 0, end = _todo.size();
-    if (num2 > 0 && num2 < end) end = num2;
-    if (num2 < 0 && end + num2 > 0) start = end + num2;
-    for (int i = start; i < end; i++) {
-      ret.append("  " + _todo.get(i).toString() + "\n");
-    }
-    return ret.toString();
-  }
-
-  public String toString() {
-    return toString(0, 0);
-  }
-
-  /** Only available for the sake of unit testing. */
-  int queryIntegerVariableBound() {
-    return _M;
+    return new HorpoResult(orderingProblem, strict, valuation, param, lst);
   }
 }
 

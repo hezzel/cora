@@ -16,6 +16,7 @@
 package cora.termination;
 
 import charlie.trs.TRS;
+import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.config.Settings;
 import cora.termination.reduction_pairs.Horpo;
@@ -28,5 +29,17 @@ public class TerminationHandler {
     DPFramework dpF = new DPFramework();
     if (!Settings.isDisabled(dpF.queryDisabledCode())) return dpF.proveTermination(trs);
     return Horpo.proveTermination(trs);
+  }
+
+  public static ProofObject proveComputability(TRS trs) {
+    DPFramework dpF = new DPFramework();
+    if (!Settings.isDisabled(dpF.queryDisabledCode())) return dpF.proveComputability(trs);
+    return new ProofObject() {
+      public TerminationAnswer queryAnswer() { return TerminationAnswer.MAYBE; }
+      public void justify(OutputModule o) {
+        o.println("Dependency pairs were disabled, and this is currently the only appraoch " +
+          "to prove universal/public computability.");
+      }
+    };
   }
 }

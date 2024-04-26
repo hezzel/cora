@@ -131,7 +131,7 @@ public interface Term {
    * If the present term is an abstraction λx.s or a beta-redex (λx.s)(t1,...,tn), this returns s.
    * Otherwise, an InappropriatePatternDataError is thrown.
    */
-  public Term queryAbstractionSubterm();
+  Term queryAbstractionSubterm();
 
   /**
    * For an applicative term a(s1,...,sn) (where a itself is not an application), the immediate

@@ -50,8 +50,10 @@ public class ReductionPairProofObjectTest {
     Term r = TheoryFactory.createValue(7);
     Term c1 = TheoryFactory.createValue(false);
     Term c2 = TheoryFactory.createValue(true);
-    OrderingRequirement req1 = new OrderingRequirement(l,r,c1, OrderingRequirement.Relation.Either);
-    OrderingRequirement req2 = new OrderingRequirement(l,r,c2, OrderingRequirement.Relation.Strict);
+    OrderingRequirement req1 =
+      new OrderingRequirement(l,r,c1, OrderingRequirement.Relation.Either, List.of());
+    OrderingRequirement req2 =
+      new OrderingRequirement(l,r,c2, OrderingRequirement.Relation.Strict, List.of());
     return OrderingProblem.createWeakProblem(trs, List.of(req1, req2));
   }
 
