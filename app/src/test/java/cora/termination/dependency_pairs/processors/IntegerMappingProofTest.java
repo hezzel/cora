@@ -33,7 +33,7 @@ import cora.io.DefaultOutputModule;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
 
-class IntegerFunctionProofTest {
+class IntegerMappingProofTest {
   @Test
   void testRemoveEverything() {
     TRS trs = CoraInputReader.readTrsFromString(
@@ -59,7 +59,7 @@ class IntegerFunctionProofTest {
     interpretation.put(g, gintp);
     varlist.put(g, List.of(x, y));
 
-    IntegerFunctionProof ifp = new IntegerFunctionProof(start,Set.of(0,1),varlist,interpretation);
+    IntegerMappingProof ifp = new IntegerMappingProof(start,Set.of(0,1),varlist,interpretation);
     
     assertTrue(ifp.applicable());
     assertTrue(ifp.queryInput() == start);
@@ -70,7 +70,7 @@ class IntegerFunctionProofTest {
     OutputModule module = DefaultOutputModule.createPlainModule(trs);
     ifp.justify(module);
     assertTrue(module.toString().equals(
-      "We use the following interpretation function:\n\n" +
+      "We use the following integer mapping:\n\n" +
       "  J(f#) = arg1 + arg2\n" +
       "  J(g#) = 2 * arg1 + arg2\n\n" +
       "We thus have:\n\n" +
@@ -100,7 +100,7 @@ class IntegerFunctionProofTest {
     interpretation.put(g, x);
     varlist.put(g, List.of(x, y));
 
-    IntegerFunctionProof ifp = new IntegerFunctionProof(start,Set.of(0),varlist,interpretation);
+    IntegerMappingProof ifp = new IntegerMappingProof(start,Set.of(0),varlist,interpretation);
     
     assertTrue(ifp.applicable());
     assertTrue(ifp.queryInput() == start);
@@ -111,7 +111,7 @@ class IntegerFunctionProofTest {
     OutputModule module = DefaultOutputModule.createUnicodeModule(trs);
     ifp.justify(module);
     assertTrue(module.toString().equals(
-      "We use the following interpretation function:\n\n" +
+      "We use the following integer mapping:\n\n" +
       "  J(f#) = arg1\n" +
       "  J(g#) = arg1\n\n" +
       "We thus have:\n\n" +
