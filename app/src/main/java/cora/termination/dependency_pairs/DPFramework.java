@@ -50,16 +50,16 @@ public class DPFramework {
     ReachabilityProcessor reachProcessor = new ReachabilityProcessor();
     GraphProcessor   graphProcessor   = new GraphProcessor();
     SubtermProcessor subtermProcessor = new SubtermProcessor();
-    KasperProcessor  kasperProcessor  = new KasperProcessor();
+    IntegerMappingProcessor imapProcessor  = new IntegerMappingProcessor();
     TheoryArgumentsProcessor targProcessor = new TheoryArgumentsProcessor();
     SplittingProcessor splitProcessor = new SplittingProcessor();
     HorpoProcessor horpoProcessor = new HorpoProcessor();
     List<Processor> proclist;
     if (!ruleExtensionPresent) {
-      proclist = List.of(graphProcessor, subtermProcessor, kasperProcessor, targProcessor,
+      proclist = List.of(graphProcessor, subtermProcessor, imapProcessor, targProcessor,
                          horpoProcessor);
     }
-    else proclist = List.of(graphProcessor, subtermProcessor, kasperProcessor, targProcessor);
+    else proclist = List.of(graphProcessor, subtermProcessor, imapProcessor, targProcessor);
 
     Problem initialProblem = DPFramework.computeInitialProblem(trs);
     DPProofObject ret = new DPProofObject(appl, initialProblem);

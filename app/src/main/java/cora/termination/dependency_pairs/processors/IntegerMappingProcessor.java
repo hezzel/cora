@@ -13,7 +13,7 @@ import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
 
-public class KasperProcessor implements Processor {
+public class IntegerMappingProcessor implements Processor {
 
   private SmtProblem _smt;
   private Map< FunctionSymbol, List<Variable> > _fnToFreshVar;

@@ -12,7 +12,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class KasperProcessorTest {
+class IntegerMappingTest {
 
   @Test
   void processDPP() {
@@ -27,7 +27,7 @@ class KasperProcessorTest {
     Problem p = DPGenerator.generateProblemFromTrs(trs);
 
     // Let's get SCCS for it...
-    KasperProcessor kasperProc = new KasperProcessor();
+    IntegerMappingProcessor kasperProc = new IntegerMappingProcessor();
     kasperProc.processDPP(p);
   }
 }

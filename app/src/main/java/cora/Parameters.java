@@ -59,7 +59,7 @@ public class Parameters {
     addTechnique(set, cora.termination.dependency_pairs.DPFramework.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.DPFramework.queryPrivateDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.GraphProcessor.queryDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.processors.KasperProcessor.queryDisabledCode());
+    addTechnique(set, cora.termination.dependency_pairs.processors.IntegerMappingProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.ReachabilityProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.SplittingProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.SubtermProcessor.queryDisabledCode());
