@@ -1,6 +1,0 @@
-f :: Int -> Int -> A
-f(x, y) -> g(x, y-1) | x = x /\ y ≥ 0
-
-g :: Int -> Int -> A
-g(x, y) -> f(x, y)   |x = x /\ y = y
-

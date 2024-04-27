@@ -1,7 +1,0 @@
-a :: o
-b :: o
-f :: o -> o -> o -> o
-g :: o -> o
-
-f(x, a, y) -> f(b, x, g(y))
-
