@@ -2,6 +2,7 @@ package cora.termination.dependency_pairs;
 
 import charlie.trs.TRS;
 import charlie.trs.TrsProperties.*;
+import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.termination.TerminationAnswer;
@@ -16,6 +17,10 @@ import static cora.termination.TerminationAnswer.*;
 public class DPFramework {
   public static String queryDisabledCode() {
     return "dp";
+  }
+
+  public static String queryPrivateDisabledCode() {
+    return "private";
   }
 
   private ProofObject isTRSApplicable(TRS trs) {
@@ -60,18 +65,20 @@ public class DPFramework {
     DPProofObject ret = new DPProofObject(appl, initialProblem);
 
     // we start with the processors that preserve the "public" nature of a chain
-    ProcessorProofObject tmp;
-    if (splitProcessor.isApplicable(initialProblem)) {
-      tmp = splitProcessor.transform(initialProblem);
-      if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
-    }
-    if (targProcessor.isApplicable(initialProblem)) {
-      tmp = targProcessor.transform(initialProblem);
-      if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
-    }
-    if (reachProcessor.isApplicable(initialProblem)) {
-      tmp = reachProcessor.transform(initialProblem);
-      if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
+    if (!Settings.isDisabled(queryPrivateDisabledCode())) {
+      ProcessorProofObject tmp;
+      if (splitProcessor.isApplicable(initialProblem)) {
+        tmp = splitProcessor.transform(initialProblem);
+        if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
+      }
+      if (targProcessor.isApplicable(initialProblem)) {
+        tmp = targProcessor.transform(initialProblem);
+        if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
+      }
+      if (reachProcessor.isApplicable(initialProblem)) {
+        tmp = reachProcessor.transform(initialProblem);
+        if (tmp.applicable()) { ret.addProcessorProof(tmp); initialProblem = tmp.queryOutput(); }
+      }
     }
 
     // At this point, we are looking for the absence of any chains, not just public chains;

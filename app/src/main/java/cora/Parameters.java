@@ -57,6 +57,7 @@ public class Parameters {
   private TreeSet<String> disableableTechniques() {
     TreeSet<String> set = new TreeSet<String>();
     addTechnique(set, cora.termination.dependency_pairs.DPFramework.queryDisabledCode());
+    addTechnique(set, cora.termination.dependency_pairs.DPFramework.queryPrivateDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.GraphProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.KasperProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.ReachabilityProcessor.queryDisabledCode());
