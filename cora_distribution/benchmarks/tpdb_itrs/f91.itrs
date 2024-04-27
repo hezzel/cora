@@ -1,6 +1,0 @@
-(VAR n)
-(RULES
-f91(n) -> cond(n <= 100, n)
-cond(TRUE, n) -> f91(f91(n + 11))
-cond(FALSE, n) -> n - 10
-)

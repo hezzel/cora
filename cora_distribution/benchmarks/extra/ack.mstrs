@@ -1,7 +1,0 @@
-0 :: nat
-s :: nat -> nat
-ack :: nat -> nat -> nat
-ack(0, n) -> s(n)
-ack(s(m), 0) -> ack(m, s(0))
-ack(s(m), s(n)) -> ack(m, ack(s(m), n))
-
