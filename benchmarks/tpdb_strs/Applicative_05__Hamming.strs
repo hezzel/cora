@@ -1,0 +1,38 @@
+0 :: b
+cons :: b → c → c
+eq :: b → b → a
+false :: a
+hamming :: c
+if :: a → c → c → c
+list1 :: c
+list2 :: c
+list3 :: c
+lt :: b → b → a
+map :: (b → b) → c → c
+merge :: c → c → c
+mult :: b → b → b
+nil :: c
+plus :: b → b → b
+s :: b → b
+true :: a
+if(true, X, Y) → X
+if(false, U, V) → V
+lt(s(W), s(P)) → lt(W, P)
+lt(0, s(X1)) → true
+lt(Y1, 0) → false
+eq(U1, U1) → true
+eq(s(V1), 0) → false
+eq(0, s(W1)) → false
+merge(P1, nil) → P1
+merge(nil, X2) → X2
+merge(cons(Y2, U2), cons(V2, W2)) → if(lt(Y2, V2), cons(Y2, merge(U2, cons(V2, W2))), if(eq(Y2, V2), cons(Y2, merge(U2, W2)), cons(V2, merge(cons(Y2, U2), W2))))
+map(J2, nil) → nil
+map(F3, cons(Y3, U3)) → cons(F3(Y3), map(F3, U3))
+mult(0, V3) → 0
+mult(s(W3), P3) → plus(P3, mult(W3, P3))
+plus(0, X4) → 0
+plus(s(Y4), U4) → s(plus(Y4, U4))
+list1 → map(mult(s(s(0))), hamming)
+list2 → map(mult(s(s(s(0)))), hamming)
+list3 → map(mult(s(s(s(s(s(0)))))), hamming)
+hamming → cons(s(0), merge(list1, merge(list2, list3)))

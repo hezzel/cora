@@ -1,0 +1,23 @@
+0 :: b
+cons :: b → c → c
+false :: a
+filter :: (b → a) → c → c
+filter2 :: a → (b → a) → b → c → c
+int :: b → b → c
+intlist :: c → c
+map :: (b → b) → c → c
+nil :: c
+s :: b → b
+true :: a
+intlist(nil) → nil
+intlist(cons(X, Y)) → cons(s(X), intlist(Y))
+int(0, 0) → cons(0, nil)
+int(0, s(U)) → cons(0, int(s(0), s(U)))
+int(s(V), 0) → nil
+int(s(W), s(P)) → intlist(int(W, P))
+map(F1, nil) → nil
+map(Z1, cons(U1, V1)) → cons(Z1(U1), map(Z1, V1))
+filter(I1, nil) → nil
+filter(J1, cons(X2, Y2)) → filter2(J1(X2), J1, X2, Y2)
+filter2(true, G2, V2, W2) → cons(V2, filter(G2, W2))
+filter2(false, J2, X3, Y3) → filter(J2, Y3)

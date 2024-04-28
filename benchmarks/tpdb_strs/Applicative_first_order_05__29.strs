@@ -1,0 +1,19 @@
+0 :: a
+ack :: a → a → a
+cons :: c → d → d
+false :: b
+filter :: (c → b) → d → d
+filter2 :: b → (c → b) → c → d → d
+map :: (c → c) → d → d
+nil :: d
+succ :: a → a
+true :: b
+ack(0, X) → succ(X)
+ack(succ(Y), U) → ack(Y, succ(0))
+ack(succ(V), succ(W)) → ack(V, ack(succ(V), W))
+map(J, nil) → nil
+map(F1, cons(Y1, U1)) → cons(F1(Y1), map(F1, U1))
+filter(H1, nil) → nil
+filter(I1, cons(P1, X2)) → filter2(I1(P1), I1, P1, X2)
+filter2(true, Z2, U2, V2) → cons(U2, filter(Z2, V2))
+filter2(false, I2, P2, X3) → filter(I2, X3)

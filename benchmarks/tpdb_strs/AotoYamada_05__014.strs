@@ -1,0 +1,17 @@
+0 :: b
+cons :: b → a → a
+double :: a → a
+inc :: a → a
+map :: (b → b) → a → a
+nil :: a
+plus :: b → b → b
+s :: b → b
+times :: b → b → b
+plus(0, X) → X
+plus(s(Y), U) → s(plus(Y, U))
+times(0, V) → 0
+times(s(W), P) → plus(times(W, P), P)
+map(F1, nil) → nil
+map(Z1, cons(U1, V1)) → cons(Z1(U1), map(Z1, V1))
+inc → map(plus(s(0)))
+double → map(times(s(s(0))))

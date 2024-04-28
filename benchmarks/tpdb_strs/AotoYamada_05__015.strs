@@ -1,0 +1,10 @@
+cons :: a → c → c
+false :: b
+filter :: (a → b) → c → c
+if :: b → c → c → c
+nil :: c
+true :: b
+if(true, X, Y) → X
+if(false, U, V) → V
+filter(I, nil) → nil
+filter(J, cons(X1, Y1)) → if(J(X1), cons(X1, filter(J, Y1)), filter(J, Y1))

@@ -1,0 +1,8 @@
+cons :: c → b → b
+map :: (c → c) → b → b
+nil :: b
+node :: a → b → c
+treemap :: (a → a) → c → c
+map(F, nil) → nil
+map(Z, cons(U, V)) → cons(Z(U), map(Z, V))
+treemap(I, node(P, X1)) → node(I(P), map(treemap(I), X1))

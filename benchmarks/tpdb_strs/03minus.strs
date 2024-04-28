@@ -1,0 +1,7 @@
+minus :: N → N → N
+s :: N → N
+z :: N
+minus(z, X) → z
+minus(Y, z) → Y
+minus(s(U), s(V)) → minus(U, V)
+minus(W, W) → z

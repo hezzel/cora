@@ -1,0 +1,10 @@
+append :: b → b → b
+cons :: a → b → b
+map :: (a → a) → b → b
+nil :: b
+append(nil, X) → X
+append(cons(Y, V), U) → cons(Y, append(V, U))
+map(I, nil) → nil
+map(J, cons(X1, Y1)) → cons(J(X1), map(J, Y1))
+append(append(U1, V1), W1) → append(U1, append(V1, W1))
+map(J1, append(X2, Y2)) → append(map(J1, X2), map(J1, Y2))

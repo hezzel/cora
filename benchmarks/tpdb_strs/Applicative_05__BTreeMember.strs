@@ -1,0 +1,18 @@
+0 :: a
+eq :: a → a → c
+false :: c
+fork :: b → a → b → b
+if :: c → c → c → c
+lt :: a → a → c
+member :: a → b → c
+null :: b
+s :: a → a
+true :: c
+lt(s(X), s(Y)) → lt(X, Y)
+lt(0, s(U)) → true
+lt(V, 0) → false
+eq(W, W) → true
+eq(s(P), 0) → false
+eq(0, s(X1)) → false
+member(Y1, null) → false
+member(U1, fork(V1, W1, P1)) → if(lt(U1, W1), member(U1, V1), if(eq(U1, W1), true, member(U1, P1)))

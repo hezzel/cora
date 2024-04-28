@@ -1,0 +1,10 @@
+cons :: b → c → c
+leaf :: a → b
+mapt :: (a → a) → b → b
+maptlist :: (a → a) → c → c
+nil :: c
+node :: c → b
+mapt(F, leaf(Y)) → leaf(F(Y))
+mapt(G, node(V)) → node(maptlist(G, V))
+maptlist(I, nil) → nil
+maptlist(J, cons(X1, Y1)) → cons(mapt(J, X1), maptlist(J, Y1))

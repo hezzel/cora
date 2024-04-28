@@ -1,0 +1,12 @@
+cons :: a → c → c
+dropWhile :: (a → b) → c → c
+if :: b → c → c → c
+nil :: c
+takeWhile :: (a → b) → c → c
+true :: b
+if(true, X, Y) → X
+if(true, U, V) → V
+takeWhile(I, nil) → nil
+takeWhile(J, cons(X1, Y1)) → if(J(X1), cons(X1, takeWhile(J, Y1)), nil)
+dropWhile(G1, nil) → nil
+dropWhile(H1, cons(W1, P1)) → if(H1(W1), dropWhile(H1, P1), cons(W1, P1))

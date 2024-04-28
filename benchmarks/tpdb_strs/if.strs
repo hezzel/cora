@@ -1,0 +1,10 @@
+0 :: nat
+false :: bool
+h :: (nat → bool) → (nat → nat) → nat → nat
+if :: bool → nat → nat → nat
+s :: nat → nat
+true :: bool
+if(true, X, Y) → X
+if(false, X, Y) → Y
+h(F, G, 0) → 0
+h(F, G, s(Y)) → G(h(F, G, if(F(Y), Y, 0)))

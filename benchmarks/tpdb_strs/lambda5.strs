@@ -1,0 +1,5 @@
+f :: (d → d) → b → c
+g :: b → a → d → d
+h :: (a → b → c) → b
+i :: c → c
+f(g(h(F), Y), U) → i(F(Y, U))

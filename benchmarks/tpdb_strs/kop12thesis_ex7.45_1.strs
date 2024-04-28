@@ -1,0 +1,14 @@
+0 :: nat
+a :: nat → nat
+f :: (nat → nat) → nat → nat → nat
+g :: nat → nat → (nat → nat) → nat → nat
+h :: nat → nat
+i :: nat → nat
+s :: nat → nat
+f(F, Y, U) → g(Y, U, F, Y)
+g(s(Y), s(U), F, V) → g(Y, U, F, V)
+g(0, 0, F, V) → f(F, s(V), F(h(V)))
+h(0) → a(0)
+h(s(Y)) → a(h(Y))
+i(0) → 0
+i(a(Y)) → s(i(Y))

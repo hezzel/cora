@@ -1,0 +1,6 @@
+ack :: N → N → N
+s :: N → N
+z :: N
+ack(z, X) → s(X)
+ack(s(Y), z) → ack(Y, s(z))
+ack(s(U), s(V)) → ack(U, ack(s(U), V))

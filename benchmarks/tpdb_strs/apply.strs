@@ -1,0 +1,7 @@
+cons :: (a → a) → listf → listf
+dapply :: a → (a → a) → (a → a) → a
+lapply :: a → listf → a
+nil :: listf
+dapply(x, F, G) → F(G(x))
+lapply(x, nil) → x
+lapply(x, cons(F, lf)) → F(lapply(x, lf))

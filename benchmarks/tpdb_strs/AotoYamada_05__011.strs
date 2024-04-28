@@ -1,0 +1,14 @@
+0 :: b
+cons :: b → a → a
+curry :: (b → b → b) → b → b → b
+inc :: a → a
+map :: (b → b) → a → a
+nil :: a
+plus :: b → b → b
+s :: b → b
+plus(0, X) → X
+plus(s(Y), U) → s(plus(Y, U))
+map(H, nil) → nil
+map(I, cons(P, X1)) → cons(I(P), map(I, X1))
+curry(Z1, U1, V1) → Z1(U1, V1)
+inc → map(curry(plus, s(0)))
