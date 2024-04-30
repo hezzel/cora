@@ -1,27 +1,71 @@
 package charlie.solvesmt;
 
+import charlie.exceptions.NullInitialisationError;
 import charlie.smt.*;
 import charlie.util.ProcessCaller;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 import static charlie.solvesmt.SMTLibString.Logic.QFNIA;
 import static charlie.solvesmt.SMTLibString.Version.V26;
+import static charlie.solvesmt.ProcessSmtSolver.PhysicalSolver.Z3;
 
 public class ProcessSmtSolver implements SmtSolver {
 
-  private static ProcessCaller runSmtSolver(String smtLibString, int timeout) {
+  public enum PhysicalSolver {
+    // Possible solvers supported by the process caller.
+    // Note: for security reasons, we cannot allow the user to input any command to be executed as solver.
+    // So this list keeps all the possible ones here and only those can be called via the process caller.
 
+    Z3, YICES2, CVC5;
+
+    @Override
+    public String toString() {
+      return switch (this) {
+        case Z3 -> "Z3";
+        case YICES2 -> "YICES 2";
+        case CVC5 -> "CvC 5";
+      };
+    }
+
+    @Contract(pure = true)
+    public @NotNull String getCommandName() {
+      return switch (this) {
+        case Z3: yield  "z3 -in";
+        case CVC5: yield  "cvc";
+        case YICES2: yield  "yices-smt2";
+      };
+    }
+  }
+
+  // The default physical solver is z3
+  private PhysicalSolver _physicalSolver;
+
+  public ProcessSmtSolver() {
+    _physicalSolver = Z3;
+  }
+
+  public ProcessSmtSolver(@NotNull PhysicalSolver physicalSolver) {
+    if(physicalSolver == null) throw new NullInitialisationError(
+      "ProcessSmtSolver",
+      "Cannot initialise a null Physical Solver"
+    );
+
+    _physicalSolver = physicalSolver;
+  }
+
+  private ProcessCaller runSmtSolver(String smtLibString, int timeout) {
     List<String> commands = new ArrayList<>();
     //TODO For now we only care about linux and mac.
     // Proper windows support for the process caller requires this code do identify the
     // current OS the JVM is running on and change the commands accordingly.
     commands.add("/bin/sh");
     commands.add("-c");
-    commands.add(
-      "echo \"" + smtLibString + " \" " + " | z3 -in "
-    );
+    commands.add(STR."echo \" \{smtLibString}\" | \{_physicalSolver.getCommandName()} ");
 
     return new ProcessCaller(commands, timeout);
   }
