@@ -1,0 +1,10 @@
+0 :: a
+lim :: (a → a) → a
+n :: a
+rec :: b → (a → b → b) → ((a → a) → b → b) → a → b
+rectuv :: b → (a → b → b) → ((a → a) → b → b) → a → b
+s :: a → a
+rec(X, Z, G, 0) → X
+rec(V, I, J, s(X1)) → I(X1, rec(V, I, J, X1))
+rec(U1, H1, I1, lim(Z1)) → I1(Z1, rectuv(U1, H1, I1, Z1(n)))
+rectuv(P1, F2, Z2, n) → rec(P1, F2, Z2, n)

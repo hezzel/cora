@@ -1,0 +1,19 @@
+append :: a → a → a
+combine :: a → a → a
+cons :: a → a → a
+levels :: a → a
+map :: (a → a) → a → a
+nil :: a
+node :: a → a → a
+zip :: a → a → a
+map(F, nil) → nil
+map(Z, cons(U, V)) → cons(Z(U), map(Z, V))
+append(W, nil) → W
+append(nil, P) → P
+append(cons(X1, Y1), U1) → cons(X1, append(Y1, U1))
+zip(nil, V1) → V1
+zip(W1, nil) → W1
+zip(cons(P1, X2), cons(Y2, U2)) → cons(append(P1, Y2), zip(X2, U2))
+combine(V2, nil) → V2
+combine(W2, cons(P2, X3)) → combine(zip(W2, P2), X3)
+levels(node(Y3, U3)) → cons(cons(Y3, nil), combine(nil, map(levels, U3)))

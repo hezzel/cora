@@ -1,0 +1,10 @@
+mult :: N → N → N
+plus :: N → N → N
+s :: N → N
+z :: N
+plus(z, X) → X
+plus(s(Y), U) → plus(Y, s(U))
+plus(plus(V, W), P) → plus(V, plus(W, P))
+mult(z, X1) → z
+mult(s(Y1), U1) → plus(mult(Y1, U1), U1)
+mult(plus(V1, W1), P1) → plus(mult(V1, P1), mult(W1, P1))

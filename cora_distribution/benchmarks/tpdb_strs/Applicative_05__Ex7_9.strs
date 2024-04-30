@@ -1,0 +1,25 @@
+0 :: a
+cons :: b → c → c
+d :: a → a → c
+false :: c
+filter :: (b → c) → c → c
+gtr :: a → a → c
+if :: c → c → c → c
+len :: c → a
+nil :: c
+s :: a → a
+sub :: a → a → a
+true :: c
+if(true, X, Y) → X
+if(false, U, V) → V
+sub(W, 0) → W
+sub(s(P), s(X1)) → sub(P, X1)
+gtr(0, Y1) → false
+gtr(s(U1), 0) → true
+gtr(s(V1), s(W1)) → gtr(V1, W1)
+d(P1, 0) → true
+d(s(X2), s(Y2)) → if(gtr(X2, Y2), false, d(s(X2), sub(Y2, X2)))
+len(nil) → 0
+len(cons(U2, V2)) → s(len(V2))
+filter(I2, nil) → nil
+filter(J2, cons(X3, Y3)) → if(J2(X3), cons(X3, filter(J2, Y3)), filter(J2, Y3))

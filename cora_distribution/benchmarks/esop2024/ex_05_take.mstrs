@@ -1,0 +1,10 @@
+nil :: list
+cons :: nat -> list -> list
+zero :: nat
+suc :: nat -> nat
+
+take :: nat -> list -> list
+take(zero, l) -> nil
+take(n, nil) -> nil
+take(suc(n), cons(x, l)) -> cons(x, take(n, l))
+

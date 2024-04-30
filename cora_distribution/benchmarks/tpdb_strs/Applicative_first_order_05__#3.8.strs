@@ -1,0 +1,24 @@
+0 :: a
+cons :: c → d → d
+false :: b
+filter :: (c → b) → d → d
+filter2 :: b → (c → b) → c → d → d
+log :: a → a
+map :: (c → c) → d → d
+minus :: a → a → a
+nil :: d
+quot :: a → a → a
+s :: a → a
+true :: b
+minus(X, 0) → X
+minus(s(Y), s(U)) → minus(Y, U)
+quot(0, s(V)) → 0
+quot(s(W), s(P)) → s(quot(minus(W, P), s(P)))
+log(s(0)) → 0
+log(s(s(X1))) → s(log(s(quot(X1, s(s(0))))))
+map(Z1, nil) → nil
+map(G1, cons(V1, W1)) → cons(G1(V1), map(G1, W1))
+filter(J1, nil) → nil
+filter(F2, cons(Y2, U2)) → filter2(F2(Y2), F2, Y2, U2)
+filter2(true, H2, W2, P2) → cons(W2, filter(H2, P2))
+filter2(false, F3, Y3, U3) → filter(F3, U3)

@@ -1,0 +1,19 @@
+0 :: a
+cons :: a → c → c
+false :: b
+filter :: (a → b) → c → c
+filtersub :: b → (a → b) → c → c
+neq :: a → a → b
+nil :: c
+nonzero :: c → c
+s :: a → a
+true :: b
+neq(0, 0) → false
+neq(0, s(X)) → true
+neq(s(Y), 0) → true
+neq(s(U), s(V)) → neq(U, V)
+filter(I, nil) → nil
+filter(J, cons(X1, Y1)) → filtersub(J(X1), J, cons(X1, Y1))
+filtersub(true, G1, cons(V1, W1)) → cons(V1, filter(G1, W1))
+filtersub(false, J1, cons(X2, Y2)) → filter(J1, Y2)
+nonzero → filter(neq(0))

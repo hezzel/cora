@@ -1,0 +1,26 @@
+0 :: b
+cons :: d → e → e
+f :: b → b → b → b → c
+false :: c
+filter :: (d → c) → e → e
+filter2 :: c → (d → c) → d → e → e
+if :: a → c → c → c
+le :: b → b → a
+map :: (d → d) → e → e
+minus :: b → b → b
+nil :: e
+perfectp :: b → c
+s :: b → b
+true :: c
+perfectp(0) → false
+perfectp(s(X)) → f(X, s(0), s(X), s(X))
+f(0, U, 0, Y) → true
+f(0, W, s(P), V) → false
+f(s(Y1), 0, U1, X1) → f(Y1, X1, minus(U1, s(Y1)), X1)
+f(s(W1), s(P1), X2, V1) → if(le(W1, P1), f(s(W1), minus(P1, W1), X2, V1), f(W1, V1, X2, V1))
+map(Z2, nil) → nil
+map(G2, cons(V2, W2)) → cons(G2(V2), map(G2, W2))
+filter(J2, nil) → nil
+filter(F3, cons(Y3, U3)) → filter2(F3(Y3), F3, Y3, U3)
+filter2(true, H3, W3, P3) → cons(W3, filter(H3, P3))
+filter2(false, F4, Y4, U4) → filter(F4, U4)

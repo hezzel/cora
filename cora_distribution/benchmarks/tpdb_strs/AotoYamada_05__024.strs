@@ -1,0 +1,5 @@
+cons :: a → b → b
+map :: (a → a) → b → b
+nil :: b
+map(F, nil) → nil
+map(Z, cons(U, V)) → cons(Z(U), map(Z, V))

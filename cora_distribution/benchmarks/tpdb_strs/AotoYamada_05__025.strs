@@ -1,0 +1,2 @@
+apply :: (a → b) → a → b
+apply(F, Y) → F(Y)

@@ -1,0 +1,4 @@
+and :: c → c → c
+arrow :: t → t → t
+lessthan :: t → t → c
+lessthan(arrow(X, Y), arrow(U, V)) → and(lessthan(U, X), lessthan(Y, V))

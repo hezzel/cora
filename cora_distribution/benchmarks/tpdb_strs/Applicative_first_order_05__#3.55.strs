@@ -1,0 +1,43 @@
+0 :: b
+add :: b → c → c
+app :: c → c → c
+false :: a
+filter :: (b → a) → c → c
+filter2 :: a → (b → a) → b → c → c
+high :: b → c → c
+if_high :: a → b → c → c
+if_low :: a → b → c → c
+le :: b → b → a
+low :: b → c → c
+map :: (b → b) → c → c
+minus :: b → b → b
+nil :: c
+quicksort :: c → c
+quot :: b → b → b
+s :: b → b
+true :: a
+minus(X, 0) → X
+minus(s(Y), s(U)) → minus(Y, U)
+quot(0, s(V)) → 0
+quot(s(W), s(P)) → s(quot(minus(W, P), s(P)))
+le(0, X1) → true
+le(s(Y1), 0) → false
+le(s(U1), s(V1)) → le(U1, V1)
+app(nil, W1) → W1
+app(add(P1, X2), Y2) → add(P1, app(X2, Y2))
+low(U2, nil) → nil
+low(W2, add(V2, P2)) → if_low(le(V2, W2), W2, add(V2, P2))
+if_low(true, Y3, add(X3, U3)) → add(X3, low(Y3, U3))
+if_low(false, W3, add(V3, P3)) → low(W3, P3)
+high(X4, nil) → nil
+high(U4, add(Y4, V4)) → if_high(le(Y4, U4), U4, add(Y4, V4))
+if_high(true, P4, add(W4, X5)) → high(P4, X5)
+if_high(false, U5, add(Y5, V5)) → add(Y5, high(U5, V5))
+quicksort(nil) → nil
+quicksort(add(W5, P5)) → app(quicksort(low(W5, P5)), add(W5, quicksort(high(W5, P5))))
+map(F6, nil) → nil
+map(Z6, add(U6, V6)) → add(Z6(U6), map(Z6, V6))
+filter(I6, nil) → nil
+filter(J6, add(X7, Y7)) → filter2(J6(X7), J6, X7, Y7)
+filter2(true, G7, V7, W7) → add(V7, filter(G7, W7))
+filter2(false, J7, X8, Y8) → filter(J7, Y8)

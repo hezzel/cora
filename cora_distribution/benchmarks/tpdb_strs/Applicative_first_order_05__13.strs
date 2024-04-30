@@ -1,0 +1,19 @@
+* :: a → a → a
++ :: a → a → a
+cons :: c → d → d
+false :: b
+filter :: (c → b) → d → d
+filter2 :: b → (c → b) → c → d → d
+map :: (c → c) → d → d
+nil :: d
+true :: b
+*(X, +(Y, U)) → +(*(X, Y), *(X, U))
+*(+(W, P), V) → +(*(V, W), *(V, P))
+*(*(X1, Y1), U1) → *(X1, *(Y1, U1))
++(+(V1, W1), P1) → +(V1, +(W1, P1))
+map(F2, nil) → nil
+map(Z2, cons(U2, V2)) → cons(Z2(U2), map(Z2, V2))
+filter(I2, nil) → nil
+filter(J2, cons(X3, Y3)) → filter2(J2(X3), J2, X3, Y3)
+filter2(true, G3, V3, W3) → cons(V3, filter(G3, W3))
+filter2(false, J3, X4, Y4) → filter(J3, Y4)

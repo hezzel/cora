@@ -1,0 +1,7 @@
+false :: a
+if :: a → b → b → b
+true :: a
+until :: (b → a) → (b → b) → b → b
+if(true, X, Y) → X
+if(false, U, V) → V
+until(J, I, X1) → if(J(X1), X1, until(J, I, I(X1)))

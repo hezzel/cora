@@ -1,0 +1,6 @@
+const :: a → b → a
+fix :: ((f → g) → f → g) → f → g
+subst :: (c → d → e) → (c → d) → c → e
+const(X, Y) → X
+subst(G, H, W) → G(W, H(W))
+fix(J, X1) → J(fix(J), X1)

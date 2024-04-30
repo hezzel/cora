@@ -1,0 +1,12 @@
+0 :: a
+cons :: a → b → b
+inc :: b → b
+map :: (a → a) → b → b
+nil :: b
+plus :: a → a → a
+s :: a → a
+plus(0, X) → X
+plus(s(Y), U) → s(plus(Y, U))
+inc(V) → map(plus(s(0)), V)
+map(I, nil) → nil
+map(J, cons(X1, Y1)) → cons(J(X1), map(J, Y1))

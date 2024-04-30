@@ -1,0 +1,3 @@
+F :: (a → a) → a → a → a
+G :: (a → a) → a → a
+F(F(Z, U), U) → F(G(F(Z, U)), Z(U))

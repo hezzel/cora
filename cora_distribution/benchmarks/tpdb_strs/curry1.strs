@@ -1,0 +1,5 @@
+f :: a → b → c
+f1 :: a → b → c
+f2 :: a → b → c
+f1(x) → f(x)
+f2(x, y) → f1(x, y)

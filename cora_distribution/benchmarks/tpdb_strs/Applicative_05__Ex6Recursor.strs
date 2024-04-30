@@ -1,0 +1,5 @@
+0 :: a
+rec :: (a → b → b) → b → a → b
+s :: a → a
+rec(F, Y, 0) → Y
+rec(G, V, s(W)) → G(s(W), rec(G, V, W))

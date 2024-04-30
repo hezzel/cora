@@ -1,0 +1,16 @@
+append :: list → list → list
+cons :: nat → list → list
+map :: (nat → nat) → list → list
+mirror :: list → list
+nil :: list
+reverse :: list → list
+shuffle :: list → list
+append(nil, U) → U
+append(cons(X, Y), U) → cons(X, append(Y, U))
+reverse(nil) → nil
+shuffle(nil) → nil
+shuffle(cons(X, Y)) → cons(X, shuffle(reverse(Y)))
+mirror(nil) → nil
+mirror(cons(X, Y)) → append(cons(X, mirror(Y)), cons(X, nil))
+map(H, nil) → nil
+map(H, cons(X, Y)) → cons(H(X), map(H, Y))

@@ -1,0 +1,18 @@
+and :: c → c → c
+cons :: a → b → b
+false :: c
+forall :: (a → c) → b → c
+forsome :: (a → c) → b → c
+nil :: b
+or :: c → c → c
+true :: c
+and(true, true) → true
+and(X, false) → false
+and(false, Y) → false
+or(true, U) → true
+or(V, true) → true
+or(false, false) → false
+forall(I, nil) → true
+forall(J, cons(X1, Y1)) → and(J(X1), forall(J, Y1))
+forsome(G1, nil) → false
+forsome(H1, cons(W1, P1)) → or(H1(W1), forsome(H1, P1))

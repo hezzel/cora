@@ -1,0 +1,10 @@
+0 :: b
+cons :: a → b → b
+nil :: b
+plus :: b → b → b
+s :: b → b
+sumwith :: (a → b) → b → b
+plus(0, X) → X
+plus(s(Y), U) → s(plus(Y, U))
+sumwith(H, nil) → nil
+sumwith(I, cons(P, X1)) → plus(I(P), sumwith(I, X1))

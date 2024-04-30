@@ -1,0 +1,21 @@
+and :: a → a → a
+cons :: c → d → d
+false :: b
+filter :: (c → b) → d → d
+filter2 :: b → (c → b) → c → d → d
+map :: (c → c) → d → d
+nil :: d
+not :: a → a
+or :: a → a → a
+true :: b
+not(not(X)) → X
+not(or(Y, U)) → and(not(Y), not(U))
+not(and(V, W)) → or(not(V), not(W))
+and(P, or(X1, Y1)) → or(and(P, X1), and(P, Y1))
+and(or(V1, W1), U1) → or(and(U1, V1), and(U1, W1))
+map(J1, nil) → nil
+map(F2, cons(Y2, U2)) → cons(F2(Y2), map(F2, U2))
+filter(H2, nil) → nil
+filter(I2, cons(P2, X3)) → filter2(I2(P2), I2, P2, X3)
+filter2(true, Z3, U3, V3) → cons(U3, filter(Z3, V3))
+filter2(false, I3, P3, X4) → filter(I3, X4)

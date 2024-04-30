@@ -1,0 +1,34 @@
+0 :: a
+cons :: c → d → d
+f :: a → a → a → a → b
+false :: b
+filter :: (c → b) → d → d
+filter2 :: b → (c → b) → c → d → d
+if :: b → b → b → b
+le :: a → a → b
+map :: (c → c) → d → d
+minus :: a → a → a
+nil :: d
+perfectp :: a → b
+s :: a → a
+true :: b
+minus(0, X) → 0
+minus(s(Y), 0) → s(Y)
+minus(s(U), s(V)) → minus(U, V)
+le(0, W) → true
+le(s(P), 0) → false
+le(s(X1), s(Y1)) → le(X1, Y1)
+if(true, U1, V1) → U1
+if(false, W1, P1) → P1
+perfectp(0) → false
+perfectp(s(X2)) → f(X2, s(0), s(X2), s(X2))
+f(0, U2, 0, Y2) → true
+f(0, W2, s(P2), V2) → false
+f(s(Y3), 0, U3, X3) → f(Y3, X3, minus(U3, s(Y3)), X3)
+f(s(W3), s(P3), X4, V3) → if(le(W3, P3), f(s(W3), minus(P3, W3), X4, V3), f(W3, V3, X4, V3))
+map(Z4, nil) → nil
+map(G4, cons(V4, W4)) → cons(G4(V4), map(G4, W4))
+filter(J4, nil) → nil
+filter(F5, cons(Y5, U5)) → filter2(F5(Y5), F5, Y5, U5)
+filter2(true, H5, W5, P5) → cons(W5, filter(H5, P5))
+filter2(false, F6, Y6, U6) → filter(F6, U6)

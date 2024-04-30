@@ -1,0 +1,19 @@
+a :: a
+b :: a
+cons :: e → f → f
+f :: a → b
+false :: d
+filter :: (e → d) → f → f
+filter2 :: d → (e → d) → e → f → f
+g :: a → c
+map :: (e → e) → f → f
+nil :: f
+true :: d
+f(a) → f(b)
+g(b) → g(a)
+map(F, nil) → nil
+map(Z, cons(U, V)) → cons(Z(U), map(Z, V))
+filter(I, nil) → nil
+filter(J, cons(X1, Y1)) → filter2(J(X1), J, X1, Y1)
+filter2(true, G1, V1, W1) → cons(V1, filter(G1, W1))
+filter2(false, J1, X2, Y2) → filter(J1, Y2)

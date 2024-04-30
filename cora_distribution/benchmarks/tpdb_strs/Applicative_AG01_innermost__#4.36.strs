@@ -1,0 +1,40 @@
+0 :: b
+cons :: b → c → c
+eq :: b → b → a
+false :: a
+filter :: (b → a) → c → c
+filter2 :: a → (b → a) → b → c → c
+if_min :: a → c → b
+if_replace :: a → b → b → c → c
+le :: b → b → a
+map :: (b → b) → c → c
+min :: c → b
+nil :: c
+replace :: b → b → c → c
+s :: b → b
+sort :: c → c
+true :: a
+eq(0, 0) → true
+eq(0, s(X)) → false
+eq(s(Y), 0) → false
+eq(s(V), s(U)) → eq(V, U)
+le(0, W) → true
+le(s(P), 0) → false
+le(s(Y1), s(X1)) → le(Y1, X1)
+min(cons(0, nil)) → 0
+min(cons(s(U1), nil)) → s(U1)
+min(cons(W1, cons(V1, P1))) → if_min(le(W1, V1), cons(W1, cons(V1, P1)))
+if_min(true, cons(Y2, cons(X2, U2))) → min(cons(Y2, U2))
+if_min(false, cons(W2, cons(V2, P2))) → min(cons(V2, P2))
+replace(Y3, X3, nil) → nil
+replace(W3, V3, cons(U3, P3)) → if_replace(eq(W3, U3), W3, V3, cons(U3, P3))
+if_replace(true, U4, Y4, cons(X4, V4)) → cons(Y4, V4)
+if_replace(false, X5, P4, cons(W4, Y5)) → cons(W4, replace(X5, P4, Y5))
+sort(nil) → nil
+sort(cons(U5, V5)) → cons(min(cons(U5, V5)), sort(replace(min(cons(U5, V5)), U5, V5)))
+map(I5, nil) → nil
+map(J5, cons(X6, Y6)) → cons(J5(X6), map(J5, Y6))
+filter(G6, nil) → nil
+filter(H6, cons(W6, P6)) → filter2(H6(W6), H6, W6, P6)
+filter2(true, F7, Y7, U7) → cons(Y7, filter(F7, U7))
+filter2(false, H7, W7, P7) → filter(H7, P7)

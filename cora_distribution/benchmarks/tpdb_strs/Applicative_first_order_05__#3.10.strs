@@ -1,0 +1,45 @@
+0 :: b
+add :: b → c → c
+app :: c → c → c
+eq :: b → b → a
+false :: a
+filter :: (b → a) → c → c
+filter2 :: a → (b → a) → b → c → c
+if_min :: a → c → b
+if_minsort :: a → c → c → c
+if_rm :: a → b → c → c
+le :: b → b → a
+map :: (b → b) → c → c
+min :: c → b
+minsort :: c → c → c
+nil :: c
+rm :: b → c → c
+s :: b → b
+true :: a
+eq(0, 0) → true
+eq(0, s(X)) → false
+eq(s(Y), 0) → false
+eq(s(U), s(V)) → eq(U, V)
+le(0, W) → true
+le(s(P), 0) → false
+le(s(X1), s(Y1)) → le(X1, Y1)
+app(nil, U1) → U1
+app(add(V1, W1), P1) → add(V1, app(W1, P1))
+min(add(X2, nil)) → X2
+min(add(U2, add(Y2, V2))) → if_min(le(U2, Y2), add(U2, add(Y2, V2)))
+if_min(true, add(P2, add(W2, X3))) → min(add(P2, X3))
+if_min(false, add(U3, add(Y3, V3))) → min(add(Y3, V3))
+rm(W3, nil) → nil
+rm(X4, add(P3, Y4)) → if_rm(eq(X4, P3), X4, add(P3, Y4))
+if_rm(true, V4, add(U4, W4)) → rm(V4, W4)
+if_rm(false, X5, add(P4, Y5)) → add(P4, rm(X5, Y5))
+minsort(nil, nil) → nil
+minsort(add(U5, V5), W5) → if_minsort(eq(U5, min(add(U5, V5))), add(U5, V5), W5)
+if_minsort(true, add(P5, X6), Y6) → add(P5, minsort(app(rm(P5, X6), Y6), nil))
+if_minsort(false, add(U6, V6), W6) → minsort(V6, add(U6, W6))
+map(J6, nil) → nil
+map(F7, add(Y7, U7)) → add(F7(Y7), map(F7, U7))
+filter(H7, nil) → nil
+filter(I7, add(P7, X8)) → filter2(I7(P7), I7, P7, X8)
+filter2(true, Z8, U8, V8) → add(U8, filter(Z8, V8))
+filter2(false, I8, P8, X9) → filter(I8, X9)

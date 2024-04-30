@@ -1,0 +1,6 @@
+0 :: d
+f :: a → a
+g :: (b → d → e) → b → e → f
+s :: c → e
+f(X) → X
+g(Z, U, s(V)) → g(Z, U, Z(U, 0))
