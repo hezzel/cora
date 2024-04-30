@@ -15,13 +15,13 @@
 
 package charlie.theorytranslation;
 
+import charlie.solvesmt.ProcessSmtSolver;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.exceptions.UnsupportedTheoryError;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
-import charlie.smt.ExternalSmtSolver;
 
 public class TermAnalyserTest {
   @Test
@@ -70,8 +70,7 @@ public class TermAnalyserTest {
     assertTrue(TermAnalyser.calculate(t).equals(TheoryFactory.createValue(-4)));
   }
 
-  // TODO: enable with an internal SmtSolver
-  // @Test
+  @Test
   public void testSatisfy() {
     CalculationSymbol p = TheoryFactory.plusSymbol;
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
@@ -80,7 +79,7 @@ public class TermAnalyserTest {
     // +(x, y) > 12
     Term t = TheoryFactory.plusSymbol.apply(x).apply(y);
     Term c = TheoryFactory.greaterSymbol.apply(t).apply(TheoryFactory.createValue(12));
-    switch (TermAnalyser.satisfy(c, new ExternalSmtSolver())) { // TODO spot
+    switch (TermAnalyser.satisfy(c, new ProcessSmtSolver())) {
       case TermAnalyser.Result.YES(Substitution subst):
         assertTrue(subst.get(x).toValue().getInt() + subst.get(y).toValue().getInt() > 12);
         break;
@@ -89,4 +88,3 @@ public class TermAnalyserTest {
     }
   }
 }
-

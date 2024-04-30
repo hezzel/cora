@@ -19,7 +19,7 @@ package charlie.smt;
  * An SmtSolver is an object that takes a Constraint and determines its satisfiability or validity.
  */
 public interface SmtSolver {
-  public sealed interface Answer {
+  sealed interface Answer {
     boolean isYes();
     public record YES(Valuation val) implements Answer { public boolean isYes() { return true; } }
     public record NO() implements Answer { public boolean isYes() { return false; } }
