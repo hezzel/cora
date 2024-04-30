@@ -1,3 +1,18 @@
+/**************************************************************************************************
+ Copyright 2024 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
 package charlie.solvesmt;
 
 import charlie.exceptions.NullInitialisationError;
@@ -58,6 +73,7 @@ public class ProcessSmtSolver implements SmtSolver {
     _physicalSolver = physicalSolver;
   }
 
+  /** The given timeout is in seconds. */
   private ProcessCaller runSmtSolver(String smtLibString, int timeout) {
     List<String> commands = new ArrayList<>();
     //TODO For now we only care about linux and mac.
@@ -65,7 +81,7 @@ public class ProcessSmtSolver implements SmtSolver {
     // current OS the JVM is running on and change the commands accordingly.
     commands.add("/bin/sh");
     commands.add("-c");
-    commands.add(STR."echo \" \{smtLibString}\" | \{_physicalSolver.getCommandName()} ");
+    commands.add("echo \" " + smtLibString + "\" | " + _physicalSolver.getCommandName() + " ");
 
     return new ProcessCaller(commands, timeout);
   }
@@ -74,7 +90,7 @@ public class ProcessSmtSolver implements SmtSolver {
    * Given an SmtProblem, this function tries to find a valuation for the variables in the problem
    * that satisfies all the constraints stored in the problem.
    * If successful, returns YES(valuation).
-   * If we determine such a valuation cannot exist, returns NO(valuation).
+   * If we determine such a valuation cannot exist, returns NO().
    * If the search for a valuation fails but we cannot prove non-existence, returns MAYBE(reason).
    * The reason could for instance be something like "External SMT solver file is missing",
    * "SMT solver failed to find a solution", or "Internal SMT solver cannot handle non-linear
@@ -84,17 +100,11 @@ public class ProcessSmtSolver implements SmtSolver {
    */
   @Override
   public Answer checkSatisfiability(SmtProblem problem) {
-
     SMTLibString file = new SMTLibString(V26, QFNIA);
-
     String stringOfSmtProblem = file.buildSmtlibString(problem);
-
     ProcessCaller pc = runSmtSolver(stringOfSmtProblem, 100);
-
     String smtResultString = pc.inputStreamToString();
-
     List<SExpression> parsedResults = SmtParser.readExpressionsFromString(smtResultString);
-
     Answer ret = SMTLibResponseHandler.expressionsToAnswer(parsedResults);
 
     // Check if the valuation constructed really makes sense.
@@ -122,7 +132,6 @@ public class ProcessSmtSolver implements SmtSolver {
   public boolean checkValidity(SmtProblem problem) {
 
     SMTLibString file = new SMTLibString(V26, QFNIA);
-
     Constraint negated = SmtFactory.createNegation(problem.queryCombinedConstraint());
 
     String stringOfSmtProblem =
@@ -133,9 +142,7 @@ public class ProcessSmtSolver implements SmtSolver {
       );
 
     ProcessCaller pc = runSmtSolver(stringOfSmtProblem, 100);
-
     Scanner scanner = new Scanner(pc.getInputStream());
-
     return SMTLibResponseHandler.readAnswer(scanner).equals("unsat");
   }
 }

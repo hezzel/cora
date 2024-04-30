@@ -23,29 +23,20 @@ import charlie.smt.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * An ExternalSmtSolver is a solver that operates by writing a file and calling a fixed external SMT solver.
+ * An ExternalSmtSolver is a solver that operates by writing a file and calling a fixed external
+ * SMT solver.
  * The output file of the solver is read to find the valuation.
- * Note: the idea of calling an external program directly through the "Runtime" caller is outdated
- * and is planned to be phased out in the future.
  */
 public class ExternalSmtSolver implements SmtSolver {
  /**
-   * This creates a file for the SMT solver.
+  * This creates a file for the SMT solver.
   * If creating the file fails for some reason, an IOException is thrown instead.
-   */
+  */
   private void createSmtFile(int numbool, int numint, Constraint constraint) throws IOException {
-
-    BufferedWriter writer =
-      new BufferedWriter(new FileWriter("problem.smt2"));
-
-    SMTLibString file =
-      new SMTLibString(SMTLibString.Version.V26, SMTLibString.Logic.QFNIA);
-
-    String stringOfFile =
-      file.buildSmtlibString(numbool, numint, constraint);
-
+    BufferedWriter writer = new BufferedWriter(new FileWriter("problem.smt2"));
+    SMTLibString file = new SMTLibString(SMTLibString.Version.V26, SMTLibString.Logic.QFNIA);
+    String stringOfFile = file.buildSmtlibString(numbool, numint, constraint);
     writer.write(stringOfFile);
-
     writer.close();
   }
 
@@ -55,9 +46,9 @@ public class ExternalSmtSolver implements SmtSolver {
    */
   private void runSmtSolver() throws IOException, InterruptedException {
     Runtime rt = Runtime.getRuntime();
-    // clean up old result, it any
+    // clean up old result, if any
     try { Process p = rt.exec(new String[] {"rm", "result"}); p.waitFor(); } catch (Exception e) {}
-    // start new satsolver process
+    // start new smtsolver process
     Process p = rt.exec(new String[] {"./smtsolver", "problem.smt2", "result" });
     p.waitFor();
   }
@@ -96,7 +87,8 @@ public class ExternalSmtSolver implements SmtSolver {
   public Answer checkSatisfiability(@NotNull SmtProblem problem) {
     Constraint combinedConstraints = problem.queryCombinedConstraint();
     try {
-      createSmtFile(problem.numberBooleanVariables(), problem.numberIntegerVariables(), combinedConstraints);
+      createSmtFile(problem.numberBooleanVariables(), problem.numberIntegerVariables(),
+                    combinedConstraints);
     }
     catch (IOException e) {
       return new Answer.MAYBE("Could not create SMT file: " + e.getMessage());
@@ -107,26 +99,27 @@ public class ExternalSmtSolver implements SmtSolver {
       return new Answer.MAYBE("Could not execute SMT solver: " + e.getMessage());
     }
     catch (InterruptedException e) {
-      return new Answer.
-        MAYBE(STR."""
-          Waiting for external SMT solver was interrupted: \{e.getMessage()}
-          (Warning: the SMT solver may still be running in the background.  If so, you may need to kill it."""
-      );
+      return new Answer.MAYBE(
+        "Waiting for external SMT solver was interrupted: " + e.getMessage() + "\n" +
+        "(Warning: the SMT solver may still be running in the background.  If so, you may need " +
+        "to kill it.");
     }
 
     Answer ret;
     try { ret = readSmtFile(); }
     catch (IOException e) {
-      return new Answer.MAYBE(STR."Error reading result file: \{e.getMessage()}");
+      return new Answer.MAYBE("Error reading result file: " + e.getMessage());
     }
     catch (ParseError e) {
-      return new Answer.MAYBE(STR."Parsing error reading result file: \{e.getMessage()}");
+      return new Answer.MAYBE("Parsing error reading result file: " + e.getMessage());
     }
 
     switch (ret) {
       case Answer.YES(Valuation val):
-        if (!combinedConstraints.evaluate(val)) return new Answer.MAYBE("Valuation read from external solver " +
-          "does not satisfy the constraint!");
+        if (!combinedConstraints.evaluate(val)) {
+          return new Answer.MAYBE("Valuation read from external solver does not satisfy " +
+                                  "the constraint!");
+        }
       default:
         return ret;
     }
@@ -147,3 +140,4 @@ public class ExternalSmtSolver implements SmtSolver {
     catch (Exception e) { return false; } // we could not conclude validity
   }
 }
+

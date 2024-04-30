@@ -1,11 +1,25 @@
+/**************************************************************************************************
+ Copyright 2024 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
 package charlie.solvesmt;
 
 import charlie.smt.*;
 import java.util.List;
 import java.util.Scanner;
 
-public class SMTLibResponseHandler {
-
+class SMTLibResponseHandler {
   /**
    * This reads the answer the SMT solver printed to the result file.  It will be either sat,
    * unsat, or a different string which should be expected to correspond to "maybe".  If the file
@@ -21,19 +35,19 @@ public class SMTLibResponseHandler {
   }
 
   static SmtSolver.Answer expressionsToAnswer(List<SExpression> exprs) {
-    if (exprs.size() == 0) return new SmtSolver.Answer.MAYBE("SMT solver returned empty expression list");
+    if (exprs.size() == 0) {
+      return new SmtSolver.Answer.MAYBE("SMT solver returned empty expression list");
+    }
     switch (exprs.get(0)) {
       case SExpression.Symbol(String answer):
         if (answer.toLowerCase().equals("unsat")) return new SmtSolver.Answer.NO();
         if (!answer.toLowerCase().equals("sat")) {
-          return new SmtSolver.Answer.MAYBE(STR."SMT solver returned: \{answer}");
+          return new SmtSolver.Answer.MAYBE("SMT solver returned: " + answer);
         }
         break;
       default:
-        return new
-          SmtSolver.
-            Answer.
-            MAYBE(STR."SMT solver returned expression rather than sat/unsat: \{exprs.get(0).toString()}");
+        return new SmtSolver.Answer.MAYBE(
+          "SMT solver returned expression rather than sat/unsat: " + exprs.get(0).toString());
     }
     Valuation val = new Valuation();
     for (SExpression e : exprs.subList(1, exprs.size())) addAssignments(e, val);
@@ -100,5 +114,4 @@ public class SMTLibResponseHandler {
       }
     }
   }
-
 }

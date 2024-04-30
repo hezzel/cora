@@ -21,7 +21,7 @@ import java.util.List;
  * This is a sealed class collecting an EXTREMELY LIMITED subset of the SMTLIB language.
  * It is very possible that more options will be added in the future, so treat with caution.
  */
-public sealed interface SExpression {
+sealed interface SExpression {
   public record Numeral(int num) implements SExpression {
     public String toString() { return "" + num; }
   }

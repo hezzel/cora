@@ -26,7 +26,7 @@ import charlie.parser.lib.ParsingStatus;
  * This class reads text from string or file written in the format of the SMTLIB.
  * For now, this is kept very simple, supporting only s-expressions, and no predefined symbols.
  */
-public class SmtParser {
+class SmtParser {
   private ParsingStatus _status;
 
   /**

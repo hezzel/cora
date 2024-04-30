@@ -1,3 +1,18 @@
+/**************************************************************************************************
+ Copyright 2024 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
 package charlie.solvesmt;
 
 import charlie.smt.Conjunction;
@@ -7,10 +22,11 @@ import charlie.smt.SmtProblem;
 import java.util.ArrayList;
 
 /**
- * <p>This class helps with the construction of a smtlib2-compliant representation of a {@link SmtProblem} object.</p>
+ * <p>This class helps with the construction of a smtlib2-compliant representation of a
+ * {@link SmtProblem} object.</p>
  * <p>The main method to be called is {@link #buildSmtlibString }. </p>
  */
-public class SMTLibString {
+class SMTLibString {
 
   public enum Version { V25   , V26   }
 
@@ -43,11 +59,11 @@ public class SMTLibString {
   }
 
   private String setVersionString() {
-    return STR."(set-info :smt-lib-version \{ SMTLibString.versionToString(this.getVersion()) })";
+    return "(set-info :smt-lib-version " + SMTLibString.versionToString(this.getVersion()) + ")";
   }
 
   private String setLogicString() {
-    return STR."(set-logic \{SMTLibString.logicToString(this.getLogic())})";
+    return "(set-logic " + SMTLibString.logicToString(this.getLogic()) + ")";
   }
 
   /**
@@ -73,8 +89,7 @@ public class SMTLibString {
     }
 
     ArrayList<Constraint> acc = new ArrayList<>();
-    if (constraint instanceof Conjunction) {
-      Conjunction c = (Conjunction) constraint;
+    if (constraint instanceof Conjunction c) {
       for (int i = 1; i <= c.numChildren(); i++) acc.add(c.queryChild(i));
     } else {
       acc.add(constraint);
@@ -82,7 +97,9 @@ public class SMTLibString {
 
     // Add to the file string the assertions of each one of those constraints
     for (Constraint c : acc) {
-      ret.append("(assert ").append(c.toSmtString()).append(")").append(System.lineSeparator());
+      ret.append("(assert ");
+      c.addToSmtString(ret);
+      ret.append(")").append(System.lineSeparator());
     }
 
     // Check for satisfiability and asks for the file model
@@ -100,5 +117,4 @@ public class SMTLibString {
       problem.queryCombinedConstraint()
     );
   }
-
 }

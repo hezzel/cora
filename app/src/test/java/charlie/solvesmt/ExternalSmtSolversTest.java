@@ -13,29 +13,36 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.smt;
+package charlie.solvesmt;
 
-import charlie.solvesmt.ProcessSmtSolver;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import charlie.smt.*;
 import charlie.smt.SmtSolver.Answer;
 
-public class ExternalSmtSolverTest {
-
-  @Test
-  public void testSimpleValidityCheck() {
-    ProcessSmtSolver solver = new ProcessSmtSolver();
+public class ExternalSmtSolversTest {
+  public void testSimpleValidityCheck(SmtSolver solver) {
     SmtProblem problem = new SmtProblem();
     // x > 1 => x > 0 is valid
     IVar x = problem.createIntegerVariable();
-    Constraint gr1 = SmtFactory.createGreater(x, new IValue(1));
-    Constraint gr0 = SmtFactory.createGreater(x, new IValue(0));
+    Constraint gr1 = SmtFactory.createGreater(x, SmtFactory.createValue(1));
+    Constraint gr0 = SmtFactory.createGreater(x, SmtFactory.createValue(0));
     problem.requireImplication(gr1, gr0);
     assertTrue(solver.checkValidity(problem));
     // x > 0 => x > 1 is not valid
     problem.clear();
     problem.requireImplication(gr0, gr1);
     assertFalse(solver.checkValidity(problem));
+  }
+
+  @Test
+  public void testSimpleValidityCheckForProcessSolver() {
+    testSimpleValidityCheck(new ProcessSmtSolver());
+  }
+
+  @Test
+  public void testSimpleValidityCheckForExternalSolver() {
+    testSimpleValidityCheck(new ExternalSmtSolver());
   }
 
   @Test
@@ -47,27 +54,30 @@ public class ExternalSmtSolverTest {
     IVar y = problem.createIntegerVariable();
     IVar z = problem.createIntegerVariable();
     problem.createBooleanVariable();
-    Constraint le = SmtFactory.createGreater(new IValue(0), z);
-    Constraint gr = SmtFactory.createGreater(y, new IValue(12));
+    Constraint le = SmtFactory.createGreater(SmtFactory.createValue(0), z);
+    Constraint gr = SmtFactory.createGreater(y, SmtFactory.createValue(12));
     Constraint eq = SmtFactory.createEqual(y, z);
-    problem.require(new Conjunction(x, new Conjunction(le, new Conjunction(gr, eq))));
+    problem.require(SmtFactory.createConjunction(x, SmtFactory.createConjunction(le,
+      SmtFactory.createConjunction(gr, eq))));
     assertTrue(solver.checkSatisfiability(problem) instanceof Answer.NO);
     problem.clear();
     // x ∧ z < 10 ∧ (y > 12 ∨ y = z)
-    problem.require(new Conjunction(x, new Conjunction(le, new Disjunction(gr, eq))));
+    problem.require(SmtFactory.createConjunction(x, SmtFactory.createConjunction(le,
+      SmtFactory.createDisjunction(gr, eq))));
     Answer a = solver.checkSatisfiability(problem);
     if (a instanceof Answer.YES(Valuation v)) {
       assertTrue(v.queryAssignment(x));
       assertTrue(v.queryAssignment(z) < 0);
       assertTrue(v.queryAssignment(y) > 12 || v.queryAssignment(y) == v.queryAssignment(z));
-      System.out.println(v);
+      //System.out.println(v);
     }
     else assertTrue(false);
     problem.clear();
     // x ∧ z > u, where u is a variable NOT in the problem
-    IVar u = new IVar(100);
-    problem.require(new Conjunction(x, SmtFactory.createGreater(z, u)));
+    IVar u = problem.createIntegerVariable();
+    problem.require(SmtFactory.createConjunction(x, SmtFactory.createGreater(z, u)));
     a = solver.checkSatisfiability(problem);
+    System.out.println(a);
     if (a instanceof Answer.MAYBE(String reason)) {
       System.out.println(reason);
     }
