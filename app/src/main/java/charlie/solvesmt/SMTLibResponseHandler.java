@@ -30,7 +30,10 @@ public class SMTLibResponseHandler {
         }
         break;
       default:
-        return new SmtSolver.Answer.MAYBE(STR."SMT solver returned expression rather than sat/unsat: \{exprs.get(0).toString()}");
+        return new
+          SmtSolver.
+            Answer.
+            MAYBE(STR."SMT solver returned expression rather than sat/unsat: \{exprs.get(0).toString()}");
     }
     Valuation val = new Valuation();
     for (SExpression e : exprs.subList(1, exprs.size())) addAssignments(e, val);
@@ -61,7 +64,6 @@ public class SMTLibResponseHandler {
         }
         else {
           for (SExpression e : lst) addAssignments(e, val);
-          return;
         }
     }
   }

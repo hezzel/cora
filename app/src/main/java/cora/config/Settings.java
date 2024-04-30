@@ -16,11 +16,8 @@
 package cora.config;
 
 import charlie.smt.SmtSolver;
-import charlie.solvesmt.ExternalSmtSolver;
 import charlie.solvesmt.ProcessSmtSolver;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-
+import charlie.solvesmt.ProcessSmtSolver.*;
 import java.util.Set;
 
 /**
@@ -30,46 +27,17 @@ import java.util.Set;
  */
 public class Settings {
 
-  public enum Solver {
-    // Possible solvers supported by the process caller.
-    // Note: for security reasons, we cannot allow the user to input any command to be executed as solver.
-    // So this list keeps all the possible ones here and only those can be called via the process caller.
+  // Sets cora to use the external smt solver.
+  // This one writes the smtstring as a file on disk and reads the result back from it.
+  // It requires auxiliary files in order to run cora on it.
+  // Before using this solver, please make sure such script is present on disk.
+  // public static SmtSolver smtSolver = new ExternalSmtSolver();
 
-    Z3, CVC5;
+  private static PhysicalSolver physicalSolver =
+    PhysicalSolver.Z3;
 
-    @Contract(pure = true)
-    public @NotNull String getCommandName() {
-      return switch (this) {
-        case Z3: yield  "z3";
-        case CVC5: yield  "cvc";
-      };
-    }
-  }
-
-  private static Settings settingsInstance;
-
-  // Currently chosen solver. This is set on initialization time.
-  private Solver _currentSolver;
-
-  public void setSolver(Solver solver) {
-    _currentSolver = solver;
-  }
-
-  /**
-   * Get the command name of the current set solver.
-   * If no solver was set, this method sets the solver to Z3 and return the z3 command name.
-   * @return
-   */
-  public String getSolverCommand() {
-    if (_currentSolver == null) {
-      this.setSolver(Solver.Z3);
-    }
-    return _currentSolver.getCommandName();
-  }
-
-//  public static SmtSolver smtSolver = new ExternalSmtSolver();
-
-  public static SmtSolver smtSolver = new ProcessSmtSolver();
+  public static SmtSolver smtSolver =
+    new ProcessSmtSolver(physicalSolver);
 
   public static Set<String> disabled = Set.of();
 
@@ -77,18 +45,28 @@ public class Settings {
     return disabled.contains(technique);
   }
 
+  private static Settings settingsInstance;
+
   private Settings() {}
 
   /**
    * Lazily Returns the unique instance of this singleton object.
-   * If the settings isn't instantiated yet, this method create such instance before returning it.
+   * If the settings isn't instantiated yet,
+   * this method create such instance before returning it.
+   * Up to now the default settings is:
+   * SmtSolver to be used: ProcessSolver
+   * PhysicalSolver to be used: Z3.
    * @return
    */
-  public static Settings getSettings() {
+  public static Settings getSettingsInstance() {
     if (settingsInstance == null) {
       settingsInstance = new Settings();
     }
     return settingsInstance;
+  }
+
+  public static void setPhysicalSolver(PhysicalSolver physicalSolver) {
+    Settings.physicalSolver = physicalSolver;
   }
 
 }

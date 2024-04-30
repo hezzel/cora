@@ -12,7 +12,6 @@ import java.util.ArrayList;
  */
 public class SMTLibString {
 
-
   public enum Version { V25   , V26   }
 
   public enum Logic   { QFLIA , QFNIA }
@@ -44,7 +43,7 @@ public class SMTLibString {
   }
 
   private String setVersionString() {
-    return STR."(set-info :smt-lib-version \{SMTLibString.versionToString(this.getVersion())})";
+    return STR."(set-info :smt-lib-version \{ SMTLibString.versionToString(this.getVersion()) })";
   }
 
   private String setLogicString() {
@@ -52,7 +51,7 @@ public class SMTLibString {
   }
 
   /**
-   * Returns the smtlib string representation of the problem given as input.
+   * Returns the SMTLIB string representation of the problem given as input.
    * @param {@link SmtProblem} problem
    */
   public String buildSmtlibString(int boolCounter, int intCounter, Constraint constraint) {

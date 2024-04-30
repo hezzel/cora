@@ -15,15 +15,16 @@
 
 package charlie.smt;
 
+import charlie.solvesmt.ProcessSmtSolver;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.smt.SmtSolver.Answer;
 
 public class ExternalSmtSolverTest {
-  // @Test
-  // NOTE: @Test removed because we don't want to be writing files at every compile
+
+  @Test
   public void testSimpleValidityCheck() {
-    ExternalSmtSolver solver = new ExternalSmtSolver();
+    ProcessSmtSolver solver = new ProcessSmtSolver();
     SmtProblem problem = new SmtProblem();
     // x > 1 => x > 0 is valid
     IVar x = problem.createIntegerVariable();
@@ -37,10 +38,9 @@ public class ExternalSmtSolverTest {
     assertFalse(solver.checkValidity(problem));
   }
 
-  // @Test
-  // NOTE: @Test removed because we don't want to be writing files at every compile
+  @Test
   public void testSimpleSatisfiabilityCheck() {
-    ExternalSmtSolver solver = new ExternalSmtSolver();
+    ProcessSmtSolver solver = new ProcessSmtSolver();
     SmtProblem problem = new SmtProblem();
     // x ∧ z < 0 ∧ y > 12 ∧ y = z
     BVar x = problem.createBooleanVariable();
@@ -75,4 +75,3 @@ public class ExternalSmtSolverTest {
     problem.clear();
   }
 }
-
