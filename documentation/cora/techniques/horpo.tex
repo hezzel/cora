@@ -584,13 +584,14 @@ say $s \geqth t$ if this can be obtained by one of the following clauses:
 \begin{description}
 \item[$\succeq$Theory] $s,t$ are theory terms whose type is the same sort,
   $\Var(s) \cup \Var(t) \subseteq \gtvA$,
-  and $\varphi \Vdash s \geqsort t$
+  and $\varphi \Vdash s\ \geqsort t$
 \item[$\succeq$Eq] $s\downarrowcalc = t\downarrowcalc$
 \item[$\succeq$Mono] $s$ is not a theory term,
   $s = \avar\ s_1 \cdots s_n$ and $t = \avar\ s_1 \cdots s_n$ and each $s_i \geqth t_i$
 \item[$\succeq$Args] $s$ is not a theory term,
   $s = \afun\ s_1 \cdots s_n$ and $t = \bfun\ t_1 \cdots t_n$ for $\afun,\bfun$
   function symbols with the same type structure such that $\afun \eqpred \bfun$,
+  $\status(\afun) = \status(\bfun)$,
   $\filter(\afun) = \filter(\bfun)$, and $s_i \geqth t_i$ for all $i \in \filter(\afun) \cap
   \{1,\dots,n\}$
 \item[$\succeq$Greater] $s \grth t$
@@ -605,6 +606,7 @@ say $s \grth t$ if this can be obtained by one of the following clauses:
 \item[$\succ$Args] $s$ is not a theory term,
   $s = \afun\ s_1 \cdots s_n$ and $t = \bfun\ t_1 \cdots t_n$ for $\afun,\bfun$
   function symbols with the same type structure such that $\afun \eqpred \bfun$,
+  $\status(\afun) = \status(\bfun)$,
   $\filter(\afun) = \filter(\bfun)$, $s_i \geqth t_i$ for all $i \in \filter(\afun) \cap
   \{1,\dots,n\}$, and there is some $i \in \filter(\afun) \cap \{1,\dots,n\}$ with
   $s_i \grth t_i$
@@ -619,7 +621,8 @@ $\gtvA$ of variables, we say $s \rpoth t$ if this can be obtained by one of the 
 \item[$\rpo$Appl] $t = t_0\ t_1 \cdots t_m$ and $s \grth t_i$ for $1 \leq i \leq m$
 \item[$\rpo$Copy] $t = \bfun\ t_1 \cdots t_m$ with $\afun \grpred \bfun$ and 
     $s \rpoth t_i$ for all $i \in \filter(\bfun) \cap \{1,\dots,m\}$
-\item[$\rpo$Lex] $t = \bfun\ t_1 \cdots t_m$ with $\afun \eqpred \bfun$ and there is some
+\item[$\rpo$Lex] $t = \bfun\ t_1 \cdots t_m$ with $\afun \eqpred \bfun$ and $\status(\afun) =
+    \status(\bfun) = 1$ and there is some
     $i \in \filter(\afun) \cap \filter(\bfun) \cap \{1,\dots,\min(n,m)\}$
     such that all of the following hold:
     \begin{itemize}
@@ -628,6 +631,19 @@ $\gtvA$ of variables, we say $s \rpoth t$ if this can be obtained by one of the 
     \item $s_i \grth t_i$
     \item $s \rpoth t_j$ for $j \in \{i+1,\dots,m\} \cap \filter(\bfun)$
     \end{itemize}
+\item[$\rpo$Mul] $t = \bfun\ t_1 \cdots t_m$ with $\afun \eqpred \bfun$ and $\status(\afun) > 1$
+    and $m \geq \status(\bfun) > 1$ and there exist a function $\rho$ from
+    $\{1,\dots,\status(\bfun)\} \cap \filter(\bfun)$ to
+    $\{1,\dots,\min(n,\status(\afun))\} \cap \filter(\afun)$ and a non-empty subset $A$ of
+    $\{1,\dots,\status(\bfun)\} \cap \filter(\afun)$ such that for all $i \in
+    \{1,\dots,\status(\bfun)\} \cap \filter(\bfun)$:
+    \begin{itemize}
+    \item if $\rho(i) \in A$, then $s_{\rho(i)} \grth t_i$
+    \item if $\rho(i) \notin A$, then $s_{\rho(i)} \geqth t_i$
+    \item if $\rho(i) \notin A$, then there is no other $j \in
+      \{1,\dots,\status(\bfun)\} \cap \filter(\bfun)$ such that $\rho(j) = \rho(i)$
+    \end{itemize}
+    Moreover, $s \rpoth t_j$ for $j \in \{\status(\bfun)+1,\dots,m\} \cap \filter(\bfun)$
 \item[$\rpo$Th] $t$ is a theory term of base type, with all variables in $\gtvA$
 \end{description}
 
@@ -712,11 +728,14 @@ By a mutual induction on the derivation of $s\ R\ t$.  Consider the case:
   $(t\gamma)\downarrowcalc$ is a value $v$; since $s$ is not a theory term, $\afun$ is not a value
   and therefore $\afun \grpred v$, so $(s\gamma)\downarrowcalc = (\afun \cdots) \rpomain v$ by
   (Rpo-copy).
-\item Finally, in each of the cases $\rpo$Select, $\rpo$Appl, $\rpo$Copy and $\rpo$Lex, we either
-  immediately conclude with the induction hypothesis (and a case analysis for a smaller ``minimal
-  index'' in the case of $\rpo$Lex), or observe that $(t\gamma)\downarrowcalc$ is a value and
-  therefore $(s\gamma)\downarrowcalc \rpoth (t\gamma)\downarrowcalc$ by (Rpo-copy), as we also did
-  in the case for $\succeq$Args.
+\item Finally, in each of the cases $\rpo$Select, $\rpo$Appl and $\rpo$Copy, we either
+  immediately conclude with the induction hypothesis, or observe that $(t\gamma)\downarrowcalc$
+  is a value and therefore $(s\gamma)\downarrowcalc \rpoth (t\gamma)\downarrowcalc$ by (Rpo-copy),
+  as we also did in the case for $\succeq$Args.
+  In the case for $\rpo$Lex we additionally use a case analysis for a smaller ``minimal index''
+  (as $s_i \geqth t_i$ might yield $(s_i\gamma)\downarrowcalc \grmain (t_i\gamma)\downarrowcalc$),
+  and in the case for $\rpo$Mul we may extend the set $A$ (and use the definition of a multiset
+  ordering).
   \qedhere
 \end{itemize}
 \end{proof}
