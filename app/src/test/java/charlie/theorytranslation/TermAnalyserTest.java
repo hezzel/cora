@@ -70,7 +70,8 @@ public class TermAnalyserTest {
     assertTrue(TermAnalyser.calculate(t).equals(TheoryFactory.createValue(-4)));
   }
 
-  @Test
+  // TODO: enable with an internal SmtSolver
+  // @Test
   public void testSatisfy() {
     CalculationSymbol p = TheoryFactory.plusSymbol;
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
