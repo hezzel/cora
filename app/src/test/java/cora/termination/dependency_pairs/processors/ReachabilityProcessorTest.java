@@ -2,7 +2,7 @@ package cora.termination.dependency_pairs.processors;
 
 import charlie.reader.CoraInputReader;
 import charlie.trs.TRS;
-import charlie.solvesmt.ExternalSmtSolver;
+import charlie.solvesmt.ProcessSmtSolver;
 import cora.config.Settings;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
@@ -15,7 +15,7 @@ class ReachabilityProcessorTest {
 
   @Test
   void processDPP() {
-    Settings.smtSolver = new ExternalSmtSolver();
+    Settings.smtSolver = new ProcessSmtSolver();
     TRS program = CoraInputReader.readTrsFromString("nil :: intlist\n" +
       "cons :: Int -> intlist -> intlist\n" +
       "\n" +

@@ -34,6 +34,7 @@ import static charlie.solvesmt.SMTLibString.Version.V26;
 import static charlie.solvesmt.ProcessSmtSolver.PhysicalSolver.Z3;
 
 public class ProcessSmtSolver implements SmtSolver {
+  public static int TIMEOUT = 10;
 
   public enum PhysicalSolver {
     // Possible solvers supported by the process caller.
@@ -60,6 +61,15 @@ public class ProcessSmtSolver implements SmtSolver {
         case YICES2: yield  "yices-smt2";
       };
     }
+  }
+
+  /** Returns the PhysicalSolver matching the given name, if any; null otherwise. */
+  public static PhysicalSolver stringToSolver(String name) {
+    name = name.toLowerCase();
+    if (name.equals("z3")) return PhysicalSolver.Z3;
+    if (name.equals("cvc5") || name.equals("cvc")) return PhysicalSolver.CVC5;
+    if (name.equals("yices2") || name.equals("yices")) return PhysicalSolver.YICES2;
+    return null;
   }
 
   private PhysicalSolver _physicalSolver;
@@ -107,7 +117,7 @@ public class ProcessSmtSolver implements SmtSolver {
   public Answer checkSatisfiability(SmtProblem problem) {
     SMTLibString file = new SMTLibString(V26, QFNIA);
     String stringOfSmtProblem = file.buildSmtlibString(problem);
-    ProcessCaller pc = createSmtSolverProcess(stringOfSmtProblem, 100);
+    ProcessCaller pc = createSmtSolverProcess(stringOfSmtProblem, TIMEOUT);
     String smtResultString = null;
     try {
       Optional<String> optionalSmtResultString = pc.getResultAsString();
@@ -158,7 +168,7 @@ public class ProcessSmtSolver implements SmtSolver {
         negated
       );
 
-    ProcessCaller pc = createSmtSolverProcess(stringOfSmtProblem, 100);
+    ProcessCaller pc = createSmtSolverProcess(stringOfSmtProblem, TIMEOUT);
     try {
       Optional<InputStream> is = pc.getResultAsInputStream();
       if (is.isPresent()) {

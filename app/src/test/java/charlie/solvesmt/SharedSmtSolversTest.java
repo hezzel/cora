@@ -51,7 +51,7 @@ public class SharedSmtSolversTest {
 
   @Test
   public void testSimpleValidityCheckForExternalSolver() {
-    testSimpleValidityCheck(new ExternalSmtSolver());
+    testSimpleValidityCheck(new ExternalSmtSolver("./smtsolver"));
   }
 
   /** Check satisfiability of: x ∧ z < 0 ∧ y > 12 ∧ y = z */
@@ -78,7 +78,7 @@ public class SharedSmtSolversTest {
 
   @Test
   public void testSatisfiabilityAnswerIsNoForExternalSolver() {
-    testSatisfiabilityAnswerIsNo(new ExternalSmtSolver());
+    testSatisfiabilityAnswerIsNo(new ExternalSmtSolver("./smtsolver"));
   }
 
   /** Check satisfiability of: x ∧ z < 10 ∧ (y > 12 ∨ y = z) */
@@ -110,7 +110,7 @@ public class SharedSmtSolversTest {
 
   @Test
   public void testSatisfiabilityAnswerIsYesForExternalSolver() {
-    testSatisfiabilityAnswerIsYes(new ExternalSmtSolver());
+    testSatisfiabilityAnswerIsYes(new ExternalSmtSolver("./smtsolver"));
   }
 
   /** Check satisfiability of: x ∧ z > u, where u is a variable NOT in the problem */
@@ -137,6 +137,6 @@ public class SharedSmtSolversTest {
 
   @Test
   public void testSatisfiabilityAnswerIsMaybeForExternalSolver() {
-    testSatisfiabilityAnswerIsMaybe(new ExternalSmtSolver());
+    testSatisfiabilityAnswerIsMaybe(new ExternalSmtSolver("./smtsolver"));
   }
 }

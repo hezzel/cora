@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Collections;
 import java.util.TreeSet;
 import charlie.trs.TRS;
+import charlie.smt.SmtSolver;
+import charlie.solvesmt.ExternalSmtSolver;
+import charlie.solvesmt.ProcessSmtSolver;
+import charlie.solvesmt.ProcessSmtSolver.PhysicalSolver;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
 import cora.config.Settings;
@@ -33,6 +37,7 @@ public class Parameters {
   private TreeSet<String> _disable;
   private OutputModule.Style _style;
   private Request _request;
+  private SmtSolver _solver;
 
   public enum Request { Print, Reduce, Termination, Computability };
   public class WrongParametersError extends Error {
@@ -47,7 +52,7 @@ public class Parameters {
    * - Add a call to the disableableTechniques() function to call queryDisabledCode() on the class.
    * - Add the code to the documentation.
    * - Add code in the primary access function for your technique to abort if
-   *   config.Settings.disabled contains that code.
+   *   config.Settings.isDisabled(that code) returns true.
    *
    * Obviously, if you want to remove the code, you should reverse all four steps.
    *
@@ -112,6 +117,28 @@ public class Parameters {
       case "-p": case "--print":
         setRequest(Request.Print);
         return index+1;
+      case "-r": case "--reduce":
+        setRequest(Request.Reduce);
+        String trm = "";
+        for (index++; index < args.length; index++) trm += args[index];
+        if (!trm.equals("")) _input.add(trm);
+        return args.length;
+      case "-s": case "--solver":
+        if (index + 1 == args.length) {
+          throw new WrongParametersError("Parameter " + arg + " without given solver!");
+        }
+        PhysicalSolver ps = ProcessSmtSolver.stringToSolver(args[index+1]);
+        if (ps != null) _solver = new ProcessSmtSolver(ps);
+        else if (args[index+1].length() > 10 && args[index+1].substring(0,9).equals("external:")) {
+          _solver = new ExternalSmtSolver(args[index+1].substring(9));
+        }
+        if (_solver == null) {
+          throw new WrongParametersError("Unknown SMT solver: " + args[index+1] + "!");
+        }
+        return index + 2;
+      case "-t": case "--termination":
+        setRequest(Request.Termination);
+        return index+1;
       case "-y": case "--style":
         if (index + 1 == args.length) {
           throw new WrongParametersError("Parameter " + arg + " without given style!");
@@ -122,15 +149,6 @@ public class Parameters {
         else if (st.equals("unicode")) _style = OutputModule.Style.Unicode;
         else throw new WrongParametersError("Unknown style: " + args[index+1]);
         return index + 2;
-      case "-r": case "--reduce":
-        setRequest(Request.Reduce);
-        String trm = "";
-        for (index++; index < args.length; index++) trm += args[index];
-        if (!trm.equals("")) _input.add(trm);
-        return args.length;
-      case "-t": case "--termination":
-        setRequest(Request.Termination);
-        return index+1;
       default:
         if (arg.length() == 0) return index+1;
         if (arg.charAt(0) == '-') {
@@ -161,7 +179,8 @@ public class Parameters {
         throw new WrongParametersError("Unknown code for technique to disable: " + d);
       }
     }
-    Settings.disabled = new TreeSet<String>(_disable);
+    Settings.setDisabled(new TreeSet<String>(_disable));
+    Settings.setSolver(_solver);
   }
 
   /** Returns the task Cora is set to do. */

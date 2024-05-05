@@ -12,8 +12,7 @@ should do.  Supplying no parameters beyond the input file is the same as supplyi
 
 Additional commands affect Cora's execution:
 
-- y <style>: use the given style for printing; currently supported styles are "plain" and "unicode"
--d <technique_1,...,technique_n>: disable the given techniques from being used by Cora. Disableable techniques are:
+-d <technique_1,...,technique_n> / --disable <technique_1,...,technique_n>: disable the given techniques from being used by Cora. Disableable techniques are:
   * dp: the DP framework (for termination, non-termination and universal computability); if disabled, HORPO is used for termination proofs instead
   * graph: the graph processor in the DP framework
   * imap: the integer function processor in the DP framework
@@ -21,4 +20,11 @@ Additional commands affect Cora's execution:
   * split: the splitting processor in the DP framework
   * subcrit: the subterm criterion processor in the DP framework
   * tharg: the theory arguments processor in the DP framework
+- s <solver> / --solver <solver>: request the given SMT solver to be used. Note that this solver should be preinstalled.  Options are:
+  * z3: this invokes the command: z3 -in
+  * cvc5: this invokes the command: cvc
+  * yices2: this invokes the command: yices-smt2
+  * external:command: this allows a user to specify a command that is invoked -- for example, a bash script, that calls an SMT solver in exactly the way you want
+    (example use: CORA mybenchmark -s external:./smtsolver)
+- y <style> / --style <style>: use the given style for printing; currently supported styles are "plain" and "unicode"
 

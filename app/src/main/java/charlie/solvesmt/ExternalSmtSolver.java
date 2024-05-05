@@ -29,6 +29,12 @@ import org.jetbrains.annotations.NotNull;
  * The output file of the solver is read to find the valuation.
  */
 public class ExternalSmtSolver implements SmtSolver {
+  private String _cmd;
+
+  public ExternalSmtSolver(String command) {
+    _cmd = command;
+  }
+
  /**
   * This creates a file for the SMT solver.
   * If creating the file fails for some reason, an IOException is thrown instead.

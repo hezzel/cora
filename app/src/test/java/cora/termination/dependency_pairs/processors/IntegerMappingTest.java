@@ -2,7 +2,7 @@ package cora.termination.dependency_pairs.processors;
 
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
-import charlie.solvesmt.ExternalSmtSolver;
+import charlie.solvesmt.ProcessSmtSolver;
 import cora.config.Settings;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
@@ -16,7 +16,7 @@ class IntegerMappingTest {
 
   @Test
   void processDPP() {
-    Settings.smtSolver = new ExternalSmtSolver();
+    Settings.smtSolver = new ProcessSmtSolver();
 
     // This is the TRS that fails and shouldn't
     TRS trs = CoraInputReader.readTrsFromString(
