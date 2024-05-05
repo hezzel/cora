@@ -15,16 +15,20 @@
 
 package charlie.solvesmt;
 
-import charlie.exceptions.NullInitialisationError;
-import charlie.smt.*;
-import charlie.util.ProcessCaller;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.InputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
+import charlie.exceptions.NullInitialisationError;
+import charlie.util.ExceptionLogger;
+import charlie.smt.*;
+import charlie.util.ProcessCaller;
 import static charlie.solvesmt.SMTLibString.Logic.QFNIA;
 import static charlie.solvesmt.SMTLibString.Version.V26;
 import static charlie.solvesmt.ProcessSmtSolver.PhysicalSolver.Z3;
@@ -33,8 +37,9 @@ public class ProcessSmtSolver implements SmtSolver {
 
   public enum PhysicalSolver {
     // Possible solvers supported by the process caller.
-    // Note: for security reasons, we cannot allow the user to input any command to be executed as solver.
-    // So this list keeps all the possible ones here and only those can be called via the process caller.
+    // Note: for security reasons, we do not allow the user to input any command to be executed as
+    // solver.  So this list keeps all the possible ones here and only those can be called via the
+    // process caller.
 
     Z3, YICES2, CVC5;
 
@@ -57,15 +62,15 @@ public class ProcessSmtSolver implements SmtSolver {
     }
   }
 
-  // The default physical solver is z3
   private PhysicalSolver _physicalSolver;
 
+  /** Sets up an SmtSolver that uses the default solver (this is currently set to Z3). */
   public ProcessSmtSolver() {
     _physicalSolver = Z3;
   }
 
   public ProcessSmtSolver(@NotNull PhysicalSolver physicalSolver) {
-    if(physicalSolver == null) throw new NullInitialisationError(
+    if (physicalSolver == null) throw new NullInitialisationError(
       "ProcessSmtSolver",
       "Cannot initialise a null Physical Solver"
     );
@@ -73,11 +78,11 @@ public class ProcessSmtSolver implements SmtSolver {
     _physicalSolver = physicalSolver;
   }
 
-  /** The given timeout is in seconds. */
-  private ProcessCaller runSmtSolver(String smtLibString, int timeout) {
+  /** Create a process caller for the given input string, with the given timeout (in seconds). */
+  private ProcessCaller createSmtSolverProcess(String smtLibString, int timeout) {
     List<String> commands = new ArrayList<>();
     //TODO For now we only care about linux and mac.
-    // Proper windows support for the process caller requires this code do identify the
+    // Proper windows support for the process caller requires this code to identify the
     // current OS the JVM is running on and change the commands accordingly.
     commands.add("/bin/sh");
     commands.add("-c");
@@ -102,8 +107,20 @@ public class ProcessSmtSolver implements SmtSolver {
   public Answer checkSatisfiability(SmtProblem problem) {
     SMTLibString file = new SMTLibString(V26, QFNIA);
     String stringOfSmtProblem = file.buildSmtlibString(problem);
-    ProcessCaller pc = runSmtSolver(stringOfSmtProblem, 100);
-    String smtResultString = pc.inputStreamToString();
+    ProcessCaller pc = createSmtSolverProcess(stringOfSmtProblem, 100);
+    String smtResultString = null;
+    try {
+      Optional<String> optionalSmtResultString = pc.getResultAsString();
+      if (!optionalSmtResultString.isPresent()) {
+        return new Answer.MAYBE("SMT solver process did not return an answer within the " +
+                                "time limit.");
+      }
+      smtResultString = optionalSmtResultString.get();
+    }
+    catch (Exception e) {
+      ExceptionLogger.log(e);
+      return new Answer.MAYBE("External SMT process failed: " + e.getMessage());
+    }
     List<SExpression> parsedResults = SmtParser.readExpressionsFromString(smtResultString);
     Answer ret = SMTLibResponseHandler.expressionsToAnswer(parsedResults);
 
@@ -141,8 +158,19 @@ public class ProcessSmtSolver implements SmtSolver {
         negated
       );
 
-    ProcessCaller pc = runSmtSolver(stringOfSmtProblem, 100);
-    Scanner scanner = new Scanner(pc.getInputStream());
-    return SMTLibResponseHandler.readAnswer(scanner).equals("unsat");
+    ProcessCaller pc = createSmtSolverProcess(stringOfSmtProblem, 100);
+    try {
+      Optional<InputStream> is = pc.getResultAsInputStream();
+      if (is.isPresent()) {
+        Scanner scanner = new Scanner(is.get());
+        return SMTLibResponseHandler.readAnswer(scanner).equals("unsat");
+      }
+    }
+    catch (Exception e) {
+      ExceptionLogger.log(e);
+      return false; // an error occurred, so no validity could be proven
+    }
+    return false; // could not read a result, so no validity could be proven
   }
 }
+

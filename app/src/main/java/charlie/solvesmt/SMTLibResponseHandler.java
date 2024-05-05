@@ -19,6 +19,11 @@ import charlie.smt.*;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * This class collects a number of static functions used both by the ExternalSmtSolver and the
+ * ProcessSmtSolver.  The functions are used to read the response from an SMT solver, and yield an
+ * SmtSolver.Answer.
+ */
 class SMTLibResponseHandler {
   /**
    * This reads the answer the SMT solver printed to the result file.  It will be either sat,
@@ -34,6 +39,10 @@ class SMTLibResponseHandler {
     return answer;
   }
 
+  /**
+   * This reads an answer from an SExpression (which typically originates from parsing an SMT
+   * result file/string).
+   */
   static SmtSolver.Answer expressionsToAnswer(List<SExpression> exprs) {
     if (exprs.size() == 0) {
       return new SmtSolver.Answer.MAYBE("SMT solver returned empty expression list");

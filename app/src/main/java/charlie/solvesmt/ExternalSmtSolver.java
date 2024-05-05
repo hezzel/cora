@@ -19,6 +19,7 @@ import java.io.*;
 import java.util.List;
 import java.util.Scanner;
 import charlie.exceptions.ParseError;
+import charlie.util.ExceptionLogger;
 import charlie.smt.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -61,7 +62,6 @@ public class ExternalSmtSolver implements SmtSolver {
   private String readAnswer() throws IOException {
     File file = new File("result");
     Scanner reader = new Scanner(file);
-
     return SMTLibResponseHandler.readAnswer(reader);
   }
 
@@ -74,9 +74,7 @@ public class ExternalSmtSolver implements SmtSolver {
    */
   private Answer readSmtFile() throws IOException {
     List<SExpression> exprs = SmtParser.readExpressionsFromFile("result");
-
     return SMTLibResponseHandler.expressionsToAnswer(exprs);
-
   }
 
   /**
@@ -91,26 +89,31 @@ public class ExternalSmtSolver implements SmtSolver {
                     combinedConstraints);
     }
     catch (IOException e) {
+      ExceptionLogger.log("Could not create SMT file: " + e.getMessage(), e);
       return new Answer.MAYBE("Could not create SMT file: " + e.getMessage());
     }
 
     try { runSmtSolver(); }
     catch (IOException e) {
+      ExceptionLogger.log("Could not execute SMT solver: " + e.getMessage(), e);
       return new Answer.MAYBE("Could not execute SMT solver: " + e.getMessage());
     }
     catch (InterruptedException e) {
-      return new Answer.MAYBE(
-        "Waiting for external SMT solver was interrupted: " + e.getMessage() + "\n" +
+      String msg = "Waiting for external SMT solver was interrupted: " + e.getMessage() + "\n" +
         "(Warning: the SMT solver may still be running in the background.  If so, you may need " +
-        "to kill it.");
+        "to kill it.";
+      ExceptionLogger.log(msg, e);
+      return new Answer.MAYBE(msg);
     }
 
     Answer ret;
     try { ret = readSmtFile(); }
     catch (IOException e) {
+      ExceptionLogger.log("Error reading SMT solver result file: " + e.getMessage(), e);
       return new Answer.MAYBE("Error reading result file: " + e.getMessage());
     }
     catch (ParseError e) {
+      ExceptionLogger.log("Parsing error reading result file: " + e.getMessage(), e);
       return new Answer.MAYBE("Parsing error reading result file: " + e.getMessage());
     }
 
@@ -137,7 +140,10 @@ public class ExternalSmtSolver implements SmtSolver {
       runSmtSolver();
       return readAnswer().equals("unsat");
     }
-    catch (Exception e) { return false; } // we could not conclude validity
+    catch (Exception e) {
+      ExceptionLogger.log(e);
+      return false; // we could not conclude validity
+    }
   }
 }
 

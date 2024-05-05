@@ -22,14 +22,12 @@ import charlie.smt.SmtProblem;
 import java.util.ArrayList;
 
 /**
- * <p>This class helps with the construction of a smtlib2-compliant representation of a
+ * <p>This class helps with the construction of a smtlib2-compliant representation of an
  * {@link SmtProblem} object.</p>
  * <p>The main method to be called is {@link #buildSmtlibString }. </p>
  */
 class SMTLibString {
-
   public enum Version { V25   , V26   }
-
   public enum Logic   { QFLIA , QFNIA }
 
   private Version _version;
@@ -41,7 +39,6 @@ class SMTLibString {
   }
 
   public Version getVersion() { return _version; }
-
   public Logic getLogic() {return _logic; }
 
   public static String versionToString(Version version) {
@@ -78,16 +75,15 @@ class SMTLibString {
     ret.append(this.setLogicString()).append(System.lineSeparator());
 
     // Next, we collect all booleans and integer definitions.
-    // Booleans
     for (int i = 1; i <= boolCounter; i++) {
       ret.append("(declare-fun b").append(i).append("() Bool)").append(System.lineSeparator());
     }
-
-    // Integers
     for (int i = 1; i <= intCounter; i++) {
       ret.append("(declare-fun i").append(i).append("() Int)").append(System.lineSeparator());
     }
 
+    // Split up the constraints into separate clauses for human-readability (in case this is
+    // useful).
     ArrayList<Constraint> acc = new ArrayList<>();
     if (constraint instanceof Conjunction c) {
       for (int i = 1; i <= c.numChildren(); i++) acc.add(c.queryChild(i));

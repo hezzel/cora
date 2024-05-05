@@ -22,14 +22,19 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+/** A utility that is used to call an external process (without writing a file). */
 public class ProcessCaller {
   private List<String> _command;
   private int _timeout;
-
   private ProcessBuilder _processBuilder;
 
+  /**
+   * Create a process caller for the given command / argument list, with the given timeout
+   * (in seconds)
+   */
   public ProcessCaller(List<String> cmd, int timeout) {
     _command = cmd;
     _timeout = timeout;
@@ -40,63 +45,53 @@ public class ProcessCaller {
   }
 
   /**
-   * Implement a timeout handler that whenever the process times out,
-   * this handler is called.
+   * This sets a timeout handler and runs the process.  If the process times out, then this is
+   * immediately handled, and null is returned.  Otherwise, the process is returned, so its input
+   * stream can be read.
    */
-  private Process callProcess() {
+  private Process callProcess() throws IOException, InterruptedException {
     Process process = null;
-    try {
-      process = _processBuilder.start();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    process = _processBuilder.start();
 
-    try {
-      final boolean exited = process.waitFor(_timeout, TimeUnit.SECONDS);
-      if(!exited) {
-        System.err.println("RUNTIME TIMEOUT: " + _command.getFirst() + " did not finish within " +
-          _timeout + " seconds, exiting.");
-        process.destroy();
-        Runtime.getRuntime().exit(1);
-      }
-    } catch (final InterruptedException ex) {
-      System.err.println("ERROR: " + _command.getFirst() + "process had not finished before " +
-        "its thread got interrupted, exiting application now.");
-      ex.printStackTrace();
+    final boolean exited = process.waitFor(_timeout, TimeUnit.SECONDS);
+    if (!exited) {
+      // we did not finish within the timeout
+      process.destroy();
+      Runtime.getRuntime().exit(1);
+      return null;
     }
 
     return process;
   }
 
-  public InputStream getInputStream() {
+  /**
+   * This function calls the process, waits for it to complete or time out, and returns the result
+   * as an InputStream.
+   */
+  public Optional<InputStream> getResultAsInputStream() throws IOException, InterruptedException {
     Process process = callProcess();
-
-    return process.getInputStream();
+    if (process == null) return Optional.empty();
+//    process.onExit().get();
+    return Optional.of(process.getInputStream());
   }
 
-  public String inputStreamToString() {
+  /**
+   * This function calls the process, waits for it to complete or time out, reads the result into a
+   * string and returns it.
+   */
+  public Optional<String> getResultAsString() throws IOException, InterruptedException,
+                                                     ExecutionException {
     Process process = callProcess();
-    String processResult = "";
-    try {
-      process.onExit().get();
-      processResult = bufferToString(process.getInputStream());
-    } catch (InterruptedException | ExecutionException e) {
-      System.err.println("IO Exception caught");
-      e.printStackTrace();
-    }
-    return processResult;
+    if (process == null) return Optional.empty();
+    process.onExit().get();
+    String processResult = bufferToString(process.getInputStream());
+    return Optional.of(processResult);
   }
 
-  private static String bufferToString(InputStream inputStream) {
-    String ret = "";
-
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-      ret = reader.lines().collect(Collectors.joining(System.lineSeparator()));
-    } catch (IOException e) {
-      System.err.println("Caught IOException when reading process InputStreamBuffer. See the stack trace below.");
-      e.printStackTrace();
-    }
-    return ret;
+  /** Helper function for getResultAsString: this reads the given input stream into a String. */
+  private static String bufferToString(InputStream inputStream) throws IOException {
+    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+    return reader.lines().collect(Collectors.joining(System.lineSeparator()));
   }
-
 }
+

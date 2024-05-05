@@ -149,3 +149,4 @@ public class SmtProblem implements Iterable<Constraint> {
     return ret.toString();
   }
 }
+
