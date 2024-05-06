@@ -180,7 +180,7 @@ public class Parameters {
       }
     }
     Settings.setDisabled(new TreeSet<String>(_disable));
-    Settings.setSolver(_solver);
+    if (_solver != null) Settings.setSolver(_solver);
   }
 
   /** Returns the task Cora is set to do. */
