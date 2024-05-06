@@ -24,8 +24,13 @@ import java.util.TreeMap;
 import charlie.terms.Term;
 import charlie.terms.TheoryFactory;
 import charlie.terms.FunctionSymbol;
+import charlie.terms.TermPrinter;
 import charlie.trs.TRS;
+import charlie.smt.BVar;
+import charlie.smt.IVar;
+import charlie.smt.Valuation;
 import charlie.reader.CoraInputReader;
+import cora.io.*;
 import cora.termination.TerminationAnswer;
 
 public class HorpoResultTest {
@@ -33,37 +38,142 @@ public class HorpoResultTest {
     return CoraInputReader.readTrsFromString(txt);
   }
 
-/*
   @Test
-  public void testPrecedenceAndStatus() {
-    TRS trs = makeTrs("f :: Int -> Int g :: Int -> Int f(x) -> f(x-1) | x > 0 g(x) -> f(x)");
+  public void testFailedProof() {
+    TRS trs = makeTrs("f :: Int -> Int g :: Int -> Int f(x) -> f(x-1) | x != 0 g(x) -> f(x)");
     OrderingProblem problem = OrderingProblem.createStrictProblem(trs);
-    TreeMap<String,Integer> prec = new TreeMap<String,Integer>();
-    TreeMap<String,Integer> stat = new TreeMap<String,Integer>();
-    prec.put("f", 1);
-    prec.put("g", 2);
-    prec.put("[-]", -1);
-    prec.put("[+]", -1);
-    stat.put("f", 0);
-    stat.put("g", 1);
-    stat.put("[+]", 2);
-    HorpoResult result = new HorpoResult(problem, Set.of(0, 1), prec, stat, 13);
-
+    HorpoResult result = new HorpoResult(problem, "Could not find a proof.");
+    assertTrue(result.queryAnswer() == TerminationAnswer.MAYBE);
+    assertFalse(result.isStrictlyOriented(0));
+    assertFalse(result.isStrictlyOriented(1));
+    assertFalse(result.isStrictlyOriented(problem.reqs().get(0)));
+    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    result.justify(o);
+    assertTrue(o.toString().equals("Could not find a proof.\n\n"));
     FunctionSymbol f = trs.lookupSymbol("f");
     FunctionSymbol g = trs.lookupSymbol("g");
-    FunctionSymbol plus = TheoryFactory.plusSymbol;
-    FunctionSymbol minus = TheoryFactory.minusSymbol;
-
-    assertTrue(result.precedence(f, g) < 0);
-    assertTrue(result.precedence(g, f) > 0);
-    assertTrue(result.precedence(g, plus) > 0);
-    assertTrue(result.precedence(plus, minus) == 0);
-
-    assertTrue(result.status(f).equals("Lex"));
-    assertTrue(result.status(g).equals("Lex"));
-    assertTrue(result.status(minus).equals("Lex"));
-    assertTrue(result.status(plus).equals("Mul_2"));
+    assertTrue(result.precedence(f, g) == 0);
+    assertTrue(result.status(f) == null);
+    assertFalse(result.regards(f, 1));
+    assertFalse(result.stronglyMonotonic());
   }
-*/
+
+  @Test
+  public void testStrictProof() {
+    TRS trs = makeTrs("f :: Int -> Int g :: Int -> Int h :: Int -> Int -> Int\n" +
+                      "j :: Int -> Int -> Int f(x) -> f(x-1) | x > 0 g(x) -> f(x)");
+    OrderingProblem problem = OrderingProblem.createNonStrictProblem(trs);
+    HorpoParameters param = new HorpoParameters(100, true);
+    HorpoConstraintList lst = new HorpoConstraintList(param, new TermPrinter(Set.of()));
+    Valuation valuation = new Valuation();
+    FunctionSymbol f = trs.lookupSymbol("f");
+    FunctionSymbol g = trs.lookupSymbol("g");
+    FunctionSymbol h = trs.lookupSymbol("h");
+    FunctionSymbol j = trs.lookupSymbol("j");
+    valuation.setInt(param.getPrecedenceFor(f).queryIndex(), 1);
+    valuation.setInt(param.getPrecedenceFor(g).queryIndex(), 2);
+    valuation.setInt(param.getPrecedenceFor(h).queryIndex(), 2);
+    valuation.setInt(param.getPrecedenceFor(j).queryIndex(), 1);
+    valuation.setInt(((IVar)param.getStatusFor(h)).queryIndex(), 3);
+    valuation.setInt(((IVar)param.getStatusFor(j)).queryIndex(), 1);
+    valuation.setBool(param.getRegardsVariableFor(f, 1).queryIndex(), true);
+    valuation.setBool(param.getDirectionIsDownVariable().queryIndex(), true);
+
+    HorpoResult result = new HorpoResult(problem, Set.of(0), valuation, param, lst);
+    assertTrue(result.queryAnswer() == TerminationAnswer.YES);
+    assertTrue(result.isStrictlyOriented(0));
+    assertFalse(result.isStrictlyOriented(1));
+    assertTrue(result.isStrictlyOriented(problem.reqs().get(0)));
+    assertFalse(result.isStrictlyOriented(problem.reqs().get(1)));
+    assertTrue(result.precedence(f, g) == -1);
+    assertTrue(result.precedence(f, j) == 0);
+    assertTrue(result.precedence(h, g) == 2);
+    assertTrue(result.status(h).equals("Mul_3"));
+    assertTrue(result.status(g).equals("Lex"));
+    assertTrue(result.status(j).equals("Lex"));
+    assertTrue(result.regards(f, 1));
+    assertTrue(result.regards(g, 1));
+    assertTrue(result.regards(h, 2));
+    assertTrue(result.stronglyMonotonic());
+    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    result.justify(o);
+    assertTrue(o.toString().equals(
+      "Constrained HORPO yields:\n\n" +
+      "  f(x) ≻ f(x - 1) | x > 0\n" +
+      "  g(x) ≽ f(x)\n\n" +
+      "We do this using the following settings:\n\n" +
+      "* Precedence and status (for non-mentioned symbols the precedence is irrelevant and " +
+        "the status is Lex):\n\n" +
+      "  h      (status: Mul_3) >\n" +
+      "  g      (status: Lex)   >\n" +
+      "  f = j  (status: Lex)\n\n" +
+      "* Well-founded theory orderings:\n\n" +
+      "  ⊐_{Bool} = {(true,false)}\n" +
+      "  ⊐_{Int}  = {(x,y) | x > -100 ∧ x > y }\n\n" +
+      "* Monotonicity requirements: this is a strongly monotonic reduction pair (all " +
+        "arguments of function symbols were regarded).\n\n"));
+  }
+
+  @Test
+  public void testNonStrictProof() {
+    TRS trs = makeTrs("f :: Int -> Int g :: Int -> Int h :: Int -> Int -> Int\n" +
+                      "f(x) -> f(x-1) | x > 0 g(x) -> f(x)");
+    OrderingProblem problem = OrderingProblem.createWeakProblem(trs, List.of());
+    HorpoParameters param = new HorpoParameters(3, false);
+    HorpoConstraintList lst = new HorpoConstraintList(param, new TermPrinter(Set.of()));
+    Valuation valuation = new Valuation();
+    FunctionSymbol f = trs.lookupSymbol("f");
+    FunctionSymbol g = trs.lookupSymbol("g");
+    FunctionSymbol h = trs.lookupSymbol("h");
+    FunctionSymbol plus = TheoryFactory.plusSymbol;
+    valuation.setInt(param.getPrecedenceFor(f).queryIndex(), 1);
+    valuation.setInt(param.getPrecedenceFor(g).queryIndex(), 2);
+    valuation.setInt(param.getPrecedenceFor(h).queryIndex(), 2);
+    valuation.setInt(param.getPrecedenceFor(plus).queryIndex(), -3);
+    valuation.setInt(((IVar)param.getStatusFor(h)).queryIndex(), 1);
+    valuation.setInt(((IVar)param.getStatusFor(plus)).queryIndex(), 2);
+    valuation.setBool(param.getRegardsVariableFor(f, 1).queryIndex(), true);
+    valuation.setBool(param.getRegardsVariableFor(g, 1).queryIndex(), false);
+    valuation.setBool(param.getRegardsVariableFor(h, 2).queryIndex(), false);
+    // this will be the _alwaysTrue variable, since plus is a theory symbol
+    valuation.setBool(param.getRegardsVariableFor(plus, 1).queryIndex(), true);
+    valuation.setBool(param.getDirectionIsDownVariable().queryIndex(), false);
+
+    HorpoResult result = new HorpoResult(problem, Set.of(1), valuation, param, lst);
+    assertTrue(result.queryAnswer() == TerminationAnswer.YES);
+    assertFalse(result.isStrictlyOriented(0));
+    assertTrue(result.isStrictlyOriented(1));
+    assertFalse(result.isStrictlyOriented(problem.reqs().get(0)));
+    assertTrue(result.isStrictlyOriented(problem.reqs().get(1)));
+    assertTrue(result.precedence(f, g) == -1);
+    assertTrue(result.precedence(h, g) == 0);
+    assertTrue(result.precedence(plus, f) == -4);
+    assertTrue(result.status(h).equals("Lex"));
+    assertTrue(result.status(g).equals("Lex"));
+    assertTrue(result.status(plus).equals("Mul_2"));
+    assertTrue(result.regards(f, 1));
+    assertFalse(result.regards(g, 1));
+    assertFalse(result.regards(h, 2));
+    assertTrue(result.regards(plus, 1));
+    assertTrue(result.regards(plus, 2));
+    assertFalse(result.stronglyMonotonic());
+    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    result.justify(o);
+    assertTrue(o.toString().equals(
+      "Constrained HORPO yields:\n\n" +
+      "  f(x) ≽ f(x - 1) | x > 0\n" +
+      "  g(x) ≽ f(x)\n\n" +
+      "We do this using the following settings:\n\n" +
+      "* Precedence and status (for non-mentioned symbols the precedence is irrelevant and the status is Lex):\n\n" +
+      "  g = h  (status: Lex)   >\n" +
+      "  f      (status: Lex)   >\n" +
+      "  +      (status: Mul_2)\n\n" +
+      "* Well-founded theory orderings:\n\n" +
+      "  ⊐_{Bool} = {(true,false)}\n" +
+      "  ⊐_{Int}  = {(x,y) | x < 3 ∧ x < y }\n\n" +
+      "* Filter:\n\n" +
+      "  g disregards argument(s) 1 \n" +
+      "  h disregards argument(s) 2 \n\n"));
+  }
 }
 

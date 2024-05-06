@@ -164,6 +164,7 @@ class HorpoParameters {
   }
 
   public record SymbolData(String symbol, int prec, int stat) {}
+  
   /**
    * For the given valuation, returns the precedence and status of all the function symbols where
    * the precedence was queried, ordered from large to small.

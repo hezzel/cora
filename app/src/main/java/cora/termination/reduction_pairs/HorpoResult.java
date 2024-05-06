@@ -69,15 +69,32 @@ class HorpoResult extends ReductionPairProofObject {
    */
   public int precedence(FunctionSymbol f, FunctionSymbol g) {
     int fi, gi;
-    return _parameters.getPrecedenceFor(f).evaluate(_valuation) -
-           _parameters.getPrecedenceFor(g).evaluate(_valuation);
+    if (_valuation == null) return 0;
+    int k = _parameters.getPrecedenceFor(f).evaluate(_valuation) -
+            _parameters.getPrecedenceFor(g).evaluate(_valuation);
+    if (k != 0) return k;
+    return _parameters.getStatusFor(f).evaluate(_valuation) -
+           _parameters.getStatusFor(g).evaluate(_valuation);
   }
 
   /** Returns the status (Lex or Mul_i for some i ≥ 2) of the given symbol */
   public String status(FunctionSymbol f) {
+    if (_valuation == null) return null;
     int k = _parameters.getStatusFor(f).evaluate(_valuation);
     if (k <= 1) return "Lex";
     else return "Mul_" + k;
+  }
+
+  /** Returns whether the given symbol regards the given position. */
+  public boolean regards(FunctionSymbol f, int position) {
+    if (_valuation == null) return false;
+    return _parameters.getRegardsVariableFor(f, position).evaluate(_valuation);
+  }
+
+  /** Returns whether the ordering is strict (that is, nothing is filtered away). */
+  public boolean stronglyMonotonic() {
+    if (_valuation == null) return false;
+    return _parameters.getDisregardedArguments(_valuation).size() == 0;
   }
 
   /** Prints a string representation of the current integer ordering to the output module. */
