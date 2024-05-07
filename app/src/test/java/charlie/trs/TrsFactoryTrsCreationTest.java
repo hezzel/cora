@@ -125,7 +125,7 @@ public class TrsFactoryTrsCreationTest {
     assertThrows(charlie.exceptions.IllegalSymbolError.class,
       () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.MSTRS));
 
-    symbols.set(symbols.size()-1, TermFactory.createConstant("i", type("(a × b) → a")));
+    symbols.set(symbols.size()-1, TermFactory.createConstant("i", type("(|a , b|) → a")));
     assertThrows(charlie.exceptions.IllegalSymbolError.class,
       () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.CFS));
   }

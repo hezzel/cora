@@ -76,8 +76,8 @@ public class CoraTypesParsingTest {
 
   @Test
   public void testSimpleProductType() {
-    Type t1 = CoraParser.readType("xx × yy × zz", true, null);
-    Type t2 = CoraParser.readType("xx × yy × zz", false, null);
+    Type t1 = CoraParser.readType("⦇ xx, yy, zz ⦈", true, null);
+    Type t2 = CoraParser.readType("⦇ xx , yy ,zz ⦈", false, null);
     assertTrue(t1.equals(t2));
     assertTrue(t1.isProductType());
     assertTrue(t1.numberSubtypes() == 3);
@@ -97,29 +97,29 @@ public class CoraTypesParsingTest {
 
   @Test
   public void testMixedType() {
-    Type t = CoraParser.readType("a × b -> c × d");
+    Type t = CoraParser.readType("⦇ a , b ⦈ -> (|c,d|)");
     assertTrue(t.isArrowType());
     assertTrue(t.subtype(1).isProductType());
-    assertTrue(t.subtype(1).toString().equals("a × b"));
+    assertTrue(t.subtype(1).toString().equals("⦇ a, b ⦈"));
     assertTrue(t.subtype(2).isProductType());
-    assertTrue(t.subtype(2).toString().equals("c × d"));
+    assertTrue(t.subtype(2).toString().equals("⦇ c, d ⦈"));
   }
 
   @Test
   public void testHigherArrowType() {
-    Type t = CoraParser.readType("(xx -> yy × xx) -> zz");
+    Type t = CoraParser.readType("(xx -> ⦇ yy, xx|)) -> zz");
     assertTrue(t.isArrowType());
     assertTrue(t.subtype(1).isArrowType());
-    assertTrue(t.subtype(1).toString().equals("xx → yy × xx"));
+    assertTrue(t.subtype(1).toString().equals("xx → ⦇ yy, xx ⦈"));
     assertTrue(t.subtype(2).toString().equals("zz"));
   }
 
   @Test
   public void testHigherProductType() {
-    Type t = CoraParser.readType("(xx -> yy × xx) × zz");
+    Type t = CoraParser.readType("(|xx -> (|yy ,xx|), zz|)");
     assertTrue(t.isProductType());
     assertTrue(t.subtype(1).isArrowType());
-    assertTrue(t.subtype(1).toString().equals("xx → yy × xx"));
+    assertTrue(t.subtype(1).toString().equals("xx → ⦇ yy, xx ⦈"));
     assertTrue(t.subtype(2).toString().equals("zz"));
   }
 
@@ -140,9 +140,9 @@ public class CoraTypesParsingTest {
 
   @Test
   public void testReadTypeEndingWithBrackets() {
-    Type t = CoraParser.readType("(a × b) → (c -> d → e)");
+    Type t = CoraParser.readType("(|a,b|) → (c -> d → e)");
     assertTrue(t.isArrowType());
-    assertTrue(t.subtype(1).toString().equals("a × b"));
+    assertTrue(t.subtype(1).toString().equals("⦇ a, b ⦈"));
     assertTrue(t.subtype(2).toString().equals("c → d → e"));
   }
 
@@ -205,12 +205,12 @@ public class CoraTypesParsingTest {
   }
 
   @Test
-  public void testTypeMissingTupleElementRecovery() {
+  public void testTypeMissingTupleCloseBracketRecovery() {
     ErrorCollector collector = new ErrorCollector();
-    Type t = CoraParser.readType("b × c ×", true, collector);
-    assertTrue(t.toString().equals("b × c"));
+    Type t = CoraParser.readType("(| b , c ) -> d", true, collector);
+    assertTrue(t.toString().equals("⦇ b, c ⦈ → d"));
     assertTrue(collector.queryCollectedMessages().equals(
-      "1:8: Expected a type (started by a sort identifier or bracket) but got end of input.\n"));
+      "1:10: Expected tuple closing bracket but got BRACKETCLOSE ()).\n"));
   }
 
   @Test

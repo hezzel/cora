@@ -42,7 +42,6 @@ class CoraTokenData {
   public static final String ARROW          = "ARROW";
   public static final String PUBLIC         = "PUBLIC";
   public static final String PRIVATE        = "PRIVATE";
-  public static final String PRODUCT        = "PRODUCT";
   // The following are only used for constrained TRSs. */
   public static final String INTEGER        = "INTEGER";
   public static final String TRUE           = "TRUE";
@@ -106,9 +105,9 @@ class CoraTokenData {
     "Int"                                     , INTTYPE,
     "Bool"                                    , BOOLTYPE,
     "String"                                  , STRINGTYPE,
-    "([^\\s()\\[\\]⟨⟩\\{\\}⦇⦈\"',:λ×%\\.\\|\\*\\+\\\\\\.><=≥≤→∧∨¬/-]|)+" , IDENTIFIER,
+    "([^\\s()\\[\\]⟨⟩\\{\\}⦇⦈\"',:λ%\\.\\|\\*\\+\\\\\\.><=≥≤→∧∨¬/-]|)+" , IDENTIFIER,
       // identifiers are now built from any characters other than whitespace, brackets (of any
-      // kind), braces, quotes, colons, lambda, dot, mid, ×, *, %, -, +, >, =, <, ≥, ≤, /, \, ¬, →
+      // kind), braces, quotes, colons, lambda, dot, mid, *, %, -, +, >, =, <, ≥, ≤, /, \, ¬, →
   };
 
   /** Both constrained and unconstrained TRSs share the tokens below. */
@@ -132,7 +131,6 @@ class CoraTokenData {
     "λ"                                       , LAMBDA,
     "\\\\"                                    , LAMBDA,
     "\\."                                     , DOT,
-    "×"                                       , PRODUCT,
     "->"                                      , ARROW,
     "→"                                       , ARROW,
     "private"                                 , PRIVATE,

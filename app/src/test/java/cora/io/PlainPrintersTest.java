@@ -28,7 +28,7 @@ import charlie.reader.CoraInputReader;
 public class PlainPrintersTest {
   private TRS exampleTrs() {
     return CoraInputReader.readTrsFromString("f :: Int -> Int -> Int\na::Int -> Int\n" +
-                                             "g :: ((Int -> Int) -> Int) -> (Int × Bool) -> A");
+                                             "g :: ((Int -> Int) -> Int) -> (|Int , Bool|) -> A");
   }
 
   @Test

@@ -201,10 +201,10 @@ public class CoraConstrainedTokensTest {
 
   @Test
   public void testAllBasicTokens() throws LexerException {
-    Lexer lexer = createLexer("xx×(y){,+#-\\a∀ \\/∃7*Q}():::a[b→b.⇒]>c-+-3|7λ12≥a≤b" +
+    Lexer lexer = createLexer("xx⦈(y){,+#-\\a∀ \\/∃7*Q}():::a[b→b.⇒]>c-+-3|7λ12≥a≤b" +
       "bae/\\a∧b<=c>=d∨e<f/g");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "xx");
-    verifyToken(lexer.nextToken(), CoraTokenData.PRODUCT, "×");
+    verifyToken(lexer.nextToken(), CoraTokenData.TUPLECLOSE, "⦈");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETOPEN, "(");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "y");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETCLOSE, ")");

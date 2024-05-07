@@ -393,8 +393,8 @@ public class TermTyperTest {
 
   @Test
   public void testAbstractionWithNonArrowTypeExpected() {
-    Term t = readTerm("λx::a.x", "b × b", false, null,
-      "1:2: Type error: expected subterm of type b × b, but got abstraction, which " +
+    Term t = readTerm("λx::a.x", "(|b,b|)", false, null,
+      "1:2: Type error: expected subterm of type ⦇ b, b ⦈, but got abstraction, which " +
       "necessarily has an arrow type.\n");
     assertTrue(t.toString().equals("abs(λx.x)"));
     assertFalse(t.isAbstraction());
@@ -478,31 +478,31 @@ public class TermTyperTest {
   public void testGoodTupleWithoutType() {
     Term t = readTerm("(| aa, f(x), 4 |)", null, true, null, "");
     assertTrue(t.isTuple());
-    assertTrue(t.queryType().toString().equals("a × (b → c → d) × Int"));
+    assertTrue(t.queryType().toString().equals("⦇ a, b → c → d, Int ⦈"));
     assertTrue(t.toString().equals("⦇aa, f(x), 4⦈"));
   }
 
   @Test
   public void testGoodTupleWithCorrectType() {
-    Term t = readTerm("⦇ x, true, 4 |)", "(a → b) × Bool × Int", true, null, "");
+    Term t = readTerm("⦇ x, true, 4 |)", "⦇ a → b, Bool, Int ⦈", true, null, "");
     assertTrue(t.isTuple());
   }
 
   @Test
   public void testTupleWithIncorrectType() {
-    Term t = readTerm("⦇ aa, true ⦈", "(a → b) × Bool", true, null,
+    Term t = readTerm("⦇ aa, true ⦈", "⦇ a → b, Bool ⦈", true, null,
       "1:3: Expected term of type a → b, but got function symbol aa which has type a.\n");
     assertTrue(t.isTuple());
   }
 
   @Test
   public void testTupleWithIncorrectLength() {
-    Term t = readTerm("⦇ aa, true ⦈", "(a → b) × Bool × Int", true, null,
-      "1:1: Type error: expected a term of type (a → b) × Bool × Int but got a tuple " +
+    Term t = readTerm("⦇ aa, true ⦈", "⦇ (a → b), Bool, Int ⦈", true, null,
+      "1:1: Type error: expected a term of type ⦇ a → b, Bool, Int ⦈ but got a tuple " +
       "of length 2.\n");
     assertFalse(t.isTuple());
     assertTrue(t.toString().equals("⦇aa, true⦈"));
-    assertTrue(t.queryType().toString().equals("(a → b) × Bool × Int"));
+    assertTrue(t.queryType().toString().equals("⦇ a → b, Bool, Int ⦈"));
   }
 
   @Test

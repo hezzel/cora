@@ -84,7 +84,7 @@ public class CoraParser {
   // ======================================== READING TYPES =======================================
 
   /**
-   * type ::= nonarrowtype (typearrow type)?
+   * type ::= basictype (typearrow type)?
    *
    * This function reads a type and returns it.
    * The input is expected to actually be a type. If this is not the case, then an error is stored.
@@ -93,7 +93,7 @@ public class CoraParser {
    * recovery.
    */
   private Type readType() {
-    Type start = readNonArrowType();
+    Type start = readBasicType();
     if (_status.readNextIf(CoraTokenData.ARROW) == null) return start;
     Type end = readType();
     if (start != null && end != null) return TypeFactory.createArrow(start, end);
@@ -103,30 +103,16 @@ public class CoraParser {
   }
 
   /**
-   * nonarrowtype ::= basictype_1 PRODUCT...PRODUCT basictype_n with n ≥ 1
-   *
-   * This function reads a non-arrow type and returns it.  The input is expected to actually start
-   * with a non-arrow type.  If this is not the case, then an error is stored and either null is
-   * returned, or whatever Type we did manage to read.
-   */
-  private Type readNonArrowType() {
-    Type start = readBasicType();
-    if (_status.readNextIf(CoraTokenData.PRODUCT) == null) return start;
-    ImmutableList.Builder<Type> builder = ImmutableList.<Type>builder();
-    if (start != null) builder.add(start);
-    do {
-      Type next = readBasicType();
-      if (next != null) builder.add(next);
-    } while (_status.readNextIf(CoraTokenData.PRODUCT) != null);
-    return TypeFactory.createProduct(builder.build());
-  }
-
-  /**
    * basictype ::= sort
+   *             | producttype
    *             | BRACKETOPEN type BRACKETCLOSE
    *
    * where
    * sort ::= INTTYPE | BOOLTYPE | STRINGTYPE | IDENTIFIER
+   *
+   * This function reads a basic type and returns it.  The input is expected to actually start with
+   * a basic type.  If this is not the case, then an error is stored and either null is returned, or
+   * whatever type we did manage to read.
    */
   private Type readBasicType() {
     if (_status.readNextIf(CoraTokenData.INTTYPE) != null) return TypeFactory.intSort;
@@ -134,12 +120,38 @@ public class CoraParser {
     if (_status.readNextIf(CoraTokenData.STRINGTYPE) != null) return TypeFactory.stringSort;
     String name = tryReadIdentifier();
     if (name != null) return TypeFactory.createSort(name);
+    if (_status.nextTokenIs(CoraTokenData.TUPLEOPEN)) return readProductType();
     Token bracket = _status.expect(CoraTokenData.BRACKETOPEN,
       "a type (started by a sort identifier or bracket)");
     if (bracket == null) return null;
     Type ret = readType();
     _status.expect(CoraTokenData.BRACKETCLOSE, "closing bracket");
     return ret;
+  }
+
+  /**
+   * producttype ::= TUPLEOPEN basictype COMMA...COMMA basictype TUPLECLOSE
+   * 
+   * This function reads a product type and returns it.  The input is expected to actually start
+   * with a product type.  If this is not the case, then an error is stored and either null is
+   * returned, or whatever type we did manage to read. (We try to complete the product, with a
+   * normal closing bracket rather than a tuple closing bracket if we have to).
+   */
+  private Type readProductType() {
+    _status.expect(CoraTokenData.TUPLEOPEN, "tuple opening bracket");
+    ArrayList<Type> components = new ArrayList<Type>();
+    Type arg = readType();
+    while (_status.readNextIf(CoraTokenData.COMMA) != null) {
+      if (arg != null) components.add(arg);
+      arg = readType();
+    }
+    if (arg != null) components.add(arg);
+    if (_status.expect(CoraTokenData.TUPLECLOSE, "tuple closing bracket") == null) {
+      _status.readNextIf(CoraTokenData.BRACKETCLOSE);
+    }
+    if (components.size() == 0) return null;
+    if (components.size() == 1) return components.get(0);
+    return TypeFactory.createProduct(components);
   }
 
   // ======================================== READING TERMS =======================================

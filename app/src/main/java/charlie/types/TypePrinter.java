@@ -64,9 +64,9 @@ public class TypePrinter {
    * you only want to change the type arrow, override the function queryArrowSymbol() instead.
    */
   protected void printArrowType(Type left, Type right, StringBuilder builder) {
-    if (!left.isBaseType()) builder.append("(");
+    if (left.isArrowType()) builder.append("(");
     print(left, builder);
-    if (!left.isBaseType()) builder.append(")");
+    if (left.isArrowType()) builder.append(")");
     builder.append(" ");
     builder.append(queryArrowSymbol());
     builder.append(" ");
@@ -76,21 +76,18 @@ public class TypePrinter {
   /**
    * Override this function to change how product types are printed (if printType is left
    * unmasked).
-   * The default functionality is to print all items in the list (bracketed unless they are base
-   * types), with queryTimesSymbol() in between them.  If you only want to change the times symbol,
-   * override the function queryTimesSymbol() instead.
+   * The default functionality is to print queryTupleOpenBracket(), then all all items in the list
+   * separated by commas, and finally queryTupleCloseBracket().
+   * If you only want to change the brackets, override the functions queryTupleOpenBracket() and
+   * queryTupleCloseBracket() instead.
    */
   protected void printProductType(ImmutableList<Type> elems, StringBuilder builder) {
+    builder.append(queryTupleOpenBracket() + " ");
     for (int i = 0; i < elems.size(); i++) {
-      if (i > 0) {
-        builder.append(" ");
-        builder.append(queryTimesSymbol());
-        builder.append(" ");
-      }
-      if (!elems.get(i).isBaseType()) builder.append("(");
+      if (i > 0) builder.append(", ");
       print(elems.get(i), builder);
-      if (!elems.get(i).isBaseType()) builder.append(")");
     }   
+    builder.append(" " + queryTupleCloseBracket());
   }
 
   /**
@@ -101,10 +98,17 @@ public class TypePrinter {
   protected String queryArrowSymbol() { return "→"; }
 
   /**
-   * Override this function to change how the separator in products is printed if both
+   * Override this function to change how the opening bracket for products is printed if both
    * printType and printProductType are left unmasked.
-   * The default functionality is a unicode times symbol.
+   * The default functionality is the unicode symbol ⦇.
    */
-  protected String queryTimesSymbol() { return "×"; }
+  protected String queryTupleOpenBracket() { return "⦇"; }
+
+  /**
+   * Override this function to change how the jlosing bracket for products is printed if both
+   * printType and printProductType are left unmasked.
+   * The default functionality is the unicode symbol ⦈.
+   */
+  protected String queryTupleCloseBracket() { return "⦈"; }
 }
 

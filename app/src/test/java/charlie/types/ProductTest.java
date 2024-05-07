@@ -107,20 +107,20 @@ class ProductTest {
     Type b = new Base("b");
     Type c = new Base("c");
     Type d = new Base("d");
-    // a × b × c
+    // ⦇ a, b, c ⦈
     Type abc = TypeFactory.createProduct(a, b, c);
-    // (a × b) × (c × d)
+    // ⦇ ⦇ a, b ⦈, ⦇ c, d ⦈ ⦈
     Type abcd = TypeFactory.createProduct(TypeFactory.createProduct(a, b),
                                           TypeFactory.createProduct(c, d));
-    // (a -> b) × c
+    // ⦇ a -> b, × c ⦈
     Type aarrbc = TypeFactory.createProduct(new Arrow(a, b), c);
-    // (a × b) -> c
+    // ⦇ a, b ⦈ -> c
     Type atimesbc = new Arrow(TypeFactory.createProduct(a, b), c);
 
-    assertTrue(abc.toString().equals("a × b × c"));
-    assertTrue(abcd.toString().equals("(a × b) × (c × d)"));
-    assertTrue(aarrbc.toString().equals("(a → b) × c"));
-    assertTrue(atimesbc.toString().equals("(a × b) → c"));
+    assertTrue(abc.toString().equals("⦇ a, b, c ⦈"));
+    assertTrue(abcd.toString().equals("⦇ ⦇ a, b ⦈, ⦇ c, d ⦈ ⦈"));
+    assertTrue(aarrbc.toString().equals("⦇ a → b, c ⦈"));
+    assertTrue(atimesbc.toString().equals("⦇ a, b ⦈ → c"));
   }
 
   @Test
