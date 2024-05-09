@@ -19,16 +19,26 @@ package cora.io;
  * A ProofObject is the way that some method within Cora passes its result to the calling function.
  * A ProofObject provides an answer, and can prints the justification for this answer.  In the
  * future, it may also be able to print a formal proof for automatic certification.
- * (The justification is allowed to be empty, for example if the answer is something like MAYBE.)
+ * (The justification is allowed to be empty, for example if the answer is MAYBE.)
  */
 public interface ProofObject {
+  /** The answer from the proof object */
+  public enum Answer { YES, NO, MAYBE }
+
   /**
-   * The answer to be given depends on the kind of proof object.  Typically, this would return
-   * YES, NO or MAYBE in some enum type, but if we are for instance analysing complexity, it might
-   * return something like "O(n)"; and for reduction it would return the normal form of an input
-   * term.
+   * The answer to be given depends on the kind of proof object, but we assume that in all cases,
+   * something like YES, NO or MAYBE can be returned.  If necessary, additional information can be
+   * given through printAnswer.  Full details are always supplied through justify().
    */
-  Object queryAnswer();
+  Answer queryAnswer();
+
+  /**
+   * This returns a string representation of the answer with perhaps additional details.
+   * For example, when analysing complexity queryAnswer() may return YES if some bound could be
+   * bound, and printAnswer() would return YES: O(n).
+   * By default, this simply prints the result of queryAnswer().
+   */
+  default String printAnswer() { return queryAnswer().toString(); }
 
   /**
    * If an answer is given, we should be able to prove it.  This may be empty, if the answer given

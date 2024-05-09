@@ -5,14 +5,11 @@ import charlie.trs.TrsProperties.*;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
-import cora.termination.TerminationAnswer;
 import cora.termination.dependency_pairs.processors.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-
-import static cora.termination.TerminationAnswer.*;
 
 public class DPFramework {
   public static String queryDisabledCode() {
@@ -27,7 +24,7 @@ public class DPFramework {
     if (!trs.verifyProperties(Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED,
                               Lhs.PATTERN, Root.FUNCTION)) {
       return new ProofObject() {
-        public Boolean queryAnswer() { return false; }
+        public Answer queryAnswer() { return Answer.MAYBE; }
         public void justify(OutputModule o) {
           o.println("For now, static dependency pairs can only be applied on applicative " +
                     "systems without tuples, where the left-hand sides of rules are patterns " +
@@ -45,7 +42,7 @@ public class DPFramework {
 
   public DPProofObject proveTermination(TRS trs, boolean ruleExtensionPresent) {
     ProofObject appl = isTRSApplicable(trs);
-    if (!((Boolean)appl.queryAnswer()).booleanValue()) return new DPProofObject(appl);
+    if (appl.queryAnswer() != ProofObject.Answer.YES) return new DPProofObject(appl);
 
     ReachabilityProcessor reachProcessor = new ReachabilityProcessor();
     GraphProcessor   graphProcessor   = new GraphProcessor();

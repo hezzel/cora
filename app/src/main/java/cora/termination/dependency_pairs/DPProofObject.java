@@ -24,7 +24,6 @@ import charlie.terms.TermPrinter.Renaming;
 import cora.io.OutputModule;
 import cora.io.OutputModuleAdapter;
 import cora.io.ProofObject;
-import cora.termination.TerminationAnswer;
 import cora.termination.dependency_pairs.processors.ProcessorProofObject;
 
 /**
@@ -35,7 +34,7 @@ class DPProofObject implements ProofObject {
   private ProofObject _accessibilityCheck;
   private Problem _initialProblem;
   private ArrayList<ProcessorProofObject> _processorProofs;
-  private TerminationAnswer _answer;
+  private Answer _answer;
   private Problem _failure;
 
   /**
@@ -51,7 +50,7 @@ class DPProofObject implements ProofObject {
     _accessibilityCheck = accessibility;
     _initialProblem = null;
     _processorProofs = new ArrayList<ProcessorProofObject>();
-    _answer = TerminationAnswer.MAYBE;
+    _answer = Answer.MAYBE;
     _failure = null;
   }
 
@@ -67,7 +66,7 @@ class DPProofObject implements ProofObject {
     _accessibilityCheck = accessibility;
     _initialProblem = initial;
     _processorProofs = new ArrayList<ProcessorProofObject>();
-    _answer = TerminationAnswer.MAYBE;
+    _answer = Answer.MAYBE;
     _failure = null;
   }
 
@@ -75,13 +74,13 @@ class DPProofObject implements ProofObject {
    * This marks the proof as complete, with a successful termination proof.
    * Package-private because this should only be done by the DP Framework constructing this object.
    */
-  void setTerminating() { _answer = TerminationAnswer.YES; }
+  void setTerminating() { _answer = Answer.YES; }
 
   /**
    * This marks the proof as complete, with a successful non-termination proof.
    * Package-private because this should only be done by the DP Framework constructing this object.
   */
-  void setNonTerminating() { _answer = TerminationAnswer.NO; }
+  void setNonTerminating() { _answer = Answer.NO; }
 
   /**
    * This marks the proof as abandoned, with the given DP Problem being unsimplifable.
@@ -89,7 +88,7 @@ class DPProofObject implements ProofObject {
    */
   void setFailedProof(Problem problem) {
     _failure = problem;
-    _answer = TerminationAnswer.MAYBE;
+    _answer = Answer.MAYBE;
   }
 
   /**
@@ -105,7 +104,7 @@ class DPProofObject implements ProofObject {
    * If neither setTerminating() nor setNonTerminating() has been called, this yields MAYBE.
    * Otherwise it returns YES or NO respectively.
    */
-  public TerminationAnswer queryAnswer() {
+  public Answer queryAnswer() {
     return _answer;
   }
 

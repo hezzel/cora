@@ -37,12 +37,16 @@ class Reduction implements ProofObject {
   Reduction(List<Term> steps) { _steps = steps; }
 
   /**
-   * The answer to be given depends on the kind of proof object.  Typically, this would return
-   * "YES", "NO" or "MAYBE", but if we are for instance analysing complexity, it might return
-   * something like "O(n)"; and for reduction it would return the normal form of an input term.
+   * As answer, we always return YES, because if a Reduction is returned, reducing to normal form
+   * succeeded.
    */
-  public Term queryAnswer() {
-    return _steps.get(_steps.size()-1);
+  public Answer queryAnswer() {
+    return Answer.YES;
+  }
+
+  /** This returns a default string representation of the normal form in the reduction. */
+  public String printAnswer() {
+    return "Normalised input term to: " + _steps.get(_steps.size()-1).toString();
   }
 
   /** The main functionality of any proof object is to print itself to an OutputModule. */

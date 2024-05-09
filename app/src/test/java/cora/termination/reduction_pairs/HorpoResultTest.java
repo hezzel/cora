@@ -31,7 +31,6 @@ import charlie.smt.IVar;
 import charlie.smt.Valuation;
 import charlie.reader.CoraInputReader;
 import cora.io.*;
-import cora.termination.TerminationAnswer;
 
 public class HorpoResultTest {
   private TRS makeTrs(String txt) {
@@ -43,7 +42,7 @@ public class HorpoResultTest {
     TRS trs = makeTrs("f :: Int -> Int g :: Int -> Int f(x) -> f(x-1) | x != 0 g(x) -> f(x)");
     OrderingProblem problem = OrderingProblem.createStrictProblem(trs);
     HorpoResult result = new HorpoResult(problem, "Could not find a proof.");
-    assertTrue(result.queryAnswer() == TerminationAnswer.MAYBE);
+    assertTrue(result.queryAnswer() == ProofObject.Answer.MAYBE);
     assertFalse(result.isStrictlyOriented(0));
     assertFalse(result.isStrictlyOriented(1));
     assertFalse(result.isStrictlyOriented(problem.reqs().get(0)));
@@ -80,7 +79,7 @@ public class HorpoResultTest {
     valuation.setBool(param.getDirectionIsDownVariable().queryIndex(), true);
 
     HorpoResult result = new HorpoResult(problem, Set.of(0), valuation, param, lst);
-    assertTrue(result.queryAnswer() == TerminationAnswer.YES);
+    assertTrue(result.queryAnswer() == ProofObject.Answer.YES);
     assertTrue(result.isStrictlyOriented(0));
     assertFalse(result.isStrictlyOriented(1));
     assertTrue(result.isStrictlyOriented(problem.reqs().get(0)));
@@ -140,7 +139,7 @@ public class HorpoResultTest {
     valuation.setBool(param.getDirectionIsDownVariable().queryIndex(), false);
 
     HorpoResult result = new HorpoResult(problem, Set.of(1), valuation, param, lst);
-    assertTrue(result.queryAnswer() == TerminationAnswer.YES);
+    assertTrue(result.queryAnswer() == ProofObject.Answer.YES);
     assertFalse(result.isStrictlyOriented(0));
     assertTrue(result.isStrictlyOriented(1));
     assertFalse(result.isStrictlyOriented(problem.reqs().get(0)));

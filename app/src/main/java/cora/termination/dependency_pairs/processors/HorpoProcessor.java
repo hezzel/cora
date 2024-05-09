@@ -3,7 +3,7 @@ package cora.termination.dependency_pairs.processors;
 import java.util.List;
 import java.util.ArrayList;
 import cora.io.OutputModule;
-import cora.termination.TerminationAnswer;
+import cora.io.ProofObject;
 import cora.termination.reduction_pairs.*;
 import cora.termination.dependency_pairs.Problem;
 import cora.termination.dependency_pairs.DP;
@@ -54,7 +54,7 @@ public class HorpoProcessor implements Processor {
     OrderingProblem problem = OrderingProblem.createWeakProblem(dpp.getTRS(), reqs);
     Horpo horpo = new Horpo(false);
     ReductionPairProofObject result = horpo.orient(problem);
-    if (result.queryAnswer() == TerminationAnswer.YES) {
+    if (result.queryAnswer() == ProofObject.Answer.YES) {
       ArrayList<DP> lst = new ArrayList<DP>();
       for (int i = 0; i < dps.size(); i++) {
         if (!result.isStrictlyOriented(i)) lst.add(dps.get(i));

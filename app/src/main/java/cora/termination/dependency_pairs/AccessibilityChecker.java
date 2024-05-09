@@ -127,8 +127,11 @@ public class AccessibilityChecker {
 
   private class AccessibilityProofObject implements ProofObject {
     private ArrayList<Pair<String,Integer>> _sorts;
+    private String _maybeReason;
 
+    /** Sets up a proof object for a successful proof. */
     private AccessibilityProofObject(Valuation solution) {
+      _maybeReason = null;
       _sorts = new ArrayList<Pair<String,Integer>>();
       _sortVariables.forEach( (x, v) -> {
         _sorts.add(new Pair<String,Integer>(x, solution.queryAssignment(v)));
@@ -140,13 +143,34 @@ public class AccessibilityChecker {
       });
     }
 
-    private AccessibilityProofObject() {
-      _sorts = null;
+    /**
+     * Sets up a proof object for an unsuccessful proof, where we could not prove
+     * non-AFPness either.
+     */
+    private AccessibilityProofObject(String reason) {
+      _maybeReason = reason;
     }
 
-    public Boolean queryAnswer() { return _sorts != null; }
+    /** Sets up a proof object if the underlying TRS is not AFP. */
+    private AccessibilityProofObject() {
+      _sorts = null;
+      _maybeReason = null;
+    }
+
+    public Answer queryAnswer() {
+      if (_maybeReason != null) return Answer.MAYBE;
+      if (_sorts == null) return Answer.NO;
+      return Answer.YES;
+    }
 
     public void justify(OutputModule module) {
+      if (_maybeReason != null) {
+        module.println("We could not verify if the system satisfies the precondition to " +
+                       "apply static dependency pairs: it needs to be accessible function " +
+                       "passing.");
+        module.println("%a", _maybeReason);
+        return;
+      }
       if (_sorts == null) {
         module.println("The system does not satisfy the preconditions to apply static " +
                        "dependency pairs: it is not accessible function passing.");
@@ -173,12 +197,11 @@ public class AccessibilityChecker {
 
   public ProofObject checkAccessibility() {
     generateTrsConstraints();
-    switch (Settings.smtSolver.checkSatisfiability(_problem)) {
-      case SmtSolver.Answer.YES(Valuation solution):
-        return new AccessibilityProofObject(solution);
-      default:
-        return new AccessibilityProofObject();
-    }
+    return switch (Settings.smtSolver.checkSatisfiability(_problem)) {
+      case SmtSolver.Answer.YES(Valuation solution) -> new AccessibilityProofObject(solution);
+      case SmtSolver.Answer.MAYBE(String reason) -> new AccessibilityProofObject(reason);
+      case SmtSolver.Answer.NO() -> new AccessibilityProofObject();
+    };
   }
 
   public String querySortOrdering() {

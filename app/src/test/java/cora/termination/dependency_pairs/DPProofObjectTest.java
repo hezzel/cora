@@ -25,15 +25,14 @@ import charlie.reader.CoraInputReader;
 import cora.io.ProofObject;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
-import cora.termination.TerminationAnswer;
 import cora.termination.dependency_pairs.processors.ProcessorProofObject;
 
 class DPProofObjectTest {
-  private ProofObject makeAccessibilityProof(boolean result) {
+  private ProofObject makeAccessibilityProof(ProofObject.Answer answer) {
     return new ProofObject() {
-      public Boolean queryAnswer() { return result; }
+      public ProofObject.Answer queryAnswer() { return answer; }
       public void justify(OutputModule m) {
-        if (result) m.println("This is totally accessible.");
+        if (answer == ProofObject.Answer.YES) m.println("This is totally accessible.");
         else m.println("This is not accessible!");
       }
     };
@@ -49,8 +48,8 @@ class DPProofObjectTest {
 
   @Test
   public void testNotAccessible() {
-    DPProofObject ob = new DPProofObject(makeAccessibilityProof(false));
-    assertTrue(ob.queryAnswer() == TerminationAnswer.MAYBE);
+    DPProofObject ob = new DPProofObject(makeAccessibilityProof(ProofObject.Answer.NO));
+    assertTrue(ob.queryAnswer() == ProofObject.Answer.MAYBE);
     OutputModule module = DefaultOutputModule.createUnicodeModule(exampleTrs());
     ob.justify(module);
     assertTrue(module.toString().equals("This is not accessible!\n\n"));
@@ -79,7 +78,7 @@ class DPProofObjectTest {
   @Test
   void testFullRun() {
     TRS trs = exampleTrs();
-    ProofObject accessibility = makeAccessibilityProof(true);
+    ProofObject accessibility = makeAccessibilityProof(ProofObject.Answer.YES);
     Problem p1 = DPGenerator.generateProblemFromTrs(trs);
     Problem p2 = new Problem(List.of(p1.getDPList().get(0)), trs);
     Problem p3 = new Problem(List.of(p1.getDPList().get(2)), trs);
@@ -87,7 +86,7 @@ class DPProofObjectTest {
     ob.addProcessorProof(new HelperA(p1, List.of(p2, p3)));
     ob.addProcessorProof(new HelperB(p2));
 
-    assertTrue(ob.queryAnswer().equals(TerminationAnswer.MAYBE));
+    assertTrue(ob.queryAnswer().equals(ProofObject.Answer.MAYBE));
     String start = 
       "This is totally accessible.\n\n" +
       "We start by computing the following initial DP problem:\n\n" +
@@ -106,7 +105,7 @@ class DPProofObjectTest {
 
     ob.setTerminating();
     ob.addProcessorProof(new HelperB(p3));
-    assertTrue(ob.queryAnswer().equals(TerminationAnswer.YES));
+    assertTrue(ob.queryAnswer().equals(ProofObject.Answer.YES));
     module = DefaultOutputModule.createUnicodeModule(exampleTrs());
     ob.justify(module);
     start +=
@@ -115,7 +114,7 @@ class DPProofObjectTest {
     assertTrue(module.toString().equals(start));
 
     ob.setFailedProof(p3);
-    assertTrue(ob.queryAnswer().equals(TerminationAnswer.MAYBE));
+    assertTrue(ob.queryAnswer().equals(ProofObject.Answer.MAYBE));
     module = DefaultOutputModule.createUnicodeModule(exampleTrs());
     ob.justify(module);
     assertTrue(module.toString().equals(start +

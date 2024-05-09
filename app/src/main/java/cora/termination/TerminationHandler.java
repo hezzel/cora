@@ -35,7 +35,7 @@ public class TerminationHandler {
     DPFramework dpF = new DPFramework();
     if (!Settings.isDisabled(dpF.queryDisabledCode())) return dpF.proveComputability(trs);
     return new ProofObject() {
-      public TerminationAnswer queryAnswer() { return TerminationAnswer.MAYBE; }
+      public Answer queryAnswer() { return Answer.MAYBE; }
       public void justify(OutputModule o) {
         o.println("Dependency pairs were disabled, and this is currently the only appraoch " +
           "to prove universal/public computability.");

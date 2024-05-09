@@ -42,7 +42,7 @@ public class App {
       TRS trs = readTRS(parameters.querySingleFile());
       ProofObject pobject = executeRequest(req, trs, parameters.queryModuleInput());
       if (pobject == null) System.exit(1);
-      System.out.println(pobject.queryAnswer());
+      System.out.println(pobject.printAnswer());
       OutputModule om = parameters.queryOutputModule(trs);
       pobject.justify(om);
       om.printToStdout();
@@ -101,7 +101,8 @@ public class App {
     return switch (request) {
       case Computability -> TerminationHandler.proveComputability(trs);
       case Print -> new ProofObject() {
-        public Object queryAnswer() { return ""; }
+        public Answer queryAnswer() { return Answer.YES; }
+        public String printAnswer() { return ""; }
         public void justify(OutputModule o) { o.printTrs(trs); }
       };
       case Termination -> TerminationHandler.proveTermination(trs);

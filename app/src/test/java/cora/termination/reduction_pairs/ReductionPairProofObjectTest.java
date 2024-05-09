@@ -27,7 +27,7 @@ import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
-import cora.termination.TerminationAnswer;
+import cora.io.ProofObject;
 
 public class ReductionPairProofObjectTest {
   private TRS makeTrs(String txt) {
@@ -61,7 +61,7 @@ public class ReductionPairProofObjectTest {
   public void testStrictness() {
     OrderingProblem problem = createProblem();
     ReductionPairProofObject rppo = new MyClass(problem, Set.of(1));
-    assertTrue(rppo.queryAnswer() == TerminationAnswer.YES);
+    assertTrue(rppo.queryAnswer() == ProofObject.Answer.YES);
     assertFalse(rppo.isStrictlyOriented(0));
     assertFalse(rppo.isStrictlyOriented(problem.reqs().get(0)));
     assertTrue(rppo.isStrictlyOriented(1));

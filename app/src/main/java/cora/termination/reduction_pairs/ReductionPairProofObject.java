@@ -19,7 +19,6 @@ import java.util.Set;
 import charlie.exceptions.IllegalArgumentError;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
-import cora.termination.TerminationAnswer;
 import cora.termination.reduction_pairs.OrderingRequirement.Relation;
 
 /**
@@ -49,9 +48,9 @@ public abstract class ReductionPairProofObject implements ProofObject {
    * Returns YES if this was a successful proof of the given OrderingProblem (even if not all
    * OrderingRequirements have been strictly oriented yet), and MAYBE otherwise.
    */
-  public TerminationAnswer queryAnswer() {
-    if (_strictlyOriented == null) return TerminationAnswer.MAYBE;
-    else return TerminationAnswer.YES;
+  public Answer queryAnswer() {
+    if (_strictlyOriented == null) return Answer.MAYBE;
+    else return Answer.YES;
   }
 
   /**
