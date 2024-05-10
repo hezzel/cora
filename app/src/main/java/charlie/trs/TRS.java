@@ -296,14 +296,11 @@ public class TRS {
       if (!term.isApplicative()) return false;
     }
     if (_productsIncluded && _theoriesIncluded) return true;
-    for (Pair<Term,Position> pair : term.querySubterms()) {
-      Term sub = pair.fst();
-      if (!_theoriesIncluded && sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) {
-        return false;
-      }
-      if (!_productsIncluded && sub.queryType().hasProducts()) return false;
-    }
-    return true;
+    return null == term.findSubterm((sub,pos) ->
+      ( (!_theoriesIncluded && sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) ||
+        (!_productsIncluded && sub.queryType().hasProducts())
+      )
+    );
   }
 
   /** Gives a human-readable representation of the term rewriting system. */

@@ -388,6 +388,22 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
+  public void testVisitor() {
+    Type type = arrowType(baseType("a"), arrowType("b", "a"));
+    Variable z = new Binder("Z", type);
+    Term arg1 = unaryTerm("g", baseType("a"), new Var("x", baseType("b")));
+    Term arg2 = constantTerm("c", baseType("b"));
+    Application term = new Application(z, arg1, arg2);    // Z(g(x),c)
+    ArrayList<String> parts = new ArrayList<String>();
+    term.visitSubterms( (s,p) -> parts.add(s.toString()));
+    assertTrue(parts.size() == 4);
+    assertTrue(parts.get(0).equals("x"));
+    assertTrue(parts.get(1).equals("g(x)"));
+    assertTrue(parts.get(2).equals("c"));
+    assertTrue(parts.get(3).equals("Z(g(x), c)"));
+  }
+
+  @Test
   public void testFullPositionsForBetaRedex() {
     Variable x = new Binder("x", baseType("A"));
     Constant a = new Constant("a", baseType("A"));

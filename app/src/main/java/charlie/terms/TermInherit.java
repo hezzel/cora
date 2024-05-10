@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import charlie.exceptions.*;
 import charlie.util.Pair;
 import charlie.terms.position.Position;
@@ -244,6 +246,21 @@ abstract class TermInherit implements Term {
       default:
         return replaceSubtermMain(pos, replacement);
     }
+  }
+
+  /** Executes the given function on all subterms. */
+  public void visitSubterms(BiConsumer<Term,Position> vis) {
+    for (Pair<Term,Position> p : querySubterms()) {
+      vis.accept(p.fst(), p.snd());
+    }
+  }
+
+  /** Returns the first subterm/position pair where vis returns true (if any) */
+  public Pair<Term,Position> findSubterm(BiFunction<Term,Position,Boolean> vis) {
+    for (Pair<Term,Position> p : querySubterms()) {
+      if (vis.apply(p.fst(), p.snd())) return p;
+    }
+    return null;
   }
 
   /** Returns the present term with all binder-variables replaced by fresh ones. */

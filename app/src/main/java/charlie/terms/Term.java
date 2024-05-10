@@ -19,6 +19,8 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.position.Position;
@@ -212,6 +214,18 @@ public interface Term {
    * always contains at least the empty position.
    */
   List<Position> queryPositions(boolean partial);
+
+  /**
+   * Runs the given function on every subterm and corresponding position.
+   * Usage: term.visitSubterms((s,p) -> ...);
+   */
+  void visitSubterms(BiConsumer<Term,Position> visitor);
+
+  /**
+   * Runs the given function on every subterm and corresponding position, and returns the frist for
+   * which the function returns true.  If it never returns true, then null is returned instead.
+   */
+  Pair<Term,Position> findSubterm(BiFunction<Term,Position,Boolean> visitor);
 
   /**
    * Returns the set of all variables occurring freely in the current term.  This may be both binder

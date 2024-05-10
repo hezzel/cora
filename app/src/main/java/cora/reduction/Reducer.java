@@ -49,15 +49,14 @@ public class Reducer {
    * such position exists.
    */
   public Position leftmostInnermostRedexPosition(Term s) {
-    List<Pair<Term,Position>> subterms = s.querySubterms();
-    for (int i = 0; i < subterms.size(); i++) {
-      Term sub = subterms.get(i).fst();
-      Position pos = subterms.get(i).snd();
+    Pair<Term,Position> p = s.findSubterm((sub,pos) -> {
       for (int j = 0; j < _components.size(); j++) {
-        if (_components.get(j).applicable(sub)) return pos;
+        if (_components.get(j).applicable(sub)) return true;
       }
-    }
-    return null;
+      return false;
+    });
+    if (p == null) return null;
+    return p.snd();
   }
 
   /**

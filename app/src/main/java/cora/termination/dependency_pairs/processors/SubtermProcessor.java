@@ -66,22 +66,6 @@ public class SubtermProcessor implements Processor {
     _smt.require(SmtFactory.createDisjunction(disj));
   }
 
-  // TODO this function doesn't belong here...
-  //  it implements the subterm relation s >= t.
-  //  meaning s = t or <the normal subterm relation>
-  private boolean isSubtermGTE(Term s, Term t) {
-    if (s.equals(t)) {
-      return true;
-    } else {
-        return
-          s.querySubterms()
-          .stream()
-          .map(Pair::fst)
-          .toList()
-          .contains(t);
-    }
-  }
-
   private void addProblemConstraintsToSMT(Map<FunctionSymbol, IVar> fSharpMap, Map<DP, BVar> dpbVarMap, Problem dpp) {
     for (DP dp : dpp.getDPList()) {
       Term lhs = dp.lhs();
@@ -100,7 +84,7 @@ public class SubtermProcessor implements Processor {
             Constraint c2 = SmtFactory.createNegation(dpbVarMap.get(dp));
             Constraint disjunction = SmtFactory.createDisjunction(new ArrayList<>(List.of(c0, c1, c2)));
             _smt.require(disjunction);
-          } else if (isSubtermGTE(si, tj)) {
+          } else if (si.hasSubterm(tj)) {
             Constraint c2 = dpbVarMap.get(dp);
             Constraint disjunction = SmtFactory.createDisjunction(new ArrayList<>(List.of(c0, c1, c2)));
             _smt.require(disjunction);

@@ -22,7 +22,7 @@ public class DPFramework {
 
   private ProofObject isTRSApplicable(TRS trs) {
     if (!trs.verifyProperties(Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED,
-                              Lhs.PATTERN, Root.FUNCTION)) {
+                              Lhs.PATTERN, Root.THEORY)) {
       return new ProofObject() {
         public Answer queryAnswer() { return Answer.MAYBE; }
         public void justify(OutputModule o) {
