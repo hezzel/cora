@@ -104,6 +104,7 @@ public class VarTest extends TermTestFoundation {
     assertTrue(z.isApplicative());
     assertTrue(z.apply(x).equals(new Application(z, x)));
     assertFalse(z.apply(x).isPattern());
+    assertTrue(s.isLinear());
     Variable y = new Binder("x", baseType("o"));
     assertTrue(x.compareTo(y) == -1);
   }

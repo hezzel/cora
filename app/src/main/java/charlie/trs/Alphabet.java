@@ -53,6 +53,24 @@ public class Alphabet {
     _symbols = builder.build();
   }
 
+  /** Creates a copy of the alphabet, with the given function symbols added. */
+  public Alphabet add(Collection<FunctionSymbol> toadd) {
+    LookupMap.Builder<FunctionSymbol> builder = new LookupMap.Builder<FunctionSymbol>();
+    for (FunctionSymbol f : _symbols.values()) builder.put(f.queryName(), f);
+    for (FunctionSymbol f : toadd) {
+      if (f == null) throw new NullInitialisationError("Alphabet", "an extra symbol");
+      if (builder.containsKey(f.queryName())) {
+        FunctionSymbol g = builder.get(f.queryName());
+        if (!g.equals(f)) {
+          throw new TypingError("Alphabet", "add", "duplicate occurrence of " +
+            f.queryName(), g.queryType().toString(), f.queryType().toString());
+        }
+      }
+      else builder.put(f.queryName(), f);
+    }
+    return new Alphabet(builder.build());
+  }
+
   /** Returns the FunctionSymbol with the given name if it exists, or null otherwise. */
   public FunctionSymbol lookup(String name) {
     return _symbols.get(name);

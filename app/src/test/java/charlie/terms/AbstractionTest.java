@@ -178,6 +178,7 @@ class AbstractionTest extends TermTestFoundation {
     assertTrue(abs.isTrueTerm());
     assertFalse(abs.isValue());
     assertFalse(abs.isTheoryTerm());
+    assertTrue(abs.isLinear());
     assertEquals("(λx.f(x, λy.y))(u)", abs.apply(constantTerm("u", arrowType("o", "o"))).toString());
   }
 

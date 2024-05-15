@@ -137,6 +137,11 @@ public class Rule {
   public boolean isSemiPatternRule() {
     return _properties.patternStatus().compareTo(Lhs.SEMIPATTERN) <= 0;
   }
+
+  /** This returns whether the left-hand side of the rule is linear. */
+  public boolean isLeftLinear() {
+    return _left.isLinear();
+  }
   
   /** This returns whether the left-hand side has a root that is a (non-theory) function symbol. */
   public boolean queryTermFunctionRoot() {

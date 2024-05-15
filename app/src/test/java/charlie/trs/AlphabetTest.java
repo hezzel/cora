@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.lang.Error;
 import java.util.ArrayList;
+import java.util.List;
 
 import charlie.exceptions.NullInitialisationError;
 import charlie.exceptions.TypingError;
@@ -49,6 +50,29 @@ public class AlphabetTest {
     assertTrue(a.lookup("0").equals(symbols.get(0)));
     assertTrue(a.lookup("S").equals(symbols.get(1)));
     assertTrue(a.lookup("s") == null);  // it's case-sensitive!
+  }
+
+  @Test
+  public void testAdd() {
+    FunctionSymbol zero = makeConstant("0", "Nat");
+    FunctionSymbol s = makeSymbol("S", TypeFactory.createArrow(baseType("Nat"), baseType("Nat")));
+    Alphabet alf1 = new Alphabet(List.of(zero, s));
+    FunctionSymbol a = makeConstant("a", "A");
+    FunctionSymbol b = makeConstant("b", "A");
+    FunctionSymbol c = makeConstant("a", "C");
+    FunctionSymbol d = makeConstant("0", "C");
+    Alphabet alf2 = alf1.add(List.of(a, s, b));
+    assertTrue(alf1.lookup("0") == zero);
+    assertTrue(alf1.lookup("S") == s);
+    assertTrue(alf1.lookup("a") == null);
+    assertTrue(alf1.lookup("b") == null);
+    assertTrue(alf2.lookup("0") == zero);
+    assertTrue(alf2.lookup("S") == s);
+    assertTrue(alf2.lookup("a") == a);
+    assertTrue(alf2.lookup("b") == b);
+    alf1.add(List.of(b, c));  // no problem here
+    assertThrows(TypingError.class, () -> alf2.add(List.of(b, c)));
+    assertThrows(TypingError.class, () -> alf1.add(List.of(d)));
   }
 
   @Test

@@ -253,5 +253,22 @@ public class TrsTest {
     defineds.add(h);
     assertTrue(trs.definedSymbols().size() == 2);
   }
+
+  @Test
+  public void testLeftLinearity() {
+    Alphabet alf = new Alphabet(List.of(f,g,h,a,b));
+    ArrayList<Rule> rules = new ArrayList<Rule>();
+    Variable x = TermFactory.createVar("x", type("a"));
+    Variable y = TermFactory.createVar("y", type("Int"));
+    Term fxb = TermFactory.createApp(f, x, b);
+    rules.add(TrsFactory.createRule(fxb, x)); // f(x, B) -> x
+    TRS trs = TrsFactory.createTrs(alf, rules, TrsFactory.STRS);
+    assertTrue(trs.isLeftLinear());
+    Term plus = TermFactory.createApp(TheoryFactory.plusSymbol, y, y);
+    Term left = g.apply(plus);
+    rules.add(TrsFactory.createRule(left, a));  // g(y+y) -> A
+    trs = TrsFactory.createTrs(alf, rules, TrsFactory.LCSTRS);
+    assertFalse(trs.isLeftLinear());
+  }
 }
 

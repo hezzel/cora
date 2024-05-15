@@ -152,6 +152,32 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.isClosed());
     assertFalse(t.isGround());
     assertTrue(t.isTrueTerm());
+    assertTrue(t.isLinear());
+  }
+
+  @Test
+  public void testLinearity() {
+    Type oo = arrowType("o", "o");
+    Term f = constantTerm("f", arrowType(baseType("o"), oo));
+    Term g = constantTerm("g", arrowType(oo, arrowType(oo, baseType("o"))));
+    Term h = constantTerm("h", arrowType(baseType("o"), arrowType(baseType("o"), oo)));
+    Variable x = TermFactory.createVar("x", baseType("o"));
+    Variable y = TermFactory.createBinder("y", baseType("o"));
+    Variable z = TermFactory.createBinder("z", baseType("o"));
+    MetaVariable zz = TermFactory.createMetaVar("Z", arrowType("o", "o"), 1);
+    MetaVariable hh = TermFactory.createMetaVar("h", arrowType("o", "o"), 1);
+    Term zy = TermFactory.createMeta(zz, y);
+    Term hy = TermFactory.createMeta(hh, y);
+    Term hz = TermFactory.createMeta(hh, z);
+    // f(x, x)
+    Term fxx = new Application(f, x, x);
+    assertFalse(fxx.isLinear());
+    // g(λz.H[z], λy.H[y])
+    Term ghh = new Application(g, new Abstraction(z, hz), new Abstraction(y, hy));
+    assertFalse(ghh.isLinear());
+    // λy.h(Z[y], y, H[y])
+    Term hzh = new Abstraction(y, (new Application(h, zy, y)).apply(hy));
+    assertTrue(hzh.isLinear());
   }
 
   @Test

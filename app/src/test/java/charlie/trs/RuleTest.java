@@ -272,6 +272,19 @@ public class RuleTest {
     assertTrue(rule.isApplicative());
     assertTrue(rule.isPatternRule());
     assertFalse(rule.queryTermFunctionRoot());
+    assertTrue(rule.isLeftLinear());
+  }
+
+  @Test
+  public void testNotLinear() {
+    // f(x, x) - x | x > 0
+    Variable x = TermFactory.createVar("x", type("Int"));
+    Term f = makeConstant("f", "Int -> Int -> Int");
+    Term left = TermFactory.createApp(f, x, x);
+    Term zero = TheoryFactory.createValue(0);
+    Term constraint = TermFactory.createApp(TheoryFactory.greaterSymbol, x, zero);
+    Rule rule = new Rule(left, x, constraint);
+    assertFalse(rule.isLeftLinear());
   }
 }
 

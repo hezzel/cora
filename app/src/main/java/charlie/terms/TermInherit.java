@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -151,6 +152,18 @@ abstract class TermInherit implements Term {
     ReplaceableList vs = freeReplaceables();
     for (Replaceable x : vs) {
       if (x.queryReplaceableKind() == Replaceable.KIND_BINDER) return false;
+    }
+    return true;
+  }
+
+  public boolean isLinear() {
+    TreeSet<MetaVariable> mvars = new TreeSet<MetaVariable>();
+    for (Pair<Term,Position> p : querySubterms()) {
+      if (p.fst().isMetaApplication()) {
+        MetaVariable x = p.fst().queryMetaVariable();
+        if (mvars.contains(x)) return false;
+        mvars.add(x);
+      }
     }
     return true;
   }

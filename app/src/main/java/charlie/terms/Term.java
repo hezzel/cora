@@ -57,7 +57,10 @@ public interface Term {
   /** Returns whether the current term is a lambda-abstraction λx.s. */
   boolean isAbstraction();
 
-  /** Returns whether the current term is a meta-variable application Z⟨s1,...,sk⟩. */
+  /**
+   * Returns whether the current term is a meta-variable application Z⟨s1,...,sk⟩.
+   * Note that non-binder variables count as meta-variable applications, too.
+   */
   boolean isMetaApplication();
 
   /** Returns whether the current term is a tuple ⦇s1,...,sk⦈ with k ≥ 2. */
@@ -80,6 +83,9 @@ public interface Term {
   
   /** Returns whether the current term is a value (which implies that it is a theory term). */
   boolean isValue();
+
+  /** Returns true if each free variable or meta-variable occurs only once. */
+  boolean isLinear();
 
  /**
   * Returns the number of arguments; that is, n for a term h(s1,...,sn) where h is not an

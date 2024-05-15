@@ -223,6 +223,14 @@ public class TRS {
     return _level.compareTo(TermLevel.APPLICATIVE) <= 0;
   }
 
+  /** Returns whether all rules are left-linear. */
+  public boolean isLeftLinear() {
+    for (int i = 0; i < _rules.size(); i++) {
+      if (!_rules.get(i).isLeftLinear()) return false;
+    }
+    return true;
+  }
+
   /**
    * Returns true if all of the following hold:
    * (a) all the rules satisfy AT MOST the given properties (e.g., if Level.APPLICATIVE is given
