@@ -420,7 +420,9 @@ public class DefaultOutputModule implements OutputModule {
       else printedAny = true;
       nextColumn("%a", f.queryName());
       nextColumn("::");
-      println("%a", f.queryType());
+      nextColumn("%a", f.queryType());
+      if (trs.isPrivate(f)) nextColumn("(private)");
+      println();
     }
     if (!printedAny) println("(empty)");
     endTable(); startTable();

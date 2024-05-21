@@ -17,8 +17,10 @@ package charlie.trs;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.Collection;
+import java.util.Collections;
 import charlie.exceptions.IndexingError;
 import charlie.exceptions.IllegalRuleError;
 import charlie.exceptions.IllegalSymbolError;
@@ -147,6 +149,11 @@ public class TRS {
   /** @return the alphabet for this TRS. */
   public Alphabet queryAlphabet() {
     return _alphabet;
+  }
+
+  /** @return our underlying set of all private symbols -- this Set is immutable! */
+  public Set<String> queryPrivateSymbols() {
+    return Collections.unmodifiableSet(_private);
   }
 
   /** @return true if the function symbol is private in this TRS. */

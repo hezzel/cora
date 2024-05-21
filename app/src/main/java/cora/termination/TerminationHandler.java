@@ -19,6 +19,7 @@ import charlie.trs.TRS;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.config.Settings;
+import cora.termination.transformation.HelperFunctionTransformer;
 import cora.termination.reduction_pairs.Horpo;
 import cora.termination.dependency_pairs.DPFramework;
 
@@ -27,18 +28,43 @@ import java.util.Optional;
 public class TerminationHandler {
   public static ProofObject proveTermination(TRS trs) {
     DPFramework dpF = new DPFramework();
-    if (!Settings.isDisabled(dpF.queryDisabledCode())) return dpF.proveTermination(trs);
+    if (!Settings.isDisabled(dpF.queryDisabledCode())) {
+      HelperFunctionTransformer transformer = new HelperFunctionTransformer(trs);
+      HelperFunctionTransformer.TransformerProofObject ob = transformer.transform();
+      if (ob.queryAnswer() != ProofObject.Answer.YES) return wrap(dpF.proveTermination(trs), trs);
+      ProofObject ret = dpF.proveTermination(ob.queryResultingTRS());
+      return wrap(new ProofObject() {
+        public Answer queryAnswer() { return ret.queryAnswer(); }
+        public void justify(OutputModule module) {
+          ob.justify(module);
+          ret.justify(module);
+        }
+      }, trs);
+    }
     return Horpo.proveTermination(trs);
   }
 
   public static ProofObject proveComputability(TRS trs) {
     DPFramework dpF = new DPFramework();
-    if (!Settings.isDisabled(dpF.queryDisabledCode())) return dpF.proveComputability(trs);
+    if (!Settings.isDisabled(dpF.queryDisabledCode())) {
+      return wrap(dpF.proveComputability(trs), trs);
+    }
     return new ProofObject() {
       public Answer queryAnswer() { return Answer.MAYBE; }
       public void justify(OutputModule o) {
         o.println("Dependency pairs were disabled, and this is currently the only appraoch " +
           "to prove universal/public computability.");
+      }
+    };
+  }
+
+  private static ProofObject wrap(ProofObject ob, TRS trs) {
+    return new ProofObject() {
+      public Answer queryAnswer() { return ob.queryAnswer(); }
+      public void justify(OutputModule module) {
+        module.print("We consider the ");
+        module.printTrs(trs);
+        ob.justify(module);
       }
     };
   }

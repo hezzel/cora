@@ -328,10 +328,10 @@ class Application extends TermInherit {
         Type type = queryType();
         for (int i = 1; i <= k; i++) {
           type = TypeFactory.createArrow(_args.get(_args.size()-i).queryType(), type);
-          if (!type.equals(replacement.queryType())) {
-            throw new TypingError("Application", "replaceSubterm", "replacement term " +
-              replacement.toString(), replacement.queryType().toString(), type.toString());
-          }
+        }
+        if (!type.equals(replacement.queryType())) {
+          throw new TypingError("Application", "replaceSubterm", "replacement term " +
+            replacement.toString(), replacement.queryType().toString(), type.toString());
         }
         return replacement.apply(_args.subList(_args.size()-k, _args.size()));
       case ArgumentPos(int index, Position tail):
