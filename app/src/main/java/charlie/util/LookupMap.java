@@ -56,7 +56,7 @@ public class LookupMap<T> {
     public void put(String key, T value) {
       _internal.put(key, value);
       if (value == null) {
-        throw new NullStorageError("LookupMap", "canont store a null value in a LookupMap");
+        throw new NullStorageError("LookupMap", "cannot store a null value in a LookupMap");
       }
     }
 
@@ -68,4 +68,3 @@ public class LookupMap<T> {
     }
   }
 }
-
