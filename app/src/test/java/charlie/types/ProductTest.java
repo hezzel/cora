@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 
 import charlie.exceptions.NullInitialisationError;
-import charlie.exceptions.IllegalArgumentError;
 
 class ProductTest {
   @Test
@@ -54,8 +53,8 @@ class ProductTest {
     builder = ImmutableList.builder();
     builder.add(new Arrow(new Base("a"), new Base("b")));
     ImmutableList<Type> l1 = builder.build();
-    assertThrows(IllegalArgumentError.class, () -> new Product(l0));
-    assertThrows(IllegalArgumentError.class, () -> new Product(l1));
+    assertThrows(IllegalArgumentException.class, () -> new Product(l0));
+    assertThrows(IllegalArgumentException.class, () -> new Product(l1));
   }
 
   @Test

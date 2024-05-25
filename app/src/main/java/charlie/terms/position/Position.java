@@ -15,7 +15,7 @@
 
 package charlie.terms.position;
 
-import charlie.exceptions.CustomParserError;
+import charlie.exceptions.CustomParserException;
 import charlie.exceptions.InappropriatePatternDataError;
 
 /**
@@ -109,7 +109,7 @@ public sealed interface Position permits
     if (star != -1) {
       try { chp = Integer.parseInt(text.substring(star+1)); }
       catch (NumberFormatException ex) {
-        throw new CustomParserError(1, star + 1, text.substring(star+1),
+        throw new CustomParserException(1, star + 1, text.substring(star+1),
           "chop count should be an integer");
       }
       n = star;
@@ -122,7 +122,7 @@ public sealed interface Position permits
     Position ret = chp == 0 ? empty : new FinalPos(chp);
     while (n > 0) {
       int dot = text.lastIndexOf('.', n-1);
-      if (dot == n-1) throw new CustomParserError(1, dot+1, text, "empty position index");
+      if (dot == n-1) throw new CustomParserException(1, dot+1, text, "empty position index");
       String part = text.substring(dot+1, n);
       boolean meta = false;
       if (part.length() > 0 && part.charAt(0) == '!') {
@@ -132,7 +132,7 @@ public sealed interface Position permits
       int num;
       try { num = Integer.parseInt(part); }
       catch (NumberFormatException ex) {
-        throw new CustomParserError(1, dot+1, part, "position index should be an integer");
+        throw new CustomParserException(1, dot+1, part, "position index should be an integer");
       }
       if (num < 0) {
         meta = true;

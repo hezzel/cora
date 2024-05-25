@@ -16,13 +16,12 @@
 package charlie.exceptions;
 
 /**
- * An IllegalArgumentError is thrown when a function is called with a non-null argument that
- * nevertheless does not satisfy the requirements for that function; for example, an empty list
- * when a non-empty list is expected.
+ * An ArityException is thrown when the arity of a type constructor or function symbol is violated,
+ * for example by giving it too many or too few arguments.
  */
-public class IllegalArgumentError extends Error {
-  public IllegalArgumentError(String classname, String function, String message) {
-    super("Calling " + classname + "::" + function + " with illegal argument: " + message + ".");
+public class ArityException extends RuntimeException {
+  public ArityException(String classname, String functionname, String message) {
+    super("Arity exception when calling " + classname + "::" + functionname + ": " + message + ".");
   }
 }
 

@@ -52,8 +52,9 @@ class MetaApplication extends TermInherit {
         "without arguments is just a non-binder variable.");
     }
     if (args.size() != mvar.queryArity()) {
-      throw new ArityError("MetaApplication", "constructor", "meta-variable " + mvar.queryName() +
-        " has arity " + mvar.queryArity() + " but " + args.size() + " arguments are given.");
+      throw new ArityException("MetaApplication", "constructor", "meta-variable " +
+        mvar.queryName() + " has arity " + mvar.queryArity() + " but " + args.size() +
+        " arguments are given.");
     }
 
     for (int i = 0; i < args.size(); i++) {
@@ -212,7 +213,7 @@ class MetaApplication extends TermInherit {
     Term v = value;
     for (int i = 0; i < newArgs.size(); i++) {
       if (!v.isAbstraction()) {
-        throw new ArityError("MetaApplication", "substitute", "trying to substitute " +
+        throw new ArityException("MetaApplication", "substitute", "trying to substitute " +
           "meta-variable in " + toString() + " by " + value.toString() +
           ": there should be " + newArgs.size() + " abstractions!");
       }

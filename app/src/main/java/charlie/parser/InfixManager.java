@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Stack;
 import java.util.TreeMap;
 
-import charlie.exceptions.IllegalArgumentError;
 import charlie.parser.lib.Token;
 import charlie.parser.lib.ParsingStatus;
 import charlie.parser.Parser.ParserTerm;
@@ -69,8 +68,8 @@ class InfixManager {
    * generates a Parserterm corresponding to s{0} op{1} s{1} op{2} ... op{N-1} s{N-1} op{N} s{N},
    * taking the associativity and priorities of all operators into account.
    * If any of the given operators has a name that is not in one of the declared groups, then an
-   * IllegalArgumentError is thrown.  This also happens if the lengths of the respective lists are
-   * not as they should be.
+   * IllegalArgumentException is thrown.  This also happens if the lengths of the respective lists
+   * are not as they should be.
    * If the chain does not (unambiguously) define a term (e.g., a /\ b \/ c, or a < b > c), then
    * an appropriate error is stored in the status.  The status is not otherwise used.
    */
@@ -78,12 +77,12 @@ class InfixManager {
                           ParsingStatus status) {
     // correctness checking
     if (terms.size() != operators.size() + 1) {
-      throw new IllegalArgumentError("InfixManager", "convertChain", "list of terms has length " +
-        terms.size() + " while list of operators has size " + operators.size());
+      throw new IllegalArgumentException("InfixManager: list of terms in convertChain has " +
+        "length " + terms.size() + " while list of operators has size " + operators.size());
     }
     for (int i = 0; i < operators.size(); i++) {
       if (!_symbols.containsKey(operators.get(i).name)) {
-        throw new IllegalArgumentError("InfixManager", "convertChain", "unexpected operator: " +
+        throw new IllegalArgumentException("InfixManager: unexpected operator in convertChain: " +
           operators.get(i).token.getText());
       }
     }

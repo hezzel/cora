@@ -60,7 +60,7 @@ class Application extends TermInherit {
    * and _outputType, and store the variables and meta-variables.  The given set args is not
    * assumed to be our property, so will not be changed.
    * If there are any problems -- such as the head or an argument being null, or the types not
-   * checking out -- an appropriate Error is thrown. However, it *is* assumed that args is not
+   * checking out -- an appropriate Exception is thrown. However, it *is* assumed that args is not
    * null.
    */
   private void construct(Term head, List<Term> args) {
@@ -83,7 +83,7 @@ class Application extends TermInherit {
           type = out;
           break;
         default:
-          throw new ArityError("Application", "constructor", "head term " + head.toString() +
+          throw new ArityException("Application", "constructor", "head term " + head.toString() +
             " has maximum arity " + i + " and is given " + args.size() + " arguments.");
       }
     }
@@ -120,14 +120,14 @@ class Application extends TermInherit {
 
   /**
    * This constructor is used to create a term head(s1,...,sn) with n > 0.
-   * Throws an error if n does not match the arity of the head, if args is empty or or if the
+   * Throws an exception if n does not match the arity of the head, if args is empty or or if the
    * types of the arguments are not the expected input types of the head.
    */
   Application(Term head, List<Term> args) {
     if (args == null) throw new NullInitialisationError("Application", "argument list");
     if (args.size() == 0) {
-      throw new IllegalArgumentError("Application", "constructor", "creating an Application " +
-        "with no arguments.");
+      throw new IllegalArgumentException("Application::constructor --  creating an " +
+        "Application with no arguments.");
     }
     construct(head, args);
   }

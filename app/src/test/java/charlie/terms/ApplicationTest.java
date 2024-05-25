@@ -57,7 +57,7 @@ public class ApplicationTest extends TermTestFoundation {
     args.add(constantTerm("c", baseType("a")));
     args.add(constantTerm("d", baseType("b")));
     args.add(constantTerm("e", baseType("a")));
-    assertThrows(ArityError.class, () -> new Application(x, args));
+    assertThrows(ArityException.class, () -> new Application(x, args));
   }
 
   @Test
@@ -68,7 +68,7 @@ public class ApplicationTest extends TermTestFoundation {
     List<Term> args = new ArrayList<Term>();
     args.add(constantTerm("d", baseType("b")));
     args.add(constantTerm("e", baseType("a")));
-    assertThrows(ArityError.class, () -> new Application(head, args));
+    assertThrows(ArityException.class, () -> new Application(head, args));
   }
 
   @Test
@@ -93,7 +93,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testCreateEmptyApplication() {
     Term head = new Var("x", arrowType(baseType("a"), arrowType("b", "a")));
     List<Term> args = new ArrayList<Term>();
-    assertThrows(IllegalArgumentError.class, () -> new Application(head, args));
+    assertThrows(IllegalArgumentException.class, () -> new Application(head, args));
   }
 
   @Test
@@ -732,7 +732,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testApplyingBaseTerm() {
     Term s = twoArgVarTerm();
     Term t = constantTerm("37", baseType("Int"));
-    assertThrows(ArityError.class, () -> s.apply(t));
+    assertThrows(ArityException.class, () -> s.apply(t));
   }
 
   @Test

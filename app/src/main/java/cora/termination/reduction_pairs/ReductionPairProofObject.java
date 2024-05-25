@@ -16,7 +16,6 @@
 package cora.termination.reduction_pairs;
 
 import java.util.Set;
-import charlie.exceptions.IllegalArgumentError;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.termination.reduction_pairs.OrderingRequirement.Relation;
@@ -77,7 +76,7 @@ public abstract class ReductionPairProofObject implements ProofObject {
     for (int i = 0; i < _problem.reqs().size(); i++) {
       if (_problem.reqs().get(i) == req) return _strictlyOriented.contains(i);
     }
-    throw new IllegalArgumentError("ReductionPairProofObject", "isStrictlyOriented",
+    throw new IllegalArgumentException("ReductionPairProofObject::isStrictlyOriented -- " +
       "Given ordering requirement " + req.toString() + " was not in the original OrderingProblem.");
   }
 

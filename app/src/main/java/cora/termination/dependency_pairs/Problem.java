@@ -1,7 +1,7 @@
 package cora.termination.dependency_pairs;
 
 import cora.data.digraph.Digraph;
-import charlie.exceptions.IllegalArgumentError;
+import charlie.exceptions.IndexingError;
 import charlie.exceptions.NullInitialisationError;
 import charlie.trs.TRS;
 import charlie.terms.FunctionSymbol;
@@ -33,12 +33,9 @@ public class Problem {
       _graph = graph;
       _trs = trs;
     } else {
-      throw new IllegalArgumentError (
-        "Problem",
-        "Problem",
-        "error initializing new DP problem.\n" +
-          "The number of DPs in the problem " +
-          STR."is \{dps.size()} while their graph has \{graph.getNumberOfVertices()} vertices"
+      throw new IllegalArgumentException ("Error initializing new DP problem.\n" +
+        "The number of DPs in the problem is " + dps.size() + " while their graph has " +
+        graph.getNumberOfVertices() + " vertices"
       );
     }
   }
@@ -62,21 +59,6 @@ public class Problem {
 
   public TRS getTRS() {
     return _trs;
-  }
-
-  public DP removeDP(int dpIndex) {
-    if (dpIndex < 0 || dpIndex > _dps.size())
-      throw new IllegalArgumentError (
-        "Problem",
-        "removeDP",
-        "argument index is out of bounds."
-      );
-    DP removedDP = _dps.get(dpIndex);
-
-    _dps.remove(dpIndex);
-    getGraph().ifPresent(g -> g.removeVertex(dpIndex));
-
-    return removedDP;
   }
 
   public Set<FunctionSymbol> getSharpHeads() {

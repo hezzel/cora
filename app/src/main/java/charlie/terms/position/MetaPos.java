@@ -15,13 +15,12 @@
 
 package charlie.terms.position;
 
-import charlie.exceptions.IllegalArgumentError;
 import charlie.exceptions.NullInitialisationError;
 
 public record MetaPos(int index, Position tail) implements Position {
   public MetaPos(int index, Position tail) {
     if (index <= 0) {
-      throw new IllegalArgumentError("MetaPos", "constructor", "given index ≤ 0");
+      throw new IllegalArgumentException("MetaPos::constructor -- given index ≤ 0");
     }
     if (tail == null) {
       throw new NullInitialisationError("MetaPos", "tail");

@@ -16,7 +16,6 @@
 package charlie.terms;
 
 import java.util.Map;
-import charlie.exceptions.IllegalArgumentError;
 import charlie.exceptions.InappropriatePatternDataError;
 import charlie.exceptions.NullInitialisationError;
 import charlie.types.Type;
@@ -36,7 +35,7 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     super(type);
     _name = name;
     if (name == null) throw new NullInitialisationError("Constant", "name");
-    if (name.equals("")) throw new IllegalArgumentError("Constant", "constructor",
+    if (name.equals("")) throw new IllegalArgumentException("Constant::constructor -- " +
       "Function Symbol created with empty name.");
     setVariables(ReplaceableList.EMPTY);
   }

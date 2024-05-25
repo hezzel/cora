@@ -17,7 +17,6 @@ package charlie.terms;
 
 import com.google.common.collect.ImmutableList;
 import charlie.exceptions.IndexingError;
-import charlie.exceptions.IllegalArgumentError;
 import charlie.exceptions.NullInitialisationError;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
@@ -43,9 +42,8 @@ class HigherMetaVar implements MetaVariable {
     if (inputs == null) throw new NullInitialisationError("HigherMetaVar", "inputs");
     if (output == null) throw new NullInitialisationError("HigherMetaVar", "output");
     if (inputs.size() == 0) {
-      throw new IllegalArgumentError("HigherMetaVar", "constructor",
-        "empty inputs list given: a meta-variable without arguments should be constructed as " +
-        "a Var instead.");
+      throw new IllegalArgumentException("HigherMetaVar::constructor -- empty inputs list " +
+        "given: a meta-variable without arguments should be constructed as a Var instead.");
     }
     _mytype = _output;
     for (int i = _inputs.size()-1; i >= 0; i--) {

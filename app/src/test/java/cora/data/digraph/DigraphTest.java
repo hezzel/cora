@@ -1,6 +1,6 @@
 package cora.data.digraph;
 
-import charlie.exceptions.IllegalArgumentError;
+import charlie.exceptions.IndexingError;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -26,14 +26,14 @@ class DigraphTest {
 
   @Test
   void testDigraphNegativeSizeCreation() {
-    Assertions.assertThrows(IllegalArgumentError.class, () -> {
+    Assertions.assertThrows(IllegalArgumentException.class, () -> {
       Digraph g = new Digraph(-1);
     });
   }
 
   @Test
   void testAddEdgeToEmptyDigraph() {
-    Assertions.assertThrows(IllegalArgumentError.class, () -> {
+    Assertions.assertThrows(IndexingError.class, () -> {
       Digraph g = new Digraph(0);
       g.addEdge(0,0);
     });
@@ -49,7 +49,7 @@ class DigraphTest {
 
   @Test
   void tesAddingOutOfBoundsOrigin() {
-    Assertions.assertThrows(IllegalArgumentError.class, () -> {
+    Assertions.assertThrows(IndexingError.class, () -> {
       Digraph g = new Digraph(3);
       g.addEdge(3,0);
     });
@@ -57,7 +57,7 @@ class DigraphTest {
 
   @Test
   void testAddingOutOfBoundsDestination() {
-    Assertions.assertThrows(IllegalArgumentError.class, () -> {
+    Assertions.assertThrows(IndexingError.class, () -> {
       Digraph g = new Digraph(3);
       g.addEdge(0, 3);
     });

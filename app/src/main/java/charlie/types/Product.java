@@ -19,13 +19,12 @@ import com.google.common.collect.ImmutableList;
 
 import charlie.exceptions.IndexingError;
 import charlie.exceptions.NullInitialisationError;
-import charlie.exceptions.IllegalArgumentError;
 
 public record Product(ImmutableList<Type> types) implements Type {
   public Product {
     if (types == null) throw new NullInitialisationError("Product", "product list");
-    if (types.size() < 2) throw new IllegalArgumentError("Product", "constructor",
-      "product list has size " + types.size() + "; should be at least 2");
+    if (types.size() < 2) throw new IllegalArgumentException("product list has size " +
+      types.size() + "; should be at least 2");
   }
 
   @Override

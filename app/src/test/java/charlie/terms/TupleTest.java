@@ -41,8 +41,8 @@ class TupleTest extends TermTestFoundation {
   public void testConstructWithTooShortArgumentList() {
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(_t);
-    assertThrows(IllegalArgumentError.class, () -> new Tuple(args));
-    assertThrows(IllegalArgumentError.class, () -> new Tuple(new ArrayList<Term>()));
+    assertThrows(IllegalArgumentException.class, () -> new Tuple(args));
+    assertThrows(IllegalArgumentException.class, () -> new Tuple(new ArrayList<Term>()));
   }
 
   @Test
@@ -176,7 +176,7 @@ class TupleTest extends TermTestFoundation {
       () -> tp.queryVariable());
     assertThrows(InappropriatePatternDataError.class,
       () -> tp.queryMetaVariable());
-    assertThrows(ArityError.class,
+    assertThrows(ArityException.class,
       () -> x.apply(constantTerm("u", baseType("A"))));
   }
 

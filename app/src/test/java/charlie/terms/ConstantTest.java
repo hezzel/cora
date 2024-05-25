@@ -32,7 +32,7 @@ public class ConstantTest extends TermTestFoundation {
 
   @Test
   public void testConstantEmptyName() {
-    assertThrows(IllegalArgumentError.class, () -> new Constant("", baseType("o")));
+    assertThrows(IllegalArgumentException.class, () -> new Constant("", baseType("o")));
   }
 
   @Test
@@ -43,7 +43,7 @@ public class ConstantTest extends TermTestFoundation {
   @Test
   public void testBaseConstantApply() {
     FunctionSymbol c = new Constant("c", baseType("o"));
-    assertThrows(ArityError.class, () -> c.apply(new Constant("a", baseType("o"))));
+    assertThrows(ArityException.class, () -> c.apply(new Constant("a", baseType("o"))));
   }
 
   @Test

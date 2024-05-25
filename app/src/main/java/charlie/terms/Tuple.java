@@ -66,9 +66,9 @@ public class Tuple extends TermInherit {
    */
   Tuple(List<Term> tms) {
     if (tms == null) throw new NullInitialisationError("Tuple", "components list");
-    if (tms.size() < 2) throw new IllegalArgumentError("Tuple", "constructor",
-      "the provided list of terms has " + tms.size() + " elements." +
-        "However, tuples can only be created with at least two terms."
+    if (tms.size() < 2) throw new IllegalArgumentException("Tuple::constructor -- " +
+      "the provided list of terms has " + tms.size() + " elements.  " +
+      "However, tuples can only be created with at least two terms."
     );
     buildTuple(tms);
   }

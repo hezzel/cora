@@ -70,7 +70,7 @@ public class BinderTest extends TermTestFoundation {
   @Test
   public void testBaseVariableApplication() {
     Term t = new Binder("x", baseType("Int"));
-    assertThrows(ArityError.class, () -> t.apply(t));
+    assertThrows(ArityException.class, () -> t.apply(t));
   }
 
   @Test

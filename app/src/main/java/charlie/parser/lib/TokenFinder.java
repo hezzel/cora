@@ -17,7 +17,6 @@ package charlie.parser.lib;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import charlie.exceptions.IllegalArgumentError;
 
 /**
  * The TokenFinder keeps track of a number of regular expressions, each of which defines a token to
@@ -47,21 +46,21 @@ class TokenFinder {
     _patterns = new PatternInfo[tokens.length/2+1];
 
     if (tokens.length%2 == 1) {
-      throw new IllegalArgumentError("TokenFinder", "constructor",
-        "Given a Token array wich an odd number of elements!");
+      throw new IllegalArgumentException("TokenFinder: " +
+        "given a Token array wich an odd number of elements!");
     }
     
     for (int i = 0; i < tokens.length; i += 2) {
       String name = tokens[i+1];
       if (name.equals(Token.EOF) || name.equals(Token.CATCHALL)) {
-        throw new IllegalArgumentError("TokenFinder", "constructor",
+        throw new IllegalArgumentException("TokenFinder: " +
           "Token array tries to define the " + name + " token (this name is reserved).");
       }
       for (int j = 0; j < name.length(); j++) {
         char c = name.charAt(j);
         if (c != '_' && (c < 'A' || c > 'Z')) {
           // do this to catch it when users mix up the token name and expression
-          throw new IllegalArgumentError("TokenFinder", "constructor",
+          throw new IllegalArgumentException("TokenFinder: " +
             "Illegal token: " + name + "!  Token names should consist only of capital letters " +
             "and underscores.");
         }

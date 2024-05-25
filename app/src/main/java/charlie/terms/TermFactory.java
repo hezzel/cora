@@ -17,8 +17,7 @@ package charlie.terms;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import charlie.exceptions.ArityError;
-import charlie.exceptions.IllegalArgumentError;
+import charlie.exceptions.ArityException;
 import charlie.types.*;
 
 public class TermFactory {
@@ -71,7 +70,7 @@ public class TermFactory {
   /** Creates a meta-variable X with arity k */
   public static MetaVariable createMetaVar(String name, Type type, int arity) {
     if (arity == 0) return new Var(name, type);
-    if (arity < 0) throw new IllegalArgumentError("TermFactory", "createMetaVar",
+    if (arity < 0) throw new IllegalArgumentException("TermFactory::createMetaVar " +
       "received negative arity " + arity + ".");
     ImmutableList.Builder<Type> builder = ImmutableList.<Type>builder();
     Type tmp = type;
@@ -81,7 +80,7 @@ public class TermFactory {
           builder.add(inp);
           tmp = out;
           break;
-        default: throw new ArityError("TermFactory", "createMetaVar",
+        default: throw new ArityException("TermFactory", "createMetaVar",
           "trying to create a meta-variable with arity " + arity + " while the given type (" +
           type.toString() + ") only has arity " + i);
       }

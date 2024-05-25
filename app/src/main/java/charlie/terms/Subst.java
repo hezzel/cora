@@ -17,7 +17,7 @@ package charlie.terms;
 
 import java.util.HashMap;
 import java.util.Set;
-import charlie.exceptions.ArityError;
+import charlie.exceptions.ArityException;
 import charlie.exceptions.NullStorageError;
 import charlie.exceptions.TypingError;
 
@@ -73,7 +73,7 @@ class Subst implements Substitution {
     if (a > 0) {
       Term tmp = value;
       while (a > 0) {
-        if (!tmp.isAbstraction()) throw new ArityError("Subst", "extend", "cannot add mapping " +
+        if (!tmp.isAbstraction()) throw new ArityException("Subst", "extend", "cannot add mapping " +
           key.toString() + " := " + value.toString() + " since " + key.toString() + " has arity " +
           a + ".");
         a--;

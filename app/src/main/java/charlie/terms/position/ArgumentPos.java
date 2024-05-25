@@ -15,13 +15,12 @@
 
 package charlie.terms.position;
 
-import charlie.exceptions.IllegalArgumentError;
 import charlie.exceptions.NullInitialisationError;
 
 public record ArgumentPos(int index, Position tail) implements Position {
   public ArgumentPos(int index, Position tail) {
     if (index <= 0) {
-      throw new IllegalArgumentError("ArgumentPos", "constructor", "given index ≤ 0");
+      throw new IllegalArgumentException("ArgumentPos::constructor -- given index ≤ 0");
     }
     if (tail == null) {
       throw new NullInitialisationError("ArgumentPos", "tail");

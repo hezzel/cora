@@ -15,12 +15,13 @@
 
 package charlie.terms.position;
 
-import charlie.exceptions.IllegalArgumentError;
 import charlie.exceptions.InappropriatePatternDataError;
 
 public record FinalPos(int chopcount) implements Position {
   public FinalPos(int chopcount) {
-    if (chopcount < 0) throw new IllegalArgumentError("FinalPos", "constructor", "chop count < 0");
+    if (chopcount < 0) {
+      throw new IllegalArgumentException("FinalPos::constructor -- chop count < 0");
+    }
     this.chopcount = chopcount;
   }
 

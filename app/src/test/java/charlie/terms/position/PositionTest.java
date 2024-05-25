@@ -148,11 +148,11 @@ public class PositionTest {
 
   @Test
   public void testCreateWithIllegalindex() {
-    assertThrows(IllegalArgumentError.class, () -> new FinalPos(-1));
-    assertThrows(IllegalArgumentError.class, () -> new ArgumentPos(0, Position.empty));
-    assertThrows(IllegalArgumentError.class, () -> new ArgumentPos(-1, Position.empty));
-    assertThrows(IllegalArgumentError.class, () -> new MetaPos(0, Position.empty));
-    assertThrows(IllegalArgumentError.class, () -> new MetaPos(-1, Position.empty));
+    assertThrows(IllegalArgumentException.class, () -> new FinalPos(-1));
+    assertThrows(IllegalArgumentException.class, () -> new ArgumentPos(0, Position.empty));
+    assertThrows(IllegalArgumentException.class, () -> new ArgumentPos(-1, Position.empty));
+    assertThrows(IllegalArgumentException.class, () -> new MetaPos(0, Position.empty));
+    assertThrows(IllegalArgumentException.class, () -> new MetaPos(-1, Position.empty));
     new MetaPos(1000000, Position.empty); // no error here
   }
 
@@ -187,12 +187,12 @@ public class PositionTest {
 
   @Test
   public void testIncorrectParsing() {
-    assertThrows(CustomParserError.class, () -> Position.parse("1.254.*3.☆15"));
-    assertThrows(CustomParserError.class, () -> Position.parse("3.111.☆2ε"));
-    assertThrows(CustomParserError.class, () -> Position.parse("3.111.☆2.ε"));
-    assertThrows(CustomParserError.class, () -> Position.parse("1..254"));
-    assertThrows(CustomParserError.class, () -> Position.parse("5.1@.3"));
-    assertThrows(CustomParserError.class, () -> Position.parse("1.254.3.."));
+    assertThrows(CustomParserException.class, () -> Position.parse("1.254.*3.☆15"));
+    assertThrows(CustomParserException.class, () -> Position.parse("3.111.☆2ε"));
+    assertThrows(CustomParserException.class, () -> Position.parse("3.111.☆2.ε"));
+    assertThrows(CustomParserException.class, () -> Position.parse("1..254"));
+    assertThrows(CustomParserException.class, () -> Position.parse("5.1@.3"));
+    assertThrows(CustomParserException.class, () -> Position.parse("1.254.3.."));
   }
 }
 

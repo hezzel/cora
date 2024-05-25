@@ -57,13 +57,13 @@ class MetaApplicationTest extends TermTestFoundation {
     inputs.add(baseType("a"));
     MetaVariable z = TermFactory.createMetaVar("z", inputs, baseType("a"));
     Term s = constantTerm("s", baseType("a"));
-    assertThrows(ArityError.class, () -> TermFactory.createMeta(z, s, s));
+    assertThrows(ArityException.class, () -> TermFactory.createMeta(z, s, s));
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(constantTerm("a", baseType("a")));
     args.add(constantTerm("a", baseType("a")));
     args.add(constantTerm("a", baseType("a")));
     args.add(constantTerm("a", baseType("a")));
-    assertThrows(ArityError.class, () -> TermFactory.createMeta(z, args));
+    assertThrows(ArityException.class, () -> TermFactory.createMeta(z, args));
   }
 
   @Test

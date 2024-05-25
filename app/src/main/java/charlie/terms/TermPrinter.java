@@ -22,7 +22,6 @@ import java.util.TreeSet;
 import java.util.Set;
 import java.util.function.Predicate;
 import charlie.exceptions.UnexpectedPatternError;
-import charlie.exceptions.IllegalArgumentError;
 
 /**
  * TermPrinters are used in the overall output process of the tool.  This class provides a default
@@ -162,12 +161,12 @@ public class TermPrinter {
    * This updates the given renaming to set the name for the given replaceable to name.  It also
    * marks the given name as unavailable for future assignments.
    *
-   * Note: if the given name is not available, then an IllegalArgumentError is thrown.
+   * Note: if the given name is not available, then an IllegalArgumentException is thrown.
    */
   protected final void assignName(Renaming naming, Replaceable x, String name) {
     if (naming._avoid.contains(name)) {
-      throw new IllegalArgumentError("TermPrinter", "assignName",
-                                     "choosing unavailable name " + name);
+      throw new IllegalArgumentException("TermPrinter::assignName -- " +
+                                         "choosing unavailable name " + name);
     }
     naming._map.put(x, name);
     naming._avoid.add(name);

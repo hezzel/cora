@@ -58,7 +58,7 @@ public class HigherMetaVarTest {
 
   @Test
   public void testCreateWithEmptyInputs() {
-    assertThrows(IllegalArgumentError.class, () ->
+    assertThrows(IllegalArgumentException.class, () ->
       new HigherMetaVar("z", muli(null, null), TypeFactory.createSort("c")));
   }
 

@@ -82,7 +82,7 @@ public class ValueTest extends TermTestFoundation {
   @Test
   public void testValueApply() {
     Value v = new IntegerValue(13);
-    assertThrows(ArityError.class, () -> v.apply(new Constant("a", baseType("o"))));
+    assertThrows(ArityException.class, () -> v.apply(new Constant("a", baseType("o"))));
   }
 
   @Test
