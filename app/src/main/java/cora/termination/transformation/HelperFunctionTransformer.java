@@ -15,6 +15,18 @@
 
 package cora.termination.transformation;
 
+/**
+ * WHAT IS THIS: this file is not currently in use.
+ *
+ * It is a prototype implementation of a new technique to try out its potential power before
+ * proving its correctness.  This implementation _could_ become a part of the standard Cora
+ * workflow, but since the technique has not yet been proven correct, it has been disabled.
+ *
+ * As usual with files that are not actively used, it is likely to become outdated.  While it
+ * still compiles, it will be left in the repository, but please feel free to remove it if it
+ * causes issues.
+ */
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -217,6 +229,7 @@ public class HelperFunctionTransformer {
   }
 
   /** Creates copies of all rules in rules with any combination of substitutions applied */
+  /* TODO: unit test me */
   private void applyAllUpdates(ArrayList<Rule> rules, ArrayList<Substitution> substitutions) {
     for (Substitution subst : substitutions) {
       int n = rules.size();

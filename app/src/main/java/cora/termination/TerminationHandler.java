@@ -19,7 +19,6 @@ import charlie.trs.TRS;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.config.Settings;
-import cora.termination.transformation.HelperFunctionTransformer;
 import cora.termination.reduction_pairs.Horpo;
 import cora.termination.dependency_pairs.DPFramework;
 
@@ -28,19 +27,7 @@ import java.util.Optional;
 public class TerminationHandler {
   public static ProofObject proveTermination(TRS trs) {
     DPFramework dpF = new DPFramework();
-    if (!Settings.isDisabled(dpF.queryDisabledCode())) {
-      HelperFunctionTransformer transformer = new HelperFunctionTransformer(trs);
-      HelperFunctionTransformer.TransformerProofObject ob = transformer.transform();
-      if (ob.queryAnswer() != ProofObject.Answer.YES) return wrap(dpF.proveTermination(trs), trs);
-      ProofObject ret = dpF.proveTermination(ob.queryResultingTRS());
-      return wrap(new ProofObject() {
-        public Answer queryAnswer() { return ret.queryAnswer(); }
-        public void justify(OutputModule module) {
-          ob.justify(module);
-          ret.justify(module);
-        }
-      }, trs);
-    }
+    if (!Settings.isDisabled(dpF.queryDisabledCode())) return wrap(dpF.proveTermination(trs), trs);
     return Horpo.proveTermination(trs);
   }
 
