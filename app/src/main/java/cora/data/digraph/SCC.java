@@ -31,7 +31,7 @@ public class SCC {
     int minValue = _low[source];
     stack.push(source);
 
-    for (int neighbor : graph.getNeighbors(source)) {
+    for (int neighbor : graph.getNeighbours(source)) {
       if (!_visided[neighbor]) {
         sccSearch(graph, neighbor);
       }

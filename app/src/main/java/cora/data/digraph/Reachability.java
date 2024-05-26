@@ -65,7 +65,7 @@ public class Reachability {
    */
   private void reachabilitySearch(Digraph graph, int source) {
     _isReachable[source] = true;
-    for(int v : graph.getNeighbors(source))
+    for(int v : graph.getNeighbours(source))
       if (!_isReachable[v]) reachabilitySearch(graph,v);
   }
 

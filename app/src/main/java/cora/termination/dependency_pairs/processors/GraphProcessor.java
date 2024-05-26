@@ -29,7 +29,7 @@ public class GraphProcessor implements Processor {
       .filter ( component ->
         component.size() > 1
           ||
-          (component.size() == 1 && graphOfDPP.getNeighbors(component.getFirst()).contains(component.getFirst()))
+          (component.size() == 1 && graphOfDPP.getNeighbours(component.getFirst()).contains(component.getFirst()))
       ).toList();
 
     int numberOfNontrivialSCCs = nonTrivalSCCs.size();
