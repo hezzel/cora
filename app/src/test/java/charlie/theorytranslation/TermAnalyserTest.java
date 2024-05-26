@@ -19,14 +19,14 @@ import charlie.solvesmt.ProcessSmtSolver;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.UnsupportedTheoryError;
+import charlie.exceptions.UnsupportedTheoryException;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
 
 public class TermAnalyserTest {
   @Test
   public void testIncompleteCalculate() {
-    assertThrows(UnsupportedTheoryError.class, () ->
+    assertThrows(UnsupportedTheoryException.class, () ->
       TermAnalyser.calculate(TheoryFactory.andSymbol.apply(TheoryFactory.createValue(false))));
   }
 

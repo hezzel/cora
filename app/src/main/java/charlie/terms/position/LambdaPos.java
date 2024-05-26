@@ -15,12 +15,12 @@
 
 package charlie.terms.position;
 
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.NullStorageException;
 
 public record LambdaPos(Position tail) implements Position {
   public LambdaPos(Position tail) {
     if (tail == null) {
-      throw new NullInitialisationError("LambdaPos", "tail");
+      throw new NullStorageException("LambdaPos", "tail");
     }
     this.tail = tail;
   }

@@ -59,7 +59,7 @@ class ParametersTest {
 
   @Test
   public void testMultipleRequests() {
-    assertThrows(Parameters.WrongParametersError.class, () ->
+    assertThrows(Parameters.WrongParametersException.class, () ->
       new Parameters(new String[] { "x", "--print", "--horpo" }));
     Parameters param = new Parameters(new String[] { "--print", "test", "-p" });
     assertTrue(param.queryRequest() == Parameters.Request.Print);
@@ -92,17 +92,17 @@ class ParametersTest {
 
   @Test
   public void testRequestBadStyle() {
-    assertThrows(Parameters.WrongParametersError.class, () ->
+    assertThrows(Parameters.WrongParametersException.class, () ->
       new Parameters(new String[] { "--style", "pain" }));
   }
 
   @Test
   public void testFileRequests() {
     Parameters param = new Parameters(new String[] { "--termination" }); // no files
-    assertThrows(Parameters.WrongParametersError.class, () -> param.querySingleFile());
+    assertThrows(Parameters.WrongParametersException.class, () -> param.querySingleFile());
     assertTrue(param.queryFiles().size() == 0);
     Parameters param2 = new Parameters(new String[] { "file1", "--print", "file2" }); // two files
-    assertThrows(Parameters.WrongParametersError.class, () -> param2.querySingleFile());
+    assertThrows(Parameters.WrongParametersException.class, () -> param2.querySingleFile());
     assertTrue(param2.queryFiles().size() == 2);
     assertTrue(param2.queryFiles().get(0).equals("file1"));
     assertTrue(param2.queryFiles().get(1).equals("file2"));
@@ -110,7 +110,7 @@ class ParametersTest {
 
   @Test
   public void testIllegalParameters() {
-    assertThrows(Parameters.WrongParametersError.class, () ->
+    assertThrows(Parameters.WrongParametersException.class, () ->
       new Parameters(new String[] { "--style", "plain", "-myfile.txt" }));
   }
 
@@ -128,7 +128,7 @@ class ParametersTest {
   @Test
   public void testIllegalDisable() {
     Parameters param = new Parameters(new String[] { "myfile", "-d", "dp,extra,graph" });
-    assertThrows(Parameters.WrongParametersError.class, () -> param.setupSettings());
+    assertThrows(Parameters.WrongParametersException.class, () -> param.setupSettings());
   }
 }
 

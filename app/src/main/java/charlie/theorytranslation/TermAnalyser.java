@@ -17,7 +17,7 @@ package charlie.theorytranslation;
 
 import java.util.Random;
 
-import charlie.exceptions.UnsupportedTheoryError;
+import charlie.exceptions.UnsupportedTheoryException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
@@ -42,7 +42,7 @@ public class TermAnalyser {
     if (type.equals(TypeFactory.intSort)) return TheoryFactory.createValue(r);
     if (type.equals(TypeFactory.boolSort)) return TheoryFactory.createValue((r % 2) == 0);
     if (type.equals(TypeFactory.stringSort)) return TheoryFactory.createValue("{" + r + "}");
-    throw new UnsupportedTheoryError("variable", "Asked to choose random value of type " +
+    throw new UnsupportedTheoryException("variable", "Asked to choose random value of type " +
       type.toString() + ", which is not a supported theory sort.");
   }
 
@@ -58,15 +58,15 @@ public class TermAnalyser {
       return TheoryFactory.createValue(c.evaluate());
     }
     if (t.isValue()) return t.toValue();
-    throw new UnsupportedTheoryError(t.toString(), "Type " + t.queryType().toString() + " is " +
+    throw new UnsupportedTheoryException(t.toString(), "Type " + t.queryType().toString() + " is " +
       "not a supported theory sort.");
   }
 
   /**
    * Given a term that is a calculation symbol applied to a number of values, this returns the
    * value it reduces to.  If the term has any other form, null is returned.
-   * If it is an unknown calculation symbol, or has an unknown type, then an UnsupportedTheoryError
-   * is thrown.
+   * If it is an unknown calculation symbol, or has an unknown type, then an
+   * UnsupportedTheoryException is thrown.
    */
   public static Value calculate(Term t) {
     if (!t.isFunctionalTerm() || t.queryRoot().toCalculationSymbol() == null) return null;

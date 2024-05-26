@@ -47,6 +47,6 @@ public class NBVarTest {
   public void testEvaluate() {
     BVar x = new BVar(3);
     NBVar nx = new NBVar(x);
-    assertThrows(charlie.exceptions.SmtEvaluationError.class, () -> nx.evaluate());
+    assertThrows(charlie.exceptions.SmtEvaluationException.class, () -> nx.evaluate());
   }
 }

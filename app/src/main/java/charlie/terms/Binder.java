@@ -16,8 +16,8 @@
 package charlie.terms;
 
 import java.util.Map;
-import charlie.exceptions.InappropriatePatternDataError;
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.InappropriatePatternDataException;
+import charlie.exceptions.NullStorageException;
 import charlie.types.Type;
 
 /**
@@ -41,7 +41,7 @@ class Binder extends LeafTermInherit implements Variable {
     _name = name;
     _index = COUNTER;
     COUNTER++;
-    if (name == null) throw new NullInitialisationError("Binder", "name");
+    if (name == null) throw new NullStorageException("Binder", "name");
     setVariables(new ReplaceableList(this));
   }
 
@@ -99,9 +99,9 @@ class Binder extends LeafTermInherit implements Variable {
     return this;
   }
 
-  /** @throws InappropriatePatternDataError, as a binder variable cannot be a meta-variable */
+  /** @throws InappropriatePatternDataException, as a binder variable cannot be a meta-variable */
   public MetaVariable queryMetaVariable() {
-    throw new InappropriatePatternDataError("Binder", "queryMetaVariable",
+    throw new InappropriatePatternDataException("Binder", "queryMetaVariable",
       "meta-variable applications");
   }
 

@@ -1,6 +1,6 @@
 package cora.termination.dependency_pairs.processors;
 
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.NullStorageException;
 import charlie.util.Pair;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
@@ -18,7 +18,7 @@ class OverApproximation {
   private TRS _trs;
 
   public OverApproximation(@NotNull TRS trs) {
-    if (trs == null) throw new NullInitialisationError("OverApproximation", "trs argument.");
+    if (trs == null) throw new NullStorageException("OverApproximation", "trs argument.");
     _trs = trs;
   }
 

@@ -139,7 +139,7 @@ public class SymbolDataTest {
   public void testFunctionSymbolIllegalOverride() {
     SymbolData data = new SymbolData();
     data.addFunctionSymbol(TermFactory.createConstant("bing", TypeFactory.createSort("a")));
-    assertThrows(java.lang.Error.class, () ->
+    assertThrows(java.lang.RuntimeException.class, () ->
       data.addFunctionSymbol(TermFactory.createConstant("bing", TypeFactory.createSort("b"))));
   }
 
@@ -148,7 +148,7 @@ public class SymbolDataTest {
     SymbolData data = new SymbolData();
     //  variables with the same name and type are not equal if they are different objects
     data.addVariable(TermFactory.createVar("bing", TypeFactory.createSort("a")));
-    assertThrows(java.lang.Error.class, () ->
+    assertThrows(java.lang.RuntimeException.class, () ->
       data.addVariable(TermFactory.createVar("bing", TypeFactory.createSort("a"))));
   }
 
@@ -166,7 +166,7 @@ public class SymbolDataTest {
     SymbolData data = new SymbolData();
     // meta-variables with the same name, type and arity are not equal if they are different objects
     data.addMetaVariable(TermFactory.createMetaVar("bing", TypeFactory.createSort("a"), 0));
-    assertThrows(java.lang.Error.class, () ->
+    assertThrows(java.lang.RuntimeException.class, () ->
       data.addMetaVariable(TermFactory.createMetaVar("bing", TypeFactory.createSort("a"), 0)));
   }
 
@@ -218,7 +218,7 @@ public class SymbolDataTest {
     SymbolData data = new SymbolData(trs);
 
     FunctionSymbol bong = TermFactory.createConstant("bing", TypeFactory.createSort("b"));
-    assertThrows(java.lang.Error.class, () -> data.addFunctionSymbol(bong));
+    assertThrows(java.lang.RuntimeException.class, () -> data.addFunctionSymbol(bong));
   }
 }
 

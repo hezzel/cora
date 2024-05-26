@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.NullStorageException;
 import charlie.util.ExceptionLogger;
 import charlie.smt.*;
 import charlie.util.ProcessCaller;
@@ -80,7 +80,7 @@ public class ProcessSmtSolver implements SmtSolver {
   }
 
   public ProcessSmtSolver(@NotNull PhysicalSolver physicalSolver) {
-    if (physicalSolver == null) throw new NullInitialisationError(
+    if (physicalSolver == null) throw new NullStorageException(
       "ProcessSmtSolver",
       "Cannot initialise a null Physical Solver"
     );

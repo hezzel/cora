@@ -17,12 +17,11 @@ package charlie.trs;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import java.lang.Error;
 import java.util.ArrayList;
 import java.util.List;
 
-import charlie.exceptions.NullInitialisationError;
-import charlie.exceptions.TypingError;
+import charlie.exceptions.NullStorageException;
+import charlie.exceptions.TypingException;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.terms.FunctionSymbol;
@@ -71,8 +70,8 @@ public class AlphabetTest {
     assertTrue(alf2.lookup("a") == a);
     assertTrue(alf2.lookup("b") == b);
     alf1.add(List.of(b, c));  // no problem here
-    assertThrows(TypingError.class, () -> alf2.add(List.of(b, c)));
-    assertThrows(TypingError.class, () -> alf1.add(List.of(d)));
+    assertThrows(TypingException.class, () -> alf2.add(List.of(b, c)));
+    assertThrows(TypingException.class, () -> alf1.add(List.of(d)));
   }
 
   @Test
@@ -91,8 +90,8 @@ public class AlphabetTest {
   public void testAlphabetNullInitialisation() {
     LookupMap<FunctionSymbol> map1 = null;
     ArrayList<FunctionSymbol> map2 = null;
-    assertThrows(NullInitialisationError.class, () -> new Alphabet(map1));
-    assertThrows(NullInitialisationError.class, () -> new Alphabet(map2));
+    assertThrows(NullStorageException.class, () -> new Alphabet(map1));
+    assertThrows(NullStorageException.class, () -> new Alphabet(map2));
   }
 
   @Test
@@ -101,7 +100,7 @@ public class AlphabetTest {
     symbols.add(makeConstant("0", "Nat"));
     symbols.add(null);
     symbols.add(makeSymbol("S", TypeFactory.createArrow(baseType("Nat"), baseType("Nat"))));
-    assertThrows(NullInitialisationError.class, () ->new Alphabet(symbols));
+    assertThrows(NullStorageException.class, () ->new Alphabet(symbols));
   }
 
   @Test
@@ -111,6 +110,6 @@ public class AlphabetTest {
     symbols.add(makeSymbol("S", TypeFactory.createArrow(baseType("Nat"), baseType("Nat"))));
     symbols.add(makeSymbol("S", TypeFactory.createArrow(baseType("Nat"), baseType("nat"))));
       // Nat vs nat
-    assertThrows(TypingError.class, () -> new Alphabet(symbols));
+    assertThrows(TypingException.class, () -> new Alphabet(symbols));
   }
 }

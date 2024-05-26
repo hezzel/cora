@@ -16,8 +16,8 @@
 package charlie.theorytranslation;
 
 import java.util.TreeMap;
-import charlie.exceptions.TypingError;
-import charlie.exceptions.UnsupportedTheoryError;
+import charlie.exceptions.TypingException;
+import charlie.exceptions.UnsupportedTheoryException;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
 import charlie.smt.*;
@@ -79,12 +79,12 @@ public class TermSmtTranslator {
    */
   private CalculationSymbol getCalculationRoot(Term t) {
     if (!t.isFunctionalTerm()) {
-      throw new UnsupportedTheoryError(t.toString(), "expected variable or functional term");
+      throw new UnsupportedTheoryException(t.toString(), "expected variable or functional term");
     }
     FunctionSymbol root = t.queryRoot();
     CalculationSymbol calc = root.toCalculationSymbol();
     if (calc == null) {
-      throw new UnsupportedTheoryError(t.toString(),
+      throw new UnsupportedTheoryException(t.toString(),
                                        "root " + root.toString() + " is not a calculation symbol");
     }
     return calc;
@@ -127,14 +127,14 @@ public class TermSmtTranslator {
       Variable x = t.queryVariable();
       if (t.queryType().equals(TypeFactory.intSort)) return new Exp.I(getIntegerVariableFor(x));
       if (t.queryType().equals(TypeFactory.boolSort)) return new Exp.B(getBooleanVariableFor(x));
-      throw new UnsupportedTheoryError(t.toString(), "variable has type " + t.queryType() +
+      throw new UnsupportedTheoryException(t.toString(), "variable has type " + t.queryType() +
         " which can neither be translated to an integer expression nor to a constraint");
     }
     if (t.isValue()) {
       Value v = t.toValue();
       if (v.isIntegerValue()) return new Exp.I(SmtFactory.createValue(v.getInt()));
       if (v.isBooleanValue()) return new Exp.B(SmtFactory.createValue(v.getBool()));
-      throw new UnsupportedTheoryError(t.toString(), "unsupported value " + t.isValue() +
+      throw new UnsupportedTheoryException(t.toString(), "unsupported value " + t.isValue() +
         " (only integer values and boolean values are supported in the SMT solver");
     }
     CalculationSymbol calc = getCalculationRoot(t);
@@ -210,9 +210,9 @@ public class TermSmtTranslator {
     };
   }
 
-  /** This function throws an UnsupportedTheoryError if t.numberArguments() is not numArgs. */
+  /** This function throws an UnsupportedTheoryException if t.numberArguments() is not numArgs. */
   private void assertArgumentCount(Term t, int numArgs) {
-    if (t.numberArguments() != numArgs) throw new UnsupportedTheoryError(t.toString(),
+    if (t.numberArguments() != numArgs) throw new UnsupportedTheoryException(t.toString(),
       "Expected " + t.queryRoot().toString() + " (of kind " +
       t.queryRoot().toCalculationSymbol().queryKind() + ") to take " + numArgs + " arguments, " +
       "not " + t.numberArguments() + ".");
@@ -230,7 +230,7 @@ public class TermSmtTranslator {
   public IntegerExpression translateIntegerExpression(Term t) {
     switch (translate(t)) {
       case Exp.I(IntegerExpression e): return e;
-      default: throw new TypingError("TermSmtTranslator", "translateIntegerExpression",
+      default: throw new TypingException("TermSmtTranslator", "translateIntegerExpression",
         t.toString(), t.queryType().toString(), "Int");
     }
   }
@@ -246,7 +246,7 @@ public class TermSmtTranslator {
   public Constraint translateConstraint(Term t) {
     switch (translate(t)) {
       case Exp.B(Constraint c): return c;
-      default: throw new TypingError("TermSmtTranslator", "translateConstraint",
+      default: throw new TypingException("TermSmtTranslator", "translateConstraint",
         t.toString(), t.queryType().toString(), "Bool");
     }
   }

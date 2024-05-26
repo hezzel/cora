@@ -32,12 +32,12 @@ public class ApplicationTest extends TermTestFoundation {
   public void testUnaryWithNullArg() {
     Variable head = new Binder("x", arrowType("a", "b"));
     Term arg = null;
-    assertThrows(NullInitialisationError.class, () ->new Application(head, arg));
+    assertThrows(NullStorageException.class, () ->new Application(head, arg));
   }
 
   @Test
   public void testBinaryWithNullHead() {
-    assertThrows(NullInitialisationError.class, () ->
+    assertThrows(NullStorageException.class, () ->
       new Application(null, constantTerm("a", baseType("b")),
                             constantTerm("a", baseType("c"))));
   }
@@ -46,7 +46,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testNullArgs() {
     Constant f = new Constant("f", arrowType("a", "b"));
     List<Term> args = null;
-    assertThrows(NullInitialisationError.class, () -> new Application(f, args));
+    assertThrows(NullStorageException.class, () -> new Application(f, args));
   }
 
   @Test
@@ -78,14 +78,14 @@ public class ApplicationTest extends TermTestFoundation {
     List<Term> args = new ArrayList<Term>();
     args.add(constantTerm("c", baseType("a")));
     args.add(constantTerm("d", baseType("a")));
-    assertThrows(TypingError.class, () -> new Application(head, args));
+    assertThrows(TypingException.class, () -> new Application(head, args));
   }
 
   @Test
   public void testConstructorBadArgTypeToApplication() {
     Type type = arrowType(baseType("a"), arrowType("b", "a"));
     Term head = constantTerm("f", type).apply(constantTerm("c", baseType("a")));
-    assertThrows(TypingError.class, () ->
+    assertThrows(TypingException.class, () ->
       new Application(head, constantTerm("d", baseType("a"))));
   }
 
@@ -255,8 +255,8 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testIncorrectSubterm() {
     Term t = twoArgVarTerm();
-    assertThrows(IndexingError.class, () -> t.queryArgument(0));
-    assertThrows(IndexingError.class, () -> t.queryArgument(3));
+    assertThrows(IndexingException.class, () -> t.queryArgument(0));
+    assertThrows(IndexingException.class, () -> t.queryArgument(3));
   }
 
   @Test
@@ -298,19 +298,19 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testInappropriateRootRequest() {
     Term t = twoArgVarTerm();
-    assertThrows(InappropriatePatternDataError.class, () -> t.queryRoot());
+    assertThrows(InappropriatePatternDataException.class, () -> t.queryRoot());
   }
 
   @Test
   public void testInappropriateVariableRequest() {
     Term t = twoArgFuncTerm();
-    assertThrows(InappropriatePatternDataError.class, () -> t.queryVariable());
+    assertThrows(InappropriatePatternDataException.class, () -> t.queryVariable());
   }
 
   @Test
   public void testInappropriateAbstractionSubtermRequest() {
     Term t = twoArgFuncTerm();
-    assertThrows(InappropriatePatternDataError.class, () -> t.queryAbstractionSubterm());
+    assertThrows(InappropriatePatternDataException.class, () -> t.queryAbstractionSubterm());
   }
 
   @Test
@@ -623,14 +623,14 @@ public class ApplicationTest extends TermTestFoundation {
   public void testSubtermBad() {
     Term s = twoArgVarTerm();
     Position pos = new ArgumentPos(1, new ArgumentPos(2, Position.empty));
-    assertThrows(IndexingError.class, () -> s.querySubterm(pos));
+    assertThrows(IndexingException.class, () -> s.querySubterm(pos));
   }
 
   @Test
   public void testHeadSubtermBad() {
     Term s = twoArgFuncTerm();
     Position pos = new ArgumentPos(2, new FinalPos(2));
-    assertThrows(IndexingError.class, () -> s.querySubterm(pos));
+    assertThrows(IndexingException.class, () -> s.querySubterm(pos));
   }
 
   @Test
@@ -644,7 +644,7 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testSubtermInHeadReplacementGood() {
+  public void testSubtermInHeadReplacementGood() throws CustomParserException {
     // (λxy.f(y,x))(a, b)
     Variable x = new Binder("x", baseType("o"));
     Variable y = new Binder("y", baseType("o"));
@@ -683,7 +683,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testSubtermReplacementBadPosition() {
     Variable z = new Var("Z", arrowType("Int", "Int"));
     Term s = new Application(z, constantTerm("37", baseType("Int")));
-    assertThrows(IndexingError.class, () ->
+    assertThrows(IndexingException.class, () ->
       s.replaceSubterm(new ArgumentPos(2, Position.empty), s));
   }
 
@@ -691,7 +691,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testSubtermHeadReplacementBadPosition() {
     Variable z = new Var("Z", arrowType("Int", "Int"));
     Term s = new Application(z, constantTerm("37", baseType("Int")));
-    assertThrows(IndexingError.class, () ->
+    assertThrows(IndexingException.class, () ->
       s.replaceSubterm(new ArgumentPos(2, new FinalPos(1)), s));
   }
 
@@ -699,7 +699,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testSubtermHeadReplacementBadHeadPosition() {
     Constant f = new Constant("f", arrowType("Int", "Int"));
     Term s = new Application(f, constantTerm("37", baseType("Int")));
-    assertThrows(IndexingError.class, () ->
+    assertThrows(IndexingException.class, () ->
       s.replaceSubterm(new FinalPos(2), constantTerm("a", baseType("B"))));
   }
 
@@ -707,7 +707,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testSubtermReplacementBadTypeSub() {
     Constant f = new Constant("f", arrowType("Int", "Bool"));
     Term s = new Application(f, constantTerm("37", baseType("Int")));
-    assertThrows(TypingError.class, () ->
+    assertThrows(TypingException.class, () ->
       s.replaceSubterm(new ArgumentPos(1, Position.empty), s));
   }
 
@@ -715,7 +715,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testSubtermReplacementBadTypeTop() {
     Variable z = new Binder("Z", arrowType("Int", "Bool"));
     Term s = new Application(z, constantTerm("37", baseType("Int")));
-    assertThrows(TypingError.class, () ->
+    assertThrows(TypingException.class, () ->
       s.replaceSubterm(Position.empty, constantTerm("42", baseType("Int"))));
   }
 
@@ -724,7 +724,7 @@ public class ApplicationTest extends TermTestFoundation {
     Variable z = new Binder("Z", arrowType("Int", "Bool"));
     Term s = new Application(z, constantTerm("37", baseType("Int")));
     Term replacement = constantTerm("f", arrowType("Int", "Int"));
-    assertThrows(TypingError.class, () ->
+    assertThrows(TypingException.class, () ->
       s.replaceSubterm(new FinalPos(1), replacement));
   }
 
@@ -743,7 +743,7 @@ public class ApplicationTest extends TermTestFoundation {
     Term c = constantTerm("c", a);
     FunctionSymbol f = new Constant("f", type);
     Term fc = new Application(f, c);
-    assertThrows(TypingError.class, () -> fc.apply(c));
+    assertThrows(TypingException.class, () -> fc.apply(c));
   }
 
   @Test

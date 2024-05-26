@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,19 +16,12 @@
 package charlie.exceptions;
 
 /**
- * An IllegalSymbolError is thrown when a symbol occurs in a TRS or a term that should not be there
- * for whatever reason (for example a higher-order symbol in a first-order TRS, or an application
- * symbol in a term that should be fully functional.
+ * An UnsupportedTheoryException is called when a constraint or integer expression passed to the
+ * SMT module has an unexpected subterms, for which no direct SMT translation exists (yet).
  */
-public class IllegalSymbolError extends Error {
-  private final String _problem;
-
-  public IllegalSymbolError(String classname, String symbol, String problem) {
-    super("Illegal symbol occurrence " + symbol + " in " + classname + ": " + problem);
-    _problem = problem;
-  }
-
-  public String queryProblem() {
-    return _problem;
+public class UnsupportedTheoryException extends RuntimeException {
+  public UnsupportedTheoryException(String term, String explanation) {
+    super("Failed to translate " + term + " to SMT: " + explanation + ".");
   }
 }
+

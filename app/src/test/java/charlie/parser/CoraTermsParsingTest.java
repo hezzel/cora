@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import com.google.common.collect.ImmutableList;
 
-import charlie.exceptions.ParseError;
 import charlie.types.*;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.lib.Token;

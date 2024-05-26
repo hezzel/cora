@@ -18,7 +18,7 @@ package charlie.types;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.NullStorageException;
 
 class BaseTest {
   private Base intType() {
@@ -30,8 +30,8 @@ class BaseTest {
   }
 
   @Test
-  void testConstructionWithNullGivesError(){
-    assertThrows(NullInitialisationError.class,
+  void testConstructionWithNullGivesException() {
+    assertThrows(NullStorageException.class,
       () -> new Base(null)
     );
   }

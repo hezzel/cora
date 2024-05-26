@@ -16,13 +16,12 @@
 package charlie.exceptions;
 
 /**
- * A PatternRequiredError is thrown when a certain function may only be called on patterns, or on
- * semi-patterns (which may have subterms Z⟨x1,...,xk⟩(s1,...,sn) so long as all xi are distinct
- * binder variables), yet is called on something else.
+ * A ParseException consists of one or more lines detailing errors encountered during
+ * lexing/parsing.
  */
-public class PatternRequiredError extends Error {
-  public PatternRequiredError(String term, String function, String message) {
-    super("Calling " + function + " on term " + term + " which is not supported: " + message);
+public class ParseException extends RuntimeException {
+  public ParseException(String message) {
+    super(message);
   }
 }
 

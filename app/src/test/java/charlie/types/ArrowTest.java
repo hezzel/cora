@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import com.google.common.collect.ImmutableList;
 
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.NullStorageException;
 
 class ArrowTest {
   private Base intType() {
@@ -32,7 +32,7 @@ class ArrowTest {
 
   @Test
   void testConstructedWithNull() {
-    assertThrows(NullInitialisationError.class, () -> {
+    assertThrows(NullStorageException.class, () -> {
       new Arrow(null, new Base(""));
       new Arrow(new Base(""), null);
     });

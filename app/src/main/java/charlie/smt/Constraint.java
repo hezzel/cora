@@ -35,7 +35,7 @@ public sealed abstract class Constraint
 
   /**
    * Assuming the current constraint has no variables, this function evaluates it to its boolean
-   * value.  If there is a variable in it, an SmtEvaluationError will be thrown instead.
+   * value.  If there is a variable in it, an SmtEvaluationException will be thrown instead.
    */
   public final boolean evaluate() {
     return evaluate(null);

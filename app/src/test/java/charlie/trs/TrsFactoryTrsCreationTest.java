@@ -21,9 +21,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
-import charlie.exceptions.IllegalRuleError;
-import charlie.exceptions.IllegalSymbolError;
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.IllegalRuleException;
+import charlie.exceptions.IllegalSymbolException;
+import charlie.exceptions.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.parser.CoraParser;
@@ -122,11 +122,11 @@ public class TrsFactoryTrsCreationTest {
     Variable x = TermFactory.createVar("x");
     rules.add(TrsFactory.createRule(TermFactory.createApp(f, x, a), x));
 
-    assertThrows(charlie.exceptions.IllegalSymbolError.class,
+    assertThrows(charlie.exceptions.IllegalSymbolException.class,
       () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.MSTRS));
 
     symbols.set(symbols.size()-1, TermFactory.createConstant("i", type("(|a , b|) → a")));
-    assertThrows(charlie.exceptions.IllegalSymbolError.class,
+    assertThrows(charlie.exceptions.IllegalSymbolException.class,
       () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.CFS));
   }
 
@@ -141,7 +141,7 @@ public class TrsFactoryTrsCreationTest {
     Term abs = TermFactory.createAbstraction(x, x);
     symbols.add(f);
     rules.add(TrsFactory.createRule(f.apply(abs), bb));
-    assertThrows(IllegalRuleError.class, () ->
+    assertThrows(IllegalRuleException.class, () ->
       TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.STRS));
   }
 
@@ -152,7 +152,7 @@ public class TrsFactoryTrsCreationTest {
     Variable y = TermFactory.createVar("y", type("b"));
     FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     rules.add(TrsFactory.createRule(TermFactory.createApp(f, x, y), y));
-    assertThrows(NullInitialisationError.class, () ->
+    assertThrows(NullStorageException.class, () ->
       TrsFactory.createTrs(null, rules, TrsFactory.MSTRS));
   }
 
@@ -161,7 +161,7 @@ public class TrsFactoryTrsCreationTest {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
-    assertThrows(NullInitialisationError.class, () ->
+    assertThrows(NullStorageException.class, () ->
       TrsFactory.createTrs(new Alphabet(symbols), null, TrsFactory.LCSTRS));
   }
 
@@ -175,7 +175,7 @@ public class TrsFactoryTrsCreationTest {
     symbols.add(f);
     rules.add(TrsFactory.createRule(TermFactory.createApp(f, x, y), y));
     rules.add(null);
-    assertThrows(NullInitialisationError.class, () ->
+    assertThrows(NullStorageException.class, () ->
       TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.CFS));
   }
 

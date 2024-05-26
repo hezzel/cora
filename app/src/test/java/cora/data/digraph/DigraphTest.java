@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.Set;
 
-import charlie.exceptions.IndexingError;
+import charlie.exceptions.IndexingException;
 
 class DigraphTest {
   private Digraph createExampleGraph() {
@@ -90,7 +90,7 @@ class DigraphTest {
 
   @Test
   void testAddEdgeToEmptyDigraph() {
-    Assertions.assertThrows(IndexingError.class, () -> {
+    Assertions.assertThrows(IndexingException.class, () -> {
       Digraph g = new Digraph(0);
       g.addEdge(0,0);
     });
@@ -106,7 +106,7 @@ class DigraphTest {
 
   @Test
   void tesAddingOutOfBoundsOrigin() {
-    Assertions.assertThrows(IndexingError.class, () -> {
+    Assertions.assertThrows(IndexingException.class, () -> {
       Digraph g = new Digraph(3);
       g.addEdge(3,0);
     });
@@ -114,7 +114,7 @@ class DigraphTest {
 
   @Test
   void testAddingOutOfBoundsDestination() {
-    Assertions.assertThrows(IndexingError.class, () -> {
+    Assertions.assertThrows(IndexingException.class, () -> {
       Digraph g = new Digraph(3);
       g.addEdge(0, 3);
     });

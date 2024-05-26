@@ -19,9 +19,9 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import charlie.exceptions.IllegalRuleError;
-import charlie.exceptions.ParseError;
-import charlie.exceptions.UnexpectedPatternError;
+import charlie.exceptions.IllegalRuleException;
+import charlie.exceptions.ParseException;
+import charlie.exceptions.UnexpectedPatternException;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.Token;
@@ -74,9 +74,9 @@ public class OCocoSortedInputReader {
    * If function symbols are used with arity different from their declared arity, or types do not
    * match the declaration, then an appropriate error message is stored in the parser status.
    *
-   * Regardless of errors, this is guaranteed to either throw a ParseError, or return a term of the
-   * expected type (if any).  If the expected type is not given (null), then a type will be guessed.
-   * but it will not be recorded since this is likely an error situation.
+   * Regardless of errors, this is guaranteed to either throw a ParseException, or return a term of
+   * the expected type (if any).  If the expected type is not given (null), then a type will be
+   * guessed. but it will not be recorded since this is likely an error situation.
    */
   private Term makeTerm(ParserTerm pterm, Type expected) {
     FunctionSymbol f;
@@ -154,7 +154,7 @@ public class OCocoSortedInputReader {
         return TermFactory.createFunctionalTerm(f, children);
       
       default:
-        throw new UnexpectedPatternError("OCocoSortedInputReader", "makeUnsortedTerm",
+        throw new UnexpectedPatternException("OCocoSortedInputReader", "makeUnsortedTerm",
           "parser term " + pterm.toString(), "a variable or functional term");
     }
   }
@@ -184,7 +184,7 @@ public class OCocoSortedInputReader {
     _symbols.clearEnvironment();
 
     try { return TrsFactory.createRule(l, r, TrsFactory.MSTRS); }
-    catch (IllegalRuleError e) {
+    catch (IllegalRuleException e) {
       storeError(e.queryProblem(), rule.token());
       return null;
     }
@@ -216,7 +216,9 @@ public class OCocoSortedInputReader {
     ParserTerm pterm = OCocoParser.readTerm(str, collector);
     Term ret = null;
     if (collector.queryErrorCount() == 0) ret = rd.makeTerm(pterm, expectedSort);
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    if (collector.queryErrorCount() > 0) {
+      throw new ParseException(collector.queryCollectedMessages());
+    }
     return ret;
   }
 
@@ -247,7 +249,7 @@ public class OCocoSortedInputReader {
   /**
    * Reads the given term from string, given that all the function symbols in it are declared in
    * the alphabet of the given TRS.  This term should not be a variable, since then it will not be
-   * possible to derive the type, and a ParseError will be thrown.
+   * possible to derive the type, and a ParseException will be thrown.
    */
   public static Term readTerm(String str, TRS trs) {
     return readTerm(str, new SymbolData(trs), null);
@@ -261,13 +263,15 @@ public class OCocoSortedInputReader {
   static TRS readParserProgram(ParserProgram trs, ErrorCollector collector) {
     OCocoSortedInputReader rd = new OCocoSortedInputReader(new SymbolData(), collector);
     TRS ret = rd.makeTRS(trs);
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    if (collector.queryErrorCount() > 0) {
+      throw new ParseException(collector.queryCollectedMessages());
+    }
     return ret;
   }
 
   /**
    * Parses the given program, and returns the (sorted or unsorted) TRS that it defines.
-   * If the string is not correctly formed, this may throw a ParseError.
+   * If the string is not correctly formed, this may throw a ParseException.
    */
   public static TRS readTrsFromString(String str) {
     ErrorCollector collector = new ErrorCollector();
@@ -277,7 +281,8 @@ public class OCocoSortedInputReader {
 
   /**
    * Parses the given file, which should be a .trs or .mstrs file, into a many-sorted TRS.
-   * This may throw a ParseError, or an IOException if something goes wrong with the file reading.
+   * This may throw a ParseException, or an IOException if something goes wrong with the file
+   * reading.
    */
   public static TRS readTrsFromFile(String filename) throws IOException {
     ErrorCollector collector = new ErrorCollector();

@@ -59,6 +59,6 @@ public class BVarTest {
   @Test
   public void testEvaluate() {
     BVar x = new BVar(3);
-    assertThrows(charlie.exceptions.SmtEvaluationError.class, () -> x.evaluate());
+    assertThrows(charlie.exceptions.SmtEvaluationException.class, () -> x.evaluate());
   }
 }

@@ -16,7 +16,7 @@
 package cora.io;
 
 import java.util.List;
-import charlie.exceptions.NullStorageError;
+import charlie.exceptions.NullStorageException;
 import charlie.terms.TermPrinter;
 import charlie.trs.TRS;
 
@@ -33,7 +33,7 @@ public class OutputModuleAdapter implements OutputModule {
   protected OutputModule _module;
 
   public OutputModuleAdapter(OutputModule m) {
-    if (m == null) throw new NullStorageError("OutputModuleAdapter", "argument module");
+    if (m == null) throw new NullStorageException("OutputModuleAdapter", "argument module");
     _module = m;
   }
 

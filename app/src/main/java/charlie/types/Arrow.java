@@ -15,12 +15,12 @@
 
 package charlie.types;
 
-import charlie.exceptions.NullInitialisationError;
-import charlie.exceptions.IndexingError;
+import charlie.exceptions.NullStorageException;
+import charlie.exceptions.IndexingException;
 
 public record Arrow(Type left, Type right) implements Type {
   public Arrow(Type left, Type right) {
-    if (left == null || right == null) throw new NullInitialisationError("Arrow", "type");
+    if (left == null || right == null) throw new NullStorageException("Arrow", "type");
     this.left = left;
     this.right = right;
   }
@@ -71,6 +71,6 @@ public record Arrow(Type left, Type right) implements Type {
   public Type subtype(int index) {
     if (index == 1) return this.left;
     if (index == 2) return this.right;
-    throw new IndexingError("Arrow", "subtype", index, 1, 2);
+    throw new IndexingException("Arrow", "subtype", index, 1, 2);
   }
 }

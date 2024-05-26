@@ -15,7 +15,7 @@
 
 package charlie.parser.lib;
 
-import charlie.exceptions.ParseError;
+import charlie.exceptions.ParseException;
 
 /**
  * A ParsingStatus object is used to keep track of progress and errors during parsing.  This is
@@ -50,15 +50,19 @@ public class ParsingStatus {
   }
 
   /**
-   * If at least one error has been encountered, this throws a ParseError indicating all the
+   * If at least one error has been encountered, this throws a ParseException indicating all the
    * error messages that have been collected.
    * If not, nothing is done.
    */
   public void throwCollectedErrors() {
-    if (_errors.queryErrorCount() > 0) throw new ParseError(_errors.queryCollectedMessages());
+    if (_errors.queryErrorCount() > 0) {
+      throw new ParseException(_errors.queryCollectedMessages());
+    }
   }
 
-  /** Once we have encountered too many errors, we immediately abort by throwing the ParseError. */
+  /**
+   * Once we have encountered too many errors, we immediately abort by throwing the ParseException.
+   */
   private void checkTooManyErrors() {
     if (_errors.queryFull()) throwCollectedErrors();
   }
@@ -71,7 +75,7 @@ public class ParsingStatus {
    * the error is not in fact added.  This is to avoid multiple errors for the same location, which
    * is usually a duplicate.
    *
-   * If too many errors have already been stored, this will immediately throw a ParseError
+   * If too many errors have already been stored, this will immediately throw a ParseException
    * indicating the collected problems.  If no error is thrown, then the parser should proceed with
    * error recovery and try to continue parsing.
    */
@@ -106,18 +110,18 @@ public class ParsingStatus {
 
   /**
    * This stores the given error message, marked to the position of the given token, and then
-   * throws a ParseError with all the collected error messages (including this one).
+   * throws a ParseException with all the collected error messages (including this one).
    * If you do not want the message to include a position, provide a null argument for token/
    */
   public void abort(String message, Token token) {
     if (token == null) _errors.addError(message);
     else _errors.addError(token.getPosition() + ": " + message);
-    throw new ParseError(_errors.queryCollectedMessages());
+    throw new ParseException(_errors.queryCollectedMessages());
   }
 
   /**
    * Reads the next token from the input.  If tokenising causes an exception, this quietly stores
-   * the exception, and only throws a ParseError once too many problems have been encountered.
+   * the exception, and only throws a ParseException once too many problems have been encountered.
    */
   public Token nextToken() {
     while (true) {

@@ -28,20 +28,20 @@ import charlie.terms.position.*;
 public class VarTest extends TermTestFoundation {
   @Test
   public void testNullInitialisation() {
-    assertThrows(NullInitialisationError.class, () -> new Var(null, baseType("o")));
-    assertThrows(NullInitialisationError.class, () -> new Var("x", null));
+    assertThrows(NullStorageException.class, () -> new Var(null, baseType("o")));
+    assertThrows(NullStorageException.class, () -> new Var("x", null));
   }
 
   @Test
   public void testRootRequest() {
     Variable x = new Var("x", baseType("o"));
-    assertThrows(InappropriatePatternDataError.class, () -> x.queryRoot());
+    assertThrows(InappropriatePatternDataException.class, () -> x.queryRoot());
   }
 
   @Test
   public void testSubtermRequest() {
     Variable x = new Var("x", baseType("o"));
-    assertThrows(IndexingError.class, () -> x.queryArgument(1));
+    assertThrows(IndexingException.class, () -> x.queryArgument(1));
   }
 
   @Test
@@ -74,7 +74,7 @@ public class VarTest extends TermTestFoundation {
   public void testIllegalTypeApplication() {
     Term t = new Var("x", arrowType("a", "b"));
     Term q = constantTerm("c", baseType("b"));
-    assertThrows(TypingError.class, () -> t.apply(q));
+    assertThrows(TypingException.class, () -> t.apply(q));
   }
 
   @Test
@@ -190,20 +190,20 @@ public class VarTest extends TermTestFoundation {
   public void testSubtermBad() {
     Term s = new Var("x", baseType("o"));
     Position p = new ArgumentPos(1, Position.empty);
-    assertThrows(IndexingError.class, () -> s.querySubterm(p));
+    assertThrows(IndexingException.class, () -> s.querySubterm(p));
   }
 
   @Test
   public void testHeadSubtermBad() {
     Term s = new Var("x", baseType("o"));
     Position p = new ArgumentPos(1, Position.empty);
-    assertThrows(IndexingError.class, () -> s.querySubterm(p));
+    assertThrows(IndexingException.class, () -> s.querySubterm(p));
   }
 
   @Test
   public void testAbstractionSubtermRequest() {
     Term s = new Var("x", arrowType("o", "O"));
-    assertThrows(InappropriatePatternDataError.class, () -> s.queryAbstractionSubterm());
+    assertThrows(InappropriatePatternDataException.class, () -> s.queryAbstractionSubterm());
   }
 
   @Test
@@ -219,14 +219,14 @@ public class VarTest extends TermTestFoundation {
   public void testSubtermReplacementBad() {
     Term s = new Var("x", baseType("o"));
     Position p = new MetaPos(1, Position.empty);
-    assertThrows(IndexingError.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
+    assertThrows(IndexingException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
   }
 
   @Test
   public void testHeadSubtermReplacementBad() {
     Term s = new Var("x", baseType("o"));
     Position p = new FinalPos(1);
-    assertThrows(IndexingError.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
+    assertThrows(IndexingException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
   }
 
   @Test

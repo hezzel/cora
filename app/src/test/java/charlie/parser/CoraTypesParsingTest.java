@@ -18,7 +18,7 @@ package charlie.parser;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.ParseError;
+import charlie.exceptions.ParseException;
 import charlie.types.*;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
@@ -164,7 +164,7 @@ public class CoraTypesParsingTest {
 
   @Test
   public void testArrowTypeWithNonExistingArrowIsRequested() {
-    assertThrows(ParseError.class, () -> CoraParser.readType("xx => yy"));
+    assertThrows(ParseException.class, () -> CoraParser.readType("xx => yy"));
   }
 
   @Test

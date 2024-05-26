@@ -48,7 +48,7 @@ public class HorpoConstraintListTest {
   }
 
   @Test
-  public void testStoreDifferentThings() {
+  public void testStoreDifferentThings() throws Exception {
     TRS trs = makeTrs("f :: Int -> Int -> Int g :: Int -> Int -> Int d :: Int -> Int");
     HorpoConstraintList lst = makeList(new HorpoParameters(1000, true), trs);
     Rule rule = CoraInputReader.readRule("f(x, d(y)) -> g(x,x) | x > 0", trs);

@@ -16,7 +16,7 @@
 package charlie.exceptions;
 
 /** A CustomParserException may arise during parsing of specific expressions outside the parser. */
-public class CustomParserException extends RuntimeException {
+public class CustomParserException extends Exception {
   private final String _text;
 
   public CustomParserException(int line, int pos, String text, String message) {

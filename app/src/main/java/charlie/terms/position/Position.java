@@ -16,7 +16,7 @@
 package charlie.terms.position;
 
 import charlie.exceptions.CustomParserException;
-import charlie.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.InappropriatePatternDataException;
 
 /**
  * Positions are a tool to refer to a specific location in a term.
@@ -72,21 +72,21 @@ public sealed interface Position permits
   /**
    * If the current Position is a partial position of the form ☆k, this returns k; if it is an
    * empty position ε it returns 0.  If it is not a final position, this instead throws an
-   * InappropriatePatternDataError.
+   * InappropriatePatternDataException.
    */
   default int queryChopCount() {
-    throw new InappropriatePatternDataError("Position", "queryChopCount", "final positions");
+    throw new InappropriatePatternDataException("Position", "queryChopCount", "final positions");
   }
 
   /**
    * For a position x.tail, returns x (returning -i for a meta-position !i).
-   * For a final position, this throws an InappropriatePatternDataError.
+   * For a final position, this throws an InappropriatePatternDataException.
    */
   int queryHead();
 
   /**
    * For a position x.tail, returns tail.
-   * For a final position, this throws an InappropriatePatternDataError.
+   * For a final position, this throws an InappropriatePatternDataException.
    */
   Position queryTail();
 
@@ -99,7 +99,7 @@ public sealed interface Position permits
    * full position), or .☆k with k > 0 (for a partial position).  If omitted, the ending .ε is
    * assumed.  Instead of supplying a negative number, also !i with i > 0 may be used.
    */
-  public static Position parse(String text) {
+  public static Position parse(String text) throws CustomParserException {
     if (text.equals("")) return empty;
 
     // find chop count, if any, and remove that part from the text

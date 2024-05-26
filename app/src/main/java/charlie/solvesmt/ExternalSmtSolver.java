@@ -18,7 +18,7 @@ package charlie.solvesmt;
 import java.io.*;
 import java.util.List;
 import java.util.Scanner;
-import charlie.exceptions.ParseError;
+import charlie.exceptions.ParseException;
 import charlie.util.ExceptionLogger;
 import charlie.smt.*;
 import org.jetbrains.annotations.NotNull;
@@ -118,7 +118,7 @@ public class ExternalSmtSolver implements SmtSolver {
       ExceptionLogger.log("Error reading SMT solver result file: " + e.getMessage(), e);
       return new Answer.MAYBE("Error reading result file: " + e.getMessage());
     }
-    catch (ParseError e) {
+    catch (ParseException e) {
       ExceptionLogger.log("Parsing error reading result file: " + e.getMessage(), e);
       return new Answer.MAYBE("Parsing error reading result file: " + e.getMessage());
     }

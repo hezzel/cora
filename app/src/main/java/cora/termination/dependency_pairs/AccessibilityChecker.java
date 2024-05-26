@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.TreeMap;
 import java.util.Map;
 
-import charlie.exceptions.NotYetImplementedError;
 import charlie.util.Pair;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
@@ -42,8 +41,8 @@ public class AccessibilityChecker {
         return SmtFactory.createGeq(getSortVariable(iota.toString()), getSortVariable(name));
       case Arrow(Type left, Type right):
         return SmtFactory.createConjunction(minGre(iota, left), posGeq(iota, right));
-      default:
-        throw new NotYetImplementedError("accessibility has not yet been defined for product types");
+      default:  // we do not yet support product types
+        return SmtFactory.createValue(false);
     }
   }
 
@@ -54,8 +53,8 @@ public class AccessibilityChecker {
         return SmtFactory.createGreater(getSortVariable(iota.toString()), getSortVariable(name));
       case Arrow(Type left, Type right):
         return SmtFactory.createConjunction(posGeq(iota, left), minGre(iota, right));
-      default:
-        throw new NotYetImplementedError("accessibility has not yet been defined for product types");
+      default:  // we do not yet support product types
+        return SmtFactory.createValue(false);
     }
   }
 
@@ -71,7 +70,7 @@ public class AccessibilityChecker {
     Type argtype = type.subtype(1);
     Type output = type.queryOutputType();
     if (output.isBaseType()) return posGeq((Base)output, argtype);
-    throw new NotYetImplementedError("Calling accArg with output type " + output);
+    return SmtFactory.createValue(false); // we do not yet support product types
   }
 
   /** Generates the requirements that all variables in s are at accessible possitions */
@@ -88,8 +87,9 @@ public class AccessibilityChecker {
       argtypes.add(input);
       type = output;
     }
-    if (!type.isBaseType()) {
-      throw new NotYetImplementedError("allVarsAcc with term " + s + " with output type " + type);
+    if (!type.isBaseType()) { // we cannot handle product types yet
+      _problem.require(SmtFactory.createValue(false));
+      return;
     }
     Base output = (Base)type;
     if (argtypes.size() < s.numberArguments()) {

@@ -18,7 +18,6 @@ package charlie.trs;
 import java.util.Map;
 import java.util.List;
 import java.util.Collection;
-import charlie.exceptions.IllegalRuleError;
 import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.Variable;

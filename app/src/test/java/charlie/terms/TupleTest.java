@@ -32,9 +32,9 @@ class TupleTest extends TermTestFoundation {
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(null);
     args.add(_s);
-    assertThrows(NullInitialisationError.class, () -> new Tuple(null));
-    assertThrows(NullInitialisationError.class, () -> new Tuple(args));
-    assertThrows(NullInitialisationError.class, () -> new Tuple(_s, _t, null));
+    assertThrows(NullStorageException.class, () -> new Tuple(null));
+    assertThrows(NullStorageException.class, () -> new Tuple(args));
+    assertThrows(NullStorageException.class, () -> new Tuple(_s, _t, null));
   }
 
   @Test
@@ -159,32 +159,32 @@ class TupleTest extends TermTestFoundation {
     assertTrue(tuple.queryTupleArgument(2) == args.get(1));
     assertTrue(tuple.queryTupleArgument(3).queryTupleArgument(2).isVariable());
 
-    assertThrows(IndexingError.class, () -> tuple.queryArgument(1));
-    assertThrows(IndexingError.class, () -> tuple.queryMetaArgument(1));
+    assertThrows(IndexingException.class, () -> tuple.queryArgument(1));
+    assertThrows(IndexingException.class, () -> tuple.queryMetaArgument(1));
   }
 
   @Test
-  void testMethodsThatShouldAlwaysThrowError() {
+  void testMethodsThatShouldAlwaysThrowException() {
     Term tp = exampleTuple();
     Tuple x = new Tuple(constantTerm("a", arrowType("A", "A")),
                         constantTerm("b", arrowType("A", "B")));
-    assertThrows(InappropriatePatternDataError.class,
+    assertThrows(InappropriatePatternDataException.class,
       () -> tp.queryAbstractionSubterm());
-    assertThrows(InappropriatePatternDataError.class,
+    assertThrows(InappropriatePatternDataException.class,
       () -> tp.queryRoot());
-    assertThrows(InappropriatePatternDataError.class,
+    assertThrows(InappropriatePatternDataException.class,
       () -> tp.queryVariable());
-    assertThrows(InappropriatePatternDataError.class,
+    assertThrows(InappropriatePatternDataException.class,
       () -> tp.queryMetaVariable());
     assertThrows(ArityException.class,
       () -> x.apply(constantTerm("u", baseType("A"))));
   }
 
   @Test
-  public void testPositionsAndSubterms() {
+  public void testPositionsAndSubterms() throws CustomParserException {
     Term tp = exampleTuple();
     assertTrue(tp.queryImmediateHeadSubterm(0) == tp);
-    assertThrows(IndexingError.class,
+    assertThrows(IndexingException.class,
       () -> tp.queryImmediateHeadSubterm(1));
     List<Position> positions = tp.queryPositions(false);
     assertTrue(positions.toString().equals(
@@ -196,25 +196,25 @@ class TupleTest extends TermTestFoundation {
     assertTrue(tp.toString().equals("⦇a, λx.f(x), ⦇f(a), y⦈⦈"));
     t = tp.replaceSubterm(Position.parse("3.1*1"), new Var("Z", arrowType("N", "M")));
     assertTrue(t.toString().equals("⦇a, λx.f(x), ⦇Z(a), y⦈⦈"));
-    assertThrows(TypingError.class,
+    assertThrows(TypingException.class,
       () -> tp.replaceSubterm(positions.get(0), constantTerm("b", baseType("A"))));
-    assertThrows(TypingError.class, () ->
+    assertThrows(TypingException.class, () ->
       tp.replaceSubterm(Position.parse("3.1*1"), new Var("Z", arrowType("N", "A"))));
   }
 
   @Test
   public void testBadPositions() {
     Term tup = exampleTuple();
-    assertThrows(IndexingError.class, () -> tup.querySubterm(Position.parse("4")));
-    assertThrows(IndexingError.class, () -> tup.querySubterm(Position.parse("3.3")));
-    assertThrows(IndexingError.class, () -> tup.querySubterm(Position.parse("3*1")));
-    assertThrows(IndexingError.class, () -> tup.querySubterm(Position.parse("*1")));
+    assertThrows(IndexingException.class, () -> tup.querySubterm(Position.parse("4")));
+    assertThrows(IndexingException.class, () -> tup.querySubterm(Position.parse("3.3")));
+    assertThrows(IndexingException.class, () -> tup.querySubterm(Position.parse("3*1")));
+    assertThrows(IndexingException.class, () -> tup.querySubterm(Position.parse("*1")));
     Term replacement = constantTerm("a", baseType("N"));
-    assertThrows(IndexingError.class,
+    assertThrows(IndexingException.class,
       () -> tup.replaceSubterm(Position.parse("4"), replacement));
-    assertThrows(IndexingError.class,
+    assertThrows(IndexingException.class,
       () -> tup.replaceSubterm(Position.parse("3.3"), replacement));
-    assertThrows(IndexingError.class,
+    assertThrows(IndexingException.class,
       () -> tup.replaceSubterm(Position.parse("3*1"), replacement));
   }
 
@@ -261,7 +261,7 @@ class TupleTest extends TermTestFoundation {
   }
 
   @Test
-  public void testEquality() {
+  public void testEquality() throws CustomParserException {
     Term a = exampleTuple();
     Term b = exampleTuple();
     // note that creating a variable twice gives different variables

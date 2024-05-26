@@ -15,7 +15,7 @@
 
 package cora;
 
-import charlie.exceptions.ParseError;
+import charlie.exceptions.ParseException;
 import charlie.terms.Term;
 import charlie.trs.TRS;
 import charlie.reader.*;
@@ -47,7 +47,7 @@ public class App {
       pobject.justify(om);
       om.printToStdout();
     }
-    catch (Parameters.WrongParametersError e) {
+    catch (Parameters.WrongParametersException e) {
       System.out.println(e.getMessage());
       System.exit(0);
     }
@@ -70,7 +70,7 @@ public class App {
       System.out.println(e.getMessage());
       System.exit(1);
     }
-    catch (ParseError e) {
+    catch (ParseException e) {
       System.out.println(e.getMessage());
       System.exit(1);
     }
@@ -112,12 +112,14 @@ public class App {
 
   /** Helper function for executeRequest: executes a Reduce request */
   private static ProofObject executeReduce(TRS trs, List<String> moduleInput) {
-    if (moduleInput.size() != 1) throw new Error("Parameters did not supply an input term!");
+    if (moduleInput.size() != 1) {
+      throw new RuntimeException("Parameters did not supply an input term!");
+    }
     String txt = moduleInput.get(0);
     Term start;
     try { start = CoraInputReader.readTerm(txt, trs); }
-    catch (ParseError e) {
-      System.out.println("Error reading input term " + txt + ":\n" + e.getMessage());
+    catch (ParseException e) {
+      System.out.println("Exception reading input term " + txt + ":\n" + e.getMessage());
       return null;
     }
     Reducer reducer = new Reducer(trs);

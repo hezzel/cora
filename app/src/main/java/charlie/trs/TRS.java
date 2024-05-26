@@ -21,10 +21,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.Collection;
 import java.util.Collections;
-import charlie.exceptions.IndexingError;
-import charlie.exceptions.IllegalRuleError;
-import charlie.exceptions.IllegalSymbolError;
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.IndexingException;
+import charlie.exceptions.IllegalRuleException;
+import charlie.exceptions.IllegalSymbolException;
+import charlie.exceptions.NullStorageException;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
@@ -96,8 +96,8 @@ public class TRS {
       Collection<String> privateSymbols, String trsKindName, TermLevel trsLevel,
       boolean includeTheories, boolean includeProducts, RuleRestrictions restrictions) {
 
-    if (alphabet == null) throw new NullInitialisationError("TRS", "alphabet");
-    if (rules == null) throw new NullInitialisationError("TRS", "rules");
+    if (alphabet == null) throw new NullStorageException("TRS", "alphabet");
+    if (rules == null) throw new NullStorageException("TRS", "rules");
 
     _theoriesIncluded = includeTheories;
     _productsIncluded = includeProducts;
@@ -116,7 +116,7 @@ public class TRS {
     _rulesProperties = new RuleRestrictions();
     ImmutableList.Builder<Rule> rulebuilder = ImmutableList.<Rule>builder();
     for (Rule rule : rules) {
-      if (rule == null) throw new NullInitialisationError("TRS", "one of the rules");
+      if (rule == null) throw new NullStorageException("TRS", "one of the rules");
       _rulesProperties = _rulesProperties.supremum(rule.queryProperties());
       rulebuilder.add(rule);
       FunctionSymbol root = rule.queryRoot();
@@ -127,7 +127,7 @@ public class TRS {
     // and give an error if we don't satisfy the given restrictions on the rules
     if (restrictions != null) {
       String problem = restrictions.checkCoverage(_rulesProperties);
-      if (problem != null) throw new IllegalRuleError(problem);
+      if (problem != null) throw new IllegalRuleException(problem);
     }
   }
 
@@ -136,12 +136,12 @@ public class TRS {
     for (FunctionSymbol f : _alphabet.getSymbols()) {
       Type type = f.queryType();
       if (_level == TermLevel.FIRSTORDER && type.queryTypeOrder() > 1) {
-        throw new IllegalSymbolError("TRS", f.toString(), "Symbol " + f.toString() +
+        throw new IllegalSymbolException("TRS", f.toString(), "Symbol " + f.toString() +
           " with a type " + type.toString() + " cannot occur in a first-order TRS.");
       }
       if (!_productsIncluded && type.hasProducts()) {
-        throw new IllegalSymbolError("TRS", f.toString(), "Symbol with a type " + type.toString() +
-          " cannot occur in a product-free TRS.");
+        throw new IllegalSymbolException("TRS", f.toString(), "Symbol with a type " +
+          type.toString() + " cannot occur in a product-free TRS.");
       }
     }
   }
@@ -174,7 +174,7 @@ public class TRS {
   /** For 0 ≤ index < queryRuleCount(), this returns one of the rules in the system. */
   public Rule queryRule(int index) {
     if (index < 0 || index >= queryRuleCount()) {
-      throw new IndexingError("TRS", "queryRule", index, 0, queryRuleCount()-1);
+      throw new IndexingException("TRS", "queryRule", index, 0, queryRuleCount()-1);
     }
     return _rules.get(index);
   }
@@ -187,7 +187,7 @@ public class TRS {
   /** For 0 ≤ index < querySchemeCount(), this returns one of the schemes in the system. */
   public RuleScheme queryScheme(int index) {
     if (index < 0 || index >= querySchemeCount()) {
-      throw new IndexingError("TRS", "queryScheme", index, 0, querySchemeCount()-1);
+      throw new IndexingException("TRS", "queryScheme", index, 0, querySchemeCount()-1);
     }
     return _schemes.get(index);
   }

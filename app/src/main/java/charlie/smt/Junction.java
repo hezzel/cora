@@ -17,7 +17,7 @@ package charlie.smt;
 
 import java.util.ArrayList;
 import java.util.List;
-import charlie.exceptions.IndexingError;
+import charlie.exceptions.IndexingException;
 
 /** Shared inherit functionality for Conjunction and Disjunction; do not use on its own. */
 abstract sealed class Junction extends Constraint permits Conjunction, Disjunction {
@@ -49,7 +49,7 @@ abstract sealed class Junction extends Constraint permits Conjunction, Disjuncti
 
   public Constraint queryChild(int index) {
     if (index <= 0 || index > _children.size()) {
-      throw new IndexingError("Junction", "queryChild", index, 1, _children.size());
+      throw new IndexingException("Junction", "queryChild", index, 1, _children.size());
     }
     return _children.get(index-1);
   }

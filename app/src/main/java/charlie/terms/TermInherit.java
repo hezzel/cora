@@ -50,7 +50,7 @@ abstract class TermInherit implements Term {
    * One of the setVariables functions should be called from the constructor, and only there.
    */
   protected void setVariables(ReplaceableList vs) {
-    if (_freeReplaceables != null) throw new Error("Setting ReplaceableList twice for " +
+    if (_freeReplaceables != null) throw new RuntimeException("Setting ReplaceableList twice for " +
       this.getClass().getSimpleName());
     _freeReplaceables = vs;
     _boundVariables = ReplaceableList.EMPTY;
@@ -61,7 +61,7 @@ abstract class TermInherit implements Term {
    * One of the setVariables functions should be called from the constructor, and only there.
    */
   protected void setVariables(ReplaceableList frees, ReplaceableList bounds) {
-    if (_freeReplaceables != null) throw new Error("Setting ReplaceableList twice for " +
+    if (_freeReplaceables != null) throw new RuntimeException("Setting ReplaceableList twice for " +
       this.getClass().getSimpleName());
     _freeReplaceables = frees;
     if (bounds == null) _boundVariables = ReplaceableList.EMPTY;
@@ -116,29 +116,29 @@ abstract class TermInherit implements Term {
 
   /** Returns the set of all variables occurring free in the current term. */
   public Environment<Variable> vars() {
-    if (_freeReplaceables == null) throw new Error("Variable list requested when it has not been " +
-      "set up for " + this.getClass().getSimpleName());
+    if (_freeReplaceables == null) throw new RuntimeException("Variable list requested when it " +
+      "has not been set up for " + this.getClass().getSimpleName());
     return new VariableEnvironment(_freeReplaceables);
   }
 
   /** Returns the set of all meta-variables occurring in the current term. */
   public Environment<MetaVariable> mvars() {
-    if (_freeReplaceables == null) throw new Error("Meta-variable list requested when it has not " +
-      "been set up for " + this.getClass().getSimpleName());
+    if (_freeReplaceables == null) throw new RuntimeException("Meta-variable list requested when " +
+      "it has not been set up for " + this.getClass().getSimpleName());
     return new MetaVariableEnvironment(_freeReplaceables);
   }
 
   /** Returns the set of all meta-variables and variables occurring free in the current term. */
   public ReplaceableList freeReplaceables() {
-    if (_freeReplaceables == null) throw new Error("Replaceable list has not been set up for " +
-      this.getClass().getSimpleName() + " when requesting free replaceables.");
+    if (_freeReplaceables == null) throw new RuntimeException("Replaceable list has not been set " +
+      "up for " + this.getClass().getSimpleName() + " when requesting free replaceables.");
     return _freeReplaceables;
   }
 
   /** Returns the set of all variables occurring bound in the current term. */
   public ReplaceableList boundVars() {
-    if (_freeReplaceables == null) throw new Error("Replaceable list has not been set up for " +
-      this.getClass().getSimpleName() + " when requesting bound variables");
+    if (_freeReplaceables == null) throw new RuntimeException("Replaceable list has not been set " +
+      "up for " + this.getClass().getSimpleName() + " when requesting bound variables");
     return _boundVariables;
   }
 
@@ -184,7 +184,7 @@ abstract class TermInherit implements Term {
     return null;
   }
 
-  /** Helper function to return the current classname for use in Errors. */
+  /** Helper function to return the current classname for use in Exceptions. */
   protected String queryMyClassName() {
     return this.getClass().getSimpleName();
   }
@@ -249,7 +249,7 @@ abstract class TermInherit implements Term {
       case FinalPos(int k):
         if (k == 0) {
           if (!queryType().equals(replacement.queryType())) {
-            throw new TypingError(queryMyClassName(), "replaceSubterm", "replacement term " +
+            throw new TypingException(queryMyClassName(), "replaceSubterm", "replacement term " +
                         replacement.toString(), replacement.queryType().toString(),
                         queryType().toString());
           }
@@ -338,24 +338,24 @@ abstract class TermInherit implements Term {
   public ImmutableList<Term> queryMetaArguments() { return ImmutableList.of(); }
   public Term queryHead() { return this; }
   public Term queryArgument(int i) {
-    throw new IndexingError(queryMyClassName(), "queryArgument", i);
+    throw new IndexingException(queryMyClassName(), "queryArgument", i);
   }
   public Term queryMetaArgument(int i) {
-    throw new IndexingError(queryMyClassName(), "queryMetaArgument", i);
+    throw new IndexingException(queryMyClassName(), "queryMetaArgument", i);
   }
   public Term queryTupleArgument(int i) {
-    throw new IndexingError(queryMyClassName(), "queryTupleArgument", i);
+    throw new IndexingException(queryMyClassName(), "queryTupleArgument", i);
   }
   public Term queryAbstractionSubterm() {
-    throw new InappropriatePatternDataError(queryMyClassName(), "queryAbstractionSubterm",
-                                            "lambda-abstractions");
+    throw new InappropriatePatternDataException(queryMyClassName(), "queryAbstractionSubterm",
+                                               "lambda-abstractions");
   }
   public Term queryImmediateHeadSubterm(int i) {
     if (i == 0) return this;
-    throw new IndexingError(queryMyClassName(), "queryImmediateHeadSubterm", i);
+    throw new IndexingException(queryMyClassName(), "queryImmediateHeadSubterm", i);
   }
   public FunctionSymbol queryRoot() {
-    throw new InappropriatePatternDataError(queryMyClassName(), "queryRoot", "functional terms");
+    throw new InappropriatePatternDataException(queryMyClassName(),"queryRoot","functional terms");
   }
 }
 

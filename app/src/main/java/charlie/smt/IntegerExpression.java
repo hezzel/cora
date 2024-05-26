@@ -102,7 +102,7 @@ public sealed abstract class IntegerExpression implements Comparable<IntegerExpr
 
   /**
    * Assuming the current expression has no variables, this function evaluates it to its integer
-   * value.  If there is a variable in it, an SmtEvaluationError will be thrown instead.
+   * value.  If there is a variable in it, an SmtEvaluationException will be thrown instead.
    */
   public final int evaluate() { return evaluate(null); }
 

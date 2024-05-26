@@ -18,7 +18,6 @@ package charlie.smt;
 import java.lang.Iterable;
 import java.util.ArrayList;
 import java.util.Iterator;
-import charlie.exceptions.NullInitialisationError;
 
 /**
  * An SmtProblem keeps track of a list of integer and boolean variables, as well as a list of

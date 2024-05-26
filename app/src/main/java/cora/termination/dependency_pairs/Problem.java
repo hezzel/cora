@@ -1,8 +1,8 @@
 package cora.termination.dependency_pairs;
 
 import cora.data.digraph.Digraph;
-import charlie.exceptions.IndexingError;
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.IndexingException;
+import charlie.exceptions.NullStorageException;
 import charlie.trs.TRS;
 import charlie.terms.FunctionSymbol;
 import charlie.types.Type;
@@ -22,7 +22,7 @@ public class Problem {
 
   public Problem (@NotNull List<DP> dps, @NotNull TRS trs, @NotNull Digraph graph) {
     if (dps == null || trs == null || graph == null) {
-      throw new NullInitialisationError(
+      throw new NullStorageException(
         "Problem",
         "one of the arguments"
       );
@@ -33,7 +33,7 @@ public class Problem {
       _graph = graph;
       _trs = trs;
     } else {
-      throw new IllegalArgumentException ("Error initializing new DP problem.\n" +
+      throw new IllegalArgumentException("Error initializing new DP problem.\n" +
         "The number of DPs in the problem is " + dps.size() + " while their graph has " +
         graph.getNumberOfVertices() + " vertices"
       );
@@ -41,7 +41,7 @@ public class Problem {
   }
 
   public Problem(@NotNull List<DP> dps, @NotNull TRS trs) {
-    if (dps == null) throw new NullInitialisationError (
+    if (dps == null) throw new NullStorageException (
       "Problem",
       "trying to create a DP problem with null reference dps."
     );

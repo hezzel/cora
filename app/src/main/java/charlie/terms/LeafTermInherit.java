@@ -30,7 +30,7 @@ abstract class LeafTermInherit extends TermInherit {
   private Type _type;
 
   protected LeafTermInherit(Type type) {
-    if (type == null) throw new NullInitialisationError(queryMyClassName(), "type");
+    if (type == null) throw new NullStorageException(queryMyClassName(), "type");
     _type = type;
   }
 
@@ -60,12 +60,12 @@ abstract class LeafTermInherit extends TermInherit {
 
   /** Throws an error, since there are no non-empty positions in a leaf term */
   public Term querySubtermMain(Position pos) {
-    throw new IndexingError(queryMyClassName(), "querySubterm", toString(), pos.toString());
+    throw new IndexingException(queryMyClassName(), "querySubterm", toString(), pos.toString());
   }
 
   /** Throws an error, since there are no non-empty positions in a leaf term */
   public Term replaceSubtermMain(Position pos, Term replacement) {
-    throw new IndexingError(queryMyClassName(), "replaceSubterm", toString(), pos.toString());
+    throw new IndexingException(queryMyClassName(), "replaceSubterm", toString(), pos.toString());
   }
 }
 

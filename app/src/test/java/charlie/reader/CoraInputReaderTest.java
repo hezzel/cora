@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 
-import charlie.exceptions.ParseError;
+import charlie.exceptions.ParseException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.parser.lib.ErrorCollector;
@@ -112,7 +112,7 @@ public class CoraInputReaderTest {
   @Test
   public void testRuleWithIncorrecTypeInEnvironment() {
     try { CoraInputReader.readRule("{ F :: Int -> Int } f(F(x)) → y", generateTRS()); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:23: Type error: expected term of type a, but got F(x) of type Int.\n"));
       return;
@@ -123,7 +123,7 @@ public class CoraInputReaderTest {
   @Test
   public void testAbuseVariableAsMetaVariable() {
     try { CoraInputReader.readRule("{ F :: a -> a } f(F[x]) → y", generateTRS()); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:19: Unexpected meta-application with meta-variable F, which was previously used " +
           "(or declared) as a variable without meta-arguments.\n" +
@@ -136,7 +136,7 @@ public class CoraInputReaderTest {
   @Test
   public void testAbuseMetaVariableAsVariable() {
     try { CoraInputReader.readRule("{ F :: [a] -> a } f(F(x)) → y", generateTRS()); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:21: Symbol F was previously used (or declared) as a meta-variable with arity > 0; " +
         "here it is used as a variable.\n"));
@@ -148,7 +148,7 @@ public class CoraInputReaderTest {
   @Test
   public void testEnvironmentWithVariableAlreadyDeclaredAsFunctionSymbol() {
     try { CoraInputReader.readRule("{ aa :: b } aa → aa", generateTRS()); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:3: Name of variable aa already occurs as a function symbol.\n"));
       return;
@@ -159,7 +159,7 @@ public class CoraInputReaderTest {
   @Test
   public void testEnvironmentWithDuplicateVariableDeclaration() {
     try { CoraInputReader.readRule("{ x :: type, x :: type } aa → aa", generateTRS()); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:14: Redeclaration of variable x in the same environment.\n"));
       return;
@@ -170,7 +170,7 @@ public class CoraInputReaderTest {
   @Test
   public void testEnvironmentWithDuplicateMetaVariableDeclaration() {
     try { CoraInputReader.readRule("{ x :: type, x :: [type] -> type } aa → aa", generateTRS()); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:14: Redeclaration of meta-variable x in the same environment.\n"));
       return;
@@ -252,7 +252,7 @@ public class CoraInputReaderTest {
     Alphabet alphabet = data.queryCurrentAlphabet();
     TRS trs = createEmptyTRS(alphabet);
     try { CoraInputReader.readRule("filter(F,cons(H,T)) -> cons(H, filter(F, T)) | F(H)", trs); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals("1:1: constraint [F(H)] is not first-order.\n"));
       return;
     }
@@ -262,7 +262,7 @@ public class CoraInputReaderTest {
   @Test
   public void testUnconstrainedRuleWithFreshVariableInRhs() {
     try { CoraInputReader.readRule(" i(x) -> y", generateTRS()); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals("1:2: right-hand side of rule [i(x) → y] " +
         "contains variable y of type a which does not occur on the left; only " +
         "variables of theory sorts may occur fresh (and that only in some kinds " +
@@ -291,7 +291,7 @@ public class CoraInputReaderTest {
   @Test
   public void testRuleTypeError() {
     try { CoraInputReader.readRule("aa ->bb", generateTRS()); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals("1:6: Expected term of type a, " +
       "but got function symbol bb which has type Int.\n"));
       return;
@@ -352,7 +352,7 @@ public class CoraInputReaderTest {
         "3 :: Int 7 :: Int f :: Bool -> Int -> Bool\n" +
         "f(X(3,y,7), y) -> X(7,3,y)", TrsFactory.AMS);
     }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "2:3: Undeclared symbol: X.  Type cannot easily be deduced from context.\n" +
         "2:19: Undeclared symbol: X.  Type cannot easily be deduced from context.\n"));
@@ -366,7 +366,7 @@ public class CoraInputReaderTest {
     try {
       TRS trs = CoraInputReader.readTrsFromString("a :: type1 b :: type2 a -> b");
     }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals("1:28: Expected term of type type1, but got function " +
         "symbol b which has type type2.\n"));
       return;
@@ -385,7 +385,7 @@ public class CoraInputReaderTest {
         "g(a,y) -> a -> y\n" +
         "f(2) -> 3\n", TrsFactory.AMS);
     }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "5:13: Expected term, started by an identifier, λ, string or (, but got ARROW (->).\n" +
         "3:9: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
@@ -412,7 +412,7 @@ public class CoraInputReaderTest {
         "-(x, y) -> x + -1 * y\n",
         TrsFactory.LCSTRS);
     }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "2:17: Expected a comma or closing bracket ) but got MID (|).\n" +
         "3:18: Expected term, started by an identifier, λ, string or (, but got " +
@@ -430,7 +430,7 @@ public class CoraInputReaderTest {
       TRS trs = CoraInputReader.readTrsFromString(
         "f :: nat -> nat g :: (nat -> nat) -> nat f(x) → x", TrsFactory.MSTRS);
     }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "Symbol g with a type (nat → nat) → nat cannot occur in a first-order TRS.\n"));
       return;
@@ -444,7 +444,7 @@ public class CoraInputReaderTest {
       TRS trs = CoraInputReader.readTrsFromString(
         "f :: nat -> nat { F :: nat -> nat } f(F(x)) → x", TrsFactory.MSTRS);
     }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:17: The rule f(F(x)) → x is not allowed to occur in MSTRSs: rule level is " +
         "limited to first-order terms, not applicative terms.\n"));
@@ -459,7 +459,7 @@ public class CoraInputReaderTest {
       TRS trs = CoraInputReader.readTrsFromString(
         "f :: (nat -> nat) -> nat f(F) → f(λx.F(x))", TrsFactory.STRS);
     }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals("1:26: The rule f(F) → f(λx.F(x)) is not allowed to " +
         "occur in STRSs: rule level is limited to applicative terms, not true terms.\n"));
       return;
@@ -474,7 +474,7 @@ public class CoraInputReaderTest {
         "map :: (nat -> nat) -> list -> list nil :: list map(λx.Z[x], nil) → nil",
         TrsFactory.CFS);
     }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals("1:49: The rule map(λx.Z⟨x⟩, nil) → nil is not allowed " +
         "to occur in CFSs: rule level is limited to true terms, not meta-terms.\n"));
       return;

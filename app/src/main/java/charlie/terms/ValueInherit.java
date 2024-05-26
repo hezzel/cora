@@ -16,7 +16,7 @@
 package charlie.terms;
 
 import java.util.Map;
-import charlie.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.InappropriatePatternDataException;
 import charlie.types.Base;
 import charlie.types.TypeFactory;
 
@@ -74,14 +74,14 @@ public abstract class ValueInherit extends LeafTermInherit implements Value {
 
   /** Throws an error, because a value is not a variable (or associated with one). */
   public Variable queryVariable() {
-    throw new InappropriatePatternDataError("ValueInherit", "queryVariable",
-                                            "variables or lambda-expressions");
+    throw new InappropriatePatternDataException("ValueInherit", "queryVariable",
+                                                "variables or lambda-expressions");
   }
 
   /** Throws an error, because a value is not a meta-application (or associated with one). */
   public MetaVariable queryMetaVariable() {
-    throw new InappropriatePatternDataError("ValueInherit", "queryMetaVariable",
-                                            "meta-variable applications (or terms headed by one)");
+    throw new InappropriatePatternDataException("ValueInherit", "queryMetaVariable",
+                              "meta-variable applications (or terms headed by one)");
   }
 
   /** Returns the current value unmodified (there is nothing to substitute in a value). */

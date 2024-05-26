@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2019--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,11 +16,15 @@
 package charlie.exceptions;
 
 /**
- * A ParseError consists of one or more lines detailing errors encountered during lexing/parsing.
+ * A TypingException is thrown when the typing of some term fails, for example because something
+ * tries to assign a non-integer type to an integer value, or when a function of type A -> B -> C
+ * is applied on two arguments of type A.
  */
-public class ParseError extends Error {
-  public ParseError(String message) {
-    super(message);
+public class TypingException extends RuntimeException {
+  public TypingException(String classname, String functionname, String what, String given,
+                         String expected) {
+    super("Type error when calling " + classname + "::" + functionname + ": " + what + " should " +
+      "have type " + expected + " but has type " + given + ".");
   }
 }
 

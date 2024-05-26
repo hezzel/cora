@@ -18,7 +18,7 @@ package charlie.parser;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.ParseError;
+import charlie.exceptions.ParseException;
 import charlie.types.*;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.lib.Token;
@@ -97,7 +97,7 @@ public class CoraTrsParsingTest {
   public void testForgotClosingBrace() {
     ErrorCollector col = new ErrorCollector();
     try { CoraParser.readRule("{ x :: a, y :: b -> c aa → aa\n { y :: a } next", true, col); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:23: Expected comma or } but got IDENTIFIER (aa).\n" +
         // error recovery is done up to the next BRACEOPEN:
@@ -275,7 +275,7 @@ public class CoraTrsParsingTest {
   public void testRuleWithBrokenLhs() {
     ErrorCollector collector = new ErrorCollector();
     try { CoraParser.readRule("() -> bb next x → x a b", false, collector); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals("1:2: Expected term, started by " +
       "an identifier, λ, string or (, but got BRACKETCLOSE ()).\n" +
       // we do stop reading after bb
@@ -288,7 +288,7 @@ public class CoraTrsParsingTest {
   @Test
   public void testRuleWithBrokenRhs() {
     try { CoraParser.readRule("aa -> () next aa :: bb", true, new ErrorCollector()); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals("1:8: Expected term, started by an " +
         "identifier, λ, string or (, but got BRACKETCLOSE ()).\n" +
         "1:15: Expected end of input but got IDENTIFIER (aa).\n"));
@@ -300,7 +300,7 @@ public class CoraTrsParsingTest {
   @Test
   public void testRuleWithMissingArrow() {
     try { CoraParser.readRule("{} aa bb cc", false, new ErrorCollector()); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:7: Expected an arrow (→ or ->) but got IDENTIFIER (bb).\n"));
       // no further tokens are given, because error recovery takes us to the end of input
@@ -479,7 +479,7 @@ public class CoraTrsParsingTest {
     try {
       ParserProgram trs = CoraParser.readProgramFromString("f :: a -> a -> b :: c d :: e");
     }
-    catch(ParseError e) {
+    catch(ParseException e) {
       assertTrue(e.getMessage().equals("1:18: Expected term, started by an identifier, λ, " +
         "string or (, but got DECLARE (::).\n"));
       return;
@@ -499,7 +499,7 @@ public class CoraTrsParsingTest {
         "f(3) -> 4 | true \n" +
         "-(x, y) -> x + -1 * y\n");
     }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "2:17: Expected a comma or closing bracket ) but got MID (|).\n" +
         "3:18: Expected term, started by an identifier, λ, string or (, but got " +

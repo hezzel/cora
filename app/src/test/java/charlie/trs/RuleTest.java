@@ -18,9 +18,9 @@ package charlie.trs;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.IllegalRuleError;
-import charlie.exceptions.NullInitialisationError;
-import charlie.exceptions.TypingError;
+import charlie.exceptions.IllegalRuleException;
+import charlie.exceptions.NullStorageException;
+import charlie.exceptions.TypingException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.parser.CoraParser;
@@ -40,16 +40,16 @@ public class RuleTest {
   @Test
   public void testNullCreation() {
     Term a = makeConstant("a", "b");
-    assertThrows(NullInitialisationError.class, () -> new Rule(a, null));
-    assertThrows(NullInitialisationError.class, () -> new Rule(null, a));
-    assertThrows(NullInitialisationError.class, () -> new Rule(a, a, null));
+    assertThrows(NullStorageException.class, () -> new Rule(a, null));
+    assertThrows(NullStorageException.class, () -> new Rule(null, a));
+    assertThrows(NullStorageException.class, () -> new Rule(a, a, null));
   }
 
   @Test
   public void testIlltypedRule() {
     Variable x = TermFactory.createVar("x", type("a"));
     Term left = makeConstant("id", "a → b → a").apply(x); // id(x)
-    assertThrows(TypingError.class, () -> new Rule(left, x));
+    assertThrows(TypingException.class, () -> new Rule(left, x));
   }
 
   @Test
@@ -62,7 +62,7 @@ public class RuleTest {
     Term g = TermFactory.createConstant("g", type("o → o → o"));
     Term left = TermFactory.createApp(f, TermFactory.createAbstraction(x, x), y);
     Term right = TermFactory.createApp(g, y, z);
-    assertThrows(IllegalRuleError.class, () -> new Rule(left, right));
+    assertThrows(IllegalRuleException.class, () -> new Rule(left, right));
   }
 
   @Test
@@ -87,7 +87,7 @@ public class RuleTest {
     Variable y = TermFactory.createVar("y", type("b"));
     Term f = TermFactory.createConstant("f", type("a → b → b"));
     Term left = TermFactory.createApp(f, x, y);
-    assertThrows(IllegalRuleError.class, () -> new Rule(left, y));
+    assertThrows(IllegalRuleException.class, () -> new Rule(left, y));
   }
 
   @Test
@@ -151,7 +151,7 @@ public class RuleTest {
     // f(x) → x | x
     Term f = TermFactory.createConstant("f", type("Int → Int"));
     Variable x = TermFactory.createVar("x", type("Int"));
-    assertThrows(IllegalRuleError.class, () -> new Rule(f.apply(x), x, x));
+    assertThrows(IllegalRuleException.class, () -> new Rule(f.apply(x), x, x));
   }
 
   @Test
@@ -161,7 +161,7 @@ public class RuleTest {
     Term f = TermFactory.createConstant("f", type("Int → Int"));
     Variable x = TermFactory.createVar("x", type("Int"));
     Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(a);
-    assertThrows(IllegalRuleError.class, () -> new Rule(f.apply(x), x, constraint));
+    assertThrows(IllegalRuleException.class, () -> new Rule(f.apply(x), x, constraint));
   }
 
   @Test
@@ -171,7 +171,7 @@ public class RuleTest {
     Variable x = TermFactory.createVar("x", TypeFactory.createSort("Int"));
     Term one = TheoryFactory.createValue(1);
     Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(one);
-    assertThrows(IllegalRuleError.class, () -> new Rule(f.apply(x), x, constraint));
+    assertThrows(IllegalRuleException.class, () -> new Rule(f.apply(x), x, constraint));
   }
 
   @Test
@@ -181,7 +181,7 @@ public class RuleTest {
     Variable x = TermFactory.createBinder("x", type("Int"));
     Term one = TheoryFactory.createValue(1);
     Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(one);
-    assertThrows(IllegalRuleError.class, () -> new Rule(f.apply(x), x, constraint));
+    assertThrows(IllegalRuleException.class, () -> new Rule(f.apply(x), x, constraint));
   }
 
   @Test
@@ -193,7 +193,7 @@ public class RuleTest {
     Variable y = TermFactory.createBinder("y", type("Int"));
     Term abs = TermFactory.createAbstraction(y, y);
     Term constraint = TheoryFactory.greaterSymbol.apply(x).apply(abs.apply(one));
-    assertThrows(IllegalRuleError.class, () -> new Rule(f.apply(x), x, constraint));
+    assertThrows(IllegalRuleException.class, () -> new Rule(f.apply(x), x, constraint));
   }
 
   @Test
@@ -233,7 +233,7 @@ public class RuleTest {
     // x + 0 → x
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     Term lhs = TheoryFactory.plusSymbol.apply(x).apply(TheoryFactory.createValue(0));
-    assertThrows(IllegalRuleError.class, () -> new Rule(lhs, x));
+    assertThrows(IllegalRuleException.class, () -> new Rule(lhs, x));
   }
 
   @Test

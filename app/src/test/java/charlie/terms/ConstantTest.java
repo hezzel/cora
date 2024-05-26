@@ -27,7 +27,7 @@ import charlie.terms.position.*;
 public class ConstantTest extends TermTestFoundation {
   @Test
   public void testConstantNullName() {
-    assertThrows(NullInitialisationError.class, () -> new Constant(null, baseType("o")));
+    assertThrows(NullStorageException.class, () -> new Constant(null, baseType("o")));
   }
 
   @Test
@@ -37,7 +37,7 @@ public class ConstantTest extends TermTestFoundation {
 
   @Test
   public void testConstantNullType() {
-    assertThrows(NullInitialisationError.class, () -> new Constant("bing", null));
+    assertThrows(NullStorageException.class, () -> new Constant("bing", null));
   }
 
   @Test
@@ -56,7 +56,7 @@ public class ConstantTest extends TermTestFoundation {
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(new Constant("aa", a));
     args.add(new Constant("bb", a));
-    assertThrows(TypingError.class, () -> f.apply(args));
+    assertThrows(TypingException.class, () -> f.apply(args));
   }
 
   @Test
@@ -108,13 +108,13 @@ public class ConstantTest extends TermTestFoundation {
   @Test
   public void testVariableRequest() {
     Term f = new Constant("f", baseType("a"));
-    assertThrows(InappropriatePatternDataError.class, () -> f.queryVariable());
+    assertThrows(InappropriatePatternDataException.class, () -> f.queryVariable());
   }
 
   @Test
   public void testAbstractionSubtermRequest() {
     Constant f = new Constant("a", arrowType("o", "O"));
-    assertThrows(InappropriatePatternDataError.class, () -> f.queryAbstractionSubterm());
+    assertThrows(InappropriatePatternDataException.class, () -> f.queryAbstractionSubterm());
   }
 
   @Test
@@ -123,7 +123,7 @@ public class ConstantTest extends TermTestFoundation {
     Type b = baseType("b");
     Type combi = arrowType(a, b);
     Constant f = new Constant("f", combi);
-    assertThrows(IndexingError.class, () -> f.querySubterm(new ArgumentPos(1, Position.empty)));
+    assertThrows(IndexingException.class, () -> f.querySubterm(new ArgumentPos(1, Position.empty)));
   }
 
   @Test
@@ -132,7 +132,7 @@ public class ConstantTest extends TermTestFoundation {
     Type b = baseType("b");
     Type combi = arrowType(a, b);
     Constant f = new Constant("f", combi);
-    assertThrows(IndexingError.class, () -> f.querySubterm(new FinalPos(1)));
+    assertThrows(IndexingException.class, () -> f.querySubterm(new FinalPos(1)));
   }
 
   @Test
@@ -141,14 +141,14 @@ public class ConstantTest extends TermTestFoundation {
     Type b = baseType("b");
     Type combi = arrowType(a, b);
     Constant f = new Constant("f", combi);
-    assertThrows(IndexingError.class, () -> 
+    assertThrows(IndexingException.class, () -> 
       f.replaceSubterm(new LambdaPos(Position.empty), new Constant("a", a)));
   }
 
   @Test
   public void testBadPartialPositionReplacement() {
     Constant f = new Constant("f", baseType("a"));
-    assertThrows(IndexingError.class, () -> 
+    assertThrows(IndexingException.class, () -> 
       f.replaceSubterm(new FinalPos(1), new Constant("a", baseType("a"))));
   }
 

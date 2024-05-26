@@ -18,7 +18,7 @@ package charlie.smt;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import charlie.exceptions.IndexingError;
+import charlie.exceptions.IndexingException;
 
 public final class Multiplication extends IntegerExpression {
   protected ArrayList<IntegerExpression> _children;
@@ -58,7 +58,7 @@ public final class Multiplication extends IntegerExpression {
 
   public IntegerExpression queryChild(int index) {
     if (index <= 0 || index > _children.size()) {
-      throw new IndexingError("Multiplication", "queryChild", index, 1, _children.size());
+      throw new IndexingException("Multiplication", "queryChild", index, 1, _children.size());
     }
     return _children.get(index-1);
   }

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2023--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,15 +16,13 @@
 package charlie.exceptions;
 
 /**
- * A TypingError is thrown when the typing of some term fails, for example because something tries
- * to assign a non-integer type to an integer value, or when a function of type A -> B -> C is
- * applied on two arguments of type A.
+ * A PatternRequiredException is thrown when a certain function may only be called on patterns, or
+ * on semi-patterns (which may have subterms Z⟨x1,...,xk⟩(s1,...,sn) so long as all xi are distinct
+ * binder variables), yet is called on something else.
  */
-public class TypingError extends Error {
-  public TypingError(String classname, String functionname, String what, String given,
-                     String expected) {
-    super("Type error when calling " + classname + "::" + functionname + ": " + what + " should " +
-      "have type " + expected + " but has type " + given + ".");
+public class PatternRequiredException extends RuntimeException {
+  public PatternRequiredException(String term, String function, String message) {
+    super("Calling " + function + " on term " + term + " which is not supported: " + message);
   }
 }
 

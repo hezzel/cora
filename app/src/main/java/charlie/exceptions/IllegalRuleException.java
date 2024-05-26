@@ -16,15 +16,19 @@
 package charlie.exceptions;
 
 /**
- * A NullInitialisationError is thrown when we try to construct an object but one of its arguments
- * is null (that should not be).
- * For calls other than constructors, use a NullStorageError instead if (parts of) the value would
- * end up being stored in the object, or NullCallError if the null value simply ends up being used
- * and you want to throw a different Error (with clearer message) than a NullPointerException.
+ * An IllegalRuleException is thrown when something tries to construct a certain kind of rule in a
+ * way that violates the restrictions for that rule (for example, a PatternRule where the left-hand
+ * side is not a pattern).
  */
-public class NullInitialisationError extends Error {
-  public NullInitialisationError(String classname, String message) {
-    super("Trying to initialise " + classname + " with a null argument: " + message + ".");
+public class IllegalRuleException extends RuntimeException {
+  private final String _problem;
+
+  public IllegalRuleException(String problem) {
+    super("Illegal rule creation: " + problem);
+    _problem = problem;
+  }
+
+  public String queryProblem() {
+    return _problem;
   }
 }
-

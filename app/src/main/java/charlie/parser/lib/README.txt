@@ -46,6 +46,6 @@ In addition, it offers the following two classes for parsing:
 
 * ParsingStatus.java
   This is the core class for the parser.  It keeps track of a TokenQueue, and can be used to look
-  ahead, and both generate and store errors.  If too many errors arise, it will throw a ParseError,
-  and can also be prompted to do so if any errors have occurred.
+  ahead, and both generate and store errors.  If too many errors arise, it will throw a
+  ParseException, and can also be prompted to do so if any errors have occurred.
 

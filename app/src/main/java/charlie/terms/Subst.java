@@ -18,8 +18,8 @@ package charlie.terms;
 import java.util.HashMap;
 import java.util.Set;
 import charlie.exceptions.ArityException;
-import charlie.exceptions.NullStorageError;
-import charlie.exceptions.TypingError;
+import charlie.exceptions.NullStorageException;
+import charlie.exceptions.TypingException;
 
 /**
  * A substitution is a function that maps a finite set of variables/meta-variables (replaceables)
@@ -35,8 +35,8 @@ class Subst implements Substitution {
 
   /**
    * Creates a substitution with a single key/value pair.
-   * If key or value is null, then a NullStorageError is thrown; if the types of key and value are
-   * not matched this results in a TypingError.
+   * If key or value is null, then a NullStorageException is thrown; if the types of key and value
+   * are not matched this results in a TypingException.
    */
   Subst(Replaceable key, Term value) {
     _mapping = new HashMap<Replaceable,Term>();
@@ -63,11 +63,11 @@ class Subst implements Substitution {
    * This will return false and do nothing if there is an existing value for the key.
    */
   public boolean extend(Replaceable key, Term value) {
-    if (key == null) throw new NullStorageError("Subst", "key");
-    if (value == null) throw new NullStorageError("Subst", "value");
+    if (key == null) throw new NullStorageException("Subst", "key");
+    if (value == null) throw new NullStorageException("Subst", "value");
     if (!key.queryType().equals(value.queryType())) {
-      throw new TypingError("Subst", "extend", "value " + value.toString() + " assigned to key " +
-        key.toString(), value.queryType().toString(), key.queryType().toString());
+      throw new TypingException("Subst", "extend", "value " + value.toString() + " assigned to " +
+        "key " + key.toString(), value.queryType().toString(), key.queryType().toString());
     }
     int a = key.queryArity();
     if (a > 0) {

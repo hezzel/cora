@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import charlie.exceptions.IllegalRuleError;
+import charlie.exceptions.IllegalRuleException;
 import charlie.terms.Term;
 import charlie.trs.TrsProperties.*;
 
@@ -59,19 +59,19 @@ public class TrsFactory {
 
   /**
    * Check if the given rule is allowed in the given kind of TRS.  If not, throws an
-   * IllegalRuleError.
+   * IllegalRuleException.
    */
   private static void checkRestrictions(Rule rule, TrsKind kind) {
     String problem = kind._restrictions.checkCoverage(rule.queryProperties());
     if (problem == null) return;
-    throw new IllegalRuleError("The rule " + rule.toString() + " is not allowed to occur in " +
+    throw new IllegalRuleException("The rule " + rule.toString() + " is not allowed to occur in " +
       kind._name + "s: " + problem + ".");
   }
 
   /**
    * This function creates an unconstrained rule left → right.
    * The rule is checked against the given TRS kind: if the rule is not allowed in the give nkind
-   * of TRS, then an IllegalRuleError is thrown.
+   * of TRS, then an IllegalRuleException is thrown.
    */
   public static Rule createRule(Term left, Term right, TrsKind restrictions) {
     Rule rule = new Rule(left, right);
@@ -87,7 +87,7 @@ public class TrsFactory {
   /**
    * This function creates a constrained rule left → right | constraint.
    * The rule is checked against the given TRS kind: if the rule is not allowed in the given kind
-   * of TRS, then an IllegalRuleError is thrown.
+   * of TRS, then an IllegalRuleException is thrown.
    */
   public static Rule createRule(Term left, Term right, Term constraint, TrsKind restrictions) {
     Rule rule = new Rule(left, right, constraint);
@@ -113,8 +113,8 @@ public class TrsFactory {
       if (includeEta) newschemes.add(TRS.RuleScheme.Eta);
     }
     else if (includeEta) {
-      throw new IllegalRuleError("Eta can only be added to TRSs whose term formation includes " +
-        "abstraction.");
+      throw new IllegalRuleException("Eta can only be added to TRSs whose term formation " +
+        "includes abstraction.");
     }
     if (kind._restrictions.theoriesUsed()) newschemes.add(TRS.RuleScheme.Calc);
     if (kind._restrictions.productsUsed()) newschemes.add(TRS.RuleScheme.Projection);

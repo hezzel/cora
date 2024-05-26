@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2019--2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,15 +16,15 @@
 package charlie.exceptions;
 
 /**
- * An IllegalTermError is thrown when something tries to construct a certain kind of term in a way
- * that violates the restrictions for that term (for example, an Abstraction whose binder is not a
- * binder-variale).
+ * An IllegalSymbolException is thrown when a symbol occurs in a TRS or a term that should not be
+ * there for whatever reason (for example a higher-order symbol in a first-order TRS, or an
+ * application symbol in a term that should be fully functional).
  */
-public class IllegalTermError extends Error {
+public class IllegalSymbolException extends RuntimeException {
   private final String _problem;
 
-  public IllegalTermError(String classname, String problem) {
-    super("Illegal term creation for " + classname + ": " + problem);
+  public IllegalSymbolException(String classname, String symbol, String problem) {
+    super("Illegal symbol occurrence " + symbol + " in " + classname + ": " + problem);
     _problem = problem;
   }
 

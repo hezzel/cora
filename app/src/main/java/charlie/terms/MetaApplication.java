@@ -42,12 +42,12 @@ class MetaApplication extends TermInherit {
    * types of the arguments are not the expected input types of the meta-variable.
    */
   MetaApplication(MetaVariable mvar, List<Term> args) {
-    if (mvar == null) throw new NullInitialisationError("MetaApplication", "meta-variable");
-    if (args == null) throw new NullInitialisationError("MetaApplication", "argument list");
+    if (mvar == null) throw new NullStorageException("MetaApplication", "meta-variable");
+    if (args == null) throw new NullStorageException("MetaApplication", "argument list");
     _metavar = mvar;
     
     if (args.size() == 0) {
-      throw new IllegalTermError("MetaApplication", "creating a MetaApplication with no " +
+      throw new IllegalArgumentException("It is not legal to create a MetaApplication with no " +
         "arguments: this should be done through the Var class, since a meta-application " +
         "without arguments is just a non-binder variable.");
     }
@@ -60,11 +60,11 @@ class MetaApplication extends TermInherit {
     for (int i = 0; i < args.size(); i++) {
       Term arg = args.get(i);
       if (arg == null) {
-        throw new NullInitialisationError("MetaApplication", "passing a null argument to " +
+        throw new NullStorageException("MetaApplication", "passing a null argument to " +
           "meta-variable application for " + mvar.queryName() + ".");
       }
       if (!arg.queryType().equals(mvar.queryInputType(i+1))) {
-        throw new TypingError("MetaApplication", "constructor", "arg " + (i+1) + " of " +
+        throw new TypingException("MetaApplication", "constructor", "arg " + (i+1) + " of " +
           mvar.toString(), arg.queryType().toString(), mvar.queryInputType(i+1).toString());
       }
     }
@@ -124,14 +124,14 @@ class MetaApplication extends TermInherit {
   /** If this term is Z⟨s1,...,sk⟩, returns si. */
   public Term queryMetaArgument(int i) {
     if (i <= 0 || i > _args.size()) {
-      throw new IndexingError("MetaApplication", "queryMetaArgument", i, 1, _args.size());
+      throw new IndexingException("MetaApplication", "queryMetaArgument", i, 1, _args.size());
     }
     return _args.get(i-1);
   }
 
-  /** @throws InappropriatePatternDataError */
+  /** @throws InappropriatePatternDataException */
   public Variable queryVariable() {
-    throw new InappropriatePatternDataError("MetaApplication", "queryVariable",
+    throw new InappropriatePatternDataException("MetaApplication", "queryVariable",
       "var terms or abstractions");
   }
 
@@ -177,13 +177,13 @@ class MetaApplication extends TermInherit {
       case MetaPos(int index, Position tail):
         if (index <= _args.size()) return _args.get(index-1).querySubterm(tail);
       default:
-        throw new IndexingError("MetaApplication", "querySubterm", toString(), pos.toString());
+        throw new IndexingException("MetaApplication", "querySubterm", toString(), pos.toString());
     }
   }
 
   /**
    * @return a copy of the term with the subterm at the given (non-empty) position replaced by
-   * replacement, if such a position exists; otherwise throws an IndexingError.
+   * replacement, if such a position exists; otherwise throws an IndexingException.
    */
   public Term replaceSubtermMain(Position pos, Term replacement) {
     switch (pos) {
@@ -194,7 +194,7 @@ class MetaApplication extends TermInherit {
           return new MetaApplication(_metavar, newargs);
         }
       default:
-        throw new IndexingError("MetaApplication", "replaceSubterm", toString(), pos.toString());
+        throw new IndexingException("MetaApplication","replaceSubterm",toString(),pos.toString());
     }
   }
 
@@ -229,8 +229,8 @@ class MetaApplication extends TermInherit {
    * returns a string describing why other is not an instance of gamma.
    * This function may only be called if the meta-application is a semi-pattern; that is, the
    * arguments to this meta-variable are all binder variables, and are substituted to distinct
-   * binder variables.  If any of the arguments violates this restriction, a PatternRequiredError
-   * is thrown.
+   * binder variables.  If any of the arguments violates this restriction, a
+   * PatternRequiredException is thrown.
    */
   public String match(Term other, Substitution gamma) {
     if (other == null) throw new NullPointerException("argument term for MetaApplication::match");
@@ -239,23 +239,23 @@ class MetaApplication extends TermInherit {
     ArrayList<Variable> substitutedArgs = new ArrayList<Variable>();
     TreeSet<Variable> set = new TreeSet<Variable>();
     for (int i = 0; i < _args.size(); i++) {
-      if (!_args.get(i).isVariable()) throw new PatternRequiredError(toString(), "match",
+      if (!_args.get(i).isVariable()) throw new PatternRequiredException(toString(), "match",
         "argument " + (i+1) + " (" + _args.get(i) + ") is not a variable.");
       Variable x = _args.get(i).queryVariable();
-      if (!x.isBinderVariable()) throw new PatternRequiredError(toString(), "match",
+      if (!x.isBinderVariable()) throw new PatternRequiredException(toString(), "match",
         "argument " + (i+1) + " ( " + x.toString() + ") is not a binder variable.");
       Term replacement = gamma.get(x);
-      if (replacement == null) throw new PatternRequiredError(toString(), "match",
+      if (replacement == null) throw new PatternRequiredException(toString(), "match",
         "argument " + (i+1) + " ( " + x.toString() + ") is not bound above " + toString() + ".");
-      if (!replacement.isVariable()) throw new PatternRequiredError(toString(), "match",
+      if (!replacement.isVariable()) throw new PatternRequiredException(toString(), "match",
         "argument " + (i+1) + " ( " + x.toString() + ") is substituted to " +
         replacement.toString() + " in the context, which is not a variable.");
       Variable y = replacement.queryVariable();
-      if (!y.isBinderVariable()) throw new PatternRequiredError(toString(), "match",
+      if (!y.isBinderVariable()) throw new PatternRequiredException(toString(), "match",
         "argument " + (i+1) + " ( " + x.toString() + ") is substituted to " +
         y.toString() + " in the context, which is a non-binder variable.");
       substitutedArgs.add(y);
-      if (set.contains(y)) throw new PatternRequiredError(toString(), "match",
+      if (set.contains(y)) throw new PatternRequiredException(toString(), "match",
         "duplicate argument to meta-variable: argument " + (i+1) + " ( " + x.toString() + ") is " +
         "substituted to " + y.toString() + " which occurred before.");
       set.add(y);

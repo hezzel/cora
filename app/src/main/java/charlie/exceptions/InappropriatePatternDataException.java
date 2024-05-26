@@ -17,16 +17,15 @@ package charlie.exceptions;
 
 /**
  * Some interfaces define a kind of object which can have various patterns (eg, a Type is either
- * ARROW(σ,τ) with σ,τ types, or BASE(c, [σ1,...,σn]) with c a type constructor and all σi types.
- * There are some features that exclusively enumerate all possible patterns.  If a pattern is
- * given that is not enumerated -- typically because a new pattern was introduced later -- an
- * UnexpectedPatternError is thrown.
+ * ARROW(σ,τ) with σ,τ types, or BASE(c, [σ1,...,σn]) with c a type constructor and all σi types;
+ * such interfaces typically define functions to get the relevant pattern data (σ,τ,c,[σ1,...,σi])
+ * out, and when these functions are called on an object implementing that interface but having a
+ * different pattern, an InappropriatePatternDataException is thrown.
  */
-public class UnexpectedPatternError extends Error {
-  public UnexpectedPatternError(String classname, String functionname, String expected,
-                                String given) {
-    super("Unexpected pattern encountered: calling " + classname + "::" + functionname + " with " +
-      given + " while " + expected + " was expected.");
+public class InappropriatePatternDataException extends RuntimeException {
+  public InappropriatePatternDataException(String classname, String functionname, String expected) {
+    super("Inappropriate pattern data request: calling " + classname + "::" + functionname +
+      " while this function should only be called on " + expected + ".");
   }
 }
 

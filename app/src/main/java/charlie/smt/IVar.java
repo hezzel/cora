@@ -15,7 +15,7 @@
 
 package charlie.smt;
 
-import charlie.exceptions.SmtEvaluationError;
+import charlie.exceptions.SmtEvaluationException;
 
 public final class IVar extends IntegerExpression {
   private int _index;
@@ -44,7 +44,7 @@ public final class IVar extends IntegerExpression {
   }
 
   public int evaluate(Valuation val) {
-    if (val == null) throw new SmtEvaluationError("i" + _index + " (" + _name + ")");
+    if (val == null) throw new SmtEvaluationException("i" + _index + " (" + _name + ")");
     else return val.queryIntAssignment(_index);
   }
 

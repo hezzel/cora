@@ -16,11 +16,11 @@
 package charlie.exceptions;
 
 /**
- * An SmtEvaluationError is called when something tries to evaluate a constraint or expression that
- * contains variables.
+ * An SmtEvaluationException is called when something tries to evaluate a constraint or expression
+ * that contains variables.
  */
-public class SmtEvaluationError extends Error {
-  public SmtEvaluationError(String varname) {
+public class SmtEvaluationException extends RuntimeException {
+  public SmtEvaluationException(String varname) {
     super("Illegal attempt to evaluate constraint or expression with a variable " + varname + ".");
   }
 }

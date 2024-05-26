@@ -122,8 +122,8 @@ public class OCocoParser extends FirstOrderParser implements Parser {
    *          | BRACKETOPEN IDENTIFIER type BRACKETCLOSE
    *
    * If the given text is not a function declaration, then an attempt at error recovery is done,
-   * and if this fails, a ParseError thrown.  If no error is thrown, then this function returns a
-   * ParserDeclaration, not null.  It is guaranteed that calling this advances the parsing status
+   * and if this fails, a ParseException thrown.  If no error is thrown, then this function returns
+   * a ParserDeclaration, not null.  It is guaranteed that calling this advances the parsing status
    * (or causes an error to be thrown).
    */
   private ParserDeclaration readFunctionDeclaration() {
@@ -201,9 +201,9 @@ public class OCocoParser extends FirstOrderParser implements Parser {
    * If this returns null, reading the rule failed, but at least one character (the arrow) has been
    * read, and error recovery may still be doable; with the right approach it might still be
    * possible to read the next rule.
-   * Otherwise, it will either throw a ParseError or return an actual rule.  (If a rule is returned
-   * it is not guaranteed that parsing was entirely successful, however; it is possible that some
-   * errors have been stored in the status.)
+   * Otherwise, it will either throw a ParseException or return an actual rule.  (If a rule is
+   * returned it is not guaranteed that parsing was entirely successful, however; it is possible
+   * that some errors have been stored in the status.)
    */
   protected ParserRule readRule(LookupMap<ParserDeclaration> vars) {
     ParserTerm left = readTerm();
@@ -241,7 +241,7 @@ public class OCocoParser extends FirstOrderParser implements Parser {
 
   /**
    * Reads a term from the given string.
-   * @throws charlie.exceptions.ParseError
+   * @throws charlie.exceptions.ParseException
    */
   public static ParserTerm readTerm(String str, ErrorCollector collector) {
     ParsingStatus status = makeStatus(str, collector);
@@ -255,7 +255,7 @@ public class OCocoParser extends FirstOrderParser implements Parser {
 
   /**
    * Reads a rule from the given string.
-   * @throws charlie.exceptions.ParseError
+   * @throws charlie.exceptions.ParseException
    */
   public static ParserRule readRule(String str, ErrorCollector collector) {
     ParsingStatus status = makeStatus(str, collector);
@@ -269,7 +269,7 @@ public class OCocoParser extends FirstOrderParser implements Parser {
 
   /**
    * Reads either the signature, or a set of variable declaration from the given string
-   * @throws charlie.exceptions.ParseError
+   * @throws charlie.exceptions.ParseException
    */
   public static LookupMap<ParserDeclaration> readDeclarations(String str, ErrorCollector collect) {
     ParsingStatus status = makeStatus(str, collect);
@@ -300,7 +300,7 @@ public class OCocoParser extends FirstOrderParser implements Parser {
 
   /**
    * Reads a full TRS, in the expected format for the current paser, from the given file.
-   * @throws charlie.exceptions.ParseError
+   * @throws charlie.exceptions.ParseException
    */
   public static ParserProgram readProgramFromFile(String filename,
                                                   ErrorCollector collector) throws IOException {

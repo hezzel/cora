@@ -19,9 +19,10 @@ import com.google.common.collect.ImmutableList;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import charlie.exceptions.IllegalRuleError;
-import charlie.exceptions.NullInitialisationError;
-import charlie.exceptions.TypingError;
+import charlie.exceptions.IllegalRuleException;
+import charlie.exceptions.NullStorageException;
+import charlie.exceptions.TypingException;
+import charlie.exceptions.UnexpectedPatternException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
@@ -187,20 +188,20 @@ public class Rule {
 
   /** Checks that no parts of a rule are null. */
   private void checkNothingNull() {
-    if (_left == null) throw new NullInitialisationError("Rule", "left-hand side");
-    if (_right == null) throw new NullInitialisationError("Rule", "right-hand side");
-    if (_constraint == null) throw new NullInitialisationError("Rule", "constraints");
+    if (_left == null) throw new NullStorageException("Rule", "left-hand side");
+    if (_right == null) throw new NullStorageException("Rule", "right-hand side");
+    if (_constraint == null) throw new NullStorageException("Rule", "constraints");
   }
 
   /** Checks that both sides of a rule have the same type, and the constraint has type Bool */
   private void checkTypesCorrect() {
     if (!_left.queryType().equals(_right.queryType())) {
-      throw new TypingError("Rule", "checkTypesCorrect", "right-hand side",
-                            _right.queryType().toString(), _left.queryType().toString());
+      throw new TypingException("Rule", "checkTypesCorrect", "right-hand side",
+                                _right.queryType().toString(), _left.queryType().toString());
     }
     Type t = _constraint.queryType();
     if (!t.equals(TypeFactory.boolSort) || !t.isTheoryType()) {
-      throw new IllegalRuleError("constraint [" + _constraint.toString() + "] does not " +
+      throw new IllegalRuleException("constraint [" + _constraint.toString() + "] does not " +
         "have the theory sort Bool (it has type " + t.toString() + ").");
     }
   }
@@ -208,7 +209,7 @@ public class Rule {
   /** Checks that both sides are closed: no binder variables occur. */
   private void checkLeftClosed() {
     if (!_left.isClosed()) { 
-      throw new IllegalRuleError("left-hand side of rule [" + toString() + "] is not closed " +
+      throw new IllegalRuleException("left-hand side of rule [" + toString() + "] is not closed " +
         "(that is, freely contains a binder-variable).");
     }
   }
@@ -216,29 +217,31 @@ public class Rule {
   /** Checks that the left-hand side is not a theory term. */
   private void checkLeftNotTheory() {
     if (_left.isTheoryTerm()) {
-      throw new IllegalRuleError("left-hand side of rule [" + toString() + "] is a theory term!");
+      throw new IllegalRuleException("left-hand side of rule [" + toString() +
+        "] is a theory term!");
     }
   }
 
   /** Checks that the constraint is a theory term. */
   private void checkConstraintTheory() {
     if (!_constraint.isTheoryTerm()) {
-      throw new IllegalRuleError("constraint [" + _constraint.toString() + "] is not a theory " +
-        "term.");
+      throw new IllegalRuleException("constraint [" + _constraint.toString() +
+        "] is not a theory term.");
     }
   }
 
   /** Checks that the constraint is a first-order term. */
   private void checkConstraintFirstOrder() {
     if (!_constraint.isFirstOrder()) {
-      throw new IllegalRuleError("constraint [" + _constraint.toString() + "] is not first-order.");
+      throw new IllegalRuleException("constraint [" + _constraint.toString() +
+        "] is not first-order.");
     }
   }
 
  /**
    * Helper function for the constructor: calculates the variables (and meta-variables) that occur
-   * in the constraint and fresh in the right-hand side, and throws an IllegalRuleError if they are
-   * anything but non-binder variables of theory sort.
+   * in the constraint and fresh in the right-hand side, and throws an IllegalRuleException if they
+   * are anything but non-binder variables of theory sort.
    */
   private void calculateLVars() {
     ReplaceableList leftvars = _left.freeReplaceables();
@@ -249,24 +252,25 @@ public class Rule {
       if (leftvars.contains(x)) continue;
       switch (x.queryReplaceableKind()) {
         case Replaceable.KIND_METAVAR:
-          throw new IllegalRuleError("right-hand side of rule [" + toString() + "] contains " +
+          throw new IllegalRuleException("right-hand side of rule [" + toString() + "] contains " +
             "meta-variable " + x.toString() + " which does not occur on the left.");
         case Replaceable.KIND_BINDER:
-          throw new IllegalRuleError("right-hand side of rule [" + toString() + "] introduces " +
-            "a fresh binder variable " + x.toString() + " (so is not closed).");
+          throw new IllegalRuleException("right-hand side of rule [" + toString() +
+            "] introduces a fresh binder variable " + x.toString() + " (so is not closed).");
         case Replaceable.KIND_BASEVAR:
           if (x.queryType().isBaseType() && x.queryType().isTheoryType()) {
             Variable y = (Variable)x;
             if (!sofar.contains(y)) { sofar.add(y); builder.add(y); }
           }
           else {
-            throw new IllegalRuleError("right-hand side of rule [" + toString() + "] contains " +
+            throw new IllegalRuleException("right-hand side of rule [" + toString() + "] contains " +
               "variable " + x.queryName() + " of type " + x.queryType().toString() + " which does " +
               "not occur on the left; only variables of theory sorts may occur fresh (and that " +
               "only in some kinds of TRSs).");
           }
           break;
-        default: throw new Error("Exhausted switch for queryReplaceableKind");
+        default: throw new UnexpectedPatternException("Rule", "calculateLVars",
+          x.toString(), "metavar, binder or base var (exhausted switch for queryReplaceableKind)");
       }
     }
 
@@ -277,8 +281,9 @@ public class Rule {
         if (!sofar.contains(y)) { sofar.add(y); builder.add(y); }
       }
       else {
-        throw new IllegalRuleError("constraint of rule [" + toString() + "] contains variable " +
-          y.queryName() + " of type " + y.queryType().toString() + " which is not a theory sort.");
+        throw new IllegalRuleException("constraint of rule [" + toString() +
+          "] contains variable " + y.queryName() + " of type " + y.queryType().toString() +
+          " which is not a theory sort.");
       }
     }
     

@@ -18,9 +18,9 @@ package charlie.trs;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.IllegalRuleError;
-import charlie.exceptions.NullInitialisationError;
-import charlie.exceptions.TypingError;
+import charlie.exceptions.IllegalRuleException;
+import charlie.exceptions.NullStorageException;
+import charlie.exceptions.TypingException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.parser.CoraParser;
@@ -43,13 +43,13 @@ public class TrsFactoryRuleCreationTest {
 
   @Test
   public void testLeftNullCreation() {
-    assertThrows(NullInitialisationError.class, () ->
+    assertThrows(NullStorageException.class, () ->
       TrsFactory.createRule(makeConstant("a", type("b")), null, TrsFactory.MSTRS));
   }
 
   @Test
   public void testRightNullCreation() {
-    assertThrows(NullInitialisationError.class, () ->
+    assertThrows(NullStorageException.class, () ->
       TrsFactory.createRule(null, makeConstant("a", type("b")), TrsFactory.MSTRS));
   }
 
@@ -57,14 +57,15 @@ public class TrsFactoryRuleCreationTest {
   public void testIlltypedRule() {
     Variable x = TermFactory.createVar("x", type("a"));
     Term left = unaryTerm("id", type("b"), x);
-    assertThrows(TypingError.class, () -> TrsFactory.createRule(left, x, TrsFactory.MSTRS));
+    assertThrows(TypingException.class, () -> TrsFactory.createRule(left, x, TrsFactory.MSTRS));
   }
 
   @Test
   public void testVariableLeft() {
     Variable x = TermFactory.createVar("x", type("a"));
     Term right = unaryTerm("id", type("a"), x);
-    assertThrows(IllegalRuleError.class, () -> TrsFactory.createRule(x, right, TrsFactory.MSTRS));
+    assertThrows(IllegalRuleException.class,
+      () -> TrsFactory.createRule(x, right, TrsFactory.MSTRS));
   }
 
   @Test
@@ -72,7 +73,8 @@ public class TrsFactoryRuleCreationTest {
     Type t = type("a -> b");
     Variable x = TermFactory.createVar("x", t);
     Term left = unaryTerm("id", t, x);
-    assertThrows(IllegalRuleError.class, () -> TrsFactory.createRule(left, x, TrsFactory.MSTRS));
+    assertThrows(IllegalRuleException.class,
+      () -> TrsFactory.createRule(left, x, TrsFactory.MSTRS));
   }
 
   @Test
@@ -83,7 +85,8 @@ public class TrsFactoryRuleCreationTest {
     FunctionSymbol f = TermFactory.createConstant("f", type("Bool -> Int -> o"));
     Term left = TermFactory.createApp(f, x, y);
     Term right = TermFactory.createApp(f, x, z);
-    assertThrows(IllegalRuleError.class, () -> TrsFactory.createRule(left, right, TrsFactory.MSTRS));
+    assertThrows(IllegalRuleException.class,
+      () -> TrsFactory.createRule(left, right, TrsFactory.MSTRS));
     // for an LCTRS, it is allowed!
     TrsFactory.createRule(left, right, TrsFactory.LCTRS);
   }
@@ -94,7 +97,7 @@ public class TrsFactoryRuleCreationTest {
     Term a = makeConstant("a", type("o"));
     Term g = makeConstant("g", type("(a -> a) -> o"));
     Variable z = TermFactory.createBinder("z", type("a"));
-    assertThrows(IllegalRuleError.class, () ->
+    assertThrows(IllegalRuleException.class, () ->
       TrsFactory.createRule(a, g.apply(TermFactory.createAbstraction(z, z)), TrsFactory.STRS));
   }
 
@@ -106,7 +109,8 @@ public class TrsFactoryRuleCreationTest {
     MetaVariable z = TermFactory.createMetaVar("Z", type("o → o"), 1);
     Term left = f.apply(TermFactory.createAbstraction(x, TermFactory.createMeta(z, x)));
     Term right = makeConstant("a", type("o"));
-    assertThrows(IllegalRuleError.class, () -> TrsFactory.createRule(left, right, TrsFactory.CFS));
+    assertThrows(IllegalRuleException.class,
+      () -> TrsFactory.createRule(left, right, TrsFactory.CFS));
   }
 
   @Test
@@ -117,7 +121,8 @@ public class TrsFactoryRuleCreationTest {
     MetaVariable z = TermFactory.createMetaVar("Z", type("o → o"), 1);
     Term a = makeConstant("a", type("o"));
     Term left = f.apply(TermFactory.createAbstraction(x, TermFactory.createMeta(z, a)));
-    assertThrows(IllegalRuleError.class, () -> TrsFactory.createRule(left, a, TrsFactory.AMS));
+    assertThrows(IllegalRuleException.class,
+      () -> TrsFactory.createRule(left, a, TrsFactory.AMS));
   }
 
   @Test
@@ -125,7 +130,8 @@ public class TrsFactoryRuleCreationTest {
     Variable x = TermFactory.createBinder("x", type("a"));
     Variable y = TermFactory.createVar("y", type("b"));
     FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
-    assertThrows(IllegalRuleError.class, () -> new Rule(TermFactory.createApp(f, x, y), y));
+    assertThrows(IllegalRuleException.class,
+      () -> new Rule(TermFactory.createApp(f, x, y), y));
   }
 
   @Test

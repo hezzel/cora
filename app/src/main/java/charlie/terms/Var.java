@@ -16,8 +16,8 @@
 package charlie.terms;
 
 import java.util.Map;
-import charlie.exceptions.IndexingError;
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.IndexingException;
+import charlie.exceptions.NullStorageException;
 import charlie.types.Type;
 
 /**
@@ -43,7 +43,7 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
     _name = name;
     _index = COUNTER;
     COUNTER++;
-    if (name == null) throw new NullInitialisationError("Var", "name");
+    if (name == null) throw new NullStorageException("Var", "name");
     setVariables(new ReplaceableList(this));
   }
 
@@ -101,9 +101,9 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
     return queryType();
   }
 
-  /** @throws IndexingError, since there are no arguments */
+  /** @throws IndexingException, since there are no arguments */
   public Type queryInputType(int index) {
-    throw new IndexingError("Var", "queryInputType", index);
+    throw new IndexingException("Var", "queryInputType", index);
   }
 
   /** @return this */

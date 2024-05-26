@@ -16,7 +16,7 @@
 package charlie.smt;
 
 import java.util.List;
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.NullStorageException;
 
 /**
  * The SmtFactory is used to create Constraints and IntegerExpressions.
@@ -34,36 +34,36 @@ public class SmtFactory {
   }
   
   public static IntegerExpression createAddition(IntegerExpression arg1, IntegerExpression arg2) {
-    if (arg1 == null) throw new NullInitialisationError("Addition", "left argument");
-    if (arg2 == null) throw new NullInitialisationError("Addition", "right argument");
+    if (arg1 == null) throw new NullStorageException("Addition", "left argument");
+    if (arg2 == null) throw new NullStorageException("Addition", "right argument");
     return new Addition(arg1, arg2);
   }
 
   public static IntegerExpression createMultiplication(int num, IntegerExpression arg) {
-    if (arg == null) throw new NullInitialisationError("Multiplication", "non-constant argument");
+    if (arg == null) throw new NullStorageException("Multiplication", "non-constant argument");
     return new Multiplication(new IValue(num), arg);
   }
 
   public static IntegerExpression createMultiplication(IntegerExpression arg1, IntegerExpression arg2) {
-    if (arg1 == null) throw new NullInitialisationError("Multiplication", "left argument");
-    if (arg2 == null) throw new NullInitialisationError("Multiplication", "right argument");
+    if (arg1 == null) throw new NullStorageException("Multiplication", "left argument");
+    if (arg2 == null) throw new NullStorageException("Multiplication", "right argument");
     return new Multiplication(arg1, arg2);
   }
 
   public static IntegerExpression createNegation(IntegerExpression arg) {
-    if (arg == null) throw new NullInitialisationError("Negation", "argument");
+    if (arg == null) throw new NullStorageException("Negation", "argument");
     return new CMult(-1, arg);
   }
 
   public static IntegerExpression createDivision(IntegerExpression arg1, IntegerExpression arg2) {
-    if (arg1 == null) throw new NullInitialisationError("Division", "left argument");
-    if (arg2 == null) throw new NullInitialisationError("Division", "right argument");
+    if (arg1 == null) throw new NullStorageException("Division", "left argument");
+    if (arg2 == null) throw new NullStorageException("Division", "right argument");
     return new Division(arg1, arg2);
   }
 
   public static IntegerExpression createModulo(IntegerExpression arg1, IntegerExpression arg2) {
-    if (arg1 == null) throw new NullInitialisationError("Modulo", "left argument");
-    if (arg2 == null) throw new NullInitialisationError("Modulo", "right argument");
+    if (arg1 == null) throw new NullStorageException("Modulo", "left argument");
+    if (arg2 == null) throw new NullStorageException("Modulo", "right argument");
     return new Modulo(arg1, arg2);
   }
 
@@ -86,81 +86,81 @@ public class SmtFactory {
   }
 
   public static Constraint createGreater(IntegerExpression left, IntegerExpression right) {
-    if (left == null) throw new NullInitialisationError("Greater", "left argument");
-    if (right == null) throw new NullInitialisationError("Greater", "right argument");
+    if (left == null) throw new NullStorageException("Greater", "left argument");
+    if (right == null) throw new NullStorageException("Greater", "right argument");
     return new Geq0(left, new Addition(new IValue(1), right));
   }
 
   public static Constraint createSmaller(IntegerExpression left, IntegerExpression right) {
-    if (left == null) throw new NullInitialisationError("Greater", "reversed right argument");
-    if (right == null) throw new NullInitialisationError("Greater", "reversed left argument");
+    if (left == null) throw new NullStorageException("Greater", "reversed right argument");
+    if (right == null) throw new NullStorageException("Greater", "reversed left argument");
     return new Geq0(right, new Addition(new IValue(1), left));
   }
 
   public static Constraint createGeq(IntegerExpression left, IntegerExpression right) {
-    if (left == null) throw new NullInitialisationError("Geq", "left argument");
-    if (right == null) throw new NullInitialisationError("Geq", "right argument");
+    if (left == null) throw new NullStorageException("Geq", "left argument");
+    if (right == null) throw new NullStorageException("Geq", "right argument");
     return new Geq0(left, right);
   }
 
   /** Creates left ≥ 0 */
   public static Constraint createGeq(IntegerExpression left) {
-    if (left == null) throw new NullInitialisationError("Geq", "left argument");
+    if (left == null) throw new NullStorageException("Geq", "left argument");
     return new Geq0(left);
   }
 
   public static Constraint createLeq(IntegerExpression left, IntegerExpression right) {
-    if (left == null) throw new NullInitialisationError("Geq", "reversed right argument");
-    if (right == null) throw new NullInitialisationError("Geq", "reversed left argument");
+    if (left == null) throw new NullStorageException("Geq", "reversed right argument");
+    if (right == null) throw new NullStorageException("Geq", "reversed left argument");
     return new Geq0(right, left);
   }
 
   public static Constraint createEqual(IntegerExpression left, IntegerExpression right) {
-    if (left == null) throw new NullInitialisationError("Equal", "left argument");
-    if (right == null) throw new NullInitialisationError("Equal", "right argument");
+    if (left == null) throw new NullStorageException("Equal", "left argument");
+    if (right == null) throw new NullStorageException("Equal", "right argument");
     return new Is0(left, right);
   }
 
   /** Creates left = 0 */
   public static Constraint createEqual(IntegerExpression left) {
-    if (left == null) throw new NullInitialisationError("Equal", "left argument");
+    if (left == null) throw new NullStorageException("Equal", "left argument");
     return new Is0(left);
   }
 
   public static Constraint createUnequal(IntegerExpression left, IntegerExpression right) {
-    if (left == null) throw new NullInitialisationError("Distinct", "left argument");
-    if (right == null) throw new NullInitialisationError("Distinct", "right argument");
+    if (left == null) throw new NullStorageException("Distinct", "left argument");
+    if (right == null) throw new NullStorageException("Distinct", "right argument");
     return new Neq0(left, right);
   }
 
   /** Creates left != 0 */
   public static Constraint createUnequal(IntegerExpression left) {
-    if (left == null) throw new NullInitialisationError("Equal", "left argument");
+    if (left == null) throw new NullStorageException("Equal", "left argument");
     return new Neq0(left);
   }
 
   public static Constraint createNegation(Constraint c) {
-    if (c == null) throw new NullInitialisationError("Not", "argument");
+    if (c == null) throw new NullStorageException("Not", "argument");
     return new Not(c);
   }
 
   public static Constraint createConjunction(Constraint a, Constraint b) {
-    if (a == null) throw new NullInitialisationError("Conjunction", "left argument");
-    if (b == null) throw new NullInitialisationError("Conjunction", "right argument");
+    if (a == null) throw new NullStorageException("Conjunction", "left argument");
+    if (b == null) throw new NullStorageException("Conjunction", "right argument");
     return new Conjunction(a, b);
   }
 
   public static Constraint createDisjunction(Constraint a, Constraint b) {
-    if (a == null) throw new NullInitialisationError("Disjunction", "left argument");
-    if (b == null) throw new NullInitialisationError("Disjunction", "right argument");
+    if (a == null) throw new NullStorageException("Disjunction", "left argument");
+    if (b == null) throw new NullStorageException("Disjunction", "right argument");
     return new Disjunction(a, b);
   }
 
   public static Constraint createDisjunction(List<Constraint> args) {
-    if (args == null) throw new NullInitialisationError("Disjunction", "argument list");
+    if (args == null) throw new NullStorageException("Disjunction", "argument list");
     for (int i = 0; i < args.size(); i++) {
       if (args.get(i) == null) {
-        throw new NullInitialisationError("Disjunction", "argument " + (i+1));
+        throw new NullStorageException("Disjunction", "argument " + (i+1));
       }
     }
     if (args.size() == 0) return new Falsehood();
@@ -169,14 +169,14 @@ public class SmtFactory {
   }
 
   public static Constraint createImplication(Constraint a, Constraint b) {
-    if (a == null) throw new NullInitialisationError("Implication", "left argument");
-    if (b == null) throw new NullInitialisationError("Implication", "right argument");
+    if (a == null) throw new NullStorageException("Implication", "left argument");
+    if (b == null) throw new NullStorageException("Implication", "right argument");
     return new Disjunction(new Not(a), b);
   }
 
   public static Constraint createIff(Constraint a, Constraint b) {
-    if (a == null) throw new NullInitialisationError("Iff", "left argument");
-    if (b == null) throw new NullInitialisationError("Iff", "right argument");
+    if (a == null) throw new NullStorageException("Iff", "left argument");
+    if (b == null) throw new NullStorageException("Iff", "right argument");
     return new Iff(a, b);
   }
 }

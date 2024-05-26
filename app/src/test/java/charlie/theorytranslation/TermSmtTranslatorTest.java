@@ -17,8 +17,8 @@ package charlie.theorytranslation;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import charlie.exceptions.UnsupportedTheoryError;
-import charlie.exceptions.TypingError;
+import charlie.exceptions.UnsupportedTheoryException;
+import charlie.exceptions.TypingException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.Term;
@@ -118,7 +118,7 @@ public class TermSmtTranslatorTest {
   @Test
   public void testNonIntTranslateInteger() {
     TermSmtTranslator tst = new TermSmtTranslator();
-    assertThrows(TypingError.class,
+    assertThrows(TypingException.class,
       () -> tst.translateIntegerExpression(TheoryFactory.createVar("x", TypeFactory.boolSort)));
   }
 
@@ -129,7 +129,7 @@ public class TermSmtTranslatorTest {
     Term f = TermFactory.createConstant("+",
       TypeFactory.createArrow(is, TypeFactory.createArrow(is, is)));
     Term t = f.apply(TheoryFactory.createValue(7)).apply(TheoryFactory.createValue(8));
-    assertThrows(UnsupportedTheoryError.class,
+    assertThrows(UnsupportedTheoryException.class,
       () -> tst.translateIntegerExpression(t));
   }
 
@@ -222,7 +222,7 @@ public class TermSmtTranslatorTest {
   @Test
   public void testNonBoolTranslateConstraint() {
     TermSmtTranslator tst = new TermSmtTranslator();
-    assertThrows(UnsupportedTheoryError.class, () ->
+    assertThrows(UnsupportedTheoryException.class, () ->
       tst.translateIntegerExpression(TheoryFactory.createValue("true")));
   }
 
@@ -233,7 +233,7 @@ public class TermSmtTranslatorTest {
     Term f = TermFactory.createConstant("∧",
       TypeFactory.createArrow(bs, TypeFactory.createArrow(bs, bs)));
     Term t = f.apply(TheoryFactory.createValue(true)).apply(TheoryFactory.createValue(false));
-    assertThrows(UnsupportedTheoryError.class, () ->
+    assertThrows(UnsupportedTheoryException.class, () ->
       tst.translateConstraint(t));
   }
 }

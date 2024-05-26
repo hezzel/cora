@@ -18,7 +18,7 @@ package charlie.parser;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.ParseError;
+import charlie.exceptions.ParseException;
 import charlie.util.LookupMap;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
@@ -211,7 +211,7 @@ public class ITrsParserTest {
   public void testMissingRules() {
     String str = "(VAR x y) (COMMENT an empty file)";
     try { ITrsParser.readProgramFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:11: Expected rules declaration but got COMMENTSTART ((COMMENT).\n"));
       return;

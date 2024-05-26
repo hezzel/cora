@@ -16,13 +16,17 @@
 package charlie.exceptions;
 
 /**
- * A NullStorageError is thrown when a call to update a certain object is given a null argument
- * (when this should not happen); this (along with NullInitialisationError in the constructor)
- * guarantees that the object will never store null values.
+ * Some interfaces define a kind of object which can have various patterns (eg, a Type is either
+ * ARROW(σ,τ) with σ,τ types, or BASE(c, [σ1,...,σn]) with c a type constructor and all σi types.
+ * There are some features that exclusively enumerate all possible patterns.  If a pattern is
+ * given that is not enumerated -- typically because a new pattern was introduced later -- an
+ * UnexpectedPatternException is thrown.
  */
-public class NullStorageError extends Error {
-  public NullStorageError(String classname, String message) {
-    super("Trying to update " + classname + " by storing a null argument: " + message + ".");
+public class UnexpectedPatternException extends RuntimeException {
+  public UnexpectedPatternException(String classname, String functionname, String expected,
+                                    String given) {
+    super("Unexpected pattern encountered: calling " + classname + "::" + functionname + " with " +
+      given + " while " + expected + " was expected.");
   }
 }
 

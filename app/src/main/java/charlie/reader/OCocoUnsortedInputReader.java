@@ -19,9 +19,9 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import charlie.exceptions.IllegalRuleError;
-import charlie.exceptions.ParseError;
-import charlie.exceptions.UnexpectedPatternError;
+import charlie.exceptions.IllegalRuleException;
+import charlie.exceptions.ParseException;
+import charlie.exceptions.UnexpectedPatternException;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.Token;
@@ -90,7 +90,7 @@ public class OCocoUnsortedInputReader {
         args = a;
         break;
       default:
-        throw new UnexpectedPatternError("OCocoUnsortedInputReader", "makeTerm",
+        throw new UnexpectedPatternException("OCocoUnsortedInputReader", "makeTerm",
           "parser term " + pterm.toString(), "a variable or functional term");
     }
 
@@ -138,7 +138,7 @@ public class OCocoUnsortedInputReader {
         storeError("Duplicate symbol: " + name + " occurs both as a variable and as a function " +
           "symbol!", vars.get(name).token());
         // let's not keep giving this error for every rule; just give up
-        throw new ParseError(_errors.queryCollectedMessages());
+        throw new ParseException(_errors.queryCollectedMessages());
       }
       _symbols.addVariable(x);
     }
@@ -150,7 +150,7 @@ public class OCocoUnsortedInputReader {
     Term r = makeTerm(right);
 
     try { return TrsFactory.createRule(l, r, TrsFactory.MSTRS); }
-    catch (IllegalRuleError e) {
+    catch (IllegalRuleException e) {
       storeError(e.queryProblem(), rule.token());
       return null;
     }
@@ -205,7 +205,7 @@ public class OCocoUnsortedInputReader {
 
   /**
    * Reads the given term from string, given that all the variables in it are listed in vars.
-   * @throws ParseError if either parsing or typing failed.
+   * @throws ParseException if either parsing or typing failed.
    */
   public static Term readTerm(String str, String vars) {
     ErrorCollector collector = new ErrorCollector();
@@ -218,7 +218,9 @@ public class OCocoUnsortedInputReader {
     Term ret = null;
     if (collector.queryErrorCount() == 0) ret = rd.makeTerm(pterm);
     // NOT using else here, because errors may also arise from makeUnsortedTerm!
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    if (collector.queryErrorCount() > 0) {
+      throw new ParseException(collector.queryCollectedMessages());
+    }
     return ret;
   }
 
@@ -229,13 +231,15 @@ public class OCocoUnsortedInputReader {
   static TRS readParserProgram(ParserProgram trs, ErrorCollector collector) {
     OCocoUnsortedInputReader rd = new OCocoUnsortedInputReader(new SymbolData(), collector);
     TRS ret = rd.makeTRS(trs);
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    if (collector.queryErrorCount() > 0) {
+      throw new ParseException(collector.queryCollectedMessages());
+    }
     return ret;
   }
 
   /**
    * Parses the given program, and returns the unsorted TRS that it defines.
-   * If the string is not correctly formed, this may throw a ParseError.
+   * If the string is not correctly formed, this may throw a ParseException.
    */
   public static TRS readTrsFromString(String str) {
     ErrorCollector collector = new ErrorCollector();
@@ -245,7 +249,8 @@ public class OCocoUnsortedInputReader {
 
   /**
    * Parses the given file, which should be a .trs or .mstrs file, into a many-sorted TRS.
-   * This may throw a ParseError, or an IOException if something goes wrong with the file reading.
+   * This may throw a ParseException, or an IOException if something goes wrong with the file
+   * reading.
    */
   public static TRS readTrsFromFile(String filename) throws IOException {
     ErrorCollector collector = new ErrorCollector();

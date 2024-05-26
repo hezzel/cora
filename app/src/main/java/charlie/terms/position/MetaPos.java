@@ -15,7 +15,7 @@
 
 package charlie.terms.position;
 
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.NullStorageException;
 
 public record MetaPos(int index, Position tail) implements Position {
   public MetaPos(int index, Position tail) {
@@ -23,7 +23,7 @@ public record MetaPos(int index, Position tail) implements Position {
       throw new IllegalArgumentException("MetaPos::constructor -- given index ≤ 0");
     }
     if (tail == null) {
-      throw new NullInitialisationError("MetaPos", "tail");
+      throw new NullStorageException("MetaPos", "tail");
     }
     this.index = index;
     this.tail = tail;

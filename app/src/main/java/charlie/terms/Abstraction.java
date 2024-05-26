@@ -34,13 +34,14 @@ class Abstraction extends TermInherit {
 
   /**
    * Generates the abstraction λ<binder>.<subterm>.
-   * Throws an IllegalArgumentError if the given binder is not marked as a binder variable.
+   * Throws an IllegalArgumentException if the given binder is not marked as a binder variable.
    */
   public Abstraction(Variable binder, Term subterm) {
-    if (binder == null) throw new NullInitialisationError("Abstraction", "binder");
-    if (subterm == null) throw new NullInitialisationError("Abstraction", "subterm");
+    if (binder == null) throw new NullStorageException("Abstraction", "binder");
+    if (subterm == null) throw new NullStorageException("Abstraction", "subterm");
     if (!binder.isBinderVariable()) {
-      throw new IllegalTermError("Abstraction", binder.toString() + " is not marked as a binder.");
+      throw new IllegalArgumentException("Trying to construct an abstraction whose binder " +
+        binder.queryName() + " is not marked as a binder.");
     }
     // to guarantee well-behavedness, make sure that subterm does not already bind the binder
     if (subterm.boundVars().contains(binder)) subterm = subterm.refreshBinders();
@@ -84,10 +85,10 @@ class Abstraction extends TermInherit {
     return _subterm;
   }
 
-  /** @throws InappropriatePatternDataError, as an abstraction is not a meta-application */
+  /** @throws InappropriatePatternDataException, as an abstraction is not a meta-application */
   public MetaVariable queryMetaVariable() {
-    throw new InappropriatePatternDataError("Abstraction", "queryMetaVariable", "meta-variable " +
-      "applications or terms with meta-variable applications as the head");
+    throw new InappropriatePatternDataException("Abstraction", "queryMetaVariable",
+      "meta-variable applications or terms with meta-variable applications as the head");
   }
 
   /** @return the binder of the abstraction */
@@ -134,7 +135,7 @@ class Abstraction extends TermInherit {
       case LambdaPos(Position tail):
         return _subterm.querySubterm(tail);
       default:
-        throw new IndexingError("Abstraction", "querySubterm", toString(), pos.toString());
+        throw new IndexingException("Abstraction", "querySubterm", toString(), pos.toString());
     }
   }
 
@@ -144,7 +145,7 @@ class Abstraction extends TermInherit {
       case LambdaPos(Position tail):
         return new Abstraction(_binder, _subterm.replaceSubterm(pos.queryTail(), replacement));
       default:  
-        throw new IndexingError("Abstraction", "replaceSubterm", toString(), pos.toString());
+        throw new IndexingException("Abstraction", "replaceSubterm", toString(), pos.toString());
     }
   }
 
@@ -214,12 +215,12 @@ class Abstraction extends TermInherit {
     Variable y = term.queryVariable();
     if (!x.queryType().equals(y.queryType())) return false;
     if (mu.containsKey(x)) {
-      throw new IllegalTermError("Abstraction",
-        "Calling alphaEquals when mu already maps " + x.toString() + ".");
+      throw new IllegalArgumentException("Calling Abstraction::alphaEquals when mu already maps " +
+        x.toString() + ".");
     }   
     if (xi.containsKey(y)) {
-      throw new IllegalTermError("Abstraction",
-        "Calling alphaEquals when xi already maps " + y.toString() + ".");
+      throw new IllegalArgumentException("Calling Abstraction::alphaEquals when xi already maps " +
+        y.toString() + ".");
     }   
     mu.put(x, k); 
     xi.put(y, k); 

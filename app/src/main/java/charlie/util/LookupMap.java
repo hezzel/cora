@@ -18,7 +18,7 @@ package charlie.util;
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeMap;
-import charlie.exceptions.NullStorageError;
+import charlie.exceptions.NullStorageException;
 
 /**
  * This class provides a read-only mapping from strings to a given type, with no null entries.
@@ -56,7 +56,7 @@ public class LookupMap<T> {
     public void put(String key, T value) {
       _internal.put(key, value);
       if (value == null) {
-        throw new NullStorageError("LookupMap", "cannot store a null value in a LookupMap");
+        throw new NullStorageException("LookupMap", "cannot store a null value in a LookupMap");
       }
     }
 

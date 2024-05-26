@@ -16,8 +16,8 @@
 package charlie.trs;
 
 import java.util.Collection;
-import charlie.exceptions.NullInitialisationError;
-import charlie.exceptions.TypingError;
+import charlie.exceptions.NullStorageException;
+import charlie.exceptions.TypingException;
 import charlie.util.LookupMap;
 import charlie.terms.FunctionSymbol;
 
@@ -27,24 +27,24 @@ public class Alphabet {
 
   /** Creates an Alphabet with the given symbols. */
   public Alphabet(LookupMap<FunctionSymbol> symbols) {
-    if (symbols == null) throw new NullInitialisationError("Alphabet", "symbols list");
+    if (symbols == null) throw new NullStorageException("Alphabet", "symbols list");
     _symbols = symbols;
   }
 
   /**
    * Create an alphabet with the given symbols.
    * Duplicate occurrences of the same function symbol are removed; duplicate occurrences of the
-   * same type that are not the same symbol cause a TypingError to be produced.
+   * same type that are not the same symbol cause a TypingException to be produced.
    */
   public Alphabet(Collection<FunctionSymbol> symbols) {
     LookupMap.Builder<FunctionSymbol> builder = new LookupMap.Builder<FunctionSymbol>();
-    if (symbols == null) throw new NullInitialisationError("Alphabet", "symbols list");
+    if (symbols == null) throw new NullStorageException("Alphabet", "symbols list");
     for (FunctionSymbol f : symbols) {
-      if (f == null) throw new NullInitialisationError("Alphabet", "a symbol");
+      if (f == null) throw new NullStorageException("Alphabet", "a symbol");
       if (builder.containsKey(f.queryName())) {
         FunctionSymbol g = builder.get(f.queryName());
         if (!g.equals(f)) {
-          throw new TypingError("Alphabet", "add", "duplicate occurrence of " +
+          throw new TypingException("Alphabet", "add", "duplicate occurrence of " +
             f.queryName(), g.queryType().toString(), f.queryType().toString());
         }
       }
@@ -58,11 +58,11 @@ public class Alphabet {
     LookupMap.Builder<FunctionSymbol> builder = new LookupMap.Builder<FunctionSymbol>();
     for (FunctionSymbol f : _symbols.values()) builder.put(f.queryName(), f);
     for (FunctionSymbol f : toadd) {
-      if (f == null) throw new NullInitialisationError("Alphabet", "an extra symbol");
+      if (f == null) throw new NullStorageException("Alphabet", "an extra symbol");
       if (builder.containsKey(f.queryName())) {
         FunctionSymbol g = builder.get(f.queryName());
         if (!g.equals(f)) {
-          throw new TypingError("Alphabet", "add", "duplicate occurrence of " +
+          throw new TypingException("Alphabet", "add", "duplicate occurrence of " +
             f.queryName(), g.queryType().toString(), f.queryType().toString());
         }
       }

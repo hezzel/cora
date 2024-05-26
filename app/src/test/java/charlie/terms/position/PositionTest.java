@@ -32,8 +32,8 @@ public class PositionTest {
     assertTrue(pos.isEmpty());
     assertTrue(pos.isFinal());
     assertTrue(pos.queryChopCount() == 0);
-    assertThrows(InappropriatePatternDataError.class, () -> pos.queryHead());
-    assertThrows(InappropriatePatternDataError.class, () -> pos.queryTail());
+    assertThrows(InappropriatePatternDataException.class, () -> pos.queryHead());
+    assertThrows(InappropriatePatternDataException.class, () -> pos.queryTail());
     
     boolean ok = false;
     switch (pos) {
@@ -57,8 +57,8 @@ public class PositionTest {
     assertFalse(pos.isEmpty());
     assertTrue(pos.isFinal());
     assertTrue(pos.queryChopCount() == 3);
-    assertThrows(InappropriatePatternDataError.class, () -> pos.queryHead());
-    assertThrows(InappropriatePatternDataError.class, () -> pos.queryTail());
+    assertThrows(InappropriatePatternDataException.class, () -> pos.queryHead());
+    assertThrows(InappropriatePatternDataException.class, () -> pos.queryTail());
     
     boolean ok = false;
     switch (pos) {
@@ -158,13 +158,13 @@ public class PositionTest {
 
   @Test
   public void testNullTail() {
-    assertThrows(NullInitialisationError.class, () -> new ArgumentPos(12, null));
-    assertThrows(NullInitialisationError.class, () -> new MetaPos(3, null));
-    assertThrows(NullInitialisationError.class, () -> new LambdaPos(null));
+    assertThrows(NullStorageException.class, () -> new ArgumentPos(12, null));
+    assertThrows(NullStorageException.class, () -> new MetaPos(3, null));
+    assertThrows(NullStorageException.class, () -> new LambdaPos(null));
   }
 
   @Test
-  public void testCorrectFullPositionParsing() {
+  public void testCorrectFullPositionParsing() throws CustomParserException {
     Position pos = Position.parse("5.6.7");
     assertTrue(pos.toString().equals("5.6.7.ε"));
     pos = Position.parse("19.!12.ε");
@@ -178,7 +178,7 @@ public class PositionTest {
   }
 
   @Test
-  public void testCorrectPartialPositionParsing() {
+  public void testCorrectPartialPositionParsing() throws CustomParserException {
     Position pos = Position.parse("1.254.3.*15");
     assertTrue(pos.toString().equals("1.254.3.☆15"));
     pos = Position.parse(("3.111.☆2"));

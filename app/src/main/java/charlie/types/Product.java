@@ -17,12 +17,12 @@ package charlie.types;
 
 import com.google.common.collect.ImmutableList;
 
-import charlie.exceptions.IndexingError;
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.IndexingException;
+import charlie.exceptions.NullStorageException;
 
 public record Product(ImmutableList<Type> types) implements Type {
   public Product {
-    if (types == null) throw new NullInitialisationError("Product", "product list");
+    if (types == null) throw new NullStorageException("Product", "product list");
     if (types.size() < 2) throw new IllegalArgumentException("product list has size " +
       types.size() + "; should be at least 2");
   }
@@ -86,7 +86,7 @@ public record Product(ImmutableList<Type> types) implements Type {
   @Override
   public Type subtype(int index) {
     if (index <= 0 || index > this.types.size()) {
-      throw new IndexingError("Product", "subtype", index, 1, this.types.size());
+      throw new IndexingException("Product", "subtype", index, 1, this.types.size());
     }
     return this.types.get(index-1);
   }

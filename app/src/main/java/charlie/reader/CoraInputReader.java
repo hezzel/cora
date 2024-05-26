@@ -125,7 +125,7 @@ public class CoraInputReader extends TermTyper {
       else if (kind == null) return TrsFactory.createRule(l, r, c);
       else return TrsFactory.createRule(l, r, c, kind);
     }
-    catch (IllegalRuleError e) {
+    catch (IllegalRuleException e) {
       storeError(e.queryProblem(), rule.token());
       return null;
     }
@@ -149,10 +149,10 @@ public class CoraInputReader extends TermTyper {
       return TrsFactory.createTrs(_symbols.queryCurrentAlphabet(), rules,
                                   _symbols.queryPrivateSymbols(), false, kind);
     }
-    catch (IllegalRuleError e) {
+    catch (IllegalRuleException e) {
       _errors.addError(e.queryProblem());
     }
-    catch (IllegalSymbolError e) {
+    catch (IllegalSymbolException e) {
       _errors.addError(e.queryProblem());
     }
     return null;
@@ -189,6 +189,13 @@ public class CoraInputReader extends TermTyper {
     return CoraParser.readType(str);
   }
 
+  /** Throws a ParseException if the given ErrorCollector has errors. */
+  private static void throwIfErrors(ErrorCollector collector) {
+    if (collector.queryErrorCount() > 0) {
+      throw new ParseException(collector.queryCollectedMessages());
+    }
+  }
+
   /**
    * Reads the given term from string.
    * The TRS is used for its alphabet (function symbols are automatically recognised), and to
@@ -197,11 +204,11 @@ public class CoraInputReader extends TermTyper {
   public static Term readTerm(String str, TRS trs) {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm pt = CoraParser.readTerm(str, trs.theoriesIncluded(), collector);
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    throwIfErrors(collector);
     SymbolData data = new SymbolData(trs);
     CoraInputReader reader = new CoraInputReader(data, collector);
     Term ret = reader.makeTerm(pt, null, true);
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    throwIfErrors(collector);
     return ret;
   }
 
@@ -213,11 +220,11 @@ public class CoraInputReader extends TermTyper {
   public static Rule readRule(String str, TRS trs) {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = CoraParser.readRule(str, trs.theoriesIncluded(), collector);
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    throwIfErrors(collector);
     SymbolData data = new SymbolData(trs);
     CoraInputReader reader = new CoraInputReader(data, collector);
     Rule ret = reader.makeRule(rule, null);
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    throwIfErrors(collector);
     return ret;
   } 
 
@@ -231,7 +238,7 @@ public class CoraInputReader extends TermTyper {
     ParserProgram trs = CoraParser.readProgramFromString(str, constrained, collector);
     CoraInputReader reader = new CoraInputReader(new SymbolData(), collector);
     TRS ret = reader.makeTRS(trs, kind);
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    throwIfErrors(collector);
     return ret;
   }
 
@@ -263,7 +270,7 @@ public class CoraInputReader extends TermTyper {
     ParserProgram trs = CoraParser.readProgramFromFile(filename, constrained, collector);
     CoraInputReader reader = new CoraInputReader(new SymbolData(), collector);
     TRS ret = reader.makeTRS(trs, kind);
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    throwIfErrors(collector);
     return ret;
   }
 }

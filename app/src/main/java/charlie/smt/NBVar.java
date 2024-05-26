@@ -15,7 +15,7 @@
 
 package charlie.smt;
 
-import charlie.exceptions.SmtEvaluationError;
+import charlie.exceptions.SmtEvaluationException;
 
 /** This class holds the negation of a boolean variable. */
 public final class NBVar extends Constraint {
@@ -38,7 +38,7 @@ public final class NBVar extends Constraint {
   }
 
   public boolean evaluate(Valuation val) {
-    if (val == null) throw new SmtEvaluationError("!" + _negated.queryName());
+    if (val == null) throw new SmtEvaluationException("!" + _negated.queryName());
     else return !val.queryBoolAssignment(_negated.queryIndex());
   }
 

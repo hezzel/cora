@@ -16,7 +16,7 @@
 package charlie.terms;
 
 import java.util.Map;
-import charlie.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.InappropriatePatternDataException;
 import charlie.types.TypeFactory;
 
 /**
@@ -54,7 +54,7 @@ class IntegerValue extends ValueInherit {
   }
 
   public boolean getBool() {
-    throw new InappropriatePatternDataError("IntegerValue", "getBool", "boolean values");
+    throw new InappropriatePatternDataException("IntegerValue", "getBool", "boolean values");
   }
 }
 

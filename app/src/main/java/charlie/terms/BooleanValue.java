@@ -15,7 +15,7 @@
 
 package charlie.terms;
 
-import charlie.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.InappropriatePatternDataException;
 import charlie.types.TypeFactory;
 
 /** BooleanValues are the function symbols true and false (which are both theory symbols). */
@@ -50,6 +50,6 @@ class BooleanValue extends ValueInherit {
   }
 
   public int getInt() {
-    throw new InappropriatePatternDataError("BooleanValue", "getInt", "integer values");
+    throw new InappropriatePatternDataException("BooleanValue", "getInt", "integer values");
   }
 }

@@ -18,7 +18,7 @@ package charlie.parser;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.ParseError;
+import charlie.exceptions.ParseException;
 import charlie.util.LookupMap;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
@@ -43,7 +43,7 @@ public class OCocoParserTest {
   @Test
   public void testReadVarListWithIllegalTokens() {
     try { OCocoParser.readProgramFromString("(VAR x -> y ( 23) =="); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:8: Unexpected token: -> (ARROW); expected a variable name\n"));
     }
@@ -102,7 +102,7 @@ public class OCocoParserTest {
     try {
       OCocoParser.readProgramFromString("  (VAR x \ny x ( 12 -> y y (RULES ))", collector);
     }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "2:3: Double declaration of variable x\n" +
         "2:5: Unexpected token: ( (BRACKETOPEN); expected a variable name\n"));
@@ -268,7 +268,7 @@ public class OCocoParserTest {
   @Test
   public void testStupidDeclaration() {
     ErrorCollector collector = new ErrorCollector();
-    assertThrows(ParseError.class, () -> OCocoParser.readDeclarations("(SIG (f : (a -> b) -> c))"));
+    assertThrows(ParseException.class, () -> OCocoParser.readDeclarations("(SIG (f : (a -> b) -> c))"));
     // this is stupid enough not to try recovery
   }
 
@@ -396,7 +396,7 @@ public class OCocoParserTest {
   @Test
   public void testReadRuleWithoutArrow() {
     try {OCocoParser.readRule("a a", new ErrorCollector()); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals("1:3: Expected ARROW (->) but got IDENTIFIER (a).\n"));
       return;
     }
@@ -496,7 +496,7 @@ public class OCocoParserTest {
   public void testReadTrsWithMoreAfterEnding() {
     String str = "(VAR x y) (RULES f(x) -> y) uh oh!";
     try { OCocoParser.readProgramFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:29: Expected end of input but got IDENTIFIER (uh).\n"));
       return;
@@ -508,7 +508,7 @@ public class OCocoParserTest {
   public void testReadTrsWithMoreAfterComment() {
     String str = "(VAR x) (RULES f(x) -> g(x,)) (COMMENT extra comma ) there...) you see?";
     try { OCocoParser.readProgramFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:28: Expected an identifier (variable or function name) but got BRACKETCLOSE ()).\n" +
         "1:64: Unexpected token: you; expected end of input following comment.\n"));
@@ -521,7 +521,7 @@ public class OCocoParserTest {
   public void testTrsWithUnclosedComment() {
     String str = "(RULES a -> a) (COMMENT bing";
     try { OCocoParser.readProgramFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals("1:16: Unclosed comment.\n"));
       return;
     }
@@ -532,7 +532,7 @@ public class OCocoParserTest {
   public void testMixSigAndVar() {
     String str = "(SIG (f 2)) (VAR x) (RULES I can just type nonsense here";
     try { OCocoParser.readProgramFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:13: Expected rules declaration but got VARSDECSTART ((VAR).\n"));
       return;
@@ -544,7 +544,7 @@ public class OCocoParserTest {
   public void testMissingRules() {
     String str = "(SIG (f 2)) (COMMENT an empty file)";
     try { OCocoParser.readProgramFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:13: Expected rules declaration but got COMMENTSTART ((COMMENT).\n"));
       return;

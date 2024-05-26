@@ -16,7 +16,7 @@
 package charlie.terms;
 
 import java.util.Map;
-import charlie.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.InappropriatePatternDataException;
 import charlie.types.Type;
 
 /** A Constant that happens to be a Calculation Symbol. */
@@ -83,8 +83,8 @@ public class CalculationConstant extends LeafTermInherit implements CalculationS
 
   /** Throws an error, because a calculation symbol is not a variable (or associated with one). */
   public Variable queryVariable() {
-    throw new InappropriatePatternDataError("CalculationConstant" + _name, "queryVariable",
-                                            "variables or lambda-expressions");
+    throw new InappropriatePatternDataException("CalculationConstant" + _name, "queryVariable",
+                                                "variables or lambda-expressions");
   }
 
   /**
@@ -92,7 +92,7 @@ public class CalculationConstant extends LeafTermInherit implements CalculationS
    * one).
    */
   public MetaVariable queryMetaVariable() {
-    throw new InappropriatePatternDataError("CalculationConstant" + _name, "queryMetaVariable",
+    throw new InappropriatePatternDataException("CalculationConstant" + _name, "queryMetaVariable",
                                             "meta-variable applications (or terms headed by one)");
   }
 

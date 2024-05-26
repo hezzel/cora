@@ -18,7 +18,7 @@ package charlie.reader;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.ParseError;
+import charlie.exceptions.ParseException;
 import charlie.trs.TRS;
 
 public class ITrsInputReaderTest {
@@ -28,7 +28,7 @@ public class ITrsInputReaderTest {
     // no errors are given about the inconsistent arities, because we stop checking if there are
     // parser errors
     try { ITrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:24: Expected a comma or closing bracket but got IDENTIFIER (y).\n"));
       return;
@@ -40,7 +40,7 @@ public class ITrsInputReaderTest {
   public void testAbuseOfInfixSymbol() {
     String str = "(VAR x y) (RULES f(+(x,y)) -> 0)";
     try { ITrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "1:20: Expected an identifier (variable or function name) but got PLUS (+).\n" +
         "1:23: Expected closing bracket ')' but got COMMA (,).\n"));
@@ -54,7 +54,7 @@ public class ITrsInputReaderTest {
     String str = "(VAR a g)\n" +
                  "(RULES g(a(x)) -> a(3))";
     try { ITrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "2:8: Variable g occurs with arguments like a function symbol.\n" +
         "2:10: Variable a occurs with arguments like a function symbol.\n" +
@@ -69,7 +69,7 @@ public class ITrsInputReaderTest {
     String str = "(VAR x y z)\n" +
                  "(RULES f(x) -> g(x, x + f(x, z)) g(x,TRUE,z) -> h(y))";
     try { ITrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "2:25: Function symbol f occurs with 2 arguments, while it previously occurred with 1.\n" +
         "2:34: Function symbol g occurs with 3 arguments, while it previously occurred with 2.\n"));
@@ -126,7 +126,7 @@ public class ITrsInputReaderTest {
       "  if(FALSE, x, y) -> y\n" +
       ")";
     try { ITrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals("I could not derive a valid typing " +
         "(Int and Bool positions are not consistentnly used).\n"));
       return;
@@ -151,7 +151,7 @@ public class ITrsInputReaderTest {
       "(VAR x)\n" +
       "(RULES x -> a :|: x > 0)\n";
     try { ITrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "2:10: The left-hand side of a rule is not allowed to be a variable.\n"));
       return;
@@ -166,7 +166,7 @@ public class ITrsInputReaderTest {
       "(VAR x y z)\n" +
       "(RULES f(x) -> g(y, x))\n";
     try { ITrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "2:13: right-hand side of rule [f(x) → g(y, x)] contains variable y of type o " +
           "which does not occur on the left; only variables of theory sorts may occur " +
@@ -186,7 +186,7 @@ public class ITrsInputReaderTest {
       "  g(x, y) -> f(x + y)\n" +
       ")";
     try { ITrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals(
         "3:8: right-hand side of rule [f(x) → g(y, x)] contains variable y which does not " +
         "occur on the left.\n"));
@@ -204,7 +204,7 @@ public class ITrsInputReaderTest {
       "  if(FALSE, x, y) -> y\n" +
       ")";
     try { ITrsInputReader.readTrsFromString(str); }
-    catch (ParseError e) {
+    catch (ParseException e) {
       assertTrue(e.getMessage().equals("3:8: left-hand side of rule [¬y → if(y, false, true)] " +
         "is a theory term!\n"));
       return;

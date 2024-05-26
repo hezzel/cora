@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.NullStorageException;
 
 class ProductTest {
   @Test
@@ -31,8 +31,8 @@ class ProductTest {
     args.add(null);
     ImmutableList<Type> lst = null;
 
-    assertThrows(NullInitialisationError.class, () -> new Product(lst));
-    // NullPointerException instead of NullInitialisationError due to ImmutableList
+    assertThrows(NullStorageException.class, () -> new Product(lst));
+    // NullPointerException instead of NullStorageException due to ImmutableList
     // blocking null elements
     assertThrows(java.lang.NullPointerException.class,
       () -> TypeFactory.createProduct(args));

@@ -16,19 +16,13 @@
 package charlie.exceptions;
 
 /**
- * An IllegalRuleError is thrown when something tries to construct a certain kind of rule in a way
- * that violates the restrictions for that rule (for example, a PatternRule where the left-hand
- * side is not a pattern).
+ * A NullStorageException is thrown when either we try to create an object with a null argument, or
+ * an existing object is updated with a null argument.  Either way, a null object would be stored
+ * where null is not expected, which could cause problems later in the program.
  */
-public class IllegalRuleError extends Error {
-  private final String _problem;
-
-  public IllegalRuleError(String problem) {
-    super("Illegal rule creation: " + problem);
-    _problem = problem;
-  }
-
-  public String queryProblem() {
-    return _problem;
+public class NullStorageException extends RuntimeException {
+  public NullStorageException(String classname, String message) {
+    super("Trying to store a null argument in " + classname + ": " + message + ".");
   }
 }
+

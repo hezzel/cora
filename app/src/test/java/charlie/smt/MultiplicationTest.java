@@ -53,8 +53,8 @@ public class MultiplicationTest {
   @Test
   public void testQueryBadChild() {
     Multiplication prod = new Multiplication(new IValue(0), new IVar(2));
-    assertThrows(charlie.exceptions.IndexingError.class, () -> prod.queryChild(0));
-    assertThrows(charlie.exceptions.IndexingError.class, () -> prod.queryChild(3));
+    assertThrows(charlie.exceptions.IndexingException.class, () -> prod.queryChild(0));
+    assertThrows(charlie.exceptions.IndexingException.class, () -> prod.queryChild(3));
   }
 
   @Test

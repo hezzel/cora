@@ -106,7 +106,7 @@ public class ITrsInputReader {
             checkTheoryArities(token, name, args);
             continue;
           default:
-            throw new UnexpectedPatternError("ITrsInputReader", "checkArities",
+            throw new UnexpectedPatternException("ITrsInputReader", "checkArities",
               "a variable or functional term", "parser term " + s.toString());
         }
       }
@@ -218,7 +218,7 @@ public class ITrsInputReader {
       case PErr(ParserTerm t):
         return getTermOutputNode(t, rule, vars);
       default:
-        throw new UnexpectedPatternError("ITrsInputReader", "getTermOutputNode",
+        throw new UnexpectedPatternException("ITrsInputReader", "getTermOutputNode",
           "a variable or functional term", "parser term " + term.toString());
     }
   }
@@ -355,14 +355,14 @@ public class ITrsInputReader {
               targs.add(makeTerm(s, inp));
               type = outp;
               break;
-            default: throw new TypingError("ITrsInputReader", "makeTerm", "function symbol f",
+            default: throw new TypingException("ITrsInputReader", "makeTerm", "function symbol f",
               f.queryType().toString(), "of arity " + args.size());
           }
         }
         if (minus) targs.set(1, TheoryFactory.minusSymbol.apply(targs.get(1)));
         return f.apply(targs);
       default:
-        throw new UnexpectedPatternError("ITrsInputReader", "makeTerm",
+        throw new UnexpectedPatternException("ITrsInputReader", "makeTerm",
           "a variable or functional term", "parser term " + term.toString());
     }
   }
@@ -389,8 +389,8 @@ public class ITrsInputReader {
         if (name.equals(ITrsParser.OR)) return TheoryFactory.orSymbol;
         if (name.equals(ITrsParser.NOT)) return TheoryFactory.notSymbol;
       default:
-        throw new UnexpectedPatternError("ITrsInputReader", "readSymbol", "a declared identifier " +
-          "or known calculation symbol", "parser term " + term.toString());
+        throw new UnexpectedPatternException("ITrsInputReader", "readSymbol", "a declared " +
+          "identifier or known calculation symbol", "parser term " + term.toString());
     }
   }
 
@@ -414,7 +414,7 @@ public class ITrsInputReader {
       if (constraint != null) return TrsFactory.createRule(l, r, constraint, TrsFactory.LCTRS);
       else return TrsFactory.createRule(l, r, TrsFactory.LCTRS);
     }
-    catch (IllegalRuleError e) {
+    catch (IllegalRuleException e) {
       storeError(e.queryProblem(), rule.token());
       return null;
     }
@@ -429,7 +429,7 @@ public class ITrsInputReader {
     }   
     Alphabet alphabet = _symbols.queryCurrentAlphabet();
     try { return TrsFactory.createTrs(alphabet, rules, TrsFactory.LCTRS); }
-    catch (IllegalRuleError e) {
+    catch (IllegalRuleException e) {
       _errors.addError(e.getMessage());
       return null;
     }
@@ -437,24 +437,31 @@ public class ITrsInputReader {
 
   // ==================================== PUBLIC FUNCTIONALITY ====================================
 
+  /** Throws a ParseException if there are any errors stored in the given error collector */
+  private static void throwIfAnyErrors(ErrorCollector collector) {
+    if (collector.queryErrorCount() > 0) {
+      throw new ParseException(collector.queryCollectedMessages());
+    }
+  }
+
   /** Helper function for readTrsFromString and readTrsFromFile */
   private static TRS readParserProgram(ParserProgram trs, ErrorCollector collector) {
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    throwIfAnyErrors(collector);
     ITrsInputReader rd = new ITrsInputReader(collector);
     TreeMap<String,Integer> arities = rd.checkArities(trs);
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    throwIfAnyErrors(collector);
     rd.generateTypeGraph(trs, arities);
     rd.determineSymbolTypes(arities);
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    throwIfAnyErrors(collector);
     TRS ret = rd.makeTRS(trs);
-    if (collector.queryErrorCount() > 0) throw new ParseError(collector.queryCollectedMessages());
+    throwIfAnyErrors(collector);
     return ret;
   }
 
   /**
    * Parses the given program, and returns the integer TRS that it defines.
    * If the string is not correctly formed, or the system cannot be unambiguously typed as an
-   * LCTRS, this may throw a ParseError.
+   * LCTRS, this may throw a ParseException.
    */
   public static TRS readTrsFromString(String str) {
     ErrorCollector collector = new ErrorCollector();
@@ -464,7 +471,8 @@ public class ITrsInputReader {
 
   /**
    * Parses the given file, which should be a .itrs file, into an LCTRS.
-   * This may throw a ParseError, or an IOException if something goes wrong with the file reading.
+   * This may throw a ParseException, or an IOException if something goes wrong with the file
+   * reading.
    */
   public static TRS readTrsFromFile(String filename) throws IOException {
     ErrorCollector collector = new ErrorCollector();

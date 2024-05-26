@@ -73,7 +73,7 @@ public sealed interface Type permits
 
   /**
    * If i is between 1 and numberSubtypes(), this returns the corresponding subtype (from left to
-   * right) of the type.  Otherwise, an IndexingError is thrown.
+   * right) of the type.  Otherwise, an IndexingException is thrown.
    */
   Type subtype(int i);
 }

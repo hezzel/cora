@@ -39,7 +39,7 @@ public class Tuple extends TermInherit {
     // check for null arguments
     for (int i = 0; i < tms.size(); i++) {
       if (tms.get(i) == null) {
-        throw new NullInitialisationError("Tuple", "passing a null argument to Tuple " +
+        throw new NullStorageException("Tuple", "passing a null argument to Tuple " +
           "constructor.");
       }
     }
@@ -65,7 +65,7 @@ public class Tuple extends TermInherit {
    * not at least two arguments.
    */
   Tuple(List<Term> tms) {
-    if (tms == null) throw new NullInitialisationError("Tuple", "components list");
+    if (tms == null) throw new NullStorageException("Tuple", "components list");
     if (tms.size() < 2) throw new IllegalArgumentException("Tuple::constructor -- " +
       "the provided list of terms has " + tms.size() + " elements.  " +
       "However, tuples can only be created with at least two terms."
@@ -133,17 +133,17 @@ public class Tuple extends TermInherit {
   @Override
   public Term queryTupleArgument(int i) {
     if (i <= 0 || i > _components.size()) {
-      throw new IndexingError("Tuple", "queryTupleArgument", i, 1, _components.size());
+      throw new IndexingException("Tuple", "queryTupleArgument", i, 1, _components.size());
     }
     return _components.get(i-1);
   }
 
   /**
-   * @throws InappropriatePatternDataError since tuples do not have a primary variable
+   * @throws InappropriatePatternDataException since tuples do not have a primary variable
    */
   @Override
   public Variable queryVariable() {
-    throw new InappropriatePatternDataError(
+    throw new InappropriatePatternDataException(
       "Tuple",
       "queryRoot",
       "a varterm, abstraction or beta-redex."
@@ -151,11 +151,11 @@ public class Tuple extends TermInherit {
   }
 
   /**
-   * @throws InappropriatePatternDataError since tuples do not have a meta-variable
+   * @throws InappropriatePatternDataException since tuples do not have a meta-variable
    */
   @Override
   public MetaVariable queryMetaVariable() {
-    throw new InappropriatePatternDataError(
+    throw new InappropriatePatternDataException(
       "Tuple",
       "queryRoot",
       "a functional term of the form f(s1, ..., sn)."
@@ -206,7 +206,7 @@ public class Tuple extends TermInherit {
 
   /**
    * Returns the subterm at the given (non-empty) position, assuming that this is indeed a position
-   * of the current term.  If not, an IndexingError is thrown.
+   * of the current term.  If not, an IndexingException is thrown.
    */
   @Override
   public Term querySubtermMain(Position pos) {
@@ -216,7 +216,7 @@ public class Tuple extends TermInherit {
           return _components.get(index-1).querySubterm(tail);
         }
       default:
-        throw new IndexingError("Tuple", "querySubterm", toString(), pos.toString());
+        throw new IndexingException("Tuple", "querySubterm", toString(), pos.toString());
     }
   }
 
@@ -234,7 +234,7 @@ public class Tuple extends TermInherit {
           return new Tuple(newcomps);
         }
       default:
-        throw new IndexingError("Tuple", "replaceSubterm", toString(), pos.toString());
+        throw new IndexingException("Tuple", "replaceSubterm", toString(), pos.toString());
     }
   }
 

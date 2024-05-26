@@ -138,8 +138,8 @@ class TermTyper {
       default -> null;
     };
     if (ret == null) { // this shouldn't happen: it's been created by the CoraParser
-      throw new UnexpectedPatternError("TermTyper", "makeCalculationSymbol",
-                                       "one of the known infix symbols", name);
+      throw new UnexpectedPatternException("TermTyper", "makeCalculationSymbol",
+                                           "one of the known infix symbols", name);
     }
     // special case: what if someone gives [-] and intends it to be binary?
     if (expected != null && name.equals(CoraParser.MINUS) && expected.queryArity() == 2) {

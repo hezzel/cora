@@ -16,8 +16,8 @@
 package charlie.terms;
 
 import java.util.Map;
-import charlie.exceptions.InappropriatePatternDataError;
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.InappropriatePatternDataException;
+import charlie.exceptions.NullStorageException;
 import charlie.types.Type;
 
 /**
@@ -34,7 +34,7 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   Constant(String name, Type type) {
     super(type);
     _name = name;
-    if (name == null) throw new NullInitialisationError("Constant", "name");
+    if (name == null) throw new NullStorageException("Constant", "name");
     if (name.equals("")) throw new IllegalArgumentException("Constant::constructor -- " +
       "Function Symbol created with empty name.");
     setVariables(ReplaceableList.EMPTY);
@@ -106,13 +106,13 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
 
   /** Throws an error, because a constant is not a variable (or associated with one). */
   public Variable queryVariable() {
-    throw new InappropriatePatternDataError("Constant", "queryVariable",
-                                            "variables or lambda-expressions");
+    throw new InappropriatePatternDataException("Constant", "queryVariable",
+                                                "variables or lambda-expressions");
   }
 
   /** Throws an error, because a constant is not a meta-application (or associated with one). */
   public MetaVariable queryMetaVariable() {
-    throw new InappropriatePatternDataError("Constant", "queryMetaVariable",
+    throw new InappropriatePatternDataException("Constant", "queryMetaVariable",
                                             "meta-variable applications (or terms headed by one)");
   }
 

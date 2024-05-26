@@ -15,7 +15,7 @@
 
 package charlie.terms.position;
 
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.NullStorageException;
 
 public record ArgumentPos(int index, Position tail) implements Position {
   public ArgumentPos(int index, Position tail) {
@@ -23,7 +23,7 @@ public record ArgumentPos(int index, Position tail) implements Position {
       throw new IllegalArgumentException("ArgumentPos::constructor -- given index ≤ 0");
     }
     if (tail == null) {
-      throw new NullInitialisationError("ArgumentPos", "tail");
+      throw new NullStorageException("ArgumentPos", "tail");
     }
     this.index = index;
     this.tail = tail;

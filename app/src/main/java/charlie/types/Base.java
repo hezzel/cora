@@ -15,13 +15,13 @@
 
 package charlie.types;
 
-import charlie.exceptions.IndexingError;
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.IndexingException;
+import charlie.exceptions.NullStorageException;
 
 public record Base(String name) implements Type {
   public Base {
     if (name == null) {
-      throw new NullInitialisationError("Base", "name");
+      throw new NullStorageException("Base", "name");
     }
   }
 
@@ -53,7 +53,7 @@ public record Base(String name) implements Type {
 
   @Override
   public Type subtype(int index) {
-    throw new IndexingError("Base", "subtype", index);
+    throw new IndexingException("Base", "subtype", index);
   }
 
   @Override

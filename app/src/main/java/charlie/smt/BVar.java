@@ -15,7 +15,7 @@
 
 package charlie.smt;
 
-import charlie.exceptions.SmtEvaluationError;
+import charlie.exceptions.SmtEvaluationException;
 
 public final class BVar extends Constraint {
   private int _index;
@@ -45,7 +45,7 @@ public final class BVar extends Constraint {
   }
 
   public boolean evaluate(Valuation val) {
-    if (val == null) throw new SmtEvaluationError("b" + _index + " (" + _name + ")");
+    if (val == null) throw new SmtEvaluationException("b" + _index + " (" + _name + ")");
     else return val.queryBoolAssignment(_index);
   }
 

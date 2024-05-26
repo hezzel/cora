@@ -16,10 +16,10 @@
 package charlie.util;
 
 /**
- * When some process in Cora runs into an Exception or Error, they may pass it on to the caller, or
- * they may wish to handle it on the spot.  However ,the latter option runs the risk of hiding that
- * an error took place.  This handler can be used to log the error to ensure that errors are
- * noticed during testing.
+ * When some process in Cora runs into an Exception, they may pass it on to the caller, or they may
+ * wish to handle it on the spot.  However ,the latter option runs the risk of hiding that an error
+ * took place.  This handler can be used to log the error to ensure that errors are noticed during
+ * testing.
  */
 public class ExceptionLogger {
   private static boolean _enabled = true;
@@ -32,12 +32,6 @@ public class ExceptionLogger {
 
   /** Prints the given message to stderr, followed by a stack trace of the Exception. */
   public static void log(String message, Exception e) {
-    System.err.println(message);
-    e.printStackTrace();
-  }
-
-  /** Prints the given message to stderr, followed by a stack trace of the Error. */
-  public static void log(String message, Error e) {
     System.err.println(message);
     e.printStackTrace();
   }

@@ -40,8 +40,8 @@ public class Parameters {
   private SmtSolver _solver;
 
   public enum Request { Print, Reduce, Termination, Computability };
-  public class WrongParametersError extends Error {
-    public WrongParametersError(String reason) { super("PARAMETERS ERROR: " + reason); }
+  public class WrongParametersException extends RuntimeException {
+    public WrongParametersException(String reason) { super("PARAMETERS ERROR: " + reason); }
   }
 
   /**
@@ -76,7 +76,7 @@ public class Parameters {
   /** Helper function for disableableTechniques() */
   private static void addTechnique(TreeSet<String> set, String value) {
     if (set.contains(value)) {
-      throw new Error("Disable value " + value + " is used by more than one technique!");
+      throw new RuntimeException("Disable value " + value + " is used by more than one technique!");
     }
     set.add(value);
   }
@@ -110,7 +110,7 @@ public class Parameters {
         return index+1;
       case "-d": case "--disable":
         if (index + 1 == args.length) {
-          throw new WrongParametersError("Parameter " + arg + " without anything to disable!");
+          throw new WrongParametersException("Parameter " + arg + " without anything to disable!");
         }
         for (String s : args[index+1].split(",")) _disable.add(s);
         return index+2;
@@ -125,7 +125,7 @@ public class Parameters {
         return args.length;
       case "-s": case "--solver":
         if (index + 1 == args.length) {
-          throw new WrongParametersError("Parameter " + arg + " without given solver!");
+          throw new WrongParametersException("Parameter " + arg + " without given solver!");
         }
         PhysicalSolver ps = ProcessSmtSolver.stringToSolver(args[index+1]);
         if (ps != null) _solver = new ProcessSmtSolver(ps);
@@ -133,7 +133,7 @@ public class Parameters {
           _solver = new ExternalSmtSolver(args[index+1].substring(9));
         }
         if (_solver == null) {
-          throw new WrongParametersError("Unknown SMT solver: " + args[index+1] + "!");
+          throw new WrongParametersException("Unknown SMT solver: " + args[index+1] + "!");
         }
         return index + 2;
       case "-t": case "--termination":
@@ -141,18 +141,18 @@ public class Parameters {
         return index+1;
       case "-y": case "--style":
         if (index + 1 == args.length) {
-          throw new WrongParametersError("Parameter " + arg + " without given style!");
+          throw new WrongParametersException("Parameter " + arg + " without given style!");
         }
-        if (_style != null) throw new WrongParametersError("Two style parameters are given.");
+        if (_style != null) throw new WrongParametersException("Two style parameters are given.");
         String st = args[index+1].toLowerCase();
         if (st.equals("plain")) _style = OutputModule.Style.Plain;
         else if (st.equals("unicode")) _style = OutputModule.Style.Unicode;
-        else throw new WrongParametersError("Unknown style: " + args[index+1]);
+        else throw new WrongParametersException("Unknown style: " + args[index+1]);
         return index + 2;
       default:
         if (arg.length() == 0) return index+1;
         if (arg.charAt(0) == '-') {
-          throw new WrongParametersError("Unknown runtime argument: " + arg + ".");
+          throw new WrongParametersException("Unknown runtime argument: " + arg + ".");
         }
         _files.add(arg);
         return index+1;
@@ -161,12 +161,12 @@ public class Parameters {
 
   /**
    * Sets the given request, if none has been set yet.  If one has already been set, a
-   * WrongParametersError is thrown instead.
+   * WrongParametersException is thrown instead.
    */
   private void setRequest(Request req) {
     if (_request == null) _request = req;
     else if (_request != req) {
-      throw new WrongParametersError("Cannot set request both to " + _request +  " and to " +
+      throw new WrongParametersException("Cannot set request both to " + _request +  " and to " +
         req + ".");
     }
   }
@@ -176,7 +176,7 @@ public class Parameters {
     TreeSet<String> codes = disableableTechniques();
     for (String d : _disable) {
       if (!codes.contains(d)) {
-        throw new WrongParametersError("Unknown code for technique to disable: " + d);
+        throw new WrongParametersException("Unknown code for technique to disable: " + d);
       }
     }
     Settings.setDisabled(new TreeSet<String>(_disable));
@@ -189,13 +189,13 @@ public class Parameters {
   }
 
   /** 
-   * This verifies that the user supplied exactly one file (if not, a WrongParameterError is thrown)
-   * and if so, returns it.
+   * This verifies that the user supplied exactly one file (if not, a WrongParameterException is
+   * thrown) and if so, returns it.
    */
   public String querySingleFile() {
-    if (_files.size() == 0) throw new WrongParametersError("No input file given!");
+    if (_files.size() == 0) throw new WrongParametersException("No input file given!");
     if (_files.size() >= 2) {
-      throw new WrongParametersError("More than one input file given! " +
+      throw new WrongParametersException("More than one input file given! " +
         "(" + _files.get(0) + " and " + _files.get(1) + ")");
     }
     return _files.get(0);

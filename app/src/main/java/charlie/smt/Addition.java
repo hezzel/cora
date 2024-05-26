@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.ArrayList;
-import charlie.exceptions.IndexingError;
+import charlie.exceptions.IndexingException;
 import charlie.util.Pair;
 
 public final class Addition extends IntegerExpression {
@@ -91,7 +91,7 @@ public final class Addition extends IntegerExpression {
   /** For 1 ≤ index ≤ numChildren(), returns the corresponding child. */
   public IntegerExpression queryChild(int index) {
     if (index <= 0 || index > _children.size()) {
-      throw new IndexingError("Addition", "queryChild", index, 1, _children.size());
+      throw new IndexingException("Addition", "queryChild", index, 1, _children.size());
     }
     return _children.get(index-1);
   }

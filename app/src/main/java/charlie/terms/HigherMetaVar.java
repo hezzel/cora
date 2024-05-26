@@ -16,8 +16,8 @@
 package charlie.terms;
 
 import com.google.common.collect.ImmutableList;
-import charlie.exceptions.IndexingError;
-import charlie.exceptions.NullInitialisationError;
+import charlie.exceptions.IndexingException;
+import charlie.exceptions.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 
@@ -38,9 +38,9 @@ class HigherMetaVar implements MetaVariable {
     _output = output;
     _index = _COUNTER;
     _COUNTER++;
-    if (name == null) throw new NullInitialisationError("HigherMetaVar", "name");
-    if (inputs == null) throw new NullInitialisationError("HigherMetaVar", "inputs");
-    if (output == null) throw new NullInitialisationError("HigherMetaVar", "output");
+    if (name == null) throw new NullStorageException("HigherMetaVar", "name");
+    if (inputs == null) throw new NullStorageException("HigherMetaVar", "inputs");
+    if (output == null) throw new NullStorageException("HigherMetaVar", "output");
     if (inputs.size() == 0) {
       throw new IllegalArgumentException("HigherMetaVar::constructor -- empty inputs list " +
         "given: a meta-variable without arguments should be constructed as a Var instead.");
@@ -68,8 +68,9 @@ class HigherMetaVar implements MetaVariable {
   }
 
   public Type queryInputType(int i) {
-    if (i <= 0 || i > _inputs.size()) throw new IndexingError("HigherMetaVar", "queryInputType",
-      i, 1, _inputs.size());
+    if (i <= 0 || i > _inputs.size()) {
+      throw new IndexingException("HigherMetaVar", "queryInputType", i, 1, _inputs.size());
+    }
     return _inputs.get(i-1);
   }
 

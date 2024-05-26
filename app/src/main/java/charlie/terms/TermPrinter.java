@@ -21,7 +21,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
 import java.util.function.Predicate;
-import charlie.exceptions.UnexpectedPatternError;
+import charlie.exceptions.UnexpectedPatternException;
 
 /**
  * TermPrinters are used in the overall output process of the tool.  This class provides a default
@@ -243,8 +243,8 @@ public class TermPrinter {
     else if (term.isAbstraction()) printAbstraction(term, naming, builder);
     else if (term.isMetaApplication()) printMetaApplication(term, naming, builder);
     else if (term.isApplication()) printApplication(term, naming, builder);
-    else throw new UnexpectedPatternError("TermPrinter", "print", "one of the standard term shapes",
-      "something else");
+    else throw new UnexpectedPatternException("TermPrinter", "print", "one of the standard term " +
+      "shapes", "something else");
   }
 
   /**

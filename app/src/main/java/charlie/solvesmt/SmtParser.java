@@ -74,7 +74,7 @@ class SmtParser {
 
   /**
    * Reads an S-expression from the given string.
-   * @throws charlie.exceptions.ParseError
+   * @throws charlie.exceptions.ParseException
    */
   public static SExpression readExpressionFromString(String str) {
     ParsingStatus status = new ParsingStatus(SmtTokenData.getStringLexer(str), 1);
@@ -87,7 +87,7 @@ class SmtParser {
 
   /**
    * Reads a list of S-expressions from the given string.
-   * @throws charlie.exceptions.ParseError
+   * @throws charlie.exceptions.ParseException
    */
   public static List<SExpression> readExpressionsFromString(String str) {
     ParsingStatus status = new ParsingStatus(SmtTokenData.getStringLexer(str), 1);
@@ -100,7 +100,7 @@ class SmtParser {
 
   /**
    * Reads a list of S-expressions from the given file.
-   * @throws charlie.exceptions.ParseError
+   * @throws charlie.exceptions.ParseException
    */
   public static List<SExpression> readExpressionsFromFile(String filename) throws IOException {
     ParsingStatus status = new ParsingStatus(SmtTokenData.getFileLexer(filename), 1);

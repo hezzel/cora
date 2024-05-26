@@ -72,31 +72,31 @@ public class CalculationTest extends TermTestFoundation {
   @Test
   public void testVariableRequest() {
     FunctionSymbol plus = TheoryFactory.plusSymbol;
-    assertThrows(InappropriatePatternDataError.class, () -> plus.queryVariable());
+    assertThrows(InappropriatePatternDataException.class, () -> plus.queryVariable());
   }
 
   @Test
   public void testAbstractionSubtermRequest() {
     FunctionSymbol times = TheoryFactory.timesSymbol;
-    assertThrows(InappropriatePatternDataError.class, () -> times.queryAbstractionSubterm());
+    assertThrows(InappropriatePatternDataException.class, () -> times.queryAbstractionSubterm());
   }
 
   @Test
   public void testArgumentPositionRequest() {
     FunctionSymbol a = TheoryFactory.andSymbol;
-    assertThrows(IndexingError.class, () -> a.querySubterm(new ArgumentPos(1, Position.empty)));
+    assertThrows(IndexingException.class, () -> a.querySubterm(new ArgumentPos(1, Position.empty)));
   }
 
   @Test
   public void testHeadPositionRequest() {
     FunctionSymbol o = TheoryFactory.orSymbol;
-    assertThrows(IndexingError.class, () -> o.querySubterm(new FinalPos(1)));
+    assertThrows(IndexingException.class, () -> o.querySubterm(new FinalPos(1)));
   }
 
   @Test
   public void testBadPositionReplacement() {
     FunctionSymbol plus = TheoryFactory.plusSymbol;
-    assertThrows(IndexingError.class, () ->
+    assertThrows(IndexingException.class, () ->
       plus.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a"))));
   }
 }

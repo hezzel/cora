@@ -15,7 +15,7 @@
 
 package charlie.terms.position;
 
-import charlie.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.InappropriatePatternDataException;
 
 public record FinalPos(int chopcount) implements Position {
   public FinalPos(int chopcount) {
@@ -54,10 +54,10 @@ public record FinalPos(int chopcount) implements Position {
   }
 
   public int queryHead() {
-    throw new InappropriatePatternDataError("FinalPos", "queryHead", "non-empty positions");
+    throw new InappropriatePatternDataException("FinalPos", "queryHead", "non-empty positions");
   }
 
   public Position queryTail() {
-    throw new InappropriatePatternDataError("FinalPos", "queryTail", "non-empty positions");
+    throw new InappropriatePatternDataException("FinalPos", "queryTail", "non-empty positions");
   }
 }

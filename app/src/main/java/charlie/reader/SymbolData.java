@@ -17,7 +17,7 @@ package charlie.reader;
 
 import java.util.TreeMap;
 import java.util.TreeSet;
-import charlie.exceptions.NullStorageError;
+import charlie.exceptions.NullStorageException;
 import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Variable;
@@ -79,13 +79,13 @@ class SymbolData {
    * allowed if the function symbols are the same).
    */
   public void addFunctionSymbol(FunctionSymbol symbol) {
-    if (symbol == null) throw new NullStorageError("SymbolData", "function symbol");
+    if (symbol == null) throw new NullStorageException("SymbolData", "function symbol");
     String name = symbol.queryName();
     Type type = symbol.queryType();
     FunctionSymbol existing = lookupFunctionSymbol(name);
     if (existing != null && !symbol.equals(existing)) {
-      throw new Error("Duplicate call to SymbolData::addFunctionSymbol: trying to overwrite " +
-                      "previously declared symbol " + name);
+      throw new IllegalArgumentException("Duplicate call to SymbolData::addFunctionSymbol: " +
+        "trying to overwrite previously declared symbol " + name);
     }
     _alphabet.put(name, symbol);
   }
@@ -96,13 +96,13 @@ class SymbolData {
    * the variables are equal.
    */
   public void addVariable(Variable variable) {
-    if (variable == null) throw new NullStorageError("SymbolData", "variable");
+    if (variable == null) throw new NullStorageException("SymbolData", "variable");
     String varname = variable.queryName();
     Type type = variable.queryType();
     Variable existing = _variables.get(varname);
     if (existing != null && !variable.equals(existing)) {
-      throw new Error("Duplicate call to SymbolData::addVariable: trying to overwrite " +
-                      "previously declared variable " + varname);
+      throw new IllegalArgumentException("Duplicate call to SymbolData::addVariable: " +
+        "trying to overwrite previously declared variable " + varname);
     }
     _variables.put(varname, variable);
   }
@@ -115,20 +115,20 @@ class SymbolData {
    * variables instead), but this is not blocked.
    */
   public void addMetaVariable(MetaVariable mvar) {
-    if (mvar == null) throw new NullStorageError("SymbolData", "mvar");
+    if (mvar == null) throw new NullStorageException("SymbolData", "mvar");
     String varname = mvar.queryName();
     Type type = mvar.queryType();
     MetaVariable existing = _mvariables.get(varname);
     if (existing != null && !mvar.equals(existing)) {
-      throw new Error("Duplicate call to SymbolData::addMetaVariable: trying to overwrite " +
-                      "previously declared meta-variable " + varname);
+      throw new IllegalArgumentException("Duplicate call to SymbolData::addMetaVariable: " +
+        "trying to overwrite previously declared meta-variable " + varname);
     }
     _mvariables.put(varname, mvar);
   }
 
   /** This marks the given function symbol as a private symbol. */
   public void setPrivate(FunctionSymbol symbol) {
-    if (symbol == null) throw new NullStorageError("SymbolData", "private function symbol");
+    if (symbol == null) throw new NullStorageException("SymbolData", "private function symbol");
     _private.add(symbol.queryName());
   }
 
@@ -176,7 +176,8 @@ class SymbolData {
   /** Returns an Alphabet containing all the currently declared function symbols. */
   public Alphabet queryCurrentAlphabet() {
     if (_trs != null) {
-      throw new Error("Calling queryCurrentAlphabet for SymbolData constructed with a given TRS!");
+      throw new RuntimeException("Calling queryCurrentAlphabet for SymbolData constructed with " +
+        "a given TRS!");
     }
     return new Alphabet(_alphabet.values());
   }

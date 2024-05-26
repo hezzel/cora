@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.LinkedList;
 
-import charlie.exceptions.ParseError;
+import charlie.exceptions.ParseException;
 
 public class ParsingStatusTest {
   private class TestTokenQueue implements TokenQueue {
@@ -116,9 +116,7 @@ public class ParsingStatusTest {
     ParsingStatus ps = new ParsingStatus(tq, collector);
     ps.storeError("Test.", null);
     ps.nextToken();
-    try { ps.storeError("Bing",null); }
-    catch (ParseError e) { return; }
-    assertTrue(false);
+    assertThrows(ParseException.class, () -> ps.storeError("Bing",null));
   }
 
   @Test

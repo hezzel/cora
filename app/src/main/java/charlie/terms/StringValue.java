@@ -16,7 +16,7 @@
 package charlie.terms;
 
 import java.util.Map;
-import charlie.exceptions.InappropriatePatternDataError;
+import charlie.exceptions.InappropriatePatternDataException;
 import charlie.exceptions.IncorrectStringException;
 import charlie.types.TypeFactory;
 
@@ -96,10 +96,10 @@ class StringValue extends ValueInherit {
   }
 
   public int getInt() {
-    throw new InappropriatePatternDataError("StringValue", "getInt", "integer values");
+    throw new InappropriatePatternDataException("StringValue", "getInt", "integer values");
   }
 
   public boolean getBool() {
-    throw new InappropriatePatternDataError("StringValue", "getBool", "boolean values");
+    throw new InappropriatePatternDataException("StringValue", "getBool", "boolean values");
   }
 }

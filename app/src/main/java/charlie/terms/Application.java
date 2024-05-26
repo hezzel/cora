@@ -64,19 +64,19 @@ class Application extends TermInherit {
    * null.
    */
   private void construct(Term head, List<Term> args) {
-    if (head == null) throw new NullInitialisationError("Application", "head");
+    if (head == null) throw new NullStorageException("Application", "head");
 
     Type type = head.queryType();
     for (int i = 0; i < args.size(); i++) {
       Term arg = args.get(i);
       if (arg == null) {
-        throw new NullInitialisationError("Application", "passing a null argument to " +
+        throw new NullStorageException("Application", "passing a null argument to " +
           head.toString() + ".");
       }
       switch (type) {
         case Arrow(Type inp, Type out):
           if (!inp.equals(arg.queryType())) {
-            throw new TypingError("Application", "constructor", "arg " + (i+1) + " of " +
+            throw new TypingException("Application", "constructor", "arg " + (i+1) + " of " +
               head.toString(), arg.queryType() == null ? "null" : arg.queryType().toString(),
               inp.toString());
           }
@@ -124,7 +124,7 @@ class Application extends TermInherit {
    * types of the arguments are not the expected input types of the head.
    */
   Application(Term head, List<Term> args) {
-    if (args == null) throw new NullInitialisationError("Application", "argument list");
+    if (args == null) throw new NullStorageException("Application", "argument list");
     if (args.size() == 0) {
       throw new IllegalArgumentException("Application::constructor --  creating an " +
         "Application with no arguments.");
@@ -199,7 +199,7 @@ class Application extends TermInherit {
   /** For a term head(s1,...,sn), this returns si if 1 <= i <= n, and throws an error otherwise. */
   public Term queryArgument(int i) {
     if (i <= 0 || i > _args.size()) {
-      throw new IndexingError("Application", "queryArgument", i, 1, _args.size());
+      throw new IndexingException("Application", "queryArgument", i, 1, _args.size());
     }
     return _args.get(i-1);
   }
@@ -212,7 +212,7 @@ class Application extends TermInherit {
   /** For a term h(s1,...,sn) this returns h(s1,...,si). */
   public Term queryImmediateHeadSubterm(int i) {
     if (i < 0 || i > _args.size()) {
-      throw new IndexingError("Application", "queryImmediateHeadSubterm", i, 0, _args.size());
+      throw new IndexingException("Application", "queryImmediateHeadSubterm", i, 0, _args.size());
     }   
     if (i == 0) return _head;
     return new Application(_head, _args.subList(0, i));
@@ -302,12 +302,12 @@ class Application extends TermInherit {
     switch (pos) {
       case FinalPos(int k):
         if (k > _args.size()) {
-          throw new IndexingError("Application", "querySubterm", toString(), pos.toString());
+          throw new IndexingException("Application", "querySubterm", toString(), pos.toString());
         }
         return _head.apply(_args.subList(0, _args.size() - k));
       case ArgumentPos(int index, Position tail):
         if (index > _args.size()) {
-          throw new IndexingError("Application", "querySubterm", toString(), pos.toString());
+          throw new IndexingException("Application", "querySubterm", toString(), pos.toString());
         }
         return _args.get(index-1).querySubterm(tail);
       default:
@@ -317,26 +317,26 @@ class Application extends TermInherit {
 
   /**
    * @return a copy of the term with the subterm at the given (non-empty) position replaced by
-   * replacement, if such a position exists; otherwise throws an IndexingError.
+   * replacement, if such a position exists; otherwise throws an IndexingException.
    */
   public Term replaceSubtermMain(Position pos, Term replacement) {
     switch (pos) {
       case FinalPos(int k):
         if (k > _args.size()) {
-          throw new IndexingError("Application", "replaceSubterm", toString(), pos.toString());
+          throw new IndexingException("Application", "replaceSubterm", toString(), pos.toString());
         }
         Type type = queryType();
         for (int i = 1; i <= k; i++) {
           type = TypeFactory.createArrow(_args.get(_args.size()-i).queryType(), type);
         }
         if (!type.equals(replacement.queryType())) {
-          throw new TypingError("Application", "replaceSubterm", "replacement term " +
+          throw new TypingException("Application", "replaceSubterm", "replacement term " +
             replacement.toString(), replacement.queryType().toString(), type.toString());
         }
         return replacement.apply(_args.subList(_args.size()-k, _args.size()));
       case ArgumentPos(int index, Position tail):
         if (index > _args.size()) {
-          throw new IndexingError("Application", "replaceSubterm", toString(), pos.toString());
+          throw new IndexingException("Application", "replaceSubterm", toString(), pos.toString());
         }
         ArrayList<Term> lst = new ArrayList<Term>(_args);
         lst.set(index-1, _args.get(index-1).replaceSubterm(tail, replacement));
@@ -353,14 +353,14 @@ class Application extends TermInherit {
    */
   public Term substitute(Substitution gamma) {
     Term h = _head.substitute(gamma);
-    if (h == null) throw new Error("Substituting " + _head.toString() + " results in null!");
+    if (h == null) throw new NullStorageException("Application",
+      "Substituting " + _head.toString() + " results in null!");
 
     List<Term> args = new ArrayList<Term>(_args);
     for (int i = 0; i < args.size(); i++) {
       Term t = args.get(i).substitute(gamma);
-      if (t == null) {
-        throw new Error("Substituting " + args.get(i).toString() + " results in null!");
-      }
+      if (t == null) throw new NullStorageException("Application",
+        "Substituting " + args.get(i).toString() + " results in null!");
       args.set(i, t);
     }
 

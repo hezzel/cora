@@ -16,23 +16,23 @@
 package charlie.exceptions;
 
 /**
- * An IndexingError is thrown when argument i is requested of some type/term/whatnot, and i is not
- * in the range 1...numberOfArguments.
+ * An IndexingException is thrown when argument i is requested of some type/term/whatnot, and i is
+ * not in the range 1...numberOfArguments.
  */
-public class IndexingError extends Error {
-  public IndexingError(String classname, String functionname, int given, int min, int max) {
+public class IndexingException extends RuntimeException {
+  public IndexingException(String classname, String functionname, int given, int min, int max) {
     super("Called " + classname + "::" + functionname + "(" + given + "), when available " +
       "indexes range from " + min + " to " + max + ".");
   }
 
   /** Use this constructor when attempting to index an empty list. */
-  public IndexingError(String classname, String functionname, int given) {
+  public IndexingException(String classname, String functionname, int given) {
     super("Called " + classname + "::" + functionname + "(" + given + "), when there are no " +
       "indexes available.");
   }
 
   /** Use this constructor when attempting to access a position that does not exist. */
-  public IndexingError(String classname, String functionname, String term, String position) {
+  public IndexingException(String classname, String functionname, String term, String position) {
     super("Called " + classname + "::" + functionname + " with position " + position + " in " +
       "term " + term + ".");
   }

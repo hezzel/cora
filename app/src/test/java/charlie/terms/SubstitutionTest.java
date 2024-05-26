@@ -19,8 +19,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 import charlie.exceptions.ArityException;
-import charlie.exceptions.NullStorageError;
-import charlie.exceptions.TypingError;
+import charlie.exceptions.NullStorageException;
+import charlie.exceptions.TypingException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 
@@ -39,13 +39,13 @@ public class SubstitutionTest {
 
   @Test
   public void testNullKeyCreation() {
-    assertThrows(NullStorageError.class, () ->
+    assertThrows(NullStorageException.class, () ->
       new Subst(null, constantTerm("37", baseType("Int"))));
   }
 
   @Test
   public void testNullValueCreation() {
-    assertThrows(NullStorageError.class, () ->
+    assertThrows(NullStorageException.class, () ->
       new Subst(TermFactory.createVar("x", baseType("Int")), null));
   }
 
@@ -53,7 +53,7 @@ public class SubstitutionTest {
   public void testIlltypedCreation() {
     Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("false", baseType("Bool"));
-    assertThrows(TypingError.class, () -> new Subst(x, xterm));
+    assertThrows(TypingException.class, () -> new Subst(x, xterm));
   }
 
   @Test
@@ -67,14 +67,14 @@ public class SubstitutionTest {
   public void testNullKeyExtension() {
     Substitution gamma = new Subst();
     Variable x = TermFactory.createVar("x", baseType("o"));
-    assertThrows(NullStorageError.class, () -> gamma.extend(null, x));
+    assertThrows(NullStorageException.class, () -> gamma.extend(null, x));
   }
 
   @Test
   public void testNullValueExtension() {
     Substitution gamma = new Subst();
     Variable x = TermFactory.createVar("x", baseType("o"));
-    assertThrows(NullStorageError.class, () -> gamma.extend(x, null));
+    assertThrows(NullStorageException.class, () -> gamma.extend(x, null));
   }
 
   @Test
@@ -91,7 +91,7 @@ public class SubstitutionTest {
     Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("37", baseType("Int"));
     Substitution gamma = new Subst(x, xterm);
-    assertThrows(TypingError.class, () -> gamma.extend(
+    assertThrows(TypingException.class, () -> gamma.extend(
       TermFactory.createVar("y", baseType("Int")), constantTerm("false", baseType("Bool"))));
   }
 
@@ -100,7 +100,7 @@ public class SubstitutionTest {
     Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("37", baseType("Int"));
     Substitution gamma = new Subst(x, xterm);
-    assertThrows(NullStorageError.class, () -> gamma.replace(null, xterm));
+    assertThrows(NullStorageException.class, () -> gamma.replace(null, xterm));
   }
   
   @Test
@@ -108,7 +108,7 @@ public class SubstitutionTest {
     Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("37", baseType("Int"));
     Substitution gamma = new Subst(x, xterm);
-    assertThrows(NullStorageError.class, () -> gamma.replace(x, null));
+    assertThrows(NullStorageException.class, () -> gamma.replace(x, null));
   }
 
   @Test
@@ -116,7 +116,7 @@ public class SubstitutionTest {
     Variable x = TermFactory.createVar("x", baseType("Int"));
     Term xterm = constantTerm("37", baseType("Int"));
     Substitution gamma = new Subst(x, xterm);
-    assertThrows(TypingError.class, () ->
+    assertThrows(TypingException.class, () ->
       gamma.replace(x, constantTerm("false", baseType("Bool"))));
   }
 

@@ -37,7 +37,7 @@ class MetaApplicationTest extends TermTestFoundation {
 
   @Test
   public void testBinaryWithNullHead() {
-    assertThrows(NullInitialisationError.class, () ->
+    assertThrows(NullStorageException.class, () ->
       TermFactory.createMeta(null, constantTerm("a", baseType("b")),
                                    constantTerm("a", baseType("c"))));
   }
@@ -46,7 +46,7 @@ class MetaApplicationTest extends TermTestFoundation {
   public void testNullArgs() {
     MetaVariable z = TermFactory.createMetaVar("z", baseType("a"), baseType("b"));
     ArrayList<Term> args = null;
-    assertThrows(NullInitialisationError.class, () -> TermFactory.createMeta(z, args));
+    assertThrows(NullStorageException.class, () -> TermFactory.createMeta(z, args));
   }
 
   @Test
@@ -70,7 +70,7 @@ class MetaApplicationTest extends TermTestFoundation {
   public void testNoArgs() {
     MetaVariable z = new Var("z", arrowType("a", "a"));
     ArrayList<Term> args = new ArrayList<Term>();
-    assertThrows(IllegalTermError.class, () -> new MetaApplication(z, args));
+    assertThrows(IllegalArgumentException.class, () -> new MetaApplication(z, args));
   }
 
   @Test
@@ -82,7 +82,7 @@ class MetaApplicationTest extends TermTestFoundation {
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(constantTerm("a", baseType("a")));
     args.add(constantTerm("b", baseType("b")));
-    assertThrows(TypingError.class, () -> TermFactory.createMeta(z, args));
+    assertThrows(TypingException.class, () -> TermFactory.createMeta(z, args));
   }
 
   @Test
@@ -352,18 +352,18 @@ class MetaApplicationTest extends TermTestFoundation {
   public void testSubtermBad() {
     Term term = createTestTerm();
     Position pos = new ArgumentPos(1, Position.empty);
-    assertThrows(IndexingError.class, () -> term.querySubterm(pos));
+    assertThrows(IndexingException.class, () -> term.querySubterm(pos));
   }
 
   @Test
   public void testHeadSubtermBad() {
     Term term = createTestTerm();
     Position pos = new FinalPos(1);
-    assertThrows(IndexingError.class, () -> term.querySubterm(pos));
+    assertThrows(IndexingException.class, () -> term.querySubterm(pos));
   }
 
   @Test
-  public void testSubtermReplacementGood() {
+  public void testSubtermReplacementGood() throws CustomParserException {
     Term term = createTestTerm();
     Position pos = Position.parse("!1.1");
     Term replacement = constantTerm("42", baseType("b"));
@@ -387,27 +387,27 @@ class MetaApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testSubtermReplacementBadPositionKind() {
+  public void testSubtermReplacementBadPositionKind() throws CustomParserException {
     Term term = createTestTerm();
     Position pos = Position.parse("2.ε");
     Term replacement = constantTerm("uu", baseType("b"));
-    assertThrows(IndexingError.class, () -> term.replaceSubterm(pos, replacement));
+    assertThrows(IndexingException.class, () -> term.replaceSubterm(pos, replacement));
   }
 
   @Test
-  public void testSubtermReplacementBadPositionRange() {
+  public void testSubtermReplacementBadPositionRange() throws CustomParserException {
     Term term = createTestTerm();
     Position pos = Position.parse("!3.ε");
     Term replacement = constantTerm("uu", baseType("b"));
-    assertThrows(IndexingError.class, () -> term.replaceSubterm(pos, replacement));
+    assertThrows(IndexingException.class, () -> term.replaceSubterm(pos, replacement));
   }
 
   @Test
-  public void testSubtermReplacementBadHeadPosition() {
+  public void testSubtermReplacementBadHeadPosition() throws CustomParserException {
     Term term = createTestTerm();
     Position pos = Position.parse("☆1");
     Term replacement = constantTerm("uu", arrowType("a", "b"));
-    assertThrows(IndexingError.class, () -> term.replaceSubterm(pos, replacement));
+    assertThrows(IndexingException.class, () -> term.replaceSubterm(pos, replacement));
   }
 
   @Test
@@ -415,16 +415,16 @@ class MetaApplicationTest extends TermTestFoundation {
     Term term = createTestTerm();
     Position pos = Position.empty;
     Term replacement = constantTerm("uu", baseType("x"));
-    assertThrows(TypingError.class, () -> term.replaceSubterm(pos, replacement));
+    assertThrows(TypingException.class, () -> term.replaceSubterm(pos, replacement));
   }
 
   @Test
   public void testIllegalCalls() {
     Term t = makeSample();
-    assertThrows(IndexingError.class, () -> t.queryImmediateHeadSubterm(1));
-    assertThrows(IndexingError.class, () -> t.queryArgument(1));
-    assertThrows(InappropriatePatternDataError.class, () -> t.queryRoot());
-    assertThrows(InappropriatePatternDataError.class, () -> t.queryVariable());
+    assertThrows(IndexingException.class, () -> t.queryImmediateHeadSubterm(1));
+    assertThrows(IndexingException.class, () -> t.queryArgument(1));
+    assertThrows(InappropriatePatternDataException.class, () -> t.queryRoot());
+    assertThrows(InappropriatePatternDataException.class, () -> t.queryVariable());
   }
 
   @Test
@@ -726,7 +726,7 @@ class MetaApplicationTest extends TermTestFoundation {
     Term a = constantTerm("a", baseType("o"));
     Term t = TermFactory.createMeta(f, a);
     Substitution subst = new Subst();
-    assertThrows(PatternRequiredError.class, () -> t.match(a, subst));
+    assertThrows(PatternRequiredException.class, () -> t.match(a, subst));
   }
 
   @Test
@@ -736,7 +736,7 @@ class MetaApplicationTest extends TermTestFoundation {
     MetaVariable f = TermFactory.createMetaVar("F", arrowType("o", "o"), 1);
     Term t = TermFactory.createMeta(f, x);
     Term a = constantTerm("a", baseType("o"));
-    assertThrows(PatternRequiredError.class, () -> t.match(a, new Subst()));
+    assertThrows(PatternRequiredException.class, () -> t.match(a, new Subst()));
   }
 
   @Test
@@ -749,7 +749,7 @@ class MetaApplicationTest extends TermTestFoundation {
     Term a = constantTerm("a", baseType("o"));
     Substitution subst = new Subst();
     subst.extend(x, y);
-    assertThrows(PatternRequiredError.class, () -> t.match(a, subst));
+    assertThrows(PatternRequiredException.class, () -> t.match(a, subst));
   }
 
   @Test
@@ -761,7 +761,7 @@ class MetaApplicationTest extends TermTestFoundation {
     Term t = createTwoArgMeta(x, y);
     Substitution subst = new Subst();
     subst.extend(x, z);
-    assertThrows(PatternRequiredError.class, () ->
+    assertThrows(PatternRequiredException.class, () ->
       t.match(constantTerm("a", baseType("o")), subst));
   }
 
@@ -775,7 +775,7 @@ class MetaApplicationTest extends TermTestFoundation {
     Substitution subst = new Subst();
     subst.extend(x, z);
     subst.extend(y, z);
-    assertThrows(PatternRequiredError.class, () ->
+    assertThrows(PatternRequiredException.class, () ->
       t.match(constantTerm("a", baseType("o")), subst));
   }
 
@@ -785,7 +785,7 @@ class MetaApplicationTest extends TermTestFoundation {
     Variable x = new Binder("x", baseType("o"));
     Variable y = new Binder("y", baseType("o"));
     Term t = createTwoArgMeta(x, x);
-    assertThrows(PatternRequiredError.class, () -> t.match(x, new Subst()));
+    assertThrows(PatternRequiredException.class, () -> t.match(x, new Subst()));
   }
 
   @Test
@@ -798,7 +798,7 @@ class MetaApplicationTest extends TermTestFoundation {
     Substitution subst = new Subst();
     subst.extend(x, z);
     subst.extend(y, z);
-    assertThrows(PatternRequiredError.class, () ->
+    assertThrows(PatternRequiredException.class, () ->
       t.match(constantTerm("a", baseType("o")), subst));
   }
 
@@ -863,7 +863,7 @@ class MetaApplicationTest extends TermTestFoundation {
 
     Term m = new Application(g, y, x);
     Substitution subst = new Subst();
-    assertThrows(PatternRequiredError.class, () -> term.match(m, subst));
+    assertThrows(PatternRequiredException.class, () -> term.match(m, subst));
   }
 
   @Test

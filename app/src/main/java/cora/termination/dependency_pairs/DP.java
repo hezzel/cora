@@ -2,7 +2,6 @@ package cora.termination.dependency_pairs;
 
 import com.google.errorprone.annotations.Var;
 import com.sun.jdi.event.StepEvent;
-import charlie.exceptions.InappropriatePatternDataError;
 import charlie.terms.Environment;
 import charlie.terms.Term;
 import charlie.terms.TheoryFactory;
@@ -41,11 +40,9 @@ public record DP(Term lhs, Term rhs, Term constraint, List<Variable> vars, boole
     if (initialVarSetCondition(constraint, vars)) {
       this.vars = vars;
     } else {
-      throw new InappropriatePatternDataError (
-        "DP",
-        "DP",
-        STR."the list of variables \{ vars } for the  must contain at least the variables in the constraint \{ constraint }"
-      );
+      throw new IllegalArgumentException("Illegal DP construction: the list of variables " +
+        vars + " for the DP must contain at least the variables in the constraint " +
+        constraint.toString() + ".");
     }
   }
 

@@ -119,31 +119,31 @@ public class ValueTest extends TermTestFoundation {
   @Test
   public void testVariableRequest() {
     Term v = new IntegerValue(-12);
-    assertThrows(InappropriatePatternDataError.class, () -> v.queryVariable());
+    assertThrows(InappropriatePatternDataException.class, () -> v.queryVariable());
   }
 
   @Test
   public void testAbstractionSubtermRequest() {
     Term v = new BooleanValue(true);
-    assertThrows(InappropriatePatternDataError.class, () -> v.queryAbstractionSubterm());
+    assertThrows(InappropriatePatternDataException.class, () -> v.queryAbstractionSubterm());
   }
 
   @Test
   public void testArgumentPositionRequest() {
     Term v = new StringValue("333");
-    assertThrows(IndexingError.class, () -> v.querySubterm(new ArgumentPos(1, Position.empty)));
+    assertThrows(IndexingException.class, () -> v.querySubterm(new ArgumentPos(1, Position.empty)));
   }
 
   @Test
   public void testHeadPositionRequest() {
     Term v = new IntegerValue(31);
-    assertThrows(IndexingError.class, () -> v.querySubterm(new FinalPos(1)));
+    assertThrows(IndexingException.class, () -> v.querySubterm(new FinalPos(1)));
   }
 
   @Test
   public void testBadPositionReplacement() {
     Term v = new BooleanValue(true);
-    assertThrows(IndexingError.class, () ->
+    assertThrows(IndexingException.class, () ->
       v.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a"))));
   }
 }

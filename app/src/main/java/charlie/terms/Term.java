@@ -118,26 +118,26 @@ public interface Term {
 
   /**
    * If 1 <= i <= numberArguments, this returns the thus indexed argument.
-   * @throws charlie.exceptions.IndexingError if i is negative or > numberArguments.
+   * @throws charlie.exceptions.IndexingException if i is negative or > numberArguments.
    */
   Term queryArgument(int i);
 
   /**
    * If the current term or its head is a meta-variable application, and its meta-variable has
    * arity k, and 1 ≤ i ≤ k, this returns the thus indexed argument to the meta-variable
-   * application.  Otherwise, this results in an IndexingError.
+   * application.  Otherwise, this results in an IndexingException.
    */
   Term queryMetaArgument(int i);
 
   /**
    * If the current term is a tuple of length k, and 1 ≤ i ≤ k, this returns the thus indexed tuple
-   * component.  Otherwise, this results in an IndexingError.
+   * component.  Otherwise, this results in an IndexingException.
    */
   Term queryTupleArgument(int i);
 
   /**
    * If the present term is an abstraction λx.s or a beta-redex (λx.s)(t1,...,tn), this returns s.
-   * Otherwise, an InappropriatePatternDataError is thrown.
+   * Otherwise, an InappropriatePatternDataException is thrown.
    */
   Term queryAbstractionSubterm();
 
@@ -145,7 +145,7 @@ public interface Term {
    * For an applicative term a(s1,...,sn) (where a itself is not an application), the immediate
    * subterms are s1,...,sn.  There are also n+1 head subterms: a, a(s1), a(s1,s2), ...,
    * a(s1,...,sn).  Here, queryImmediateHeadSubterm(i) returns a(s1,...,si) if 0 ≤ i ≤ n, and
-   * throws an IndexingError otherwise.
+   * throws an IndexingException otherwise.
    * (Note that this should not be used in analysis of first-order term rewriting, since all
    * non-trivial head subterms have a higher type).
    */
@@ -156,20 +156,20 @@ public interface Term {
 
    /**
    * If this is a functional term f(s1,...,sn) or constant f, this returns the root symbol f.
-   * Otherwise, an InappropriatePatternDataError is thrown.
+   * Otherwise, an InappropriatePatternDataException is thrown.
    */
   FunctionSymbol queryRoot();
 
   /**
    * If the head of this term is a variable x, abstraction λx.s or application with a variable or
    * abstraction at the head, this returns x.
-   * Otherwise, an InappropriatePatternDataError is thrown.
+   * Otherwise, an InappropriatePatternDataException is thrown.
    */
   Variable queryVariable();
 
   /**
    * If the head of this term is a meta-application Z⟨s1,...,sk⟩, this returns Z.
-   * Otherwise, an InappropriatePatternDataError is thrown.
+   * Otherwise, an InappropriatePatternDataException is thrown.
    */
   MetaVariable queryMetaVariable();
 
@@ -211,6 +211,8 @@ public interface Term {
    * Note that this set is non-empty as it always contains the empty position (representing the
    * current term), and does not contain partial positions (e.g., the position for f(x) in a term
    * f(x,y)).
+   *
+   * This is a mutable list.  Altering it does not affect the term.
    */
   List<Pair<Term,Position>> querySubterms();
 
@@ -265,7 +267,7 @@ public interface Term {
   /**
    * Returns the subterm at the given position, assuming that this is indeed a position of the
    * current term.
-   * If not, an IndexingError is thrown.
+   * If not, an IndexingException is thrown.
    */
   Term querySubterm(Position pos);
 
@@ -286,7 +288,7 @@ public interface Term {
    *
    * @param args a possibly empty list of terms, if <code>args</code> is an empty list then this
    *             method returns the calling object back
-   * @throws charlie.exceptions.TypingError if the term cannot be constructed for typing reasons.
+   * @throws charlie.exceptions.TypingException if the term cannot be constructed for typing reasons.
    *
    */
   Term apply(List<Term> args);

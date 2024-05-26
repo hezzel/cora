@@ -17,7 +17,6 @@ package charlie.smt;
 
 import java.util.List;
 import java.util.ArrayList;
-import charlie.exceptions.IndexingError;
 
 public final class Disjunction extends Junction {
   Disjunction(Constraint a, Constraint b) {

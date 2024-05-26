@@ -34,13 +34,13 @@ public class HigherMetaVarTest {
   @Test
   public void testCreateWithNullName() {
     Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
-    assertThrows(NullInitialisationError.class, () ->
+    assertThrows(NullStorageException.class, () ->
       new HigherMetaVar(null, muli(a, b), TypeFactory.createSort("c")));
   }
 
   @Test
   public void testCreateWithNullInputs() {
-    assertThrows(NullInitialisationError.class, () ->
+    assertThrows(NullStorageException.class, () ->
       new HigherMetaVar("z", null, TypeFactory.createSort("c")));
   }
 
@@ -53,7 +53,7 @@ public class HigherMetaVarTest {
   @Test
   public void testCreateWithNullOutput() {
     Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
-    assertThrows(NullInitialisationError.class, () -> new HigherMetaVar("z", muli(a, b), null));
+    assertThrows(NullStorageException.class, () -> new HigherMetaVar("z", muli(a, b), null));
   }
 
   @Test
