@@ -140,5 +140,31 @@ public class TermPrinterTest {
     printer.print(abs, naming, builder);
     assertEquals("λx1.λy.λx2.f(g(z, x2), z, x1)", builder.toString());
   }
+
+  @Test
+  public void testAvoidName() {
+    // create f(x, y) and a loose variable z
+    Type o = TypeFactory.createSort("o");
+    Variable x = new Var("x", o);
+    Variable y = new Var("y", o);
+    Variable z = new Var("z", o);
+    Constant f = new Constant("f", TypeFactory.createArrow(o, TypeFactory.createArrow(o, o)));
+    Term term = f.apply(x).apply(y);
+
+    TermPrinter printer = new TermPrinter(Set.of());
+    TermPrinter.Renaming a = printer.generateUniqueNaming(term);
+    printer.avoidAdditional(Set.of("x", "z"));
+    TermPrinter.Renaming b = printer.generateUniqueNaming(term);
+
+    assertTrue(printer.print(term, a).equals("f(x, y)"));
+    assertTrue(printer.print(term, b).equals("f(x__1, y)"));
+    assertTrue(printer.print(z, a).equals("z"));
+    assertTrue(printer.print(z, b).equals("z"));
+
+    printer.avoidAdditional("y");
+    assertTrue(printer.print(term, b).equals("f(x__1, y)"));
+    TermPrinter.Renaming c = printer.generateUniqueNaming(term);
+    assertTrue(printer.print(term, c).equals("f(x__1, y__1)"));
+  }
 }
 

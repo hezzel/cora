@@ -17,7 +17,6 @@ package cora.io;
 
 import java.util.Set;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.types.TypePrinter;
@@ -40,8 +39,7 @@ public class DefaultOutputModule implements OutputModule {
   /** This creates a module with Plain style (pure text, no unicode). */
   public static OutputModule createPlainModule(TRS trs) {
     TypePrinter typr = new PlainTypePrinter();
-    Set<String> avoid = trs == null ? Set.of() : trs.queryAlphabet().getSymbols().stream()
-                           .map(FunctionSymbol::queryName).collect(Collectors.toSet());
+    Set<String> avoid = trs == null ? Set.of() : trs.queryFunctionSymbolNames();
     ArrayList<Pair<String,String>> codes = new ArrayList<Pair<String,String>>();
     codes.add(new Pair<String,String>("%{ruleArrow}", "->"));
     codes.add(new Pair<String,String>("%{typeArrow}", "->"));
@@ -107,8 +105,7 @@ public class DefaultOutputModule implements OutputModule {
   /** This creates a module with Unicode style (pure text, but unicode symbols are allowed). */
   public static OutputModule createUnicodeModule(TRS trs) {
     TypePrinter typr = new TypePrinter();
-    Set<String> avoid = trs == null ? Set.of() : trs.queryAlphabet().getSymbols().stream()
-                           .map(FunctionSymbol::queryName).collect(Collectors.toSet());
+    Set<String> avoid = trs == null ? Set.of() : trs.queryFunctionSymbolNames();
     ArrayList<Pair<String,String>> codes = new ArrayList<Pair<String,String>>();
     codes.add(new Pair<String,String>("%{ruleArrow}", "→"));
     codes.add(new Pair<String,String>("%{typeArrow}", "→"));

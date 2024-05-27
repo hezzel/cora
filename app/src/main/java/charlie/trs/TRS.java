@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 import charlie.exceptions.IndexingException;
 import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.IllegalSymbolException;
@@ -200,6 +201,12 @@ public class TRS {
   /** Returns a copy of the set of defined symbols. */
   public TreeSet<FunctionSymbol> definedSymbols() {
     return new TreeSet<FunctionSymbol>(_defined);
+  }
+
+  /** Returns the names of all non-theory symbols declared in the alphabet. */
+  public Set<String> queryFunctionSymbolNames() {
+    return _alphabet.getSymbols().stream().map(FunctionSymbol::queryName)
+                    .collect(Collectors.toSet());
   }
 
   /**

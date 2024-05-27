@@ -60,6 +60,23 @@ public class TermPrinter {
   }
 
   /**
+   * Adds a single name to the list of names to avoid when generating variable names.  Note that
+   * this does not affect existing renamings, only new ones!
+   */
+  public void avoidAdditional(String name) {
+    _blockedNames.add(name);
+  }
+
+  /**
+   * Adds names to the list of strings to avoid when generating variable names.
+   * Note that this does not affect existing renamings (even if you have not generated any names
+   * with them yet), only ones that will be created after this function was called!
+   */
+  public void avoidAdditional(Set<String> names) {
+    _blockedNames.addAll(names);
+  }
+  
+  /**
    * This access function to generateUniqueNaming can be called with an arbitrary number of
    * term arguments.
    */

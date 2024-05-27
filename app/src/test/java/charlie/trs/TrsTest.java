@@ -255,6 +255,18 @@ public class TrsTest {
   }
 
   @Test
+  public void testSymbolNames() {
+    setupTRSs();
+    Set<String> names = _ams.queryFunctionSymbolNames();
+    assertTrue(names.size() == 5);
+    assertTrue(names.contains("A"));
+    assertTrue(names.contains("B"));
+    assertTrue(names.contains("f"));
+    assertTrue(names.contains("g"));
+    assertTrue(names.contains("h"));
+  }
+
+  @Test
   public void testLeftLinearity() {
     Alphabet alf = new Alphabet(List.of(f,g,h,a,b));
     ArrayList<Rule> rules = new ArrayList<Rule>();
