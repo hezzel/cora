@@ -3,8 +3,6 @@ package cora.termination.dependency_pairs;
 import static org.junit.jupiter.api.Assertions.*;
 
 import cora.data.digraph.Digraph;
-import charlie.exceptions.IllegalArgumentError;
-import charlie.exceptions.NullInitialisationError;
 import cora.termination.dependency_pairs.processors.GraphProcessor;
 import charlie.terms.Term;
 import charlie.terms.TermFactory;
@@ -37,19 +35,19 @@ class ProblemTest {
 //    List<DP> dp = this.createDPExamples();
 //    Problem p = new Problem(this.createDPExamples(), new Digraph(3));
 //
-//    Assertions.assertThrows(NullInitialisationError.class, () -> {
+//    Assertions.assertThrows(NullStorageException.class, () -> {
 //      new Problem(null);
 //    });
 //
-//    Assertions.assertThrows(NullInitialisationError.class, () -> {
+//    Assertions.assertThrows(NullStorageException.class, () -> {
 //      new Problem(this.createDPExamples(), null);
 //    });
 //
-//    Assertions.assertThrows(NullInitialisationError.class, () -> {
+//    Assertions.assertThrows(NullStorageException.class, () -> {
 //      new Problem(null, new Digraph(0));
 //    });
 //
-//    Assertions.assertThrows(IllegalArgumentError.class, () -> {
+//    Assertions.assertThrows(IllegalArgumentException.class, () -> {
 //      new Problem(dp, new Digraph(0));
 //    });
 //  }
