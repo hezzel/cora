@@ -5,9 +5,4 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AppTest {
 
-  @Test
-  public void test() {
-    assertTrue(false);
-  }
-
 }
