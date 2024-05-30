@@ -39,7 +39,8 @@ tasks{
     val COMPILER_OPTIONS = listOf("--enable-preview", "-Xlint:preview", "-Xlint:deprecation")
 
     withType<JavaCompile>() {
-        options.compilerArgs = COMPILER_OPTIONS
+        options.compilerArgs = COMPILER_OPTIONS;
+        options.encoding = "UTF8"
     }
 
     named<Test>("test") {
