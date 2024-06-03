@@ -40,8 +40,11 @@ public class Parameters {
   private SmtSolver _solver;
 
   public enum Request { Print, Reduce, Termination, Computability };
+
   public class WrongParametersException extends RuntimeException {
-    public WrongParametersException(String reason) { super("PARAMETERS ERROR: " + reason); }
+    public WrongParametersException(String reason) {
+      super("PARAMETERS ERROR: " + reason + "\n" + Parameters.getUsageString());
+    }
   }
 
   /**
@@ -235,4 +238,36 @@ public class Parameters {
       case OutputModule.Style.Unicode -> DefaultOutputModule.createUnicodeModule();
     };
   }
+
+  public static String getUsageString() {
+    StringBuilder str = new StringBuilder();
+    str.append("usage: cora [<options>] <input_file>").append(System.lineSeparator());
+    str.append("options:").append(System.lineSeparator());
+
+    str.append("    -p | --print" +
+        "        " +
+        "        " +
+        "print the given TRS on standard output.")
+      .append(System.lineSeparator());
+
+    str.append("    -r <term> | --reduce" +
+        "        parse the given term, " +
+        "and reduce it under the given TRS; no further parameters can be given after this " +
+        "as they will be considered part of the term.")
+      .append(System.lineSeparator());
+
+    str.append("    -t | --terminate" +
+        "        " +
+        "    " +
+        "try to prove or disprove termination of the given TRS.")
+      .append(System.lineSeparator());
+
+    str.append("    -d <techniques> | --disable <techniques>" +
+        "        " +
+        "")
+      .append(System.lineSeparator());
+
+    return str.toString();
+  }
+
 }
