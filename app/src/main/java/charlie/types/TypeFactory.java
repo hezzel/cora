@@ -65,7 +65,7 @@ public class TypeFactory {
     return ret;
   }
 
-  /** Creates a type o → ... → o → o, with in total k+1 os. */
+  /** Creates a type o → ... → o → o, with in total arity+1 os. */
   public static Type createDefaultArrow(int arity) {
     Type ret = defaultSort;
     for (int i = 0; i < arity; i++) ret = new Arrow(defaultSort, ret);
