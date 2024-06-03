@@ -32,7 +32,7 @@ install:
 	@cp -R ./cora_distribution/lib ~/.cora
 	@echo "Cora was successfully installed at ~/.cora."
 	@echo "If you would like to run it from anywhere, please add the following line to your bash profile:"
-	@echo 'export PATH="$$HOME/.cora/bin:$$PATH'
+	@echo 'export PATH="$$HOME/.cora/bin:$$PATH"'
 	@echo "For security reasons, this installation script will not change this file for you."
 
 uninstall:
