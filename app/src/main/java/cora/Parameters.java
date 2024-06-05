@@ -247,11 +247,20 @@ public class Parameters {
     str.append("    -p | --print" +
         "        " +
         "        " +
-        "print the given TRS on standard output.")
+        "Print the given TRS on standard output.")
       .append(System.lineSeparator());
 
-    str.append("    -r <term> | --reduce" +
-        "        parse the given term, " +
+    str.append("    -y | --style  <style>" +
+      "   " +
+      "    " +
+      "Use the given style for printing; " +
+      "currently supported styles are \"plain\" and \"unicode\".")
+      .append(System.lineSeparator());
+
+
+    str.append("    -r | --reduce <term>" +
+        "        " +
+        "Parse the given term, " +
         "and reduce it under the given TRS; no further parameters can be given after this " +
         "as they will be considered part of the term.")
       .append(System.lineSeparator());
@@ -259,12 +268,90 @@ public class Parameters {
     str.append("    -t | --terminate" +
         "        " +
         "    " +
-        "try to prove or disprove termination of the given TRS.")
+        "Try to prove or disprove termination of the given TRS.")
       .append(System.lineSeparator());
 
-    str.append("    -d <techniques> | --disable <techniques>" +
-        "        " +
-        "")
+    str.append("    -d | --disable [<tech>]" +
+        "     " +
+        "Disable the given techniques from being used by Cora.")
+      .append(System.lineSeparator());
+
+    str.append("    " +
+      "    " +
+      "The following techniques can be disabled:")
+      .append(System.lineSeparator());
+
+    str.append("    " +
+      "    " +
+      "    " +
+      "dp" +
+      "    " +
+      "    " +
+      " " +
+      "The DP framework (for termination, non-termination, and universal computability);" +
+      "if disabled, HORPO is used for termination proofs instead.")
+      .append(System.lineSeparator());
+
+    str.append("    " +
+        "    " +
+        "    " +
+        "graph" +
+        "      " +
+        "The graph processor in the DP framework.")
+      .append(System.lineSeparator());
+
+    str.append("    " +
+        "    " +
+        "    " +
+        "imap       The integer function processor in the DP framework.")
+      .append(System.lineSeparator());
+
+    str.append("    " +
+        "    " +
+        "    " +
+        "reach      The reachability processor in the DP framework (when using public functions).")
+      .append(System.lineSeparator());
+
+    str.append("    " +
+        "    " +
+        "    " +
+        "split      The splitting processor in the DP framework.")
+      .append(System.lineSeparator());
+
+    str.append("    " +
+        "    " +
+        "    " +
+        "subcrit    The subterm criterion processor in the DP framework.")
+      .append(System.lineSeparator());
+
+    str.append("    " +
+        "    " +
+        "    " +
+        "tharg      The theory arguments processor in the DP framework.")
+      .append(System.lineSeparator());
+
+    str.append("    -s | --solver  [<solver>]" +
+      "   " +
+      "Request the given SMT solver to be used." +
+      "Note that this solver should be installed on your local computer.")
+      .append(System.lineSeparator());
+
+    str.append("    " +
+        "    " +
+        "The following SMT solvers are supported.")
+      .append(System.lineSeparator());
+
+    str.append("    " +
+        "    " +
+        "    " +
+        "z3 | cvc5 | yices2    To use any of those, please install locally.")
+      .append(System.lineSeparator());
+
+    str.append("    " +
+        "    " +
+        "    " +
+        "external:command    This allows a user to specify a command that is invoked, for " +
+        "example, a bash script, that calls an SMT solver in exactly the way you want.")
       .append(System.lineSeparator());
 
     return str.toString();
