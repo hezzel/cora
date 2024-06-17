@@ -20,10 +20,10 @@ import java.util.ArrayList;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.types.TypePrinter;
-import charlie.terms.TermPrinter;
-import charlie.terms.TermPrinter.Renaming;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
+import charlie.terms.Renaming;
+import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 

@@ -20,7 +20,7 @@ import java.util.HashMap;
 import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.Variable;
-import charlie.terms.TermPrinter.Renaming;
+import charlie.terms.Renaming;
 import cora.io.OutputModule;
 import cora.io.OutputModuleAdapter;
 import cora.io.ProofObject;
@@ -184,8 +184,8 @@ class DPProofObject implements ProofObject {
       ret.append(" { ");
       boolean first = true;
       for (Variable x : dp.vars()) {
-        if (naming.get(x) == null) continue;  // if it doesn't occur in the terms
-                                              // it's only confusing if we list it here
+        if (naming.getName(x) == null) continue;  // if it doesn't occur in the terms
+                                                  // it's only confusing if we list it here
         if (!first) ret.append(", ");
         first = false;
         ret.append("%a");

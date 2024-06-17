@@ -24,7 +24,7 @@ import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.Term;
 import charlie.terms.TermFactory;
-import charlie.terms.TermPrinter.Renaming;
+import charlie.terms.Renaming;
 import charlie.trs.*;
 import charlie.reader.CoraInputReader;
 

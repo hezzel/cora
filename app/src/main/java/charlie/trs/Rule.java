@@ -158,7 +158,7 @@ public class Rule {
   public String toString() {
     StringBuilder builder = new StringBuilder();
     TermPrinter printer = new TermPrinter(Set.of());
-    TermPrinter.Renaming renaming = printer.generateUniqueNaming(_left, _right, _constraint);
+    Renaming renaming = printer.generateUniqueNaming(_left, _right, _constraint);
     printer.print(_left, renaming, builder);
     builder.append(" → ");
     printer.print(_right, renaming, builder);
