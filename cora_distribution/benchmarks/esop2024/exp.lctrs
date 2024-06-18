@@ -1,7 +1,0 @@
-exp :: Int -> Int -> Int
-exp(x, y) → x | x > y
-exp(x, y) → exp(2 * x, y) | x ≤ y ∧ 0 < x ∧ x < 100000
-
-start :: Int
-start → exp(1, y)
-

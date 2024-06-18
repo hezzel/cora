@@ -1,4 +1,0 @@
-f :: (a → a) → b
-g :: (a → a) → a → a
-g(F, Y) → Y
-f(G) → f(g(G))

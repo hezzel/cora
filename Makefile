@@ -1,15 +1,16 @@
 DIST_DIR := ./app/build/distributions
-LIB_DIR := ./cora_distribution/lib
+BIN_DIR  := ./cora_distribution/bin
+LIB_DIR  := ./cora_distribution/lib
 
 .PHONY: all
 all:
 	./gradlew clean
 	./gradlew build --rerun-tasks --info
 	cd $(DIST_DIR) && unzip app.zip
+	rm -rf ./cora_distribution/bin
 	rm -rf ./cora_distribution/lib
+	cp -R $(DIST_DIR)/app/bin $(BIN_DIR)
 	cp -R $(DIST_DIR)/app/lib $(LIB_DIR)
-	rm -rf ./cora_distribution/benchmarks
-	cp -R ./benchmarks ./cora_distribution/benchmarks
 
 define path_question
 	$(eval confirm := $(shell read -p "Do you want to automatically add cora to your path? [y/n] > " -r; echo $$REPLY))

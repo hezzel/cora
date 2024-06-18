@@ -1,4 +1,0 @@
-sum :: Int -> Int
-sum(x) -> 0         | x ≤ 0
-sum(x) -> x + sum(x - 1) | x != 0
-

@@ -1,3 +1,0 @@
-fapp :: o → o → o
-lam :: (o → o) → o
-fapp(lam(X), Y) → X(Y)

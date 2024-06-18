@@ -1,8 +1,0 @@
-nil :: list
-cons :: nat -> list -> list
-zero :: nat
-suc :: nat -> nat
-
-iterate :: (nat -> nat) -> nat -> list
-iterate(f, x) -> cons(x, iterate(f, f(x)))
-

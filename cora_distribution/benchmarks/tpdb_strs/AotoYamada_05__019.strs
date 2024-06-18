@@ -1,4 +1,0 @@
-comp :: (a → a) → (a → a) → a → a
-twice :: (a → a) → a → a
-comp(F, Z, U) → F(Z(U))
-twice(H) → comp(H, H)

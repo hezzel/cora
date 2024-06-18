@@ -21,12 +21,15 @@ dependencies {
 
     // This dependency is used by the application.
     implementation("com.google.guava:guava:32.1.1-jre")
+
+    //Jline is a dependency to deal with REPL inputs.
+    implementation("org.jline:jline:3.26.1")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(22))
     }
 }
 
@@ -36,7 +39,9 @@ application {
 }
 
 tasks{
-    val COMPILER_OPTIONS = listOf("--enable-preview", "-Xlint:preview", "-Xlint:deprecation")
+    // Compiler options with preview java features enabled
+    val COMPILER_OPTIONS =
+        listOf("--enable-preview", "-Xlint:preview", "-Xlint:deprecation", "-Xlint:unchecked")
 
     withType<JavaCompile>() {
         options.compilerArgs = COMPILER_OPTIONS;

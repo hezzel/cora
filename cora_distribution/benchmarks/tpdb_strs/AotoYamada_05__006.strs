@@ -1,5 +1,0 @@
-branch :: a → b → b → b
-leaf :: a → b
-mapbt :: (a → a) → b → b
-mapbt(F, leaf(Y)) → leaf(F(Y))
-mapbt(G, branch(P, V, W)) → branch(G(P), mapbt(G, V), mapbt(G, W))

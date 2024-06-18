@@ -55,7 +55,7 @@
 #       Darwin, MinGW, and NonStop.
 #
 #   (3) This script is generated from the Groovy template
-#       https://github.com/gradle/gradle/blob/HEAD/subprojects/plugins/src/main/resources/org/gradle/api/internal/plugins/unixStartScript.txt
+#       https://github.com/gradle/gradle/blob/HEAD/platforms/jvm/plugins-application/src/main/resources/org/gradle/api/internal/plugins/unixStartScript.txt
 #       within the Gradle project.
 #
 #       You can find Gradle at https://github.com/gradle/gradle/.
@@ -112,7 +112,7 @@ case "$( uname )" in                #(
   NONSTOP* )        nonstop=true ;;
 esac
 
-CLASSPATH=$APP_HOME/lib/app.jar:$APP_HOME/lib/annotations-24.0.0.jar:$APP_HOME/lib/guava-32.1.1-jre.jar:$APP_HOME/lib/failureaccess-1.0.1.jar:$APP_HOME/lib/jsr305-3.0.2.jar:$APP_HOME/lib/checker-qual-3.33.0.jar:$APP_HOME/lib/error_prone_annotations-2.18.0.jar
+CLASSPATH=$APP_HOME/lib/app.jar:$APP_HOME/lib/annotations-24.0.0.jar:$APP_HOME/lib/guava-32.1.1-jre.jar:$APP_HOME/lib/jline-3.26.1.jar:$APP_HOME/lib/failureaccess-1.0.1.jar:$APP_HOME/lib/jsr305-3.0.2.jar:$APP_HOME/lib/checker-qual-3.33.0.jar:$APP_HOME/lib/error_prone_annotations-2.18.0.jar
 
 
 # Determine the Java command to use to start the JVM.
@@ -200,7 +200,7 @@ fi
 
 
 # Add default JVM options here. You can also use JAVA_OPTS and APP_OPTS to pass JVM options to this script.
-DEFAULT_JVM_OPTS="--enable-preview"
+DEFAULT_JVM_OPTS=""
 
 # Collect all arguments for the java command:
 #   * DEFAULT_JVM_OPTS, JAVA_OPTS, JAVA_OPTS, and optsEnvironmentVar are not allowed to contain shell fragments,

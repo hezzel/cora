@@ -1,9 +1,0 @@
-0 :: a
-add :: a → a → a
-curry :: (a → a → a) → a → a → a
-plus :: a → a → a
-s :: a → a
-plus(0, X) → X
-plus(s(Y), U) → s(plus(Y, U))
-curry(H, W, P) → H(W, P)
-add → curry(plus)

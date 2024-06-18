@@ -1,5 +1,0 @@
-f :: a → b → c
-f1 :: a → b → c
-f2 :: a → b → c
-f(x) → f1(x)
-f1(x, y) → f2(x, y)

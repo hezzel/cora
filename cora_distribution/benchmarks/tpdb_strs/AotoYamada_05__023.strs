@@ -1,7 +1,0 @@
-0 :: a
-id :: a → a
-plus :: a → a → a
-s :: a → a
-id(X) → X
-plus(0) → id
-plus(s(Y), U) → s(plus(Y, U))

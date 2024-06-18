@@ -1,9 +1,0 @@
-cons :: nat → list → list
-map :: (nat → nat) → list → list
-merge :: list → list → list → list
-nil :: list
-merge(nil, nil, X) → X
-merge(nil, cons(Y, U), V) → merge(U, nil, cons(Y, V))
-merge(cons(W, P), X1, Y1) → merge(X1, P, cons(W, Y1))
-map(G1, nil) → nil
-map(H1, cons(W1, P1)) → cons(H1(W1), map(H1, P1))

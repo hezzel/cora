@@ -1,7 +1,0 @@
-random :: Int -> Int -> Int
-random(x, y) -> x
-random(x, y) -> y
-
-f :: Int -> Int -> Int -> A
-f(x, y, z) -> f(x, x + 1, x - 1) | y < z
-

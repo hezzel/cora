@@ -22,19 +22,22 @@ import charlie.reader.*;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.reduction.Reducer;
+import cora.rwinduction.tui.REPL;
 import cora.termination.TerminationHandler;
 import cora.Parameters.Request;
 
 import java.io.IOException;
-import java.io.File;
-import java.nio.file.*;
 import java.util.List;
-import java.util.TreeSet;
 
 /** Basic entry class: this reads a TRS and asks the user for a term, then reduces this term. */
 public class App {
+
   /** Main function: parses the parameters and starts up the program flow. */
   public static void main(String[] args) {
+
+    REPL repl = new REPL();
+    repl.runRepl();
+
     try {
       Parameters parameters = new Parameters(args);
       parameters.setupSettings();
@@ -126,4 +129,3 @@ public class App {
     return reducer.normalise(start);
   }
 }
-

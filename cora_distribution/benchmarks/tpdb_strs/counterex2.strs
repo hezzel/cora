@@ -1,3 +1,0 @@
-f :: nat → nat → nat
-g :: (nat → nat) → nat
-f(g(X), g(X)) → X(g(X))

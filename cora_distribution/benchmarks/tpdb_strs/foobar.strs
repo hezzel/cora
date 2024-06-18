@@ -1,3 +1,0 @@
-bar :: (o → o) → o
-foo :: o → o
-foo(bar(F)) → F(bar(F))

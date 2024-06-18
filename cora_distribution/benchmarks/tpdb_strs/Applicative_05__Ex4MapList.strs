@@ -1,7 +1,0 @@
-cons :: c → d → d
-fcons :: (b → c) → a → a
-fmap :: a → b → d
-fnil :: a
-nil :: d
-fmap(fnil, X) → nil
-fmap(fcons(Z, U), V) → cons(Z(V), fmap(U, V))
