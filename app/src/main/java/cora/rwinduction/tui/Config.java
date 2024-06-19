@@ -6,5 +6,8 @@ public class Config {
 
   private Config() { }
 
-  public static Config getInstance() {}
+  public static Config getInstance() {
+    // TODO implementa essa merda
+    return null;
+  }
 }

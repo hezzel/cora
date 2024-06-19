@@ -1,7 +1,6 @@
 package cora.rwinduction.engine;
 
 import java.util.Optional;
-import java.util.function.BiFunction;
 
 abstract class DeductionRule {
 
@@ -10,19 +9,16 @@ abstract class DeductionRule {
    * In order to apply a deduction rule {@code D} on an equation in E,
    * we need to first check that all the requirements for the applicability of {@code D} are met.
    *
-   * @param proofState the given proof state, of shape {@code (E, H)}
-   * @param equationIndex the index of an equation {@code s = t [c]} in E.
    * @return {@code true} if the implemented rule can be applied and {@code false} otherwise.
+   *
    */
-  boolean isApplicable(ProofState proofState, int equationIndex) {
-    return false;
-  }
+  abstract <T extends RuleArguments> boolean isApplicable(T args);
 
-  abstract ProofState ruleLogic(ProofState proofState, int equationIndex);
+  protected abstract <T extends RuleArguments> ProofState ruleLogic(T args);
 
-  final Optional<ProofState> applyRule(ProofState proofState, int equationIndex) {
-    if (this.isApplicable(proofState, equationIndex))
-      return Optional.of(ruleLogic(proofState, equationIndex));
+  final <T extends RuleArguments> Optional<ProofState> applyRule(T args) {
+    if (this.isApplicable(args))
+      return Optional.of(ruleLogic(args));
     else
       return Optional.empty();
   }

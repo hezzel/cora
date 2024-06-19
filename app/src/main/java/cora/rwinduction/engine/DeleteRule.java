@@ -1,14 +1,11 @@
 package cora.rwinduction.engine;
 
+import charlie.exceptions.IndexingException;
 import charlie.theorytranslation.TermAnalyser;
-import charlie.trs.Rule;
 import cora.config.Settings;
+import org.jetbrains.annotations.NotNull;
 
-public class DeleteRule extends DeductionRule {
-
-  class DeleteArgs extends RuleArguments {
-    public int test;
-  }
+final class DeleteRule extends DeductionRule {
 
   /**
    * The <b>delete</b> deduction rule can be applied whenever either the selected equation
@@ -16,15 +13,28 @@ public class DeleteRule extends DeductionRule {
    * (which means modulo-alpha when lambdas are present)
    * identical to {@code t} or the constraint {@code c} is not satisfiable.
    *
-   * @param proofState The input proof state, it has the form of a pair (E, H) of equations and
-   *                   hypotheses.
-   * @param equationIndex The index of an equation in E, for which <b>delete</b> should be
-   *                      applied to.
+   * @param args default parent class {@link RuleArguments} since this rule doesn't need
+   *             additional parameters.
+   *             Therefore, this method expects {@code args} to be of type {@code RuleArguments}.
    *
+   * @return whether delete can be applied to the selected equation
+   *
+   * @throws IndexingException if rule index given in args is out of bounds.
    */
   @Override
-  public boolean isApplicable(ProofState proofState, int equationIndex) {
-    Equation equation = proofState.getEquations().get(equationIndex);
+  public <T extends RuleArguments> boolean isApplicable(@NotNull T args) {
+
+    if(args.getRuleIndex() >= args.getProofState().getEquations().size()) {
+      throw new IndexingException(
+        "DeleteRule",
+        "isApplicable",
+        args.getRuleIndex()
+      );
+    }
+
+    Equation equation = args.getProofState()
+      .getEquations()
+      .get(args.getRuleIndex());
 
     boolean constraintIsUnsatisfiable = false;
 
@@ -47,20 +57,9 @@ public class DeleteRule extends DeductionRule {
     return equation.getLhs().equals(equation.getRhs()) || constraintIsUnsatisfiable;
   }
 
-  /**
-   * @param proofState
-   * @param equationIndex
-   * @return
-   */
   @Override
-  ProofState ruleLogic(ProofState proofState, int equationIndex) {
-    return null;
+  public <T extends RuleArguments> ProofState ruleLogic(@NotNull T args) {
+    return args.getProofState().deleteEquation(args.getRuleIndex());
   }
-
-  ProofState ruleLogic(ProofState proofState, int equationIndex, int tes) {
-    return null;
-  }
-
-
 
 }

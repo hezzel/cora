@@ -2,7 +2,7 @@ package cora.rwinduction.engine;
 
 import charlie.terms.Term;
 
-public class Equation {
+class Equation {
   private Term _lhs;
   private Term _rhs;
   private Term _constraint;

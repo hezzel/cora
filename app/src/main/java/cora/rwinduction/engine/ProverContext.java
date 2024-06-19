@@ -5,7 +5,7 @@ import charlie.trs.TRS;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-public class ProverContext {
+class ProverContext {
 
   private TRS _initialSystem;
 
