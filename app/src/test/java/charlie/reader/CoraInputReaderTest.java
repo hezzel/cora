@@ -502,5 +502,24 @@ public class CoraInputReaderTest {
     assertTrue(trs.isPrivate(b));
     assertFalse(trs.isPrivate(c));
   }
+
+  @Test
+  public void testReadTerm() {
+    TRS trs = CoraInputReader.readTrsFromString("f :: a -> b -> a h :: Int -> b -> b");
+    Term s = CoraInputReader.readTerm("f(x, h(0, y))", trs);
+    Term t = CoraInputReader.readTerm("f(x, h(0, y))", trs);
+    assertFalse(s.equals(t)); // different variables!
+    TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
+    Renaming renaming = printer.generateUniqueNaming(s);
+    assertTrue(CoraInputReader.readTerm("f(x, h(0, y))", renaming, trs).equals(s));
+    Variable x = renaming.getVariable("x");
+    Variable y = renaming.getVariable("y");
+
+    Renaming newnaming = new Renaming(trs.queryFunctionSymbolNames());
+    newnaming.setName(x, "aa");
+    newnaming.setName(y, "bb");
+    Term q = CoraInputReader.readTerm("f(aa, h(0, bb))", newnaming, trs);
+    assertTrue(s.equals(q));
+  }
 }
 

@@ -92,12 +92,21 @@ class SymbolData {
 
   /**
    * Save the given variable: its name will now uniquely be associated with that variable.
-   * Should not be used for variables that have already been declared, although it is allowed if
-   * the variables are equal.
+   * Should not be used for names that have already been used for a variable (or indeed, for
+   * anything else), although it is allowed if the variables are equal.
    */
   public void addVariable(Variable variable) {
+    addVariable(variable, variable.queryName());
+  }
+
+  /**
+   * Save the given variable by the given name.  This name will now be uniquely associated with
+   * that variable.  This should not be used for names that are already in use for other variables,
+   * although it is allowed if the variables are equal.
+   */
+  public void addVariable(Variable variable, String varname) {
     if (variable == null) throw new NullStorageException("SymbolData", "variable");
-    String varname = variable.queryName();
+    if (varname == null) throw new NullStorageException("SymbolData", "varname");
     Type type = variable.queryType();
     Variable existing = _variables.get(varname);
     if (existing != null && !variable.equals(existing)) {
@@ -108,22 +117,27 @@ class SymbolData {
   }
 
   /**
-   * Save the given meta-variable: its name will now uniquely be associated with that meta-variable.
-   * Should not be used for meta-variables that have already been declared, although it is allowed
-   * if the meta-variables are equal.
+   * Save the given meta-variable by the given name: this name will now uniquely be associated with
+   * that meta-variable.  Should not be used for names that are already in use for other
+   * meta-variables, if the meta-variables are equal.
    * It is not intended to be used for meta-variables that are also variables (store those as
    * variables instead), but this is not blocked.
    */
-  public void addMetaVariable(MetaVariable mvar) {
+  public void addMetaVariable(MetaVariable mvar, String mvarname) {
     if (mvar == null) throw new NullStorageException("SymbolData", "mvar");
-    String varname = mvar.queryName();
+    if (mvarname == null) throw new NullStorageException("SymbolData", "mvarname");
     Type type = mvar.queryType();
-    MetaVariable existing = _mvariables.get(varname);
+    MetaVariable existing = _mvariables.get(mvarname);
     if (existing != null && !mvar.equals(existing)) {
       throw new IllegalArgumentException("Duplicate call to SymbolData::addMetaVariable: " +
-        "trying to overwrite previously declared meta-variable " + varname);
+        "trying to overwrite previously declared meta-variable " + mvarname);
     }
-    _mvariables.put(varname, mvar);
+    _mvariables.put(mvarname, mvar);
+  }
+
+  /** Shorthand for addMetaVariable(mvar, mvar.queryName()) */
+  public void addMetaVariable(MetaVariable mvar) {
+    addMetaVariable(mvar, mvar.queryName());
   }
 
   /** This marks the given function symbol as a private symbol. */

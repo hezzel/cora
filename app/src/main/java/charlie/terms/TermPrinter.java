@@ -31,25 +31,6 @@ import charlie.exceptions.UnexpectedPatternException;
 public class TermPrinter {
   private TreeSet<String> _blockedNames;  // the names that may not be used as variable names
 
-  /** A Renaming is used to assign a new name to (meta-)variables in a term. */
-  public final class Renaming {
-    private TreeMap<Replaceable,String> _map;
-    private TreeSet<String> _avoid;
-    public Renaming() {
-      _map = new TreeMap<Replaceable,String>();
-      _avoid = new TreeSet<String>(_blockedNames);
-    }
-    /** Returns the chosen name for the given replaceable, or null if it's not in the domain. */
-    public String get(Replaceable x) { return _map.get(x); }
-    /**
-     * Returns whether the given name is available to be used for further renamings.
-     * (The renaming is set up so that any name that is already in use is not available, along
-     * with the "avoid" names given in the TermPrinter's constructor, and potentially some other
-     * names).
-     */
-    public boolean isAvailable(String name) { return !_avoid.contains(name); }
-  }
-
   /**
    * Generates a TermPrinter.
    * @param avoid names in this set will not be used as generated variable names in the default
@@ -63,7 +44,7 @@ public class TermPrinter {
    * Adds a single name to the list of names to avoid when generating variable names.  Note that
    * this does not affect existing renamings, only new ones!
    */
-  public void avoidAdditional(String name) {
+  public final void avoidAdditional(String name) {
     _blockedNames.add(name);
   }
 
@@ -72,7 +53,7 @@ public class TermPrinter {
    * Note that this does not affect existing renamings (even if you have not generated any names
    * with them yet), only ones that will be created after this function was called!
    */
-  public void avoidAdditional(Set<String> names) {
+  public final void avoidAdditional(Set<String> names) {
     _blockedNames.addAll(names);
   }
   
@@ -117,7 +98,7 @@ public class TermPrinter {
     // to generate a new renaming that assigns them all distinct names, we first assign names for
     // the replaceables whose name is already unique (since they can likely be unchanged), and then
     // for the rest
-    Renaming ret = new Renaming();
+    Renaming ret = new Renaming(_blockedNames);
     for (int i = 0; i < 2; i++) {
       for (TreeSet<Replaceable> set : existingNames.values()) {
         if (i == 0 && set.size() != 1) continue;
@@ -126,9 +107,8 @@ public class TermPrinter {
         for (Replaceable x : set) {
           counter++;
           String name = generateName(x, n -> ret.isAvailable(n), counter, set.size());
-          ret._map.put(x, name);
-          ret._avoid.add(name);
-          if (!name.equals(x.queryName())) ret._avoid.add(x.queryName());
+          ret.setName(x, name);
+          if (!name.equals(x.queryName())) ret.avoid(x.queryName());
         }
       }
     }
@@ -172,31 +152,6 @@ public class TermPrinter {
   private boolean isGoodNameStart(char c) {
     if (c == '#' || c == '$' || c == '?') return true;
     return c >= 'A' && c != '[' && c != ']';
-  }
-
-  /**
-   * This updates the given renaming to set the name for the given replaceable to name.  It also
-   * marks the given name as unavailable for future assignments.
-   *
-   * Note: if the given name is not available, then an IllegalArgumentException is thrown.
-   */
-  protected final void assignName(Renaming naming, Replaceable x, String name) {
-    if (naming._avoid.contains(name)) {
-      throw new IllegalArgumentException("TermPrinter::assignName -- " +
-                                         "choosing unavailable name " + name);
-    }
-    naming._map.put(x, name);
-    naming._avoid.add(name);
-  }
-
-  /**
-   * This updates the given renaming to remove the name for the given replaceable, and marks the
-   * replaceable as available.
-   */
-  protected final void unassignName(Renaming naming, Replaceable x) {
-    String name = naming._map.get(x);
-    naming._map.remove(x);
-    if (name != null) naming._avoid.remove(name);
   }
 
   /**
@@ -276,7 +231,7 @@ public class TermPrinter {
    * then it uses the variable's base name.
    */
   protected void printVariable(Variable variable, Renaming naming, StringBuilder builder) {
-    String name = naming._map.get(variable);
+    String name = naming.getName(variable);
     if (name == null) builder.append(variable.queryName());
     else builder.append(name);
   }
@@ -524,14 +479,13 @@ public class TermPrinter {
    */
   protected void printAbstraction(Term term, Renaming naming, StringBuilder builder) {
     Variable binder = term.queryVariable();
-    String backup = naming._map.get(binder);
+    String backup = naming.getName(binder);
 
     // find varname
     String bname = binder.queryName();
     String name = bname;
-    for (int i = 1; naming._avoid.contains(name); i++) name = bname + i;
-    naming._map.put(binder, name);
-    naming._avoid.add(name);
+    for (int i = 1; !naming.isAvailable(name); i++) name = bname + i;
+    naming.setName(binder, name);
 
     // print term
     builder.append(queryLambda());
@@ -540,9 +494,8 @@ public class TermPrinter {
     print(term.queryAbstractionSubterm(), naming, builder);
 
     // restore naming
-    if (backup == null) naming._map.remove(binder);
-    else naming._map.put(binder, backup);
-    naming._avoid.remove(name);
+    if (backup == null) naming.unsetName(binder);
+    else naming.setName(binder, backup);
   }
 
   /**
@@ -564,7 +517,7 @@ public class TermPrinter {
    */
   protected void printMetaApplication(Term term, Renaming naming, StringBuilder builder) {
     MetaVariable mvar = term.queryMetaVariable();
-    String name = naming.get(mvar);
+    String name = naming.getName(mvar);
     if (name == null) builder.append(mvar.queryName());
     else builder.append(name);
     builder.append(queryMetaOpenBracket());

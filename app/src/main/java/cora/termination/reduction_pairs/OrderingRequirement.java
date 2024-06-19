@@ -23,7 +23,7 @@ import java.util.Collections;
 import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.Variable;
-import charlie.terms.TermPrinter.Renaming;
+import charlie.terms.Renaming;
 import cora.io.OutputModule;
 
 /**

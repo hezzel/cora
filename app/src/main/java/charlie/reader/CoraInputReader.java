@@ -200,12 +200,40 @@ public class CoraInputReader extends TermTyper {
    * Reads the given term from string.
    * The TRS is used for its alphabet (function symbols are automatically recognised), and to
    * know whether or not we should include theories.  The rules and rule schemes are ignored.
+   * Variables are declared as needed.  Note that reading a single variable will not succeed,
+   * since its type cannot be derived.
    */
   public static Term readTerm(String str, TRS trs) {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm pt = CoraParser.readTerm(str, trs.theoriesIncluded(), collector);
     throwIfErrors(collector);
     SymbolData data = new SymbolData(trs);
+    CoraInputReader reader = new CoraInputReader(data, collector);
+    Term ret = reader.makeTerm(pt, null, true);
+    throwIfErrors(collector);
+    return ret;
+  }
+
+  /**
+   * Reads the given term from string.
+   * The given renaming is used to recognise variables and meta-variables.
+   * The TRS is used for its alphabet (function symbols are automatically recognised), and to
+   * know whether or not we should include theories.  The rules and rule schemes are ignored.
+   */
+  public static Term readTerm(String str, Renaming naming, TRS trs) {
+    ErrorCollector collector = new ErrorCollector();
+    ParserTerm pt = CoraParser.readTerm(str, trs.theoriesIncluded(), collector);
+    throwIfErrors(collector);
+    SymbolData data = new SymbolData(trs);
+    for (Replaceable r : naming.domain()) {
+      String name = naming.getName(r);
+      if (r instanceof Variable x) data.addVariable(x, name);
+      else if (r instanceof MetaVariable z) data.addMetaVariable(z, name);
+      else {
+        throw new UnexpectedPatternException("CoraInputReader", "readTerm",
+          "replaceable " + name, "either a variable or a meta-variable");
+      }
+    }
     CoraInputReader reader = new CoraInputReader(data, collector);
     Term ret = reader.makeTerm(pt, null, true);
     throwIfErrors(collector);

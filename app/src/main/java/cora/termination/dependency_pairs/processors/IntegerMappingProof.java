@@ -22,7 +22,6 @@ import java.util.Map;
 
 import charlie.util.Pair;
 import charlie.terms.*;
-import charlie.terms.TermPrinter.Renaming;
 import cora.io.OutputModule;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;

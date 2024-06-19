@@ -155,7 +155,7 @@ class HorpoConstraintList {
   /** Returns a string representation that uniquely identifies the given constraint */
   private String reqToString(Term left, Relation relation, Term right, Term constraint,
                              TreeSet<Variable> theorvar) {
-    TermPrinter.Renaming naming = _printer.generateUniqueNaming(constraint, left, right);
+    Renaming naming = _printer.generateUniqueNaming(constraint, left, right);
     StringBuilder builder = new StringBuilder();
     _printer.print(left, naming, builder);
     builder.append(switch(relation) {
