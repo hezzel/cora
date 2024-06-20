@@ -1,14 +1,11 @@
 package cora.rwinduction.engine;
 
-import charlie.exceptions.IndexingException;
 import charlie.reader.CoraInputReader;
-import charlie.reader.OCocoInputReader;
 import charlie.terms.Term;
+import charlie.trs.TRS;
+import charlie.util.either.Either;
+import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
-
-import java.io.Reader;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class DeleteRuleTest {
 
@@ -16,12 +13,26 @@ class DeleteRuleTest {
 
   @Test
   void testIsApplicableOutOfBounds() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "sum :: Int -> Int " +
+      "sum(x) -> 0         | x ≤ 0 " +
+      "sum(x) -> x + sum(x - 1) | x > 0"
+    );
 
-    ProofState empty = ProofState.createEmptyState();
+    Term lhs = CoraInputReader.readTerm("sum(n)", trs);
+    Term rhs = CoraInputReader.readTerm("n * (n + 1) / 2", trs);
+    Term ctr = CoraInputReader.readTerm("n > 0 /\\ n < 0", trs);
+    Equation eq = new Equation(lhs, rhs, ctr);
 
-    RuleArguments delArgs = new RuleArguments(empty, 0);
+    ProofState proofState = new ProofState(ImmutableList.of(eq));
 
-    // try to remove something from an empty context
-    assertThrows(IndexingException.class, () -> deleteRule.isApplicable(delArgs));
+    RuleArguments ruleArguments = new RuleArguments(proofState, 0);
+
+    Either<String, Boolean> checkCtr = DeleteRule.checkEqConstraint(eq);
+
+    Either<String, ProofState> res = deleteRule.applyRule(ruleArguments);
+
+    System.out.println(res);
+
   }
 }

@@ -51,6 +51,7 @@ class ProofState {
    * @param equation the new equation
    * @return the new proof state
    */
+  @Contract(pure = true)
   public ProofState addEquation(Equation equation) {
     return new ProofState(
       ImmutableList.<Equation>builder()
@@ -70,6 +71,7 @@ class ProofState {
    * @throws IndexOutOfBoundsException if the equationIndex is out of range
    *         ({@code equationIndex < 0 || equationIndex >= E.size()})
    */
+  @Contract(pure = true)
   public ProofState deleteEquation(int equationIndex) {
     ImmutableList.Builder<Equation> builder = ImmutableList.builder();
 
@@ -83,6 +85,7 @@ class ProofState {
     return new ProofState(equations, _hypotheses);
   }
 
+  @Contract(pure = true)
   public ProofState addHypothesis(Rule rule) {
     return new ProofState(
       _equations,
@@ -92,7 +95,6 @@ class ProofState {
         .build()
     );
   }
-
 
   @Contract(" -> new")
   static @NotNull ProofState createEmptyState() {
