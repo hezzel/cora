@@ -2,30 +2,51 @@ package cora.rwinduction.engine;
 
 import charlie.exceptions.NullStorageException;
 import charlie.trs.Rule;
+import charlie.trs.TRS;
 import com.google.common.collect.ImmutableList;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * TODO explain proof states.
+/** TODO document this method
+ * @apiNote All methods provided by this class are immutable.
+ * For instance, {@link ProofState#addEquation(Equation)} does not modify the current object but
+ * returns a new proof state with the new equation instead.
  */
 class ProofState {
+  private final TRS _trs;
   private final ImmutableList<Equation> _equations;
   private final ImmutableList<Rule> _hypotheses;
 
-  public ProofState(@NotNull ImmutableList<Equation> initialEquations) {
+  /**
+   * Instantiates a new proof state object with the following data:
+   * @param trs the TRS used in the rewriting induction mechanism, note that {@code ProofState}
+   *           objects do not provide methods to change this TRS.
+   *            All subsequent changes on the proof state by the deduction rules use the same
+   *            initial TRS.
+   * @param initialEquations the list of equations to be proved.
+   */
+  public ProofState(@NotNull TRS trs, @NotNull ImmutableList<Equation> initialEquations) {
     if (initialEquations == null)
       throw new NullStorageException("ProofState", "initialEquations cannot be null");
 
+    if (trs == null)
+      throw new NullStorageException("ProofState", "trs cannot be null");
+
+    if (initialEquations == null)
+      throw new NullStorageException("ProofState", "initialEquations cannot be null");
+
+    _trs = trs;
     _equations = initialEquations;
     _hypotheses = ImmutableList.of();
   }
 
   /**
-   * Builds a new proof state of the form (E, empty).
+   *
    */
-  private ProofState(@NotNull ImmutableList<Equation> equations,
+  private ProofState(@NotNull TRS trs,
+                     @NotNull ImmutableList<Equation> equations,
                      @NotNull ImmutableList<Rule> hypotheses) {
+    _trs = trs;
     _equations = equations;
     _hypotheses = hypotheses;
   }
@@ -33,14 +54,14 @@ class ProofState {
   /**
    * Returns the list of equations in this proof state.
    */
-  public ImmutableList<Equation> getEquations() {
+  ImmutableList<Equation> getEquations() {
     return _equations;
   }
 
   /**
    * Returns the list of hypotheses in this proof state.
    */
-  public ImmutableList<Rule> getHypotheses() {
+  ImmutableList<Rule> getHypotheses() {
     return _hypotheses;
   }
 
@@ -52,8 +73,9 @@ class ProofState {
    * @return the new proof state
    */
   @Contract(pure = true)
-  public ProofState addEquation(Equation equation) {
+  ProofState addEquation(Equation equation) {
     return new ProofState(
+      _trs,
       ImmutableList.<Equation>builder()
         .addAll(_equations)
         .add(equation)
@@ -72,7 +94,7 @@ class ProofState {
    *         ({@code equationIndex < 0 || equationIndex >= E.size()})
    */
   @Contract(pure = true)
-  public ProofState deleteEquation(int equationIndex) {
+  ProofState deleteEquation(int equationIndex) {
     ImmutableList.Builder<Equation> builder = ImmutableList.builder();
 
     for(int i = 0 ; i < _equations.size() ; i++) {
@@ -82,12 +104,13 @@ class ProofState {
 
     ImmutableList<Equation> equations = builder.build();
 
-    return new ProofState(equations, _hypotheses);
+    return new ProofState(_trs, equations, _hypotheses);
   }
 
   @Contract(pure = true)
-  public ProofState addHypothesis(Rule rule) {
+  ProofState addHypothesis(Rule rule) {
     return new ProofState(
+      _trs,
       _equations,
       ImmutableList.<Rule>builder()
         .addAll(_hypotheses)
@@ -97,8 +120,8 @@ class ProofState {
   }
 
   @Contract(" -> new")
-  static @NotNull ProofState createEmptyState() {
-    return new ProofState(ImmutableList.of());
+  static @NotNull ProofState createEmptyState(TRS trs) {
+    return new ProofState(trs, ImmutableList.of());
   }
 
 }

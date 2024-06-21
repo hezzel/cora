@@ -8,7 +8,8 @@ import charlie.util.either.Left;
 import charlie.util.either.Right;
 import cora.config.Settings;
 import org.jetbrains.annotations.NotNull;
-import java.util.stream.Stream;
+import java.util.function.BinaryOperator;
+
 
 final class DeleteRule extends DeductionRule {
 
@@ -20,7 +21,7 @@ final class DeleteRule extends DeductionRule {
    * solver returned a maybe, which in this case we pass the SMT's reason for that through.
    * In case the equation is <b>unsat</b>, it returns {@code}
    */
-  static Either<String, Boolean> checkEqConstraint(Equation equation) {
+  private static Either<String, Boolean> checkEqConstraint(Equation equation) {
 
     TermAnalyser.Result res =
       TermAnalyser.satisfy(equation.getConstraint(), Settings.smtSolver);
@@ -42,43 +43,42 @@ final class DeleteRule extends DeductionRule {
    * @param equation
    * @return
    */
-  Either<String, Boolean> isLeftEqualsRight(Equation equation) {
+  private static Either<String, Boolean> isLeftEqualsRight(Equation equation) {
     return new Right<>(equation.getLhs().equals(equation.getRhs()));
   }
 
+
   @Override
   public <T extends RuleArguments> Either<String, Boolean> isApplicable(@NotNull T args) {
-
-    // Check if the equation index is within bounds.
-    // Note: this test should've been done before.
-    // But I don't trust people will really do it always.
+    // For efficiency, after checking each condition, if they fail (so returning a Left<>)
+    // We should return its value immediately and don't check the other conditions.
+    // Implementation note: specially the ones that use the SMT solvers.
+    // Do those tests only after all the others didn't fail.
     Either<String, Boolean> checkEqBounds = args.checkEqBounds();
+    if (checkEqBounds.isLeft()) { return checkEqBounds; }
 
-    return switch (checkEqBounds) {
-      case Left<String, Boolean>  _ -> checkEqBounds;
+    // Get the equation
+    Equation equation = args.getProofState()
+      .getEquations()
+      .get(args.getEquationIndex());
 
-      case Right<String, Boolean> _ -> {
-        // Check if the constraint in the equation is unsatisfiable.
-        Equation equation = args.getProofState()
-          .getEquations()
-          .get(args.getEquationIndex());
-        Either<String, Boolean> isUnsat = checkEqConstraint(equation);
+    // Check if s is syntactically equal to t in the equation s = t [c].
+    Either<String, Boolean> leftRightSyntaxEq = isLeftEqualsRight(equation);
+    if (leftRightSyntaxEq.isLeft()) { return leftRightSyntaxEq; }
 
-        // Check if, in the equation, s = t [c] s is syntactically equal to t
-        Either<String, Boolean> leftRightSyntaxEq = isLeftEqualsRight(equation);
+    // !(SMT usage) Check if the constraint in the equation is unsatisfiable.
+    Either<String, Boolean> isUnsat = checkEqConstraint(equation);
+    if (isUnsat.isLeft()) { return isUnsat; }
 
-        yield Stream
-          .of(isUnsat, leftRightSyntaxEq)
-          .reduce(
-            FunctorialUtils.pure(false),
-            FunctorialUtils.liftBinOp( (x, y) -> x || y)
-          );
-      }
-    };
+    // Whenever none of the tests fail, we return their disjunction.
+    BinaryOperator<Either<String, Boolean>> liftedOp =
+      FunctorialUtils.liftBinOp((x, y) -> x || y);
+
+    return liftedOp.apply(isUnsat, leftRightSyntaxEq);
   }
 
   @Override
-  public <T extends RuleArguments> Either<String, ProofState> ruleLogic(@NotNull T args) {
+  protected <T extends RuleArguments> Either<String, ProofState> ruleLogic(@NotNull T args) {
     return new Right<>(args.getProofState().deleteEquation(args.getEquationIndex()));
   }
 }

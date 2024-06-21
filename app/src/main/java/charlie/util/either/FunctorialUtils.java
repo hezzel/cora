@@ -11,7 +11,7 @@ public class FunctorialUtils {
   }
 
   // TODO implement documentation
-  public static <E, A, B> Function<Either<E, A>, Either<E,B>> fmap(Function<A,B> f) {
+  public static <E, A, B> Function<Either<E, A>, Either<E,B>> fmap(Function<? super A, ? extends B> f) {
     return x -> x.map(f);
   }
 
