@@ -12,18 +12,18 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains:annotations:24.0.0")
+
     // Use JUnit Jupiter for testing.
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
-    // Use JUnit4 for old tests
-    testImplementation("junit:junit:4.13.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // This dependency is used by the application.
-    implementation("com.google.guava:guava:32.1.1-jre")
+    implementation("com.google.guava:guava:33.2.1-jre")
 
     //Jline is a dependency to deal with REPL inputs.
     implementation("org.jline:jline:3.26.1")
+
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
