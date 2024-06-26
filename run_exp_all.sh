@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Terminal colors
 BLUE='\033[1;34m'
 PURPLE='\033[1;35m'
@@ -10,6 +11,10 @@ EXP_PATH="./benchmarks"
 
 FILE_COUNTER=0
 
+./gradlew build --rerun-tasks --no-build-cache --quiet
+
+unzip -qo ./app/build/distributions/app.zip -d ./app/build/distributions/
+
 # Run paper experiments
 echo "Running paper experiments..."
 
@@ -20,7 +25,7 @@ for f in $FILES
 do
     printf "${PURPLE}Experiment number $((FILE_COUNTER + 1))...${NC}\n"
     printf "${BLUE}Invoking cora on file $f ${NC}\n"
-    ./bin/app "$f"
+    ./app/build/distributions/app/bin/app "$f"
     printf "${GREEN}Done.${NC}\n\n"
     FILE_COUNTER=$((FILE_COUNTER+1))
 done
@@ -35,7 +40,7 @@ for f in $FILES
 do
     printf "${PURPLE}Experiment number $FILE_COUNTER...${NC}\n"
     printf "${BLUE}Invoking cora on file $f ${NC}\n"
-    ./bin/app "$f"
+    ./app/build/distributions/app/bin/app "$f"
     printf "${GREEN}Done.${NC}\n\n"
     FILE_COUNTER=$((FILE_COUNTER+1))
 done
@@ -49,7 +54,7 @@ for f in $FILES
 do
     printf "${PURPLE}Experiment number $FILE_COUNTER...${NC}\n"
     printf "${BLUE}Invoking cora on file $f ${NC}\n"
-    ./bin/app "$f"
+    ./app/build/distributions/app/bin/app "$f"
     printf "${GREEN}Done.${NC}\n\n"
     FILE_COUNTER=$((FILE_COUNTER+1))
 done
@@ -63,10 +68,12 @@ for f in $FILES
 do
     printf "${PURPLE}Experiment number $FILE_COUNTER...${NC}\n"
     printf "${BLUE}Invoking cora on file $f ${NC}\n"
-    ./bin/app "$f"
+    ./app/build/distributions/app/bin/app "$f"
     printf "${GREEN}Done.${NC}\n\n"
     FILE_COUNTER=$((FILE_COUNTER+1))
 done
 
 rm -rf result
 rm -rf problem.smt2
+
+rm -rf ./app/build

@@ -6,118 +6,115 @@ Cora is an analysis tool for constrained higher-order term rewriting.
 At the moment several techniques for termination analysis are implemented, and
 in the future we hope to expand to other properties.
 
-## Folder structure
+## Build Instructions
 
-This artifact is organized as follows:
+Currently,
+we support only UNIX-like systems.
+So you can build and run cora on linux or macOS (including M series macs).
+**Windows is not supported**.
 
+The build dependencies are listed below.
+
+- ``jdk >= 22.0.1``, we recommend [openjdk-21](https://openjdk.org/projects/jdk/21/). 
+  - Make sure that jdk is properly installed and that ``JAVA_PATH`` is properly set.
+- ``gradle >= 8.8``
+  - Gradle will then download the following additional dependencies from the [maven](https://central.sonatype.com) repositories.
+    - ``guava:33.2.1-jre``
+    - ``junit:jupiter:5.10.2``
+- ``z3 >= 4.13.0``, check the [z3 git repository](https://github.com/Z3Prover/z3) 
+for more details on how to install it on your system.
+Z3 is also available in most package managers for linux distributions and also on brew (in macOS).
+  - Cora does not use the ``z3`` java bindings. 
+  The command ``z3`` should be available on your ``PATH``.
+
+To build cora, simply run:
+
+```bash
+./gradlew build
 ```
-├── Dockerfile
-├── README.md
-├── app
-├── cora_distribution
-├── gradle
-├── gradlew
-├── gradlew.bat
-├── resources
-└── settings.gradle.kts
+
+## Installation
+We have provided a make file for it.
+Just run ```make``` and then ```make install```.
+Cora will be installed at ``~/.cora``.
+
+If you would like to run it from anywhere, please add the following line to your bash profile:
+
+```bash
+export PATH="$HOME/.cora/bin:$PATH"
 ```
-Important folders are:
-the ``app`` folder contains the source code and
-``cora_distribution`` contains the binaries and scripts to run the latest published release.
 
-## Running the cora distribution
-
-### Requirements:
-
-- ``java`` runtime ``jre >= 21``
-- the command ``z3`` should be available system-wide, so make sure ``z3``
-is properly installed in your system.
-  - Please check [https://github.com/Z3Prover/z3](https://github.com/Z3Prover/z3)
-  for installation instructions for your system.
+Commonly, this is either ``~/.bashrc`` or ``~/.zshrc`` depending on which bash you are using.
 
 ### Running cora on an input file
-You can invoke ``cora`` using files present in ``./cora_distribution/benchmarks/``.
+
+You can invoke ``cora`` using files present in ``./benchmarks``.
 For instance,
-to run ``cora`` in the file ``./cora_distribution/benchmarks/extra_examples/map.strs``,
+to run ``cora`` in the file ``./benchmarks/esop2024/factunit.lcstrs``,
 we execute the following command (from the root of this artifact).
 
 ```bash
-cd cora_distribution
-./bin/app ./benchmarks/extra_examples/ex_06_fact.lctrs
+cora ./benchmarks/esop2024/factunit.lcstrs
 ```
 
 If everything is fine, the output should be:
 
 ```bash
-./bin/cora inputs/fact.lcstrs
+cora inputs/fact.lcstrs
 YES
+We consider the LCSTRS with only rule scheme Calc:
 
-comp : (Int ⇒ Int) ⇒ (Int ⇒ Int) ⇒ Int ⇒ Int
-fact : Int ⇒ (Int ⇒ Int) ⇒ Int
-fact2 : Int ⇒ Int
-All the standard theory symbols are also included.
+  Signature: comp   :: (Int → ret) → (Int → Int) → Int → ret
+             error  :: ret
+             fact   :: Int → (Int → ret) → ret
+             return :: Int → ret
 
-comp(f, g, x) → f(g(x))
-fact(n, k) → k(1) | n ≤ 0
-fact(n, k) → fact(n - 1, comp(k, *(n))) | n > 0
-fact2(n) → 1 | n ≤ 0
-fact2(n) → n * fact2(n - 1) | n > 0
-calc : f(x1,...,xk) → y [f(x1,...,xk) = y] for f ∈ Σ_{theory}
+  Rules: comp(f, g, x) → f(g(x))
+         fact(n, k) → error | n < 0
+         fact(n, k) → k(1) | n = 0
+         fact(n, k) → fact(n - 1, comp(k, [*](n))) | n > 0
 
-Constrained HORPO succeedings in orienting all rules, using the following settings:
-  Precedence (all non-mentioned symbols have precedence -1 for theory symbols and 0 for other symbols):
-    * : -1
-    + : -1
-    comp : 0
-    fact : 1
-    fact2 : 1
-  Status (all non-mentioned symbols have status Lex):
-    fact : Lex
-  Well-founded theory orderings:
-    ⊐_{Bool} = {(true,false)}
-    ⊐_{Int} = {(x,y) | x > -1000 ∧ x > y }
+The system is accessible function passing by a sort ordering that equates all sorts.
+
+We start by computing the following initial DP problem:
+
+  P1. (1) fact#(n, k) ➡ comp#(k, [*](n), X{9}) | n > 0
+      (2) fact#(n, k) ➡ fact#(n - 1, comp(k, [*](n))) | n > 0
+
+***** We apply the Graph Processor on P1.
+
+There is only one SCC, so all DPs not inside the SCC can be removed:
+
+  P2. (1) fact#(n, k) ➡ fact#(n - 1, comp(k, [*](n))) | n > 0
+
+***** We apply the Integer Function Processor on P2.
+
+We use the following integer mapping:
+
+  J(fact#) = arg_1
+
+We thus have:
+
+  (1) n > 0 ⊨ n > n - 1 (and n ≥ 0)
+
+All DPs are strictly oriented, and may be removed.  Hence, this DP problem is finite.
 ```
 
 The very first line tells if ``cora`` could successfully find a termination proof.
 
 - ``YES`` output means a proof was found; and
 - ``MAYBE`` output means no proof was found but non-termination is not proved.
-- At the moment ``cora`` doesn't prove non-termination.
 
-Notice that we navigated inside the distribution folder,
-this is necessary for properly running of cora, as it needs the ``smtsolver`` executable
-to be present.
-It calls the smt solver externally.
-Please make sure that whenever manually invoking ``cora``,
-you are in the correct folder.
+### Runtime arguments
 
-## Requirements
+Running ``cora`` without any file given as argument 
+will produce the complete lis of options on how to run it.
 
-This section describes the requirements for running cora in both host machine and docker image.
+```bash
+cora
+```
 
-- Software
-  - OS
-    - linux
-    - macOs
-    - Windows **is not supported**.
-  - ``java``
-    - runtime ``jre >= 21`` for running the application
-    - building ``jdk >= 21``
-  - the command ``z3`` should be available system-wide, so make sure ``z3``
-    is properly installed in your system.
-    - Please check [https://github.com/Z3Prover/z3](https://github.com/Z3Prover/z3)
-      for installation instructions for your system.
-  - docker (for building/running the docker image)
-  - Dockerfile is the docker file needed to build the docker image
-- Hardware
-  There are no specific hardware requirement.
-  A reasonable laptop, reasonable meaning:
-  - at least 2 cores
-  - more or less 4gb of ram
-    is already enough.
-- The build script requires an active internet connection.
-
-## Running cora from docker
+## Running cora from a docker image
 
 We provided a docker file in the root of this artifact.
 In order to run ``cora`` from the docker image, please proceed as follows.
@@ -133,27 +130,6 @@ In order to run ``cora`` from the docker image, please proceed as follows.
 ```bash
 docker run -i -it cora
 ```
-- Finally, the contents of ``cora_distribution`` lies in ``/opt/cora`` inside the docker image.
-```bash
-cd /opt/cora
-```
-The scripts are ``run_exp_all.sh run_exp_extra.sh  run_exp_paper.sh``.
-They execute all experiments, only extra experiments, and only the paper examples,
-respectively.
 
-## Building cora from source
-
-In this version ``cora`` utilizes preview features of java-21.
-So the latest version of jdk is needed.
-
-### Build Dependencies
-
-- ``jdk >= 21.0.1``, for instance
-  [openjdk-21](https://openjdk.org/projects/jdk/21/).
-- ``gradle >= 8.5``
-
-Having the requirements above installed, to build ``cora`` just do:
-
-```bash
-./gradlew build
-```
+The ``cora`` command will be available in this docker image. 
+Benchmarks can be found at ``/benchmarks``.
