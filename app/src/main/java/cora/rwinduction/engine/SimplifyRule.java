@@ -11,15 +11,15 @@ class SimplifyRule {
 
   public final class SimplifyArgs extends RuleArguments {
 
-    private EqSide _side;
+    private final EqSide _side;
 
-    private Rule _simplRule;
+    private final Rule _simplRule;
 
-    private Position _position;
+    private final Position _position;
 
-    private Substitution _matchingSubstitution;
+    private final Substitution _matchingSubstitution;
 
-    private Substitution _freeVariableSubstitution;
+    private final Substitution _freeVariableSubstitution;
 
     public SimplifyArgs(@NotNull ProofState proofState,
                               @NotNull int eqIndex,
