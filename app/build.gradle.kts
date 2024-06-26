@@ -28,6 +28,9 @@ java {
 application {
     // Define the main class for the application.
     mainClass.set("cora.App")
+
+    //Sets the application DefaultJVMArgs
+    applicationDefaultJvmArgs = listOf("--enable-preview")
 }
 
 tasks {
