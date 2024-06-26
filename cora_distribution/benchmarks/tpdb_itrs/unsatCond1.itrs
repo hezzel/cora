@@ -1,4 +1,0 @@
-(VAR x)
-(RULES
-f(x) -> f(x) :|: x > x
-)

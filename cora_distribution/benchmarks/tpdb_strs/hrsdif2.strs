@@ -1,4 +1,0 @@
-0 :: nat
-1 :: nat
-f :: nat → (nat → nat) → nat
-f(0, F) → F(f(F(1), F))

@@ -1,7 +1,0 @@
-0 :: nat
-s :: nat -> nat
-
-add :: nat -> nat -> nat
-add(0, y) -> y
-add(s(x), y) -> add(x, s(y))
-

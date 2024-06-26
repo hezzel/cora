@@ -1,5 +1,0 @@
-cons :: a → list → list
-map :: list → (a → a) → list
-nil :: list
-map(nil, F) → nil
-map(cons(x, l), F) → cons(F(x), map(l, F))

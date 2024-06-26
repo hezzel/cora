@@ -1,2 +1,0 @@
-fapp :: (a → b) → a → b
-fapp(X, Y) → X(Y)

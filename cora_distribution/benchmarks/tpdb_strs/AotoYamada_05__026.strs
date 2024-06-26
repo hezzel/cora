@@ -1,9 +1,0 @@
-comp :: (c → c) → (c → c) → c → c
-cons :: a → b → b
-map :: (a → a) → b → b
-nil :: b
-twice :: (c → c) → c → c
-map(F, nil) → nil
-map(Z, cons(U, V)) → cons(Z(U), map(Z, V))
-comp(I, J, X1) → I(J(X1))
-twice(Z1) → comp(Z1, Z1)

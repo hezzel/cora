@@ -1,5 +1,0 @@
-0 :: nat
-rec :: nat → a → (nat → a → a) → a
-s :: nat → nat
-rec(0, U, X) → U
-rec(s(x), U, X) → X(x, rec(x, U, X))

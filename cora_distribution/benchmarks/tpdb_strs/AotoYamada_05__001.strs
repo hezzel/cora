@@ -1,3 +1,0 @@
-cons :: a → b → b
-iterate :: (a → a) → a → b
-iterate(F, Y) → cons(Y, iterate(F, F(Y)))

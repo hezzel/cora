@@ -1,2 +1,0 @@
-uncurry :: (a → b → c) → a → b → c
-uncurry(F, Y, U) → F(Y, U)

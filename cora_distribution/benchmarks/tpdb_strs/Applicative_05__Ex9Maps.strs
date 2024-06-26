@@ -1,8 +1,0 @@
-cons :: d → e → e
-g :: b
-map_1 :: (d → d) → e → e
-map_2 :: (d → a → d) → a → e → e
-map_3 :: (b → d → c → d) → b → c → e → e
-map_1(F, cons(Y, U)) → cons(F(Y), map_1(F, U))
-map_2(I, V, cons(P, X1)) → cons(I(P, V), map_2(I, V, X1))
-map_3(G1, g, Y1, cons(V1, W1)) → cons(G1(g, V1, Y1), map_3(G1, g, Y1, W1))
