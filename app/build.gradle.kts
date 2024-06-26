@@ -12,21 +12,21 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains:annotations:24.0.0")
+
     // Use JUnit Jupiter for testing.
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
-    // Use JUnit4 for old tests
-    testImplementation("junit:junit:4.13.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // This dependency is used by the application.
-    implementation("com.google.guava:guava:32.1.1-jre")
+    implementation("com.google.guava:guava:33.2.1-jre")
+    
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(22))
     }
 }
 
@@ -36,7 +36,9 @@ application {
 }
 
 tasks{
-    val COMPILER_OPTIONS = listOf("--enable-preview", "-Xlint:preview", "-Xlint:deprecation")
+    // Compiler options with preview java features enabled
+    val COMPILER_OPTIONS =
+        listOf("--enable-preview", "-Xlint:preview", "-Xlint:deprecation", "-Xlint:unchecked")
 
     withType<JavaCompile>() {
         options.compilerArgs = COMPILER_OPTIONS;
