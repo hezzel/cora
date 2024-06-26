@@ -1,5 +1,3 @@
-import org.apache.tools.ant.taskdefs.Java
-
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     application
@@ -36,9 +34,12 @@ java {
 application {
     // Define the main class for the application.
     mainClass.set("cora.App")
+
+    //Sets the application DefaultJVMArgs
+    applicationDefaultJvmArgs = listOf("--enable-preview")
 }
 
-tasks{
+tasks {
     // Compiler options with preview java features enabled
     val COMPILER_OPTIONS =
         listOf("--enable-preview", "-Xlint:preview", "-Xlint:deprecation", "-Xlint:unchecked")
