@@ -1,12 +1,13 @@
 \documentclass[a4paper,USenglish,cleveref,autoref,thm-restate]{lipics-v2021}
 
-\pdfoutput=1 %uncomment to ensure pdflatex processing (mandatatory e.g. to submit to arXiv)
-\hideLIPIcs  %uncomment to remove references to LIPIcs series (logo, DOI, ...), e.g. when preparing a pre-final version to be uploaded to arXiv or another public repository
-\nolinenumbers
+%\pdfoutput=1 %uncomment to ensure pdflatex processing (mandatatory e.g. to submit to arXiv)
+%\hideLIPIcs  %uncomment to remove references to LIPIcs series (logo, DOI, ...), e.g. when preparing a pre-final version to be uploaded to arXiv or another public repository
 
 \bibliographystyle{plainurl}
 
 \title{A weakly monotonic, logically constrained, HORPO-variant}
+
+\author{Liye Guo}{Radboud University, Nijmegen, The Netherlands}{l.guo@cs.ru.nl}{https://orcid.org/0000-0002-3064-2691}{}
 
 \author{Cynthia Kop}{Radboud University, Nijmegen, The Netherlands}{c.kop@cs.ru.nl}{https://orcid.org/0000-0002-6337-2544}{}
 
@@ -18,7 +19,7 @@
 
 \keywords{Higher-order term rewriting, constrained rewriting, dependency pairs}
 
-\funding{The author is supported by NWO VI.Vidi.193.075, project ``CHORPE''.}
+\funding{The authors are supported by NWO VI.Vidi.193.075, project ``CHORPE''.}
 
 \usepackage{mathtools}
 
@@ -61,7 +62,7 @@
 \newcommand{\bvar}{y}
 \newcommand{\cvar}{z}
 
-%\newcommand{\status}{\mathit{stat}}
+\newcommand{\status}{\mathit{stat}}
 \newcommand{\filter}{\pi}
 
 \newcommand{\myparagraph}[1]{\medskip\noindent\textbf{#1.}}
@@ -75,21 +76,19 @@ In this short paper, we present a simple variant of the recursive path ordering,
 Logically Constrained Simply Typed Rewriting Systems (LCSTRSs).  This is a method for
 \emph{curried} systems, without $\lambda$ but with partially applied function symbols, which can
 deal with \emph{logical constraints}.  As it is designed for use in the dependency pair framework,
-it is defined as reduction pair, allowing weak monotonicity.
+it is defined as a reduction pair, allowing for weak monotonicity.
 \end{abstract}
 
 \section{Introduction}
 
 This is a technical report, so no preliminaries are given.
-We assume familiarity with Logically Constrained Simply Typed Rewriting
-Systems~\cite{guo:kop:24}, and will adapt the HORPO variant given in that paper to a reduction
-pair (although for now, we omit the multiset status as it would complicate the definition).
-
+We assume familiarity with Logically Constrained Simply Typed Rewriting Systems~\cite{guo:kop:24},
+and will adapt the HORPO variant given in that paper to a reduction pair.
 The main difference with~\cite{guo:kop:24} is a kind of filtering to take advantage of the weaker
 monotonicity requirements that are used for reduction pairs in the DP framework.  This filtering is
-reminiscent of \emph{argument filterings} which are often used in dependency pair approaches, but
-note that the direct definition of argument filtering does not naturally extend to systems with
-partially applied function symbols -- so a special definition is needed.
+reminiscent of \emph{argument filterings} which are often used in dependency pair approaches.
+However, since the definition of argument filtering does not naturally extend to systems with
+partially applied function symbols, a special definition is needed.
 
 We will use the following definigion of a constrained reduction pair:
 
@@ -132,17 +131,16 @@ Notationally, we will use the following conventions without expicitly stating th
 \section{Unconstrained HORPO for curried systems}\label{sec:unconstrained}
 
 We assume familiarity with STRSs: in short, terms are constructed from a set of typed variables,
-typed constants, and the type-conscious application operator (these are LCSTRSs with an empty
-theory signature).
-We allow for an infinite set of function symbols (constants), but assume given:
+typed constants, and the type-conscious application operator.  We allow for an infinite set of
+function symbols (constants), but assume given:
 \begin{itemize}
 \item a \emph{precedence}: a quasi-ordering $\geqpred$ on the set of all function symbols, such
   that its strict part $\grpred ::= \geqpred \setminus \leqpred$, is well-founded;
   we write $\eqpred$ for the equivalence relation $\geqpred \cap \leqpred$  
-%\item a \emph{status}: a function $\status$ mapping each function symbol $\afun ::
-%  \atype_1 \arrtype \dots \arrtype \atype_m \arrtype \asort$ with $\asort$ a sort to an integer
-%  in $\{0,\dots,m\}$;
-%  %such that $\status(\afun) = \status(\bfun)$ whenever $\afun \eqpred \bfun$
+\item a \emph{status}: a function $\status$ mapping each function symbol $\afun ::
+  \atype_1 \arrtype \dots \arrtype \atype_m \arrtype \asort$ with $\asort$ a sort to an integer
+  in $\{1,\dots,m\}$
+  %such that $\status(\afun) = \status(\bfun)$ whenever $\afun \eqpred \bfun$
 \item a \emph{filter}: a function $\filter$ mapping each function symbol $\afun :: \atype_1
   \arrtype \dots \arrtype \atype_m \arrtype \asort$ with $\asort$ a sort to a subset of
   $\{1,\dots,m\}$: the arguments that $\afun$ regards
@@ -168,6 +166,7 @@ the following holds:
 \item[(Eq-args)] $s = \afun\ s_1 \cdots s_n$ and $t = \bfun\ t_1 \cdots t_n$ for $\afun,\bfun$
   function symbols with the same type structure such that
   $\afun \eqpred \bfun$,
+  $\status(\afun) = \status(\bfun)$,
   $\filter(\afun) = \filter(\bfun)$, and 
   $s_i \ismain t_i$ for all $i \in \filter(\afun) \cap \{1,\dots,n\}$.
 \end{description}
@@ -206,8 +205,8 @@ For monotonicity, we do not need the induction.  Suppose $s :: \atype \arrtype \
 \item $s = x\ s_1 \cdots s_n$ and $s' = x\ s_1' \cdots s_n'$ with each $s_i \ismain s_i'$; since
   $t \ismain t'$ also $x\ s_1 \cdots s_n\ t \ismain x\ s_1' \cdots s_n'\ t'$
 \item $s = \afun\ s_1 \cdots s_n$ and $s' = \bfun\ s_1' \cdots s_n'$ with $\afun,\bfun$ having the
-  same type structure and filter, and being equal in the precedence; this is not affected by adding
-  an extra argument, so we complete as above.
+  same type structure, status and filter, and being equal in the precedence; this is not
+  affected by adding an extra argument, so we complete as above.
   \qedhere
 \end{itemize}
 \end{proof}
@@ -224,6 +223,7 @@ Our other relations are defined through a mutual recursion.  Specifically, for t
     and some $s_i \grmain t_i$, or
   \item[(Gr-args)] $s = \afun\ s_1 \cdots s_n$ and $t = \bfun\ t_1 \cdots t_n$ for $\afun,\bfun$
     function symbols with the same type structure such that $\afun \eqpred \bfun$,
+    $\status(\afun) = \status(\bfun)$,
     $\filter(\afun) = \filter(\bfun)$, and 
     $s_i \geqmain t_i$ for all $i \in \filter(\afun) \cap \{1,\dots,n\}$, and
     $s_i \grmain t_i$ for some $i \in \filter(\afun) \cap \{1,\dots,n\}$
@@ -236,15 +236,23 @@ Our other relations are defined through a mutual recursion.  Specifically, for t
   \item[(Rpo-appl)] $t = t_0\ t_1 \cdots t_m$ and $s \rpomain t_i$ for $1 \leq i \leq m$
   \item[(Rpo-copy)] $t = \bfun\ t_1 \cdots t_m$ with $\afun \grpred \bfun$ and 
     $s \rpomain t_i$ for all $i \in \filter(\bfun) \cap \{1,\dots,m\}$
-  \item[(Rpo-lex)] $t = \bfun\ t_1 \cdots t_m$ with $\afun \eqpred \bfun$ and there is some
-    $i \in \filter(\afun) \cap \filter(\bfun) \cap \{1,\dots,\min(n,m)\}$
-    such that all of the following hold:
+  \item[(Rpo-lex)] $t = \bfun\ t_1 \cdots t_m$ with $\afun \eqpred \bfun$ and
+    $\status(\afun) = \status(\bfun) = 1$ and there is some $i \in \filter(\afun) \cap
+    \filter(\bfun) \cap \{1,\dots,\min(n,m)\}$ such that all of the following hold:
     \begin{itemize}
     \item $\filter(\afun) \cap \{1,\dots,i\} = \filter(\bfun) \cap \{1,\dots,i\}$
     \item $s_j \ismain t_j$ for $j \in \{1,\dots,i-1\} \cap \filter(\afun)$
     \item $s_i \grmain t_i$
     \item $s \rpomain t_j$ for $j \in \{i+1,\dots,m\} \cap \filter(\bfun)$
     \end{itemize}
+  \item[(Rpo-mul)] $t = \bfun\ t_1 \cdots t_m$ with $\afun \eqpred \bfun$ and
+    $\status(\afun) > 1$ and $\status(\bfun) > 1$ and $m \geq \status(\bfun)$ and
+    $\{\!\{s_i \mid 1 \leq i \leq \min(n,\status(\afun)) \wedge i \in \filter(\afun)\}\!\}
+    \grmain_{\text{mul}} \{\!\{t_i \mid 1 \leq i \leq \status(\bfun) \wedge i \in
+    \filter(\bfun)\}\!\}$
+    (using multiset comparison with $\grmain$ for the strict ordering and $\ismain$ for
+    the equivalence),
+    and $s \rpomain t_j$ for $j \in \{\status(\bfun)+1,\dots,m\} \cap \filter(\bfun)$
   \end{description}
 \end{itemize}
 
@@ -268,9 +276,10 @@ The case when $R$ is $\grmain$ follows by a case analysis on the rule used to de
 \item if $t \grmain u$ by Gr-mono, then $s = x\ s_1 \cdots s_n$ and $t = x\ t_1 \cdots t_n$ and
   $u = x\ u_1 \cdots u_n$ and we complete by the induction hypothesis on $s_j \ismain t_j \geqmain
   u_j$ and $s_i \ismain t_i \grmain u_i$;
-\item if $t \grmain u$ by Gr-args, then $s = \afun\ s_1 \cdots s_n$ and $\bfun = x\ t_1 \cdots t_n$
-  and $u = \cfun\ u_1 \cdots u_n$ with $\afun \eqpred \bfun \eqpred \cfun$ and $\filter(\afun) =
-  \filter(\bfun) = \filter(\cfun)$ and we complete by the induction hypothesis on $s_j \ismain t_j
+\item if $t \grmain u$ by Gr-args, then $s = \afun\ s_1 \cdots s_n$ and $t = \bfun\ t_1 \cdots t_n$
+  and $u = \cfun\ u_1 \cdots u_n$ with $\afun \eqpred \bfun \eqpred \cfun$ and
+  $\status(\afun) = \status(\bfun) = \status(\cfun)$ and $\filter(\afun) = \filter(\bfun) =
+  \filter(\cfun)$ and we complete by the induction hypothesis on $s_j \ismain t_j
   \geqmain u_j$ and $s_i \ismain t_i \grmain u_i$ (for unfiltered arguments);
 \item if $t \grmain u$ by Gr-rpo, we have $s \rpomain u$ and therefore $s \grmain u$ by the
   induction hypothesis.
@@ -278,9 +287,9 @@ The case when $R$ is $\grmain$ follows by a case analysis on the rule used to de
 
 The case when $R$ is $\rpomain$ follows by a case analysis on the rule used to derive $t \rpomain u$.
 Note that in this case, $s = \afun\ s_1 \cdots s_n$ and $t = \bfun\ t_1 \cdots t_n$ with
-$\afun,\bfun$ having the same type structure $\atype_1 \arrtype \dots \arrtype \atype_m \arrtype
-\asort$, $\afun \eqpred \bfun$, $\filter(\afun) = \filter(\bfun) \supseteq \{n+1,\dots,m\}$ and
-$s_i \ismain t_i$ whenever $i \in \pi(\afun)$.
+$\afun,\bfun$ having the same type structure $\atype_1 \arrtype \dots \arrtype \atype_m
+\arrtype \asort$, $\afun \eqpred \bfun$, $\status(\afun) = \status(\bfun)$, $\filter(\afun) =
+\filter(\bfun) \supseteq \{n+1,\dots,m\}$ and $s_i \ismain t_i$ whenever $i \in \pi(\afun)$.
 \begin{itemize}
 \item Rpo-select: $t_i \geqmain u$ for some $i \in \pi(\bfun) = \pi(\afun)$, so
   $s_i \ismain t_i \geqmain u$; we complete with Rpo-select and the induction hypothesis
@@ -290,7 +299,8 @@ $s_i \ismain t_i$ whenever $i \in \pi(\afun)$.
   $u_i$ with $i \in \filter(\cfun) \cap \{1,\dots,m\}$; but then also $s \rpomain u_i$ for these
   $i$, and $\afun \eqpred \bfun \grpred \cfun$ implies $\afun \grpred \cfun$
 \item Rpo-lex: $u = \cfun\ u_1 \cdots u_m$ with $\bfun \eqpred \cfun$ (so also $\afun \eqpred
-  \cfun$ because $\eqpred$ is transitive) and there exists $i$ such that:
+  \cfun$ because $\eqpred$ is transitive) and $\status(\bfun) = \status(\cfun) = 1$ (so also
+  $\status(\afun) = 1$ as $\status(\afun) = \status(\bfun)$), and there exists $i$ such that:
   \begin{itemize}
   \item $i \in \filter(\bfun) \cap \{1,\dots,\min(n,m)\} = \filter(\afun) \cap \{1,\dots,\min(n,m)\}$
   \item $s_j \ismain t_j \ismain u_j$ for $j \in \{1,\dots,i-1\} \cap \filter(\afun)$ (as
@@ -301,6 +311,25 @@ $s_i \ismain t_i$ whenever $i \in \pi(\afun)$.
     $s \grmain u_j$ by the induction hypothesis
     \qedhere
   \end{itemize}
+\item Rpo-mul: $u = \cfun\ u_1 \cdots u_m$ with $\bfun \eqpred \cfun$ (so also $\afun \eqpred
+  \cfun$ because $\eqpred$ is transitive) and $\status(\bfun) > 1$ and $\status(\cfun) > 1$
+  (and recall that $\status(\afun) = \status(\bfun)$) and there exists a function
+  $\alpha$ from $\{1,\dots,\status(\bfun)\} \cap \filter(\bfun)$ to $\{1,\dots,\min(n,
+  \status(\afun)\} \cap \filter(\afun)$, and a non-empty subset $A$ from $\{1,\dots,\min(n,
+  \status(\afun))\} \cap \filter(\afun)$ such that:
+  \begin{itemize}
+  \item for $j \in \{1,\dots,\status(\bfun)\} \cap \filter(\bfun)$:
+    if $\alpha(j) \in A$: $t_{\alpha(j)} \grmain u_j$, and therefore by the induction
+    hypothesis also $s_{\alpha(j)} \grmain u_j$
+  \item for $j \in \{1,\dots,\status(\bfun)\} \cap \filter(\bfun)$:
+    if $\alpha(j) \notin A$: $t_{\alpha(j)} \ismain u_j$, and therefore by transitivity of
+    $\ismain$ also $s_{\alpha(j)} \ismain u_j$
+  \item for $j_1,j_2 \in \{1,\dots,\status(\bfun)\} \cap \filter(\bfun)$:
+    if $\alpha(j_1) = \alpha(j_2) \in A$ then $j_1 = j_2$
+  \item $t \rpomain u_j$ for $\status(\bfun) < j \leq m$ with $j \in \filter(\cfun)$; by
+    the induction hypothesis also $s \rpomain u_j$
+  \end{itemize}
+  We conclude that also $s \rpomain u$ by Rpo-mul.
 \end{itemize}
 \end{proof}
 
@@ -360,7 +389,7 @@ Second, if $s \ismain s'$ and $t \grmain t'$, there are two options:
   and if $n+1 \notin \filter(\afun) = \filter(\bfun)$ then $s\ t \ismain s'\ t'$ by Eq-args.
 \end{itemize}
 
-Finally, if $s \grmain s'$ then $s\ t \grmain s'\ t'$ by Lemma!\ref{lem:leftmono}.
+Finally, if $s \grmain s'$ then $s\ t \grmain s'\ t'$ by Lemma~\ref{lem:leftmono}.
 \end{proof}
 
 It remains to prove that $\grmain$ is well-founded.  For this, we use the notion of
@@ -435,12 +464,21 @@ $s\ u_1 \cdots u_n$ is non-terminating, contradicting computability of $s$.
 
 \begin{lemma}\label{lem:wellfounded:induction}
 Let $\afun :: \atype_1 \arrtype \dots \arrtype \atype_m \arrtype \asort$ and terms $s_1 :: \atype_1,
-\dots,s_n : \atype_n$ be given such that
-(1) any function symbol $\bfun$ with $\afun \grpred \bfun$ is computable;
-(2) for all $i \in \filter(\afun)$: $s_i$ is computable, and
-(3) if $\afun \eqpred \bfun$ and $t_1,\dots,t_k$ are terms such that $[s_i \mid i \in 
-  \filter(\afun)]\ (\ismain,\grmain)_{\mathtt{lex}}\ [t_i \mid i \in \filter(\bfun)]$,
+\dots,s_n : \atype_n$ be given such that:
+\begin{enumerate}
+\item any function symbol $\bfun$ with $\afun \grpred \bfun$ is computable;
+\item for all $i \in \filter(\afun)$: $s_i$ is computable;
+\item if $\status(\afun) = \status(\bfun) = 1$ and $\afun \eqpred \bfun$ and $t_1,\dots,
+  t_k$ are terms such that $[s_i \mid i \in\filter(\afun)]\ 
+  (\ismain,\grmain)_{\mathtt{lex}}\ [t_i \mid i \in \filter(\bfun)]$, then $\bfun\ t_1
+  \cdots t_k$ is terminating; and
+\item if $\status(\afun) > 1$ and $\status(\bfun) > 1$ and $\afun \eqpred \bfun$ and
+  $t_1,\dots,t_k$ (with $k \geq \status(\bfun)$) are terms such that
+  $\{\!\{s_i \mid i \in \filter(\afun) \wedge i \leq \status(\afun)\}\!\}\ 
+  (\ismain,\grmain)_{\mathtt{mul}}\ 
+  \{\!\{t_i \mid i \in \filter(\bfun) \wedge i \leq \status(\bfun)\}\!\}$,
   then $\bfun\ t_1 \cdots t_k$ is terminating.
+\end{enumerate}
 Then for any $t$ such that $\afun\ s_1 \cdots s_n \rpomain t$: $t$ is computable.
 \end{lemma}
 
@@ -457,10 +495,11 @@ If it follows by Rpo-copy, then $t = \bfun\ t_1 \cdots t_k$ with $\afun \grpred 
 induction hypothesis each $t_i$ with $i \in \filter(\bfun)$ is computable; since $\bfun$ is
 computable, the whole result is.
 
-If it follows by Rpo-lex, then $t = \bfun\ t_1 \cdots t_k :: \btype_{k+1} \arrtype \dots \arrtype
-\btype_p \arrtype \bsort$ with $\afun \eqpred \bfun$.  We must see that for any computable $t_{k+1}
-:: \btype_{k+1},\dots,t_p :: \btype_p$ we have $\bfun\ t_1 \cdots t_p$ terminates.  But this is the
-case by assumption, because $[s_i \mid i \in \filter(\afun)]\ (\ismain,\grmain)_{\mathtt{lex}}\ 
+If it follows by Rpo-lex, then $t = \bfun\ t_1 \cdots t_k :: \btype_{k+1} \arrtype \dots
+\arrtype \btype_p \arrtype \bsort$ with $\afun \eqpred \bfun$ and $\status(\afun) =
+\status(\bfun) = 1$.  We must see that for any computable $t_{k+1} :: \btype_{k+1},\dots,
+t_p :: \btype_p$ we have that $\bfun\ t_1 \cdots t_p$ terminates.  But this is the case by
+assumption, because $[s_i \mid i \in \filter(\afun)]\ (\ismain,\grmain)_{\mathtt{lex}}\ 
 [t_i \mid i \in \filter(\bfun)]$: we see that this holds because, for some index $i$:
 \begin{itemize}
 \item $\filter(\afun) \cap \{1,\dots,i\} = \filter(\bfun) \cap \{1,\dots,i\}$, and
@@ -473,6 +512,14 @@ case by assumption, because $[s_i \mid i \in \filter(\afun)]\ (\ismain,\grmain)_
   $[t_j \mid j \in \filter(\afun) \wedge j \in \{1,\dots,i\}]$.
   \qedhere
 \end{itemize}
+
+Finally, if it follows by Rpo-lex, then $t = \bfun\ t_1 \cdots t_k :: \btype_{k+1} \arrtype
+\dots \arrtype \btype_p \arrtype \bsort$ with $\afun \eqpred \bfun$ and $\status(\afun) > 1$
+and $k \geq \status(\bfun) > 1$.  We must see that for any computable $t_{k+1} ::
+\btype_{k+1},\dots,t_p :: \btype_p$ we have that $\bfun\ t_1 \cdots t_p$ terminates.  But this
+is the case by assumption, because $\{\!\{s_i \mid i \in \filter(\afun) \wedge 1 \leq i \leq
+\status(\afun)\}\!\}\ (\ismain,\grmain)_{\mathtt{mul}}\ \{\!\{t_j \mid j \in \filter(\bfun)
+\wedge 1 \leq j \leq \status(\bfun)\}\!\}$, by definition of Rpo-mul.
 \end{proof}
 
 \begin{lemma}\label{lem:functionscomputable}
@@ -515,6 +562,9 @@ Given an LCSTRS, we assume given the following ingredients:
 \item a \emph{precedence} $\geqpred$ on the \emph{non-value symbols} (defined the same as in
   Section~\ref{sec:unconstrained}, and with the same restriction that the maximal arity of
   equivalent symbols should be bounded);
+\item a \emph{status}: a function $\status$ mapping each function symbol $\afun ::
+  \atype_1 \arrtype \dots \arrtype \atype_m \arrtype \asort$ with $\asort$ a sort to an integer
+  in $\{1,\dots,m\}$
 \item a \emph{filter} $\filter$, which is restricted so that $\filter(\afun) = \{1,\dots,m\}$ for
   $\afun :: \atype_1 \arrtype \dots \arrtype \atype_m \arrtype \asort$ a theory symbol
 \item for every sort $\asort$, a \emph{well-founded ordering} $\grsort_{\asort}$ and a
@@ -534,13 +584,14 @@ say $s \geqth t$ if this can be obtained by one of the following clauses:
 \begin{description}
 \item[$\succeq$Theory] $s,t$ are theory terms whose type is the same sort,
   $\Var(s) \cup \Var(t) \subseteq \gtvA$,
-  and $\varphi \Vdash s \geqsort t$
+  and $\varphi \Vdash s\ \geqsort t$
 \item[$\succeq$Eq] $s\downarrowcalc = t\downarrowcalc$
 \item[$\succeq$Mono] $s$ is not a theory term,
   $s = \avar\ s_1 \cdots s_n$ and $t = \avar\ s_1 \cdots s_n$ and each $s_i \geqth t_i$
 \item[$\succeq$Args] $s$ is not a theory term,
   $s = \afun\ s_1 \cdots s_n$ and $t = \bfun\ t_1 \cdots t_n$ for $\afun,\bfun$
   function symbols with the same type structure such that $\afun \eqpred \bfun$,
+  $\status(\afun) = \status(\bfun)$,
   $\filter(\afun) = \filter(\bfun)$, and $s_i \geqth t_i$ for all $i \in \filter(\afun) \cap
   \{1,\dots,n\}$
 \item[$\succeq$Greater] $s \grth t$
@@ -555,6 +606,7 @@ say $s \grth t$ if this can be obtained by one of the following clauses:
 \item[$\succ$Args] $s$ is not a theory term,
   $s = \afun\ s_1 \cdots s_n$ and $t = \bfun\ t_1 \cdots t_n$ for $\afun,\bfun$
   function symbols with the same type structure such that $\afun \eqpred \bfun$,
+  $\status(\afun) = \status(\bfun)$,
   $\filter(\afun) = \filter(\bfun)$, $s_i \geqth t_i$ for all $i \in \filter(\afun) \cap
   \{1,\dots,n\}$, and there is some $i \in \filter(\afun) \cap \{1,\dots,n\}$ with
   $s_i \grth t_i$
@@ -569,7 +621,8 @@ $\gtvA$ of variables, we say $s \rpoth t$ if this can be obtained by one of the 
 \item[$\rpo$Appl] $t = t_0\ t_1 \cdots t_m$ and $s \grth t_i$ for $1 \leq i \leq m$
 \item[$\rpo$Copy] $t = \bfun\ t_1 \cdots t_m$ with $\afun \grpred \bfun$ and 
     $s \rpoth t_i$ for all $i \in \filter(\bfun) \cap \{1,\dots,m\}$
-\item[$\rpo$Lex] $t = \bfun\ t_1 \cdots t_m$ with $\afun \eqpred \bfun$ and there is some
+\item[$\rpo$Lex] $t = \bfun\ t_1 \cdots t_m$ with $\afun \eqpred \bfun$ and $\status(\afun) =
+    \status(\bfun) = 1$ and there is some
     $i \in \filter(\afun) \cap \filter(\bfun) \cap \{1,\dots,\min(n,m)\}$
     such that all of the following hold:
     \begin{itemize}
@@ -578,6 +631,19 @@ $\gtvA$ of variables, we say $s \rpoth t$ if this can be obtained by one of the 
     \item $s_i \grth t_i$
     \item $s \rpoth t_j$ for $j \in \{i+1,\dots,m\} \cap \filter(\bfun)$
     \end{itemize}
+\item[$\rpo$Mul] $t = \bfun\ t_1 \cdots t_m$ with $\afun \eqpred \bfun$ and $\status(\afun) > 1$
+    and $m \geq \status(\bfun) > 1$ and there exist a function $\rho$ from
+    $\{1,\dots,\status(\bfun)\} \cap \filter(\bfun)$ to
+    $\{1,\dots,\min(n,\status(\afun))\} \cap \filter(\afun)$ and a non-empty subset $A$ of
+    $\{1,\dots,\status(\bfun)\} \cap \filter(\afun)$ such that for all $i \in
+    \{1,\dots,\status(\bfun)\} \cap \filter(\bfun)$:
+    \begin{itemize}
+    \item if $\rho(i) \in A$, then $s_{\rho(i)} \grth t_i$
+    \item if $\rho(i) \notin A$, then $s_{\rho(i)} \geqth t_i$
+    \item if $\rho(i) \notin A$, then there is no other $j \in
+      \{1,\dots,\status(\bfun)\} \cap \filter(\bfun)$ such that $\rho(j) = \rho(i)$
+    \end{itemize}
+    Moreover, $s \rpoth t_j$ for $j \in \{\status(\bfun)+1,\dots,m\} \cap \filter(\bfun)$
 \item[$\rpo$Th] $t$ is a theory term of base type, with all variables in $\gtvA$
 \end{description}
 
@@ -662,11 +728,14 @@ By a mutual induction on the derivation of $s\ R\ t$.  Consider the case:
   $(t\gamma)\downarrowcalc$ is a value $v$; since $s$ is not a theory term, $\afun$ is not a value
   and therefore $\afun \grpred v$, so $(s\gamma)\downarrowcalc = (\afun \cdots) \rpomain v$ by
   (Rpo-copy).
-\item Finally, in each of the cases $\rpo$Select, $\rpo$Appl, $\rpo$Copy and $\rpo$Lex, we either
-  immediately conclude with the induction hypothesis (and a case analysis for a smaller ``minimal
-  index'' in the case of $\rpo$Lex), or observe that $(t\gamma)\downarrowcalc$ is a value and
-  therefore $(s\gamma)\downarrowcalc \rpoth (t\gamma)\downarrowcalc$ by (Rpo-copy), as we also did
-  in the case for $\succeq$Args.
+\item Finally, in each of the cases $\rpo$Select, $\rpo$Appl and $\rpo$Copy, we either
+  immediately conclude with the induction hypothesis, or observe that $(t\gamma)\downarrowcalc$
+  is a value and therefore $(s\gamma)\downarrowcalc \rpoth (t\gamma)\downarrowcalc$ by (Rpo-copy),
+  as we also did in the case for $\succeq$Args.
+  In the case for $\rpo$Lex we additionally use a case analysis for a smaller ``minimal index''
+  (as $s_i \geqth t_i$ might yield $(s_i\gamma)\downarrowcalc \grmain (t_i\gamma)\downarrowcalc$),
+  and in the case for $\rpo$Mul we may extend the set $A$ (and use the definition of a multiset
+  ordering).
   \qedhere
 \end{itemize}
 \end{proof}
