@@ -4,10 +4,7 @@ import charlie.reader.CoraInputReader;
 import charlie.terms.Term;
 import charlie.trs.TRS;
 import charlie.util.either.Either;
-import charlie.util.either.Left;
-import charlie.util.either.Right;
 import com.google.common.collect.ImmutableList;
-
 import org.junit.jupiter.api.Test;
 
 class DeleteRuleTest {

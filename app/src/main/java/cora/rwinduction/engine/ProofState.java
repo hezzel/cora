@@ -51,6 +51,10 @@ class ProofState {
     _hypotheses = hypotheses;
   }
 
+  TRS getTRS() {
+    return _trs;
+  }
+
   /**
    * Returns the list of equations in this proof state.
    */
@@ -102,6 +106,27 @@ class ProofState {
         builder.add(_equations.get(i));
     }
 
+    ImmutableList<Equation> equations = builder.build();
+
+    return new ProofState(_trs, equations, _hypotheses);
+  }
+
+  /**
+   *
+   * @param equationIndex
+   * @param equation
+   * @return
+   */
+  @Contract(pure = true)
+  ProofState replaceEquation(int equationIndex, Equation equation) {
+    ImmutableList.Builder<Equation> builder = ImmutableList.builder();
+    for(int i = 0 ; i < _equations.size() ; i++) {
+      if (i != equationIndex) {
+        builder.add(_equations.get(i));
+      } else {
+        builder.add(equation);
+      }
+    }
     ImmutableList<Equation> equations = builder.build();
 
     return new ProofState(_trs, equations, _hypotheses);

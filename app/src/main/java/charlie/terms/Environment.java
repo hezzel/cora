@@ -28,4 +28,3 @@ public interface Environment<T> extends Iterable<T> {
   /** Returns the number of elements in the environment.  Note: calling this takes linear time. */
   int size();
 }
-

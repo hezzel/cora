@@ -63,7 +63,8 @@ final class DeleteRule extends DeductionRule {
       .get(args.getEquationIndex());
 
     // Check if s is syntactically equal to t in the equation s = t [c].
-    Either<String, Boolean> leftRightSyntaxEq = isLeftEqualsRight(equation);
+    Either<String, Boolean> leftRightSyntaxEq =
+      DeleteRule.isLeftEqualsRight(equation);
     if (leftRightSyntaxEq.isLeft()) { return leftRightSyntaxEq; }
 
     // !(SMT usage) Check if the constraint in the equation is unsatisfiable.
