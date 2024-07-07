@@ -32,6 +32,7 @@
 \newcommand{\Rules}{\mathcal{R}}
 \newcommand{\FV}{\mathit{FV}}
 \newcommand{\FMV}{\mathit{MV}}
+\newcommand{\BV}{\mathit{BV}}
 \newcommand{\Positions}{\mathit{Positions}}
 \newcommand{\SubPositions}{\mathit{SubPositions}}
 \newcommand{\HeadPositions}{\mathit{HeadPositions}}
@@ -123,8 +124,8 @@
 \begin{abstract}
 \cora\ is a tool meant to analyse constrained term rewriting systems, both
 first-order and higher-order.
-The cora code \charlie\ provides functionality to represent higher-order term
-rewriting systems (with constraints).
+The core library code \charlie\ provides functionality to represent
+higher-order term rewriting systems (with or without theories and constraints).
 This document explains the underlying formalism.
 \end{abstract}
 
@@ -167,31 +168,27 @@ We do not impose limitations on the set of sorts.  In traditional, unsorted term
 rewriting, there is only one sort (e.g., $\Sorts = \{ \unitsort \}$). However,
 we may also have a larger finite or even infinite sort set.
 In the future, we may consider a shallow form of polymorphic types, but for the
-moment we will limit interest to these simple types.
+moment we will limit interest to these (extended) simple types.
 
 \subsection*{In \charlie}
 
 \begin{itemize}
 \item The class \texttt{charlie.types.Type} represents types.
 \item Types can be constructed using \texttt{charlie.types.TypeFactory}.
+\item All types are immutable, so can be copied around as needed.
 \item Types can be printed using \texttt{charlie.types.TypePrinter} or any class
   inheriting it.
   (The in-built \texttt{toString()} is meant for debugging and unit testing, and
   should typically not be used when printing to users.)
 \end{itemize}
 
-\section{Unconstrained Applicative Meta-variable Systems (AMSs)}
+\section{Terms}
 
-Before explaining the full formalism of \cora, let us start by explaining
-higher-order term rewriting systems without constraints.  Most of the notions
-will be directly relevant to constrained systems as well.
-
-\subsection{Terms}
 Terms are \emph{well-typed} expressions built over given sets of \emph{function
 symbols}, \emph{variables} and \emph{meta-variables}. The full definition is
 presented below.
 
-\mysubsection{Symbols and (meta-)variables}
+\subsection{Symbols and (meta-)variables}
 
 We fix a set $\F$ of \emph{function symbols}, also called the \emph{alphabet};
 each function symbol is a \emph{typed constant}. Notation: $\afun \in \F$ or
@@ -213,12 +210,13 @@ such that $0 \leq k \leq \arity(\atype)$.  Notation:
 $X :: (\atype_1 \arrtype \dots \arrtype \atype_k \arrtype \btype,k) \in \M$ or
 $X :: [\atype_1,\dots,\atype_k] \arrtype \btype \in \M$, for a meta-variable
 with arity $k$ and type $\atype_1 \arrtype \dots \arrtype \atype_k \arrtype
-\btype$.  We require that $\Vfree = \{ (x :: \atype) \mid x :: (\atype,0) \in
-\M \}$; so the non-binder variables are exactly the meta-variables with arity
+\btype$ (here, $\btype$ is allowed to be an arrow type).
+We require that $\Vfree = \{ (x :: \atype) \mid x :: (\atype,0) \in \M \}$; so
+the non-binder variables are exactly the meta-variables with arity
 $0$.  We also require that the symbols in $\F$ and $\Vbound$ are disjoint from
 those in $\M$.
 
-\mysubsection{Term formation}\label{subsec:form}
+\subsection{Term formation}\label{subsec:form}
 
 Terms are those expressions $s$ such that $s :: \atype$ can be derived for some
 $\atype \in \Types$ using the following clauses:
@@ -280,7 +278,7 @@ Note also that a variable $\avar$ is also considered a var term, and a constant
 $\afun$ is a functional term, but a plain abstraction is \emph{not} a
 $\beta$-redex.
 
-\mysubsection{$\alpha$-equality}
+\subsection{$\alpha$-equality}
 We let $=_\alpha$ be the usual $\alpha$-renaming equivalence relation as used in
 the $\lambda$-calculus. This relation can be formally defined as follows:
 \begin{itemize}
@@ -319,7 +317,7 @@ this variable was bound by the same $\lambda$ in both terms.  We can
 straightforwardly prove that $=_\alpha$ is an equivalence relation (Corollary
 \ref{corr:alphaequiv}).
 
-\mysubsection{Restricted terms}\label{subsec:termsets}
+\subsection{Restricted terms}\label{subsec:termsets}
 
 The definition of terms is deliberately broad, to support a rather liberal kind
 of higher-order rewriting; in some other works, what we call ``terms'' would be
@@ -414,7 +412,48 @@ The set of first-order terms is denoted $\FOTerms(\F,\V)$.  Since every
 first-order term is also an applicative pattern, $\FOTerms(\F,\V) \subseteq
 \ATerms(\F,\V) \subseteq \Terms(\F,\V)$.
 
-\subsection{Free variables}
+\subsection{Application}\label{subsec:application}
+We have defined application as a clause, but it will sometimes be convenient to
+have it as an operation.  This is defined as follows:
+
+\begin{definition}
+For any term $h(s_1,\dots,s_n) :: \atype \arrtype \btype$ (with $n \geq 0$),
+and $t :: \atype$, we let $h(s_1,\dots,s_n) \cdot t$ be the term
+$h(s_1,\dots,s_n,t) :: \btype$.
+The application operator $\cdot$ is left-associative, so $h(s_1,\dots,s_n)
+\cdot t_1 \cdots t_m$ denotes $((h(s_1,\dots,s_n) \cdot t_1) \cdot t_2) \cdots
+t_m = h(s_1,\dots,s_n,t_1,\dots,t_m)$.
+\end{definition}
+
+We easily obtain the following result;
+
+\begin{lemma}\label{lem:applicative_notation}
+The set $\ATerms(\F,\V)$ is the smallest set such that:
+\begin{itemize}
+\item $\F \cup \V \subseteq \ATerms(\F,\V)$;
+\item if $s_1,\dots,s_n \in \ATerms(\F,\V)$ with $n \geq 2$ then
+  $\tuple{s_1}{s_n} \in \ATerms(\F,\V)$;
+\item if $s,t \in \ATerms(\F,\V)$ and $s :: \atype \arrtype \btype$ and $t ::
+  \atype$ then $s \cdot t \in \ATerms(\F,\V)$.
+\end{itemize}
+\end{lemma}
+
+\begin{proof}
+Trivial.
+\end{proof}
+
+Lemma~\ref{lem:applicative_notation} shows that our applicative terms are the
+same as applicative terms constructed in the traditional way; however, for
+convenience we denote them in a functional notation.
+We can similarly see easily that the set of all terms is exactly the smallest
+set which includes $\F,\V$ and is closed under abstraction, meta-application,
+tuple and this application operator.
+
+Application interacts with $\alpha$-equality as you would expect: $u \cdot s_1
+\cdots s_n =_\alpha v \cdot t_1 \cdots t_n$ if and only if $u =_\alpha v$ and
+each $s_i =_\alpha t_i$ (Lemma \ref{lem:alphaappl}).
+
+\subsection{Sets of (meta-)variables}
 The set of \emph{free variables} of a term is inductively defined as follows:
 \begin{itemize}
 \item $\FV(\afun) = \emptyset$;
@@ -425,12 +464,14 @@ The set of \emph{free variables} of a term is inductively defined as follows:
 \item $\FV(\abs{\avar}{t}) = \FV(t) \setminus \{ \avar \}$;
 \item $\FV(\meta{\Avar}{t_1,\dots,t_k}) = \FV(t_1) \cup \dots \cup \FV(t_k)$.
 \end{itemize}
-That is, $\FV(s)$ contains all variables in $s$ except for those bound by a $\lambda$.
-For applicative and first-order terms $s$, this is the set of \emph{all} variables occurring in
-$s$.
+That is, $\FV(s)$ contains all variables in $s$ except for those bound by a
+$\lambda$.
+For applicative and first-order terms $s$, this is the set of \emph{all}
+variables occurring in $s$.
 Note that it is possible for $\FV(s)$ to contain variables in $\Vbound$.
 
-The set of \emph{meta-variables} of a term is inductively defined as follows:
+The set of \emph{meta-variables} of a term $s$ is exactly the set containing all
+the meta-variables that occur in $s$.  This is inductively defined as follows:
 \begin{itemize}
 \item $\FMV(\afun) = \emptyset$;
 \item $\FMV(\avar) = \{ \avar \}$ if $\avar \in \Vfree$
@@ -453,127 +494,104 @@ Since $\FV(s) = \FV(t)$ and $\FMV(s) = \FMV(t)$ whenever $s =_\alpha t$
 (Corollary \ref{corr:alphafreevar}), $\FV$ also defines a function on
 equivalence classes of terms.
 
-\subsection{Application}\label{subsec:application}
-We have defined application as a clause, but it will sometimes be convenient to
-have it as an operation.  This is defined as follows:
+\subsection{Well-formedness}
 
-\begin{definition}
-For any term $h(s_1,\dots,s_n) :: \atype \arrtype \btype$ (with $n \geq 0$),
-and $t :: \atype$, we let $h(s_1,\dots,s_n) \cdot t$ be the term
-$h(s_1,\dots,s_n,t) :: \btype$.
-The application operator $\cdot$ is left-associative, so $h(s_1,\dots,s_n)
-\cdot t_1 \cdots t_m$ denotes $((h(s_1,\dots,s_n) \cdot t_1) \cdot t_2) \cdots
-t_m = h(s_1,\dots,s_n,t_1,\dots,t_m)$.
+In addition, we can define the set $\BV(s)$ of \emph{bound variables} of $s$ as
+the set containing all $\avar$ such that $\abs{\avar}{s'}$ occurs in $s$ for
+some $s'$:
+
+\begin{itemize}
+\item $\BV(\afun) = \BV(\avar) = \emptyset$;
+\item $\BV(h(s_1,\dots,s_n)) = \BV(h) \cup \BV(s_1) \cup \dots \cup \BV(s_n)$ if
+  $n > 0$;
+\item $\BV(\tuple{s_1}{s_n}) = \BV(\meta{\Avar}{s_1,\dots,s_n}) =
+  \BV(s_1) \cup \dots \cup \BV(s_n)$.
+\item $\BV(\abs{\avar}{t}) = \BV(t) \cup \{ \avar \}$;
+\end{itemize}
+
+This is \emph{not} a function on equivalence classes, since for
+instance $\BV(\abs{\avar}{\avar}) = \{\avar\} \neq \{\bvar\} = \BV(\abs{\bvar}{
+\bvar})$.  Instead, it can often be used to show that a definition that regards
+terms rather than equivalence classes makes sense.  For example, it allows us to
+define \emph{well-formedness}.
+
+\begin{definition}\label{def:wellformed}
+A term $s$ is \emph{well-formed} if $\FV(s) \cap \BV(s) = \emptyset$, and:
+\begin{itemize}
+\item if $s = h(s_1,\dots,s_n)$ then $h$ and all $s_i$ are well-formed
+\item if $s = \tuple{s_1}{s_n}$ or $\meta{\Avar}{s_1}{s_n}$ then all $s_i$ are
+  well-formed
+\item if $s = \abs{\avar}{s'}$ then $\avar \notin \BV(s')$
+\end{itemize}
 \end{definition}
 
-We easily obtain the following result;
+In definitions, it is often useful to assume that a given term is well-formed,
+and even that certain variables are not in its bound variables.  We can safely
+do so: for every finite set $X \subseteq \Vbound$ and every term $s$, there
+exists a well-formed term $s'$ such that $s =_\alpha s'$ and $\BV(s') \cap
+X = \emptyset$ (Lemma~\ref{lem:wellformedcounterpart}).
 
-\begin{lemma}\label{lem:applicative_notation}
-The set $\ATerms(\F,\V)$ is the smallest set such that:
-\begin{itemize}
-\item $\F \cup \V \subseteq \ATerms(\F,\V)$;
-\item if $s_1,\dots,s_n \in \ATerms(\F,\V)$ with $n \geq 2$ then
-  $\tuple{s_1}{s_n} \in \ATerms(\F,\V)$;
-\item if $s,t \in \ATerms(\F,\V)$ and $s : \atype \arrtype \btype$ and $t : \atype$ then
-  $s \cdot t \in \ATerms(\F,\V)$.
-\end{itemize}
-\end{lemma}
-
-\begin{proof}
-Trivial.
-\end{proof}
-
-Lemma~\ref{lem:applicative_notation} shows that our applicative terms are the
-same as applicative terms constructed in the traditional way; however, for
-convenience we denote them in a functional notation.
-We can similarly see easily that the set of all terms is exactly the smallest
-set which includes $\F,\V$ and is closed under abstraction, meta-application,
-tuple and this application operator.
-
-Application interacts with $\alpha$-equality as you would expect: $u \cdot s_1
-\cdots s_n =_\alpha v \cdot t_1 \cdots t_n$ if and only if $u =_\alpha v$ and
-each $s_i =_\alpha t_i$ (Lemma \ref{lem:alphaappl}).
-
-\subsection{Substitution}
-
-A \emph{substitution} is a partial function $\gamma$ that maps:
-\begin{itemize}
-\item \emph{variables} $\avar :: \atype$ to terms of type $\atype$
-\item \emph{meta-variables} $\Avar :: (\atype,k)$ to terms $\abs{\bvar_1 \dots
-  \bvar_k}{t}$ of type $\atype$
-\end{itemize}
-The \emph{domain} $\domain(\gamma)$ of a substitution $\gamma$ is the set of
-variables and meta-variables for which $\gamma$ is defined; note that (in
-contrast to some of the literature) this includes those $\avar$ with
-$\gamma(\avar) = \avar$.
-We denote $[x_1:=s_1,\dots,x_n:=s_n]$ for the substitution $\gamma$ with
-domain $\{x_1,\dots,x_n\{$ that maps each $x_i$ to $s_i$; finite substitutions
-can always be denoted in such a form.
-Applying a substitution $\gamma$ to a term $s$, notation $s\gamma$, yields a
-new term of the same type, by the following clauses:
+\subsection*{In Charlie}
 
 \begin{itemize}
-\item $\afun\gamma = \afun$;
-\item $\avar\gamma = \gamma(\avar)$ if $\avar \in \domain(\gamma)$;
-\item $\avar\gamma = \avar$ if $\avar \notin \domain(\gamma)$;
-\item $h(s_1,\dots,s_n)\gamma = (h\gamma) \cdot (s_1\gamma) \cdots (s_n\gamma)$
-  if $n > 0$;
-\item $\tuple{s_1}{s_n}\gamma = \tuple{s_1\gamma}{s_n\gamma}$;
-\item $(\abs{\avar}{t})\gamma = \abs{\cvar}{(t ([\avar:=\cvar] \cup [\bvar:=
-  \gamma(\bvar) \mid \bvar \in \domain(\gamma) \setminus \{\avar\}]))}$ \\
-  for $\cvar$ a \emph{fresh}** variable in $\Vbound$ with the same type as
-  $\avar$;
-\item $\meta{\Avar}{s_1,\dots,s_k}\gamma = \meta{\Avar}{s_1\gamma,\dots,s_k
-  \gamma}$ if $k > 0$ and $\Avar \notin \domain(\gamma)$;
-\item $\meta{\Avar}{s_1,\dots,s_k}\gamma = t[\bvar_1:=s_1\gamma,\dots,\bvar_k:=
-  s_k\gamma]$ if $k > 0$ and $\Avar \in \domain(\gamma)$ and $\Avar =
-  \abs{\bvar_1 \dots \bvar_k}{t}$.
-  (Here, if some $\bvar_i = \bvar_j$ for $i < j$, the substitution $[\bvar_1:
-  =u_1,\dots,\bvar_n:=u_n]$ maps $\bvar_i$ to $u_j$.)
+\item The class \texttt{charlie.terms.FunctionSymbol} represents function
+  symbols.
+\item The class \texttt{charlie.terms.Variable} represents variables
+  (the function \texttt{Variable::isBinderVariable()} indicates whether the
+  variable is in $\Vbound$) and the class \texttt{charlie.terms.MetaVariable}
+  represents meta-variables.  The class \texttt{charlie.terms.Replaceable}
+  is used for any of the three (this is a shared interface inherited by both
+  \texttt{Variable} and \texttt{MetaVariable}).
+\item The class \texttt{charlie.terms.Term} represents terms.  Note that
+  function symbols and variables are also considered terms (but in general,
+  meta-variables are not).
+\item Function symbols, variables, meta-variables and terms can all be
+  constructed using \texttt{charlie.terms.TermFactory}.  Note that, for
+  flexibility with different kinds of rewriting, there are sometimes multiple
+  ways to construct the same term -- for example,
+  \texttt{TermFactory.createFunctionalTerm(f, lst)} builds the same term as
+  \texttt{TermFactory.createApp(f, lst)}, but the former can only be used if
+  \texttt{f} is a function symbol, while the latter executes the application
+  constructor and can therefore be used for any head term (including
+  applications).
+\item The method \texttt{Term::equals(Term other)} checks $\alpha$-equality.
+\item Terms can be queried whether they fall into a specific ``restricted term''
+  category; for example using \texttt{Term::isTrueTerm()},
+  \texttt{Term::isPattern()} and \texttt{Term::isApplicative()}.
+\item All terms are immutable, so can be copied around as needed.
+\item Terms can be printed using \texttt{charlie.terms.TermPrinter} or any class
+  inheriting it.
+  (The in-built \texttt{toString()} is meant for debugging and unit testing, and
+  should typically not be used when printing to users.)
 \end{itemize}
-** A \emph{fresh} variable $\cvar$ is one that does not occur in
-$\FV(\bvar\gamma)$ for any $\bvar \in \FV(s)$.
 
-Due to the case for meta-application, it is not immediately obvious that these
-definitions are well-founded: it is not the case that each step is defined in
-terms of an obviously smaller substitution.  However, we can see this in two
-steps: substitutions are well-defined when $\domain(\gamma) \subseteq \Vbound$
-(since then the meta-application case does not occur); and we can use this as a
-prerequisite to see that all substitutions are well-defined (Lemma
-\ref{lem:substdefined}).
+\medskip
+Some extra notes on variables and meta-variables: these are defined not by their
+\emph{name}, but by their \emph{pointer}: whenever any replaceable is created,
+it is automatically different from any other variable that has already been
+used in the program.  Thus, to reuse a variable, simply copy the pointer.  To
+print (meta-)variables, every TermPrinter works with a \emph{Renaming}: a
+special mapping that assigns a name to each variable in a given set of terms.
+(The names that are given to (meta-)variables during creation are used as a
+default name / basis for the name by the standard term printer, but can be
+entirely ignored by other implementations of TermPrinter).
 
-===================
+The constructors in the \texttt{charlie.terms} package ensure that all terms
+are well-formed: if something tries to construct a term such as $\afun(\avar,
+\abs{\avar}{s})$ or $\abs{\avar}{\bfun(\abs{\avar}{\avar})}$, then the inner
+variable will automatically be $\alpha$-renamed.  Please keep this in mind, as
+it means that you cannot assume that the term you use is exactly the one you
+created (but users never have to worry about terms being well-formed no matter
+how they are constructed).
 
-More critically, these definitions technically do not define functions on terms:
-the substitution of an abstraction may lead to any fresh variable being chosen.
-Hence, we should perhaps think of these notions as defining \emph{relations}
-between terms.  However, they do define a function on \emph{equivalence classes}
-(by Corollary \ref{cor:substitutionalpha}):
-\begin{itemize}
-\item if $s_1 =_\alpha s_2$ and $s_1\gamma = t_1$ and $s_2\gamma' = t_2$ and
-  $\gamma(x) =_\alpha \gamma'(x)$ for $x \in \FV(s_1)$, then $t_1 =_\alpha t_2$;
-\item if $s_1 =_\alpha s_2$ and $s_1\gamma = t_1$ and $s_2\gamma = t_2$ then
-  $t_1 =_\alpha t_2$ (this is a special case of the previous item, but it is
-  highlighted since it shows that substitution by a specific $\gamma$ defines a
-  function);
-\end{itemize}
-Hence, the difference is not significant, and we can safely think of
-substitution as defining a function.
+\section{Positions and subterms}
 
-For two substitutions $\gamma$ and $\delta$, we let $\gamma\delta$ denote the substitution
-$[\avar := \gamma(\avar)\delta \mid \avar \in \domain(\gamma)] \cup
-[\avar := \delta(\avar) \mid \avar \in \domain(\delta) \setminus \domain(\gamma)]$.
-Essentially, applying a substitution $\gamma$ to a term corresponds with replacing each variable
-$\avar$ by $\avar\gamma$ (and evaluating the applications of abstractions that are created as a
-result), and applying $\gamma\delta$ corresponds to replacing $\avar$ by $(\avar\gamma)\delta$.
-We can prove (Lemma \ref{lem:combinesubst}) that $s(\gamma\delta)$ is exactly $(s\gamma)\delta$.
-
-A \emph{renaming} is a substitution $[x_1:=y_1,\dots,x_n:=y_n]$ with $x_1,\dots,x_n$ pairwise
-distinct, and $y_1,\dots,y_n$ pairwise distinct.
+========================
 
 \subsection{Positions}
 
-The \emph{head positions} of a given term are the paths to specific subterms, defined as follows:
+The \emph{head positions} of a given term are the paths to specific subterms,
+defined as follows:
 
 \begin{itemize}
 \item $\HeadPositions(h(s_1,\dots,s_n)) = \{ \epsilon, \star 0, \dots, \star (n-1) \} \cup
@@ -660,6 +678,84 @@ definitions are exactly the subterms and positions as they are usually considere
 term rewriting; however, head-subterms are generally not considered.  For applicative terms,
 both subterms and head-subterms are usually referred to as just ``subterms''; we distinguish them
 here because doing so is practical for analysis.
+
+\section{Substitution}
+
+A \emph{substitution} is a partial function $\gamma$ that maps:
+\begin{itemize}
+\item \emph{variables} $\avar :: \atype$ to terms of type $\atype$
+\item \emph{meta-variables} $\Avar :: (\atype,k)$ to terms $\abs{\bvar_1 \dots
+  \bvar_k}{t}$ of type $\atype$
+\end{itemize}
+The \emph{domain} $\domain(\gamma)$ of a substitution $\gamma$ is the set of
+variables and meta-variables for which $\gamma$ is defined; note that (in
+contrast to some of the literature) this includes those $\avar$ with
+$\gamma(\avar) = \avar$.
+We denote $[x_1:=s_1,\dots,x_n:=s_n]$ for the substitution $\gamma$ with
+domain $\{x_1,\dots,x_n\{$ that maps each $x_i$ to $s_i$; finite substitutions
+can always be denoted in such a form.
+Applying a substitution $\gamma$ to a term $s$, notation $s\gamma$, yields a
+new term of the same type, by the following clauses:
+
+\begin{itemize}
+\item $\afun\gamma = \afun$;
+\item $\avar\gamma = \gamma(\avar)$ if $\avar \in \domain(\gamma)$;
+\item $\avar\gamma = \avar$ if $\avar \notin \domain(\gamma)$;
+\item $h(s_1,\dots,s_n)\gamma = (h\gamma) \cdot (s_1\gamma) \cdots (s_n\gamma)$
+  if $n > 0$;
+\item $\tuple{s_1}{s_n}\gamma = \tuple{s_1\gamma}{s_n\gamma}$;
+\item $(\abs{\avar}{t})\gamma = \abs{\cvar}{(t ([\avar:=\cvar] \cup [\bvar:=
+  \gamma(\bvar) \mid \bvar \in \domain(\gamma) \setminus \{\avar\}]))}$ \\
+  for $\cvar$ a \emph{fresh}** variable in $\Vbound$ with the same type as
+  $\avar$;
+\item $\meta{\Avar}{s_1,\dots,s_k}\gamma = \meta{\Avar}{s_1\gamma,\dots,s_k
+  \gamma}$ if $k > 0$ and $\Avar \notin \domain(\gamma)$;
+\item $\meta{\Avar}{s_1,\dots,s_k}\gamma = t[\bvar_1:=s_1\gamma,\dots,\bvar_k:=
+  s_k\gamma]$ if $k > 0$ and $\Avar \in \domain(\gamma)$ and $\Avar =
+  \abs{\bvar_1 \dots \bvar_k}{t}$.
+  (Here, if some $\bvar_i = \bvar_j$ for $i < j$, the substitution $[\bvar_1:
+  =u_1,\dots,\bvar_n:=u_n]$ maps $\bvar_i$ to $u_j$.)
+\end{itemize}
+** A \emph{fresh} variable $\cvar$ is one that does not occur in
+$\FV(\bvar\gamma)$ for any $\bvar \in \FV(s)$.
+
+Due to the case for meta-application, it is not immediately obvious that these
+definitions are well-founded: it is not the case that each step is defined in
+terms of an obviously smaller substitution.  However, we can see this in two
+steps: substitutions are well-defined when $\domain(\gamma) \subseteq \Vbound$
+(since then the meta-application case does not occur); and we can use this as a
+prerequisite to see that all substitutions are well-defined (Lemma
+\ref{lem:substdefined}).
+
+More critically, these definitions technically do not define functions on terms:
+the substitution of an abstraction may lead to any fresh variable being chosen.
+Hence, we should perhaps think of these notions as defining \emph{relations}
+between terms.  However, they do define a function on \emph{equivalence classes}
+(by Corollary \ref{cor:substitutionalpha}):
+\begin{itemize}
+\item if $s_1 =_\alpha s_2$ and $s_1\gamma = t_1$ and $s_2\gamma' = t_2$ and
+  $\gamma(x) =_\alpha \gamma'(x)$ for $x \in \FV(s_1)$, then $t_1 =_\alpha t_2$;
+\item if $s_1 =_\alpha s_2$ and $s_1\gamma = t_1$ and $s_2\gamma = t_2$ then
+  $t_1 =_\alpha t_2$ (this is a special case of the previous item, but it is
+  highlighted since it shows that substitution by a specific $\gamma$ defines a
+  function);
+\end{itemize}
+Hence, the difference is not significant, and we can safely think of
+substitution as defining a function.
+
+For two substitutions $\gamma$ and $\delta$, we let $\gamma\delta$ denote the substitution
+$[\avar := \gamma(\avar)\delta \mid \avar \in \domain(\gamma)] \cup
+[\avar := \delta(\avar) \mid \avar \in \domain(\delta) \setminus \domain(\gamma)]$.
+Essentially, applying a substitution $\gamma$ to a term corresponds with replacing each variable
+$\avar$ by $\avar\gamma$ (and evaluating the applications of abstractions that are created as a
+result), and applying $\gamma\delta$ corresponds to replacing $\avar$ by $(\avar\gamma)\delta$.
+We can prove (Lemma \ref{lem:combinesubst}) that $s(\gamma\delta)$ is exactly $(s\gamma)\delta$.
+
+A \emph{renaming} is a substitution $[x_1:=y_1,\dots,x_n:=y_n]$ with $x_1,\dots,x_n$ pairwise
+distinct, and $y_1,\dots,y_n$ pairwise distinct.
+
+
+\section{Unconstrained Applicative Meta-variable Systems (AMSs)}
 
 \subsection{Rules and rewriting}
 
@@ -909,6 +1005,91 @@ Choosing $k = 1$ and $\mu,\xi$ the constant $0$-functions again, we obtain:
 
 \begin{corollary}\label{corr:alphafreevar}
 If $s =_\alpha t$ then $\FV(s) = \FV(t)$ and $\FMV(s) = \FMV(t)$.
+\end{corollary}
+
+Well-formedness is formally obtained by the following Lemma:
+
+\begin{lemma}\label{lem:wellformedcounterpart}
+Let $X \subseteq \Vbound$ be finite, and let $s$ be a term, $k \in \N$ and
+$\mu,\xi$ be functions in $\Vbound \to \{0,\dots,k\}$ such that:
+\begin{itemize}
+\item for every $i \in \{1,\dots,k\}$, there is exactly one variable $\bvar$
+  such that $\xi(\bvar) = i$
+\item for $\avar \in \FV(s)$: if $\mu(\avar) = 0$ then $\xi(\avar) = 0$
+\item all $\avar$ with $\mu(\avar) > 0$ and all $\bvar$ with $\xi(\bvar) > 0$
+  are in $X$
+\end{itemize}
+Then there exists a well-formed term $t$ such that $s =_\alpha^{\mu,\xi,k+1} t$
+and $\BV(t) \cap X = \emptyset$.
+\end{lemma}
+
+\begin{proof}
+By a straightforward induction on the size of $s$.  To ensure that in all
+subterms, $\FV(t) \cap \BV(t) = \emptyset$, we start by including $\FV(s)$ into
+$X$.
+    % 
+    % \begin{itemize}
+    % \item If $s = \afun$ then we can choose $t = \afun$ as well.
+    % \item If $s = \avar$ with $\mu(\avar) = 0$ then note that $\avar \in \FV(s)$ so
+    %   by assumption $\xi(\avar) = 0$ as well.  We choose $t = \avar$.
+    % \item If $s = \avar$ with $\mu(\avar) = i > 0$, then let $\bvar$ be the unique
+    %   variable such that $\xi(\bvar) = i$ (this exists by assumption).  We choose
+    %   $t = \bvar$.
+    % \item If $s = a(s_1,\dots,s_n)$ with $n > 0$ then by the induction there exist
+    %   well-formed $b$, $t_1,\dots,t_n$ such that $a =_\alpha^{\mu,\xi,k+1} b$ and
+    %   $\BV(b) \cap X = \emptyset$, and $s_i =_\alpha^{\mu,\xi,k+1} t_i$ for all
+    %   $i$, and $\BV(t_i) \cap X = \emptyset$.  Note that by definition of
+    %   $\alpha$-equivalence, $b$ cannot be an application because $a$ is not, so
+    %   $t := b(t_1,\dots,t_n)$ is a term, and $s =_\alpha^{\mu,\xi,k+1} t$.
+    % 
+    %   Note that $\BV(t) \cap X =
+    %   (\BV(b) \cup \BV(t_1) \cup \dots \cup \BV(t_n)) \cap X =
+    %   (\BV(b) \cap X) \cup (\BV(t_1) \cap X) \cup \dots \cup (\BV(t_n) \cap X) =
+    %   \emptyset$.
+    % 
+    %   We also observe that $\FV(t) \cap \BV(t) = \emptyset$: towards a
+    %   contradiction assume that $\cvar \in \FV(t) \cap\BV(t)$.  If $\xi(\cvar) = 0$
+    %   then note that by Lemma~\ref{lem:alphafreevar}, also $\cvar \in \FV(s)$ and
+    %   therefore in $X$ (as we had assumed $X \supseteq \FV(s)$), and we observed
+    %   above that $\BV(t) \cap X = \emptyset$.  On the other hand, if
+    %   $\xi(\cvar) > 0$ then $\cvar \in X$ by assumption.
+    %   Hence, from this and well-formedness of $b$ and all $t_i$, we conclude that
+    %   $t$ is well-formed.
+    % \item If $s = \tuple{s_1}{s_n}$ or $\meta{\Cvar}{s_1,\dots,s_n}$ then we use
+    %   the induction hypothesis to find well-formed $t_1,\dots,t_n$ such that each
+    %   $s_i =_\alpha^{\mu,\xi,k+1} t_i$ and $\BV(t_i) \cap X = \emptyset$.  We
+    %   choose $t := \tuple{t_1}{t_n}$ or $\meta{\Cvar}{t_1,\dots,t_n}$ respectively,
+    %   which suffices with the same reasoning we used above.
+    % \item Finally, if $s = \abs{\avar}{s'}$ then note that, since $X$ is finite and
+    %   there are infinitely many binder variables of all types, we can choose
+    %   $\bvar \notin X$ which has the same type as $\avar$.
+    %   Let $\mu' := \mu[\avar:=k+1]$,
+    %   let $\xi' := \xi[\bvar:=k+1]$,
+    %   and let $X' := X \cup \{\avar,\bvar\}$;
+    %   then still $X' \supseteq \FV(s')$ and $X'$ contains all variables $\cvar$
+    %   with $\mu'(\cvar) > 0$ or $\xi'(\cvar) > 0$.  The other two requirements to
+    %   apply the induction hypothesis are also satisfied, so we do so and find a
+    %   well-formed term $t'$ such that $s' =_\alpha^{\mu',\xi',k+2} t'$, and $\BV(t)
+    %   \cap X' = \emptyset$.
+    % 
+    %   Let $t := \abs{\bvar;}{t'}$.
+    %   Then we see: $\BV(t) \cap X = (\BV(t') \cup \{\bvar\}) \cap X =  (\BV(t')
+    %   \cap X) \cup (\{\bvar\} \cap X) = \BV(t') \cap X \subseteq \BV(t') \cap X' =
+    %   \emptyset$.
+    %   Moreover, $\FV(t) \cap \BV(t) = (\FV(t') \setminus \{\bvar\}) \cap
+    %   (\BV(t') \cup \{\bvar\}) = \FV(t') \cap \BV(t') = \emptyset$ because $t'$ is
+    %   well-formed.
+    %   Since $\bvar \notin \BV(t')$ (as $\bvar \in X'$), this tells us that $t$ is
+    %   well-formed.
+    %   \qedhere
+    % \end{itemize}
+\end{proof}
+
+By choosing $k = 1$ we immediately obtain:
+
+\begin{corollary}\label{cor:wellformedcounterpart}
+If $X \subseteq \Vbound$ is finite then for every term $s$ there exists a
+well-formed term $t$ such that $s =_\alpha t$ and $\BV(t) \cap X = \emptyset$.
 \end{corollary}
 
 Next, we define some helper results that have little meaning on their own, but

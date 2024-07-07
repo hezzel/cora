@@ -27,7 +27,10 @@ public interface Replaceable extends Comparable<Replaceable> {
   public static int KIND_BASEVAR = 1;
   public static int KIND_METAVAR = 2;
 
-  /** @return the kind of Replaceable this is (one of KIND_BINDER, KIND_BASEVAR or KIND_METAVAR) */
+  /**
+   * @return the kind of Replaceable this is (one of KIND_BINDER, KIND_BASEVAR or KIND_METAVAR)
+   * Here, a BASEVAR is an element of V_{nonb}, and a METAVAR is an element of M \ V.
+   */
   int queryReplaceableKind();
 
   /**
