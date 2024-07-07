@@ -1469,8 +1469,8 @@ abstraction.
 If $\subrel{\abs{\avar_1 \dots \avar_n}{s},\gamma,u}$ then $u = \abs{\bvar_1
 \dots \bvar_n}{t}$ such that:
 \begin{itemize}
-\item each $\bvar_i \notin \FV(\gamma(\cvar))$ for any $\cvar \in \FV(s)
-  \setminus \{\avar_1,\dots,\avar_n\}$
+\item each $\bvar_i \notin \FV(\gamma(\cvar))$ for any $\cvar \in (\FV(s) \cup
+  \FMV(s)) \setminus \{\avar_1,\dots,\avar_n\}$
 \item if $\bvar_i = \bvar_j$ for some $i < j$, then $\avar_i \notin \FV(s)$ or
   $\avar_i = \avar_k$ for some $k > i$ 
 \item $\subrel{s,\gamma',t}$ where $\gamma'$ is any substitution with
@@ -1487,10 +1487,10 @@ By induction on $n$.  For $n = 0$ the lemma clearly holds (using Lemma
 \ref{lem:substextend}).
 Now if $\subrel{\abs{\avar_1 \cdots \avar_n}{s},\gamma,u}$ and $n > 0$ then
 by definition $u = \abs{\bvar_1}{u'}$ with $\bvar_1 \notin \FV(\gamma(\cvar))$
-for any $\cvar \in \FV(\abs{\avar_1 \dots \avar_n}{s}) = \FV(s) \setminus
-\{\avar_1,\dots,\avar_n\}$, and $\subrel{\abs{\avar_2 \dots \avar_n}{s},
-[\avar_1:=\bvar_1] \cup [\cvar:=\gamma(\cvar) \mid \cvar \in \domain(\gamma)
-\setminus \{\avar_1\}],u'}$.
+for any $\cvar \in \FV(\abs{\avar_1 \dots \avar_n}{s}) \cup \FMV(\abs{\avar_1
+\dots \avar_n}{s}) = (\FV(s) \setminus \{\avar_1,\dots,\avar_n\}) \cup \FMV(s)$,
+and $\subrel{\abs{\avar_2 \dots \avar_n}{s}, [\avar_1:=\bvar_1] \cup [\cvar:=
+\gamma(\cvar) \mid \cvar \in \domain(\gamma) \setminus \{\avar_1\}],u'}$.
 Each of the three requirements now follows easily by the induction hypothesis and the properties above.
 %    % 
 %    % Write $\gamma^{\avar_1:=\bvar_1} = [\avar_1:=\bvar_1] \cup [\cvar:=\gamma(\cvar)
@@ -1538,11 +1538,53 @@ Each of the three requirements now follows easily by the induction hypothesis an
 %    % \end{itemize}
 \end{proof}
 
+We also provide a helper result combining substitutions and free variables.
+
+\begin{lemma}\label{lem:varinsubstitute}
+Let $s,t$ be terms and $\gamma$ a substitution with $\domain(\gamma) \subseteq
+\V$, such that $\subrel{s,\gamma,t}$.
+Suppose $\avar \in \FV(\gamma(\bvar))$ for some $\bvar \in \FV(s)$.
+Then $\avar \in \FV(t)$.
+\end{lemma}
+
+\begin{proof}
+By a straightforward induction on the definition of $\subrel{s,\gamma,t}$.
+    % \begin{itemize}
+    % \item If $s = \afun$ then there is no $\bvar \in \FV(s)$, so there is nothing to
+    %   prove.
+    % \item If $s = \bvar$ then $t = \gamma(\bvar)$ and by assumption $\avar \in
+    %   \FV(\gamma(\bvar)) = \FV(t)$.
+    % \item If $s = h(s_1,\dots,s_n)$ then $t = w \cdot t_1 \cdots t_n$ with
+    %   $\subrel{h,\gamma,w}$ and $\subrel{s_i,\gamma,t_i}$ for all $i$.
+    %   By definition, $\FV(s) = \FV(h) \cup \FV(s_1) \cup \dots \cup \FV(s_n)$, so
+    %   $\avar \in \FV(\gamma(\bvar))$ for some $\bvar$ that occurs either in $\FV(h)$
+    %   or in some $\FV(s_i)$.  By the induction hypothesis then, $\avar \in \FV(w)$
+    %   or $\avar \in \FV(t_i)$ respectively.  By definition of $\cdot$ and $\FV$ we
+    %   easily obtain $\avar \in \FV(t)$.
+    % \item If $s = \tuple{s_1}{s_n}$ then $t = \tuple{t_1}{t_n}$ and by the
+    %   induction hypothesis, $\avar \in \FV(t_i)$ for some $i$; hence $\avar \in
+    %   \FV(t)$.
+    % \item If $s = \meta{\Avar}{s_1,\dots,s_k}$ then since $\Avar \notin \domain(
+    %   \gamma)$ we have $t = \meta{\Avar}{t_1,\dots,t_k}$ and by the induction
+    %   hypothesis there is some $i$ such that $\avar \in \FV(t_i)$; hence $\avar \in
+    %   \FV(t)$.
+    % \item If $s = \abs{\cvar}{s'}$ then $t = \abs{\cvar'}{t'}$ with
+    %   $\cvar' \notin \FV(\gamma(w))$ for any $w \in \FV(s)$ (**), and
+    %   $\subrel{s',\gamma^{\cvar:=\cvar'},t'}$.
+    %   Now suppose $\bvar \in \FV(s) = \FV(s') \setminus \{\cvar\}$, and $\avar \in
+    %   \FV(\gamma(\bvar))$.
+    %   Since $\bvar \neq \cvar$ we have $\gamma^{\cvar:=\cvar'}(\bvar) = \gamma(
+    %   \bvar)$, so by the induction hypothesis, $\avar \in \FV(t')$.  Moreover,
+    %   $\avar \neq \cvar'$ since $\cvar' \notin \FV(\gamma(\bvar))$ by (**).
+    %   Hence, $\avar \in \FV(t') \setminus \{\cvar'\} = \FV(t)$.
+    % \end{itemize}
+\end{proof}
+
 \subsection{Combining substitutions}
 
 The proof that $(s\gamma)\delta = s(\gamma\delta)$ is actually quite complex,
-both due to abstraction and meta-application.  For this reason, we split it up
-into multiple smaller steps.
+due to the interplay of substitution and variable renaming.  For this reason,
+we split it up into multiple smaller steps.
 
 To start, let us define the combination of two substitutions as a relation:
 
@@ -1575,25 +1617,24 @@ Then there exists $u$ such that both $\subrel{t,\delta,u}$ and
 $\subrel{s,\eta,u}$.
 \end{lemma}
 
-Note that the requirements above all satisfied if $\domain(\gamma) \subseteq \V$
-and $\subrel{\gamma,\delta,\eta}$ and $\subrel{s,\gamma,t}$.  We phrase it more
-generally for the sake of an induction hypothesis.
+Note that the first three requirements above are satisfied if $\domain(\gamma)
+\subseteq \V$ and $\subrel{\gamma,\delta,\eta}$ and $\subrel{s,\gamma,t}$.  We
+phrase it more generally for the sake of a stronger induction hypothesis.
 
 \begin{proof}
 By induction on the size of $s$.
 
 In the case of an abstraction $s = \abs{\avar}{s'}$ and $t = \abs{\bvar}{t'}$,
 we choose the fresh variable $\cvar$ outside both $\FV(\delta(w))$ for all $w
-\in \FV(t) \cup \FMV(t)$, and $\FV(\eta(w))$ for all $w \in \FV(s) \cup
-\FMV(s)$.  Since $\delta$ extended with $[\bvar:=\cvar]$ and $\eta$ extended
-with $[\avar:=\cvar]$ are both substitutions with domain $\subseteq \Vbound$,
+\in \FV(t) \cup (\FMV(t) \cap \domain(\delta))$, and $\FV(\eta(w))$ for all
+$w \in \FV(s) \cup (\FMV(s) \cap \domain(\eta))$.
+Since $\delta$ extended with $[\bvar:=\cvar]$ and $\eta$ extended with
+$[\avar:=\cvar]$ are both substitutions with domain $\subseteq \Vbound$,
 we can apply the induction hypothesis.  The case of a meta-application
 $\meta{\Avar}{s_1,\dots,s_k}$ is trivial with the induction hypothesis if
 $\Avar \notin \domain(\delta)$, and quite easy using
 Lemma~\ref{lem:substdefined} if $\Avar \in \domain(\delta)$.
     % 
-    % TODO: update the proof to have $\domain(\gamma) \subseteq \Vbound$ instead
-    % of just containing variables
     % \begin{itemize}
     % \item If $s = \afun$ or $s = \avar \in \Vfree$ then $t = \afun$;
     %   we choose $u := \afun$ as well.
@@ -1672,9 +1713,207 @@ Lemma~\ref{lem:substdefined} if $\Avar \in \domain(\delta)$.
     % \end{itemize}
 \end{proof}
 
-=====================
+Lemma~\ref{lem:combinesubst:allbound} gives us an ``exists'' result.  If we
+additionally limit the domain of $\delta$ (and consequently $\eta$), we can also
+find a ``forall'' result:
 
-We use Lemma \ref{lem:combinesubst:allbound} to obtain the full result we want:
+\begin{lemma}\label{lem:combinesubst:gammadeltalimited}
+Let $s,t,u$ be terms and let $\gamma,\delta,\eta$ be substitutions, with:
+\begin{itemize}
+\item $\domain(\gamma) \cup \domain(\delta) \cup \domain(\eta) \subseteq \V$
+\item $\subrel{\gamma(\avar),\delta,\eta(\avar)}$ for all $\avar \in \FV(s)$
+\item $\subrel{s,\gamma,t}$
+\item $\subrel{s,\eta,u}$
+\end{itemize}
+Then $\subrel{t,\delta,u}$ as well.
+\end{lemma}
+
+\begin{proof}
+By induction on the size of $s$.  The only difficult case is abstraction:
+$s = \abs{\avar}{s'}$, $t = \abs{\bvar}{t'}$ and $u = \abs{\cvar}{u'}$.  The
+challenging part is to show that $\cvar \notin \FV(\delta(w))$ for any $w \in
+\FV(t)$.  We do this by finding a term $u'$ that is $\alpha$-equal to $u$ by
+Lemma~\ref{lem:combinesubst:allbound}, and use Lemma~\ref{lem:varinsubstitute}
+to show that if $\cvar \in \FV(\delta(w))$ then also $\cvar \in \FV(u)$, which
+gives the required contradiction.
+    % 
+    % \begin{itemize}
+    % \item If $s = \afun$ then $t = u = \afun$ as well, and indeed
+    %   $\subrel{t,\delta,u}$.
+    % \item If $s = \avar$ then $t = \gamma(\avar)$ and $u = \eta(\avar)$.
+    %   By assumption, $\subrel{\gamma(\avar),\delta,\eta(\avar)}$.
+    % \item If $s = h(s_1,\dots,s_n)$ then $t = w \cdot t_1 \cdots t_n$ and $u =
+    %   q \cdot u_1 \cdots u_n$ with $\subrel{h,\gamma,w}$ and $\subrel{h,\eta,u}$,
+    %   and both $\subrel{s_i,\gamma,t_i}$ and $\subrel{s_i,\gamma,u_i}$ as well.
+    %   By the induction hypothesis, $\subrel{w,\delta,q}$ and $\subrel{t_i,\delta,
+    %   u_i}$ for all $i$, so indeed $\subrel{t,\delta,u}$ by
+    %   Lemma~\ref{lem:appsubstitute}.
+    % \item If $s = \tuple{s_1}{s_n}$ then we similarly complete immediately by the
+    %   induction hypothesis.
+    % \item If $s = \meta{\Avar}{s_1,\dots,s_k}$ then we similarly complete by the
+    %   induction hypothesis, since $\Avar$ is not in the domain of any of the
+    %   substitutions.
+    % \item If $s = \abs{\avar}{s'}$ then $t = \abs{\bvar}{t'}$ with
+    %   $\bvar \notin \FV(\gamma(w))$ for any $w \in \FV(s)$, and we have
+    %   $\subrel{s',\gamma^{\avar:=\bvar},t'}$ where
+    %   $\gamma^{\avar:=\bvar} = [\avar:=\bvar] \cup [w:=\gamma(w) \mid w \in
+    %   \domain(\gamma) \setminus \{\avar\}]$.  Note that the domain of
+    %   $\gamma^{\avar:=\bvar}$ is also limited to variables.
+    %   Moreover, $u = \abs{\cvar}{u'}$ with $\cvar \notin \FV(\eta(w))$ for any
+    %   $w \in \FV(s)$, and we have $\subrel{s',\eta^{\avar:=\cvar},t'}$.
+    % 
+    %   Now suppose $\cvar \in \FV(\delta(w))$ for some $w \in \FV(t)$.  Let $u'$
+    %   be such that both $\subrel{t',\delta,u'}$ and $\subrel{s',\eta,u'}$; such
+    %   $u'$ exists by Lemma~\ref{lem:combinesubst:allbound}.
+    %   By Lemma~\ref{lem:varinsubstitute}, $\cvar \in \FV(u')$.  So by
+    %   Corollaries~\ref{corr:alphafreevar} and~\ref{cor:substitutionalpha},
+    %   also $\cvar \in \FV(u)$, which is clearly not the case.
+    %   We conclude that $\cvar \notin \FV(\delta(w))$ for any $w \in \FV(t)$.
+    % 
+    %   We also observe that $\domain(\gamma^{\avar:=\bvar}) \cup
+    %   \domain(\delta^{\bvar:=\cvar}) \cup \domain(\eta^{\avar:=\cvar}) \subseteq
+    %   \domain(\gamma) \cup \domain(\delta) \cup \domain(\eta) \cup \{\avar,\bvar\}
+    %   \subseteq \V$.  Moreover, for $w \in \FV(s')$ we have
+    %   $\subrel{\gamma^{\avar:=\bvar}(w),\delta^{\bvar:=\cvar},
+    %   \eta^{\avar:=\cvar}(w)}$:
+    %   \begin{itemize}
+    %   \item If $w = \avar$ then indeed $\subrel{\bvar,\delta^{\bvar:=\cvar},\cvar}$.
+    %   \item Otherwise, $w \in \FV(s)$ and $\gamma^{\avar:=\bvar}(w) = \gamma(w)$
+    %     and $\eta^{\avar:=\cvar}(w) = \eta(w)$.  Since $\bvar \notin \FV(\gamma(w))$
+    %     by assumption, we obtain from $\subrel{\gamma(w),\delta,\eta(w)}$ that also
+    %     $\subrel{\gamma(w),\delta^{\bvar:=\cvar},\eta(w)}$, which is exactly what we
+    %     need. \\
+    %   \end{itemize}
+    %   Hence, we can apply the induction hypothesis to deduce $\subrel{t',\delta^{
+    %   \bvar:=\cvar},u'}$.  This then gives us $\subrel{t,\delta,u}$.
+    %   \qedhere
+    % \end{itemize}
+\end{proof}
+
+We use this to obtain another ``forall'' result, where meta-variables \emph{are}
+allowed in the domain, but we expect substitutions of a specific form.
+
+\begin{lemma}\label{lem:combinesubst:special}
+Let $s,t,u,q_1,\dots,q_n$ be terms, $\avar_1,\dots,\avar_n,\bvar_1,\dots,\bvar_n
+\in \Vbound$ and $\delta$ a substitution with $\{\avar_1,\dots,\avar_n\} \cap
+\domain(\delta) = \emptyset$.  Suppose that
+$\subrel{s,[\avar_1:=\bvar_1,\dots,\avar_n:=\bvar_n] \cup \delta,t}$ and
+$\subrel{s,[\avar_1:=q_1,\dots,\avar_n:=q_n] \cup \delta,u}$. Suppose, moreover,
+that:
+\begin{itemize}
+\item each $\bvar_i \notin \FV(\delta(\cvar))$ for any $\cvar \in (\FV(s)
+  \setminus \{\avar_1,\dots,\avar_n\}) \cup (\FMV(s) \cap \domain(\delta))$
+\item if $\bvar_i = \bvar_j$ for some $i < j$ then $\avar_i \notin \FV(s)$
+  or $\avar_i = \avar_p$ for some $p > i$ as well.
+\end{itemize}
+Then we have $\subrel{t,[\bvar_1:=q_1,\dots,\bvar_n:=q_n],u}$ as well.
+\end{lemma}
+
+\begin{proof}
+By induction on the size of $s$.
+In the case of an abstraction, some careful checking of the restrictions on the
+binder variables shows that we can apply the induction hypothesis.  In the case
+of a meta-application, we use Lemma~\ref{lem:combinesubst:gammadeltalimited}.
+    % 
+    % \begin{itemize}
+    % \item If $s = \afun$ then $t = u = \afun$ as well, and indeed
+    %   $\subrel{t,[\vec{\bvar}:=\vec{q}],u}$ holds.
+    % \item If $s = \avar_i$ with $i$ maximal, then $t = \bvar_i$, and $u = q_i$.
+    %   Note that there is no $j > i$ such that $\bvar_i = \bvar_j$, since $i$ was
+    %   maximal and $\avar_i \in \FV(s)$.  Hence, $\subrel{\bvar,[\vec{\bvar}:=
+    %   \vec{q}],q_i}$ as well.
+    % \item If $s = \cvar \in \V \setminus \{\avar_1,\dots,\avar_n\}$, then $t = u =
+    %   \delta(\cvar)$.  Note that $\bvar_i \notin \FV(t)$ for any $i$ by the first
+    %   requirement.  Hence, by Lemma~\ref{lem:substitutionrefl}, we have
+    %   $\subrel{t,[\vec{\bvar}:=\vec{q}],u}$.
+    % \item If $s = h(s_1,\dots,s_n)$ with $n > 0$ then $t = w \cdot t_1 \cdots t_n$
+    %   with $\subrel{h,[\vec{\avar}:=\vec{\bvar}] \cup \delta,w}$ and
+    %   $\subrel{s_i,[\vec{\avar}:=\vec{\bvar}] \cup \delta,t_i}$ for all $i$.
+    %   Moreover, $u = v \cdot u_1 \cdots u_n$ with
+    %   $\subrel{h,[\vec{\avar}:=\vec{q}] \cup \delta,v}$ and
+    %   $\subrel{s_i,[\vec{\avar}:=\vec{q}] \cup \delta,u_i}$ for all $i$.
+    %   By the induction hypothesis, $\subrel{w,[\vec{\bvar}:=\vec{q}] \cup \delta,v}$
+    %   and $\subrel{t_i,\vec{\bvar}:=\vec{q}] \cup \delta,u_i}$ for all $i$, so
+    %   $\subrel{t,[\vec{\bvar}:=\vec{q}] \cup \delta,u}$ follows by
+    %   Lemma~\ref{lem:appsubstitute}.
+    % \item If $s = \tuple{s_1}{s_n}$ then $t = \tuple{t_1}{t_n}$ and $u = \tuple{
+    %   u_1}{u_n}$.  We immediately complete with the induction hypothesis.
+    % \item If $s = \abs{\avar_{n+1}}{s'}$ then $t = \abs{\bvar_{n+1}}{t'}$ and
+    %   $\subrel{s',[\avar_1:=\bvar_1,\dots,\avar_{n+1}:=\bvar_{n+1}] \cup
+    %   \delta_{\setminus\{\avar_{n+1}\}},t'}$, where
+    %   $\delta_{\setminus\{\avar_{n+1}\}} =
+    %   [\delta(\cvar) \mid \cvar \in \domain(\delta) \setminus \{\avar_{n+1}\}]$.
+    %   Note that:
+    %   \begin{itemize}
+    %   \item Let $\cvar \in (\FV(s') \setminus \{\avar_1,\dots,\avar_n,\avar_{n+1}\})
+    %     \cup (\FMV(s') \cap \domain(\delta_{\setminus\{\avar_{n+1}\}}))$.
+    % 
+    %     This exactly means that $\cvar \in (\FV(s) \setminus \{\avar_1,\dots,
+    %     \avar_n\}) \cup (\FMV(s) \cap \domain(\delta))$, so $\bvar_1,\dots,\bvar_n
+    %     \notin \FV(\delta(\cvar))$.
+    %     Moreover, $\bvar_{n+1} \notin \FV(\delta(\cvar))$ either, by definition of
+    %     the substitution relation on abstractions.
+    % 
+    %     Thus, $\bvar_i \notin \FV(\delta(\cvar))$ for $1 \leq i \leq n+1$.
+    %     Since $\cvar \neq \avar_{n+1}$, we also have $\bvar_i \notin
+    %     \FV(\delta_{\setminus\{\avar_{n+1}\}}(\cvar))$.
+    %   \item If $\bvar_i = \bvar_j$ for $i < j \leq n$ then $\avar_i \notin \FV(s)$
+    %     or $\avar_i = \avar_p$ for some $p > i$; in the former case, either
+    %     $\avar_i \notin \FV(s')$ either, or $\avar_i = \avar_{n+1}$ (and $n+1 > i$).
+    %     If $\bvar_i = \bvar_{n+1}$ with $i$ maximal ($\leq n$), then by choice of
+    %     $\bvar_{n+1}$ this variable does not occur in $\FV( ([\avar_1:=\bvar_1,
+    %     \dots,\avar_n:=\bvar_n] \cup \delta)(\cvar) )$ for any variable or
+    %     meta-variable $\cvar$ in $s$.  But (choosing $\cvar := \avar_i$), that
+    %     means that either $\avar_i \notin \FV(s)$, or $\avar_i = \avar_p$ for some
+    %     $n \geq p > i$.  Hence, $\avar_i \notin \FV(s')$ or $\avar_i = \avar_p$ for
+    %     some $n+1 \geq p > i$. \\
+    %   \end{itemize}
+    %   We also have $u = \abs{\cvar_{n+1}}{u'}$ and $\subrel{s',[\avar_1:=q_1,\dots,
+    %   \avar_n:=q_n,\avar_{n+1}:=\cvar_{n+1}] \cup \delta_{\setminus\{\avar_{n+1}\}},
+    %   u'}$.  Hence, by the induction hypothesis,
+    %   $\subrel{t',[\bvar_1:=q_1,\dots,\bvar_n:=q_n,\bvar_{n+1}:=\cvar_{n+1}] \cup
+    %   \delta_{\setminus\{\avar_{n+1}\}},u'}$.  This is exactly what we need to
+    %   obtain $\subrel{t,[\bvar_1:=q_1,\dots,\bvar_n:=q_n] \cup \delta,u}$.
+    % \item If $s = \meta{\Avar}{s_1,\dots,s_k}$ with $\Avar \notin \domain(\delta)$,
+    %   then $t = \meta{\Avar}{t_1,\dots,t_k}$ with $\subrel{s_i,[\vec{\avar}:=\vec{
+    %   \bvar}] \cup \delta,t_i}$ for all $i$, and $u = \meta{\Avar}{u_1,\dots,u_k}$
+    %   with $\subrel{s_i,[\vec{\avar}:=\vec{q}] \cup \delta,u_i}$ for all $i$.  By
+    %   the induction hypothesis, $\subrel{t_i,[\vec{\bvar}:=\vec{q}],u_i}$ for all
+    %   $i$, so we immediately obtain $\subrel{t,[\vec{\bvar}:=\vec{q}],u}$.
+    % \item Finally, if $s = \meta{\Avar}{s_1,\dots,s_k}$ with $\Avar \in
+    %   \domain(\delta)$, then write $\delta(\Avar) = \abs{\cvar_1 \dots \cvar_k}{w}$.
+    %   Then there exist $t_1,\dots,t_k$ and $u_1,\dots,u_k$ with
+    %   $\subrel{s_i,[\vec{\avar}:=\vec{\bvar}] \cup \delta,t_i}$ and
+    %   $\subrel{s_i,[\vec{\avar}:=\vec{q}] \cup \delta,u_i}$ for all $i$, such that
+    %   $\subrel{w,[\cvar_1:=t_1,\dots,\cvar_k:=t_k],t}$ and
+    %   $\subrel{w,[\cvar_1:=u_1,\dots,\cvar_k:=u_k],u}$.
+    %   By the induction hypothesis, each $\subrel{t_i,[\vec{\bvar}:=\vec{q}],u_i}$.
+    % 
+    %   Now write
+    %   $\gamma' = [\cvar_1:=t_1,\dots,\cvar_k:=t_k]$,
+    %   $\delta' = [\vec{\bvar}:=\vec{q}]$ and
+    %   $\eta' = [\cvar_1:=u_1,\dots,\cvar_k:=u_k]$.
+    %   All three substitutions have a domain $\subseteq \V$, and for all variables
+    %   $a \in \FV(w)$ we have $\subrel{\gamma'(a),\delta',\eta'(a)}$.
+    %   \begin{itemize}
+    %   \item If $a = \cvar_i$ with $i$ maximal, then $\gamma'(a) =
+    %     t_i$ and $\eta'(a) = u_i$, so $\subrel{\gamma'(a),\delta',\eta'(a)}$.
+    %   \item If $a \notin \{\cvar_1,\dots,\cvar_k\}$ then $\gamma'(a) = \eta'(a) =
+    %     a$.  Note that $a \notin \domain(\delta')$, since $a \in \FV(w) \setminus
+    %     \{\avar_1,\dots,\avar_k\} = \FV(\delta(\Avar))$, and by assumption
+    %     $\bvar_1,\dots,\bvar_n \notin \FV(\delta(a))$.
+    %     Hence, by Lemma~\ref{lem:substitutionrefl}, $\subrel{\gamma'(a),\delta',
+    %     \eta'(a)}$. \\
+    %   \end{itemize}
+    %   We also have $\subrel{w,\gamma',t}$ and $\subrel{w,\eta',u}$.
+    %   Hence, we can apply Lemma~\ref{lem:combinesubst:gammadeltalimited} to obtain
+    %   $\subrel{t,\delta',u}$, so $\subrel{t,[\vec{\bvar}:=\vec{q}],u}$.  This is
+    %   exactly what we need.
+    %   \qedhere
+    % \end{itemize}
+\end{proof}
+
+Finally, we combine all the above results to obtain the full result we want:
 
 \begin{lemma}\label{lem:combinesubst}
 Let $s,t$ be terms and let $\gamma,\delta,\eta$ be substitutions, such that:
@@ -1691,547 +1930,142 @@ Then there exists $u$ such that both $\subrel{t,\delta,u}$ and
 $\subrel{s,\eta,u}$.
 \end{lemma}
 
+(Note that if $\subrel{\gamma,\delta,\eta}$, the first three requirements are
+indeed satisfied.)
+
 \begin{proof}
 By induction on the size of $s$.
-
-\begin{itemize}
-\item If $s = \afun$ then $t = u = \afun$ and we are quickly done.
-\item If $s = \avar$ then let $u = \eta(\avar)$.
-\item If $s = h(s_1,\dots,s_n)$ or $\tuple{s_1}{s_n}$ then we complete by
-  induction.
-\item If $s = \meta{\Avar}{s_1,\dots,s_k}$ with $\Avar \notin \domain(\gamma)$
-  and $\Avar \notin \domain(\delta)$, then note that $\Avar \notin
-  \domain(\eta)$; by the induction hypothesis we find $u_i$ with $\subrel{s_i,
-  \eta,u_i}$ and $\subrel{t_i,\delta,u_i}$ for all $i$ and we can choose
-  $u := \meta{\Avar}{u_1,\dots,u_k}$.
-\item If $s = \meta{\Avar}{s_1,\dots,s_k}$ with $\avar \notin \domain(\gamma)$
-  but $\Avar \in \domain(\delta)$ then $t = \meta{\Avar}{t_1,\dots,t_k}$ and
-  we can find $u_i$ with $\subrel{s_i,\eta,u_i}$ and $\subrel{t_i,\delta,u_i}$.
-  Moreover, $\delta(\Avar) = \eta(\Avar)$.
-  If $\delta(\Avar) = \abs{\avar_1 \cdots \avar_k}{q}$ then choose $u$ such
-  that $\subrel{q,[\avar_1:=u_1,\dots,\avar_k:=u_k],u}$.  Then both
-  $\subrel{s,\eta,u}$ and $\subrel{t,\delta,u}$.
-\item If $s = \abs{\avar}{s'}$ then $t = \abs{\bvar}{t'}$ with $\bvar
-  \notin \FV(\gamma(w))$ for any $w \in \FV(s) \cup \FMV(s)$, and
-  $\subrel{s',\gamma^{\avar:=\bvar},t'}$.
-  Let $\cvar$ be a variable of the same type as $\avar$, which does not occur
-  in any $\delta(w)$ for variables or meta-variables $w$ in either $s$ or $t$.
-  Then $\gamma^{\avar:=\bvar},\delta^{\bvar:=\cvar}$ and $\eta^{\avar:=\cvar}$
-  satisfy the requirement to apply the induction hypothesis:
-  \begin{itemize}
-  \item $\domain(\eta^{\avar:=\cvar}) \setminus \V =
-    (\domain(\eta) \cup \{\avar\}) \setminus \V = \domain(\eta) \setminus \V =
-    (\domain(\gamma) \cup \domain(\delta)) \setminus \V =
-    (\domain(\gamma) \cup \{\avar\} \cup \domain(\delta) \cup \{\bvar\})
-    \setminus \V =
-    (\domain(\gamma^{\avar:=\bvar}) \cup \domain(\delta^{\bvar:=\cvar}))
-    \setminus \V$
-  \item $\subrel{\gamma^{\avar:=\bvar}(w),\delta^{\bvar:=\cvar},\eta^{\avar:=
-    \cvar}(w)}$ for all $w \in \FV(s') \cup (\FMV(s') \cap \domain(\gamma^{
-    \avar:=\bvar}))$:
-    \begin{itemize}
-    \item if $w = \avar$, then indeed $\subrel{\bvar,\delta^{\bvar:=\cvar},
-      \cvar}$
-    \item if not, $\gamma^{\avar:=\bvar}(w) = \gamma(w)$ and $w \in \FV(s) \cup
-      (\FMV(s) \cap \domain(\gamma))$. Since $w \in \FV(s') \setminus \{\avar\}$
-      we have $w \in \FV(s)$, so $\bvar \notin \FV(\gamma(w))$.
-      Hence, by Lemma~\ref{lem:substextend},
-      $\subrel{\gamma(w),\delta,\eta(w)}$ implies $\subrel{\gamma(w),
-      \delta^{\bvar:=\cvar},\eta(w)}$.  This suffices because
-      $\eta(w) = \eta^{\avar:=\cvar}(w)$.
-    \item for meta-variables $\Avar$, $\delta^{\bvar:=\cvar}(\Avar) =
-      \delta(\Avar)$ and $\eta^{\avar:=\cvar}(\Avar) = \eta(\Avar)$, so the
-      third requirement is still satisfied
-    \item $\subrel{s',\gamma^{\avar:=\bvar},t'}$ is given. \\
-    \end{itemize}
-    Hence, we find $u'$ such that both $\subrel{t',\delta^{\bvar:=\cvar},u'}$
-    and $\subrel{s',\eta^{\avar:=\cvar},u'}$.  We are done choosing
-    $u = \abs{\cvar}{u'}$.
-  \end{itemize}
-\item This leaves only the case $s = \meta{\Avar}{s_1,\dots,s_k}$ with
-  $\Avar \in \domain(\gamma)$; let $\gamma(\Avar) = \abs{\avar_1 \dots
-  \avar_k}{a}$.  We make a number of observations.
-  \begin{enumerate}
-  \item\label{obs:stot}
-    there exist $t_1,\dots,t_k$ such that
-    $\subrel{s_i,\gamma,t_i}$ for all $i$, and
-    $\subrel{a,[\avar_1:=t_1,\dots,\avar_k:=t_k],t}$
-  \item\label{obs:stoui}
-    there exist $u_1,\dots,u_k$ such that both
-    $\subrel{t_i,\delta,u_i}$ and $\subrel{s_i,\eta,u_i}$ for all $i$
-    \\ (by the induction hypothesis and \ref{obs:stot})
-  \item\label{obs:etaX}
-    we can write $\eta(\Avar) = \abs{\bvar_1 \dots \bvar_k}{b}$ with
-    $\subrel{a,\delta^{\avar_1:=\bvar_1,\dots,\avar_k:=\bvar_k},b}$
-    \\ (by Lemma~\ref{lem:abssubst} because $\subrel{\gamma(\Avar),\delta,
-    \eta(\Avar)}$)
-  \item\label{obs:bvari}
-    each $\bvar_i \notin \FV(\delta(\cvar))$ for any $\cvar \in \FV(a)
-    \setminus \{\avar_1,\dots,\avar_k\}$
-    \\ (also by Lemma~\ref{lem:abssubst})
-  \item if $\bvar_i = \bvar_j$ for some $i < j$ then $\avar_i \notin
-    \FV(a)$ or $\avar_i = \avar_l$ for some $l > i$
-    \\ (also by Lemma~\ref{lem:abssubst})
-  \end{enumerate}
-  By (\ref{obs:stot}) and Lemma~\ref{lem:combinesubst:allbound} we obtain that
-  some $u$ exists such that both $\subrel{t,\delta,u}$, and
-  $\subrel{a,\zeta,u}$ where $\zeta$ is any substitution with
-  $\subrel{[\avar_1:=t_1,\dots,\avar_k:=t_k],\delta,\zeta}$.
-\end{itemize}
-
-====================
-
-Needed: we need to define $\zeta$ in such a way that we can get from
-$\subrel{a,\delta^{\avar_1:=\bvar_1,\dots,\avar_k:=\bvar_k},b}$ and
-$\subrel{a,\zeta,u}$ that also $\subrel{b,[\vec{y}:=\vec{u}],u}$---which is a
-result in the other direction.  I think this has potential because the second
-substitution $[\vec{\bvar}:=\vec{u}]$ has as domain exactly the variables that
-the $\avar_i$ are mapped to.
-\end{proof}
-
-\newcommand{\aprel}[1]{\mathsf{ap}(#1)}
-
-From Lemma \ref{lem:combinesubst:allbound}, we obtain the following helper result regarding superapplication:
-
-\begin{lemma}\label{lem:boundsubsthelper}
-Suppose:
-\begin{itemize}
-\item $\domain(\gamma) \subseteq \Vbound$ and $\FV(a) \cap \domain(\gamma) = \emptyset$,
-\item $\aprel{a, [s_1,\dots,s_n], s}$,
-\item $\subrel{s_i,\gamma,t_i}$ for $1 \leq i \leq n$.
-\end{itemize}
-Then there exists $t$ such that $\aprel{a,[t_1,\dots,t_n],t}$ and $\subrel{s,\gamma,t}$.
-\end{lemma}
-
-That is, if $\gamma$ does not affect the free variables in $a$, then
-$\superapply(a,[s_1,\dots,s_n])\gamma = \superapply(a,[s_1\gamma,\dots,s_n\gamma])$.
-We limit interest to $\gamma$ with domain in $\Vbound$ since we only need it in this form,
-and this avoids the meta-application case.
-
-\begin{proof}
-We can always write $a = \abs{\avar_1 \dots \avar_k}{b}$ with either $k = n$ or $k < n$ and
-$b$ not an abstraction.
-Then $\aprel{a,[s_1,\dots,s_n],s}$ implies $\subrel{b,[\avar_1:=s_1,\dots,\avar_k:=s_k],s'}$
-for some $s'$ such that $s = s' \cdot s_{k+1} \cdots s_n$ (if $k = n$, then $s = s'$).
-%
-We apply Lemma \ref{lem:combinesubst:allbound} to obtain $t'$ such that both
-$\subrel{s',\gamma,t'}$ and $\subrel{b,\eta,t'}$, and are done choosing $t := t \cdot t_{k+1}
-\cdots t_n$.
-    % Write $\chi := [\avar_k:=s_1,\dots,\avar_k:=s_n]$, and let $\eta := [\avar_k:=t_1,\dots,t_k]$.
-    % Then:
-    % \begin{itemize}
-    % \item As $\{\avar_1,\dots,\avar_k\} \subseteq \Vbound$, each of $\chi$, $\gamma$ and $\eta$ has a
-    %   domain $\subseteq \Vbound$.
-    % \item We have $\subrel{\chi(\bvar),\gamma,\eta(\bvar)}$ for all $\bvar \in \FV(b)$:
-    %   \begin{itemize}
-    %   \item if $\bvar = \avar_i$ this holds because $\subrel{s_i,\gamma,t_i}$ by assumption;
-    %   \item otherwise, $\chi(\bvar) = \eta(\bvar) = \bvar$, and it holds because $\gamma(\avar) =
-    %     \avar$ too: $\FV(a) \cap \domain(\gamma) = \emptyset$, so since $\bvar \in \FV(a)$
-    %     necessarily $\bvar \notin \domain(\gamma)$
-    %   \end{itemize}
-    % \item As noted above, we have $\subrel{b,\chi,s}$.
-    % \end{itemize}
-    % Hence we can apply Lemma \ref{lem:combinesubst:allbound} to obtain $t'$ such that both
-    % $\subrel{s',\gamma,t'}$ and $\subrel{b,\eta,t'}$.
-    % Let $t := t' \cdot t_{k+1} \cdots t_n$.  Then:
-    % \begin{itemize}
-    % \item $\subrel{s,\gamma,t}$ by Lemma \ref{lem:appsubstitute};
-    % \item $\aprel{a,[t_1,\dots,t_n],t}$ by definition.
-    %   \qedhere
-    % \end{itemize}
-\end{proof}
-
-%The next helper result is phrased in a very technical way so as to be usable in other proofs, but
-%it essentially expands on Lemma \ref{lem:combinesubst:allbound} by allowing the second substitution,
-%but not the first, to have non-binder variables in its domain.  It is not quite the same, however;
-%rather than showing that $(s\gamma)\delta = s(\gamma\delta)$ it states that, under certain
-%restrictions, $(s\gamma)\delta = s\delta_1(\gamma\delta)_2$, where $\delta_1$ is the
-%restriction of $\delta$ to variables which do not occur in $\domain(\gamma)$, and $(\gamma\delta)_2$
-%is the restriction of $\gamma\delta$ to variables in the domain of $\gamma$.
-%This for instance allows us to conclude that $a[\avar_1:=s_1,\dots,\avar_k:=s_k]\delta =
-%a[\avar_1:=s_1\delta,\dots,\avar_k:=s_k\delta]$ if $\FV(s) \cap (\domain(\delta) \setminus
-%\{\avar_1,\dots,\avar_k\}) = \emptyset$.
-%
-%\begin{lemma}\label{lem:combinesubst:gammabound}
-%Let $\domain(\gamma),\domain(\eta) \subseteq \Vbound$ with $\eta$ having a finite domain,
-%$s$ a term, and $\chi$ a mapping from $\Vbound$ to $\Vbound$, such that:
-%\begin{itemize}
-%\item $\subrel{s,\gamma,t}$
-%\item $\subrel{\gamma(\avar),\delta,\eta(\chi(\avar))}$ for all $\avar \in \domain(\gamma) \cap
-%  \FV(s)$
-%\item $\domain(\eta) \cap \FV(\delta(\avar)) = \emptyset$ for all $\avar \in \FV(s) \setminus
-%  \domain(\gamma)$
-%\item $\subrel{s,\delta^\chi,q}$, where $\delta^\chi$ is the substitution with
-%  $\delta^\chi(\avar) = \chi(\avar)$ if $\avar \in \domain(\gamma)$ and $\delta^\chi(\avar) =
-%  \delta(\avar)$ otherwise.
-%\end{itemize}
-%Then there exists $u$ such that both $\subrel{t,\delta,u}$ and $\subrel{q,\eta,u}$.
-%\end{lemma}
-%
-%\begin{proof}
-%We prove the result by induction on the size of $s$.
-%
-%\begin{itemize}
-%\item If $s = h(s_1,\dots,s_n)$ with $n > 0$ then:
-%  \begin{itemize}
-%  \item $t = v_0 \cdot v_1 \cdots v_n$ with $\subrel{h,\gamma,v_0}$ and $\subrel{s_i,\gamma,v_i}$
-%    for $1 \leq i \leq n$, and
-%  \item $q = w_0 \cdot w_1 \cdots w_n$ with $\subrel{h,\delta^\chi,w_0}$ and
-%    $\subrel{s_i,\delta^\chi,w_i}$ for $1 \leq i \leq n$.
-%  \end{itemize}
-%  \ \\
-%  Hence, by the induction hypothesis, there exist $u_0,\dots,u_n$ with
-%  $\subrel{v_i,\delta,u_i}$ and $\subrel{w_i,\eta,u_i}$ for $0 \leq i \leq n$.
-%  Choose $u := u_0 \cdot u_1 \cdots u_n$. Then both
-%  $\subrel{t,\delta,u}$ and $\subrel{q,\eta,u}$ by Lemma \ref{lem:appsubstitute}.
-%\item If $s = \afun$ then necessarily $t = q = \afun$ as well; we let $u := \afun$.
-%\item If $s = \avar \in \domain(\gamma)$ then $t = \gamma(\avar)$ and $q = \delta^\chi(\avar) =
-%  \chi(\avar)$.  We choose $u := \eta(\chi(\avar))$.  Then by assumption $\subrel{t,\delta,u}$
-%  (since $\avar \in \FV(s) \cap \domain(\gamma)$) and by definition $\subrel{q,\eta,u}$.
-%\item If $s = \avar \in \V \setminus \domain(\gamma)$, then $t = \avar$ and $q = \delta(\avar)$.
-%  We choose $u := q$.  Then clearly $\subrel{t,\delta,u}$.  Since $\domain(\eta) \cap \FV(q) =
-%  \emptyset$ we have $\subrel{q,\eta,u}$ by Lemma \ref{lem:substitutionrefl}.
-%\item If $s = \abs{\avar}{s'}$ then $t = \abs{\bvar_1}{t'}$ and $q = \abs{\bvar_2}{q'}$ with:
-%  \begin{itemize}
-%  \item $\bvar_1 \notin \FV(\gamma(w))$ for any $w \in \FV(s) = \FV(s') \setminus \{\avar\}$
-%  \item $\bvar_2 \notin \FV(\delta^\chi(w))$ for any $w \in \FV(s) = \FV(s') \setminus \{\avar\}$
-%  \end{itemize}
-%  \ \\
-%  Let $\cvar$ be a variable of the same type as $\avar$, such that $\cvar \notin \FV(\delta(w))$
-%  for any $w \in \FV(t)$, $\cvar \notin \FV(\eta(w))$ for any $w \in \FV(q)$, $\cvar \neq \bvar_2$
-%  and $\cvar \notin \domain(\eta)$.
-%  Since there are infinitely many binder variables of all types, we can always find such $\cvar$.
-%  Now let:
-%  \begin{itemize}
-%  \item $\gamma^{\avar:=\bvar_1} := [\avar:=\bvar_1] \cup [w:=\gamma(w) \mid w \in \domain(\gamma)
-%    \setminus \{\avar\}$
-%  \item $\delta^{\bvar_1:=\cvar} := [\bvar_1:=\cvar] \cup [w:=\delta(w) \mid w \in \domain(\delta)
-%    \setminus \{\bvar\}]$
-%  \item $\eta^{\bvar_2:=\cvar} := [\bvar_2:=\cvar] \cup [w:=\eta(w) \mid w \in \domain(\eta)
-%    \setminus \{\bvar\}]$
-%  \item $\chi^{\avar:=\bvar_2} := [\avar:=\bvar_2] \cup [w := \chi(w) \mid w \in \domain(\chi)
-%    \setminus \{\avar\}]$
-%  \end{itemize}
-%  \ \\
-%  We can apply the induction hypothesis, because:
-%  \begin{itemize}
-%  \item $\domain(\gamma^{\avar:=\bvar_1}),\domain(\eta^{\bvar_2:=\cvar}) \subseteq \Vbound$;
-%  \item $\subrel{s',\gamma^{\avar:=\bvar},t'}$ follows from $\subrel{s,\gamma,t}$
-%  \item $\subrel{\gamma^{\avar:=\bvar_1}(w),\delta^{\bvar_1:=\cvar},\eta^{\bvar_2:=\cvar}(\chi^{
-%    \avar:=\bvar_2}(w))}$ for all $w \in \FV(s') \cap \domain(\gamma^{\avar:=\bvar})$:
-%    \begin{itemize}
-%    \item if $w = \avar$ then this exactly says $\subrel{\bvar_1,\delta^{\bvar_1:=\cvar},\cvar}$,
-%      which clearly holds;
-%    \item otherwise, we must show $\subrel{\gamma(w),\delta^{\bvar_1:=\cvar},\eta^{\bvar_2:=\cvar}(
-%      \chi(w))}$; since $\bvar_2 \notin \FV(\delta^\chi(w))$ because $w \in \FV(s') \setminus \{
-%      \avar\}$, clearly $\chi(w) \neq \bvar_2$, so $\eta^{\bvar_2:=\cvar}(\chi(w)) =
-%      \eta(\chi(w))$; and since $\bvar_1 \notin \FV(\gamma(w))$, Lemma \ref{lem:substextend} allows
-%      us to derive $\subrel{\gamma(w),\delta^{\bvar_1:=\cvar},\eta(\chi(w))}$ from
-%      $\subrel{\gamma(w),\delta,\eta(\chi(w))}$
-%    \end{itemize}
-%  \item $\domain(\eta^{\bvar_2:=\cvar}) \cap \FV(\delta^{\bvar_1:=\cvar}(w)) = \emptyset$ for all
-%    $w \in \FV(s') \setminus \domain(\gamma^{\avar:=\bvar_1})$:
-%    \begin{itemize}
-%    \item if $w = \bvar_1$ then $\delta^{\bvar_1:=\cvar}(w) = \cvar$, and since we chose
-%      $\cvar \neq \bvar_2$ and $\cvar \notin \domain(\eta)$, the overlap is empty
-%    \item otherwise, if $w = \avar$ then $w \notin \FV(s') \setminus
-%      \domain(\gamma^{\avar:=\bvar_1})$;
-%    \item otherwise, note that note that since $w \notin \domain(\gamma^{\avar:=\bvar})$ and $w \neq
-%      \avar$ implies $w \notin \domain(\gamma)$, so $\delta^{\bvar_1:=\cvar}(w) = \delta(w) =
-%      \delta^\chi(w)$; we both have $\bvar_2 \notin \FV(\delta^\chi(w))$ and $\domain(\eta) \cap
-%      \FV(\delta^\chi(w)) = \emptyset$, so $\eta^{\bvar_2:=\cvar} \cap \FV(\delta^{\bvar_1:=\cvar}(w))
-%      = \emptyset$ as well
-%    \end{itemize}
-%  \item ====================
-%  \item $\subrel{s',\delta',q'}$, where $\delta'$ is the substitution with $\delta'(w) =
-%    \chi^{\avar:=\bvar_2}(w)$ if $w \in \domain(\gamma^{\avar:=\bvar_1})$ and $\delta'(w) =
-%    \delta^{\bvar_1:=\cvar}(w)$ otherwise:
-%    \begin{itemize}
-%      \item from $\subrel{s,\delta^\chi,q}$ we obtain $\subrel{s',\delta_2,q'}$, where
-%        $\delta_2(\avar) = \bvar_2$ and $\delta_2(w) = \delta^\chi(w)$ for all other $w$;
-%      \item for all $w \in \FV(s')$: $\delta'(w) = \delta_2(w)$:
-%        \begin{itemize}
-%        \item if $w = \avar$ and $\avar = \bvar_1$, then PROBLEM
-%        \end{itemize}
-%      \item hence, by Lemma \ref{lem:substextend}, also $\subrel{s',\delta',q'}$
-%    \end{itemize}
-%  \end{itemize}
-%  \ \\
-%  NODIG: $\subrel{t', \delta^{\bvar_1:=\cvar}, u'}$ and
-%  $\subrel{q',\eta^{\bvar_2:=\cvar}, u'}$
-%
-%
-%\item ======================
-%\item If $s = \meta{\avar}{s_1,\dots,s_k}$ then $\avar \in \Vbound$ so $\avar \notin
-%  \domain(\gamma)$.  Hence, $t = \meta{\avar}{t_1,\dots,t_k}$ with $\subrel{s_i,\gamma,t_i}$ for
-%  $1 \leq i \leq k$.  Moreover, $\delta^\chi(\avar) = \delta(\avar)$, so
-%  $\aprel{\delta(\avar),[q_1,\dots,q_k],q}$, where $\subrel{s_i,\delta^\chi,q_i}$ for $1 \leq i
-%  \leq k$.  We apply the induction hypothesis to find $u_1,\dots,u_k$ such that
-%  $\subrel{t_i,\delta,u_i}$ and $\subrel{q_i,\eta,u_i}$ for $1 \leq i \leq k$.
-%
-%  Now, we have:
-%  \begin{itemize}
-%  \item $\domain(\eta) \subseteq \Vbound$ and $\FV(\delta(\avar)) \cap \domain(\eta) = \emptyset$
-%    by assumption
-%  \item $\aprel{\delta(\avar),[q_1,\dots,q_k],q}$
-%  \item $\subrel{q_i,\eta,u_i}$ for $1 \leq i \leq k$
-%  \end{itemize}
-%  \ \\
-%  Hence, by Lemma \ref{lem:boundsubsthelper}, there exists $u$ such that both
-%  $\aprel{\delta(\avar),[u_1,\dots,u_k],u}$ and $\subrel{q,\eta,u}$.  We obtain
-%  $\subrel{t,\delta,u}$ from $\aprel{\delta(\avar),[u_1,\dots,u_k],u}$ and
-%  $\subrel{t_i,\delta,u_i}$ for all $i$.
-%\end{itemize}
-%\end{proof}
-
-The next helper result roughly states that $a[\avar_1:=s_1,\dots,\avar_k:=s_k]\gamma =
-(a\gamma')[\avar_1:=s_1\gamma,\dots,\avar_k:=s_k\gamma]$ if the $\avar_i$ do not occur in the range
-of $\gamma$, where $\gamma'$ is the restriction of $\gamma$ to variables other than $\avar_1,\dots,
-\avar_k$.  It is a bit more general, allowing also for a renaming of the variables $\avar_i$; we
-will need it in this form for Lemma \ref{lem:combinesubsthelper}.
-
-\begin{lemma}\label{lem:switchordercombihelper}
-Assume given variables $\bvar_i,\cvar_i \in \Vbound$ for $1 \leq i \leq k$,
-a substitution $\delta$,
-and terms $a,b,t_1,\dots,t_k,v_1,\dots,v_k$ such that:
-\begin{itemize}
-\item $\subrel{a,[\bvar_1:=t_1,\dots,\bvar_k:=t_k],t}$
-\item $\subrel{t_i,\delta,v_i}$ for $1 \leq i \leq k$ if $\bvar_i \neq \bvar_j$ for any $j > i$ and
-  $\bvar_i \in \FV(a)$
-\item $\subrel{a,\delta^{\vec{\bvar}:=\vec{\cvar}},b}$ where $\delta^{\vec{\bvar}:=\vec{\cvar}}$ is the
-  substitution with $\delta^{\vec{\bvar}:=\vec{\cvar}}(\bvar_i) = \cvar_i$ if there is no $j > i$ with
-  $\bvar_i = \bvar_j$, and $\delta^{\vec{\bvar}:=\vec{\cvar}}(\avar) = \delta(\avar)$ if $\avar \notin
-  \{\bvar_1,\dots,\bvar_n\}$
-\item each $\cvar_i \notin \FV(\delta(\avar))$ for any $\avar \in \FV(a) \setminus \{\bvar_1,\dots,\bvar_n\}$
-\item if $\cvar_i = \cvar_j$ for some $j > i$, then $\bvar_i \notin \FV(a)$ or $\bvar_i = \bvar_l$ for some $l > i$ 
-\end{itemize}
-Then there exists $u$ such that $\subrel{t,\delta,u}$ and $\subrel{b,[\cvar_1:=v_1,\dots,\cvar_k:=
-v_k],u}$.
-\end{lemma}
-
-\begin{proof}
-We prove the result by induction on the size of $a$.  We use
-
-We use Lemma \ref{lem:appsubstitute} for the case of $a$ being an application $h(s_1,\dots,s_n)$ with $n > 0$;
-Lemma \ref{lem:substitutionrefl} for the case of a variable $\avar \notin \{\bvar_1,\dots,\avar_k\}$;
-Lemma \ref{lem:substextend} and careful variable renaming for the case of an abstraction (we let
-$a = \abs{\bvar_{k+1}}{a'}$ and $b = \abs{\cvar_{k+1}}{b'}$); and
-Lemma \ref{lem:boundsubsthelper} for the case of a meta-application.
-    % \begin{itemize}
-    % \item If $a = h(s_1,\dots,s_n)$ with $n > 0$ then:
-    %   \begin{itemize}
-    %   \item $t = q_0 \cdot q_1 \cdots q_n$ with $\subrel{h,[\bvar_1:=t_1,\dots,\bvar_k:=t_k],q_0}$ and
-    %     $\subrel{s_i,[\bvar_1:=t_1,\dots,\bvar_k:=t_k],q_i}$ for $1 \leq i \leq n$, and
-    %   \item $b = w_0 \cdot w_1 \cdots w_n$ with $\subrel{h,\delta^{\vec{\bvar}:=\vec{\cvar}},w_0}$ and
-    %     $\subrel{s_i,\delta^{\vec{\bvar}:=\vec{\cvar}},w_i}$ for $1 \leq i \leq n$.
-    %   \end{itemize}
-    %   \ \\
-    %   Hence, by the induction hypothesis, there exist $u_0,\dots,u_n$ with
-    %   $\subrel{q_i,\delta,u_i}$ and $\subrel{w_i,[\cvar_1:=v_1,\dots,\cvar_k:=v_k],u_i}$ for $0 \leq i
-    %   \leq n$.  Choose $u := u_0 \cdot u_1 \cdots u_n$. Then:
-    %   \begin{itemize}
-    %   \item $\subrel{t,\delta,u}$ by Lemma \ref{lem:appsubstitute}, because $t = q_0 \cdots q_n$,
-    %     $u = u_0 \cdots u_n$, and each $\subrel{q_i,\delta,u_i}$
-    %   \item $\subrel{b,[\cvar_1:=v_1,\dots,\cvar_k:=v_k],u}$ also by Lemma \ref{lem:appsubstitute}.
-    %   \end{itemize}
-    % \item If $a = \afun$ then necessarily $t = b = \afun$ as well; we let $u := \afun$.
-    % \item If $a = \bvar_i$ for some $i$, we can safely assume that there is no $j > i$ with $a =
-    %   \bvar_j$ (otherwise we just consider $\bvar_j$).  Then $t = t_i$, and $b = \cvar_i$.
-    %   By assumption, $\subrel{t_i,\delta,v_i}$ and since clearly $\bvar_i \in \FV(a)$, there is no
-    %   $j > i$ with $\cvar_i = \cvar_j$.  Hence, we have $\subrel{b,[\cvar_1:=v_1,\dots,\cvar_k:=v_k],
-    %   b_i}$ as well.  We are done choosing $u := v_i$.
-    % \item If $a = \avar \in \V \setminus \{\bvar_1,\dots,\bvar_k\}$ then $t = \avar$ and $b =
-    %   \delta(\avar)$.  Choose $u := \delta(\avar)$.  Then obviously $\subrel{t,\delta,u}$.  Also
-    %   $\subrel{b,[\cvar_1:=u_1,\dots,\cvar_k:=u_k],u}$ by Lemma \ref{lem:substitutionrefl}, since
-    %   $\cvar_1,\dots,\cvar_i \notin \FV(\delta(\avar))$ by assumption.
-    % \item If $a$ is an abstraction, then we can write:
-    %   \begin{itemize}
-    %   \item $a = \abs{\bvar_{k+1}}{a'}$
-    %   \item $t = \abs{\avar}{t'}$ with $\avar \notin \FV(a) \setminus \{\bvar_1,\dots,\bvar_k\}$ (X0);
-    %     $\avar \notin \FV(t_i)$ for any $i$ with $\bvar_i \in \FV(a)$
-    %     if there is no $j > i$ with $\bvar_j = \bvar_i$ (X1);
-    %     moreover, $\subrel{a',[\bvar_1:=t_1,\dots,\bvar_k:=t_k,\bvar_{k+1}:=\avar],t'}$ (X2);
-    % %  \item $b = \abs{\cvar_{k+1}}(b')$ with $\cvar_{k+1} \notin \FV(\delta^{\vec{\bvar}:=\vec{\cvar}}(
-    % %    w))$ for any $w \in \FV(a)$
-    % %    \begin{itemize}
-    % %    \item[] (that is, for $w \in \FV(a') \setminus \{\bvar_{k+1}\}$ we have:
-    % %      \begin{itemize}
-    % %      \item if $w = \bvar_i$ such that no $j > i$ exists with $w = \bvar_j$: $\cvar_{k+1} \neq \cvar_i$
-    % %      \item otherwise, $\bvar_{k+1} \notin \FV(\delta(w))$
-    % %      \end{itemize}
-    % %      \ \\)
-    % %    \end{itemize}
-    % %    \ \\and $\subrel{a',\delta^{\bvar_1:=\cvar_1,\dots,\bvar_{k+1}:=
-    % %    \cvar_{k+1}},b'}$
-    %   \item $b = \abs{\cvar_{k+1}}{b'}$ with $\cvar_{k+1} \notin \FV(\delta^{\bvar_1:=\cvar_1,\dots,
-    %     \bvar_k:=\cvar_k}(w))$ for any $w \in \FV(a') \setminus \{\bvar_{k+1}\}$ (X3)
-    %     and we have $\subrel{a',\delta^{\bvar_1:=\cvar_1,\dots,
-    %     \bvar_{k+1}:=\cvar_{k+1}},b'}$ (X4)
-    %   \end{itemize}
-    %   \ \\
-    %   Now let $\avar'$ be a variable in $\Vbound$ such that $\avar' \notin \{\bvar_1,\dots,\bvar_{k+1},
-    %   \cvar_1,\dots,\cvar_{k+1}\}$
-    %   and let $\delta' := [\avar:=\avar'] \cup [w := \delta(w) \mid w \in \domain(\delta) \setminus
-    %   \{\avar\}]$.
-    %   Then we can apply the induction hypothesis on $(\bvar_1,\dots,\bvar_{k+1}),(\cvar_1,\dots,
-    %   \cvar_{k+1}),\delta',a',b',(t_1,\dots,t_k,\avar),(v_1,\dots,v_k,\avar')$:
-    %   \begin{itemize}
-    %   \item $\subrel{a',[\bvar_1:=t_1,\dots,\bvar_k:=t_k,\bvar_{k+1}:=\avar],t'}$ by (X2);
-    %   \item for $1 \leq i \leq k$, if $\bvar_i \in \FV(a')$ and there is no $j \in \{i+1,\dots,k+1\}$
-    %     with $\bvar_i = \bvar_j$, then both $\bvar_i \in \FV(a)$ (since $\bvar_i \in \FV(a') \setminus
-    %     \{\bvar_{k+1}\}$) and $\subrel{t_i,\delta,v_i}$ is assumed, so since $\avar \notin \FV(t_i)$ by
-    %     (X1) also $\subrel{t_i,\delta',v_i}$ by Lemma \ref{lem:substextend}; \\
-    %     clearly also $\subrel{\avar,\delta',\avar'}$
-    %   \item $\subrel{a',(\delta')^{\bvar_1:=\cvar_1,\dots,\bvar_{k+1}:=\cvar_{k+1}},b'}$ by (X3) and
-    %     Lemma \ref{lem:substextend}: if $\avar \in \FV(a')$ then by (X0) $\avar \in \{\bvar_1,\dots,
-    %     \bvar_{k+1}\}$, so the assignment is removed by the $[\bvar_1:=\cvar_1,\dots,\bvar_{k+1}:=
-    %     \cvar_{k+1}]$ replacement;
-    %   \item for $1 \leq i \leq k$ we have $\cvar_i \notin \FV(\delta(w))$ for any $w \in \FV(a)
-    %     \setminus \{\bvar_1,\dots,\bvar_k\} = \FV(a') \setminus \{\bvar_1,\dots,\bvar_{k+1}\}$ and
-    %     therefore also $\cvar_i \notin \FV(\delta'(w))$ if $w \neq \avar$; and $\cvar_i \notin
-    %     \FV(\delta'(\avar))$ because $\delta(\avar) = \avar'$ which we chose unequal to all
-    %     $\cvar_i$; \\
-    %     we also have $\cvar_{k+1} \neq \avar' = \delta'(\avar)$, and $\cvar_i \notin \FV(\delta(w))$
-    %     for any other $w \in \FV(a') \setminus \{\bvar_1,\dots,\bvar_{k+1}\}$ by (X3): on this
-    %     domain, $\delta'(w) = \delta(w)$
-    %   \item if $\cvar_i = \cvar_j$ for some $i < j \leq k$ then by assumption either $\bvar_i =
-    %     \bvar_l$ for some $l > j$, or $\bvar_i \notin \FV(a) = \FV(a') \setminus \{\bvar_{k+1}\}$;
-    %     so in the latter case, $\bvar_i \notin \FV(a')$ or $\bvar_i = \bvar_{k+1}$ \\
-    %     otherwise, if $\cvar_i = \cvar_{k+1}$ for some $i < k+1$ then by (X3), $\bvar_i \notin
-    %     \FV(a') \setminus \{\bvar_{k+1}\}$
-    %   \end{itemize}
-    %   \ \\
-    %   Hence, by the induction hypothesis, there exists $u'$ such that $\subrel{t',\delta',u'}$ and
-    %   $\subrel{b',[\cvar_1:=v_1,\dots,\cvar_k:=v_k,\cvar_{k+1}:=\avar'],u'}$.  We are done choosing
-    %   $u := \abs{\avar'}{u'}$.
-    % \item ========================
-    % \item If $a = \meta{\avar}{s_1,\dots,s_n}$ then $\avar \in \Vfree$ so $\avar \notin \{\bvar_1,
-    %   \dots,\bvar_k\}$.  Hence, $t = \meta{\avar}{q_1,\dots,q_n}$ with $\subrel{s_i,[\bvar_1:=t_1,
-    %   \dots,\bvar_k:=t_k],q_i}$ for $1 \leq i \leq n$.  Moreover, $\delta^\chi(\avar) = \delta(\avar)$
-    %   since $\avar \notin \{\cvar_1,\dots,\cvar_n\}$.
-    %   
-    %   First suppose $\avar \notin \domain(\delta)$.  Then $b = \meta{\avar}{w_1,\dots,w_n}$ with
-    %   $\subrel{s_i,\delta^\chi,w_i}$ for $1 \leq i \leq n$.  By the induction hypothesis, there exist
-    %   $u_1,\dots,u_n$ such that $\subrel{q_i,\delta,u_i}$ and
-    %   $\subrel{w_i,[\bvar_1:=v_1,\dots,\bvar_n:=v_n],u_i}$ for $1 \leq i \leq n$; we are done
-    %   choosing $u = \meta{\avar}{u_1,\dots,u_n}$.
+Mostly this is the same as the proof of Lemma~\ref{lem:combinesubst:allbound};
+only the case with $s = \meta{\Avar}{s_1,\dots,s_k}$ and $\Avar \in \domain(
+\gamma)$ is new.  Writing $\gamma(\Avar) = \abs{\avar_1 \dots \avar_k}{a}$ and
+$\eta(\Avar) = \abs{\bvar_1 \cdots \bvar_k}{b}$, we have
+$\subrel{a,[\vec{\avar}:=\vec{t}],t}$ (with $\subrel{s_i,\gamma,t_i}$), and use
+the induction hypothesis to find $u_1,\dots,u_k$ such that both
+$\subrel{t_i,\delta,u_i}$ and $\subrel{s_i,\eta,u_i}$.
+Since $[\vec{\avar}:=\vec{t}]$ has only variables in its domain, we can use
+Lemma~\ref{lem:combinesubst:allbound} to find $u$ such that both
+$\subrel{t,\delta,u}$ and $\subrel{a,\delta^{\vec{\avar}:=\vec{u}},u}$.
+Then by Lemma~\ref{lem:combinesubst:special} we have $\subrel{b,[\vec{\bvar}:=
+\vec{u}],u}$, which provides $\subrel{s,\eta,u}$.
     % 
-    %   If $\avar \in \domain(\delta)$ then $\aprel{\delta(\avar),[w_1,\dots,w_n],b}$ for some
-    %   $\vec{w}$ with $\subrel{s_i,\delta^\chi,w_i}$ for $1 \leq i \leq n$.
-    %   Here, too, we apply the induction hypothesis to find $u_1,\dots,u_k$ such that
-    %   $\subrel{q_i,\delta,u_i}$ and $\subrel{w_i,[\cvar_1:=v_1,\dots,\cvar_k:=v_k],u_i}$ for
-    %   $1 \leq i \leq k$.
-    %   Now, we have:
+    % \begin{itemize}
+    % \item If $s = \afun$ then $t = \afun$ and we are quickly done choosing
+    %   $u = \afun$.
+    % \item If $s = \avar$ then we can safely choose $u = \eta(\avar)$.
+    % \item If $s = h(s_1,\dots,s_n)$ or $\tuple{s_1}{s_n}$ then we complete by
+    %   induction (like in Lemma~\ref{lem:combinesubst:allbound}).
+    % \item If $s = \meta{\Avar}{s_1,\dots,s_k}$ with $\Avar \notin \domain(\gamma)$
+    %   and $\Avar \notin \domain(\delta)$, then note that $\Avar \notin
+    %   \domain(\eta)$; by the induction hypothesis we find $u_i$ with $\subrel{s_i,
+    %   \eta,u_i}$ and $\subrel{t_i,\delta,u_i}$ for all $i$ and we can choose
+    %   $u := \meta{\Avar}{u_1,\dots,u_k}$.
+    % \item If $s = \meta{\Avar}{s_1,\dots,s_k}$ with $\avar \notin \domain(\gamma)$
+    %   but $\Avar \in \domain(\delta)$ then $t = \meta{\Avar}{t_1,\dots,t_k}$ and
+    %   we can find $u_i$ with $\subrel{s_i,\eta,u_i}$ and $\subrel{t_i,\delta,u_i}$.
+    %   Moreover, $\delta(\Avar) = \eta(\Avar)$.
+    %   If $\delta(\Avar) = \abs{\avar_1 \cdots \avar_k}{q}$ then choose $u$ such
+    %   that $\subrel{q,[\avar_1:=u_1,\dots,\avar_k:=u_k],u}$.  Then both
+    %   $\subrel{s,\eta,u}$ and $\subrel{t,\delta,u}$.
+    % \item If $s = \abs{\avar}{s'}$ then $t = \abs{\bvar}{t'}$ with $\bvar
+    %   \notin \FV(\gamma(w))$ for any $w \in \FV(s) \cup \FMV(s)$, and
+    %   $\subrel{s',\gamma^{\avar:=\bvar},t'}$.
+    %   Let $\cvar$ be a variable of the same type as $\avar$, which does not occur
+    %   in any $\delta(w)$ or $\eta(w)$ for variables or meta-variables $w$ in $s$ or
+    %   $t$.
+    %   Then $\gamma^{\avar:=\bvar},\delta^{\bvar:=\cvar}$ and $\eta^{\avar:=\cvar}$
+    %   satisfy the requirement to apply the induction hypothesis:
     %   \begin{itemize}
-    %   \item $\domain([\cvar_1:=v_1,\dots,\cvar_k=v_k]) \subseteq \Vbound$ and
-    %     $\FV(\delta(\avar)) \cap \{\cvar_1,\dots,\cvar_k\} = \emptyset$
-    %     by assumption
-    %   \item $\aprel{\delta(\avar),[w_1,\dots,w_n],b}$
-    %   \item $\subrel{w_i,[\cvar_1:=v_1,\dots,\cvar_k=v_k],u_i}$ for $1 \leq i \leq n$
+    %   \item $\domain(\eta^{\avar:=\cvar}) \setminus \V =
+    %     (\domain(\eta) \cup \{\avar\}) \setminus \V = \domain(\eta) \setminus \V =
+    %     (\domain(\gamma) \cup \domain(\delta)) \setminus \V =
+    %     (\domain(\gamma) \cup \{\avar\} \cup \domain(\delta) \cup \{\bvar\})
+    %     \setminus \V =
+    %     (\domain(\gamma^{\avar:=\bvar}) \cup \domain(\delta^{\bvar:=\cvar}))
+    %     \setminus \V$
+    %   \item $\subrel{\gamma^{\avar:=\bvar}(w),\delta^{\bvar:=\cvar},\eta^{\avar:=
+    %     \cvar}(w)}$ for all $w \in \FV(s') \cup (\FMV(s') \cap \domain(\gamma^{
+    %     \avar:=\bvar}))$:
+    %     \begin{itemize}
+    %     \item if $w = \avar$, then indeed $\subrel{\bvar,\delta^{\bvar:=\cvar},
+    %       \cvar}$
+    %     \item if not, $\gamma^{\avar:=\bvar}(w) = \gamma(w)$ and $w \in \FV(s) \cup
+    %       (\FMV(s) \cap \domain(\gamma))$. Since $w \in \FV(s') \setminus \{\avar\}$
+    %       we have $w \in \FV(s)$, so $\bvar \notin \FV(\gamma(w))$.
+    %       Hence, by Lemma~\ref{lem:substextend},
+    %       $\subrel{\gamma(w),\delta,\eta(w)}$ implies $\subrel{\gamma(w),
+    %       \delta^{\bvar:=\cvar},\eta(w)}$.  This suffices because
+    %       $\eta(w) = \eta^{\avar:=\cvar}(w)$.
+    %     \end{itemize}
+    %   \item for meta-variables $\Avar$, $\delta^{\bvar:=\cvar}(\Avar) =
+    %     \delta(\Avar)$ and $\eta^{\avar:=\cvar}(\Avar) = \eta(\Avar)$, so the
+    %     third requirement is still satisfied
+    %   \item $\subrel{s',\gamma^{\avar:=\bvar},t'}$ is given. \\
     %   \end{itemize}
-    %   \ \\
-    %   Hence, by Lemma \ref{lem:boundsubsthelper}, there exists $u$ such that both
-    %   $\aprel{\delta(\avar),[u_1,\dots,u_k],u}$ and $\subrel{b,[\cvar_1:=v_1,\dots,\cvar_k=v_k],u}$.
-    %   We obtain $\subrel{t,\delta,u}$ from $\aprel{\delta(\avar),[u_1,\dots,u_k],u}$ and
-    %   $\subrel{q_i,\delta,u_i}$ for all $i$.
+    %   Hence, we find $u'$ such that both $\subrel{t',\delta^{\bvar:=\cvar},u'}$
+    %   and $\subrel{s',\eta^{\avar:=\cvar},u'}$.  We are done choosing
+    %   $u = \abs{\cvar}{u'}$.
+    % \item This leaves only the case $s = \meta{\Avar}{s_1,\dots,s_k}$ with
+    %   $\Avar \in \domain(\gamma)$; let $\gamma(\Avar) = \abs{\avar_1 \dots
+    %   \avar_k}{a}$.  We make a number of observations.
+    %   \begin{enumerate}
+    %   \item\label{obs:stot}
+    %     there exist $t_1,\dots,t_k$ such that
+    %     $\subrel{s_i,\gamma,t_i}$ for all $i$, and
+    %     $\subrel{a,[\avar_1:=t_1,\dots,\avar_k:=t_k],t}$
+    %   \item\label{obs:stoui}
+    %     there exist $u_1,\dots,u_k$ such that both
+    %     $\subrel{t_i,\delta,u_i}$ and $\subrel{s_i,\eta,u_i}$ for all $i$
+    %     \\ (by the induction hypothesis and \ref{obs:stot})
+    %   \item\label{obs:etaX}
+    %     we can write $\eta(\Avar) = \abs{\bvar_1 \dots \bvar_k}{b}$ with
+    %     $\subrel{a,\delta^{\avar_1:=\bvar_1,\dots,\avar_k:=\bvar_k},b}$
+    %     \\ (by Lemma~\ref{lem:abssubst} because $\subrel{\gamma(\Avar),\delta,
+    %     \eta(\Avar)}$)
+    %   \item\label{obs:bvari}
+    %     each $\bvar_i \notin \FV(\delta(\cvar))$ for any $(\cvar \in \FV(a)
+    %     \setminus \{\avar_1,\dots,\avar_k\}) \cup (\FMV(a) \cap \domain(\delta))$
+    %     \\ (also by Lemma~\ref{lem:abssubst})
+    %   \item\label{obs:bvarequal} if $\bvar_i = \bvar_j$ for some $i < j$ then
+    %     $\avar_i \notin \FV(a)$ or $\avar_i = \avar_l$ for some $l > i$
+    %     \\ (also by Lemma~\ref{lem:abssubst})
+    %   \end{enumerate}
+    %   Define $\delta_{\setminus\{\vec{\avar}\}} =
+    %   [\bvar:=\delta(\bvar) \mid \bvar \in \domain(\delta) \setminus
+    %   \{\avar_1,\dots,\avar_k \}]$ and $\delta^{\vec{\avar}:=\vec{u}} :=
+    %   [\avar_1:=u_1,\dots,\avar_k:=u_k] \cup \delta_{\setminus\{\vec{\avar}\}}$.
+    %   Then by (\ref{obs:stoui}) we have
+    %   $\subrel{[\avar_1:=t_1,\dots,\avar_k:=t_k],\delta,\delta^{\vec{\avar}:=
+    %   \vec{u}}}$.  By (\ref{obs:stot}) and
+    %   Lemma~\ref{lem:combinesubst:allbound} we obtain that some $u$ exists such that
+    %   both $\subrel{t,\delta,u}$, and $\subrel{a,\delta^{\vec{\avar}:=\vec{u}},u}$.
+    %   Note that
+    %   $\delta^{\vec{\avar}:=\vec{\bvar}} = [\avar_1:=\bvar_1,\dots,\avar_k:=\bvar_k]$
+    %   and $\delta^{\vec{\avar}:=\vec{u}} = [\avar_1:=u_1,\dots,\avar_k:=u_k]
+    %   \cup \delta_{\setminus\{\vec{\avar}\}}$, and that by
+    %   (\ref{obs:etaX}--\ref{obs:bvarequal}), the conditions to apply
+    %   Lemma~\ref{lem:combinesubst:special} are satisfied.  Hence, we find
+    %   $\subrel{b,[\bvar_1:=u_1,\dots,\bvar_k:=u_k],u}$.
+    %   This immediately provides $\subrel{s,\eta,u}$ as well.
     %   \qedhere
     % \end{itemize}
 \end{proof}
 
-With these preparations we are finally ready to show that $s(\gamma\delta) = (s\gamma)\delta$.
-Using the $\subrel{}$ relation, this is formulated as follows:
-
-\begin{lemma}\label{lem:combinesubsthelper}
-Let $s,t$ be terms, and $\gamma,\delta,\eta$ be substitutions, such that for all variables $x$ in
-$\FV(s)$: $\subrel{\gamma(x),\delta,\eta(x)}$.  Then,
-  if $\subrel{s,\gamma,t}$ then there exists $u$ such that both $\subrel{t,\delta,u}$ and
-  $\subrel{s,\eta,u}$.
-\end{lemma}
-
-\begin{proof}
-By induction on the definition of $\subrel{}$ (or, put differently, induction first on the presence
-of $\Vfree$ variables in $\domain(\gamma)$, second on the size of $s$).
-
-\begin{itemize}
-\item If $s = h(s_1,\dots,s_n)$ with $n > 0$, then there exist $q, t_1,\dots,t_n$ such that
-  $\subrel{h,\gamma,q}$ and $\subrel{s_i,\gamma,t_i}$ for all $i$, and $t = q \cdot t_1 \cdots
-  t_n$.  By the induction hypothesis, there exist $w$ such that both
-  $\subrel{q,\delta,w}$ and $\subrel{h,\eta,w}$, and $u_1,\dots,u_n$ such that for all $i$
-  both $\subrel{t_i,\delta,u_i}$ and $\subrel{s_i,\eta,u_i}$.
-  Choose $u := w \cdot u_1 \cdots u_n$.
-  Then $\subrel{t,\delta,u}$ by Lemma \ref{lem:appsubstitute}, and $\subrel{s,\eta,u}$ by
-  definition.
-\item If $s = \afun$ then $t = \afun$; we choose $u := \afun$ as well.
-\item If $s = \avar$ then $t = \gamma(\avar)$ and $\subrel{t,\delta,\eta(\avar)}$ by assumption.
-  We let $u := \eta(\avar)$.
-\item If $s = \abs{\avar}{s'}$ then $t = \abs{\bvar}{t'}$, with:
-  \begin{itemize}
-  \item $\bvar \notin \FV(\gamma(w))$ for any $w \in \FV(s)$;
-  \item $\subrel{s',\gamma^{\avar:=\bvar},t'}$
-    where $\gamma^{\avar:=\bvar} = [\avar:=\bvar] \cup [w:=\gamma(w) \mid w \in \domain(\gamma)
-    \setminus \{\avar\}]$;
-  \end{itemize}
-  \ \\
-  Let $\cvar$ be a variable of the same type as $\avar$, such that:
-  \begin{itemize}
-  \item $\cvar \notin \FV(\delta(w))$ for any $w \in \FV(t)$, and
-  \item $\cvar \notin \FV(\eta(w))$ for any $w \in \FV(s)$.
-  \end{itemize}
-  \ \\
-  Since $\cvar$ is only required to be unequal to a finite number of variables, and $\Vbound$ has
-  infinitely many elements of each type, such a variable can always be found.
-
-  Now let $\delta^{\bvar:=\cvar} = [\bvar:=\cvar] \cup [w:=\delta(w) \mid w \in \domain(\delta)
-  \setminus \{\bvar\}]$ and let $\eta^{\avar:=\cvar} = [\avar:=\cvar] \cup [w:=\eta(w) \mid w \in
-  \domain(\eta) \setminus \{\avar\}]$.  Then clearly $\subrel{\gamma^{\avar:=\bvar}(w),\delta^{
-  \bvar:=\cvar},\eta^{\avar:=\cvar}(w)}$ for all $w \in \FV(s')$:
-  \begin{itemize}
-  \item for $w = \avar$ we have $\subrel{\bvar,\delta^{\bvar:=\cvar},\cvar}$;
-  \item and for all other $w$ we have $\subrel{\gamma(w),\delta^{\bvar:=\cvar},\eta(w)}$ by Lemma
-    \ref{lem:substextend},because $\bvar \notin \FV(\gamma(w))$ when $w \in \FV(s) = \FV(s')
-    \setminus \{\avar\}$ (by choice of $\bvar$).
-  \end{itemize}
-  \ \\
-  Hence, we can apply the induction hypothesis on $\subrel{s',\gamma^{\avar:=\bvar},t'}$ to obtain
-  $u'$ such that both $\subrel{t',\delta^{\bvar;=\cvar},u'}$ and $\subrel{s',\eta^{\avar:=\cvar},
-  u'}$.  We choose $u := \abs{\cvar}{u'}$.  Due to the requirements on $\cvar'$ we have both
-  $\subrel{t,\delta,u}$ and $\subrel{s,\eta,u}$.
-\item If $s = \meta{\avar}{s_1,\dots,s_k}$ and $\avar \notin \domain(\gamma)$, then
-  $t = \meta{\avar}{t_1,\dots,t_k}$ with $\subrel{s_i,\gamma,t_i}$ for all $i$.  By the induction
-  hypothesis we find $u_1,\dots,u_k$ such that both $\subrel{t_i,\delta,u_i}$ and $\subrel{s_i,
-  \eta,u_i}$ for all $i$.
-
-  Let $u$ be such that $\aprel{\delta(\avar),[u_1,\dots,u_k],u}$ (this exists by Lemma
-  \ref{lem:substdefined}).  This property both gives $\subrel{t,\delta,u}$ and $\subrel{s,\eta,u}$.
-\item =================
-\item If $s = \meta{\avar}{s_1,\dots,s_k}$ and $\avar \in \domain(\gamma)$, we can write
-  $\gamma(\avar) = \abs{\bvar_1 \dots \bvar_n}{a}$ with either $n = k$ or $n < k$ and $a$ is not an
-  abstraction.
-  Then there exist $t_1,\dots,t_k,t'$ such that $\subrel{s_i,\gamma,t_i}$ for all $i$,
-  $t = t' \cdot t_{n+1} \cdots t_k$ and $\subrel{a,[\bvar_1:=t_1,\dots,\bvar_n:=t_n],t'}$.
-  By the induction hypothesis on each $s_i$, there exist $u_1,\dots,u_k$ such that both
-  $\subrel{t_i,\delta,u_i}$ and $\subrel{s_i,\eta,u_i}$ for all $i \in \{1,\dots,k\}$.
-
-  By Lemma \ref{lem:abssubst} and $\subrel{\gamma(\avar),\delta,\eta(\avar)}$, we can write
-  $\eta(\avar) = \abs{\cvar_1 \cdots \cvar_n}{b}$ such that:
-
-  PROBLEEM: wat als $\eta(\avar)$ een langere abstractie is?  Dit is absoluut mogelijk\dots
-\end{itemize}
-
-TODO
-\end{proof}
-
+Hence we may conclude the $=_\alpha$-sensitive version:
 
 \begin{lemma}\label{lem:combinesubst}
 Always $s(\gamma\delta) =_\alpha (s\gamma)\delta$.
 \end{lemma}
 
 \begin{proof}
-Let $\eta = \gamma\delta$; that is, $\domain(\eta) = \domain(\gamma) \cup \domain(\delta)$ and
-$\eta(x) = \gamma(x)\delta$ for all $x \in \domain(\eta)$ and $\eta(x) = \delta(x)$ for aother $x$
-in its domain.  We will prove that there exists $t$ such that $s\gamma = t$ and $t\delta = s\eta$.
-The desired result then follows by Lemma \ref{lem:substitutionalpha}.
+Let $\eta$ be any substitution such that $\subrel{\gamma,\delta,\eta}$.
+If $\subrel{s,\gamma,t}$ and $\subrel{t,\delta,a}$ and $\subrel{s,\eta,b}$,
+then note that by Lemma~\ref{lem:combinesubst} there exists $u$ such that both
+$\subrel{t,\delta,u}$ and $\subrel{s,\eta,u}$.  By
+Lemma~\ref{lem:substitutionalpha}, $a =_\alpha u =_\alpha b$, so we conclude
+$a =_\alpha b$ by Lemma~\ref{lem:alphaequiv}(\ref{lem:alphaequiv:transitive}).
 \end{proof}
+
+\end{document}
 
 
 \end{document}
