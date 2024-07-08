@@ -33,9 +33,7 @@
 \newcommand{\FV}{\mathit{FV}}
 \newcommand{\FMV}{\mathit{MV}}
 \newcommand{\BV}{\mathit{BV}}
-\newcommand{\Positions}{\mathit{Positions}}
-\newcommand{\SubPositions}{\mathit{SubPositions}}
-\newcommand{\HeadPositions}{\mathit{HeadPositions}}
+\newcommand{\Positions}{\mathsf{Pos}}
 \newcommand{\Pairs}{\mathit{Pairs}}
 
 \newcommand{\domain}{\mathtt{dom}}
@@ -70,6 +68,7 @@
 \newcommand{\meta}[2]{#1\langle#2\rangle}
 \newcommand{\superapply}{\mathtt{superapply}}
 \newcommand{\tuple}[2]{\llparenthesis #1,\dots,#2 \rrparenthesis}
+\newcommand{\tuplelong}[1]{\llparenthesis #1 \rrparenthesis}
 \newcommand{\product}[2]{\llparenthesis #1,\dots,#2 \rrparenthesis}
 \newcommand{\pair}[2]{\llparenthesis #1,#2 \rrparenthesis}
 \newcommand{\triple}[3]{\llparenthesis #1,#2,#3 \rrparenthesis}
@@ -586,73 +585,100 @@ how they are constructed).
 
 \section{Positions and subterms}
 
-========================
-
 \subsection{Positions}
 
-The \emph{head positions} of a given term are the paths to specific subterms,
-defined as follows:
-
+A \emph{position} is either:
 \begin{itemize}
-\item $\HeadPositions(h(s_1,\dots,s_n)) = \{ \epsilon, \star 0, \dots, \star (n-1) \} \cup
-  \{ i \cdot p \mid \exists i \in \{1,\dots,n\}. p \in \HeadPositions(s_i) \} \cup
-  \SubPositions(h)$
-\item $\SubPositions(\afun) = \SubPositions(\avar) = \emptyset$
-\item $\SubPositions(\abs{\avar}{t}) = \{ 0 \cdot p \mid p \in \HeadPositions(t) \}$
-\item $\SubPositions(\meta{\avar}{t_1,\dots,t_k}) = \{ !i \cdot p \mid p \in
-  \HeadPositions(t) \}$
+\item a sequence $p_1 \cdots p_n \cdot \epsilon$ of integers ($n \geq 0$), or
+\item a sequence $p_1 \cdots p_n \star c$, where $n \geq 0$, $p_1,\dots,p_n,c$
+  are integers and $c > 0$
 \end{itemize}
+The former is called a \emph{full} position, the latter a \emph{partial}
+position.  If $p_i < 0$, then we typically present $p_i$ as $!q$ instead of
+$-q$.  We often denote a position as a combination of head and tail; e.g.,
+if $p = p_1 \cdots p_n$ then $i \cdot p$ denotes the position
+$i \cdot p_1 \cdots p_n$.
 
-The \emph{positions} of a given term are all the head positions of a form $p_1 \cdots p_n \epsilon$,
-so those that do not contain $\star$.
-Note that (head) positions are associated to a term; thus, not every sequence of natural numbers
-and exclamation marks is a position.
-
-For a term $s$ and a position $p \in \HeadPositions(s)$, the \emph{subterm of $s$ at position $p$},
-denoted $s|_p$, is defined as follows:
+Positions essentially describe the path to a specific subterm in a term.
+Formally, for $s$ a term and $p$ a position, we define the \emph{subterm of $s$
+at position $p$}, $s|_p$, as follows:
 \begin{itemize}
-\item $s|_\epsilon = s$;
-\item $h(s_1,\dots,s_n)|_{\star i} = h(s_1,\dots,s_i)$ (so just $h$ if $i = 0$);
-\item $h(s_1,\dots,s_n)|_{i \cdot p} = s_i|_p$ if $1 \leq i \leq n$;
-\item $(\abs{\avar}{t})(s_1,\dots,s_n)|_{0 \cdot p} = t|_p$;
-\item $\meta{\avar}{t_1,\dots,t_k}(s_1,\dots,s_n)|_{!i \cdot p} = t_i|_p$.
+\item if $p = \epsilon$ then $s|_p = s$;
+\item if $p = h(s_1,\dots,s_n)$ and $p = \star i$ with $i \leq n$ then
+  $s|_p = h(s_1,\dots,s_{n-i})$ \\
+    (so for example $s|_{\star n} = h$ and $s|_{\star 1} =
+    h(s_1,\dots,s_{n-1})$)
+\item if $s = h(s_1,\dots,s_n)$ or $p = \tuple{s_1}{s_n}$ and $p = i \cdot p'$
+  with $1 \leq i \leq n$, then $s|_p = s_i|_{p'}$
+\item if $s = (\abs{\avar}{s})(s_1,\dots,s_n)$ with $n \geq 0$ and $p = 0 \cdot
+  p'$ then $s|_p = t|_{p'}$
+\item if $s = \meta{\Avar}{t_1,\dots,t_k}(s_1,\dots,s_n)$ with $n \geq 0$ and
+  $p = !i$ with $i > 0$ then $s|_p = t_i|_{p'}$
 \end{itemize}
+For all other positions $p$, the subterm of $s$ at position $p$ is undefined.
 
-If $s|_p$ has the same type as some term $u$, then $s[u]_p$ denotes $s$ with the subterm at position
-$p$ replaced by $u$.  Formally, $s[u]_p$ is obtained as follows:
+We let $\Positions(s,\mathsf{full})$ denote the set of all full positions $p$
+such that $s|_p$ is defined, and $\Positions(s,\mathsf{partial})$ denote the
+set of all partial positions $p$ for which $s|_p$ is defined.  Note that both
+sets are finite.
+
+Hence, a subterm position $p_i = j > 0$ indicates ``descend into argument $j$
+of an application, or tuple argument $j$''.  A subterm position $p_i = 0$
+indicates ``descend into an abstraction (which should be at the head of the
+current term)''.  A subterm position $p_i = !j$ indicates ``descend into
+meta-argument $j$''.
+
+If $s|_p$ has the same type as some term $u$, then $s[u]_p$ denotes $s$ with
+the subterm at position $p$ replaced by $u$.  Formally, $s[u]_p$ is obtained as
+follows:
 \begin{itemize}
 \item $s[u]_\epsilon = u$;
-\item $h(s_1,\dots,s_n)[u]_{\star i} = u \cdot s_{i+1} \cdots s_n$;
-\item $h(s_1,\dots,s_n)[u]_{i \cdot p} = h(s_1,\dots,s_{i-1},s_i[u]_p,s_{i+1},\dots,s_n)$;
-\item $(\abs{\avar}{t})(s_1,\dots,s_n)[u]_{0 \cdot p} = (\abs{\avar}{t[u]_p})(s_1,\dots,s_n)$;
-\item $\meta{x}{t_1,\dots,t_k}(s_1,\dots,s_n)[u]_{!i \cdot p} = \meta{x}{t_1,\dots,t_{i-1},t_i[u]_p,t_{i+1},\dots,t_k}(s_1,\dots,s_n)$;
+\item $h(s_1,\dots,s_n)[u]_{\star i} = u \cdot s_{n-i+1} \cdots s_n$;
+\item $h(s_1,\dots,s_n)[u]_{i \cdot p} = h(s_1,\dots,s_{i-1},s_i[u]_p,s_{i+1},
+  \dots,s_n)$;
+\item $\tuple{s_1}{s_n}[u]_{i \cdot p} = \tuplelong{s_1,\dots,s_{i-1},s_i[u]_p,
+  s_{i+1},\dots,s_n}$
+\item $(\abs{\avar}{t})(s_1,\dots,s_n)[u]_{0 \cdot p} =
+  (\abs{\avar}{t[u]_p})(s_1,\dots,s_n)$;
+\item $\meta{\Avar}{t_1,\dots,t_k}(s_1,\dots,s_n)[u]_{!i \cdot p} =
+  \meta{\Avar}{t_1,\dots,t_{i-1},t_i[u]_p,t_{i+1},\dots,t_k}(s_1,\dots,s_n)$.
 \end{itemize}
-Thus, we can find and replace the subterm at a given position.
-Note that this is \emph{not} an operation on equivalence classes of terms; for example,
-$\abs{x}{x} =_\alpha \abs{y}{y}$, but $(\abs{x}{x})[x]_0 = \abs{x}{x} \not =_\alpha
-\abs{y}{x} = (\abs{y}{y})[y]_0$.  Hence, when subterms are considered this should usually be
-accompanied by some result that guarantees the operation handles bound variables properly.
+Thus, we can find and replace the subterm at a (full or partial) given position
+in $s$.
 
-Note that we do \emph{not} have the property that if $p$ is a position of $s$, then $p$ is a
-position of $s\gamma$ for any substitution $\gamma$; for example, $x(\afun(y))$ has a position
-$1\ 1\ \epsilon$, with $x(\afun(y))|_{1\ 1\ \epsilon} = y$.  However,
-$x(\afun(y))[x:=\bfun(\identifier{a})] = \bfun(\identifier{a},\afun(y))$, which does not have this
-position.  If we ever need it, we could define alternative positions with the property that
-if $s|_p = t$ then $(s\gamma)|_p = t\gamma$ for $s$ a proper term.  However, we cannot have both
-this, and that positions correspond to the usual definition of positions in the first-order setting.
+Note that this is \emph{not} an operation on equivalence classes of terms; for
+example, $\abs{x}{x} =_\alpha \abs{y}{y}$, but $(\abs{x}{x})[x]_0 = \abs{x}{x}
+\not =_\alpha \abs{y}{x} = (\abs{y}{y})[y]_0$.  Hence, when subterms are
+considered this should usually be accompanied by some result that guarantees the
+operation handles bound variables properly.
+
+\emph{Remark.}
+Note also that we do \emph{not} have the property that if $p$ is a position of
+$s$, then $p$ is a position of $s\gamma$ for any substitution $\gamma$; for
+example, $x(\afun(y))$ has a position $1 \cdot 1 \cdot \epsilon$, with
+$x(\afun(y))|_{1 \cdot 1 \cdot \epsilon} = y$.  However, $x(\afun(y))[x:=
+\bfun(\identifier{a})] = \bfun(\identifier{a},\afun(y))$, which does not have
+this position.  If we ever need it, we could define alternative positions with
+the property that if $s|_p = t$ then $(s\gamma)|_p = t\gamma$ for $s$ a proper
+term.  However, we cannot have both this, and that positions correspond to the
+usual definition of positions in the first-order setting.
 
 \subsection{Subterms}
 
-We say that \emph{$t$ is a subterm of $s$}, notation $t \subtermeq s$, if there is some position
-$p \in \Positions(s)$ with $t = s|_p$.  This could equivalently be formulated as follows:
+We say that \emph{$t$ is a fully applied subterm of $s$}, notation $t
+\subtermeq s$, if there is a \emph{full} position $p \in \Positions(s,
+\mathsf{full})$ with $t = s|_p$.  This could equivalently be formulated as
+follows:
 
 \begin{lemma}
 $u \subtermeq s$ if and only if one of the following holds:
 \begin{itemize}
 \item $s = u$;
 \item $s = h(s_1,\dots,s_n)$ and $u \subtermeq s_i$ for some $i$;
+\item $s = \tuple{s_1}{s_n}$ and $u \subtermeq s_i$ for some $i$;
 \item $s = (\abs{x}{t})(s_1,\dots,s_n)$ and $u \subtermeq t$;
-\item $s = \meta{x}{t_1,\dots,t_k}(s_1,\dots,s_n)$ and $u \subtermeq t_i$ for some $i$.
+\item $s = \meta{\Avar}{t_1,\dots,t_k}(s_1,\dots,s_n)$ and $u \subtermeq t_i$
+  for some $i$.
 \end{itemize}
 \end{lemma}
 
@@ -664,22 +690,60 @@ If $s \subtermeq t$ and $t \subtermeq q$ then $s \subtermeq q$.
 
 This is obvious because if $t = q|_p$ and $s = t|_{p'}$ then $s = q|_{p \cdot p'}$.
 
-It should be noted that in contrast to most definitions of higher-order rewriting, we do \emph{not}
-consider, for example, $\afun(x)$ to be a subterm of $\afun(x,y)$.  Instead, we define the
-following: \emph{$t$ is a head-subterm of $s$}, notation $t \headsubtermeq s$ if $s|_p = t$ for
-$p \in \HeadPositions(s)$.
+It should be noted that we do \emph{not} consider, for example, $\afun(x)$ to be
+a subterm of $\afun(x,y)$, since this requires a \emph{partial} position.  To be
+able to refer to such subterms too, we define the following: \emph{$t$ is a
+head-subterm of $s$}, notation $t \headsubtermeq s$ if $s|_p = t$ for some $p
+\in \Positions(s,\mathsf{partial})$.
 
-It should also be noted that if $s =_\alpha t$, it does not follow that $s$ and $t$ have the same
-subterms: $\abs{x}{x}$ has a subterm $x$, while $\abs{y}{y}$ does not.  For applicative and
-first-order terms, this is not an issue.
+It should also be noted that if $s =_\alpha t$, it does not follow that $s$ and
+$t$ have the same subterms: $\abs{x}{x}$ has a subterm $x$, while $\abs{y}{y}$
+does not.  For applicative and first-order terms, this is not an issue.
 
-Regarding different kinds of terms: the subterms and positions of a first-order term by these
-definitions are exactly the subterms and positions as they are usually considered in first-order
-term rewriting; however, head-subterms are generally not considered.  For applicative terms,
-both subterms and head-subterms are usually referred to as just ``subterms''; we distinguish them
-here because doing so is practical for analysis.
+\emph{Remark.} In contrast to most definitions of higher-order rewriting, we
+consider the notion of \emph{fully applied subterm} the primary one; and if we
+simply refer to ``subterm'', we usually mean this, and not head-subterms.  This
+is because, using our definitions, fully applied subterms arise naturally in
+recursive definitions and proofs.
+
+Regarding different kinds of terms: the fully applied subterms and full
+positions of a first-order term by these definitions are exactly the subterms
+and positions as they are usually considered in first-order term rewriting;
+head-subterms are generally not considered.  For applicative terms, both
+subterms and head-subterms are usually referred to as just ``subterms''; we
+distinguish them here because doing so is practical for analysis.
+
+\subsection*{In Charlie.}
+
+\begin{itemize}
+\item The class \texttt{charlie.terms.position.Position} represents positions
+  (both full and partial).
+\item There is no factory for positions; instead, if you have a need for one,
+  you can either read it from string using \texttt{Position::parse(String txt)}
+  or create one of:
+  \begin{itemize}
+  \item \texttt{charlie.terms.position.ArgumentPos}(i,p) for $i \cdot p$
+  \item \texttt{charlie.terms.position.LambdaPos}(i,p) for $0 \cdot p$
+  \item \texttt{charlie.terms.position.MetaPos}(i,p) for $!i \cdot p$
+  \item \texttt{charlie.terms.position.FinalPos}(0) for $\epsilon$, and
+  \item \texttt{charlie.terms.position.FinalPos}(k) for $\star k$.
+  \end{itemize}
+\item To obtain $\Positions(s,\mathsf{full})$, use
+  \texttt{$s$.queryPositions(false)}. \\
+  To obtain $\Positions(s,\mathsf{partial})$, use
+  \texttt{$s$.queryPositions(true)}.
+\item Alternatively, for a term $s$ the function
+  \texttt{$s$.querySubterms()} yields the list of all pairs $(s|_p,p)$ for
+  $p \in \Positions(s,\mathsf{full})$.  Use \texttt{Term::visitSubterms} to
+  execute a function for all pairs $(s|_p,p)$ of a fully applied subterm and a
+  full position.
+\item To obtain $s|_p$, use \texttt{$s$.querySubterm($p$)}.
+\item To obtain $s[u]_p$ use \texttt{$s$.replaceSubterm($p$, $u$)}.
+\end{itemize}
 
 \section{Substitution}
+
+==================
 
 A \emph{substitution} is a partial function $\gamma$ that maps:
 \begin{itemize}
