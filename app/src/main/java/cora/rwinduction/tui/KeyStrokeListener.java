@@ -1,5 +1,6 @@
 package cora.rwinduction.tui;
 
+import cora.rwinduction.engine.Interpreter;
 import org.jline.console.ArgDesc;
 import org.jline.console.CmdDesc;
 import org.jline.reader.*;
@@ -32,7 +33,8 @@ public class KeyStrokeListener {
       Completer testCompleter = new ArgumentCompleter(
         new StringsCompleter("simplify"),
         new StringsCompleter("delete"),
-        new StringsCompleter("widget")
+        new StringsCompleter("widget"),
+        new StringsCompleter(":quit")
       );
 
       LineReader lineReader = LineReaderBuilder.builder()
@@ -57,7 +59,9 @@ public class KeyStrokeListener {
       widgetsOpts.put("-U", Arrays.asList(new AttributedString("Push characters to the stack")));
       widgetsOpts.put("-l", Arrays.asList(new AttributedString("List user-defined widgets")));
 
-      CmdDesc desc = new CmdDesc(mainDescription, ArgDesc.doArgNames(Arrays.asList("[pn]")),
+      CmdDesc desc = new CmdDesc(
+        mainDescription,
+        ArgDesc.doArgNames(Arrays.asList("args", "options")),
         widgetsOpts);
 
       tailTips.put("widget", desc);
@@ -73,12 +77,11 @@ public class KeyStrokeListener {
 
       while (true) {
         String c = lineReader.readLine("> ");
+        String[] args = c.trim().split("\\s+");
 
-        REPL repl = new REPL();
+        System.out.println("Argument received: " + Arrays.toString(args));
 
-        repl.interpreter.accept(c);
-
-        System.out.println(c);
+        Interpreter.interpreter.accept(args);
 
         if (c == null) break;
 //        if (c >= 0) {

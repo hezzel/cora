@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.BinaryOperator;
 
 
-final class DeleteRule extends DeductionRule {
+final class DeductionDelete extends DeductionAbstractRule {
 
   /**
    * In an equation of the form {@code s = t [c]}, this method checks if {@code c}
@@ -64,7 +64,7 @@ final class DeleteRule extends DeductionRule {
 
     // Check if s is syntactically equal to t in the equation s = t [c].
     Either<String, Boolean> leftRightSyntaxEq =
-      DeleteRule.isLeftEqualsRight(equation);
+      DeductionDelete.isLeftEqualsRight(equation);
     if (leftRightSyntaxEq.isLeft()) { return leftRightSyntaxEq; }
 
     // !(SMT usage) Check if the constraint in the equation is unsatisfiable.

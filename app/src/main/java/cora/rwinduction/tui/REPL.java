@@ -1,5 +1,7 @@
 package cora.rwinduction.tui;
 
+import cora.rwinduction.engine.Action;
+
 import java.util.Scanner;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -22,23 +24,7 @@ public class REPL {
   public void runRepl() {
 
     KeyStrokeListener keyStrokeListener = new KeyStrokeListener();
-
     keyStrokeListener.test();
 
-    try (Scanner scanner = new Scanner(System.in)) {
-
-      // The supplier reads the user input.
-      Supplier<String> input = () -> {
-        System.out.println("> ");
-        return scanner.nextLine();
-      };
-
-
-
-      Predicate<String> quitCommand = command -> quit.equalsIgnoreCase(command.trim());
-
-      Stream.generate(input).forEach(interpreter);
-
-    }
   }
 }

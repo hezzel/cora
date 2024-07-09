@@ -16,7 +16,7 @@ import cora.config.Settings;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
-class SimplifyRule extends DeductionRule {
+class DeductionSimplify extends DeductionAbstractRule {
 
   static final class SimplifyArgs extends RuleArguments {
 

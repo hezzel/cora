@@ -4,7 +4,7 @@ import charlie.util.either.Either;
 import charlie.util.either.Left;
 import charlie.util.either.Right;
 
-abstract class DeductionRule {
+abstract class DeductionAbstractRule {
 
   /**
    * Let us assume given a proof state {@code (E, H)}.

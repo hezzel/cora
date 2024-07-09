@@ -10,9 +10,9 @@ import charlie.util.either.Left;
 import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
 
-class SimplifyRuleTest {
+class DeductionSimplifyTest {
 
-  SimplifyRule simplifyRule = new SimplifyRule();
+  DeductionSimplify deductionSimplify = new DeductionSimplify();
   TRS trs = CoraInputReader.readTrsFromString(
     "sum :: Int -> Int " +
       "sum(x) -> 0         | x ≤ 0 " +
@@ -29,8 +29,8 @@ class SimplifyRuleTest {
     Position p = Position.empty;
     Substitution s = TermFactory.createEmptySubstitution();
 
-    SimplifyRule.SimplifyArgs args =
-      new SimplifyRule.SimplifyArgs (
+    DeductionSimplify.SimplifyArgs args =
+      new DeductionSimplify.SimplifyArgs (
         proofState,
         0,
         RuleArguments.EqSide.L,
@@ -38,7 +38,7 @@ class SimplifyRuleTest {
         p,
         s);
 
-    System.out.println(simplifyRule.isApplicable(args));
+    System.out.println(deductionSimplify.isApplicable(args));
   }
 
   @Test

@@ -2,8 +2,7 @@ package cora.rwinduction.engine;
 
 import charlie.trs.TRS;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.Stack;
 
 class ProverContext {
 
@@ -11,6 +10,8 @@ class ProverContext {
 
   private TRS _currentSystem;
 
-  private Deque<ProofState> _proofStates = new ArrayDeque<>();
+  private Stack<ProofState> _proofStates = new Stack<>();
+
+
 
 }

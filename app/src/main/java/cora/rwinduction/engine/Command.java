@@ -1,5 +1,9 @@
 package cora.rwinduction.engine;
 
-public class Command {
+import charlie.util.either.Either;
+
+interface Command extends RunnableArguments {
+
+  Either<String, Boolean> run(String args);
 
 }

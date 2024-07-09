@@ -7,21 +7,21 @@ class Equation {
   private Term _rhs;
   private Term _constraint;
 
-  public Equation(Term lhs, Term rhs, Term constraint) {
+  Equation(Term lhs, Term rhs, Term constraint) {
     _lhs = lhs;
     _rhs = rhs;
     _constraint = constraint;
   }
 
-  public Term getLhs() {
+  Term getLhs() {
     return _lhs;
   }
 
-  public Term getRhs() {
+  Term getRhs() {
     return _rhs;
   }
 
-  public Term getConstraint() {
+  Term getConstraint() {
     return _constraint;
   }
 

@@ -7,9 +7,9 @@ import charlie.util.either.Either;
 import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
 
-class DeleteRuleTest {
+class DeductionDeleteTest {
 
-  DeleteRule deleteRule = new DeleteRule();
+  DeductionDelete deductionDelete = new DeductionDelete();
   TRS trs = CoraInputReader.readTrsFromString(
     "sum :: Int -> Int " +
       "sum(x) -> 0         | x ≤ 0 " +
@@ -27,7 +27,7 @@ class DeleteRuleTest {
     ProofState proofState = new ProofState(trs, ImmutableList.of());
     RuleArguments ruleArguments = new RuleArguments(proofState, 0);
 
-    Either<String, ProofState> result = deleteRule.applyRule(ruleArguments);
+    Either<String, ProofState> result = deductionDelete.applyRule(ruleArguments);
 
   }
 }
