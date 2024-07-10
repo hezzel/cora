@@ -1,5 +1,6 @@
 package cora.rwinduction.engine;
 
+import charlie.util.Pair;
 import com.google.common.collect.ImmutableList;
 
 interface RunnableArguments {
@@ -12,7 +13,7 @@ interface RunnableArguments {
   /**
    * Returns an immutable list of strings describing how to call the runnable.
    */
-  ImmutableList<String> callDescriptor();
+  ImmutableList<Pair<String, String>> callDescriptor();
 
   /**
    * Returns an immutable list of strings describing the arguments the runnable receives.

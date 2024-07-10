@@ -1,18 +1,19 @@
-package cora.rwinduction.engine;
+package cora.rwinduction.engine.deduction;
 
 import charlie.util.either.Either;
 import charlie.util.either.Left;
 import charlie.util.either.Right;
+import cora.rwinduction.engine.data.ProofState;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-class RuleArguments {
+public class DeductionArguments {
   private final ProofState _proofState;
   protected final int _equationIndex;
 
   public enum EqSide {L, R}
 
-  public RuleArguments(ProofState proofState, int ruleIndex) {
+  public DeductionArguments(ProofState proofState, int ruleIndex) {
     _proofState = proofState;
     _equationIndex = ruleIndex;
   }
@@ -41,7 +42,7 @@ class RuleArguments {
   final @NotNull Either<String, Boolean> checkEqBounds() {
     if (this.getEquationIndex() >= this.getProofState().getEquations().size()) {
       return new Left<>(
-        RuleArguments.getBoundsErrString(
+        DeductionArguments.getBoundsErrString(
           this.getEquationIndex(),
           this.getProofState().getEquations().size() - 1
         ));
@@ -54,7 +55,7 @@ class RuleArguments {
   final @NotNull Either<String, Boolean> checkHypBounds(@NotNull int hypothesisIndex) {
     if (hypothesisIndex >= _proofState.getHypotheses().size()) {
       return new Left<>(
-        RuleArguments.getBoundsErrString(
+        DeductionArguments.getBoundsErrString(
           hypothesisIndex,
           _proofState.getHypotheses().size()
         )

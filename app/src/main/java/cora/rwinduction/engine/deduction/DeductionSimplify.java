@@ -1,10 +1,7 @@
-package cora.rwinduction.engine;
+package cora.rwinduction.engine.deduction;
 
 import charlie.exceptions.IndexingException;
-import charlie.terms.Environment;
-import charlie.terms.Substitution;
-import charlie.terms.Term;
-import charlie.terms.Variable;
+import charlie.terms.*;
 import charlie.terms.position.Position;
 import charlie.theorytranslation.TermSmtTranslator;
 import charlie.trs.Rule;
@@ -13,17 +10,20 @@ import charlie.util.either.Left;
 import charlie.util.either.Right;
 import com.google.common.collect.ImmutableList;
 import cora.config.Settings;
+import cora.rwinduction.engine.data.Equation;
+import cora.rwinduction.engine.data.ProofState;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 class DeductionSimplify extends DeductionAbstractRule {
 
-  static final class SimplifyArgs extends RuleArguments {
+  static final class SimplifyArgs extends DeductionArguments {
 
     private final EqSide _side;
     private final Either<Integer, Integer> _simplRule;
     private final Position _position;
     private final Substitution _matchingSubstitution;
+    private final Renaming _newNaming;
 
     /**
      * The rule simplify requires the following arguments.
@@ -32,8 +32,8 @@ class DeductionSimplify extends DeductionAbstractRule {
      * (E, H)}.
      * @param eqIndex the index of the equation this rule will be applied to
      * @param s the equation side for which this rule will be applied, i.e.,
-     * {@link RuleArguments.EqSide#L } for left or
-     * {@link RuleArguments.EqSide#R } for right.
+     * {@link DeductionArguments.EqSide#L } for left or
+     * {@link DeductionArguments.EqSide#R } for right.
      *
      * @param rule the index of the to be in either R or H, pass a {@link charlie.util.either.Left}
      *             in the former or a {@link charlie.util.either.Right} on the latter case.
@@ -41,22 +41,25 @@ class DeductionSimplify extends DeductionAbstractRule {
      * @param matchingSubstitution the matching substitution.
      */
     public SimplifyArgs(@NotNull ProofState proofState,
-                              @NotNull int eqIndex,
-                              @NotNull EqSide s,
-                              @NotNull Either<Integer, Integer> rule,
-                              @NotNull Position p,
-                              @NotNull Substitution matchingSubstitution) {
+                        @NotNull int eqIndex,
+                        @NotNull EqSide s,
+                        @NotNull Either<Integer, Integer> rule,
+                        @NotNull Position p,
+                        @NotNull Substitution matchingSubstitution,
+                        @NotNull Renaming newNaming) {
       super(proofState, eqIndex);
       Objects.requireNonNull(proofState);
       Objects.requireNonNull(s);
       Objects.requireNonNull(rule);
       Objects.requireNonNull(p);
       Objects.requireNonNull(matchingSubstitution);
+      Objects.requireNonNull(newNaming);
 
       _side = s;
       _simplRule = rule;
       _position = p;
       _matchingSubstitution = matchingSubstitution;
+      _newNaming = newNaming;
     }
 
     /** Returns the position */
@@ -212,7 +215,7 @@ class DeductionSimplify extends DeductionAbstractRule {
    * @return
    */
   @Override
-  <T extends RuleArguments> Either<String, Boolean> isApplicable(T args) {
+  <T extends DeductionArguments> Either<String, Boolean> isApplicable(T args) {
     if (args instanceof SimplifyArgs simplifyArgs) {
       Either<String, Boolean> bounds = checkIndexBounds(simplifyArgs);
       if (bounds.isLeft()) { return bounds; }
@@ -238,7 +241,7 @@ class DeductionSimplify extends DeductionAbstractRule {
    * @return
    */
   @Override
-  protected <T extends RuleArguments> Either<String, ProofState> ruleLogic(T args) {
+  protected <T extends DeductionArguments> Either<String, ProofState> ruleLogic(T args) {
     if (args instanceof SimplifyArgs simplifyArgs) {
       Term rhsRuleInstance = simplifyArgs
         .getRwRule()

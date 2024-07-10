@@ -4,6 +4,6 @@ import charlie.util.either.Either;
 
 interface Command extends RunnableArguments {
 
-  Either<String, Boolean> run(String args);
+  Either<String, Boolean> run(Prover prover, String args);
 
 }

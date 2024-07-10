@@ -1,4 +1,4 @@
-package cora.rwinduction.engine;
+package cora.rwinduction.engine.deduction;
 
 import charlie.terms.Substitution;
 import charlie.theorytranslation.TermAnalyser;
@@ -7,11 +7,12 @@ import charlie.util.either.FunctorialUtils;
 import charlie.util.either.Left;
 import charlie.util.either.Right;
 import cora.config.Settings;
+import cora.rwinduction.engine.data.Equation;
+import cora.rwinduction.engine.data.ProofState;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.BinaryOperator;
 
-
-final class DeductionDelete extends DeductionAbstractRule {
+public final class DeductionDelete extends DeductionAbstractRule {
 
   /**
    * In an equation of the form {@code s = t [c]}, this method checks if {@code c}
@@ -47,9 +48,8 @@ final class DeductionDelete extends DeductionAbstractRule {
     return new Right<>(equation.getLhs().equals(equation.getRhs()));
   }
 
-
   @Override
-  public <T extends RuleArguments> Either<String, Boolean> isApplicable(@NotNull T args) {
+  <T extends DeductionArguments> Either<String, Boolean> isApplicable(@NotNull T args) {
     // For efficiency, after checking each condition, if they fail (so returning a Left<>)
     // We should return its value immediately and don't check the other conditions.
     // Implementation note: specially the ones that use the SMT solvers.
@@ -79,7 +79,7 @@ final class DeductionDelete extends DeductionAbstractRule {
   }
 
   @Override
-  protected <T extends RuleArguments> Either<String, ProofState> ruleLogic(@NotNull T args) {
+  protected <T extends DeductionArguments> Either<String, ProofState> ruleLogic(@NotNull T args) {
     return new Right<>(args.getProofState().deleteEquation(args.getEquationIndex()));
   }
 }

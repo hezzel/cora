@@ -1,4 +1,4 @@
-package cora.rwinduction.engine;
+package cora.rwinduction.engine.data;
 
 import charlie.exceptions.NullStorageException;
 import charlie.trs.Rule;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
  * For instance, {@link ProofState#addEquation(Equation)} does not modify the current object but
  * returns a new proof state with the new equation instead.
  */
-class ProofState {
+public class ProofState {
   private final TRS _trs;
   private final ImmutableList<Equation> _equations;
   private final ImmutableList<Rule> _hypotheses;
@@ -51,21 +51,21 @@ class ProofState {
     _hypotheses = hypotheses;
   }
 
-  TRS getTRS() {
+  public TRS getTRS() {
     return _trs;
   }
 
   /**
    * Returns the list of equations in this proof state.
    */
-  ImmutableList<Equation> getEquations() {
+  public ImmutableList<Equation> getEquations() {
     return _equations;
   }
 
   /**
    * Returns the list of hypotheses in this proof state.
    */
-  ImmutableList<Rule> getHypotheses() {
+  public ImmutableList<Rule> getHypotheses() {
     return _hypotheses;
   }
 
@@ -77,7 +77,7 @@ class ProofState {
    * @return the new proof state
    */
   @Contract(pure = true)
-  ProofState addEquation(Equation equation) {
+  public ProofState addEquation(Equation equation) {
     return new ProofState(
       _trs,
       ImmutableList.<Equation>builder()
@@ -98,7 +98,7 @@ class ProofState {
    *         ({@code equationIndex < 0 || equationIndex >= E.size()})
    */
   @Contract(pure = true)
-  ProofState deleteEquation(int equationIndex) {
+  public ProofState deleteEquation(int equationIndex) {
     ImmutableList.Builder<Equation> builder = ImmutableList.builder();
 
     for(int i = 0 ; i < _equations.size() ; i++) {
@@ -118,7 +118,7 @@ class ProofState {
    * @return
    */
   @Contract(pure = true)
-  ProofState replaceEquation(int equationIndex, Equation equation) {
+  public ProofState replaceEquation(int equationIndex, Equation equation) {
     ImmutableList.Builder<Equation> builder = ImmutableList.builder();
     for(int i = 0 ; i < _equations.size() ; i++) {
       if (i != equationIndex) {
@@ -133,7 +133,7 @@ class ProofState {
   }
 
   @Contract(pure = true)
-  ProofState addHypothesis(Rule rule) {
+  public ProofState addHypothesis(Rule rule) {
     return new ProofState(
       _trs,
       _equations,
@@ -144,8 +144,16 @@ class ProofState {
     );
   }
 
+  /**
+   * Returns whether this state is a final state, that is, the set of equations, i.e.,
+   * the proof goal, is empty.
+   */
+  public boolean isFinalState() {
+    return _equations.isEmpty();
+  }
+
   @Contract(" -> new")
-  static @NotNull ProofState createEmptyState(TRS trs) {
+  public static @NotNull ProofState createInitialState(TRS trs) {
     return new ProofState(trs, ImmutableList.of());
   }
 

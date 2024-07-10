@@ -1,12 +1,6 @@
 package cora.rwinduction.tui;
 
-import cora.rwinduction.engine.Action;
-
-import java.util.Scanner;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 public class REPL {
 

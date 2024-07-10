@@ -2,7 +2,7 @@ package cora.rwinduction.engine;
 
 import java.util.function.Consumer;
 
-class Actions {
+class ActionsStatics {
 
   static Consumer<String[]> forceQuit = _ -> {
     System.exit(0);

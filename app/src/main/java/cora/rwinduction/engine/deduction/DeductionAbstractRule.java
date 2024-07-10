@@ -1,8 +1,9 @@
-package cora.rwinduction.engine;
+package cora.rwinduction.engine.deduction;
 
 import charlie.util.either.Either;
 import charlie.util.either.Left;
 import charlie.util.either.Right;
+import cora.rwinduction.engine.data.ProofState;
 
 abstract class DeductionAbstractRule {
 
@@ -27,13 +28,13 @@ abstract class DeductionAbstractRule {
    * <p> This API will always assume that if no reason is provided, none is needed.</p>
    * <p> See {@link Either} for more details on this type.</p>
    */
-  abstract <T extends RuleArguments> Either<String, Boolean> isApplicable(T args);
+  abstract <T extends DeductionArguments> Either<String, Boolean> isApplicable(T args);
 
   //TODO implement documentation
-  protected abstract <T extends RuleArguments> Either<String, ProofState> ruleLogic(T args);
+  protected abstract <T extends DeductionArguments> Either<String, ProofState> ruleLogic(T args);
 
   //TODO implement documentation
-  final <T extends RuleArguments> Either<String, ProofState> applyRule(T args) {
+  public final <T extends DeductionArguments> Either<String, ProofState> applyRule(T args) {
 
     Either<String, Boolean> result = isApplicable(args);
 
