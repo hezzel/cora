@@ -208,7 +208,7 @@ public class RenamingTest {
   }
 
   @Test
-  public void testCopyFor() {
+  public void testLimit() {
     Renaming renaming = makeRenaming();
     Variable x = TermFactory.createVar("x", CoraParser.readType("b"));
     Variable y = TermFactory.createVar("y", CoraParser.readType("b"));
@@ -223,15 +223,11 @@ public class RenamingTest {
     Term b = g.apply(x).apply(z); // g(x, z)
     Term c = g.apply(w).apply(z); // g(w, z)
 
-    Pair<Renaming,Set<Replaceable>> pair = renaming.copyFor(a, b, c);
-    Renaming copy = pair.fst();
-    Set<Replaceable> reps = pair.snd();
-    assertTrue(copy.getName(x).equals("x"));
-    assertTrue(copy.getName(y) == null);
-    assertTrue(copy.domain().size() == 1);
-    assertTrue(reps.contains(z));
-    assertTrue(reps.contains(w));
-    assertTrue(reps.size() == 2);
+    renaming.limitDomain(a, b, c);
+
+    assertTrue(renaming.domain().size() == 1);
+    assertTrue(renaming.getName(x).equals("x"));
+    assertTrue(renaming.getReplaceable("y") == null);
   }
 }
 

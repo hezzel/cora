@@ -137,25 +137,20 @@ public class Renaming {
     return ret;
   }
 
-  /**
-   * Creates a copy of the current Renaming that has a name only for the replaceables that occur
-   * in any of the terms in the given term list.  Replaceables that occur in these terms but do NOT
-   * occur in the current Renaming, are put in the set that is the second returned argument.
-   */
-  public Pair<Renaming,Set<Replaceable>> copyFor(Term ...terms) {
-    Renaming ret = new Renaming(_avoid);
-    TreeSet<Replaceable> newReplaceables = new TreeSet<Replaceable>();
-    for (Term s : terms) {
-      for (Replaceable x : s.freeReplaceables()) {
-        if (ret._varToName.get(x) != null || newReplaceables.contains(x)) continue;
-        if (_varToName.get(x) == null) {
-          newReplaceables.add(x);
-          continue;
+  /** Limits the Renaming to only the replaceables that occur in any of the given terms. */
+  public void limitDomain(Term ...terms) {
+    TreeSet<Replaceable> remove = new TreeSet<Replaceable>();
+    for (Replaceable r : _varToName.keySet()) {
+      boolean ok = false;
+      for (Term t : terms) {
+        if (t.freeReplaceables().contains(r)) {
+          ok = true;
+          break;
         }
-        ret.setName(x, _varToName.get(x));
       }
+      if (!ok) remove.add(r);
     }
-    return new Pair<Renaming,Set<Replaceable>>(ret, newReplaceables);
+    for (Replaceable r : remove) unsetName(r);
   }
 }
 
