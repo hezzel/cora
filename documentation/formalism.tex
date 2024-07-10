@@ -20,13 +20,21 @@
 
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\F}{\mathcal{F}}
+\newcommand{\thF}{\mathcal{F}_{\mathtt{theory}}}
 \newcommand{\V}{\mathcal{V}}
+\newcommand{\thV}{\mathcal{V}}
 \newcommand{\M}{\mathcal{M}}
+\newcommand{\thM}{\mathcal{M}_{\mathtt{theory}}}
 \newcommand{\Vfree}{\mathcal{V}_{\mathit{nonb}}}
+\newcommand{\thVfree}{\mathcal{V}_{\mathit{nonb},\mathtt{theory}}}
 \newcommand{\Vbound}{\mathcal{V}_{\mathit{binder}}}
+\newcommand{\thVbound}{\mathcal{V}_{\mathit{binder},\mathtt{theory}}}
 \newcommand{\Sorts}{\mathcal{S}}
+\newcommand{\thSorts}{\mathcal{S}_{\mathtt{theory}}}
 \newcommand{\Types}{\mathcal{Y}}
+\newcommand{\thTypes}{\mathcal{Y}_{\mathtt{theory}}}
 \newcommand{\Terms}{\mathcal{T}}
+\newcommand{\MTerms}{\mathcal{B}}
 \newcommand{\ATerms}{\mathcal{T}_{\mathcal{A}}}
 \newcommand{\FOTerms}{\mathcal{T}_{\mathcal{FO}}}
 \newcommand{\Rules}{\mathcal{R}}
@@ -35,6 +43,10 @@
 \newcommand{\BV}{\mathit{BV}}
 \newcommand{\Positions}{\mathsf{Pos}}
 \newcommand{\Pairs}{\mathit{Pairs}}
+\newcommand{\I}{\mathcal{I}}
+\newcommand{\J}{\mathcal{J}}
+\newcommand{\Val}{\mathcal{V}\!\mathit{al}}
+\newcommand{\Reps}{\mathcal{R}\!\mathit{ep}}
 
 \newcommand{\domain}{\mathtt{dom}}
 \newcommand{\order}{\mathit{order}}
@@ -49,6 +61,8 @@
 \newcommand{\afun}{\identifier{f}}
 \newcommand{\bfun}{\identifier{g}}
 \newcommand{\cfun}{\identifier{h}}
+\newcommand{\aconstructor}{\identifier{c}}
+\newcommand{\bconstructor}{\identifier{d}}
 \newcommand{\avar}{x}
 \newcommand{\bvar}{y}
 \newcommand{\cvar}{z}
@@ -83,6 +97,7 @@
 \newcommand{\headsubtermeq}{\unlhd_{\bullet}}
 \newcommand{\supterm}{\rhd}
 \newcommand{\suptermeq}{\unrhd}
+\newcommand{\interpret}[1]{\llbracket #1 \rrbracket}
 
 \newcommand{\symb}[1]{\mathtt{#1}}
 
@@ -94,7 +109,8 @@
 \newcommand{\sfalse}{\symb{false}}
 \newcommand{\suc}{\symb{s}}
 \newcommand{\map}{\symb{map}}
-\newcommand{\bool}{\symb{bool}}
+\newcommand{\bool}{\symb{Bool}}
+\newcommand{\tint}{\symb{Int}}
 \newcommand{\nat}{\symb{nat}}
 \newcommand{\lijst}{\symb{list}}
 \newcommand{\unitsort}{\mathtt{o}}
@@ -236,6 +252,9 @@ $\atype \in \Types$ using the following clauses:
   \atype_k \arrtype \btype,k)) \in \M$ for some $k \geq 1$ and $t_1 :: \atype_1,
   \dots,t_k :: \atype_n$ then $\meta{\ameta}{t_1,\dots,t_k} :: \btype$
 \end{description}
+
+We let $\MTerms(\F,\M,\V)$ denote the set of all terms built using the signature
+$\F$, meta-variables $\M$ and variables $\V$.
 
 We will identify $h() = h$.  This allows us to write any term in a form $h(s_1,
 \dots,s_n)$ with $n \geq 0$, where the \emph{head} $h$ is either a constant,
@@ -618,14 +637,15 @@ at position $p$}, $s|_p$, as follows:
 For all other positions $p$, the subterm of $s$ at position $p$ is undefined.
 
 We let $\Positions(s,\mathsf{full})$ denote the set of all full positions $p$
-such that $s|_p$ is defined, and $\Positions(s,\mathsf{partial})$ denote the
-set of all partial positions $p$ for which $s|_p$ is defined.  Note that both
-sets are finite.
+such that $s|_p$ is defined, and $\Positions(s,\mathsf{all})$ denote the
+set of all positions $p$ (full or partial) for which $s|_p$ is defined.  Note
+that both sets are finite, and that $\Positions(s,a) = \Positions(t,a)$ whenever
+$s =_\alpha t$.
 
 Hence, a subterm position $p_i = j > 0$ indicates ``descend into argument $j$
 of an application, or tuple argument $j$''.  A subterm position $p_i = 0$
 indicates ``descend into an abstraction (which should be at the head of the
-current term)''.  A subterm position $p_i = !j$ indicates ``descend into
+current term)''.  A subterm position $p_i =\ !j$ indicates ``descend into
 meta-argument $j$''.
 
 If $s|_p$ has the same type as some term $u$, then $s[u]_p$ denotes $s$ with
@@ -646,11 +666,11 @@ follows:
 Thus, we can find and replace the subterm at a (full or partial) given position
 in $s$.
 
-Note that this is \emph{not} an operation on equivalence classes of terms; for
-example, $\abs{x}{x} =_\alpha \abs{y}{y}$, but $(\abs{x}{x})[x]_0 = \abs{x}{x}
-\not =_\alpha \abs{y}{x} = (\abs{y}{y})[y]_0$.  Hence, when subterms are
-considered this should usually be accompanied by some result that guarantees the
-operation handles bound variables properly.
+Note that $s \mapsto s|_p$ and $s \mapsto s[u]_p$ are \emph{not} operations on
+equivalence classes of terms; for example, $\abs{x}{x} =_\alpha \abs{y}{y}$, but
+$(\abs{x}{x})[x]_0 = \abs{x}{x} \not =_\alpha \abs{y}{x} = (\abs{y}{y})[y]_0$.
+Hence, when subterms are considered this should usually be accompanied by some
+result that guarantees the operation handles bound variables properly.
 
 \emph{Remark.}
 Note also that we do \emph{not} have the property that if $p$ is a position of
@@ -743,8 +763,6 @@ distinguish them here because doing so is practical for analysis.
 
 \section{Substitution}
 
-==================
-
 A \emph{substitution} is a partial function $\gamma$ that maps:
 \begin{itemize}
 \item \emph{variables} $\avar :: \atype$ to terms of type $\atype$
@@ -756,8 +774,12 @@ variables and meta-variables for which $\gamma$ is defined; note that (in
 contrast to some of the literature) this includes those $\avar$ with
 $\gamma(\avar) = \avar$.
 We denote $[x_1:=s_1,\dots,x_n:=s_n]$ for the substitution $\gamma$ with
-domain $\{x_1,\dots,x_n\{$ that maps each $x_i$ to $s_i$; finite substitutions
+domain $\{x_1,\dots,x_n\}$ that maps each $x_i$ to $s_i$; finite substitutions
 can always be denoted in such a form.
+%For variables $\avar$ not in the domain of $\gamma$, we will slightly abuse
+%notation and denote $\gamma(\avar) = \avar$; for meta-variables $\Cvar ::
+%(\atype,k)$ not in the domain of $\gamma$ we denote $\gamma(\Cvar) =
+%\abs{\avar_1 \dots \avar_k}{\meta{\Cvar}{\avar_1,\dots,\avar_k}}$.
 Applying a substitution $\gamma$ to a term $s$, notation $s\gamma$, yields a
 new term of the same type, by the following clauses:
 
@@ -781,7 +803,8 @@ new term of the same type, by the following clauses:
   =u_1,\dots,\bvar_n:=u_n]$ maps $\bvar_i$ to $u_j$.)
 \end{itemize}
 ** A \emph{fresh} variable $\cvar$ is one that does not occur in
-$\FV(\bvar\gamma)$ for any $\bvar \in \FV(s)$.
+$\FV(\bvar\gamma)$ for any $\bvar \in \FV(s)$, nor in
+$\FV(\gamma(\Avar))$ for any $\Avar \in \FMV(s) \cap \domain(\gamma)$.
 
 Due to the case for meta-application, it is not immediately obvious that these
 definitions are well-founded: it is not the case that each step is defined in
@@ -798,52 +821,180 @@ between terms.  However, they do define a function on \emph{equivalence classes}
 (by Corollary \ref{cor:substitutionalpha}):
 \begin{itemize}
 \item if $s_1 =_\alpha s_2$ and $s_1\gamma = t_1$ and $s_2\gamma' = t_2$ and
-  $\gamma(x) =_\alpha \gamma'(x)$ for $x \in \FV(s_1)$, then $t_1 =_\alpha t_2$;
+  $\domain(\gamma) = \domain(\gamma')$ and
+  $\gamma(x) =_\alpha \gamma'(x)$ for all $x \in (\FV(s_1) \cup \FMV(s_1)) \cap
+  \domain(\gamma)$, then $t_1 =_\alpha t_2$;
 \item if $s_1 =_\alpha s_2$ and $s_1\gamma = t_1$ and $s_2\gamma = t_2$ then
-  $t_1 =_\alpha t_2$ (this is a special case of the previous item, but it is
-  highlighted since it shows that substitution by a specific $\gamma$ defines a
-  function);
+  $t_1 =_\alpha t_2$ \\
+  (this is a special case of the previous item, but it is highlighted since it
+  shows that substitution by a specific $\gamma$ defines a function);
 \end{itemize}
 Hence, the difference is not significant, and we can safely think of
 substitution as defining a function.
 
-For two substitutions $\gamma$ and $\delta$, we let $\gamma\delta$ denote the substitution
-$[\avar := \gamma(\avar)\delta \mid \avar \in \domain(\gamma)] \cup
-[\avar := \delta(\avar) \mid \avar \in \domain(\delta) \setminus \domain(\gamma)]$.
-Essentially, applying a substitution $\gamma$ to a term corresponds with replacing each variable
-$\avar$ by $\avar\gamma$ (and evaluating the applications of abstractions that are created as a
-result), and applying $\gamma\delta$ corresponds to replacing $\avar$ by $(\avar\gamma)\delta$.
-We can prove (Lemma \ref{lem:combinesubst}) that $s(\gamma\delta)$ is exactly $(s\gamma)\delta$.
+For two substitutions $\gamma$ and $\delta$, we let $\gamma\delta$ denote the
+substitution $[\avar := \gamma(\avar)\delta \mid \avar \in \domain(\gamma)] \cup
+[\avar := \delta(\avar) \mid \avar \in \domain(\delta) \setminus
+\domain(\gamma)]$.
+We can prove (Lemma \ref{lem:combinesubst}) that $s(\gamma\delta)$ is exactly
+$(s\gamma)\delta$.
 
-A \emph{renaming} is a substitution $[x_1:=y_1,\dots,x_n:=y_n]$ with $x_1,\dots,x_n$ pairwise
-distinct, and $y_1,\dots,y_n$ pairwise distinct.
+\subsection*{In Charlie}
 
-
-\section{Unconstrained Applicative Meta-variable Systems (AMSs)}
-
-\subsection{Rules and rewriting}
-
-A rule $\rho$ is a pair $\ell \arrz r$ of two closed terms with the same type.
-
-For a given set of rules $\Rules$ and $T \subseteq \Terms(\F,\V)$, the reduction relation
-$\arr{\Rules,T}$ is given by:
 \begin{itemize}
-\item if there is some $\ell \arrz r \in \Rules$, a substitution $\gamma$ and a position $p$ of
-  $s$ such that $s|_p = \ell\gamma$, then $s \arr{\Rules} s[r\gamma]_p$
+\item Substitutions are represented by \texttt{charlie.terms.Substitution}.
+  Note that in principle, substitutions are \emph{mutable} objects, since they
+  can be extended or have mappings removed.
+\item Note that the domain of a substitution is a set of \emph{replaceables}
+  (which can be variables or meta-variables).
+\item In line with the common convention to denote $\gamma(\avar) = \avar$ for
+  variables $\avar \notin \domain(\gamma)$, the function
+  \texttt{Substitution::getReplaceablement(Variable x)} always returns a term
+  (but \texttt{Substitution::get(Replaceable x)} does not, since there is no
+  default mapping for a meta-variable of arity $> 1$).
 \end{itemize}
 
-\medskip
-Note that this explicitly includes applications of rules at the head of a subterm.
-We will denote $\arr{\Rules}$ for the relation $\arr{\Rules},\Terms(\F,\V)$.
+\section{rules and rewriting}
 
-A rule is a \emph{pattern rule} if the left-hand side $\ell$ is a pattern.
+A rule $\rho$ is a pair $\ell \arrz r$ of two closed terms with the same type,
+such that $\FMV(r) = \FMV(\ell)$, and $\ell$ is not a meta-variable application
+$\meta{\Avar}{\ell_1,\dots,\ell_k}$ with $k \geq 0$ (so also not a variable).
+
+For terms $s,t$, position $p \in \Positions(s,\mathsf{all})$ and rule $\rho =
+\ell \arrz r$, we say that \emph{$s$ reduces to $t$ by rule $\rho$ at position
+$p$} if there exists a substitution $\gamma$ such that $s|_p = \ell\gamma$ and
+$t = s[r\gamma]_p$.
+For $\Rules$ a set of rules, we say that \emph{$s$ reduces to $t$ by $\Rules$},
+denoted $s \arr{\Rules} t$, if there exist a position $p \in \Positions(s,
+\mathsf{partial})$ and rule $\rho \in \Rules$ such that $s$ reduces to $t$ by
+rule $\rho$ at position $p$.
+
+Note that this explicitly includes applications of rules at the head of a
+subterm.
+
+A rule $\ell \arrz r$ is:
+\begin{itemize}
+\item a \emph{pattern rule} if $\ell$ is a pattern;
+\item a \emph{semi-pattern} rule if $\ell$ is a semi-pattern;
+\item \emph{first-order} if both $\ell$ and $r$ are first-order;
+\item \emph{applicative} if both $\ell$ and $r$ are applicative;
+\item \emph{left-linear} if $\ell$ is linear: that is, for every $\Avar \in
+  \FMV(\ell)$ there is at most one position $p$ such that $\ell|_p$ has a form
+  $\meta{\Avar}{\ell_1,\dots,\ell_k}$;
+\item \emph{meta-free} if $\FMV(\ell) = \FV(s)$.
+\end{itemize}
+If $\ell$ has a form $\afun(\ell_1,\dots,\ell_k)$ then we say that $\afun$ is
+\emph{the root} of the rule $\ell \arrz r$.  (However, it is in principle not
+mandatory for the left-hand side to have such a shape.)
 
 We can see that $\arr{\Rules}$ really does define a reduction on the set of terms:
 
 \begin{lemma}
-If $s =_\alpha s'$ and $s \arr{\Rules} t$ then exists $t'$ with $t =_\alpha t'$ such that
-$s' \arr{\Rules} t'$.
+If $s =_\alpha s'$ and $s \arr{\Rules} t$ then exists $t'$ with $t =_\alpha t'$
+such that $s' \arr{\Rules} t'$.
 \end{lemma}
+
+\begin{definition}
+A \emph{generalised term rewriting system (TRS)} is an abstract rewriting
+system of the form $(T_\F,\arr{\Rules})$, where $\F$ is an alphabet and $T_\F
+\subseteq \Terms(\F,\V)$ is a set of true terms over $\F$, which is closed
+under the reduction relation $\arr{\Rules}$.
+\end{definition}
+
+We consider the sets $\Sorts$, $\V$ and $\M$ implicit.  The use of a subset
+$T_\F \subseteq \Terms(\F,\V)$ allows us to for instance consider first-order
+(many-sorted) TRSs (where $T_\F = \FOTerms(\F,\V)$ and all rules are
+first-order), applicative TRSs (where $T_\F = \ATerms(\F,\V)$ and all rules
+are applicative), or TRSs where tuples and product types are not allowed in
+term formation.
+
+While it is perfectly allowed for a generalised TRS to have infinitely many
+rules, in practice this can be hard to work with (and particularly to automate).
+Hence, we often use \emph{rule schemes}, which are ways to represent an infinite
+number of rules.  Some examples:
+\begin{itemize}
+\item Beta: for all $\atype,\btype \in \Types$,
+  a rule $(\abs{\avar}{\meta{\Bvar}{\avar}})(\Cvar) \arrz \meta{\Bvar}{\Cvar}$
+  with $\Cvar :: \atype$ and $\Bvar :: [\atype] \arrtype \btype$
+\item Eta: for all $\atype,\btype \in \Types$,
+  a rule $\abs{\avar}{\Bvar(\avar)} \arrz \Bvar$
+  with $\Bvar :: [] \arrtype \atype \arrtype \btype$
+\end{itemize}
+
+\subsection*{In Charlie}
+
+\begin{itemize}
+\item Rules are represented by \texttt{charlie.trs.Rule} (although this class
+  also represents \emph{constrained rules} -- see Section~\ref{sec:theories}).
+  They can be queried for properties like left-linearity or being a pattern
+  rule.
+\item Generalised TRSs are represented by \texttt{charlie.trs.TRS}.
+\item Both rules and generalised TRSs can be constructed using
+  \texttt{charlie.trs.TrsFactory}.
+  In particular, this factory offers ways to create specific, common kinds of
+  TRSs like many-sorted or pattern TRSs.  More about this in
+  Section~\ref{sec:trskinds}.
+\item To check whether a term $s$ is in the set $T_\F$ of a generalised TRS,
+  one may use \texttt{trs.termAllowed($s$)}.
+\item More typically, a TRS is created with specific restrictions on term
+  creation, and what these are can be checked using
+  \texttt{TRS::verifyProperties}.  This same function can be used to check
+  which properties the rules and rule schemes in a TRS satisfy.  More about this
+  will also be explained in Section~\ref{sec:trskinds}.
+\end{itemize}
+
+==================
+
+\section{Generalised TRSs with Theories}\label{sec:theories}
+
+We fix a set $\thSorts \subseteq \Sorts$ of \emph{theory sorts}, and define a
+\emph{theory type} as any type which only uses theory sorts; that is, a type
+generated by the grammar:
+\[
+\thTypes ::= \thSorts \mid \thTypes \arrtype \thTypes \mid
+  \product{\thTypes}{\thTypes}
+\]
+We additionally assume given, for every theory sort $\asort$, a set
+$\I_\asort$.  For example, we may have $\thSorts = \{\tint,\bool\}$ and let
+$\I_\tint = \mathbb{Z}$ and $\I_\bool = \{\top,\bot\}$.
+We use this to generate an asosciated set for \emph{all} theory types:
+\begin{itemize}
+\item $\I_{\atype \arrtype \btype}$ is the set of all functions from
+  $\I_\atype$ to $\I_\btype$
+\item $\I_{\product{\atype_1}{\atype_n}} = \I_{\atype_1} \times \dots \times
+  \I_{\atype_n}$
+\end{itemize}
+
+Next, we fix a set $\thF \subseteq \F$ of function symbols $(\afun :: \atype)$
+where $\atype$ is a theory type, and a function $\J$ that maps each
+$(\afun :: \atype) \in \thF$ to an element of $\I_\atype$.
+We require that for every sort $\asort$, $\thF \supseteq \Val_\asort$, where
+$\Val_\asort$ is a set of constants $\aconstructor :: \asort$ such that
+$\J$ defines a bijection from $\Val_\asort$ and $\I_\asort$.  We call the
+elements of $\Val := \bigcup_{\asort \in \thSorts} \Val_\asort$ \emph{values}.
+All other elements of $\thF$ are called \emph{calculation symbols}.
+
+A \emph{theory term} is one that uses only symbols from $\thF$, and
+(meta-)variables of a theory type.  That is, if we
+let $\thM := \{ (\Avar :: (\atype,k)) \mid (\Avar :: (\atype,k)) \in \M \wedge
+\atype \in \thTypes \}$,
+$\thVfree := \{ (\avar :: \atype) \mid (\avar :: \atype) \in \Vfree \wedge
+\atype \in \thTypes \}$,
+$\thVbound := \{ (\avar :: \atype) \mid (\avar :: \atype) \in \Vbound \wedge
+\atype \in \thTypes \}$,
+and $\thV := \thVfree \cup \thVbound$,
+then a theory term is an element of $\MTerms(\thF,\thM,\thV)$.
+Clearly, a theory term is still a term.
+
+==================
+
+Every closed theory term of type $\atype$ necessarily corresponds to an element
+of $\I_\atype$, defined as follows:
+\begin{itemize}
+\item $\interpret{\afun} = \J_\afun$
+\end{itemize}
+
+\section{Different kinds of generalised TRSs}\label{sec:trskinds}
 
 \subsection{HOTRSs}
 
@@ -1559,7 +1710,9 @@ multiple applications of both Lemmas \ref{lem:alphafreevar} and
 
 \begin{corollary}\label{cor:substitutionalpha}
 If $s =_\alpha s'$ and $\subrel{s,\gamma,t}$ and $\subrel{s',\gamma',t'}$ and
-  $\gamma(x) =_\alpha \gamma'(x)$ for all $x \in \FV(s)$, then $t =_\alpha t'$.
+  $\gamma(x) =_\alpha \gamma'(x)$ for all $x \in (\FV(s) \cup \FMV(s)) \cap
+  \domain(\gamma)$ and $\domain(\gamma) = \domain(\gamma')$, then
+  $t =_\alpha t'$.
 \end{corollary}
 
 \subsection{Some results on $\alpha$-equivalence and substitution}
@@ -2311,208 +2464,4 @@ $a =_\alpha b$ by Lemma~\ref{lem:alphaequiv}(\ref{lem:alphaequiv:transitive}).
 \end{proof}
 
 \end{document}
-
-
-\end{document}
-
-%\begin{lemma}\label{lem:combinesubst:innocent}
-%Let $s,t$ be terms, and $\gamma,\delta,\eta$ substitutions such that:
-%\begin{itemize}
-%\item $\domain(\gamma) \subseteq \Vbound$ and $\gamma(x) \in \Vbound$ for all
-%  $x \in \domain(\gamma)$
-%\item $\domain(\delta) = \{ \gamma(x) \mid x \in \domain(\gamma) \}$
-%\item $\domain(\delta) \cap \domain(\eta) = \emptyset$
-%\item $\domain(\zeta) = \domain(\gamma) \cup \domain(\eta)$
-%\item $\zeta(\avar) = \delta(\gamma(\avar))$ for $\avar \in \domain(\gamma)$ and
-%  $\zeta(\avar) = \eta(\avar)$ for $\avar \in \domain(\zeta) \setminus
-%    \domain(\gamma)$
-%\item $\FV(s) \cap \domain(\delta) \subseteq \domain(\gamma)$
-%\end{itemize}
-%If $\subrel{s,\gamma,t}$ and $\subrel{t,\delta \cup \eta,u}$ then
-%$\subrel{s,\zeta,u}$.
-%\end{lemma}
-%
-%\begin{proof}
-%By induction on the size of $s$.
-%\begin{itemize}
-%\item If $s = \afun$ then $t = \afun$ and $u = \afun$, so indeed
-%  $\subrel{s,\zeta,u}$.
-%\item If $s = \avar \in \domain(\gamma)$ then $t = \gamma(\avar)$, a variable,
-%  so $u = \delta(\gamma(\avar)) = \zeta(\avar)$; indeed $\subrel{\avar,\zeta,
-%  u}$.
-%\item If $s = \avar \in \V \setminus \domain(\gamma)$ then $t = \avar$.
-%  If also $\avar \notin \domain(\delta) \cup \domain(\eta)$ then $\avar \notin
-%  \domain(\zeta)$ as well, and we have $u = \avar$; then indeed
-%  $\subrel{\avar,\zeta,u}$ as well.
-%  Otherwise, we must have $\avar \in \domain(\eta)$ by the last requirement,
-%  so $u = \eta(\avar) = \zeta(\avar)$, and indeed $\subrel{\avar,\zeta,u}$.
-%\item If $s = h(s_1,\dots,s_n)$ with $n > 0$ then $t = w \cdot t_1 \cdots t_n$
-%  for some $w,\vec{t}$ such that $\subrel{h,\gamma,w}$ and $\subrel{s_i,\gamma,
-%  t_i}$ for all $i$.  By Lemma~\ref{lem:appsubstitute} we can write
-%  $u = q \cdot u_1 \cdots u_n$ such that $\subrel{w,\delta \cup \eta,q}$ and
-%  $\subrel{t_i,\delta \cup \eta,u_i}$ for all $i$, and by the induction
-%  hypothesis $\subrel{h,\zeta,q}$ and $\subrel{s_i,\zeta,u_i}$ for all $i$
-%  follows.  By definition then $\subrel{s,\zeta,u}$.
-%\item If $s = \tuple{s_1}{s_n}$ then $t = \tuple{t_1}{t_n}$ and $u = \tuple{
-%  u_1}{u_n}$, where $\subrel{s_i,\gamma,t_i}$ and $\subrel{t_i,\delta \cup
-%  \eta,u_i}$ for all $i$.  By the induction hypothesis $\subrel{s_i,\zeta,u_i}$
-%  follows.
-%\item If $s = \abs{\avar}{s'}$ then $t = \abs{\bvar}{t'}$
-%  and $u =\abs{\cvar}{u'}$ with:
-%  \begin{itemize}
-%  \item $\bvar \notin \FV(\gamma(a))$ for any $a \in \FV(s)$
-%  \item $\subrel{s',\gamma^{\avar:=\bvar},t'}$ where $\gamma^{\avar:=\bvar} =
-%  [\avar:=\bvar] \cup [a:=\gamma(a) \mid a \in \domain(\gamma) \setminus
-%  \{\avar\}]$
-%  \item $\cvar \notin \FV(\delta \cup \eta)(a)$ for any $a \in \FV(t) \cup
-%    (\FMV(t) \cap \domain(\delta \cup \eta))$
-%  \item $\subrel{t',\delta\eta^{\bvar:=\cvar},u'}$, where $\delta\eta^{\bvar:=
-%    \cvar} = [\bvar:=\cvar] \cup [a:=(\delta \cup \eta)(a) \mid a \in
-%    \domain(\delta \cup \eta) \setminus \{ \bvar \}]$ \\
-%  \end{itemize}
-%  Let us define:
-%  \begin{itemize}
-%  \item $\delta^{\neg\gamma(\avar),\bvar:=\cvar} = [\bvar:=\cvar] \cup
-%    [a:=\delta(a) \mid a \in \domain(\delta) \setminus \{ \gamma(\avar),\bvar\}]$;
-%  \item $\eta^{\neg\bvar} := [a:=\eta(a) \mid a \in \domain(\eta) \setminus
-%    \{\bvar\}$.
-%  \item $\zeta' = [a:=\delta(\gamma(a)) \mid a \in \domain(\gamma) \setminus
-%    \{\avar\}] \cup \\{}
-%    [\avar:=\cvar] \cup [a:=\eta(a) \mid a \in \domain(\eta) \setminus
-%    (\domain(\gamma) \cup \{\avar,\bvar\})]$. \\
-%  \end{itemize}
-%  Then observe that:
-%  \begin{itemize}
-%  \item $\domain(\gamma^{\avar:=\bvar}) \subseteq \Vbound$ and
-%    $\gamma^{\avar:=\bvar}(a) \in \Vbound$ for all $a \in \domain(
-%    \gamma^{\avar:=\bvar})$
-%  \item $\domain(\delta^{\neg\gamma(\avar),\bvar:=\cvar}) = (\domain(\delta)
-%    \setminus \{\gamma(\avar)\}) \cup \{\bvar\} = \{ \gamma^{\avar:=\bvar}(a)
-%    \mid a \in \domain(\gamma) \}$
-%  \item $\domain(\delta^{\neg\gamma(\avar),\bvar:=\cvar}) \cap
-%    \domain(\eta^{\neg\bvar}) = ((\domain(\delta) \setminus \{\gamma(\avar)\})
-%    \cup \{\bvar\}) \cap (\domain(\eta) \setminus \{\bvar\}) =
-%    (\domain(\delta) \setminus \{\gamma(\avar)\}) \cap (\domain(\eta) \setminus
-%    \{\bvar\}) \subseteq \domain(\delta) \cap \domain(\eta) = \emptyset$
-%  \item $\domain(\zeta') = (\domain(\gamma) \setminus \{\avar\}) \cup
-%    \{\avar\} \cup (\domain(\eta) \setminus (\domain(\gamma) \cup \{\avar,
-%    \bvar\})) = \domain(\gamma) \cup \{\avar\} \cup (\domain(\eta) \setminus
-%    \{\bvar\}) = \domain(\gamma^{\avar:=\bvar}) \cup \domain(\eta^{\neg\bvar})$
-%  \item =================
-%  \item $\zeta'(a) = \delta^{\neg\gamma(\avar),\bvar:=\cvar}(\gamma^{\avar:=
-%    \bvar}(a))$ for $a \in \domain(\gamma^{\avar:=\bvar})$:
-%    \begin{itemize}
-%    \item if $a = \avar$ then $\zeta'(a) = \cvar$ and
-%      $\delta^{\neg\gamma(\avar),\bvar:=\cvar}(\gamma^{\avar:=\bvar}(a)) =
-%      \delta^{\neg\gamma(\avar),\bvar:=\cvar}(\bvar) = \cvar$
-%    \item if $a \neq \avar$ then $a \in \domain(\gamma)$, so $\zeta'(a) =
-%      \delta(\gamma(a))$ and $\delta^{\neg\gamma(\avar),\bvar:=
-%      \cvar}(\gamma^{\avar:=\bvar}(a)) = \delta^{\neg\gamma(\avar),\bvar:=
-%      \cvar}(\gamma(a))$ TODO: $\gamma(a) \neq \gamma(\avar)$ and
-%      $\gamma(a) \neq \bvar$\dots
-%    \end{itemize}
-%  \end{itemize}
-%\end{itemize}
-%\end{proof}
-
-
-
-
-%\section{Unconstrained first-order term rewriting}
-%
-%Although first-order (many-sorted) term rewriting systems can be seen as a kind of higher-order
-%term rewriting system, we will present their definition separately first, and later explain how
-%they can be viewed as part of the larger framework.
-%
-%\subsection{Terms} When considering \emph{first-order} term rewriting, we limit interest to $\F$
-%with the following property: for every $(\afun : \atype) \in \F$ we have $\order(\atype) \leq 1$.
-%First-order terms are those expressions $s$ such that $s : \asort$ can be derived for some
-%\emph{base type} $\asort$ using the following clauses:
-%\begin{itemize}
-%\item if $(\afun : \atype_1 \arrtype \dots \arrtype \atype_n \arrtype \asort) \in \F$ and
-%  $s_1 : \atype_1,\dots,s_n : \atype_n$ then $\afun(s_1,\dots,s_n) : \asort$;
-%\item if $(\avar : \asort) \in \V$ then $\avar : \asort$.
-%\end{itemize}
-%We denote $\FOTerms(\F,\V)$ for the set of all first-order terms $s$.
-%A first-order term of the form $\afun(s_1,\dots,s_n)$ is called a \emph{functional term} and
-%$\afun$ is its root; a term $\avar$ is simply called a variable.
-%If $s : \asort$ then we say that $\asort$ is the type of $s$; it is clear from the definitions
-%above that each term has a unique type (which is a base type).
-%
-%The set $\FV(s)$ of \emph{variables} of a term $s$ is inductively defined as follows:
-%\begin{itemize}
-%\item $\FV(\afun(s_1,\dots,s_n)) = \FV(s_1) \cup \dots \cup \FV(s_n)$;
-%\item $\FV(\avar) = \{ \avar \}$.
-%\end{itemize}
-%%That is, $\FV(s)$ contains all variables in $s$.
-%
-%\bigskip
-%The \emph{subterm} relation $\subtermeq$ is defined as follows:
-%\begin{itemize}
-%\item $s \subtermeq s$ for all $s$;
-%\item $s \subtermeq \afun(s_1,\dots,s_n)$ if $s \subtermeq s_i$ for some $i$.
-%\end{itemize}
-%If $s \subtermeq t$ we say that $s$ \emph{is a subterm of} $t$.
-%
-%\subsection{Substitution}
-%
-%A substitution is a function $\gamma$ that maps each variable $\avar \in \V$ to a term
-%$\gamma(\avar)$ of the same type.  A substitution is applied to an arbitrary first-order term as
-%follows:
-%\begin{itemize}
-%\item $\afun(s_1,\dots,s_n)\gamma = \afun(s_1\gamma,\dots,s_n\gamma)$;
-%\item $\avar\gamma = \gamma(\avar)$.
-%\end{itemize}
-%
-%The \emph{domain} $\domain(\gamma)$ of a substitution $\gamma$ is the set of all variables $x$
-%such that $\gamma(x) \neq x$.
-%We denote $[x_1:=s_1,\dots,x_n:=s_n]$ for the substitution $\gamma$ with $\gamma(x_i) = s_i$ for
-%$1 \leq i \leq n$ and $\gamma(y) = y$ for $y \notin \{x_1,\dots,x_n\}$.
-%For two substitutions $\gamma$ and $\delta$, we let $\gamma\delta$ denote the substitution that
-%maps each variable $x$ to $\gamma(x)\delta$.
-%
-%\subsection{Positions}
-%
-%The \emph{positions} of a given first-order term are the paths to specific subterms, defined as
-%follows:
-%
-%\begin{itemize}
-%\item $\Positions(\afun(s_1,\dots,s_n)) = \{ \epsilon \} \cup \{ i \cdot p \mid 1 \leq i \leq n
-%  \wedge p \in \Positions(s_i) \}$;
-%\item $\Positions(\avar) = \{ \epsilon \}$.
-%\end{itemize}
-%Note that positions are associated to a term; thus, not every integer sequence is a position.
-%
-%For a term $s$ and a position $p \in \Positions(s)$, the \emph{subterm of $s$ at position $p$},
-%denoted $s|_p$, is defined as follows:
-%\begin{itemize}
-%\item $s|_\epsilon = s$;
-%\item $\afun(s_1,\dots,s_n)|_{i \cdot p} = s_i|_p$;
-%\end{itemize}
-%
-%Note that $t \subtermeq s$ if and only if there is some position $p \in \Positions(s)$ with
-%$t = s|_p$.
-%If $s|_p$ has the same type as some term $t$, then $s[t]_p$ denotes $s$ with the subterm at position
-%$p$ replaced by $t$.  Formally, $s[t]_p$ is obtained as follows:
-%\begin{itemize}
-%\item $s[t]_p = t$;
-%\item $\afun(s_1,\dots,s_n)[t]_{i \cdot p} = \afun(s_1,\dots,s_{i-1},s_i[t]_p,s_{i+1},\dots,s_n)$.
-%\end{itemize}
-%
-%\subsection{Rules and reduction}
-%
-%A rule is a pair $\ell \arrz r$ of two terms with the same type.
-%For a given set of rules $\Rules$, the reduction relation $\arr{\Rules}$ is given by:
-%\begin{itemize}
-%\item if there exist $\ell \arrz r \in \Rules$ and $p \in \Positions(s)$ and substitution $\gamma$
-%  such that $s|_p = \ell\gamma$, then $s \arr{\Rules} s[r\gamma]_p$.
-%\end{itemize}
-%
-%\bigskip
-%A \emph{first-order term rewriting system (TRS)} is an abstract rewriting system of the form
-%$(\FOTerms(\F,\V),\arr{\Rules})$.
-%
-%In principle, we have defined a \emph{many-sorted} TRS here; a traditional unsorted TRS is obtained
-%by limiting interest to the case $\Sorts = \{ \unitsort \}$.
-
 
