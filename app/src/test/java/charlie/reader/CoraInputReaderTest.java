@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import charlie.exceptions.ParseException;
 import charlie.types.Type;
@@ -511,15 +512,37 @@ public class CoraInputReaderTest {
     assertFalse(s.equals(t)); // different variables!
     TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
     Renaming renaming = printer.generateUniqueNaming(s);
-    assertTrue(CoraInputReader.readTerm("f(x, h(0, y))", renaming, trs).equals(s));
+    assertTrue(CoraInputReader.readTerm("f(x, h(0, y))", renaming, false, trs).equals(s));
     Variable x = renaming.getVariable("x");
     Variable y = renaming.getVariable("y");
 
     Renaming newnaming = new Renaming(trs.queryFunctionSymbolNames());
     newnaming.setName(x, "aa");
     newnaming.setName(y, "bb");
-    Term q = CoraInputReader.readTerm("f(aa, h(0, bb))", newnaming, trs);
+    Term q = CoraInputReader.readTerm("f(aa, h(0, bb))", newnaming, false, trs);
     assertTrue(s.equals(q));
+  }
+
+  @Test
+  public void testUpdateRenaming() {
+    TRS trs = CoraInputReader.readTrsFromString("f :: a -> a -> a");
+    Renaming renaming = new Renaming(Set.of());
+    Variable x = TermFactory.createVar("x", type("a"));
+    renaming.setName(x, "y");
+    Term s = CoraInputReader.readTerm("f(x, y)", renaming, true, trs);
+    assertTrue(s.toString().equals("f(x__2, x__1)"));
+    assertTrue(renaming.getName(x).equals("y"));
+    assertTrue(renaming.getName(s.queryArgument(1).queryVariable()).equals("x"));
+  }
+
+  @Test
+  public void testUpdateRenamingIllegal() {
+    TRS trs = CoraInputReader.readTrsFromString("f :: a -> a");
+    Renaming renaming = new Renaming(Set.of("x"));
+    Term s = CoraInputReader.readTerm("f(x)", renaming, false, trs);
+    assertTrue(s.toString().equals("f(x)"));
+    assertThrows(ParseException.class, () ->
+      CoraInputReader.readTerm("f(x)", renaming, true, trs));
   }
 }
 
