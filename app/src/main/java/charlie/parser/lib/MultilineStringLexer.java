@@ -20,7 +20,7 @@ package charlie.parser.lib;
  * no token can span more than a single line.  Thus, we go through the lines, and set appropriate
  * positioning information for each Token we encounter.
  */
-class MultilineStringLexer implements Lexer {
+class MultilineStringLexer implements ModeLexer {
   private TokenFinder _tokenfinder;
   private String[] _lines;
   private int _currentLine;
@@ -33,6 +33,7 @@ class MultilineStringLexer implements Lexer {
   MultilineStringLexer(TokenFinder finder, String search) {
     _tokenfinder = finder;
     _lines = search.split("\\R");
+    for (int i = 0; i < _lines.length-1; i++) _lines[i] += "\n";
     _currentLine = 0;
     setupNextLexer();
   }
@@ -61,5 +62,14 @@ class MultilineStringLexer implements Lexer {
     }
     if (lastEof == null) lastEof = Token.eofToken(new ParsePosition(_currentLine + 1, 1));
     return lastEof;
+  }
+
+  public void switchMode(TokenFinder newfinder) {
+    if (_currentLineLexer != null) _currentLineLexer.switchMode(newfinder);
+    _tokenfinder = newfinder;
+  }
+
+  public TokenFinder getCurrentMode() {
+    return _tokenfinder;
   }
 }

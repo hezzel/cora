@@ -88,5 +88,29 @@ public class StringLexerTest {
     token = lexer.nextToken();
     assertTrue(token.isEof());
   }
+
+  @Test
+  public void testSwitchTokeniser() {
+    TokenFinder tf1 = new TokenFinder(new String[] {
+                                        "[a-zA-Z_][a-z0-9A-Z_]*", "IDENTIFIER",
+                                        "0|[1-9][0-9]*", "INTEGER",
+                                        "\\s", Token.SKIP });
+    TokenFinder tf2 = new TokenFinder(new String[] {
+                                        "[0-9]", "DIGIT",
+                                        ".", "CHARACTER",
+                                      });
+    StringLexer lexer = new StringLexer(tf1, "ABC d1 341");
+    lexer.setFilename("fname");
+    lexer.setLineNumber(4);
+    assertTrue(lexer.nextToken().toString().equals("fname:4:1: ABC (IDENTIFIER)"));
+    lexer.switchMode(tf2);
+    assertTrue(lexer.nextToken().toString().equals("fname:4:4:   (CHARACTER)"));
+    assertTrue(lexer.nextToken().toString().equals("fname:4:5: d (CHARACTER)"));
+    assertTrue(lexer.nextToken().toString().equals("fname:4:6: 1 (DIGIT)"));
+    assertTrue(lexer.nextToken().toString().equals("fname:4:7:   (CHARACTER)"));
+    assertTrue(lexer.nextToken().toString().equals("fname:4:8: 3 (DIGIT)"));
+    lexer.switchMode(tf1);
+    assertTrue(lexer.nextToken().toString().equals("fname:4:9: 41 (INTEGER)"));
+  }
 }
 

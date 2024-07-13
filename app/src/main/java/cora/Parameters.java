@@ -265,7 +265,7 @@ public class Parameters {
         "as they will be considered part of the term.")
       .append(System.lineSeparator());
 
-    str.append("    -t | --terminate" +
+    str.append("    -t | --termination" +
         "        " +
         "    " +
         "Try to prove or disprove termination of the given TRS.")

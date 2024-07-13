@@ -29,11 +29,13 @@ public class MultilineStringLexerTest {
     Token token = lexer.nextToken();
     assertTrue(token.toString().equals("1:1: BING (IDENTIFIER)"));
     token = lexer.nextToken();
-    assertTrue(token.toString().equals("1:5:   (WHITESPACE)"));
+    assertTrue(token.toString().equals("1:5:  \n (WHITESPACE)"));
     token = lexer.nextToken();
     assertTrue(token.toString().equals("2:1:    (WHITESPACE)"));
     token = lexer.nextToken();
     assertTrue(token.toString().equals("2:3: 12 (INTEGER)"));
+    token = lexer.nextToken();
+    assertTrue(token.toString().equals("2:5: \n (WHITESPACE)"));
     token = lexer.nextToken();
     assertTrue(token.toString().equals("3:1: 31 (INTEGER)"));
     token = lexer.nextToken();
@@ -45,6 +47,8 @@ public class MultilineStringLexerTest {
     token = lexer.nextToken();
     assertTrue(token.toString().equals("3:9: ? (CATCHALL)"));
     token = lexer.nextToken();
+    assertTrue(token.toString().equals("3:10: \n (WHITESPACE)"));
+    token = lexer.nextToken();
     assertTrue(token.toString().equals("4:1: 0 (INTEGER)"));
     token = lexer.nextToken();
     assertTrue(token.isEof());
@@ -54,6 +58,26 @@ public class MultilineStringLexerTest {
     assertTrue(token.toString().equals("5:1:  (EOF)"));
     token = lexer.nextToken();
     assertTrue(token.toString().equals("5:1:  (EOF)"));
+  }
+
+  @Test
+  public void testSwitchMode() throws LexerException {
+    TokenFinder tf1 = new TokenFinder(new String[] {
+                                        "[a-zA-Z_][a-z0-9A-Z_]*", "IDENTIFIER",
+                                        "0|[1-9][0-9]*", "INTEGER",
+                                        "\\s+", "WHITESPACE" });
+    TokenFinder tf2 = new TokenFinder(new String[] {
+                                        "[^a]+", "NOTA",
+                                        "a", "A",
+                                      });
+    ModeLexer lexer = new MultilineStringLexer(tf1, "hello sweet world!\n How are you todaaaay?");
+    assertTrue(lexer.nextToken().toString().equals("1:1: hello (IDENTIFIER)"));
+    lexer.switchMode(tf2);
+    assertTrue(lexer.nextToken().toString().equals("1:6:  sweet world!\n (NOTA)"));
+    assertTrue(lexer.nextToken().toString().equals("2:1:  How  (NOTA)"));
+    assertTrue(lexer.nextToken().toString().equals("2:6: a (A)"));
+    lexer.switchMode(tf1);
+    assertTrue(lexer.nextToken().toString().equals("2:7: re (IDENTIFIER)"));
   }
 }
 
