@@ -258,12 +258,14 @@ class DeductionSimplify extends DeductionAbstractRule {
         case L -> {
             Term newLeft =
               currEq.getLhs().replaceSubterm(simplifyArgs.getPosition(), rhsRuleInstance);
-            yield new Equation(newLeft, currEq.getRhs(), currEq.getConstraint());
+            // TODO Need to fix this
+            yield new Equation(newLeft, currEq.getRhs(), currEq.getConstraint(), simplifyArgs._newNaming);
           }
           case R -> {
             Term newRight =
               currEq.getRhs().replaceSubterm(simplifyArgs.getPosition(), rhsRuleInstance);
-            yield new Equation(currEq.getLhs(), newRight, currEq.getConstraint());
+            // TODO need to fix this
+            yield new Equation(currEq.getLhs(), newRight, currEq.getConstraint(), simplifyArgs._newNaming);
           }
         };
 

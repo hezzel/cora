@@ -3,16 +3,24 @@ package cora.rwinduction.engine.data;
 import charlie.terms.Renaming;
 import charlie.terms.Term;
 
+import java.util.Objects;
+
 public class Equation {
   private Term _lhs;
   private Term _rhs;
   private Term _constraint;
   private Renaming _varNaming;
 
-  public Equation(Term lhs, Term rhs, Term constraint) {
+  public Equation(Term lhs, Term rhs, Term constraint, Renaming varNaming) {
+    Objects.requireNonNull(lhs);
+    Objects.requireNonNull(rhs);
+    Objects.requireNonNull(constraint);
+    Objects.requireNonNull(varNaming);
+
     _lhs = lhs;
     _rhs = rhs;
     _constraint = constraint;
+    _varNaming = varNaming;
   }
 
   public Term getLhs() {
@@ -23,8 +31,8 @@ public class Equation {
     return _rhs;
   }
 
-  public Term getConstraint() {
-    return _constraint;
-  }
+  public Term getConstraint() { return _constraint; }
+
+  public Renaming getVarNaming() {return _varNaming; }
 
 }
