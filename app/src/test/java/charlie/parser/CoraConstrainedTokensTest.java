@@ -425,7 +425,7 @@ public class CoraConstrainedTokensTest {
   public void testUnterminatedStringEndLine() throws LexerException {
     Lexer lexer = createLexer("\"bla\n20 bla\"");
     assertTrue(checkExceptionOnNextToken(lexer, "1:1:"));
-    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"bla\"");
+    verifyToken(lexer.nextToken(), CoraTokenData.STRING, "\"bla\n\"");
     verifyToken(lexer.nextToken(), CoraTokenData.INTEGER, "20");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "bla");
     assertTrue(checkExceptionOnNextToken(lexer, "2:7:"));

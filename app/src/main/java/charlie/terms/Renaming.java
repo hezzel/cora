@@ -19,6 +19,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
 import charlie.exceptions.NullStorageException;
+import charlie.util.Pair;
 
 /**
  * Renamings are used by TermPrinters to give each (meta-)variable in a given term or set of terms
@@ -126,6 +127,30 @@ public class Renaming {
    */
   public boolean isAvailable(String name) {
     return !_avoid.contains(name) && _nameToVar.get(name) == null;
+  }
+
+  /** Makes a copy of the current renaming, so one can be changed without affecting the other. */
+  public Renaming copy() {
+    Renaming ret = new Renaming(_avoid);
+    ret._varToName.putAll(_varToName);
+    ret._nameToVar.putAll(_nameToVar);
+    return ret;
+  }
+
+  /** Limits the Renaming to only the replaceables that occur in any of the given terms. */
+  public void limitDomain(Term ...terms) {
+    TreeSet<Replaceable> remove = new TreeSet<Replaceable>();
+    for (Replaceable r : _varToName.keySet()) {
+      boolean ok = false;
+      for (Term t : terms) {
+        if (t.freeReplaceables().contains(r)) {
+          ok = true;
+          break;
+        }
+      }
+      if (!ok) remove.add(r);
+    }
+    for (Replaceable r : remove) unsetName(r);
   }
 }
 

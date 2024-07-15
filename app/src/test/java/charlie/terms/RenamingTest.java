@@ -18,6 +18,7 @@ package charlie.terms;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
+import charlie.util.Pair;
 import charlie.parser.CoraParser;
 
 /**
@@ -165,6 +166,68 @@ public class RenamingTest {
     assertTrue(ren.getReplaceable("y") == null);
     assertFalse(ren.isAvailable("y"));
     assertFalse(ren.isAvailable("z"));
+  }
+
+  @Test
+  public void testCopy() {
+    Renaming renaming = makeRenaming();
+    Variable x = TermFactory.createVar("x", CoraParser.readType("b"));
+    Variable y = TermFactory.createVar("y", CoraParser.readType("b"));
+    renaming.setName(x, "x");
+    renaming.setName(y, "q");
+    Renaming ren2 = renaming.copy();
+    renaming.setName(y, "y");
+    Variable z1 = TermFactory.createVar("z1", CoraParser.readType("a"));
+    Variable z2 = TermFactory.createVar("z2", CoraParser.readType("b"));
+    renaming.setName(z1, "z");
+    ren2.setName(z2, "z");
+    renaming.avoid("a");
+    ren2.avoid("b");
+
+    assertTrue(renaming.getName(x).equals("x"));
+    assertTrue(renaming.getName(y).equals("y"));
+    assertTrue(renaming.getName(z1).equals("z"));
+    assertTrue(renaming.getName(z2) == null);
+    assertTrue(renaming.getReplaceable("x") == x);
+    assertTrue(renaming.getReplaceable("y") == y);
+    assertTrue(renaming.getReplaceable("z") == z1);
+    assertTrue(renaming.getReplaceable("q") == null);
+    assertFalse(renaming.isAvailable("a"));
+    assertTrue(renaming.isAvailable("b"));
+
+    assertTrue(ren2.getName(x).equals("x"));
+    assertTrue(ren2.getName(y).equals("q"));
+    assertTrue(ren2.getName(z1) == null);
+    assertTrue(ren2.getName(z2).equals("z"));
+    assertTrue(ren2.getReplaceable("x") == x);
+    assertTrue(ren2.getReplaceable("y") == null);
+    assertTrue(ren2.getReplaceable("z") == z2);
+    assertTrue(ren2.getReplaceable("q") == y);
+    assertTrue(ren2.isAvailable("a"));
+    assertFalse(ren2.isAvailable("b"));
+  }
+
+  @Test
+  public void testLimit() {
+    Renaming renaming = makeRenaming();
+    Variable x = TermFactory.createVar("x", CoraParser.readType("b"));
+    Variable y = TermFactory.createVar("y", CoraParser.readType("b"));
+    Variable z = TermFactory.createVar("z", CoraParser.readType("b"));
+    Variable w = TermFactory.createVar("w", CoraParser.readType("b"));
+    renaming.setName(x, "x");
+    renaming.setName(y, "q");
+
+    FunctionSymbol f = TermFactory.createConstant("f", CoraParser.readType("b -> b"));
+    FunctionSymbol g = TermFactory.createConstant("g", CoraParser.readType("b -> b -> b"));
+    Term a = f.apply(x);          // f(x)
+    Term b = g.apply(x).apply(z); // g(x, z)
+    Term c = g.apply(w).apply(z); // g(w, z)
+
+    renaming.limitDomain(a, b, c);
+
+    assertTrue(renaming.domain().size() == 1);
+    assertTrue(renaming.getName(x).equals("x"));
+    assertTrue(renaming.getReplaceable("y") == null);
   }
 }
 

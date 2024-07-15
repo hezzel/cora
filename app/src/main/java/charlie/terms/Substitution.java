@@ -55,7 +55,7 @@ public interface Substitution {
   boolean replace(Replaceable key, Term value);
 
   /**
-   * Returns the set of variables which have a mapped variable, including those which are mapped
+   * Returns the set of replaceables which are mapped to a term, including those which are mapped
    * to themselves.
    */
   Set<Replaceable> domain();

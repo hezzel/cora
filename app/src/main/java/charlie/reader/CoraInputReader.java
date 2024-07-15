@@ -216,11 +216,13 @@ public class CoraInputReader extends TermTyper {
 
   /**
    * Reads the given term from string.
-   * The given renaming is used to recognise variables and meta-variables.
+   * The given renaming is used to recognise variables and meta-variables.  If updateRenaming is
+   * true, it is also updated to set the names of new variables and meta-variables to their
+   * actual names (provided this is allowed by the renaming; if not, this gives a parser exception).
    * The TRS is used for its alphabet (function symbols are automatically recognised), and to
    * know whether or not we should include theories.  The rules and rule schemes are ignored.
    */
-  public static Term readTerm(String str, Renaming naming, TRS trs) {
+  public static Term readTerm(String str, Renaming naming, boolean updateRenaming, TRS trs) {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm pt = CoraParser.readTerm(str, trs.theoriesIncluded(), collector);
     throwIfErrors(collector);
@@ -236,6 +238,16 @@ public class CoraInputReader extends TermTyper {
     }
     CoraInputReader reader = new CoraInputReader(data, collector);
     Term ret = reader.makeTerm(pt, null, true);
+    if (ret != null && updateRenaming) {
+      for (Replaceable r : ret.freeReplaceables()) {
+        if (naming.getName(r) == null) {
+          if (!naming.setName(r, r.queryName())) {
+            collector.addError("(meta-)variable " + r.queryName() + " is not allowed " +
+              "for a variable in the given naming scheme");
+          }
+        }
+      }
+    }
     throwIfErrors(collector);
     return ret;
   }

@@ -23,7 +23,7 @@ public class LexerFactory {
    * Creates a lexer that goes through the given string line by line.  Tokens cannot include a
    * newline symbol.
    */
-  public static Lexer createStringLexer(String[] tokens, String text) {
+  public static ModeLexer createStringLexer(String[] tokens, String text) {
     return new MultilineStringLexer(new TokenFinder(tokens), text);
   }
 
@@ -31,8 +31,19 @@ public class LexerFactory {
    * Creates a lexer that goes through the given file line by line.  Tokens cannot include a
    * newline symbol.
    */
-  public static Lexer createFileLexer(String[] tokens, String filename) throws IOException {
+  public static ModeLexer createFileLexer(String[] tokens, String filename) throws IOException {
     return new FileLexer(new TokenFinder(tokens), filename);
+  }
+
+  /**
+   * Creates a lexer that adapts the given lexer by setting up a long (multiline) token.  The token
+   * starts when a token with name tokenOpen is encountered; then proceeds to read the expression
+   * middleExp 0 or more times, until the expression closeExp is encountered; the complete string is
+   * then combined into a token with name resultName.
+   */
+  public static ModeLexer createLongTokenLexer(ModeLexer lexer, String tokenOpen, String middleExp,
+                                               String closeExp, String resultName) {
+    return new LongTokenLexer(lexer, tokenOpen, middleExp, closeExp, resultName);
   }
 
   /**
