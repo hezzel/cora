@@ -17,6 +17,7 @@ package charlie.util;
 
 import org.junit.jupiter.api.Test;
 
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,5 +44,25 @@ class ProcessCallerTest {
       e.printStackTrace();
       assertTrue(false);
     }
+  }
+
+  @Test
+  void callZ3AnyOS() {
+
+    List<String> commands = new ArrayList<>();
+    String cmdLeft = ProcessCaller.callSystemEcho("(declare-const p Bool) (check-sat)");
+    commands.add( cmdLeft + " | z3 -in");
+
+    ProcessCaller pc = new ProcessCaller(commands, 1);
+    try {
+      Optional<String> result = pc.getResultAsString();
+      System.out.println(result);
+    }
+    catch (Exception e) {
+      System.out.println(e.getMessage());
+      e.printStackTrace();
+      assertTrue(false);
+    }
+
   }
 }
