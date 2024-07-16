@@ -52,7 +52,7 @@ class MultilineStringLexer implements ModeLexer {
   }
 
   /** Returns the next token, which may be on a different line of the input. */
-  public Token nextToken() throws LexerException {
+  public Token nextToken() {
     Token lastEof = null;
     while (_currentLineLexer != null) {
       Token ret = _currentLineLexer.nextToken();
