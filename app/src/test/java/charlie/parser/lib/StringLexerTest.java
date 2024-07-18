@@ -103,13 +103,13 @@ public class StringLexerTest {
     lexer.setFilename("fname");
     lexer.setLineNumber(4);
     assertTrue(lexer.nextToken().toString().equals("fname:4:1: ABC (IDENTIFIER)"));
-    lexer.switchMode(tf2);
+    lexer.changeTokenData(tf2);
     assertTrue(lexer.nextToken().toString().equals("fname:4:4:   (CHARACTER)"));
     assertTrue(lexer.nextToken().toString().equals("fname:4:5: d (CHARACTER)"));
     assertTrue(lexer.nextToken().toString().equals("fname:4:6: 1 (DIGIT)"));
     assertTrue(lexer.nextToken().toString().equals("fname:4:7:   (CHARACTER)"));
     assertTrue(lexer.nextToken().toString().equals("fname:4:8: 3 (DIGIT)"));
-    lexer.switchMode(tf1);
+    lexer.changeTokenData(tf1);
     assertTrue(lexer.nextToken().toString().equals("fname:4:9: 41 (INTEGER)"));
   }
 }

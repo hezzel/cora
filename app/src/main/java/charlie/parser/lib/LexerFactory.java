@@ -23,7 +23,7 @@ public class LexerFactory {
    * Creates a lexer that goes through the given string line by line.  Tokens cannot include a
    * newline symbol.
    */
-  public static ModeLexer createStringLexer(String[] tokens, String text) {
+  public static ChangeableLexer createStringLexer(String[] tokens, String text) {
     return new MultilineStringLexer(new TokenFinder(tokens), text);
   }
 
@@ -31,8 +31,17 @@ public class LexerFactory {
    * Creates a lexer that goes through the given file line by line.  Tokens cannot include a
    * newline symbol.
    */
-  public static ModeLexer createFileLexer(String[] tokens, String filename) throws IOException {
+  public static ChangeableLexer createFileLexer(String[] tokens, String filename)
+                                                                              throws IOException {
     return new FileLexer(new TokenFinder(tokens), filename);
+  }
+
+  /**
+   * Creates a token data object for the given tokens.  This can be used to update changeable
+   * lexers.
+   */
+  public static TokenFinder createTokenData(String[] tokens) {
+    return new TokenFinder(tokens);
   }
 
   /**
@@ -41,8 +50,9 @@ public class LexerFactory {
    * middleExp 0 or more times, until the expression closeExp is encountered; the complete string is
    * then combined into a token with name resultName.
    */
-  public static ModeLexer createLongTokenLexer(ModeLexer lexer, String tokenOpen, String middleExp,
-                                               String closeExp, String resultName) {
+  public static ChangeableLexer createLongTokenLexer(ChangeableLexer lexer, String tokenOpen,
+                                                     String middleExp, String closeExp,
+                                                     String resultName) {
     return new LongTokenLexer(lexer, tokenOpen, middleExp, closeExp, resultName);
   }
 
@@ -60,6 +70,35 @@ public class LexerFactory {
    */
   public static Lexer createNestedCommentRemoverLexer(Lexer lexer, String copen, String cclose) {
     return new CommentRemoverLexer(lexer, copen, cclose, true);
+  }
+
+  /** A changeable version of the CommentRemoverLexer */
+  private static class HelperCRemove extends CommentRemoverLexer implements ChangeableLexer {
+    private ChangeableLexer _lex;
+    private HelperCRemove(ChangeableLexer lexer, String copen, String cclose, boolean nested) {
+      super(lexer, copen, cclose, nested);
+      _lex = lexer;
+    }
+    public void changeTokenData(TokenFinder data) { _lex.changeTokenData(data); }
+    public TokenFinder getCurrentTokenData() { return _lex.getCurrentTokenData(); }
+  }
+
+  /**
+   * Adapts the given changeable lexer to remove any tokens between copen and cclose.
+   */
+  public static ChangeableLexer createBasicCommentRemoverLexer(ChangeableLexer lexer, String copen,
+                                                               String cclose) {
+    return new HelperCRemove(lexer, copen, cclose, false);
+  }
+
+  /**
+   * Adapts the given lexer to remove any tokens between copen and cclose.  These tokens are viewed
+   * in a NESTED way: if copen occurs again within a "comment" block, then cclose needs to occur a
+   * second time before the comment is closed, etc.
+   */
+  public static ChangeableLexer createNestedCommentRemoverLexer(ChangeableLexer lexer, String copen,
+                                                                String cclose) {
+    return new HelperCRemove(lexer, copen, cclose, true);
   }
 
   /**
@@ -83,6 +122,25 @@ public class LexerFactory {
    */
   public static Lexer createErrorLexer(Lexer lexer, String token, String message) {
     return new ErrorLexer(lexer, token, message);
+  }
+
+  /** A changeable version of the ErrorRemoverLexer */
+  private static class HelperErrLexer extends ErrorLexer implements ChangeableLexer {
+    private ChangeableLexer _lex;
+    private HelperErrLexer(ChangeableLexer lexer, String token, String message) {
+      super(lexer, token, message);
+      _lex = lexer;
+    }
+    public void changeTokenData(TokenFinder data) { _lex.changeTokenData(data); }
+    public TokenFinder getCurrentTokenData() { return _lex.getCurrentTokenData(); }
+  }
+
+  /**
+   * Adapts the given changeable lexer to throw an error when encountering a token by the given
+   * name.  To include the text of the token, put @TEXT@ in the message.
+   */
+  public static ChangeableLexer createErrorLexer(ChangeableLexer lexer, String tok, String mess) {
+    return new HelperErrLexer(lexer, tok, mess);
   }
 
   /**

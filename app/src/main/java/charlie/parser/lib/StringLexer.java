@@ -20,7 +20,7 @@ package charlie.parser.lib;
  * keeps producing the EOF token indefinitely.  The string is not required to be a single line
  * (there are allowed to be newlines), though this is a common use.
  */
-class StringLexer implements ModeLexer {
+class StringLexer implements ChangeableLexer {
   private TokenFinder _tokenfinder;
   private String _mystring;
   private String _filename;
@@ -81,11 +81,11 @@ class StringLexer implements ModeLexer {
   }
 
   /** This changes the tokeniser to a different one, continuing at the same point in the string. */
-  public void switchMode(TokenFinder newfinder) {
+  public void changeTokenData(TokenFinder newfinder) {
     _tokenfinder = newfinder;
   }
 
-  public TokenFinder getCurrentMode() {
+  public TokenFinder getCurrentTokenData() {
     return _tokenfinder;
   }
 }

@@ -61,7 +61,7 @@ public class MultilineStringLexerTest {
   }
 
   @Test
-  public void testSwitchMode() throws LexerException {
+  public void testSwitchTokenData() throws LexerException {
     TokenFinder tf1 = new TokenFinder(new String[] {
                                         "[a-zA-Z_][a-z0-9A-Z_]*", "IDENTIFIER",
                                         "0|[1-9][0-9]*", "INTEGER",
@@ -70,13 +70,14 @@ public class MultilineStringLexerTest {
                                         "[^a]+", "NOTA",
                                         "a", "A",
                                       });
-    ModeLexer lexer = new MultilineStringLexer(tf1, "hello sweet world!\n How are you todaaaay?");
+    ChangeableLexer lexer =
+      new MultilineStringLexer(tf1, "hello sweet world!\n How are you todaaaay?");
     assertTrue(lexer.nextToken().toString().equals("1:1: hello (IDENTIFIER)"));
-    lexer.switchMode(tf2);
+    lexer.changeTokenData(tf2);
     assertTrue(lexer.nextToken().toString().equals("1:6:  sweet world!\n (NOTA)"));
     assertTrue(lexer.nextToken().toString().equals("2:1:  How  (NOTA)"));
     assertTrue(lexer.nextToken().toString().equals("2:6: a (A)"));
-    lexer.switchMode(tf1);
+    lexer.changeTokenData(tf1);
     assertTrue(lexer.nextToken().toString().equals("2:7: re (IDENTIFIER)"));
   }
 }

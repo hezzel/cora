@@ -16,16 +16,19 @@
 package charlie.parser.lib;
 
 /**
- * A ModeLexer is a lexer that supports different modes, by switching the underlying tokeniser for
- * a different one.
+ * A ChangeableLexer is a lexer that allows the user to switch its underlying token data.  To
+ * ensure that its output is correct, a ChangeableLexer must not progress its position in the
+ * input string / file beyond the last read token.  (For example, reading a few tokens ahead and
+ * returning them when nextToken() is called is not allowed, since this would be problematic if the
+ * token data is switched before the stored tokens are returned.)
  */
-public interface ModeLexer extends Lexer {
+public interface ChangeableLexer extends Lexer {
   /**
    * Change the TokenFinder used by this lexer.  Any subsequent tokens will be parsed using the new
    * token finger, continuing from the current point of the input.
    */
-  public void switchMode(TokenFinder newfinder);
+  public void changeTokenData(TokenFinder newfinder);
 
   /** Get the current mode for this lexer (so we can switch back later). */
-  public TokenFinder getCurrentMode();
+  public TokenFinder getCurrentTokenData();
 }

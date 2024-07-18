@@ -20,8 +20,8 @@ package charlie.parser.lib;
  * CLOSE, where newlines may appear before or after any of the MIDDLE parts.  This requires the
  * original lexer to have a token for OPEN, but not for MIDDLE or CLOSE.
  */
-class LongTokenLexer implements ModeLexer {
-  private ModeLexer _mylexer;
+class LongTokenLexer implements ChangeableLexer {
+  private ChangeableLexer _mylexer;
   private String _openTokenName;
   private TokenFinder _myTokens;
   private String _resultName;
@@ -38,11 +38,12 @@ class LongTokenLexer implements ModeLexer {
    *   this token and simply return the next one (but in this case, consider using the
    *   CommentRemoverLexer instead)
    */
-  LongTokenLexer(ModeLexer lexer, String tokenOpen, String middleExp, String closeExp,
+  LongTokenLexer(ChangeableLexer lexer, String tokenOpen, String middleExp, String closeExp,
                  String myName) {
     _mylexer = lexer;
     _openTokenName = tokenOpen;
-    _myTokens = new TokenFinder(new String[] { closeExp, "CLOSE", middleExp, "MIDDLE" });
+    _myTokens = new TokenFinder(new String[] { closeExp, "LONGTOKENCLOSE",
+                                               middleExp, "LONGTOKENMIDDLE" });
     _resultName = myName;
   }
 
@@ -56,36 +57,42 @@ class LongTokenLexer implements ModeLexer {
     Token ret = _mylexer.nextToken();
     if (ret.isEof()) return ret;
     if (!ret.getName().equals(_openTokenName)) return ret;
-    TokenFinder backup = _mylexer.getCurrentMode();
-    _mylexer.switchMode(_myTokens);
+    TokenFinder backup = _mylexer.getCurrentTokenData();
+    _mylexer.changeTokenData(_myTokens);
     StringBuilder txt = new StringBuilder(ret.getText());
 
     while (true) {
       Token token;
       try { token = _mylexer.nextToken(); }
       catch (LexerException e) {
-        _mylexer.switchMode(backup);
+        _mylexer.changeTokenData(backup);
         throw new LexerException(e.queryToken(), e.getMessage() + " (long token " + _resultName +
           " started at " + ret.getPosition() + " not finished)");
       }
       txt.append(token.getText());
-      if (token.getName().equals("CLOSE")) break;
-      if (!token.getName().equals("MIDDLE")) {
-        _mylexer.switchMode(backup);
+      if (token.getName().equals("LONGTOKENCLOSE")) break;
+      if (token.isEof()) {
+        _mylexer.changeTokenData(backup);
+        throw new LexerException(token, "Unexpected end of input while reading long token " +
+          "started at " + ret.getPosition() + ".");
+      }
+      if (!token.getName().equals("LONGTOKENMIDDLE")) {
+        _mylexer.changeTokenData(backup);
         throw new LexerException(token, "Unexpected token: " + token.getText() + ".  Not allowed " +
           "in long token " + _resultName + " (started at " + ret.getPosition() + ").");
       }
     }
 
-    _mylexer.switchMode(backup);
+    _mylexer.changeTokenData(backup);
+    if (_resultName.equals(Token.SKIP)) return nextToken();
     return ret.samePositionToken(_resultName, txt.toString());
   }
 
-  public void switchMode(TokenFinder finder) {
-    _mylexer.switchMode(finder);
+  public void changeTokenData(TokenFinder finder) {
+    _mylexer.changeTokenData(finder);
   }
 
-  public TokenFinder getCurrentMode() {
-    return _mylexer.getCurrentMode();
+  public TokenFinder getCurrentTokenData() {
+    return _mylexer.getCurrentTokenData();
   }
 }
