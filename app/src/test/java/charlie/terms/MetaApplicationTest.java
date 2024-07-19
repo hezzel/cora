@@ -241,7 +241,7 @@ class MetaApplicationTest extends TermTestFoundation {
     Variable y = new Var("y", TypeFactory.stringSort);
     Term abs = new Abstraction(x, x);
     s = makeMeta("Z", abs, y, TypeFactory.boolSort);
-    assertTrue(s.isTheoryTerm());
+    assertFalse(s.isTheoryTerm());
     assertFalse(s.isValue());
     assertTrue(s.toValue() == null);
   }
