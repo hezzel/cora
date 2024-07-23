@@ -106,9 +106,10 @@ public class Rule {
 
   /**
    * This returns whether the rule is a constrained rule -- which is the case if the constraint
-   * is anything other than the value true.
+   * is anything other than the value true, or if lvar is non-empty.
    */
   public boolean isConstrained() {
+    if (!_lvars.isEmpty()) return true;
     Value value = _constraint.toValue();
     if (value == null) return true;
     return !value.getBool();
