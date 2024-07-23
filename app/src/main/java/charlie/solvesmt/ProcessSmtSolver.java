@@ -17,14 +17,11 @@ package charlie.solvesmt;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
 import java.io.InputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
-
 import charlie.exceptions.NullStorageException;
 import charlie.util.ExceptionLogger;
 import charlie.smt.*;
