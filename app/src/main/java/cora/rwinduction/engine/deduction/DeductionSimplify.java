@@ -208,12 +208,6 @@ class DeductionSimplify extends DeductionAbstractRule {
 
   // ----------------------------------------------------------------------------------------------
 
-  /**
-   *
-   * @param args
-   * @param <T>
-   * @return
-   */
   @Override
   <T extends DeductionArguments> Either<String, Boolean> isApplicable(T args) {
     if (args instanceof SimplifyArgs simplifyArgs) {
@@ -235,11 +229,6 @@ class DeductionSimplify extends DeductionAbstractRule {
     }
   }
 
-  /**
-   * @param args
-   * @param <T>
-   * @return
-   */
   @Override
   protected <T extends DeductionArguments> Either<String, ProofState> ruleLogic(T args) {
     if (args instanceof SimplifyArgs simplifyArgs) {
@@ -253,18 +242,22 @@ class DeductionSimplify extends DeductionAbstractRule {
         .getEquations()
         .get(simplifyArgs.getEquationIndex());
 
+      // Here we mutate a renaming, but notice that we only do this here at creation of an equation
+      // that will use this new renaming.
       Equation newEquation =
         switch (simplifyArgs.getSide()) {
         case L -> {
             Term newLeft =
               currEq.getLhs().replaceSubterm(simplifyArgs.getPosition(), rhsRuleInstance);
-            // TODO Need to fix this
+            // Obs.: This is the only place a renaming is mutated instead of copied.
+            simplifyArgs._newNaming.limitDomain(newLeft, currEq.getRhs(), currEq.getConstraint());
             yield new Equation(newLeft, currEq.getRhs(), currEq.getConstraint(), simplifyArgs._newNaming);
           }
           case R -> {
             Term newRight =
               currEq.getRhs().replaceSubterm(simplifyArgs.getPosition(), rhsRuleInstance);
-            // TODO need to fix this
+            // Obs.: This is the only place a renaming is mutated instead of copied.
+            simplifyArgs._newNaming.limitDomain(currEq.getLhs(), newRight, currEq.getConstraint());
             yield new Equation(currEq.getLhs(), newRight, currEq.getConstraint(), simplifyArgs._newNaming);
           }
         };
