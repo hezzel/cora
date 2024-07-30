@@ -92,7 +92,7 @@ public class CoraInputReaderTest {
   @Test
   public void testRuleWithVariableEnvironment() {
     Rule rule = CoraInputReader.readRule("{ F :: a -> a } f(F(x)) → y", generateTRS());
-    assertTrue(rule.toString().equals("f(F(x)) → y"));
+    assertTrue(rule.toString().equals("f(F(x)) → y | true"));
     Variable f = rule.queryLeftSide().queryArgument(1).queryHead().queryVariable();
     assertTrue(f.queryType().toString().equals("a → a"));
     Variable x = rule.queryLeftSide().queryArgument(1).queryArgument(1).queryVariable();
@@ -103,7 +103,7 @@ public class CoraInputReaderTest {
   @Test
   public void testRuleWithMetavariableEnvironment() {
     Rule rule = CoraInputReader.readRule("{ F :: [a] -> a } f(F[x]) → y", generateTRS());
-    assertTrue(rule.toString().equals("f(F⟨x⟩) → y"));
+    assertTrue(rule.toString().equals("f(F⟨x⟩) → y | true"));
     MetaVariable f = rule.queryLeftSide().queryArgument(1).queryHead().queryMetaVariable();
     assertTrue(f.queryType().toString().equals("a → a"));
     Variable x = rule.queryLeftSide().queryArgument(1).queryMetaArgument(1).queryVariable();
@@ -286,7 +286,7 @@ public class CoraInputReaderTest {
   @Test
   public void testRuleWithFreshTheoryVariableInRhs() {
     Rule rule = CoraInputReader.readRule("f(x) -> y", generateTRS());
-    assertTrue(rule.toString().equals("f(x) → y"));
+    assertTrue(rule.toString().equals("f(x) → y | true"));
   }
 
   @Test
