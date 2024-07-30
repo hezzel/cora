@@ -109,7 +109,7 @@ public class Rule {
    * is anything other than the value true, or if lvar is non-empty.
    */
   public boolean isConstrained() {
-    if (!_lvars.isEmpty()) return true;
+    if (_lvars != null && !_lvars.isEmpty()) return true;
     Value value = _constraint.toValue();
     if (value == null) return true;
     return !value.getBool();
