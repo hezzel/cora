@@ -46,6 +46,7 @@ public class OutputModuleAdapter implements OutputModule {
   public void endTable() { _module.endTable(); }
   public void printToStdout() { _module.printToStdout(); }
   public void printTrs(TRS trs) { _module.printTrs(trs); }
+  public void clear() { _module.clear(); }
 
   public void print(String text, Object ...objects) {
     for (int i = 0; i < objects.length; i++) {
@@ -64,4 +65,3 @@ public class OutputModuleAdapter implements OutputModule {
    */
   protected Object alterObject(Object ob) { return null; }
 }
-
