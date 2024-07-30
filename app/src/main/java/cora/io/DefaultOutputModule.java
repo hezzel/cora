@@ -26,6 +26,8 @@ import charlie.terms.Renaming;
 import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 public class DefaultOutputModule implements OutputModule {
   private TypePrinter _typePrinter;
@@ -37,7 +39,8 @@ public class DefaultOutputModule implements OutputModule {
   private ArrayList< Pair<String,String> > _codes;
 
   /** This creates a module with Plain style (pure text, no unicode). */
-  public static OutputModule createPlainModule(TRS trs) {
+  @Contract("_ -> new")
+  public static @NotNull OutputModule createPlainModule(TRS trs) {
     TypePrinter typr = new PlainTypePrinter();
     Set<String> avoid = trs == null ? Set.of() : trs.queryFunctionSymbolNames();
     ArrayList<Pair<String,String>> codes = new ArrayList<Pair<String,String>>();
@@ -192,13 +195,24 @@ public class DefaultOutputModule implements OutputModule {
     _currentTable = null;
   }
 
+  @Override
+  public void clear() { _builder = new StringBuilder(); }
+
   public TypePrinter queryTypePrinter() { return _typePrinter; }
+
+  @Override
   public TermPrinter queryTermPrinter() { return _termPrinter; }
+
+  @Override
   public Style queryStyle() { return _style; }
+
+  @Override
   public boolean queryInParagraph() { return _inParagraph; }
+
   public boolean inTable() { return _currentTable != null; }
 
   /** Starts a table.  If we were already in a table, it is ended first, and a new one begun. */
+  @Override
   public void startTable() {
     if (_inParagraph) println();
     if (_currentTable != null) endTable();
@@ -214,6 +228,7 @@ public class DefaultOutputModule implements OutputModule {
   }
 
   /** This ends the current cell, so subsequent prints write to the next. */
+  @Override
   public void nextColumn() {
     if (_currentTable == null) {
       throw new IllegalPrintError("Called endTable when no table was started!");
@@ -247,6 +262,7 @@ public class DefaultOutputModule implements OutputModule {
    * sizes of all the cells, uses this to determine the overall lay-out of the table, and then
    * prints the whole table to the internal string builder.
    */
+  @Override
   public void endTable() {
     if (_currentTable == null) {
       throw new IllegalPrintError("Called endTable when no table was started!");
@@ -275,6 +291,7 @@ public class DefaultOutputModule implements OutputModule {
    * This handles the ending of a line, which does very different things depending on whether we are
    * in a paragraph or in a table.
    */
+  @Override
   public void println() {
     if (_inParagraph) {
       _inParagraph = false;
@@ -293,6 +310,7 @@ public class DefaultOutputModule implements OutputModule {
    * The core printing functionality, printing to either a paragraph of the current cell in the
    * table.
    */
+  @Override
   public void print(String text, Object ...objects) {
     String txt = makeString(text, objects);
     if (!_inParagraph && _currentTable == null) _inParagraph = true;
@@ -301,6 +319,7 @@ public class DefaultOutputModule implements OutputModule {
   }
 
   /** This prints the results so far to standard out. */
+  @Override
   public void printToStdout() {
     System.out.println(toString());
   }
@@ -400,6 +419,7 @@ public class DefaultOutputModule implements OutputModule {
     return ob.toString();
   }
 
+  @Override
   public void printTrs(TRS trs) {
     print("%a with ", trs.queryTrsKind());
     if (trs.querySchemeCount() == 0) println("no additional rule schemes:");
@@ -434,4 +454,3 @@ public class DefaultOutputModule implements OutputModule {
     endTable();
   }
 }
-

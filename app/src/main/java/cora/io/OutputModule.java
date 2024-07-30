@@ -161,6 +161,11 @@ public interface OutputModule {
     endTable();
   }
 
+  /**
+   * Clear the contents of the output module.
+   */
+  void clear();
+
   /** This prints the given TRS to the output module. */
   void printTrs(TRS trs);
 
@@ -171,4 +176,3 @@ public interface OutputModule {
    */
   void printToStdout();
 }
-
