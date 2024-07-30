@@ -5,7 +5,7 @@
  in compliance with the License.
  You may obtain a copy of the License at
 
-     http://www.apache.org/licenses/LICENSE-2.0
+ http://www.apache.org/licenses/LICENSE-2.0
 
  Unless required by applicable law or agreed to in writing, software distributed under the
  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
@@ -19,29 +19,33 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/** A utility that is used to call an external process (without writing a file). */
+/**
+ * A utility that is used to call an external process (without writing a file).
+ */
 public class ProcessCaller {
-  private List<String> _command;
-  private int _timeout;
-  private ProcessBuilder _processBuilder;
+  private final int _timeout;
+  private final ProcessBuilder _processBuilder;
 
   /**
    * Create a process caller for the given command / argument list, with the given timeout
    * (in seconds)
    */
   public ProcessCaller(List<String> cmd, int timeout) {
-    _command = cmd;
     _timeout = timeout;
 
-    _processBuilder = new ProcessBuilder(_command);
+    List<String> systemCommands =
+      ProcessCaller.callSystemBash();
+    systemCommands.addAll(cmd);
+
+    _processBuilder = new ProcessBuilder(systemCommands);
     _processBuilder.redirectErrorStream(true);
-//    _processBuilder.inheritIO();
   }
 
   /**
@@ -80,7 +84,7 @@ public class ProcessCaller {
    * string and returns it.
    */
   public Optional<String> getResultAsString() throws IOException, InterruptedException,
-                                                     ExecutionException {
+    ExecutionException {
     Process process = callProcess();
     if (process == null) return Optional.empty();
     process.onExit().get();
@@ -88,10 +92,32 @@ public class ProcessCaller {
     return Optional.of(processResult);
   }
 
-  /** Helper function for getResultAsString: this reads the given input stream into a String. */
+  /**
+   * Helper function for getResultAsString: this reads the given input stream into a String.
+   */
   private static String bufferToString(InputStream inputStream) throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
     return reader.lines().collect(Collectors.joining(System.lineSeparator()));
   }
-}
 
+  static List<String> callSystemBash() {
+    if (SystemUtils.IS_OS_WINDOWS) {
+      return new ArrayList<>(List.of("Powershell", "-Command"));
+    }
+    if (SystemUtils.IS_UNIX_LIKE) {
+      return new ArrayList<>(List.of("/bin/sh", "-c"));
+    }
+    return List.of();
+  }
+
+  public static String callSystemEcho(String echoString) {
+    if (SystemUtils.IS_OS_WINDOWS) {
+      return "Write-Output '" + echoString + "'";
+    }
+    if (SystemUtils.IS_UNIX_LIKE) {
+      return "echo \"" + echoString + "\"";
+    }
+    return echoString;
+  }
+
+}

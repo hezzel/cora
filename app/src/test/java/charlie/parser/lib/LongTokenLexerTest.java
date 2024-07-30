@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class LongTokenLexerTest {
   @Test
   public void testBasics() throws LexerException {
-    ModeLexer lexer = LexerFactory.createStringLexer(new String[] {
+    ChangeableLexer lexer = LexerFactory.createStringLexer(new String[] {
                                      "\\w*", "IDENTIFIER",
                                      "\\s+", Token.SKIP,
                                      "\\|", "STRINGSTART",
@@ -45,8 +45,23 @@ public class LongTokenLexerTest {
   }
 
   @Test
+  public void testSkip() throws LexerException {
+    ChangeableLexer lexer = LexerFactory.createStringLexer(new String[] {
+                                     "\\w*", "IDENTIFIER",
+                                     "\\s+", Token.SKIP,
+                                     "\\|", "STRINGSTART",
+                                   }, "Hello world! |bing bang| toot |test\n bla  | dododo");
+    lexer = LexerFactory.createLongTokenLexer(lexer, "STRINGSTART", "[^|]+", "\\|", Token.SKIP);
+    assertTrue(lexer.nextToken().toString().equals("1:1: Hello (IDENTIFIER)"));
+    assertTrue(lexer.nextToken().toString().equals("1:7: world (IDENTIFIER)"));
+    assertTrue(lexer.nextToken().toString().equals("1:12: ! (CATCHALL)"));
+    assertTrue(lexer.nextToken().toString().equals("1:26: toot (IDENTIFIER)"));
+    assertTrue(lexer.nextToken().toString().equals("2:9: dododo (IDENTIFIER)"));
+  }
+
+  @Test
   public void testBadLongToken() throws LexerException {
-    ModeLexer lexer = LexerFactory.createStringLexer(new String[] {
+    ChangeableLexer lexer = LexerFactory.createStringLexer(new String[] {
                                      "\\w*", "IDENTIFIER",
                                      "\\s+", Token.SKIP,
                                      "\\|", "STRINGSTART",
@@ -74,7 +89,7 @@ public class LongTokenLexerTest {
 
   @Test
   public void testCombineLexer() throws LexerException {
-    ModeLexer lexer = LexerFactory.createStringLexer(new String[] {
+    ChangeableLexer lexer = LexerFactory.createStringLexer(new String[] {
                                      "\\w*", "IDENTIFIER",
                                      "\\s+", Token.SKIP,
                                      "\\|", "SPECIALSTART",
@@ -95,7 +110,7 @@ public class LongTokenLexerTest {
   @Test
   public void testLongTokenLexerFromFile() throws LexerException, java.io.IOException {
     String fname = "test.txt";
-    ModeLexer lexer = LexerFactory.createFileLexer(new String[] {
+    ChangeableLexer lexer = LexerFactory.createFileLexer(new String[] {
                                      "\\w*", "IDENTIFIER",
                                      "\\s+", Token.SKIP,
                                      "\\|", "STRINGSTART",

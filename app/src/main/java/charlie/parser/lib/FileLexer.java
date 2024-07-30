@@ -24,7 +24,7 @@ import java.io.IOException;
  * newline.  Thus, we go through all the lines in the file, and set appropriate positioning
  * information for each Token we encounter.
  */
-class FileLexer implements ModeLexer {
+class FileLexer implements ChangeableLexer {
   private TokenFinder _tokenfinder;
   private BufferedReader _reader;
   private StringLexer _currentLineLexer;
@@ -78,13 +78,13 @@ class FileLexer implements ModeLexer {
   }
 
   /** Switches the tokeniser to the given one, continuing at the current position in the file */
-  public void switchMode(TokenFinder newfinder) {
-    if (_currentLineLexer != null) _currentLineLexer.switchMode(newfinder);
+  public void changeTokenData(TokenFinder newfinder) {
+    if (_currentLineLexer != null) _currentLineLexer.changeTokenData(newfinder);
     _tokenfinder = newfinder;
   }
 
   /** Returns the token finder we are currently using. */
-  public TokenFinder getCurrentMode() {
+  public TokenFinder getCurrentTokenData() {
     return _tokenfinder;
   }
 }

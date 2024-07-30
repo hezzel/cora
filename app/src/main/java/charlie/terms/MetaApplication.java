@@ -99,11 +99,7 @@ class MetaApplication extends TermInherit {
   }
 
   public boolean isTheoryTerm() {
-    if (!_metavar.queryType().isTheoryType()) return false;
-    for (int i = 0; i < _args.size(); i++) {
-      if (!_args.get(i).isTheoryTerm()) return false;
-    }
-    return true;
+    return false;
   }
 
   /** Adds all function symbols in the present term to storage. */

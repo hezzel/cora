@@ -17,14 +17,11 @@ package charlie.solvesmt;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
 import java.io.InputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
-
 import charlie.exceptions.NullStorageException;
 import charlie.util.ExceptionLogger;
 import charlie.smt.*;
@@ -72,7 +69,7 @@ public class ProcessSmtSolver implements SmtSolver {
     return null;
   }
 
-  private PhysicalSolver _physicalSolver;
+  private final PhysicalSolver _physicalSolver;
 
   /** Sets up an SmtSolver that uses the default solver (this is currently set to Z3). */
   public ProcessSmtSolver() {
@@ -91,12 +88,10 @@ public class ProcessSmtSolver implements SmtSolver {
   /** Create a process caller for the given input string, with the given timeout (in seconds). */
   private ProcessCaller createSmtSolverProcess(String smtLibString, int timeout) {
     List<String> commands = new ArrayList<>();
-    //TODO For now we only care about linux and mac.
-    // Proper windows support for the process caller requires this code to identify the
-    // current OS the JVM is running on and change the commands accordingly.
-    commands.add("/bin/sh");
-    commands.add("-c");
-    commands.add("echo \" " + smtLibString + "\" | " + _physicalSolver.getCommandName() + " ");
+
+    String commandEchoString = ProcessCaller.callSystemEcho(smtLibString);
+
+    commands.add(commandEchoString + " | " + _physicalSolver.getCommandName());
 
     return new ProcessCaller(commands, timeout);
   }
@@ -183,4 +178,3 @@ public class ProcessSmtSolver implements SmtSolver {
     return false; // could not read a result, so no validity could be proven
   }
 }
-

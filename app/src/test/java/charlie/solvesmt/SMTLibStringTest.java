@@ -39,16 +39,15 @@ class SMTLibStringTest {
     smtProblem.require(c);
 
     SMTLibString sls = new SMTLibString(SMTLibString.Version.V26, SMTLibString.Logic.QFNIA);
-    assertTrue(sls.buildSmtlibString(smtProblem).equals(
-      "(set-info :smt-lib-version 2.6)\n" +
-      "(set-logic QF_NIA)\n" +
-      "(declare-fun b1() Bool)\n" +
-      "(declare-fun i1() Int)\n" +
-      "(declare-fun i2() Int)\n" +
-      "(assert (>= (+ i1 (- i2)) 0))\n" +
-      "(assert b1)\n" +
-      "(check-sat)\n" +
-      "(get-model)\n" +
-      "(exit)\n"));
+      assertEquals("(set-info :smt-lib-version 2.6)" + System.lineSeparator() +
+              "(set-logic QF_NIA)" + System.lineSeparator() +
+              "(declare-fun b1() Bool)" + System.lineSeparator() +
+              "(declare-fun i1() Int)"  + System.lineSeparator() +
+              "(declare-fun i2() Int)"  + System.lineSeparator() +
+              "(assert (>= (+ i1 (- i2)) 0))" + System.lineSeparator() +
+              "(assert b1)" + System.lineSeparator() +
+              "(check-sat)" + System.lineSeparator() +
+              "(get-model)" + System.lineSeparator() +
+              "(exit)" + System.lineSeparator(), sls.buildSmtlibString(smtProblem));
   }
 }

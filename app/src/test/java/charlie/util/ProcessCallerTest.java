@@ -44,4 +44,9 @@ class ProcessCallerTest {
       assertTrue(false);
     }
   }
+
+  @Test
+  void ProcessCallerOSSupportedTest() {
+    assertTrue(SystemUtils.isOSSupported());
+  }
 }
