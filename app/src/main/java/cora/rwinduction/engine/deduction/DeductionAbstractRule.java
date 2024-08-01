@@ -5,6 +5,9 @@ import charlie.util.either.Left;
 import charlie.util.either.Right;
 import cora.rwinduction.engine.data.ProofState;
 
+/**
+ *
+ */
 abstract class DeductionAbstractRule {
 
   /**

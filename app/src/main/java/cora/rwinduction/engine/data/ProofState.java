@@ -153,8 +153,8 @@ public class ProofState {
   }
 
   @Contract(" -> new")
-  public static @NotNull ProofState createInitialState(TRS trs) {
-    return new ProofState(trs, ImmutableList.of());
+  public static @NotNull ProofState createInitialState(TRS trs, ImmutableList<Equation> equations) {
+    return new ProofState(trs, equations);
   }
 
 }

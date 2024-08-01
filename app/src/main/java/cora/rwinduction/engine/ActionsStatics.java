@@ -4,7 +4,7 @@ import java.util.function.Consumer;
 
 class ActionsStatics {
 
-  static Consumer<String[]> forceQuit = _ -> {
+  static Consumer<String> forceQuit = _ -> {
     System.exit(0);
   };
 

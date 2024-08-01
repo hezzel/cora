@@ -8,13 +8,14 @@ import com.google.common.collect.ImmutableList;
 import cora.rwinduction.engine.data.ProofState;
 import cora.rwinduction.engine.deduction.DeductionArguments;
 import cora.rwinduction.engine.deduction.DeductionDelete;
+import org.jetbrains.annotations.NotNull;
 
 public class CommandDeleteRule implements Command {
 
-  private Either<String, Boolean> runAux(Prover prover,
-                                         DeductionDelete deleteRule,
-                                         DeductionArguments decArgs,
-                                         String cmdLiteral) {
+  private @NotNull Either<String, Boolean> runAux(Prover prover,
+                                                  @NotNull DeductionDelete deleteRule,
+                                                  DeductionArguments decArgs,
+                                                  String cmdLiteral) {
 
     Either<String, ProofState> decResult = deleteRule.applyRule(decArgs);
 

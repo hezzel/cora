@@ -1,6 +1,12 @@
 package cora.rwinduction.tui;
 
+import charlie.reader.CoraInputReader;
+import charlie.trs.TRS;
+import cora.io.DefaultOutputModule;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.Interpreter;
+import cora.rwinduction.engine.Prover;
+import cora.rwinduction.engine.data.ProverContext;
 import org.jline.console.ArgDesc;
 import org.jline.console.CmdDesc;
 import org.jline.reader.*;
@@ -62,7 +68,8 @@ public class KeyStrokeListener {
       CmdDesc desc = new CmdDesc(
         mainDescription,
         ArgDesc.doArgNames(Arrays.asList("args", "options")),
-        widgetsOpts);
+        widgetsOpts
+      );
 
       tailTips.put("widget", desc);
 
@@ -75,24 +82,30 @@ public class KeyStrokeListener {
       AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(lineReader);
       autosuggestionWidgets.enable();
 
+      TRS trs = CoraInputReader.readTrsFromString (
+        "sum :: Int -> Int\n" +
+        "sum(x) -> 0         | x ≤ 0\n" +
+        "sum(x) -> x + sum(x - 1) | x > 0"
+      );
+
+//      Prover prover =
+//        new Prover(new ProverContext(trs, DefaultOutputModule.createUnicodeModule(trs)));
+
+//      OutputModule outputModule = prover.getProverContext().getOutputModule();
+
       while (true) {
         String c = lineReader.readLine("> ");
-        String[] args = c.trim().split("\\s+");
 
-        System.out.println("Argument received: " + Arrays.toString(args));
+        System.out.println(c.trim().split("simplify 1 0.256 with [x := f(x)]"));
 
-        Interpreter.interpreter.accept(args);
+
+//        outputModule.printTrs(trs);
+//        outputModule.printToStdout();
+//        outputModule.clear();
+
+        Interpreter.interpreter.accept(c);
 
         if (c == null) break;
-//        if (c >= 0) {
-//          terminal.writer().write("Read c: " + c);
-//          terminal.writer().flush();
-//
-//          //Use q to quit
-//          if (c == 81 || c == 113) break;
-//        } else {
-//          if (c == -1) break;
-//        }
       }
     } catch (UserInterruptException e) {
       System.out.println("User interrupted");

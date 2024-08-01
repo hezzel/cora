@@ -11,9 +11,9 @@ public class Interpreter {
       .add(":quit")
       .build();
 
-  public static Consumer<String[]> interpreter =
+  public static Consumer<String> interpreter =
     args -> {
-      if(args[0].equalsIgnoreCase(":quit")) {
+      if(args.equalsIgnoreCase(":quit")) {
         ActionsStatics.forceQuit.accept(args);
       }
     };
