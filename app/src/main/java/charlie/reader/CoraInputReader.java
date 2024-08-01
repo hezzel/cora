@@ -215,6 +215,44 @@ public class CoraInputReader extends TermTyper {
   }
 
   /**
+   * This sets up a new SymbolData for the given TRS, with the variables and meta-variables in
+   * naming already included (by their renamed names).
+   */
+  private static SymbolData setupSymbolData(TRS trs, Renaming naming) {
+    SymbolData data = new SymbolData(trs);
+    for (Replaceable r : naming.domain()) {
+      String name = naming.getName(r);
+      if (r instanceof Variable x) data.addVariable(x, name);
+      else if (r instanceof MetaVariable z) data.addMetaVariable(z, name);
+      else {
+        throw new UnexpectedPatternException("CoraInputReader", "setupSymbolData",
+          "replaceable " + name, "either a variable or a meta-variable");
+      }
+    }
+    return data;
+  }
+
+  /**
+   * Helper function for readTerm (multiple instances).  This function updates the given renaming
+   * by giving all variables that occur in t but not yet in naming their own name.
+   * This should work as expected if the given renaming was used when reading the term, and the
+   * only blocked function symbols in the renaming are either not valid identifiers, or are the
+   * names of function symbols in the TRS that was used to read the term.
+   * If this is not the case, it may be that some variable was given an illegal default name; in
+   * this case, an error is stored in the collector since this is unexpected bheaviour.
+   */
+  private static void updateRenaming(Renaming naming, Term t, ErrorCollector collector) {
+    for (Replaceable r : t.freeReplaceables()) {
+      if (naming.getName(r) == null) {
+        if (!naming.setName(r, r.queryName())) {
+          collector.addError("(meta-)variable " + r.queryName() + " is not allowed " +
+            "for a variable in the given naming scheme");
+        }
+      }
+    }
+  }
+
+  /**
    * Reads the given term from string.
    * The given renaming is used to recognise variables and meta-variables.  If updateRenaming is
    * true, it is also updated to set the names of new variables and meta-variables to their
@@ -222,35 +260,36 @@ public class CoraInputReader extends TermTyper {
    * The TRS is used for its alphabet (function symbols are automatically recognised), and to
    * know whether or not we should include theories.  The rules and rule schemes are ignored.
    */
-  public static Term readTerm(String str, Renaming naming, boolean updateRenaming, TRS trs) {
+  public static Term readTerm(String str, Renaming naming, boolean updateNaming, TRS trs) {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm pt = CoraParser.readTerm(str, trs.theoriesIncluded(), collector);
     throwIfErrors(collector);
-    SymbolData data = new SymbolData(trs);
-    for (Replaceable r : naming.domain()) {
-      String name = naming.getName(r);
-      if (r instanceof Variable x) data.addVariable(x, name);
-      else if (r instanceof MetaVariable z) data.addMetaVariable(z, name);
-      else {
-        throw new UnexpectedPatternException("CoraInputReader", "readTerm",
-          "replaceable " + name, "either a variable or a meta-variable");
-      }
-    }
+    SymbolData data = setupSymbolData(trs, naming);
     CoraInputReader reader = new CoraInputReader(data, collector);
     Term ret = reader.makeTerm(pt, null, true);
-    if (ret != null && updateRenaming) {
-      for (Replaceable r : ret.freeReplaceables()) {
-        if (naming.getName(r) == null) {
-          if (!naming.setName(r, r.queryName())) {
-            collector.addError("(meta-)variable " + r.queryName() + " is not allowed " +
-              "for a variable in the given naming scheme");
-          }
-        }
-      }
-    }
+    if (ret != null && updateNaming) updateRenaming(naming, ret, collector);
     throwIfErrors(collector);
     return ret;
   }
+
+  /**
+   * Reads the given parser term into a proper term, using the TRS to assess the function symbols
+   * (and to know if theory symbols should be created), and the Renaming to map (meta-)variable
+   * names to (meta-)variables.
+   *
+   * It is allowed for the parser term to contain variable identifiers that are not yet in the
+   * given renaming.  These will be added to the renaming (so the naming should be expected to be
+   * altered).
+   */
+  public static Term readTerm(ParserTerm pt, Renaming naming, TRS trs) {
+    ErrorCollector collector = new ErrorCollector();
+    SymbolData data = setupSymbolData(trs, naming);
+    CoraInputReader reader = new CoraInputReader(data, collector);
+    Term ret = reader.makeTerm(pt, null, true);
+    if (ret != null) updateRenaming(naming, ret, collector);
+    throwIfErrors(collector);
+    return ret;
+ }
 
   /**
    * Reads the given term from string.

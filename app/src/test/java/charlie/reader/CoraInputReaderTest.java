@@ -25,6 +25,9 @@ import charlie.exceptions.ParseException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.parser.lib.ErrorCollector;
+import charlie.parser.lib.ParsingStatus;
+import charlie.parser.Parser.ParserTerm;
+import charlie.parser.CoraTokenData;
 import charlie.parser.CoraParser;
 import charlie.terms.*;
 import charlie.trs.*;
@@ -533,6 +536,30 @@ public class CoraInputReaderTest {
     assertTrue(s.toString().equals("f(x__2, x__1)"));
     assertTrue(renaming.getName(x).equals("y"));
     assertTrue(renaming.getName(s.queryArgument(1).queryVariable()).equals("x"));
+  }
+
+  @Test
+  public void testReadTermWithParserTerm() {
+    // preparations
+    TRS trs = CoraInputReader.readTrsFromString("f :: a -> b -> a h :: Int -> b -> b");
+    String str = "f(x, h(0, y)) f(z, y)";
+    ParsingStatus status = new ParsingStatus(CoraTokenData.getConstrainedStringLexer(str), 10);
+    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
+    ParserTerm s = CoraParser.readTerm(status);
+    ParserTerm t = CoraParser.readTerm(status);
+
+    // using readterm
+    Term a = CoraInputReader.readTerm(s, renaming, trs);
+    Term b = CoraInputReader.readTerm(t, renaming, trs);
+
+    // did it do what it should?
+    assertTrue(renaming.range().size() == 3);
+    assertTrue(renaming.range().contains("x"));
+    assertTrue(renaming.range().contains("y"));
+    assertTrue(renaming.range().contains("z"));
+    assertTrue(a.toString().equals("f(x, h(0, y))"));
+    assertTrue(b.toString().equals("f(z, y)"));
+    assertTrue(a.queryArgument(2).queryArgument(2) == b.queryArgument(2));
   }
 
   @Test
