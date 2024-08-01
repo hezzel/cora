@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 
 import charlie.types.*;
 import charlie.parser.lib.ErrorCollector;
+import charlie.parser.lib.ParsingStatus;
 import charlie.parser.lib.Token;
 import charlie.parser.Parser.*;
 
@@ -552,6 +553,20 @@ public class CoraTermsParsingTest {
       "1:4: Expected a comma or tuple closing bracket ⦈ but got IDENTIFIER (y).\n" +
       "1:7: Expected end of input but got ARROW (->).\n");
     assertTrue(t.toString().equals("⦇[x, ERR(y)]⦈"));
+  }
+
+  @Test
+  public void testReadWithStatus() {
+    String txt = "f(x) = g(y,x) | Int F(y)";
+    ErrorCollector errors = new ErrorCollector(3);
+    ParsingStatus status = new ParsingStatus(CoraTokenData.getConstrainedStringLexer(txt), errors);
+    assertTrue(CoraParser.readTerm(status).toString().equals("@(=, [@(f, [x]), @(g, [y, x])])"));
+    assertTrue(CoraParser.readTerm(status) == null);  // it's a MID!
+    status.expect(CoraTokenData.MID, "MID problem");
+    assertTrue(CoraParser.readType(status).toString().equals("Int"));
+    assertTrue(CoraParser.readTerm(status).toString().equals("@(F, [y])"));
+    assertTrue(errors.queryCollectedMessages().equals(
+      "1:15: Expected term, started by an identifier, λ, string or (, but got MID (|).\n"));
   }
 }
 
