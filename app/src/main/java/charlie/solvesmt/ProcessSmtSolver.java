@@ -15,23 +15,24 @@
 
 package charlie.solvesmt;
 
+import charlie.exceptions.NullStorageException;
+import charlie.smt.*;
+import charlie.util.ExceptionLogger;
+import charlie.util.ProcessCaller;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
-import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
-import charlie.exceptions.NullStorageException;
-import charlie.util.ExceptionLogger;
-import charlie.smt.*;
-import charlie.util.ProcessCaller;
+import static charlie.solvesmt.ProcessSmtSolver.PhysicalSolver.Z3;
 import static charlie.solvesmt.SMTLibString.Logic.QFNIA;
 import static charlie.solvesmt.SMTLibString.Version.V26;
-import static charlie.solvesmt.ProcessSmtSolver.PhysicalSolver.Z3;
 
 public class ProcessSmtSolver implements SmtSolver {
   public static int TIMEOUT = 10;
@@ -56,7 +57,7 @@ public class ProcessSmtSolver implements SmtSolver {
     @Contract(pure = true)
     public @NotNull String getCommandName() {
       return switch (this) {
-        case Z3: yield  "z3 -in";
+        case Z3: yield  "z3";
         case CVC5: yield  "cvc";
         case YICES2: yield  "yices-smt2";
       };
@@ -74,9 +75,11 @@ public class ProcessSmtSolver implements SmtSolver {
 
   private PhysicalSolver _physicalSolver;
 
+  private OS currentOS;
+
   /** Sets up an SmtSolver that uses the default solver (this is currently set to Z3). */
   public ProcessSmtSolver() {
-    _physicalSolver = Z3;
+    this(Z3);
   }
 
   public ProcessSmtSolver(@NotNull PhysicalSolver physicalSolver) {
@@ -86,17 +89,30 @@ public class ProcessSmtSolver implements SmtSolver {
     );
 
     _physicalSolver = physicalSolver;
+
+    if (System.getProperty("os.name").startsWith("Windows")) {
+      currentOS = OS.WINDOWS;
+    } else {
+      currentOS = OS.UNIX;
+    }
   }
 
   /** Create a process caller for the given input string, with the given timeout (in seconds). */
-  private ProcessCaller createSmtSolverProcess(String smtLibString, int timeout) {
+  private ProcessCaller createSmtSolverProcess(Path smtProblemFile, int timeout) {
     List<String> commands = new ArrayList<>();
     //TODO For now we only care about linux and mac.
     // Proper windows support for the process caller requires this code to identify the
     // current OS the JVM is running on and change the commands accordingly.
-    commands.add("/bin/sh");
-    commands.add("-c");
-    commands.add("echo \" " + smtLibString + "\" | " + _physicalSolver.getCommandName() + " ");
+
+    if (currentOS == OS.UNIX) {
+      commands.add("/bin/sh");
+      commands.add("-c");
+    } else {
+      commands.add("cmd.exe");
+      commands.add("/c");
+    }
+
+    commands.add(_physicalSolver.getCommandName() + " " + smtProblemFile.toString() + " ");
 
     return new ProcessCaller(commands, timeout);
   }
@@ -117,10 +133,18 @@ public class ProcessSmtSolver implements SmtSolver {
   public Answer checkSatisfiability(SmtProblem problem) {
     SMTLibString file = new SMTLibString(V26, QFNIA);
     String stringOfSmtProblem = file.buildSmtlibString(problem);
-    ProcessCaller pc = createSmtSolverProcess(stringOfSmtProblem, TIMEOUT);
     String smtResultString = null;
+    Path smtProblemFile = null;
     try {
+      smtProblemFile = Files.createTempFile("coraSMTTask_sat_", null);
+      Files.writeString(smtProblemFile, stringOfSmtProblem);
+
+      ProcessCaller pc = createSmtSolverProcess(smtProblemFile, TIMEOUT);
+
       Optional<String> optionalSmtResultString = pc.getResultAsString();
+
+      Files.delete(smtProblemFile);
+
       if (!optionalSmtResultString.isPresent()) {
         return new Answer.MAYBE("SMT solver process did not return an answer within the " +
                                 "time limit.");
@@ -168,9 +192,16 @@ public class ProcessSmtSolver implements SmtSolver {
         negated
       );
 
-    ProcessCaller pc = createSmtSolverProcess(stringOfSmtProblem, TIMEOUT);
     try {
+      Path smtProblemFile = Files.createTempFile("coraSMTTask_validity_", null);
+      Files.writeString(smtProblemFile, stringOfSmtProblem);
+
+      ProcessCaller pc = createSmtSolverProcess(smtProblemFile, TIMEOUT);
+
       Optional<InputStream> is = pc.getResultAsInputStream();
+
+      Files.delete(smtProblemFile);
+
       if (is.isPresent()) {
         Scanner scanner = new Scanner(is.get());
         return SMTLibResponseHandler.readAnswer(scanner).equals("unsat");

@@ -15,15 +15,10 @@
 
 package charlie.solvesmt;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import charlie.smt.*;
-import charlie.util.ProcessCaller;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SMTLibStringTest {
   @Test
@@ -40,7 +35,7 @@ class SMTLibStringTest {
 
     SMTLibString sls = new SMTLibString(SMTLibString.Version.V26, SMTLibString.Logic.QFNIA);
     assertTrue(sls.buildSmtlibString(smtProblem).equals(
-      "(set-info :smt-lib-version 2.6)\n" +
+            ("(set-info :smt-lib-version 2.6)\n" +
       "(set-logic QF_NIA)\n" +
       "(declare-fun b1() Bool)\n" +
       "(declare-fun i1() Int)\n" +
@@ -49,6 +44,7 @@ class SMTLibStringTest {
       "(assert b1)\n" +
       "(check-sat)\n" +
       "(get-model)\n" +
-      "(exit)\n"));
+      "(exit)\n").replace("\n", System.lineSeparator()))
+    );
   }
 }
