@@ -853,5 +853,26 @@ public class CoraParser {
     finish(status, collector == null || program == null);
     return program;
   }
+
+  /**
+   * Reads a sequence of terms from a file, all in the expected Cora format.
+   * @throws charlie.exceptions.ParseException
+   */
+  public static ArrayList<ParserTerm> readTermFromFile(String filename, boolean constrained,
+                                               ErrorCollector collector) throws IOException {
+    TokenQueue queue;
+    if (constrained) queue = CoraTokenData.getConstrainedFileLexer(filename);
+    else queue = CoraTokenData.getUnconstrainedFileLexer(filename);
+    ParsingStatus status =
+      new ParsingStatus(queue, collector == null ? new ErrorCollector() : collector);
+    CoraParser parser = new CoraParser(status);
+    ArrayList<ParserTerm> ret = new ArrayList<ParserTerm>();
+    while (!status.peekNext().isEof()) {
+      ParserTerm t = parser.readTerm();
+      if (t != null) ret.add(t);
+      if (collector == null || t == null) status.throwCollectedErrors();
+    }
+    return ret;
+  }
 }
 

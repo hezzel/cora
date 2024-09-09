@@ -31,7 +31,7 @@ public class TermAnalyser {
   private static Random _rnd = new Random();
 
   public sealed interface Result {
-    public record YES(Substitution subts) implements Result {}
+    public record YES(Substitution subst) implements Result {}
     public record NO() implements Result {}
     public record MAYBE(String reason) implements Result {}
   }

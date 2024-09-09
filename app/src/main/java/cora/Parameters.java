@@ -39,7 +39,7 @@ public class Parameters {
   private Request _request;
   private SmtSolver _solver;
 
-  public enum Request { Print, Reduce, Termination, Computability };
+  public enum Request { Print, Reduce, Termination, Computability, Smt };
 
   public class WrongParametersException extends RuntimeException {
     public WrongParametersException(String reason) {
@@ -96,7 +96,7 @@ public class Parameters {
       i = handleArgument(args, i);
     }
 
-    if (_request == null) _request = Request.Termination;
+    if (_request == null) _request = Request.Smt;
   }
 
   /**
@@ -117,6 +117,9 @@ public class Parameters {
         }
         for (String s : args[index+1].split(",")) _disable.add(s);
         return index+2;
+      case "-m": case "--smt":
+        setRequest(Request.Smt);
+        return index+1;
       case "-p": case "--print":
         setRequest(Request.Print);
         return index+1;

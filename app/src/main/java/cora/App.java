@@ -17,10 +17,12 @@ package cora;
 
 import charlie.exceptions.ParseException;
 import charlie.terms.Term;
-import charlie.trs.TRS;
+import charlie.terms.TermFactory;
+import charlie.trs.*;
 import charlie.reader.*;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
+import cora.smt.InternalSolverHandler;
 import cora.reduction.Reducer;
 import cora.termination.TerminationHandler;
 import cora.Parameters.Request;
@@ -30,6 +32,7 @@ import java.io.File;
 import java.nio.file.*;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.Set;
 
 /** Basic entry class: this reads a TRS and asks the user for a term, then reduces this term. */
 public class App {
@@ -82,6 +85,7 @@ public class App {
     String extension = getExtension(file);
     if (extension.equals("trs")) return OCocoInputReader.readTrsFromFile(file);
     else if (extension.equals("itrs")) return ITrsInputReader.readTrsFromFile(file);
+    else if (extension.equals("smt")) return readSmt(file);
     else return CoraInputReader.readTrsFromFile(file);
   }
 
@@ -100,6 +104,7 @@ public class App {
   private static ProofObject executeRequest(Request request, TRS trs, List<String> moduleInput) {
     return switch (request) {
       case Computability -> TerminationHandler.proveComputability(trs);
+      case Smt -> InternalSolverHandler.proveSatisfiability(trs.queryRule(0).queryConstraint());
       case Print -> new ProofObject() {
         public Answer queryAnswer() { return Answer.YES; }
         public String printAnswer() { return ""; }
@@ -124,6 +129,19 @@ public class App {
     }
     Reducer reducer = new Reducer(trs);
     return reducer.normalise(start);
+  }
+
+  /**
+   * Helper function for this temporary branch: this reads an SMT formula straight from a file.
+   * It wraps it up as a TRS because that's convenient in the program flow.
+   * Once all the testing is done, the Smt option should probably be removed altogether.
+   */
+  private static TRS readSmt(String file) throws IOException {
+    Term formula = CoraInputReader.readFormulaFromFile(file);
+    Alphabet alphabet = new Alphabet(Set.of());
+    Term start = TermFactory.createConstant("start", 0);
+    Rule rule = TrsFactory.createRule(start, start, formula);
+    return TrsFactory.createTrs(alphabet, List.of(rule), TrsFactory.CORA);
   }
 }
 

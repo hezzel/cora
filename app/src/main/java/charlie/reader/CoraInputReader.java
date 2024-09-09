@@ -301,4 +301,20 @@ public class CoraInputReader extends TermTyper {
     throwIfErrors(collector);
     return ret;
   }
+
+  /** Reads the given file, parses the formula in it, and returns the result. */
+  public static Term readFormulaFromFile(String filename) throws IOException {
+    ErrorCollector collector = new ErrorCollector();
+    ArrayList<ParserTerm> ret = CoraParser.readTermFromFile(filename, true, collector);
+    CoraInputReader reader = new CoraInputReader(new SymbolData(), collector);
+    if (ret.size() == 0) return TheoryFactory.createValue(true);
+    Term term = reader.makeTerm(ret.get(0), TypeFactory.boolSort, true);
+    throwIfErrors(collector);
+    for (int i = 1; i < ret.size(); i++) {
+      Term t = reader.makeTerm(ret.get(i), TypeFactory.boolSort, true);
+      if (t != null) term = TheoryFactory.andSymbol.apply(term).apply(t);
+    }
+    throwIfErrors(collector);
+    return term;
+  }
 }

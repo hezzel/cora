@@ -37,7 +37,7 @@ import charlie.smt.*;
  * - use an SmtSolver to query satisfiability or validity of the SmtProblem
  *
  * For convenience, some extra functions have been supplied:
- * - you ca ngenerate the trnaslator without an SmtProblem; in this case a new SmtProblem is
+ * - you can generate the trnaslator without an SmtProblem; in this case a new SmtProblem is
  *   created (and can be queried using queryProblem())
  * - you can immediately "require" theory terms of type Bool, rather than first translating this
  *   term and then requiring it in the underlying SmtProblem.

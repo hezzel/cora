@@ -54,7 +54,7 @@ class ParametersTest {
   @Test
   public void testRequestNothing() {
     Parameters param = new Parameters(new String[] { "input", "more input" });
-    assertTrue(param.queryRequest() == Parameters.Request.Termination);
+    assertTrue(param.queryRequest() == Parameters.Request.Smt);
   }
 
   @Test
