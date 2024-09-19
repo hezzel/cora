@@ -118,7 +118,6 @@ public class InternalSolver implements SmtSolver {
         throw new Error("Expression of the form " + expr.toString() + " not supported!");
     }
   }
-
   public ArrayList<ArrayList<Double>> makeSimplexTableau (SmtProblem problem, ArrayList<IntegerExpression> expressions){
     ArrayList<ArrayList<Double>> simplexTableau = new ArrayList<>();
     System.out.println(expressions);
