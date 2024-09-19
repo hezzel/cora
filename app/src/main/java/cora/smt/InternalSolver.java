@@ -38,7 +38,6 @@ public class InternalSolver implements SmtSolver {
         children.add(conjunction.queryChild(i));
       }
     }
-
     ArrayList<IntegerExpression> expressions = new ArrayList<IntegerExpression>();
     for (int i =0; i < children.size(); i++){
       Constraint child = children.get(i);
