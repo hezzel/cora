@@ -18,6 +18,8 @@ package charlie.terms;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TreeMap;
 import charlie.exceptions.*;
 import charlie.types.Type;
@@ -232,5 +234,34 @@ public class ConstantTest extends TermTestFoundation {
     assertTrue(fa.equals(g.apply(new Constant("aa", a))));
 
     assertTrue(f.match(g) != null);
+  }
+
+  @Test
+  public void testEqualsHashCodeConsistent() {
+    // Class Object requires
+    // https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html#hashCode()
+    // that for all objects o1, o2 for which o1.equals(o2) evaluates to true
+    // with method Object::equals(Object), also o1.hashCode() == o2.hashCode()
+    // must evaluate to true (classes like HashSet, HashMap, LinkedHashSet,
+    // LinkedHashMap rely on this contract). This contract that method
+    // hashCode() must be consistent with equals(Object) is inherited by all
+    // Java classes.
+    Type b = TypeFactory.createSort("b");
+    FunctionSymbol a1 = TermFactory.createConstant("a", b);
+    FunctionSymbol a2 = TermFactory.createConstant("a", b);
+    assertEquals(a1, a2);
+    assertEquals(a1.hashCode(), a2.hashCode());
+  }
+
+  @Test
+  public void testHashSetOfFunctionSymbol() {
+    Type b = TypeFactory.createSort("b");
+    FunctionSymbol a1 = TermFactory.createConstant("a", b);
+    FunctionSymbol a2 = TermFactory.createConstant("a", b);
+    assertEquals(a1, a2);
+    Set<FunctionSymbol> set = new HashSet<>();
+    set.add(a1);
+    assertTrue(set.contains(a1));
+    assertTrue(set.contains(a2));
   }
 }
