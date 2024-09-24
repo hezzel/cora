@@ -64,6 +64,47 @@ public class TheoryFactory {
     return StringValue.parseUserStringValue(s);
   }
 
+  /**
+   * Create an equality between two terms of the same theory sort.
+   * If they do not have the same type, an IllegalArgumentException will be thrown.
+   * If these types are not theory sorts, or there is no equality symbol of these types, then
+   * null is returned instead.
+   */
+  public static Term createEquality(Term a, Term b) {
+    if (!a.queryType().equals(b.queryType())) {
+      throw new IllegalArgumentException("TheoryFactory::createEquality received terms of two " +
+        "different types!");
+    }
+    if (a.queryType().equals(TypeFactory.boolSort)) {
+      return new Application(iffSymbol, a, b);
+    }
+    if (a.queryType().equals(TypeFactory.intSort)) {
+      return new Application(equalSymbol, a, b);
+    }
+    return null;
+  }
+
+  /**
+   * Creates a conjunction between the two given terms of boolean sort.
+   * If they do not have boolean sort, a TypeException is thrown instead.
+   */
+  public static Term createConjunction(Term a, Term b) {
+    if (!a.queryType().equals(TypeFactory.boolSort) || !b.queryType().equals(TypeFactory.boolSort)) {
+      throw new IllegalArgumentException("TheoryFactory::createConjunction called with arguments " +
+        "of type " + a.queryType().toString() + " and " + b.queryType().toString() +
+        " respectively (expected booleans).");
+    }
+    if (a instanceof BooleanValue) {
+      if (((BooleanValue)a).getBool()) return b;
+      else return a;
+    }
+    if (b instanceof BooleanValue) {
+      if (((BooleanValue)b).getBool()) return a;
+      else return b;
+    }
+    return new Application(andSymbol, a, b);
+  }
+
   /** The binary symbol for addition */
   public static final CalculationSymbol plusSymbol = new CalculationConstant("+",
     binaryIntOperatorType, Kind.PLUS, Associativity.ASSOC_LEFT, CalculationSymbol.INFIX_PLUS);
@@ -97,6 +138,10 @@ public class TheoryFactory {
   public static final CalculationSymbol notSymbol = new CalculationConstant("¬",
     TypeFactory.createArrow(TypeFactory.boolSort, TypeFactory.boolSort), Kind.NOT,
     Associativity.NOT_INFIX, CalculationSymbol.INFIX_NONE);
+
+  /** The binary calculation symbol for if and only if */
+  public static final CalculationSymbol iffSymbol = new CalculationConstant("⇔",
+    binaryBoolConnectiveType, Kind.IFF, Associativity.ASSOC_NONE, CalculationSymbol.INFIX_IFF);
 
   /** The binary calculation symbol for greater */
   public static final CalculationSymbol greaterSymbol = new CalculationConstant(">",

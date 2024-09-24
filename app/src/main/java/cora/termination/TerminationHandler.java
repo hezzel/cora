@@ -20,19 +20,19 @@ import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.config.Settings;
 import cora.termination.reduction_pairs.Horpo;
-import cora.termination.dependency_pairs.DPFramework;
+import cora.termination.dependency_pairs.FullDPFramework;
 
 import java.util.Optional;
 
 public class TerminationHandler {
   public static ProofObject proveTermination(TRS trs) {
-    DPFramework dpF = new DPFramework();
+    FullDPFramework dpF = new FullDPFramework();
     if (!Settings.isDisabled(dpF.queryDisabledCode())) return wrap(dpF.proveTermination(trs), trs);
     return Horpo.proveTermination(trs);
   }
 
   public static ProofObject proveComputability(TRS trs) {
-    DPFramework dpF = new DPFramework();
+    FullDPFramework dpF = new FullDPFramework();
     if (!Settings.isDisabled(dpF.queryDisabledCode())) {
       return wrap(dpF.proveComputability(trs), trs);
     }
@@ -56,3 +56,4 @@ public class TerminationHandler {
     };
   }
 }
+

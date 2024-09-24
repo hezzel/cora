@@ -245,6 +245,15 @@ public class TRS {
     return true;
   }
 
+  /** 
+   * Creates a TRS with alphabet, restrictions and rule schemes the same as we have, but with the
+   * given rules replacing the original ones.  No restrictions are imposed on the new rules.
+   */
+  public TRS createDerivative(List<Rule> newrules) {
+    return new TRS(_alphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
+                   _productsIncluded, null);
+  }
+
   /**
    * Returns true if all of the following hold:
    * (a) all the rules satisfy AT MOST the given properties (e.g., if Level.APPLICATIVE is given

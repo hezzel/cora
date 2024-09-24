@@ -1,3 +1,18 @@
+/**************************************************************************************************
+ Copyright 2024 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
 package cora.termination.dependency_pairs;
 
 import charlie.trs.Rule;
@@ -15,14 +30,30 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- *
+ * This class generates the DP problem for a given TRS, under different settings (e.g., full or
+ * call-by-value strategy; termination or universal computability).
  */
 public class DPGenerator {
+  /** The output sort of all marked symbols in the DP method. */
+  static Type dpSort = TypeFactory.createSort("DP_SORT");
 
   /**
-   * This property sets the output sort used in the DP method for marked symbols.
+   * Given a type A1 → ... → An → B with b a sort or product type, this method returns the type
+   * A1 → ... → An → dpSort, where dpSort is a static sort used in the
+   * Dependency Pairs framework.
    */
-  static Type dpSort = TypeFactory.createSort("DP_SORT");
+  static Type generateDpType( Type ty) {
+    return switch (ty) {
+      case Base(_), Product(_) -> dpSort;
+      case Arrow(Type left, Type right) ->
+        TypeFactory.createArrow(left, generateDpType(right));
+    };
+  }
+
+
+
+
+
   List<Term> sharpSymbols = new ArrayList<>();
 
   /**
@@ -50,21 +81,6 @@ public class DPGenerator {
       while_ty = right;
     }
     return acc;
-  }
-
-  /**
-   * Given a type A1 => ... => An => B with b a sort or product type.
-   * This method returns the type A1 => ... => An => dpSort.
-   * Where dpSort is a static sort used in the
-   * Dependency Pairs framework.
-   */
-  @Contract(pure = true)
-  static Type generateDpType(@NotNull Type ty) {
-    return switch (ty) {
-      case Base(_), Product(_) -> dpSort;
-      case Arrow(Type left, Type right) ->
-        TypeFactory.createArrow(left, generateDpType(right));
-    };
   }
 
   /**
