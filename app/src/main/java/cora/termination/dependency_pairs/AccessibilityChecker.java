@@ -1,3 +1,18 @@
+/**************************************************************************************************
+ Copyright 2024 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
 package cora.termination.dependency_pairs;
 
 import java.util.ArrayList;
@@ -15,18 +30,28 @@ import charlie.smt.*;
 import charlie.trs.TRS;
 import cora.config.Settings;
 
+/**
+ * This class is used to check the "accessible function passing" requirement for a given TRS.  It
+ * does so by encoding the existence of a suitable sort ordering to an SMT problem and delegates
+ * the search.
+ */
 public class AccessibilityChecker {
   private SmtProblem _problem;
   private TreeMap<String,IVar> _sortVariables;
   private TRS _trs;
   private String _result;
 
+  /** Use this constructor to create a checker, then call checkAccessibility to gain an answer. */
   public AccessibilityChecker(TRS trs) {
     _problem = new SmtProblem();
     _sortVariables = new TreeMap<String,IVar>();
     _trs = trs;
   }
 
+  /**
+   * Creates a variable for the "weight" of a sort.
+   * We say ι ≽ κ if weight(ι) ≥ weight(κ).
+   */
   private IVar getSortVariable(String sort) {
     if (!_sortVariables.containsKey(sort)) {
       _sortVariables.put(sort, _problem.createIntegerVariable(sort));
@@ -58,7 +83,7 @@ public class AccessibilityChecker {
     }
   }
 
-  /** Returns whether i ∈ Acc(f) */
+  /** Returns a constraint modelling whether i ∈ Acc(f) */
   private Constraint accArg(int i, FunctionSymbol f) {
     Type type = f.queryType();
     for (int j = 1; j < i; j++) {
@@ -105,6 +130,10 @@ public class AccessibilityChecker {
     }
   }
 
+  /**
+   * Starting point for the sort ordering search problem: this encodes the whole problem of finding
+   * a suitable sort ordering (that makes all left-hand sides accessible) into an SMT problem.
+   */
   private void generateTrsConstraints() {
     for (int i = 0; i < _trs.queryRuleCount(); i++) {
       Term left = _trs.queryRule(i).queryLeftSide();
@@ -125,82 +154,19 @@ public class AccessibilityChecker {
     return ret;
   }
 
-  private class AccessibilityProofObject implements ProofObject {
-    private ArrayList<Pair<String,Integer>> _sorts;
-    private String _maybeReason;
-
-    /** Sets up a proof object for a successful proof. */
-    private AccessibilityProofObject(Valuation solution) {
-      _maybeReason = null;
-      _sorts = new ArrayList<Pair<String,Integer>>();
-      _sortVariables.forEach( (x, v) -> {
-        _sorts.add(new Pair<String,Integer>(x, solution.queryAssignment(v)));
-      });
-      Collections.sort(_sorts, new Comparator<Pair<String,Integer>>() {
-        public int compare(Pair<String,Integer> p1, Pair<String,Integer> p2) {
-          return p2.snd() - p1.snd();
-        }
-      });
-    }
-
-    /**
-     * Sets up a proof object for an unsuccessful proof, where we could not prove
-     * non-AFPness either.
-     */
-    private AccessibilityProofObject(String reason) {
-      _maybeReason = reason;
-    }
-
-    /** Sets up a proof object if the underlying TRS is not AFP. */
-    private AccessibilityProofObject() {
-      _sorts = null;
-      _maybeReason = null;
-    }
-
-    public Answer queryAnswer() {
-      if (_maybeReason != null) return Answer.MAYBE;
-      if (_sorts == null) return Answer.NO;
-      return Answer.YES;
-    }
-
-    public void justify(OutputModule module) {
-      if (_maybeReason != null) {
-        module.println("We could not verify if the system satisfies the precondition to " +
-                       "apply static dependency pairs: it needs to be accessible function " +
-                       "passing.");
-        module.println("%a", _maybeReason);
-        return;
-      }
-      if (_sorts == null) {
-        module.println("The system does not satisfy the preconditions to apply static " +
-                       "dependency pairs: it is not accessible function passing.");
-        return;
-      }
-      
-      module.print("The system is accessible function passing by ");
-
-      if (_sorts.size() == 0 ||
-          _sorts.get(0).snd().equals(_sorts.get(_sorts.size()-1).snd())) {
-        module.println("a sort ordering that equates all sorts.");
-        return;
-      }
-
-      module.print("a sort ordering with %a", _sorts.get(0).fst());
-      for (int i = 1; i < _sorts.size(); i++) {
-        if (_sorts.get(i).snd() < _sorts.get(i-1).snd()) module.print(" ≻ ");
-        else module.print(" = ");
-        module.print("%a", _sorts.get(i).fst());
-      }
-      module.println(".");
-    }
-  }
-
+  /**
+   * Main access function of the class.
+   * Call this after constructing class to test if the TRS the class was constructed with is AFP.
+   * The resulting ProofObject will either tell you YES (it is AFP, and the sort ordering can be
+   * queried through querySortOrdering()), NO (it is not AFP), or MAYBE (we could not determine it).
+   */
   public ProofObject checkAccessibility() {
     generateTrsConstraints();
     return switch (Settings.smtSolver.checkSatisfiability(_problem)) {
-      case SmtSolver.Answer.YES(Valuation solution) -> new AccessibilityProofObject(solution);
-      case SmtSolver.Answer.MAYBE(String reason) -> new AccessibilityProofObject(reason);
-      case SmtSolver.Answer.NO() -> new AccessibilityProofObject();
+      case SmtSolver.Answer.YES(Valuation solution) ->
+        new AccessibilityProofObject(solution, _sortVariables);
+      case SmtSolver.Answer.MAYBE(String reason) -> new MaybeAccessibleProofObject(reason);
+      case SmtSolver.Answer.NO() -> new NotAccessibleProofObject();
     };
   }
 
@@ -208,3 +174,71 @@ public class AccessibilityChecker {
     return _result;
   }
 }
+
+// ================================================================================================
+
+/** Helper class: this is the ProofObject returned when the system is not AFP. */
+class NotAccessibleProofObject implements ProofObject {
+  public Answer queryAnswer() { return Answer.NO; }
+  public void justify(OutputModule module) {
+    module.println("The system does not satisfy the preconditions to apply static " +
+                   "dependency pairs: it is not accessible function passing.");
+  }
+}
+
+/**
+ * Helper class: this is the ProofObject returned when we could not determine if the system is AFP.
+ */
+class MaybeAccessibleProofObject implements ProofObject {
+  private String _reason;
+  MaybeAccessibleProofObject(String reason) { _reason = reason; }
+  public Answer queryAnswer() { return Answer.MAYBE; }
+  public void justify(OutputModule module) {
+    module.println("We could not verify if the system satisfies the precondition to " +
+                   "apply static dependency pairs: it needs to be accessible function " +
+                   "passing.");
+    module.println("%a", _reason);
+  }
+}
+
+/** Helper class: this is the ProofObject returned when the system is AFP. */
+class AccessibilityProofObject implements ProofObject {
+  private ArrayList<Pair<String,Integer>> _sorts;
+
+  /** Sets up a proof object for a successful proof. */
+  AccessibilityProofObject(Valuation solution, TreeMap<String,IVar> sortVariables) {
+    _sorts = new ArrayList<Pair<String,Integer>>();
+    sortVariables.forEach( (x, v) -> {
+      _sorts.add(new Pair<String,Integer>(x, solution.queryAssignment(v)));
+    });
+    Collections.sort(_sorts, new Comparator<Pair<String,Integer>>() {
+      public int compare(Pair<String,Integer> p1, Pair<String,Integer> p2) {
+        return p2.snd() - p1.snd();
+      }
+    });
+  }
+
+  public Answer queryAnswer() {
+    return Answer.YES;
+  }
+
+  public void justify(OutputModule module) {
+    module.print("The system is accessible function passing by ");
+
+    if (_sorts.size() == 0 ||
+        _sorts.get(0).snd().equals(_sorts.get(_sorts.size()-1).snd())) {
+      module.println("a sort ordering that equates all sorts.");
+      return;
+    }
+
+    module.print("a sort ordering with %a", _sorts.get(0).fst());
+    for (int i = 1; i < _sorts.size(); i++) {
+      if (_sorts.get(i).snd() < _sorts.get(i-1).snd()) module.print(" ≻ ");
+      else module.print(" = ");
+      module.print("%a", _sorts.get(i).fst());
+    }
+    module.println(".");
+  }
+}
+
+

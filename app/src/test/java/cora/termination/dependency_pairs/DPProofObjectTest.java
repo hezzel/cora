@@ -16,10 +16,13 @@
 package cora.termination.dependency_pairs;
 
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Set;
 
+import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.ProofObject;
@@ -75,42 +78,70 @@ class DPProofObjectTest {
     }
   }
 
+  private class HelperC extends ProcessorProofObject {
+    private static Problem helperProblem(Problem inp) {
+      ArrayList<Rule> newrules = new ArrayList<Rule>();
+      for (int i = 2; i < inp.getRuleList().size(); i++) newrules.add(inp.getRuleList().get(i));
+      return new Problem(inp.getDPList(), newrules, null, inp.getOriginalTRS(),
+                         false, inp.isInnermost(), inp.queryTerminationStatus());
+    }
+    public HelperC(Problem inp) {
+      super(inp, helperProblem(inp));
+    }
+    public String queryProcessorName() { return "helper 3"; }
+    public void justify(OutputModule m) { m.println("This is the rule-removal helper."); }
+  }
+
   @Test
   void testFullRun() {
     TRS trs = exampleTrs();
     ProofObject accessibility = makeAccessibilityProof(ProofObject.Answer.YES);
-    Problem p1 = DPGenerator.generateProblemFromTrs(trs);
-    Problem p2 = new Problem(List.of(p1.getDPList().get(0)), trs);
-    Problem p3 = new Problem(List.of(p1.getDPList().get(2)), trs);
+    Problem p1 = (new DPGenerator(trs)).queryProblem(false, true);
+    Problem p2 = p1.removeDPs(Set.of(1, 2), true);
+    Problem p3 = p1.removeDPs(Set.of(0, 1), true);
     DPProofObject ob = new DPProofObject(accessibility, p1);
     ob.addProcessorProof(new HelperA(p1, List.of(p2, p3)));
     ob.addProcessorProof(new HelperB(p2));
+    HelperC helper = new HelperC(p3);
+    ob.addProcessorProof(helper);
+    helper = new HelperC(helper.queryOutput());
+    ob.addProcessorProof(helper);
+    Problem p4 = helper.queryOutput();
 
     assertTrue(ob.queryAnswer().equals(ProofObject.Answer.MAYBE));
     String start = 
       "This is totally accessible.\n\n" +
-      "We start by computing the following initial DP problem:\n\n" +
+      "We start by computing the initial DP problem D1 = (P1, R ∪ R_?, f, c), where:\n\n" +
       "  P1. (1) ack#(m, 0) ➡ ack#(m - 1, 1) | m > 0\n" +
       "      (2) ack#(m, n) ➡ ack#(m, n - 1) | m > 0 ∧ n > 0\n" +
       "      (3) ack#(m, n) ➡ ack#(m - 1, ack(m, n - 1)) | m > 0 ∧ n > 0\n\n" +
-      "***** We apply the helper 1 Processor on P1.\n\n" +
+      "***** We apply the helper 1 Processor on D1 = (P1, R ∪ R_?, f, c).\n\n" +
       "This is the first helper.\n\n" +
+      "Processor output: { D2 = (P2, R ∪ R_?, f, c) ; D3 = (P3, R ∪ R_?, f, c) }, where:\n\n" +
       "  P2. (1) ack#(m, 0) ➡ ack#(m - 1, 1) | m > 0\n\n" +
       "  P3. (1) ack#(m, n) ➡ ack#(m - 1, ack(m, n - 1)) | m > 0 ∧ n > 0\n\n" +
-      "***** We apply the helper 2 Processor on P2.\n\n" +
-      "Here's a DP for you: ack#(m, 0) ➡ ack#(m - 1, 1) | m > 0.\n\n";
+      "***** We apply the helper 2 Processor on D2 = (P2, R ∪ R_?, f, c).\n\n" +
+      "Here's a DP for you: ack#(m, 0) ➡ ack#(m - 1, 1) | m > 0.\n\n" +
+      "Processor output: { }.\n\n" +
+      "***** We apply the helper 3 Processor on D3 = (P3, R ∪ R_?, f, c).\n\n" +
+      "This is the rule-removal helper.\n\n" +
+      "Processor output: { D4 = (P3, R2, f, c) }, where:\n\n" +
+      "  R2. (1) ack(m, n) → ack(m - 1, ack(m, n - 1)) | m > 0 ∧ n > 0\n\n" +
+      "***** We apply the helper 3 Processor on D4 = (P3, R2, f, c).\n\n" +
+      "This is the rule-removal helper.\n\n" +
+      "Processor output: { D5 = (P3, ø, f, c) }.\n\n";
     OutputModule module = DefaultOutputModule.createUnicodeModule(exampleTrs());
     ob.justify(module);
     assertTrue(module.toString().equals(start));
-
     ob.setTerminating();
-    ob.addProcessorProof(new HelperB(p3));
+    ob.addProcessorProof(new HelperB(p4));
     assertTrue(ob.queryAnswer().equals(ProofObject.Answer.YES));
     module = DefaultOutputModule.createUnicodeModule(exampleTrs());
     ob.justify(module);
     start +=
-      "***** We apply the helper 2 Processor on P3.\n\n" +
-      "Here's a DP for you: ack#(m, n) ➡ ack#(m - 1, ack(m, n - 1)) | m > 0 ∧ n > 0.\n\n";
+      "***** We apply the helper 2 Processor on D5 = (P3, ø, f, c).\n\n" +
+      "Here's a DP for you: ack#(m, n) ➡ ack#(m - 1, ack(m, n - 1)) | m > 0 ∧ n > 0.\n\n" +
+      "Processor output: { }.\n\n";
     assertTrue(module.toString().equals(start));
 
     ob.setFailedProof(p3);
@@ -118,6 +149,6 @@ class DPProofObjectTest {
     module = DefaultOutputModule.createUnicodeModule(exampleTrs());
     ob.justify(module);
     assertTrue(module.toString().equals(start +
-      "***** No progress could be made on DP problem P3.\n\n"));
+      "***** No progress could be made on DP problem D3 = (P3, R ∪ R_?, f, c).\n\n"));
   }
 }

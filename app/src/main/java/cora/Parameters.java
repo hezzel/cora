@@ -67,12 +67,14 @@ public class Parameters {
     TreeSet<String> set = new TreeSet<String>();
     addTechnique(set, cora.termination.dependency_pairs.DPFramework.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.DPFramework.queryPrivateDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.processors.GraphProcessor.queryDisabledCode());
+    addTechnique(set, cora.termination.dependency_pairs.processors.graph.GraphProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.IntegerMappingProcessor.queryDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.processors.ReachabilityProcessor.queryDisabledCode());
+    addTechnique(set, cora.termination.dependency_pairs.processors.graph.ReachabilityProcessor.queryDisabledCode());
+    /*
     addTechnique(set, cora.termination.dependency_pairs.processors.SplittingProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.SubtermProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.TheoryArgumentsProcessor.queryDisabledCode());
+    */
     addTechnique(set, cora.termination.reduction_pairs.Horpo.queryDisabledCode());
     return set;
   }

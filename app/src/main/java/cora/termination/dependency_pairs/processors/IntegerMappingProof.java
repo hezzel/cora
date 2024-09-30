@@ -45,23 +45,12 @@ class IntegerMappingProof extends ProcessorProofObject {
    */
   IntegerMappingProof(Problem inp, Set<Integer> oriented,
                       Map<FunctionSymbol,List<Variable>> argvars, Map<FunctionSymbol,Term> intp) {
-    super(inp, removeDPs(oriented, inp));
+    super(inp, inp.removeDPs(oriented, true));
     _oriented = oriented;
     _argvars = argvars;
     _intp = intp;
   }
 
-  /** Helper function for the constructor */
-  private static List<Problem> removeDPs(Set<Integer> oriented, Problem original) {
-    List<DP> originalDPs = original.getDPList();
-    List<DP> remainingDPs = new ArrayList<DP>();
-    for (int index = 0; index < originalDPs.size(); index++) {
-      if (!oriented.contains(index)) remainingDPs.add(originalDPs.get(index));
-    }
-    if (remainingDPs.size() == 0) return List.of();
-    else return List.of(new Problem(remainingDPs, original.getTRS()));
-  }
- 
   public String queryProcessorName() { return "Integer Function"; }
     
   public void justify(OutputModule module) {

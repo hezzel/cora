@@ -41,7 +41,7 @@ class IntegerMappingProofTest {
       "g :: Int -> Int -> o\n" +
       "f(x, y) -> g(x-1, y)   | x > 0 ∧ y > 0\n" +
       "g(x, y) -> f(x, y-1)   | x > 0 ∧ y > 0\n");
-    Problem start = DPGenerator.generateProblemFromTrs(trs);
+    Problem start = (new DPGenerator(trs)).queryProblem(false, true);
     TreeMap<FunctionSymbol,Term> interpretation = new TreeMap<FunctionSymbol,Term>();
     TreeMap<FunctionSymbol,List<Variable>> varlist = new TreeMap<FunctionSymbol,List<Variable>>();
 
@@ -82,11 +82,11 @@ class IntegerMappingProofTest {
   @Test
   public void testRemoveJustOne() {
     TRS trs = CoraInputReader.readTrsFromString(
-      "f :: Int -> Int -> o\n" +
-      "g :: Int -> Int -> o\n" +
-      "f(x, y) -> g(x-1, y)   | x > 0 ∧ y > 0\n" +
-      "g(x, y) -> f(x, y-1)   | x > 0 ∧ y > 0\n");
-    Problem start = DPGenerator.generateProblemFromTrs(trs);
+      "private f :: Int -> Int -> o\n" +
+      "private g :: Int -> Int -> o\n" +
+      "f(x, y) -> g(x-1, y) | x > 0 ∧ y > 0\n" +
+      "g(x, y) -> f(x, y-1) | x > 0 ∧ y > 0\n");
+    Problem start = (new DPGenerator(trs)).queryProblem(true, false);
     TreeMap<FunctionSymbol,Term> interpretation = new TreeMap<FunctionSymbol,Term>();
     TreeMap<FunctionSymbol,List<Variable>> varlist = new TreeMap<FunctionSymbol,List<Variable>>();
 
@@ -107,6 +107,9 @@ class IntegerMappingProofTest {
     assertTrue(ifp.queryOutput().getDPList().size() == 1);
     assertTrue(ifp.queryResults().size() == 1);
     assertTrue(ifp.queryProcessorName().equals("Integer Function"));
+    assertFalse(ifp.queryResults().get(0).hasPrivateDPs());
+    assertFalse(ifp.queryResults().get(0).hasExtraRules());
+    assertTrue(ifp.queryResults().get(0).isInnermost());
 
     OutputModule module = DefaultOutputModule.createUnicodeModule(trs);
     ifp.justify(module);

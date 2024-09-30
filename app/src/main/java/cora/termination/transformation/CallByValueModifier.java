@@ -15,11 +15,13 @@
 
 package cora.termination.transformation;
 
+import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
 import charlie.trs.*;
 
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 /**
  * The CallByValueModifier class modifies an existing TRS by changing all rules to store all
@@ -27,15 +29,32 @@ import java.util.ArrayList;
  * be assumed to be instantiated only with values).
  */
 public class CallByValueModifier {
+  private TRS _trs;
+  private TreeSet<String> _badTheorySorts;
+
   /** Returns whether or not the current technique is applicable to the given TRS. */
   public static boolean isApplicable(TRS trs) {
-    return trs.verifyProperties(TrsProperties.Level.META, TrsProperties.Constrained.YES,  
-      TrsProperties.Products.ALLOWED, TrsProperties.Lhs.NONPATTERN, TrsProperties.Root.ANY);
+    if (!trs.verifyProperties(TrsProperties.Level.META, TrsProperties.Constrained.YES,  
+                              TrsProperties.Products.ALLOWED, TrsProperties.Lhs.NONPATTERN,
+                              TrsProperties.Root.ANY)) {
+      return false;
+    }
+    // we're not applicable if term values of theory sort cannot be assumed to be theory values
+    for (FunctionSymbol f : trs.queryAlphabet().getSymbols()) {
+      if (f.isTheorySymbol()) continue;
+      if (trs.isDefined(f)) continue;
+      Type type = f.queryType().queryOutputType();
+      if (type.isTheoryType() && type.isBaseType()) return false;
+    }
+    return true;
   }
 
-  /** Main function: modifies the given TRS */
+  /**
+   * Main function: modifies the given TRS.
+   * NOTE: this should only be called if isApplicable(trs) returns true, otherwise soundness is not
+   * guaranteed.
+   */
   public static TRS modify(TRS trs) {
-    if (!isApplicable(trs)) return trs;
     ArrayList<Rule> newrules = new ArrayList<Rule>();
     for (int i = 0; i < trs.queryRuleCount(); i++) {
       Rule rho = trs.queryRule(i);

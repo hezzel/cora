@@ -36,7 +36,8 @@ public abstract class ProcessorProofObject {
   /** Initialises a successful proof with the given input and singleton list of output. */
   protected ProcessorProofObject(Problem input, Problem output) {
     _input = input;
-    _output = List.of(output);
+    if (output.isEmpty()) _output = List.of();
+    else _output = List.of(output);
   }
 
   /** Initialises an unsuccessful proof with the given input. */
@@ -62,7 +63,10 @@ public abstract class ProcessorProofObject {
    */
   public Problem queryOutput() {
     if (_output == null) return _input;
-    if (_output.size() == 0) return new Problem(List.of(), _input.getTRS());
+    if (_output.size() == 0) {
+      return new Problem(List.of(), _input.getRuleList(), null, _input.getOriginalTRS(),
+        _input.isInnermost(), _input.hasExtraRules(), _input.queryTerminationStatus());
+    }
     if (_output.size() == 1) return _output.get(0);
     throw new Error("Calling queryOutput() when there are " + _output.size() + " results!");
   }

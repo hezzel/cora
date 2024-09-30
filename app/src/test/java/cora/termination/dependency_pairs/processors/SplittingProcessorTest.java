@@ -34,7 +34,7 @@ class SplittingProcessorTest {
       "f(x, y) -> f(x, y-1) | x < y ∧ (1 = 2 ∧ x < y + 1)"
     );
 
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = (new DPGenerator(trs)).queryProblem(false, true);
     SplittingProcessor splitProc = new SplittingProcessor();
     assertFalse(splitProc.processDPP(p).applicable());
   }
@@ -44,14 +44,19 @@ class SplittingProcessorTest {
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int -> Int\n" +
       "f(x ,y) -> f(x, y-1) | x != y");
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = (new DPGenerator(trs)).queryProblem(false, false);
     SplittingProcessor splitProc = new SplittingProcessor();
     ProcessorProofObject result = splitProc.processDPP(p);
     assertTrue(result.applicable());
     assertTrue(result.queryResults().size() == 1);
     assertTrue(result.queryResults().get(0).toString().equals(
-      "  f#(x, y) -> f#(x, y - 1) [ x > y ] \n" +
-      "  f#(x, y) -> f#(x, y - 1) [ x < y ] \n"));
+      "DPs:\n" +
+      "  f#(x, y) => f#(x, y - 1) | x > y { }\n" +
+      "  f#(x, y) => f#(x, y - 1) | x < y { }\n" +
+      "Rules:\n" +
+      "  f(x, y) → f(x, y - 1) | x ≠ y\n" +
+      "Evaluation is arbitrary.\n"+
+      "Right-hand sides are expected to be Computable.\n"));
   }
 
   @Test
@@ -59,15 +64,20 @@ class SplittingProcessorTest {
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int -> Int\n" +
       "f(x ,y) -> f(x, y-1) | x = 1 ∨ x = 3 ∨ x = 10");
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = (new DPGenerator(trs)).queryProblem(true, false);
     SplittingProcessor splitProc = new SplittingProcessor();
     ProcessorProofObject result = splitProc.processDPP(p);
     assertTrue(result.applicable());
     assertTrue(result.queryResults().size() == 1);
     assertTrue(result.queryResults().get(0).toString().equals(
-      "  f#(x, y) -> f#(x, y - 1) [ x = 1 ] \n" +
-      "  f#(x, y) -> f#(x, y - 1) [ x = 3 ] \n" +
-      "  f#(x, y) -> f#(x, y - 1) [ x = 10 ] \n"));
+      "DPs:\n" +
+      "  f#(x, y) => f#(x, y - 1) | x = 1 { }\n" +
+      "  f#(x, y) => f#(x, y - 1) | x = 3 { }\n" +
+      "  f#(x, y) => f#(x, y - 1) | x = 10 { }\n" +
+      "Rules:\n" +
+      "  f(x, y) → f(x, y - 1) | x = 1 ∨ x = 3 ∨ x = 10\n" +
+      "Evaluation is innermost.\n" +
+      "Right-hand sides are expected to be Computable.\n"));
   }
 
   @Test
@@ -75,14 +85,20 @@ class SplittingProcessorTest {
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int -> Int\n" +
       "f(x, y) -> f(x, y-1) | x != y ∧ x ≤ y");
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = (new DPGenerator(trs)).queryProblem(true, true);
     SplittingProcessor splitProc = new SplittingProcessor();
     ProcessorProofObject result = splitProc.processDPP(p);
     assertTrue(result.applicable());
     assertTrue(result.queryResults().size() == 1);
     assertTrue(result.queryResults().get(0).toString().equals(
-      "  f#(x, y) -> f#(x, y - 1) [ x > y ∧ x ≤ y ] \n" +
-      "  f#(x, y) -> f#(x, y - 1) [ x < y ∧ x ≤ y ] \n"));
+      "DPs:\n" +
+      "  f#(x, y) => f#(x, y - 1) | x > y ∧ x ≤ y { }\n" +
+      "  f#(x, y) => f#(x, y - 1) | x < y ∧ x ≤ y { }\n" +
+      "Rules:\n" +
+      "  f(x, y) → f(x, y - 1) | x ≠ y ∧ x ≤ y\n" +
+      "  ... and an unknown number of additional rules\n" +
+      "Evaluation is innermost.\n" +
+      "Right-hand sides are expected to be Computable.\n"));
   }
 
   @Test
@@ -93,15 +109,21 @@ class SplittingProcessorTest {
       "h :: Int -> Int\n" +
       "f(x) -> f(x+1) | 3 = 4 ∧ (x < 0 ∨ x > 10)" +
       "g(x) -> f(x) | x <= 0");
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = (new DPGenerator(trs)).queryProblem(false, false);
     SplittingProcessor splitProc = new SplittingProcessor();
     ProcessorProofObject result = splitProc.processDPP(p);
     assertTrue(result.applicable());
     assertTrue(result.queryResults().size() == 1);
     assertTrue(result.queryResults().get(0).toString().equals(
-      "  f#(x) -> f#(x + 1) [ 3 = 4 ∧ x < 0 ] \n" +
-      "  f#(x) -> f#(x + 1) [ 3 = 4 ∧ x > 10 ] \n" +
-      "  g#(x) -> f#(x) [ x ≤ 0 ] \n"));
+      "DPs:\n" +
+      "  f#(x) => f#(x + 1) | 3 = 4 ∧ x < 0 { }\n" +
+      "  f#(x) => f#(x + 1) | 3 = 4 ∧ x > 10 { }\n" +
+      "  g#(x) => f#(x) | x ≤ 0 { }\n" +
+      "Rules:\n" +
+      "  f(x) → f(x + 1) | 3 = 4 ∧ (x < 0 ∨ x > 10)\n" +
+      "  g(x) → f(x) | x ≤ 0\n" +
+      "Evaluation is arbitrary.\n" +
+      "Right-hand sides are expected to be Computable.\n"));
   }
 
   @Test
@@ -109,7 +131,7 @@ class SplittingProcessorTest {
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int -> Int\n" +
       "f(x,y) -> f(x+2,y-1) | x != y ∧ y > 0 ∧ (x % 2 = 0 ∨ x % 3 != 0)");
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = (new DPGenerator(trs)).queryProblem(false, true);
     SplittingProcessor splitProc = new SplittingProcessor();
     ProcessorProofObject result = splitProc.processDPP(p);
     assertTrue(result.applicable());
@@ -127,7 +149,7 @@ class SplittingProcessorTest {
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int -> Int\n" +
       "f(x,y) -> f(x+2,y-1) | x != y ∧ y != 0 ∧ (x % 2 = 0 ∨ x % 3 != 0)");
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = (new DPGenerator(trs)).queryProblem(true, true);
     SplittingProcessor splitProc = new SplittingProcessor();
     assertFalse(splitProc.processDPP(p).applicable());
   }

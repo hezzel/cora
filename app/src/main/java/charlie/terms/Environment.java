@@ -16,6 +16,9 @@
 package charlie.terms;
 
 import java.lang.Iterable;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * An Environment is a finite set of objects -- specifically, variables or meta-variables.
@@ -27,5 +30,9 @@ public interface Environment<T> extends Iterable<T> {
 
   /** Returns the number of elements in the environment.  Note: calling this takes linear time. */
   int size();
+
+  default Set<T> toSet() {
+    return StreamSupport.stream(spliterator(), false).collect(Collectors.toSet());
+  }
 }
 

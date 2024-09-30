@@ -20,7 +20,7 @@ import cora.termination.dependency_pairs.processors.*;
 import cora.termination.dependency_pairs.processors.graph.GraphProcessor;
 import cora.termination.dependency_pairs.processors.graph.ReachabilityProcessor;
 
-public class FullDPFramework extends DPFramework {
+public class InnermostDPFramework extends DPFramework {
   private boolean _extraRules;
   private Processor[] _processors;
   private int RESTARTLOOP;
@@ -28,12 +28,12 @@ public class FullDPFramework extends DPFramework {
     // mostly to take advantage of the public/private information
 
   /**
-   * Create a DP framework for full termination and the given rules.  If extraRules is set to true,
-   * then an arbitrary number of additional, unknown defined symbols and rules defining them may be
-   * present in the TRS (as well as additional sorts and constructors defining those, but not
+   * Create a DP framework for innermost termination and the given rules.  If extraRules is set to
+   * true, then an arbitrary number of additional, unknown defined symbols and rules defining them
+   * may be present in the TRS (as well as additional sorts and constructors defining those, but not
    * additional constructors of the existing sorts, nor rules defining any known symbol).
    */
-  public FullDPFramework(TRS trs, boolean extraRules) {
+  public InnermostDPFramework(TRS trs, boolean extraRules) {
     super(trs);
     _extraRules = extraRules;
     _processors = new Processor[] {
@@ -42,14 +42,14 @@ public class FullDPFramework extends DPFramework {
         new ReachabilityProcessor(),
         new GraphProcessor(),
         new SubtermProcessor(),
-        new TheoryArgumentsProcessor(false),
-        new IntegerMappingProcessor()
+        new IntegerMappingProcessor(),
+        new TheoryArgumentsProcessor(false)
       };
     RESTARTLOOP = 3;
   }
 
   protected Problem createInitialProblem(DPGenerator generator) {
-    return generator.queryProblem(false, _extraRules);
+    return generator.queryProblem(true, _extraRules);
   }
 
   protected Processor getProcessor(int index) {

@@ -18,53 +18,83 @@
 // tests.  If you make changes to the file, please uncomment for a bit to check that it didn't
 // muck anything up. :)
 
-package cora.termination.dependency_pairs.processors;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.TreeSet;
-
-import cora.termination.dependency_pairs.DP;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import static org.junit.jupiter.api.Assertions.*;
+package cora.termination.dependency_pairs.processors.graph;
 
 import charlie.types.*;
 import charlie.terms.*;
 import charlie.trs.*;
 import charlie.reader.CoraInputReader;
+import cora.termination.dependency_pairs.DP;
 
-class OverApproximationTest {
+import java.util.ArrayList;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class ApproximateApproximateReducerTest {
   private Type type(String text) {
     return CoraInputReader.readType(text);
   }
 
   @Test
   public void testRename() {
-//    // f(x, y) => g(x) | [y | x]
+    // f(x, y) => g(x) | y { x }
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     Variable y = TheoryFactory.createVar("y", TypeFactory.boolSort);
     Term left = TermFactory.createConstant("f", type("Int -> Bool -> unit")).apply(x).apply(y);
     Term right = TermFactory.createConstant("g", type("Int -> unit")).apply(x);
-    List<Variable> vars = new ArrayList<>();
+    TreeSet<Variable> vars = new TreeSet<Variable>();
     vars.add(x);
     vars.add(y);
-    DP dp = new DP(left, right, y, vars, false);
-    DP dp2 = OverApproximation.rename(dp);
-//    assertTrue(dp2.lhs().toString().equals("f(x, y)"));
-//    assertTrue(dp2.rhs().toString().equals("g(x)"));
-//    assertTrue(dp2.constraint().isVariable());
-//    Variable y2 = dp2.constraint().queryVariable();
-//    assertTrue(dp2.vars().size() == 1);
-//    Variable x2 = dp2.vars().iterator().next();
-//    assertTrue(x != x2);
-//    assertTrue(y != y2);
-//    assertTrue(dp2.lhs().vars().size() == 2);
-//    assertTrue(dp2.lhs().vars().contains(x2));
-//    assertTrue(dp2.lhs().vars().contains(y2));
-//    assertTrue(dp2.rhs().vars().size() == 1);
-//    assertTrue(dp2.rhs().vars().contains(x2));
+    DP dp = new DP(left, right, y, vars);
+    DP dp2 = ApproximateReducer.rename(dp);
+    assertTrue(dp2.lhs().toString().equals("f(x, y)"));
+    assertTrue(dp2.rhs().toString().equals("g(x)"));
+    assertTrue(dp2.constraint().isVariable());
+    Variable y2 = dp2.constraint().queryVariable();
+    assertTrue(dp2.lvars().size() == 2);
+    Variable x2 = dp2.lvars().iterator().next();
+    assertTrue(x != x2);
+    assertTrue(y != y2);
+    assertTrue(dp2.lhs().vars().size() == 2);
+    assertTrue(dp2.lhs().vars().contains(x2));
+    assertTrue(dp2.lhs().vars().contains(y2));
+    assertTrue(dp2.rhs().vars().size() == 1);
+    assertTrue(dp2.rhs().vars().contains(x2));
+  }
+  
+  @Test
+  public void testRuleArity() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "id :: Int -> Int\n" +
+      "f :: Int -> A -> Bool -> Int\n" +
+      "a :: A\n" +
+      "[+](f(x,y,z)) -> id\n" +
+      "id(x) -> x\n" +
+      "f(x,a) -> f(0,a)\n" +
+      "f(0,a,false) -> 3\n" +
+      "id -> [+](0)\n"
+    );
+    // rules contains all rules except for the last (which affects arities!)
+    ArrayList<Rule> rules = new ArrayList<Rule>();
+    for (int i = 0; i < trs.queryRuleCount()-1; i++) rules.add(trs.queryRule(i));
+    // gather all the symbols
+    FunctionSymbol id = trs.lookupSymbol("id");
+    FunctionSymbol f = trs.lookupSymbol("f");
+    FunctionSymbol a = trs.lookupSymbol("a");
+    FunctionSymbol plus = TheoryFactory.plusSymbol;
+    FunctionSymbol times = TheoryFactory.timesSymbol;
+    // query all the arities
+    ApproximateReducer reducer = new ApproximateReducer(trs, rules);
+    TreeMap<FunctionSymbol,Integer> ar = reducer.computeRuleArities();
+    // do the checks
+    assertTrue(ar.get(id) == 1);
+    assertTrue(ar.get(f) == 2);
+    assertTrue(ar.get(a) == null);
+    assertTrue(ar.get(plus) == 1);
+    assertTrue(ar.get(times) == null);
   }
 
   private TRS testTrs() {
@@ -84,21 +114,21 @@ class OverApproximationTest {
     Term three = TheoryFactory.createValue(3);
     Term minthree = TheoryFactory.createValue(-3);
     Term sum = TermFactory.createApp(TheoryFactory.plusSymbol, TheoryFactory.createValue(1), three);
-    Reducer reducer = new Reducer(testTrs());
+    ApproximateReducer reducer = new ApproximateReducer(testTrs());
     TreeSet<Variable> empty = new TreeSet<Variable>();
     TreeSet<Variable> hasx = new TreeSet<Variable>(); hasx.add(x);
     // we don't actually need to create real DPs; just making sure the rhs and lhs are right
-    Reducer.MyDP dp1 = new Reducer.MyDP(x, x, constraint, hasx);
+    DP dp1 = new DP(x, x, constraint, hasx);
     assertTrue(reducer.mayReduce(dp1, dp1));
-    Reducer.MyDP dp2 = new Reducer.MyDP(x, x, anticonstraint, hasx);
+    DP dp2 = new DP(x, x, anticonstraint, hasx);
     assertFalse(reducer.mayReduce(dp1, dp2));
-    Reducer.MyDP dp3 = new Reducer.MyDP(three, x, anticonstraint, hasx);
+    DP dp3 = new DP(three, x, anticonstraint, hasx);
     assertTrue(reducer.mayReduce(dp1, dp3));
-    Reducer.MyDP dp4 = new Reducer.MyDP(minthree, x, anticonstraint, hasx);
+    DP dp4 = new DP(minthree, x, anticonstraint, hasx);
     assertFalse(reducer.mayReduce(dp1, dp4));
-    Reducer.MyDP dp5 = new Reducer.MyDP(x, x, top, empty);
+    DP dp5 = new DP(x, x, top, empty);
     assertTrue(reducer.mayReduce(dp1, dp5));
-    Reducer.MyDP dp6 = new Reducer.MyDP(sum, x, top, empty);
+    DP dp6 = new DP(sum, x, top, empty);
     assertFalse(reducer.mayReduce(dp1, dp6));
   }
 
@@ -112,16 +142,16 @@ class OverApproximationTest {
     Term a = TermFactory.createConstant("a", type("Int"));
     TreeSet<Variable> xset = new TreeSet<Variable>();
     xset.add(x);
-    Reducer reducer = new Reducer(testTrs());
-    Reducer.MyDP dp1 = new Reducer.MyDP(x, x, top, xset);
+    ApproximateReducer reducer = new ApproximateReducer(testTrs());
+    DP dp1 = new DP(x, x, top, xset);
     assertTrue(reducer.mayReduce(dp1, dp1));
-    Reducer.MyDP dp2 = new Reducer.MyDP(x, x, constraint, xset);
+    DP dp2 = new DP(x, x, constraint, xset);
     assertTrue(reducer.mayReduce(dp1, dp2));
-    Reducer.MyDP dp3 = new Reducer.MyDP(x, x, top, new TreeSet<Variable>());
+    DP dp3 = new DP(x, x, top, new TreeSet<Variable>());
     assertTrue(reducer.mayReduce(dp1, dp3));
-    Reducer.MyDP dp4 = new Reducer.MyDP(sum, x, top, new TreeSet<Variable>());
+    DP dp4 = new DP(sum, x, top, new TreeSet<Variable>());
     assertTrue(reducer.mayReduce(dp1, dp4));
-    Reducer.MyDP dp5 = new Reducer.MyDP(a, a, top, new TreeSet<Variable>());
+    DP dp5 = new DP(a, a, top, new TreeSet<Variable>());
     assertFalse(reducer.mayReduce(dp1, dp5));
   }
 
@@ -136,21 +166,21 @@ class OverApproximationTest {
                                        .apply(TheoryFactory.createValue(2));
     TreeSet<Variable> empty = new TreeSet<Variable>();
     TreeSet<Variable> xset = new TreeSet<Variable>(); xset.add(x);
-    Reducer reducer = new Reducer(testTrs());
-    Reducer.MyDP dp1 = new Reducer.MyDP(three, three, top, empty);
+    ApproximateReducer reducer = new ApproximateReducer(testTrs());
+    DP dp1 = new DP(three, three, top, empty);
     assertTrue(reducer.mayReduce(dp1, dp1));
-    Reducer.MyDP dp2 = new Reducer.MyDP(sum, three, top, xset);
+    DP dp2 = new DP(sum, three, top, xset);
     assertFalse(reducer.mayReduce(dp1, dp2));
     assertTrue(reducer.mayReduce(dp2, dp1));
-    Reducer.MyDP dp3 = new Reducer.MyDP(x, x, constraint, xset);
+    DP dp3 = new DP(x, x, constraint, xset);
     assertFalse(reducer.mayReduce(dp1, dp3));
   }
 
   private boolean checkReduce(Term from, Term fromConstraint, TreeSet<Variable> fromtheory,
                               Term to, Term toConstraint, TreeSet<Variable> totheory) {
-    Reducer.MyDP dp1 = new Reducer.MyDP(from, from, fromConstraint, fromtheory);
-    Reducer.MyDP dp2 = new Reducer.MyDP(to, to, toConstraint, totheory);
-    Reducer reducer = new Reducer(testTrs());
+    DP dp1 = new DP(from, from, fromConstraint, fromtheory);
+    DP dp2 = new DP(to, to, toConstraint, totheory);
+    ApproximateReducer reducer = new ApproximateReducer(testTrs());
     return reducer.mayReduce(dp1, dp2);
   }
 
@@ -241,28 +271,5 @@ class OverApproximationTest {
                             f.apply(TheoryFactory.createValue(-2)), top, empty));
   }
 
-  @Test
-  public void testRuleArity() {
-    TRS trs = CoraInputReader.readTrsFromString(
-      "id :: Int -> Int\n" +
-      "f :: Int -> A -> Bool -> Int\n" +
-      "a :: A\n" +
-      "[+](f(x,y,z)) -> id\n" +
-      "id(x) -> x\n" +
-      "f(x,a) -> f(0,a)\n" +
-      "f(0,a,false) -> 3\n"
-    );
-    FunctionSymbol id = trs.lookupSymbol("id");
-    FunctionSymbol f = trs.lookupSymbol("f");
-    FunctionSymbol a = trs.lookupSymbol("a");
-    FunctionSymbol plus = TheoryFactory.plusSymbol;
-    FunctionSymbol times = TheoryFactory.timesSymbol;
-    Reducer reducer = new Reducer(trs);
-    assertTrue(reducer.ruleArity(id) == 1);
-    assertTrue(reducer.ruleArity(f) == 2);
-    assertTrue(reducer.ruleArity(a) == 1);
-    assertTrue(reducer.ruleArity(plus) == 1);
-    assertTrue(reducer.ruleArity(times) == 3);
-  }
 */
 }

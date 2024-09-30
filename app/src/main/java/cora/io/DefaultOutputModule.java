@@ -64,6 +64,7 @@ public class DefaultOutputModule implements OutputModule {
     codes.add(new Pair<String,String>("%{subtermeq}", "|<=|"));
     codes.add(new Pair<String,String>("%{supterm}", "|>|"));
     codes.add(new Pair<String,String>("%{suptermeq}", "|>=|"));
+    codes.add(new Pair<String,String>("%{union}", "UNION"));
     codes.add(new Pair<String,String>("%{greater}", ">"));
     codes.add(new Pair<String,String>("%{smaller}", "<"));
     codes.add(new Pair<String,String>("%{geq}", ">="));
@@ -130,6 +131,7 @@ public class DefaultOutputModule implements OutputModule {
     codes.add(new Pair<String,String>("%{subtermeq}", "⊴"));
     codes.add(new Pair<String,String>("%{supterm}", "⊳"));
     codes.add(new Pair<String,String>("%{suptermeq}", "⊵"));
+    codes.add(new Pair<String,String>("%{union}", "∪"));
     codes.add(new Pair<String,String>("%{greater}", ">"));
     codes.add(new Pair<String,String>("%{smaller}", "<"));
     codes.add(new Pair<String,String>("%{geq}", "≥"));
@@ -381,9 +383,9 @@ public class DefaultOutputModule implements OutputModule {
   }
 
   /**
-   * This helper function for makeString parses the given code (e.g., %s, %t) and prints the
-   * corresponding object as such.  If the object does not have the right type, then an
-   * IllegalPrintError is thrown instead.
+   * This helper function for makeString prints the given object as it should be printed, if it is
+   * a known object type.  If the object does not have a recognised type, then its toString() is
+   * used.
    */
   private String printObject(Object ob) {
     if (ob instanceof Type y) {

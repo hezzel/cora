@@ -1,144 +1,184 @@
+/**************************************************************************************************
+ Copyright 2024 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
 package cora.termination.dependency_pairs;
 
-import charlie.reader.CoraInputReader;
 import charlie.terms.FunctionSymbol;
-import charlie.terms.TermFactory;
-import charlie.terms.Variable;
-import charlie.types.Type;
-import charlie.types.TypeFactory;
-import org.junit.jupiter.api.Test;
-import charlie.terms.Term;
+import charlie.trs.TRS;
+import charlie.reader.CoraInputReader;
 
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.assumingThat;
-
 class DPGeneratorTest {
-
   @Test
-  void testGenerateVarsNotArrowTypeGivesEmptyList() {
-    Type ty = TypeFactory.createSort("a");
-    assertTrue(DPGenerator.generateVars(ty).isEmpty());
+  public void generateDPsWithOneSimpleTailRecursiveRule() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "eval :: Int -> Int -> Int\n" +
+      "eval(x, y) -> eval(x - 1, y) | x > y\n");
+    DPGenerator generator = new DPGenerator(trs);
+    assertTrue(generator.queryDPSort().name().equals("dpsort"));
+    FunctionSymbol evalsharp = generator.querySharpSymbolFor(trs.lookupSymbol("eval")).get();
+    assertTrue(evalsharp.queryType().toString().equals("Int → Int → dpsort"));
+    assertTrue(evalsharp.queryName().equals("eval#"));
+    Problem prob = generator.queryProblem(true, false);
+    assertTrue(prob.isInnermost());
+    assertFalse(prob.hasExtraRules());
+    assertFalse(prob.hasPrivateDPs());
+    assertTrue(prob.queryTerminationStatus().equals(Problem.TerminationFlag.Computable));
+    assertFalse(prob.getOriginalTRS() == trs);
+    assertTrue(prob.getOriginalTRS().lookupSymbol("eval#") == evalsharp);
+    assertTrue(trs.lookupSymbol("eval#") == null);
+    assertTrue(prob.getDPList().size() == 1);
+    assertTrue(prob.getDPList().get(0).toString().equals(
+      "eval#(x, y) => eval#(x - 1, y) | x > y { }"));
   }
 
   @Test
-  void testGenerateVarsArrow() {
-    // (int => int) => int => int
-    Type ty = TypeFactory.createArrow(
-      TypeFactory.createArrow(
-        TypeFactory.intSort,
-        TypeFactory.intSort
-      ),
-      TypeFactory.createArrow(
-        TypeFactory.boolSort,
-        TypeFactory.boolSort
-      )
+  public void generateDPsWithGeneralRecursiveRule() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "cons :: Int -> list -> list\n" +
+      "nil :: list\n" +
+      "append :: list -> list -> list\n" +
+      "append(cons(x,y), z) -> cons(x, append(y,z))\n");
+    DPGenerator generator = new DPGenerator(trs);
+    Problem prob = generator.queryProblem(false, false);
+    assertFalse(prob.isInnermost());
+    assertFalse(prob.hasExtraRules());
+    assertTrue(prob.getDPList().size() == 1);
+    assertTrue(prob.getDPList().get(0).toString().equals(
+      "append#(cons(x, y), z) => append#(y, z) | true { }"));
+  }
+
+  @Test
+  public void generateDPsWithPartiallyAppliedRule() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "f :: Int -> Int -> Int\n" +
+      "private g :: (Int -> Int) -> Int -> Int\n" +
+      "g(F,y) -> F(y)\n" +
+      "f(x) -> g(f(x-1)) | x > 0\n");
+    DPGenerator generator = new DPGenerator(trs);
+    Problem prob = generator.queryProblem(true, true);
+    assertTrue(prob.isInnermost());
+    assertTrue(prob.hasExtraRules());
+    assertFalse(prob.hasPrivateDPs());
+    assertTrue(prob.getOriginalTRS().lookupSymbol("f#").queryType().toString().equals(
+      "Int → Int → dpsort"));
+    assertTrue(prob.getDPList().size() == 2);
+    assertTrue(prob.getDPList().get(0).toString().equals(
+      "f#(x, arg2) => f#(x - 1, fresh1) | x > 0 { }"));
+    assertTrue(prob.getDPList().get(1).toString().equals(
+      "f#(x, arg2) => g#(f(x - 1), arg2) | x > 0 { }"));
+  }
+
+  @Test
+  public void generateDPsWithHigherOrderRule() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "nil :: list\n" +
+      "cons :: Int -> list -> list\n" +
+      "private map :: (Int -> Int) -> list -> list\n" +
+      "start :: list -> list\n" +
+      "map(F, nil) -> nil\n" +
+      "map(F, cons(x, y)) -> cons(F(x), map(F, y))\n" +
+      "start -> map([+](2))\n"
     );
+    DPGenerator generator = new DPGenerator(trs);
+    Problem prob = generator.queryProblem(false, true);
+    assertFalse(prob.isInnermost());
+    assertTrue(prob.hasExtraRules());
+    assertTrue(prob.hasPrivateDPs());
+    assertTrue(prob.getDPList().size() == 2);
+    assertTrue(prob.getDPList().get(0).lhs().queryRoot().queryType().toString().equals(
+      "(Int → Int) → list → dpsort"));
+    assertTrue(prob.isPrivate(0));
+    assertFalse(prob.isPrivate(1));
+    assertTrue(prob.getDPList().get(0).toString().equals(
+      "map#(F, cons(x, y)) => map#(F, y) | true { }"));
+    assertTrue(prob.getDPList().get(1).toString().equals(
+      "start#(arg1) => map#([+](2), arg1) | true { }"));
+  }
 
-    List<Variable> dpVars = DPGenerator.generateVars(ty);
-
-    assertEquals(2,dpVars.size());
-
-    //generateVars correctly creates variables of arrow types
-    assertEquals(
-      dpVars.get(0).queryType(),
-      TypeFactory.createArrow(
-        TypeFactory.intSort,
-        TypeFactory.intSort
-      )
+  @Test
+  public void testProductTypeTransformation() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "swap :: (| a , b |) -> (| b, a |)\n" +
+      "swap( (| x, y |) ) -> id( (| y, x |) )\n" +
+      "id :: (| b, a |) -> (| b, a |)\n" +
+      "id(x) -> x\n"
     );
-    //and of other types
-    assertEquals(
-      dpVars.get(1).queryType(),
-      TypeFactory.boolSort
+    DPGenerator generator = new DPGenerator(trs);
+    Problem prob = generator.queryProblem(false, true);
+    assertTrue(prob.getDPList().size() == 1);
+    FunctionSymbol swapsharp = generator.querySharpSymbolFor(trs.lookupSymbol("swap")).get();
+    assertTrue(swapsharp.queryName().equals("swap#"));
+    assertTrue(swapsharp.queryType().toString().equals("⦇ a, b ⦈ → dpsort"));
+  }
+
+  @Test
+  public void testSharpNameAlreadyTaken() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "f :: Int -> A\n" +
+      "f# :: Int -> A\n" +
+      "f(x) -> f#(x)\n"
     );
+    DPGenerator generator = new DPGenerator(trs);
+    assertTrue(generator.querySharpSymbolFor(trs.lookupSymbol("f")).get()
+      .queryName().equals("f#1"));
   }
 
   @Test
-  void testGenerateDpType() {
-    Type ty =
-      CoraInputReader.readType("Bool");
-    Type depTy = DPGenerator.generateDpType(ty);
-
-    assumingThat(ty.isBaseType() || ty.isProductType(),  () -> {
-      assertTrue(DPGenerator.dpSort.equals(depTy));
-    });
-
-    assumingThat(ty.isArrowType(), () -> {
-      assertSame(DPGenerator.generateDpType(ty).queryOutputType(), DPGenerator.dpSort);
-    });
+  public void testSharpNameReplacementAlsoTaken() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "f :: Int -> A\n" +
+      "f# :: Int -> A\n" +
+      "f#1 :: Int -> A\n" +
+      "f(x) -> f#(x)\n" +
+      "f#(x) -> f#1(x)\n" +
+      "f#1(x) -> f(x)\n"
+    );
+    DPGenerator generator = new DPGenerator(trs);
+    assertTrue(generator.querySharpSymbolFor(trs.lookupSymbol("f")).get()
+      .queryName().equals("f#2"));
   }
 
   @Test
-  void testGenerateSharpFn() {
-    FunctionSymbol f = TermFactory.
-      createConstant("f", CoraInputReader.readType("Bool -> Int"));
-    FunctionSymbol fSharp = DPGenerator.generateSharpFn(f);
-
-    // the fsharp symbol is named correctly.
-    assertEquals(fSharp.toString(), f.toString() + "#");
-
-    // the fsharp symbol has the correct type, which is generated by generateDpType.
-    assertTrue(DPGenerator.generateDpType(f.queryType()).equals(fSharp.queryType()));
+  public void chooseDifferentDPSort() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "f :: Int -> A\n" +
+      "wrap :: A -> A\n" +
+      "f# :: Int -> dpsort\n" +
+      "f(x) -> wrap(f(x-1)) | x > 0\n" +
+      "f#(x) -> f#(x-1) | x > 0\n");
+    DPGenerator generator = new DPGenerator(trs);
+    assertTrue(generator.queryDPSort().toString().equals("DPSORT"));
   }
 
   @Test
-  void testFakeEta() {
-    Type arr =
-      CoraInputReader.readType("Bool -> b -> c -> d -> e");
-    Term f = TermFactory.createConstant("f",arr);
-    Term x = TermFactory.createVar(TypeFactory.boolSort);
-
-    // TODO
-
-    //System.out.println(f + ":" + f.queryType());
-
-    //System.out.println("fake eta result");
-
-    //System.out.println(DPGenerator.fakeEta(f.apply(x)));
-  }
-
-  @Test
-  void testGenLeftSharpRule() {
-    Type arr =
-      CoraInputReader.readType(
-        "Bool -> b -> c -> d -> e"
-      );
-    Term f = TermFactory.createConstant("f",arr);
-    // TODO
-    //System.out.println("Normal lhs: " + f + ":" + f.queryType());
-    //System.out.println("DP lhs: " + DPGenerator.generateSharpEta(f));
-    //System.out.println("With f : " + DPGenerator.generateSharpEta(f).queryRoot().queryType());
-  }
-
-  @Test
-  void testGenRightCandidates() {
-    Term f = TermFactory.createConstant("f",
-        CoraInputReader.readType("a -> b -> c"));
-    Type a = CoraInputReader.readType("a");
-    Term c = TermFactory.createConstant("c", a);
-    Term g = TermFactory.createConstant("g",
-        CoraInputReader.readType("a -> a"));
-    Term gc = TermFactory.createApp(g,c);
-    Term lhs = TermFactory.createApp(f, c);
-    Term rhs = TermFactory.createApp(f, List.of(gc));
-    Term eta = DPGenerator.fakeEta(rhs);
-
-    // TODO
-    // Printing part
-    //System.out.println("Original lhs: " + lhs + " : " + lhs.queryType());
-    //System.out.println("Original rhs: " + rhs + " : " + rhs.queryType());
-    //System.out.println("Fake eta expanded form: " + eta + " : " + eta.queryType());
-//    System.out.println(DPGenerator.genRightCandidates(eta));
-
-//    DP t = new DP(f, f);
-//
-//    System.out.println(t);
-//    Rule r = RuleFactory.createRule(lhs, rhs);
-//    System.out.println (
-//        DPGenerator.generateProblemFromRule(r)
-//    );
-
+  public void chooseNumberedDPSort() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "f :: Int -> A\n" +
+      "wrap :: A -> A\n" +
+      "tmp1 :: DPSORT\n" +
+      "tmp2 :: dp_sort\n" +
+      "tmp3 :: DP_SORT\n" +
+      "tmp4 :: dpsort1\n" +
+      "f# :: Int -> dpsort\n" +
+      "f(x) -> wrap(f(x-1)) | x > 0\n" +
+      "f#(x) -> f#(x-1) | x > 0\n");
+    DPGenerator generator = new DPGenerator(trs);
+    assertTrue(generator.queryDPSort().toString().equals("dpsort2"));
   }
 }

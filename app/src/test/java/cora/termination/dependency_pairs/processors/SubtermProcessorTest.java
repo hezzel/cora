@@ -26,7 +26,7 @@ class SubtermProcessorTest {
       "ack(s(m),s(n)) -> ack(m, ack(s(m),n))\n",
       TrsFactory.MSTRS);
 
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = (new DPGenerator(trs)).queryProblem(false, false);
 
     SubtermProcessor subProc = new SubtermProcessor();
     // TODO: do an assert with the output of this
@@ -44,7 +44,7 @@ class SubtermProcessorTest {
       "g(x, y, i) -> f(y, x) | i <= 0\n" +
       "g(x, y, i) -> g(s(x), y, i-1) | i > 0\n");
     SubtermProcessor subProc = new SubtermProcessor();
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = (new DPGenerator(trs)).queryProblem(false, true);
     // TODO: do an assert with the output of this
     if (ENABLE) subProc.processDPP(p);
   }
@@ -55,7 +55,7 @@ class SubtermProcessorTest {
       "f :: Int -> Int -> Int\n" +
       "f(x, y) -> f(x, y+1) | y < x\n");
     SubtermProcessor subProc = new SubtermProcessor();
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = (new DPGenerator(trs)).queryProblem(true, false);
     // TODO: do an assert with the output of this
     if (ENABLE) assertFalse(subProc.processDPP(p).applicable());
   }

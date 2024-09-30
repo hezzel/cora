@@ -1,7 +1,23 @@
+/**************************************************************************************************
+ Copyright 2024 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
 package cora.termination.dependency_pairs.processors;
 
 import charlie.util.Pair;
 import charlie.smt.*;
+import charlie.trs.TrsProperties.*;
 import cora.io.OutputModule;
 import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
@@ -19,32 +35,27 @@ public class SubtermProcessor implements Processor {
   public static String queryDisabledCode() { return "subcrit"; }
 
   @Override
-  public boolean isApplicable(Problem dp) { return !Settings.isDisabled(queryDisabledCode()); }
+  public boolean isApplicable(Problem dpp) {
+    return !Settings.isDisabled(queryDisabledCode()) &&
+           (dpp.isInnermost() || dpp.terminating()) &&
+           dpp.getOriginalTRS().verifyProperties(Level.APPLICATIVE, Constrained.YES,
+                                                 Products.ALLOWED, Lhs.NONPATTERN, Root.ANY);
+  }
 
   /**
-   * Generates an Integer variable, i.e.,
-   * an object of type {@link IVar}, for each
+   * Generates an Integer variable, i.e., an object of type {@link IVar}, for each
    * @param dpp
-   * @return
    */
   private Map<FunctionSymbol, IVar> generateFnIvarMap(Problem dpp) {
-    //TODO Refactor this function, it is highly non-efficient.
-    Set<FunctionSymbol> allFns = dpp.getSharpHeads();
-
+    Set<FunctionSymbol> allFns = dpp.getHeads();
     Map<FunctionSymbol, IVar> retMap = new TreeMap<>();
-
-    // TODO: I am getting a list here, which defeats the point of having sets.
-    //  Fix this later.
-    allFns
-      .stream()
-      .forEach(fn -> retMap.put(fn, _smt.createIntegerVariable()));
+    for (FunctionSymbol f : allFns) retMap.put(f, _smt.createIntegerVariable());
     return retMap;
   }
 
   private Map<DP, BVar> generateDpBVarMap(Problem dpp) {
     Map<DP, BVar> retMap = new LinkedHashMap<>(dpp.getDPList().size());
-    dpp.getDPList()
-      .forEach(dp -> retMap.put(dp, _smt.createBooleanVariable()));
+    dpp.getDPList().forEach(dp -> retMap.put(dp, _smt.createBooleanVariable()));
     return retMap;
   }
 
@@ -60,13 +71,12 @@ public class SubtermProcessor implements Processor {
 
   private void requireAtLeastOneStrict(Map<DP, BVar> boolMap) {
     ArrayList<Constraint> disj = new ArrayList<Constraint>();
-    for (BVar b : boolMap.values()) {
-      disj.add(b);
-    }
+    for (BVar b : boolMap.values()) disj.add(b);
     _smt.require(SmtFactory.createDisjunction(disj));
   }
 
-  private void addProblemConstraintsToSMT(Map<FunctionSymbol, IVar> fSharpMap, Map<DP, BVar> dpbVarMap, Problem dpp) {
+  private void addProblemConstraintsToSMT(Map<FunctionSymbol, IVar> fSharpMap,
+                                          Map<DP, BVar> dpbVarMap, Problem dpp) {
     for (DP dp : dpp.getDPList()) {
       Term lhs = dp.lhs();
       FunctionSymbol f = lhs.queryRoot();
@@ -97,10 +107,9 @@ public class SubtermProcessor implements Processor {
     }
   }
 
-  private class SubcritProofObject extends ProcessorProofObject {
-    public SubcritProofObject(Problem inp) { super(inp); }
-    public SubcritProofObject(Problem inp, Problem out) { super(inp, out); }
-    public SubcritProofObject(Problem inp, List<Problem> out) { super(inp, out); }
+  /** Proof object for a failed proof */
+  private class FailedSubcritProofObject extends ProcessorProofObject {
+    public FailedSubcritProofObject(Problem inp) { super(inp); }
     public void justify(OutputModule module) { }
     public String queryProcessorName() { return "Subterm Criterion"; }
   }
@@ -124,7 +133,7 @@ public class SubtermProcessor implements Processor {
     Valuation valuation = null;
     switch (Settings.smtSolver.checkSatisfiability(_smt)) {
       case SmtSolver.Answer.YES(Valuation val): valuation = val; break;
-      default: return new SubcritProofObject(dpp); // this processor cannot do anything
+      default: return new FailedSubcritProofObject(dpp); // this processor cannot do anything
     };
 
     // we found a solution! Store the information from the valuation

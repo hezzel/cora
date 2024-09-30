@@ -1,4 +1,4 @@
-f :: Int -> A
+private f :: Int -> A
 g :: Int -> A
 
 f(x) -> g(x -1)

@@ -29,6 +29,7 @@ import charlie.types.*;
 import charlie.terms.*;
 import charlie.trs.*;
 import charlie.reader.CoraInputReader;
+import cora.io.ProofObject;
 
 class AccessibilityCheckerTest {
   private Type type(String text) {
@@ -40,17 +41,20 @@ class AccessibilityCheckerTest {
    * disable it to only run the checks if the SMT problem is correct.
    */
   private void checkAccessible(AccessibilityChecker checker, boolean value) {
-    //assertTrue(checker.checkAccessibility() == value);
+    /*
+    if (value) assertTrue(checker.checkAccessibility().queryAnswer() == ProofObject.Answer.YES);
+    else assertTrue(checker.checkAccessibility().queryAnswer() == ProofObject.Answer.NO);
+    */
   }
 
   @Test
   public void testObviouslyAccessibleFirstOrder() {
     TRS trs = CoraInputReader.readTrsFromString(
       "cons :: Int -> list -> list\n" +
-        "nil :: list\n" +
-        "append :: list -> list -> list\n" +
-        "append(nil, z) -> z\n" +
-        "append(cons(x,y), z) -> cons(x, append(y,z))\n");
+      "nil :: list\n" +
+      "append :: list -> list -> list\n" +
+      "append(nil, z) -> z\n" +
+      "append(cons(x,y), z) -> cons(x, append(y,z))\n");
     AccessibilityChecker checker = new AccessibilityChecker(trs);
     // no requirement for z, but requirements for x and y
     assertTrue(checker.printTrsConstraints().equals(

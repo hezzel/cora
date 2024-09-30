@@ -42,11 +42,24 @@ public class CallByValueModifierTest {
       "f(x,z) -> f(1,2) | x >= z\n" +
       "f(y,z) -> f(1,y) | y >= 0\n"
     );
+    assertTrue(CallByValueModifier.isApplicable(trs));
     TRS replacement = CallByValueModifier.modify(trs);
     assertTrue(replacement.queryRuleCount() == 3);
     assertTrue(replacement.queryRule(0).toString().equals("f(x, y) → f(x + 1, y) | x = x ∧ y = y"));
     assertTrue(replacement.queryRule(1).toString().equals("f(x, z) → f(1, 2) | x ≥ z"));
     assertTrue(replacement.queryRule(2).toString().equals("f(y, z) → f(1, y) | y ≥ 0 ∧ z = z"));
+  }
+
+  @Test
+  public void testNotApplicable() {
+    TRS trs = makeTrs(
+      "f :: Int -> Int -> Int\n" +
+      "c :: Nat -> Int\n" +
+      "f(x,y) -> f(x+1,y)\n" +
+      "f(x,z) -> f(1,2) | x >= z\n" +
+      "f(y,z) -> f(1,y) | y >= 0\n"
+    );
+    assertFalse(CallByValueModifier.isApplicable(trs));
   }
 }
 

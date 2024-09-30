@@ -15,244 +15,201 @@
 
 package cora.termination.dependency_pairs;
 
-import charlie.trs.Rule;
-import charlie.trs.TRS;
-import charlie.terms.*;
 import charlie.types.*;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+import charlie.terms.*;
+import charlie.trs.*;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import java.util.Optional;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * This class generates the DP problem for a given TRS, under different settings (e.g., full or
  * call-by-value strategy; termination or universal computability).
  */
 public class DPGenerator {
-  /** The output sort of all marked symbols in the DP method. */
-  static Type dpSort = TypeFactory.createSort("DP_SORT");
+  private TRS _trs;
+  private Base _dpSort;
+  private TreeMap<FunctionSymbol,FunctionSymbol> _sharpSymbols;
+  private TreeMap<FunctionSymbol,FunctionSymbol> _originalSymbols;
+  private TreeSet<String> _usedNames;
+  private ArrayList<DP> _dps;
+  private Alphabet _extendedAlphabet;
+
+  /**
+   * On construction, the DP generator immediately computes the dependency pairs of the given TRS.
+   * The result can then be converted to a DP Problem using queryProblem().  The other query
+   * functions provide additional information on the generated problem.
+   */
+  public DPGenerator(TRS trs) {
+    _trs = trs;
+    _dpSort = chooseDPSort();
+    _sharpSymbols = new TreeMap<FunctionSymbol,FunctionSymbol>();
+    _originalSymbols = new TreeMap<FunctionSymbol,FunctionSymbol>();
+    _usedNames = new TreeSet<String>();
+    _dps = new ArrayList<DP>();
+    for (int i = 0; i < _trs.queryRuleCount(); i++) {
+      storeDPsForRule(_trs.queryRule(i));
+    }
+    _extendedAlphabet = _trs.queryAlphabet().add(_sharpSymbols.values());
+  }
+
+  /** Returns the output sort that is used for all DPs. */
+  public Base queryDPSort() {
+    return _dpSort;
+  }
+
+  /**
+   * Returns the sharp function symbol for the given symbol, if any, or empty if none has been
+   * generated (for example because the function symbol is not a defined symbol).
+   */
+  public Optional<FunctionSymbol> querySharpSymbolFor(FunctionSymbol f) {
+    FunctionSymbol ret = _sharpSymbols.get(f);
+    if (ret == null) return Optional.empty();
+    else return Optional.of(ret);
+  }
+
+  /**
+   * Returns the symbol f for a given sharp symbol f#.  If the given function symbol is not a
+   * sharp symbol that we know about, it returns empty instead.
+   */
+  public Optional<FunctionSymbol> queryUnsharpSymbolFor(FunctionSymbol f) {
+    FunctionSymbol ret = _originalSymbols.get(f);
+    if (ret == null) return Optional.empty();
+    else return Optional.of(ret);
+  }
+
+  /**
+   * This returns the initial DP problem for the given settings.
+   * Note that the "original" TRS in the problem is the TRS that we were generated with, but with
+   * its alphabet extended to include the sharped symbols.
+   */
+  public Problem queryProblem(boolean innermost, boolean extraRules) {
+    TreeSet<Integer> priv = new TreeSet<Integer>();
+    for (int i = 0; i < _dps.size(); i++) {
+      if (_trs.isPrivate(_originalSymbols.get(_dps.get(i).lhs().queryRoot()))) priv.add(i);
+    }
+    TRS newtrs = _trs.createDerivative(_trs.queryRules(), _extendedAlphabet);
+    return new Problem(_dps, _trs.queryRules(), priv, newtrs, innermost, extraRules,
+                       Problem.TerminationFlag.Computable);
+  }
+
+  /**
+   * Helper function for the constructor (so may only use _trs of the global variables): chooses
+   * the sort to use as the output sort for the sharped function symbols.
+   */
+  private Base chooseDPSort() {
+    // collect all the sorts used in the alphabet of _trs
+    TreeSet<String> sorts = new TreeSet<String>();
+    ArrayList<Type> types = new ArrayList<Type>();
+    for (FunctionSymbol f : _trs.queryAlphabet().getSymbols()) types.add(f.queryType());
+    for (int i = 0; i < types.size(); i++) {
+      if (types.get(i) instanceof Base(String name)) sorts.add(name);
+      for (int j = 1; j <= types.get(i).numberSubtypes(); j++) types.add(types.get(i).subtype(j));
+    }
+
+    // choose an unused one!
+    if (!sorts.contains("dpsort")) return TypeFactory.createSort("dpsort");
+    if (!sorts.contains("DPSORT")) return TypeFactory.createSort("DPSORT");
+    if (!sorts.contains("dp_sort")) return TypeFactory.createSort("dp_sort");
+    if (!sorts.contains("DP_SORT")) return TypeFactory.createSort("DP_SORT");
+    for (int i = 1; ; i++) {
+      String attempt = "dpsort" + i;
+      if (!sorts.contains(attempt)) return TypeFactory.createSort(attempt);
+    }
+  }
 
   /**
    * Given a type A1 → ... → An → B with b a sort or product type, this method returns the type
-   * A1 → ... → An → dpSort, where dpSort is a static sort used in the
-   * Dependency Pairs framework.
+   * A1 → ... → An → dpSort, where dpSort is the special (otherwise unused) sort we use as the
+   * output type of all dependency pairs.
    */
-  static Type generateDpType( Type ty) {
-    return switch (ty) {
-      case Base(_), Product(_) -> dpSort;
-      case Arrow(Type left, Type right) ->
-        TypeFactory.createArrow(left, generateDpType(right));
+  private Type generateDpType(Type ty) {
+    return switch(ty) {
+      case Base(_), Product(_) -> _dpSort;
+      case Arrow(Type left, Type right) -> TypeFactory.createArrow(left, generateDpType(right));
     };
   }
 
-
-
-
-
-  List<Term> sharpSymbols = new ArrayList<>();
-
   /**
-   * Given a type A1 => ... => An => B this method returns a list of variables X1, ..., Xn
-   * such that each variable Xi is of type Ai.
-   * <p>If the given type is not an arrow type then the returned list is empty.</p>
-   *
-   * @param ty
-   * @throws NullPointerException if ty is null
+   * Given a function symbol f : A1 ⇒ ... ⇒ An ⇒ ι, this method generates a new function symbol
+   * f# : A1 ⇒ ... ⇒ An ⇒ dp_sort.
    */
-  @Contract(pure = true)
-  public static @NotNull List<Variable> generateVars(Type ty) {
-    Objects.requireNonNull(ty, "Null argument given to DPGenerator::generateVars.");
-
-    List<Variable> acc = new ArrayList<>();
-    // Notice that the variable while_ty starts with ty, and then we mutate it to the right hand side
-    // of the arrow. Eventually we will get to a sort or product, which guarantees that
-    // the whole recursion will be terminated.
-    // I would advise using this technique instead of a
-    // while (true) { .. } construct.
-    Type while_ty = ty;
-
-    while (while_ty instanceof Arrow(Type left, Type right)) {
-      acc.add(TermFactory.createVar(left));
-      while_ty = right;
+  private FunctionSymbol generateSharpFn(FunctionSymbol fn) {
+    if (_sharpSymbols.containsKey(fn)) return _sharpSymbols.get(fn);
+    String newname = fn.queryName() + "#";
+    for (int i = 1; _trs.lookupSymbol(newname) != null || _usedNames.contains(newname); i++) {
+      newname = fn.queryName() + "#" + i + "";
     }
-    return acc;
+    FunctionSymbol ret = TermFactory.createConstant(newname, generateDpType(fn.queryType()));
+    _sharpSymbols.put(fn, ret);
+    _originalSymbols.put(ret, fn);
+    _usedNames.add(newname);
+    return ret;
   }
 
   /**
-   * Given a function symbol f : A1 => ... => An => B, this method generates a new
-   * function symbol f# : A1 => ... => An => dp_sort.
+   * Given a term f(s1,...,sn), this returns the term f#(s1,...,sn).  If necessary, the function
+   * symbol f# is generated and stored in _sharpSymbols first.
+   * If the given term is not a functional term, this yields an InappropriatePatternDataException.
    */
-  @Contract(pure = true)
-  static @NotNull FunctionSymbol generateSharpFn(@NotNull FunctionSymbol fn) {
-    return TermFactory.createConstant(
-      fn.queryHead().toString().concat("#"),
-      DPGenerator.generateDpType(fn.queryHead().queryType())
-    );
-  }
-
-  @Contract(pure = true)
-  static @NotNull Term generateSharpTm(@NotNull Term tm) {
+  private Term generateSharpTm(Term tm) {
     FunctionSymbol newHead = generateSharpFn(tm.queryRoot());
     return newHead.apply(tm.queryArguments());
   }
 
   /**
-   * This method applies a term of (possibly) arrow type to freshly generated variables until
-   * it is of base type.
-   * <p><b>Example:</b>
-   * take f : A1 => A2 => A3 => a, with a being a sort.
-   * then {@code fakeEta(f) = f(X{0}, X{1}, X{2})}, of course the generated variables should be of type
-   * A1, A2, and A3, respectively.
-   * <br />
-   * In the case that {@code f} is applied to some other terms the result is analogous.
-   * So, {@code fakeEta(f(s)) = f(s, X{0}, X{1}) }, assuming s is a term of type A1.
-   * </p>
-   * If the argument is already of base type, this function returns it unaltered.
+   * Given a type A1 ⇒ ... ⇒ An ⇒ ι, this returns a list of variables X1, ..., Xn such that
+   * each variable Xi is of type Ai.  If the given type is not an arrow type, then the returned
+   * list is empty.
+   * The default names for the given variables are basename + startIndex, basename +
+   * (startIndex + 1), ...
    */
-  @Contract(pure = true)
-  static @NotNull Term fakeEta(@NotNull Term tm) {
-    Type tmTy = tm.queryType();
-    List<Variable> vars = DPGenerator.generateVars(tmTy);
-    List<Term> varsCasted = vars.stream().map( x -> (Term) x).toList();
-    return tm.apply(varsCasted);
+  private ArrayList<Term> generateFlatteningVars(Type ty, String basename, int startIndex) {
+    ArrayList<Term> ret = new ArrayList<Term>();
+    while (ty instanceof Arrow(Type left, Type right)) {
+      ret.add(TermFactory.createVar(basename + startIndex, left));
+      startIndex++;
+      ty = right;
+    }
+    return ret;
   }
 
   /**
-   * @param tm
-   * @return
+   * Given a term term r, this returns the list of all subterms of r whose root symbol is a defined
+   * symbol in _trs, flattened to base type with fresh variables.  These are the candidates that
+   * will be used to generate dependency pairs from.
    */
-  static @NotNull Term generateSharpEta(Term tm) {
-    Term fSharp = DPGenerator.generateSharpFn(tm.queryRoot());
-    return DPGenerator.fakeEta(fSharp.apply(tm.queryArguments()));
+  private ArrayList<Term> generateCandidates(Term tm) {
+    ArrayList<Term> cands = new ArrayList<Term>();
+    tm.visitSubterms( (s,p) -> {
+      if (s.isFunctionalTerm()) {
+        FunctionSymbol f = s.queryRoot();
+        if (_trs.isDefined(f)) {
+          cands.add(s.apply(generateFlatteningVars(s.queryType(), "fresh", 1)));
+        }
+      }
+    } );
+    return cands;
   }
 
-  static @NotNull boolean isDefined(TRS trs, FunctionSymbol fn) {
-    return trs.isDefined(fn);
-  }
-
-  // TODO this probably isn't to be here
-  static @NotNull boolean isConstructor(TRS trs, FunctionSymbol tm) {
-    return !trs.isDefined(tm);
-  }
-
-  // Computes the initial set V, defined in definition 5 (cade paper)
-  // a DP l -> r [Phi] should have the following set of initial variables
-  // Var(Phi) cup (Var(r) \ Var(l))
-  // TODO Implementation notice: this needs to get refactored, it just blindly convert
-  //   the result of calling vars() to lists... But I want streams easily!
-  //   so we pay the price in a bit of performance here. Deadline approaching,
-  //   so...
-  private static List<Variable> computeInitialVSet(Term lhs, Term rhs, Term constraint) {
-
-    List<Variable> lhsVars =
-      StreamSupport
-        .stream(lhs.vars().spliterator(), false)
-        .toList();
-
-    List<Variable> rhsVars =
-      StreamSupport
-        .stream(lhs.vars().spliterator(), false)
-        .toList();
-
-    //TODO also not so efficient, fix this
-    List<Variable> lVars =
-      rhsVars
-        .stream()
-        .filter(x -> !lhsVars.contains(x))
-        .toList();
-
-    List<Variable> constraintsVars =
-      StreamSupport
-        .stream(constraint.vars().spliterator(), false)
-        .toList();
-
-    return Stream.concat(constraintsVars.stream(), lVars.stream()).toList();
-  }
-
-  static @NotNull List<Term> generateCandidates(@NotNull TRS trs, @NotNull Term tm) {
-    // In each case below we will have to recursively compute the
-    // U_{i = 1}^k genRightCandidates(si), for the arguments si, of the rhs,
-    // so we compute it beforehand.
-    List<Term> argsCandidateApp = tm
-      .queryArguments()
-      .stream()
-      .map(t -> DPGenerator.generateCandidates(trs, t).stream())
-      .reduce(Stream.empty(), Stream::concat)
-      .toList();
-
-    // Case x (s1 ... sn), we return the candidates of each argument
-    if (tm.isApplication() && tm.queryHead().isVariable()) {
-      return argsCandidateApp;
-    }
-    // Case c (s1, ..., sn), we return the candidates of each argument
-    else if (tm.isApplication() && isConstructor(trs, tm.queryRoot())) {
-      return argsCandidateApp;
-    }
-    // Case for: (| s1, ..., sn |), we return the candidates of each argument
-    else if (tm.isTuple()) {
-      return tm
-        .queryTupleArguments()
-        .stream()
-        .flatMap(t -> DPGenerator.generateCandidates(trs, t).stream())
-        .collect(Collectors.toList());
-    }
-    // Case for: g(s1, ..., sn) with g a defined symbol and n > 0
-    else if (tm.isApplication() && isDefined(trs, tm.queryRoot())) {
-      return Stream.concat(
-        argsCandidateApp.stream(),
-        Stream.of(DPGenerator.generateSharpEta(tm))
-      ).toList();
-    } else if (tm.isConstant() && isDefined(trs, tm.queryRoot())) {
-      return List.of(generateSharpEta(tm));
-    }
-    // If none of the cases above is true, we return an empty list.
-    return List.of();
-  }
-
-  static Problem generateProblemFromRule(TRS trs, Rule rule) {
+  /** This function computes the dependency pairs for the given rule, and stores them into _dps. */
+  private void storeDPsForRule(Rule rule) {
     Term lhs = rule.queryLeftSide();
     Term rhs = rule.queryRightSide();
     Term ctr = rule.queryConstraint();
-    List<Term> freshDpVars = DPGenerator
-      .generateVars(lhs.queryType())
-      .stream()
-      .map(x -> (Term) x)
-      .toList();
 
-    Term dpLeft = generateSharpTm(lhs).apply(freshDpVars);
-    Term dpRight = rhs.apply(freshDpVars);
+    // flatten left- and right-hand side to base type by adding extra variables
+    ArrayList<Term> xs = generateFlatteningVars(lhs.queryType(), "arg", lhs.numberArguments()+1);
+    lhs = lhs.apply(xs);
+    rhs = rhs.apply(xs);
 
-    List<Term> candRight = generateCandidates(trs, dpRight);
-
-    return new Problem (
-      candRight
-        .stream()
-        .map(candidates ->
-          new DP(dpLeft, candidates, ctr, computeInitialVSet(dpLeft, candidates, ctr), trs.isPrivate(lhs.queryRoot()))
-        ).toList(),
-      trs
-    );
-  }
-
-  public static Problem generateProblemFromTrs(TRS trs) {
-    List<Rule> rules = new ArrayList<Rule>();
-    for (int i = 0; i < trs.queryRuleCount(); i++) {
-      rules.add(trs.queryRule(i));
+    Term dpLeft = generateSharpTm(lhs);
+    ArrayList<Term> cands = generateCandidates(rhs);
+    for (Term candidate : cands) {
+      _dps.add(new DP(dpLeft, generateSharpTm(candidate), ctr));
     }
-    return new Problem (
-      rules
-        .stream()
-        .flatMap(
-          rule ->
-            DPGenerator.generateProblemFromRule(trs, rule).getDPList().stream()
-        )
-        .toList(),
-      trs
-    );
   }
 }
+
