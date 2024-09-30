@@ -25,6 +25,7 @@ import cora.termination.dependency_pairs.processors.Processor;
 import cora.termination.dependency_pairs.processors.ProcessorProofObject;
 
 import java.util.LinkedList;
+import java.util.Set;
 
 public abstract class DPFramework {
   private ProofObject _applicability;
@@ -48,6 +49,9 @@ public abstract class DPFramework {
     _applicability = determineApplicability(trs);
     DPGenerator generator = new DPGenerator(trs);
     _initialProblem = createInitialProblem(generator);
+    if (Settings.isDisabled(queryPrivateDisabledCode())) {
+      _initialProblem = _initialProblem.removeDPs(Set.of(), true);
+    }
   }
 
   /**
