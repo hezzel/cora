@@ -25,7 +25,7 @@ import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.config.Settings;
 import cora.termination.transformation.CallByValueModifier;
-import cora.termination.reduction_pairs.Horpo;
+//import cora.termination.reduction_pairs.Horpo;
 import cora.termination.dependency_pairs.DPFramework;
 import cora.termination.dependency_pairs.FullDPFramework;
 
@@ -38,9 +38,12 @@ public class TerminationHandler {
     DPFramework framework = chooseFramework(trs, true);
     ProofObject po = framework.checkApplicable();
     if (po.queryAnswer() != ProofObject.Answer.YES) {
+      /*
       ProofObject ret = Horpo.proveTermination(trs);
       if (ret.queryAnswer() == ProofObject.Answer.YES) return wrap(ret, trs, "termination");
       else return wrap(po, ret, trs, "termination");
+      */
+      return wrap(po, trs, "termination");
 
     }
     return wrap(framework.run(), trs, "termination");

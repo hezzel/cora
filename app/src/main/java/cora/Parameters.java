@@ -73,7 +73,7 @@ public class Parameters {
     addTechnique(set, cora.termination.dependency_pairs.processors.SplittingProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.SubtermProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.TheoryArgumentsProcessor.queryDisabledCode());
-    addTechnique(set, cora.termination.reduction_pairs.Horpo.queryDisabledCode());
+    addTechnique(set, cora.termination.reduction_pairs.horpo.Horpo.queryDisabledCode());
     return set;
   }
 

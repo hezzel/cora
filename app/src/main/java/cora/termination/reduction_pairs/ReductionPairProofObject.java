@@ -15,32 +15,62 @@
 
 package cora.termination.reduction_pairs;
 
-import java.util.Set;
+import charlie.util.Pair;
+import charlie.terms.FunctionSymbol;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.termination.reduction_pairs.OrderingRequirement.Relation;
+
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.function.BiFunction;
 
 /**
  * A Proof Object variant specifically for the result of reduction pairs, which can be queried for
  * the OrderingRequirements that were strictly oriented.
  */
 public abstract class ReductionPairProofObject implements ProofObject {
-  protected OrderingProblem _problem;
-  protected Set<Integer> _strictlyOriented; // set to null for a failed proof!
+  protected Set<Integer> _strictlyOriented;
+    // this stores the identifiers of the Either requirements that were strictly oriented, and is
+    // set to null for a failed proof!
+  protected ArrayList<OrderingRequirement> _reqs;
+    // this stores the actual requirements that we have oriented, or is null for a failed proof
+  protected BiFunction<FunctionSymbol,Integer,Boolean> _regards;
+    // this stores the regards function that was actually used, or is null for a failed proof
 
   /**
-   * Initialise a successful proof, for the given problem, with the given indexes within the problem
-   * being oriented strictly (and the rest weakly).
+   * Initialise a successful proof, for the given problem, with the given identifiers within the
+   * problem being oriented strictly (and the rest of the either requirements weakly).  The second
+   * set lists the indexes of those conditional requirements for which the condition was satisfied
+   * (and thus which have also been oriented).
    */
-  protected ReductionPairProofObject(OrderingProblem problem, Set<Integer> strictlyOriented) {
-    _problem = problem;
+  protected ReductionPairProofObject(OrderingProblem problem, Set<Integer> strictlyOriented,
+                                     Set<Integer> conditionSatisfied,
+                                     BiFunction<FunctionSymbol,Integer,Boolean> regards) {
     _strictlyOriented = strictlyOriented;
+    _reqs = new ArrayList<OrderingRequirement>();
+    _regards = regards;
+
+    // store either requirements, after figuring out whether they're strictly or weakly oriented
+    for (Pair<Integer,OrderingRequirement> p : problem.eitherReqs()) {
+      Relation rel = strictlyOriented.contains(p.fst()) ? Relation.Strict : Relation.Weak;
+      _reqs.add(new OrderingRequirement(p.snd().left(), p.snd().right(), p.snd().constraint(),
+                rel, p.snd().tvar()));
+    }
+    // store unconditional requirements
+    _reqs.addAll(problem.unconditionalReqs());
+    // store conditional requirements for which the condition is satisfied
+    int n = problem.conditionalReqs().size();
+    for (int i = 0; i < n; i++) {
+      if (conditionSatisfied.contains(i)) _reqs.add(problem.conditionalReqs().get(i).snd());
+    }
   }
 
   /** Initialise a failed proof for the given problem. */
   protected ReductionPairProofObject(OrderingProblem problem) {
-    _problem = problem;
     _strictlyOriented = null;
+    _reqs = null;
+    _regards = null;
   }
 
   /**
@@ -48,58 +78,45 @@ public abstract class ReductionPairProofObject implements ProofObject {
    * OrderingRequirements have been strictly oriented yet), and MAYBE otherwise.
    */
   public Answer queryAnswer() {
-    if (_strictlyOriented == null) return Answer.MAYBE;
+    if (_reqs == null) return Answer.MAYBE;
     else return Answer.YES;
   }
 
   /**
-   * This returns whether the OrderingRequirement with the given index in the ordering problem
-   * was strictly oriented.
+   * This returns whether the "either" OrderingRequirement with the given identifier in the ordering
+   * problem was strictly oriented.
    *
    * In the case of a failed proof, this always returns false.
    */
-  public final boolean isStrictlyOriented(int index) {
+  public final boolean isStrictlyOriented(int identifier) {
     if (_strictlyOriented == null) return false;
-    return _strictlyOriented.contains(index);
+    return _strictlyOriented.contains(identifier);
   }
 
   /**
-   * This returns whether the given OrderingRequirement was strictly oriented.  Note that this is
-   * checked by pointer equality; recreating the same requirement to call this function will likely
-   * cause an Error to be thrown, as will any call with a requirement that is not in the
-   * OrderingProblem.
-   *
-   * In the case of a failed proof, this always returns false.
+   * This returns whether the chosen reduction pair regards the given position of the given function
+   * symbol.
    */
-  public final boolean isStrictlyOriented(OrderingRequirement req) {
-    if (_strictlyOriented == null) return false;
-    for (int i = 0; i < _problem.reqs().size(); i++) {
-      if (_problem.reqs().get(i) == req) return _strictlyOriented.contains(i);
-    }
-    throw new IllegalArgumentException("ReductionPairProofObject::isStrictlyOriented -- " +
-      "Given ordering requirement " + req.toString() + " was not in the original OrderingProblem.");
+  public final boolean regards(FunctionSymbol f, int index) {
+    if (_regards == null) return false;
+    return _regards.apply(f, index);
   }
 
   /**
    * This prints a table describing the ordering problem to the given output module, without
-   * "Either" option: the strictly oriented requirements are ordered strictly, the weakly oriented
-   * ones weakly.
+   * "Either" or conditional option:
+   *
+   * - for the "Either" requirements, the strictly oriented requirements are printed with a strict
+   *   ordering, and the others with a weak ordering;
+   * - for the conditional requirements, only the ones for which the constraint is satisfied are
+   *   printed (without their constraint)
    */
   protected void printOrderingProblem(OutputModule module) {
     module.startTable();
-    for (int i = 0; i < _problem.reqs().size(); i++) {
-      OrderingRequirement req = _problem.reqs().get(i);
-      OrderingRequirement r = switch (req.rel()) {
-        case Relation.Strict -> req;
-        case Relation.Weak -> req;
-        case Relation.Either ->
-          new OrderingRequirement(req.left(), req.right(), req.constraint(),
-                                  _strictlyOriented.contains(i) ? Relation.Strict : Relation.Weak,
-                                  req.tvar());
-      };
-      r.printTo(module);
+    for (OrderingRequirement req : _reqs) {
+      req.printTo(module);
       module.println();
-    }   
+    }
     module.endTable();
   }
 

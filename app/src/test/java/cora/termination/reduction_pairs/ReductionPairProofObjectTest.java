@@ -20,14 +20,20 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.function.BiFunction;
+
+import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
 import charlie.terms.TheoryFactory;
+import charlie.trs.Rule;
 import charlie.trs.TRS;
+import charlie.smt.BVar;
+import charlie.smt.SmtProblem;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
 import cora.io.ProofObject;
+import cora.termination.reduction_pairs.OrderingRequirement.Relation;
 
 public class ReductionPairProofObjectTest {
   private TRS makeTrs(String txt) {
@@ -35,8 +41,9 @@ public class ReductionPairProofObjectTest {
   }
 
   private class MyClass extends ReductionPairProofObject {
-    MyClass(OrderingProblem problem, Set<Integer> strictlyOriented) {
-      super(problem, strictlyOriented); 
+    MyClass(OrderingProblem problem, Set<Integer> strictlyOriented, Set<Integer> cond,
+            BiFunction<FunctionSymbol,Integer,Boolean> regards) {
+      super(problem, strictlyOriented, cond, regards); 
     }
     public void justify(OutputModule module) {
       module.println("RPPO for the problem:");
@@ -44,33 +51,60 @@ public class ReductionPairProofObjectTest {
     }
   }
 
-  private OrderingProblem createProblem() {
-    TRS trs = makeTrs("sum :: Int -> Int sum(0) -> 0 sum(x) -> x + sum(x-1) | x != 0");
+  private OrderingProblem createProblem(TRS trs) {
     Term l = TheoryFactory.createValue(9);
     Term r = TheoryFactory.createValue(7);
+    Term q = TheoryFactory.createValue(42);
     Term c1 = TheoryFactory.createValue(false);
     Term c2 = TheoryFactory.createValue(true);
-    OrderingRequirement req1 =
-      new OrderingRequirement(l,r,c1, OrderingRequirement.Relation.Either, List.of());
-    OrderingRequirement req2 =
-      new OrderingRequirement(l,r,c2, OrderingRequirement.Relation.Strict, List.of());
-    return OrderingProblem.createWeakProblem(trs, List.of(req1, req2));
+    SmtProblem smt = new SmtProblem();
+    BVar a = smt.createBooleanVariable("A");
+    BVar b = smt.createBooleanVariable("B");
+    OrderingProblem prob = new OrderingProblem(trs, new ArgumentFilter(smt));
+    for (Rule rho : trs.queryRules()) prob.require(new OrderingRequirement(rho, Relation.Weak));
+    prob.requireEither(new OrderingRequirement(l,r,c1, Relation.Strict, List.of()), 12);
+    prob.requireEither(new OrderingRequirement(l,r,c2, Relation.Weak, List.of()), -19);
+    prob.requireConditionally(new OrderingRequirement(q,l,c1, Relation.Strict, Set.of()), a);
+    prob.requireConditionally(new OrderingRequirement(r,q,c2, Relation.Weak, Set.of()), b);
+    return prob;
   }
 
   @Test
   public void testStrictness() {
-    OrderingProblem problem = createProblem();
-    ReductionPairProofObject rppo = new MyClass(problem, Set.of(1));
+    TRS trs = makeTrs("sum :: Int -> Int sum(0) -> 0 sum(x) -> x + sum(x-1) | x != 0");
+    OrderingProblem problem = createProblem(trs);
+    ReductionPairProofObject rppo = new MyClass(problem, Set.of(12), Set.of(0), (f,i) -> true);
     assertTrue(rppo.queryAnswer() == ProofObject.Answer.YES);
-    assertFalse(rppo.isStrictlyOriented(0));
-    assertFalse(rppo.isStrictlyOriented(problem.reqs().get(0)));
-    assertTrue(rppo.isStrictlyOriented(1));
-    assertTrue(rppo.isStrictlyOriented(problem.reqs().get(1)));
+    assertTrue(rppo.isStrictlyOriented(12));
+    assertFalse(rppo.isStrictlyOriented(-19));
+  }
+
+  @Test
+  public void testRegards() {
+    TRS trs = makeTrs("sum :: Int -> Int f :: test -> test " +
+                      "sum(0) -> 0 sum(x) -> x + sum(x-1) | x != 0");
+    OrderingProblem problem = createProblem(trs);
+    ReductionPairProofObject rppo = new MyClass(problem, Set.of(12), Set.of(0), (f,i) -> {
+      if (f.queryName().equals("sum")) return i == 1;
+      if (f.isTheorySymbol()) return i == 2;
+      return false;
+    });
+    FunctionSymbol sum = trs.lookupSymbol("sum");
+    FunctionSymbol plus = TheoryFactory.plusSymbol;
+    FunctionSymbol f = trs.lookupSymbol("f");
+    assertTrue(rppo.regards(sum, 1));
+    assertFalse(rppo.regards(sum, 2));
+    assertFalse(rppo.regards(f, 1));
+    assertFalse(rppo.regards(f, 2));
+    assertFalse(rppo.regards(plus, 1));
+    assertTrue(rppo.regards(plus, 2));
   }
 
   @Test
   public void testOutput() {
-    ReductionPairProofObject rppo = new MyClass(createProblem(), Set.of(1));
+    TRS trs = makeTrs("sum :: Int -> Int sum(0) -> 0 sum(x) -> x + sum(x-1) | x != 0");
+    ReductionPairProofObject rppo = new MyClass(createProblem(trs), Set.of(-19), Set.of(0),
+      (f,k) -> false);
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     rppo.justify(module);
     assertTrue(module.toString().equals(
@@ -78,7 +112,8 @@ public class ReductionPairProofObjectTest {
       "  9 ≽ 7 | false\n" +
       "  9 ≻ 7\n" +
       "  sum(0) ≽ 0\n" +
-      "  sum(x) ≽ x + sum(x - 1) | x ≠ 0\n\n"));
+      "  sum(x) ≽ x + sum(x - 1) | x ≠ 0\n" +
+      "  42 ≻ 9 | false\n\n"));
   }
 }
 

@@ -15,86 +15,111 @@
 
 package cora.termination.reduction_pairs;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
-import charlie.terms.*;
-import charlie.trs.Rule;
+import charlie.util.Pair;
 import charlie.trs.TRS;
+import charlie.smt.Constraint;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
 import cora.termination.reduction_pairs.OrderingRequirement.Relation;
 
 /**
  * An OrderingProblem represents a list of requirements s ≻ t / s ≽ t that should be satisfied by
- * a reduction pair.
- *
- * Here, the problem is to find a reduction pair such that s ≻ t for the strict requirements,
- * s ≽ t for the weak requirements, and either s ≻ t or s ≽ for the remaining requirements, but we
- * are always required to orient at least one inequality strictly (so using ≻).
+ * a reduction pair.  In addition, some requirements may only be required conditionally on some
+ * constraint, and for some requirements we may want to prove *either* s ≻ t *or* s ≽ t, with at
+ * least one of those special requirements oriented strictly (so using ≻).
  *
  * The OrderingProblem keeps track of a TRS to impose the restrictions of term formation; its rules
  * are not directly used.
  */
-public record OrderingProblem(ImmutableList<OrderingRequirement> reqs, TRS trs) {
-  /**
-   * Helper function: updates the given immutable list builder with requirements l [rel] r | φ for
-   * all rules l → r | φ in the given TRS.
-   */
-  private static void orient(TRS trs, Relation rel, ImmutableList.Builder<OrderingRequirement> b) {
-    for (int i = 0; i < trs.queryRuleCount(); i++) {
-      Rule rule = trs.queryRule(i);
-      b.add(new OrderingRequirement(rule.queryLeftSide(), rule.queryRightSide(),
-        rule.queryConstraint(), rel, rule.queryLVars()));
-    }
-  }
-
-  /** Creates an OrderingProblem where all rules in the TRS must be oriented strictly. */
-  public static OrderingProblem createStrictProblem(TRS trs) {
-    ImmutableList.Builder<OrderingRequirement> b = ImmutableList.<OrderingRequirement>builder();
-    orient(trs, Relation.Strict, b);
-    return new OrderingProblem(b.build(), trs);
-  }
-
-  /** Creates an OrderingProblem where at least one rule in the TRS must be oriented strictly. */
-  public static OrderingProblem createNonStrictProblem(TRS trs) {
-    ImmutableList.Builder<OrderingRequirement> b = ImmutableList.<OrderingRequirement>builder();
-    orient(trs, Relation.Either, b);
-    return new OrderingProblem(b.build(), trs);
-  }
+public class OrderingProblem {
+  private List<OrderingRequirement> _alwaysReqs;
+  private List<Pair<Constraint,OrderingRequirement>> _conditionalReqs;
+  private List<Pair<Integer,OrderingRequirement>> _eitherReqs;
+  private TRS _originalTRS;
+  private Monotonicity _monotonicity;
 
   /**
-   * Creates an OrderingProblem where the rules in the TRS must be oriented weakly, and the
-   * additional requirements must also be satisfied.
-   * The given "extra" requirements will be stored at the start of the OrderingProblem, so their
-   * index coincides with the index in a potential ReductionPairProofObject.
+   * Creates an empty OrderingProblem, with restrictions on term formation based on the given TRS,
+   * and using the given monotonicity requirements.
    */
-  public static OrderingProblem createWeakProblem(TRS trs, List<OrderingRequirement> extra) {
-    ImmutableList.Builder<OrderingRequirement> b = ImmutableList.<OrderingRequirement>builder();
-    for (OrderingRequirement req : extra) b.add(req);
-    orient(trs, Relation.Weak, b);
-    return new OrderingProblem(b.build(), trs);
+  public OrderingProblem(TRS original, Monotonicity mono) {
+    _alwaysReqs = new ArrayList<OrderingRequirement>();
+    _conditionalReqs = new ArrayList<Pair<Constraint,OrderingRequirement>>();
+    _eitherReqs = new ArrayList<Pair<Integer,OrderingRequirement>>();
+    _originalTRS = original;
+    _monotonicity = mono;
   }
 
-  /** Prints the current OrderingRequirement to the given OutputModule (as a table) */
-  public void printTo(OutputModule module) {
-    module.startTable();
-    for (OrderingRequirement req : reqs) {
-      req.printTo(module);
-      module.println();
-    }
-    module.endTable();
+  /** Returns the origin TRS, which is relevant for the restrictions on term formation. */
+  public TRS queryOriginalTRS() {
+    return _originalTRS;
   }
 
+  /** Returns the monotonicity requirements a reduction pair for this problem must satisfy. */
+  public Monotonicity queryMonotonicity() {
+    return _monotonicity;
+  }
+
+  /**
+   * Adds the given ordering requirement to the problem unconditionally: this must hold
+   * regardless of anything else in the SMT problem, and if it doesn't, the reduction pair fails.
+   */
+  public void require(OrderingRequirement req) {
+    _alwaysReqs.add(req);
+  }
+
+  /**
+   * Conditionally adds the given ordering requirement to the problem; that is, it should be
+   * satisfied if the constraint evaluates to true, and otherwise can be ignored.
+   */
+  public void requireConditionally(OrderingRequirement req, Constraint constraint) {
+    _conditionalReqs.add(new Pair<Constraint,OrderingRequirement>(constraint, req));
+  }
+
+  /**
+   * Adds the given OrderingRequirement -- for which it does not matter if it is a Greater or Geq
+   * requirement -- as an "either" requirement: if any either requirements are given, then at least
+   * one must be oriented strictly, and the rest must be oriented strictly or weakly.
+   * Each Either requirement should come with a unique identifier, which can be used to query the
+   * strict/weak orientation status after an OrderingProblem has been oriented.
+   */
+  public void requireEither(OrderingRequirement req, int identifier) {
+    _eitherReqs.add(new Pair<Integer,OrderingRequirement>(identifier, req));
+  }
+
+  /** Returns the list of either reqs, each with their unique identifier */
+  public List<Pair<Integer,OrderingRequirement>> eitherReqs() {
+    return Collections.unmodifiableList(_eitherReqs);
+  }
+
+  /** Returns the list of conditional requirements, each along with its condition */
+  public List<Pair<Constraint,OrderingRequirement>> conditionalReqs() {
+    return Collections.unmodifiableList(_conditionalReqs);
+  }
+
+  /** Returns the list of requirements we always have to satisfy */
+  public List<OrderingRequirement> unconditionalReqs() {
+    return Collections.unmodifiableList(_alwaysReqs);
+  }
+  
   /**
    * Returns a string representative of the problem.
-   * This is only meant for debug output, as it is quite inefficient! (It creates a whole new
-   * output module just for the printing).
+   * This is only meant for debug output!
    */
   public String toString() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule(trs);
-    printTo(module);
-    return module.toString();
+    StringBuilder builder = new StringBuilder();
+    for (OrderingRequirement req : _alwaysReqs) builder.append("U) " + req.toString() + "\n");
+    for (Pair<Constraint,OrderingRequirement> p : _conditionalReqs) {
+      builder.append("C) " + p.fst() + "  ==>  " + p.snd() + "\n");
+    }
+    for (Pair<Integer,OrderingRequirement> p : _eitherReqs) {
+      builder.append("E) " + p.fst() + "  :  " + p.snd() + "\n");
+    }
+    return builder.toString();
   }
 }
 
