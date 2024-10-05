@@ -146,7 +146,7 @@ public class TermSmtTranslator {
       case CalculationSymbol.Kind.PLUS -> {
         assertArgumentCount(t, 2);
         yield new Exp.I(SmtFactory.createAddition(translateIntegerExpression(t.queryArgument(1)),
-                                                   translateIntegerExpression(t.queryArgument(2))));
+                                                  translateIntegerExpression(t.queryArgument(2))));
       }
       case CalculationSymbol.Kind.TIMES -> {
         assertArgumentCount(t, 2);
@@ -156,7 +156,7 @@ public class TermSmtTranslator {
       case CalculationSymbol.Kind.DIV -> {
         assertArgumentCount(t, 2);
         yield new Exp.I(SmtFactory.createDivision(translateIntegerExpression(t.queryArgument(1)),
-                                                   translateIntegerExpression(t.queryArgument(2))));
+                                                  translateIntegerExpression(t.queryArgument(2))));
       }
       case CalculationSymbol.Kind.MOD -> {
         assertArgumentCount(t, 2);
@@ -166,12 +166,12 @@ public class TermSmtTranslator {
       case CalculationSymbol.Kind.GREATER -> {
         assertArgumentCount(t, 2);
         yield new Exp.B(SmtFactory.createGreater(translateIntegerExpression(t.queryArgument(1)),
-                                                  translateIntegerExpression(t.queryArgument(2))));
+                                                 translateIntegerExpression(t.queryArgument(2))));
       }
       case CalculationSymbol.Kind.SMALLER -> {
         assertArgumentCount(t, 2);
         yield new Exp.B(SmtFactory.createSmaller(translateIntegerExpression(t.queryArgument(1)),
-                                                  translateIntegerExpression(t.queryArgument(2))));
+                                                 translateIntegerExpression(t.queryArgument(2))));
       }
       case CalculationSymbol.Kind.GEQ -> {
         assertArgumentCount(t, 2);
@@ -181,31 +181,36 @@ public class TermSmtTranslator {
       case CalculationSymbol.Kind.LEQ -> {
         assertArgumentCount(t, 2);
         yield new Exp.B(SmtFactory.createLeq(translateIntegerExpression(t.queryArgument(1)),
-                                              translateIntegerExpression(t.queryArgument(2))));
+                                             translateIntegerExpression(t.queryArgument(2))));
       }
       case CalculationSymbol.Kind.EQUALS -> {
         assertArgumentCount(t, 2);
         yield new Exp.B(SmtFactory.createEqual(translateIntegerExpression(t.queryArgument(1)),
-                                                translateIntegerExpression(t.queryArgument(2))));
+                                               translateIntegerExpression(t.queryArgument(2))));
       }
       case CalculationSymbol.Kind.NEQ -> {
         assertArgumentCount(t, 2);
         yield new Exp.B(SmtFactory.createUnequal(translateIntegerExpression(t.queryArgument(1)),
-                                                  translateIntegerExpression(t.queryArgument(2))));
+                                                 translateIntegerExpression(t.queryArgument(2))));
       }
       case CalculationSymbol.Kind.AND -> {
         assertArgumentCount(t, 2);
         yield new Exp.B(SmtFactory.createConjunction(translateConstraint(t.queryArgument(1)),
-                                                      translateConstraint(t.queryArgument(2))));
+                                                     translateConstraint(t.queryArgument(2))));
       }
       case CalculationSymbol.Kind.OR -> {
         assertArgumentCount(t, 2);
         yield new Exp.B(SmtFactory.createDisjunction(translateConstraint(t.queryArgument(1)),
-                                                      translateConstraint(t.queryArgument(2))));
+                                                     translateConstraint(t.queryArgument(2))));
       }
       case CalculationSymbol.Kind.NOT -> {
         assertArgumentCount(t, 1);
         yield new Exp.B(SmtFactory.createNegation(translateConstraint(t.queryArgument(1))));
+      }
+      case CalculationSymbol.Kind.IFF -> {
+        assertArgumentCount(t, 2);
+        yield new Exp.B(SmtFactory.createIff(translateConstraint(t.queryArgument(1)),
+                                             translateConstraint(t.queryArgument(2))));
       }
     };
   }

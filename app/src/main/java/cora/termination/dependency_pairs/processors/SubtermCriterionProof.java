@@ -44,22 +44,11 @@ class SubtermCriterionProof extends ProcessorProofObject {
    * function.  The set of indexes considers the 0-based index in inp.getDPList().
    */
   SubtermCriterionProof(Problem inp, Set<Integer> oriented, Map<FunctionSymbol,Integer> proj) {
-    super(inp, removeDPs(oriented, inp));
+    super(inp, inp.removeDPs(oriented, true));
     _oriented = oriented;
     _proj = proj;
   }
 
-  /** Helper function for the constructor */
-  private static List<Problem> removeDPs(Set<Integer> oriented, Problem original) {
-    List<DP> originalDPs = original.getDPList();
-    List<DP> remainingDPs = new ArrayList<DP>();
-    for (int index = 0; index < originalDPs.size(); index++) {
-      if (!oriented.contains(index)) remainingDPs.add(originalDPs.get(index));
-    }
-    if (remainingDPs.size() == 0) return List.of();
-    else return List.of(new Problem(remainingDPs, original.getTRS()));
-  }
- 
   public String queryProcessorName() { return "Subterm Criterion"; }
     
   public void justify(OutputModule module) {
@@ -75,7 +64,7 @@ class SubtermCriterionProof extends ProcessorProofObject {
       module.println("All DPs are strictly oriented, and may be removed.  " +
                      "Hence, this DP problem is finite.");
     }
-    else module.println("We may remove the strictly oriented DPs, which yields:");
+    else module.println("We may remove the strictly oriented DPs.");
   }
 
   /** Helper function for justify: prints the interpretation function we found. */

@@ -180,6 +180,11 @@ public class TRS {
     return _rules.get(index);
   }
 
+  /** Returns the rules in this TRS as a list. */
+  public ImmutableList<Rule> queryRules() {
+    return _rules;
+  }
+
   /** @return the number of schemes in the TRS that can be queried. */
   public int querySchemeCount() {
     return _schemes.size();
@@ -243,6 +248,25 @@ public class TRS {
       if (!_rules.get(i).isLeftLinear()) return false;
     }
     return true;
+  }
+
+  /** 
+   * Creates a TRS with alphabet, restrictions and rule schemes the same as we have, but with the
+   * given rules and alphabet replacing the original ones.  No restrictions are imposed on the new
+   * rules.
+   */
+  public TRS createDerivative(List<Rule> newrules, Alphabet newAlphabet) {
+    return new TRS(newAlphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
+                   _productsIncluded, null);
+  }
+
+  /** 
+   * Creates a TRS with alphabet, restrictions and rule schemes the same as we have, but with the
+   * given rules replacing the original ones.  No restrictions are imposed on the new rules.
+   */
+  public TRS createDerivative(List<Rule> newrules) {
+    return new TRS(_alphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
+                   _productsIncluded, null);
   }
 
   /**

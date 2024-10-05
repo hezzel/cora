@@ -1,3 +1,18 @@
+/**************************************************************************************************
+ Copyright 2024 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
 package cora.termination.dependency_pairs.processors;
 
 import java.util.*;
@@ -6,6 +21,7 @@ import java.util.function.Consumer;
 import charlie.types.*;
 import charlie.terms.*;
 import charlie.smt.*;
+import charlie.trs.TrsProperties.*;
 import charlie.theorytranslation.TermSmtTranslator;
 import cora.io.OutputModule;
 import cora.config.Settings;
@@ -23,14 +39,18 @@ public class IntegerMappingProcessor implements Processor {
   public static String queryDisabledCode() { return "imap"; }
 
   @Override
-  public boolean isApplicable(Problem dp) { return !Settings.isDisabled(queryDisabledCode()); }
+  public boolean isApplicable(Problem dp) {
+    return !Settings.isDisabled(queryDisabledCode()) &&
+           dp.getOriginalTRS().verifyProperties(Level.APPLICATIVE, Constrained.YES,
+                                                Products.DISALLOWED, Lhs.PATTERN, Root.THEORY);
+  }
 
   /**
-   * For a DPP problem {@code dpp}, returns a mapping of each f# : A1 => ... => An => DP_SORT
+   * For a DPP problem {@code dpp}, returns a mapping of each f# : A1 ⇒ ... ⇒ An ⇒ DP_SORT
    * in heads(P) to the list of fresh variables [x1 : A1, ..., xn : An].
    */
   private Map<FunctionSymbol, List<Variable>> computeFreshVars(Problem dpp) {
-    Set<FunctionSymbol> allSharps = dpp.getSharpHeads();
+    Set<FunctionSymbol> allSharps = dpp.getHeads();
 
     Map<FunctionSymbol, List<Variable>> ret = new TreeMap<>();
     allSharps
@@ -53,7 +73,7 @@ public class IntegerMappingProcessor implements Processor {
 
   /** This creates an empty set of candidates for every root symbol of interest. */
   private void initiateCandidates(Problem dpp) {
-    Set<FunctionSymbol> allSharps = dpp.getSharpHeads();
+    Set<FunctionSymbol> allSharps = dpp.getHeads();
     _candidates = new TreeMap<FunctionSymbol,List<Term>>();
     allSharps.forEach(fSharp -> {
       _candidates.put(fSharp, new ArrayList<Term>());
@@ -179,7 +199,7 @@ public class IntegerMappingProcessor implements Processor {
    * This function filters out those candidates from the candidate list which, if chosen, would not
    * generate a ground theory term with variables in theoryVars for the given term.
    */
-  private void filterCandidateList(Term term, List<Variable> theoryVars) {
+  private void filterCandidateList(Term term, Set<Variable> theoryVars) {
     List<Term> updatedCandidates = new ArrayList<Term>();
     FunctionSymbol fSharp = term.queryRoot();
     for (Term cand : _candidates.get(fSharp)) {
@@ -205,7 +225,7 @@ public class IntegerMappingProcessor implements Processor {
       Term lhs = dp.lhs();
       Term rhs = dp.rhs();
       Term ctr = dp.constraint();
-      List<Variable> V = dp.vars();
+      Set<Variable> V = dp.lvars();
 
       filterCandidateList(lhs, V);
       filterCandidateList(rhs, V);
@@ -213,7 +233,7 @@ public class IntegerMappingProcessor implements Processor {
   }
 
   private Map<FunctionSymbol, IVar> generateIVars(Problem dpp) {
-    Set<FunctionSymbol> allFns = dpp.getSharpHeads();
+    Set<FunctionSymbol> allFns = dpp.getHeads();
     Map<FunctionSymbol, IVar> retMap = new TreeMap<>();
 
     allFns.forEach(fSharp -> {
@@ -355,3 +375,4 @@ public class IntegerMappingProcessor implements Processor {
     return new IntegerMappingProof(dpp, indexOfOrientedDPs, _fnToFreshVar, candFun);
   }
 }
+

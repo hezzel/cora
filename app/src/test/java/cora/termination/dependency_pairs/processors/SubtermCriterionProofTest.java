@@ -38,7 +38,7 @@ class SubtermCriterionProofTest {
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int -> Int\n" +
       "f(x,y) -> f(x-y, x+y) | x > y\n");
-    Problem start = DPGenerator.generateProblemFromTrs(trs);
+    Problem start = (new DPGenerator(trs)).queryProblem(false, true);
     SubtermCriterionProof scp = new SubtermCriterionProof(start);
     assertFalse(scp.applicable());
     assertTrue(scp.queryOutput() == start);
@@ -52,7 +52,7 @@ class SubtermCriterionProofTest {
       "g :: Int -> Int -> Int\n" +
       "f(x,y) -> g(y, x-1) | x > y\n" +
       "g(x,y) -> x\n");
-    Problem start = DPGenerator.generateProblemFromTrs(trs);
+    Problem start = (new DPGenerator(trs)).queryProblem(true, false);
     TreeMap<FunctionSymbol,Integer> projection = new TreeMap<FunctionSymbol,Integer>();
     projection.put(start.getDPList().get(0).lhs().queryRoot(), 2);
     projection.put(start.getDPList().get(0).rhs().queryRoot(), 1);
@@ -68,7 +68,7 @@ class SubtermCriterionProofTest {
       "  nu(g#) = 1\n\n" +
       "We thus have:\n\n" +
       "  (1) y |>=| y\n\n" +
-      "We may remove the strictly oriented DPs, which yields:\n\n"));
+      "We may remove the strictly oriented DPs.\n\n"));
   }
 
   @Test
@@ -80,7 +80,7 @@ class SubtermCriterionProofTest {
       "ack(o, n) -> s(n)\n" +
       "ack(s(m), o) -> ack(m, s(o))\n" +
       "ack(s(m), s(n)) -> ack(m, ack(s(m), n))\n");
-    Problem start = DPGenerator.generateProblemFromTrs(trs);
+    Problem start = (new DPGenerator(trs)).queryProblem(false, false);
     TreeMap<FunctionSymbol,Integer> projection = new TreeMap<FunctionSymbol,Integer>();
 
     FunctionSymbol ack = start.getDPList().get(0).lhs().queryRoot();
@@ -102,7 +102,7 @@ class SubtermCriterionProofTest {
       "  (1) s(m) ⊳ m\n" +
       "  (2) s(m) ⊵ s(m)\n" +
       "  (3) s(m) ⊳ m\n\n" +
-      "We may remove the strictly oriented DPs, which yields:\n\n"));
+      "We may remove the strictly oriented DPs.\n\n"));
   }
 
   @Test
@@ -112,7 +112,7 @@ class SubtermCriterionProofTest {
       "cons :: Int -> list -> list\n" +
       "append :: list -> list -> list\n" +
       "append(cons(x, y), z) -> cons(x, append(y, z))\n");
-    Problem start = DPGenerator.generateProblemFromTrs(trs);
+    Problem start = (new DPGenerator(trs)).queryProblem(true, true);
     TreeMap<FunctionSymbol,Integer> projection = new TreeMap<FunctionSymbol,Integer>();
     FunctionSymbol append = start.getDPList().get(0).lhs().queryRoot();
     projection.put(append, 1);

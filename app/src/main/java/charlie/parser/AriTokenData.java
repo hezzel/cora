@@ -54,18 +54,18 @@ public class AriTokenData {
     ";.*$"                                  , Token.SKIP,
   };
 
-  private static Lexer updateLexer(ChangeableLexer mylexer) {
+  private static TokenQueue updateLexer(ChangeableLexer mylexer) {
     Lexer lexer = LexerFactory.createLongTokenLexer(mylexer, "BAR", "[^|\\\\]", "\\|", IDENTIFIER);
     lexer = LexerFactory.createErrorLexer(lexer, Token.CATCHALL,
       "Unexpected symbol: @TEXT@. This symbol is not permitted in an ARI input file.");
-    return lexer;
+    return LexerFactory.createPushbackLexer(lexer);
   }
 
-  public static Lexer getStringLexer(String str) {
+  public static TokenQueue getStringLexer(String str) {
     return updateLexer(LexerFactory.createStringLexer(tokens, str));
   }
 
-  public static Lexer getFileLexer(String filename) throws IOException {
+  public static TokenQueue getFileLexer(String filename) throws IOException {
     return updateLexer(LexerFactory.createFileLexer(tokens, filename));
   }
 }

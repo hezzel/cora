@@ -24,6 +24,8 @@ import charlie.terms.Term;
 import charlie.terms.TheoryFactory;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
+import cora.io.OutputModule;
+import cora.io.DefaultOutputModule;
 
 public class OrderingRequirementTest {
   private TRS makeTrs(String txt) {
@@ -35,11 +37,17 @@ public class OrderingRequirementTest {
     // we test this via OrderingProblem, since it's the most convenient way to access an
     // OutputModule print
     TRS trs = makeTrs("f :: Int -> Int g :: Int -> Int -> Int f(x) -> g(x,y) | x > 0");
-    OrderingProblem problem = OrderingProblem.createStrictProblem(trs);
-    assertTrue(problem.toString().equals("  f(x) ≻ g(x, y) | x > 0 { x y }\n\n"));
+    OrderingRequirement req = new OrderingRequirement(trs.queryRule(0),
+                                                      OrderingRequirement.Relation.Strict);
+    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    req.printTo(module);
+    assertTrue(module.toString().equals("f(x) ≻ g(x, y) | x > 0 { x y }"));
+
+    module.clear();
     trs = makeTrs("f :: Int -> Int g :: Int -> Int -> Int f(x) -> g(x,0) | x > 0");
-    problem = OrderingProblem.createWeakProblem(trs, List.of());
-    assertTrue(problem.toString().equals("  f(x) ≽ g(x, 0) | x > 0\n\n"));
+    req = new OrderingRequirement(trs.queryRule(0), OrderingRequirement.Relation.Weak);
+    req.printTo(module);
+    assertTrue(module.toString().equals("f(x) ≽ g(x, 0) | x > 0"));
   }
 }
 

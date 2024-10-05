@@ -97,6 +97,55 @@ class ParametersTest {
   }
 
   @Test
+  public void testRequestFullStrategy() {
+    Parameters param = new Parameters(new String[] { "--strategy", "full" });
+    param.setupSettings();
+    assertTrue(Settings.queryRewritingStrategy() == Settings.Strategy.Full);
+  }
+
+  @Test
+  public void testRequestInnermostStrategy() {
+    Parameters param = new Parameters(new String[] { "--strategy", "innermost" });
+    param.setupSettings();
+    assertTrue(Settings.queryRewritingStrategy() == Settings.Strategy.Innermost);
+  }
+
+  @Test
+  public void testRequestCBVStrategy() {
+    Parameters param = new Parameters(new String[] { "--print", "-g", "cbv" });
+    param.setupSettings();
+    assertTrue(Settings.queryRewritingStrategy() == Settings.Strategy.CallByValue);
+    param = new Parameters(new String[] { "--strategy", "call-by-value" });
+    param.setupSettings();
+    assertTrue(Settings.queryRewritingStrategy() == Settings.Strategy.CallByValue);
+  }
+
+  @Test
+  public void testRequestNoStrategy() {
+    Parameters param = new Parameters(new String[] { "--print" });
+    param.setupSettings();
+    assertTrue(Settings.queryRewritingStrategy() == Settings.Strategy.Full);
+  }
+
+  @Test
+  public void testRequestStrategyWithoutStrategy() {
+    assertThrows(Parameters.WrongParametersException.class, () ->
+      new Parameters(new String[] { "--print", "-g" }) );
+  }
+
+  @Test
+  public void testRequestBadStrategy() {
+    assertThrows(Parameters.WrongParametersException.class, () ->
+      new Parameters(new String[] { "--print", "--strategy", "inner" }) );
+  }
+
+  @Test
+  public void testRequestDoubleStrategy() {
+    assertThrows(Parameters.WrongParametersException.class, () ->
+      new Parameters(new String[] { "-g", "cbv", "--print", "--strategy", "call-by-value" }) );
+  }
+
+  @Test
   public void testFileRequests() {
     Parameters param = new Parameters(new String[] { "--termination" }); // no files
     assertThrows(Parameters.WrongParametersException.class, () -> param.querySingleFile());
@@ -119,10 +168,10 @@ class ParametersTest {
     Parameters param = new Parameters(new String[] {
       "myfile", "-d", "dp,graph", "--disable", "dp,imap" });
     param.setupSettings();
-    assertTrue(Settings.disabled.size() == 3);
-    assertTrue(Settings.disabled.contains("dp"));
-    assertTrue(Settings.disabled.contains("graph"));
-    assertTrue(Settings.disabled.contains("imap"));
+    assertTrue(Settings.isDisabled("dp"));
+    assertTrue(Settings.isDisabled("graph"));
+    assertTrue(Settings.isDisabled("imap"));
+    assertFalse(Settings.isDisabled("subcrit"));
   }
 
   @Test

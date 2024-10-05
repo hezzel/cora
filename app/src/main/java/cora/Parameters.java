@@ -35,6 +35,7 @@ public class Parameters {
   private ArrayList<String> _files;
   private ArrayList<String> _input;
   private TreeSet<String> _disable;
+  private Settings.Strategy _strategy;
   private OutputModule.Style _style;
   private Request _request;
   private SmtSolver _solver;
@@ -66,13 +67,13 @@ public class Parameters {
     TreeSet<String> set = new TreeSet<String>();
     addTechnique(set, cora.termination.dependency_pairs.DPFramework.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.DPFramework.queryPrivateDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.processors.GraphProcessor.queryDisabledCode());
+    addTechnique(set, cora.termination.dependency_pairs.processors.graph.GraphProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.IntegerMappingProcessor.queryDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.processors.ReachabilityProcessor.queryDisabledCode());
+    addTechnique(set, cora.termination.dependency_pairs.processors.graph.ReachabilityProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.SplittingProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.SubtermProcessor.queryDisabledCode());
     addTechnique(set, cora.termination.dependency_pairs.processors.TheoryArgumentsProcessor.queryDisabledCode());
-    addTechnique(set, cora.termination.reduction_pairs.Horpo.queryDisabledCode());
+    addTechnique(set, cora.termination.reduction_pairs.horpo.Horpo.queryDisabledCode());
     return set;
   }
 
@@ -91,6 +92,7 @@ public class Parameters {
     _disable = new TreeSet<String>();
     _style = null;
     _request = null;
+    _strategy = null;
 
     for (int i = 0; i < args.length; ) {
       i = handleArgument(args, i);
@@ -116,6 +118,15 @@ public class Parameters {
           throw new WrongParametersException("Parameter " + arg + " without anything to disable!");
         }
         for (String s : args[index+1].split(",")) _disable.add(s);
+        return index+2;
+      case "-g": case "--strategy":
+        if (index + 1 == args.length) {
+          throw new WrongParametersException("Parameter " + arg + " without a given strategy!");
+        }
+        if (_strategy != null) {
+          throw new WrongParametersException("Received strategy parameter twice!");
+        }
+        setStrategy(args[index+1]);
         return index+2;
       case "-p": case "--print":
         setRequest(Request.Print);
@@ -174,6 +185,20 @@ public class Parameters {
     }
   }
 
+  /**
+   * Updates Settings with the strategy requested by the user, or throws a WrongParametersException
+   * if the strategy is not known.
+   */
+  private void setStrategy(String strategy) {
+    strategy = strategy.toLowerCase();
+    if (strategy.equals("full")) _strategy = Settings.Strategy.Full;
+    else if (strategy.equals("innermost")) _strategy = Settings.Strategy.Innermost;
+    else if (strategy.equals("cbv")) _strategy = Settings.Strategy.CallByValue;
+    else if (strategy.equals("call-by-value")) _strategy = Settings.Strategy.CallByValue;
+    else throw new WrongParametersException("Unknown strategy: " + strategy + ".  Supported " +
+      "strategies are full, innermost and cbv (call-by-value).");
+  }
+
   /** Sets up config.Settings based on what the input arguments were. */
   public void setupSettings() {
     TreeSet<String> codes = disableableTechniques();
@@ -184,6 +209,7 @@ public class Parameters {
     }
     Settings.setDisabled(new TreeSet<String>(_disable));
     if (_solver != null) Settings.setSolver(_solver);
+    if (_strategy != null) Settings.setStrategy(_strategy);
   }
 
   /** Returns the task Cora is set to do. */

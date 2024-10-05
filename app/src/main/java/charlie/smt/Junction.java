@@ -33,7 +33,7 @@ abstract sealed class Junction extends Constraint permits Conjunction, Disjuncti
 
   Junction(List<Constraint> args) {
     _children = new ArrayList<Constraint>();
-    for (int i = 0; i < args.size(); i++) addChild(args.get(i));
+    for (Constraint c : args) addChild(c);
   }
 
   private void addChild(Constraint child) {

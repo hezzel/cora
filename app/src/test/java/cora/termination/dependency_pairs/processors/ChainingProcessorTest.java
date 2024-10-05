@@ -63,7 +63,7 @@ public class ChainingProcessorTest {
   @Test
   public void testOneNonRecDPNoSelfChaining() {
     TRS trs = makeTRSWithOneNonRecDP();
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = new DPGenerator(trs).queryProblem(true, false);
     ChainingProcessor proc = new ChainingProcessor(false);
     assertFalse(proc.isApplicable(p));
     ProcessorProofObject proof = proc.processDPP(p);
@@ -73,7 +73,7 @@ public class ChainingProcessorTest {
   @Test
   public void testOneNonRecDPWithSelfChaining() {
     TRS trs = makeTRSWithOneNonRecDP();
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = new DPGenerator(trs).queryProblem(true, false);
     ChainingProcessor proc = new ChainingProcessor(true);
     ProcessorProofObject proof = proc.processDPP(p);
     assertFalse(proof.applicable());
@@ -82,7 +82,7 @@ public class ChainingProcessorTest {
   @Test
   public void testOneRecDPNoSelfChaining() {
     TRS trs = makeTRSWithOneRecDP();
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = new DPGenerator(trs).queryProblem(true, false);
     ChainingProcessor proc = new ChainingProcessor(false);
     ProcessorProofObject proof = proc.processDPP(p);
     assertFalse(proof.applicable());
@@ -91,7 +91,7 @@ public class ChainingProcessorTest {
   @Test
   public void testOneRecDPSelfChaining() {
     TRS trs = makeTRSWithOneRecDP();
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = new DPGenerator(trs).queryProblem(true, false);
     assertEquals(1, p.getDPList().size());
     ChainingProcessor proc = new ChainingProcessor(true);
     assertTrue(proc.isApplicable(p));
@@ -109,7 +109,7 @@ public class ChainingProcessorTest {
   @Test
   public void testTwoNonRecDPSelfChaining() {
     TRS trs = makeTRSWithTwoDPsChain();
-    Problem p = DPGenerator.generateProblemFromTrs(trs);
+    Problem p = new DPGenerator(trs).queryProblem(true, false);
     assertEquals(2, p.getDPList().size());
     ChainingProcessor proc = new ChainingProcessor(true);
     assertTrue(proc.isApplicable(p));

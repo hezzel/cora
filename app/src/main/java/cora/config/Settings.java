@@ -25,12 +25,21 @@ import java.util.Set;
  * settings that are not set), and can be queried from any class outside of the cora library.
  */
 public class Settings {
+  public enum Strategy { Full , Innermost , CallByValue };
+  private static Set<String> _disabled = Set.of();
+  private static Strategy _strategy = Strategy.Full;
+
+  /** The SMT solver that any SMT-encoding submodule should use. */
   public static SmtSolver smtSolver = new ProcessSmtSolver(ProcessSmtSolver.PhysicalSolver.Z3);
-  public static Set<String> disabled = Set.of();
 
   /** Use this to check if a technique is diabled (by name). */
   public static boolean isDisabled(String technique) {
-    return disabled.contains(technique);
+    return _disabled.contains(technique);
+  }
+
+  /** Use this to check the rewriting strategy the user wishes to consider by default. */
+  public static Strategy queryRewritingStrategy() {
+    return _strategy;
   }
 
   /** Used to set up the SMT solver. */
@@ -40,6 +49,11 @@ public class Settings {
 
   /** Used to set up which techniques are disabled. */
   public static void setDisabled(Set<String> disabledTechniques) {
-    disabled = disabledTechniques;
+    _disabled = disabledTechniques;
+  }
+
+  /** Used to set up the strategy. */
+  public static void setStrategy(Strategy strat) {
+    _strategy = strat;
   }
 }

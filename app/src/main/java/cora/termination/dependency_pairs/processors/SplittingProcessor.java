@@ -33,7 +33,9 @@ public class SplittingProcessor implements Processor {
   public static String queryDisabledCode() { return "split"; }
 
   @Override
-  public boolean isApplicable(Problem dp) { return !Settings.isDisabled(queryDisabledCode()); }
+  public boolean isApplicable(Problem dp) {
+    return !Settings.isDisabled(queryDisabledCode()); 
+  }
   
   /**
    * For C1 o...o Cn, where Ci does not have o as a root symbol, this appends [C1,...,Cn] to sofar.
@@ -138,7 +140,7 @@ public class SplittingProcessor implements Processor {
     if (numSplit == 0) return Optional.empty();
     ArrayList<DP> ret = new ArrayList<DP>();
     for (int i = 0; i < results.size(); i++) {
-      ret.add(new DP(dp.lhs(), dp.rhs(), results.get(i), dp.vars(), dp.isPrivate()));
+      ret.add(new DP(dp.lhs(), dp.rhs(), results.get(i), dp.lvars()));
     }
     return Optional.of(ret);
   }
@@ -159,32 +161,35 @@ public class SplittingProcessor implements Processor {
         for (DP result : p.snd()) module.println("%a", result);
         module.endTable();
       }
-      module.println("This yields:");
     }
   }
 
-  public ProcessorProofObject transform(Problem dpp) {
+  public ProcessorProofObject processDPP(Problem dpp) {
     _anythingChanged = false;
     List<DP> dps = dpp.getDPList();
     ArrayList<DP> ret = new ArrayList<DP>();
+    TreeSet<Integer> priv = new TreeSet<Integer>();
     ArrayList<Pair<DP,List<DP>>> info = new ArrayList<Pair<DP,List<DP>>>();
     for (int i = 0; i < dps.size(); i++) {
       Optional<ArrayList<DP>> splitDP = split(dps.get(i));
-      if (splitDP.isEmpty()) ret.add(dps.get(i));
+      if (splitDP.isEmpty()) {
+        if (dpp.isPrivate(i)) priv.add(ret.size());
+        ret.add(dps.get(i));
+      }
       else {
         _anythingChanged = true;
         info.add(new Pair<DP,List<DP>>(dps.get(i), splitDP.get()));
-        for (DP dp : splitDP.get()) ret.add(dp);
+        for (DP dp : splitDP.get()) {
+          if (dpp.isPrivate(i)) priv.add(ret.size());
+          ret.add(dp);
+        }
       }
     }
     if (_anythingChanged) {
-      return new SplittingProofObject(dpp, new Problem(ret, dpp.getTRS()), info);
+      Problem newprob = new Problem(ret, dpp.getRuleList(), priv, dpp.getOriginalTRS(),
+        dpp.isInnermost(), dpp.hasExtraRules(), dpp.queryTerminationStatus());
+      return new SplittingProofObject(dpp, newprob, info);
     }
     return new SplittingProofObject(dpp);
-  }
-
-  @Override
-  public ProcessorProofObject processDPP(Problem dpp) {
-    return transform(dpp);
   }
 }

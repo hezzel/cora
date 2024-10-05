@@ -108,7 +108,10 @@ public class ChainingProcessor implements Processor {
       dpsResult.removeAll(deletedDPs);
       dpsResult.addAll(chainedToOldDPs.keySet());
 
-      Problem result = new Problem(new ArrayList<>(dpsResult), dpp.getTRS());
+      // TODO check use of new constructor API for Problem
+      Problem result = new Problem(new ArrayList<>(dpsResult), dpp.getRuleList(),
+        null, dpp.getOriginalTRS(), dpp.isInnermost(), dpp.hasExtraRules(),
+        dpp.queryTerminationStatus());
       return new ChainingProof(dpp, result, chainedToOldDPs, deletedDPs);
     }
     // no function symbol could be chained away
@@ -119,13 +122,16 @@ public class ChainingProcessor implements Processor {
                                   Map<FunctionSymbol, Set<DP>> rootToDP1s,
                                   Map<FunctionSymbol, Set<DP>> rootToDP2s,
                                   Set<FunctionSymbol> forbiddenDP2Roots) {
-    Set<FunctionSymbol> heads = dpp.getSharpHeads();
+    Set<FunctionSymbol> heads = dpp.getHeads();
     for (FunctionSymbol fSharp : heads) {
       rootToDP1s.put(fSharp, new LinkedHashSet<>()); // init
       rootToDP2s.put(fSharp, new LinkedHashSet<>()); // init
     }
-    TRS trs = dpp.getTRS();
+    TRS trs = dpp.getOriginalTRS();
     Set<FunctionSymbol> definedSymbols = trs.definedSymbols();
+    // presuming that the original TRS is up to date wrt the current DP problem
+    // (may be an issue, e.g., after using Semantic Labelling)
+
     List<DP> allDPs = dpp.getDPList();
     for (DP dp : allDPs) {
       Term lhs = dp.lhs();
@@ -213,7 +219,7 @@ public class ChainingProcessor implements Processor {
     // check whether all logical variables of right are mapped to theory terms
 
     Set<Replaceable> replaceables = new LinkedHashSet<>(matcher.domain());
-    replaceables.retainAll(dp2.vars());
+    replaceables.retainAll(dp2.lvars());
     for (Replaceable var : replaceables) {
       // replacement should not be null: var is in the domain of matcher
       Term replacement = matcher.get(var);
@@ -225,18 +231,15 @@ public class ChainingProcessor implements Processor {
     Term dp2ConstraintSubst = dp2.constraint().substitute(matcher);
     Term resultConstraint = TermFactory.createApp(TheoryFactory.andSymbol,
       dp1.constraint(), dp2ConstraintSubst);
-    Set<Variable> resultTheoryVars = new LinkedHashSet<>(dp1.vars());
-    for (Variable x : dp2.vars()) {
+    Set<Variable> resultTheoryVars = new LinkedHashSet<>(dp1.lvars());
+    for (Variable x : dp2.lvars()) {
       Term xReplacement = matcher.get(x);
       Environment<Variable> env = xReplacement.vars();
       for (Variable v : env) {
         resultTheoryVars.add(v);
       }
     }
-    List<Variable> resultTheoryVarsList = new ArrayList<>(resultTheoryVars);
-    // TODO check public/private DP
-    DP result = new DP(dp1.lhs(), resultRhs, resultConstraint, resultTheoryVarsList,
-      dp1.isPrivate() && dp2.isPrivate());
+    DP result = new DP(dp1.lhs(), resultRhs, resultConstraint, resultTheoryVars);
     return Optional.of(result);
   }
 

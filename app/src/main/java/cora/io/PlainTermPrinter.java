@@ -34,6 +34,7 @@ public class PlainTermPrinter extends TermPrinter {
 
   protected String queryCalculationName(Kind symbolkind, String defaultName) {
     return switch (symbolkind) {
+      case Kind.IFF -> "<=>";
       case Kind.AND -> "/\\";
       case Kind.OR -> "\\/";
       case Kind.GREATER -> ">";

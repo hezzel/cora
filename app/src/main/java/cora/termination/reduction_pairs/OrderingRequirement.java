@@ -15,8 +15,9 @@
 
 package cora.termination.reduction_pairs;
 
-import java.util.Set;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.Collections;
 
@@ -24,18 +25,34 @@ import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.Renaming;
+import charlie.trs.Rule;
 import cora.io.OutputModule;
 
 /**
- * An OrderingRequirement is a conditional requirement left R right [constraint], where R is one of
- * ≻, ≽ or "either".  It is particularly used in an OrderingProblem.
+ * An OrderingRequirement is a constrained requirement left R right [constraint], where R is either
+ * ≻ or ≽.  It is particularly used in an OrderingProblem.
+ *
+ * The set tvar is unmodifiable.
  */
 public record OrderingRequirement(Term left, Term right, Term constraint, Relation rel,
                                   Set<Variable> tvar) {
-  public enum Relation { Strict, Weak, Either }
+  public enum Relation { Strict, Weak }
 
-  public OrderingRequirement(Term l, Term r, Term co, Relation relation, List<Variable> tv) {
+  /**
+   * Creates an OrderingRequirement based on the given terms and set.
+   * Note that the set should not be modified afterwards: it is stored inside the record.
+   */
+  public OrderingRequirement(Term l, Term r, Term co, Relation relation, Collection<Variable> tv) {
     this(l, r, co, relation, Collections.unmodifiableSet(new TreeSet<Variable>(tv)));
+  }
+
+  /**
+   * Creates an OrderingRequirement based on the left-hand side, right-hand side, constraint and
+   * lvars of the given rule, with the given relation.
+   */
+  public OrderingRequirement(Rule rho, Relation relation) {
+    this(rho.queryLeftSide(), rho.queryRightSide(), rho.queryConstraint(), relation,
+         Collections.unmodifiableSet(new TreeSet<Variable>(rho.queryLVars())));
   }
 
   /**
@@ -47,7 +64,6 @@ public record OrderingRequirement(Term left, Term right, Term constraint, Relati
     String relation = switch (rel) {
       case Strict -> "%{succ}";
       case Weak -> "%{succeq}";
-      case Either -> "%{succ}?";
     };
     Pair<Term,Renaming> l = new Pair<Term,Renaming>(left, naming);
     Pair<Term,Renaming> r = new Pair<Term,Renaming>(right, naming);

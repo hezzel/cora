@@ -13,20 +13,21 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.termination.reduction_pairs;
+package cora.termination.reduction_pairs.horpo;
 
 import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.Set;
+import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.terms.FunctionSymbol;
 import charlie.smt.Valuation;
 import cora.io.OutputModule;
+import cora.termination.reduction_pairs.*;
 
 /**
- * A HorpoResult contains the information needed to show that an OrderingProblem was satisfied
- * using Constrained Horpo.  It also tells us which of the "Either" inequalities were oriented
- * strictly.
+ * A HorpoResult is a ReductionPairProofObject that, aside from the basics, contains the information
+ * needed to explain how an OrderingProblem was oriented using Constrained Horpo.
  *
  * Alternatively, if no such proof could be found, it contains that information too.
  */
@@ -34,7 +35,8 @@ class HorpoResult extends ReductionPairProofObject {
   private final HorpoParameters _parameters;
   private final HorpoConstraintList _constraints;
   private final Valuation _valuation;
-  private String _failReason;
+  private final String _failReason;
+  private final boolean _stronglyMonotonic;
 
   /** Create a failed proof (which will return MAYBE) */
   HorpoResult(OrderingProblem problem, String reason) {
@@ -42,23 +44,26 @@ class HorpoResult extends ReductionPairProofObject {
     _parameters = null;
     _constraints = null;
     _valuation = null;
+    _stronglyMonotonic = false;
     _failReason = reason;
   }
 
   /**
    * Initialise a successful proof, for the given problem, with the given indexes within the problem
-   * being oriented strictly (and the rest weakly).
+   * being oriented strictly (and the rest weakly), and the given indexes of conditional
+   * requirements being relevant.
    * The other arguments are the parameters and constraint list that were used to solve the problem.
    * These can be queried for information interesting to print.
    * The valuation indicates how the variables in the parameters and constraint list should be
    * evaluated.
    */
-  HorpoResult(OrderingProblem problem, Set<Integer> strict, Valuation valuation,
+  HorpoResult(OrderingProblem problem, Set<Integer> strict, Set<Integer> conds, Valuation valuation,
               HorpoParameters param, HorpoConstraintList hclst) {
-    super(problem, strict);
+    super(problem, strict, conds, problem.queryArgumentFilter().getRegardedArguments(valuation));
     _parameters = param;
     _constraints = hclst;
     _valuation = valuation;
+    _stronglyMonotonic = problem.queryArgumentFilter().everythingIsRegarded(valuation);
     _failReason = null;
   }
 
@@ -85,16 +90,9 @@ class HorpoResult extends ReductionPairProofObject {
     else return "Mul_" + k;
   }
 
-  /** Returns whether the given symbol regards the given position. */
-  public boolean regards(FunctionSymbol f, int position) {
-    if (_valuation == null) return false;
-    return _parameters.getRegardsVariableFor(f, position).evaluate(_valuation);
-  }
-
-  /** Returns whether the ordering is strict (that is, nothing is filtered away). */
+  /** Returns whether the ordering is inherently strict. */
   public boolean stronglyMonotonic() {
-    if (_valuation == null) return false;
-    return _parameters.getDisregardedArguments(_valuation).size() == 0;
+    return _stronglyMonotonic;
   }
 
   /** Prints a string representation of the current integer ordering to the output module. */
@@ -104,6 +102,16 @@ class HorpoResult extends ReductionPairProofObject {
     int bound = _parameters.queryIntegerBound();
     if (down) module.print("x %{greater} -%a %{and} x %{greater} y }", bound);
     else module.print("x %{smaller} %a %{and} x %{smaller} y }", bound);
+  }
+
+  /** Returns the set of all function symbols in the requirements we oriented. */
+  private TreeSet<FunctionSymbol> getSymbols() {
+    TreeSet<FunctionSymbol> ret = new TreeSet<FunctionSymbol>();
+    for (OrderingRequirement req : _reqs) {
+      req.left().storeFunctionSymbols(ret);
+      req.right().storeFunctionSymbols(ret);
+    }
+    return ret;
   }
 
   /**
@@ -160,22 +168,22 @@ class HorpoResult extends ReductionPairProofObject {
 
   /** This prints information about variable regardings. */
   private void printFilterings(OutputModule o) {
-    ArrayList<Pair<String,Integer>> disregarded = _parameters.getDisregardedArguments(_valuation);
-    if (disregarded.size() == 0) {
+    if (_stronglyMonotonic) {
       o.println("* Monotonicity requirements: this is a strongly monotonic reduction pair " +
         "(all arguments of function symbols were regarded).");
       return;
     }
-    o.println("* Filter:");
+    o.println("* Regarded arguments:");
     o.startTable();
-    for (int i = 0; i < disregarded.size(); ) {
-      String name = disregarded.get(i).fst();
-      o.nextColumn("%a", name);
-      o.nextColumn("disregards argument(s)");
-      for (; i < disregarded.size() && disregarded.get(i).fst().equals(name); i++) {
-        o.print("%a ", disregarded.get(i).snd());
+    for (FunctionSymbol f : getSymbols()) {
+      boolean first = true;
+      for (int i = 1; i <= f.queryArity(); i++) {
+        if (regards(f, i)) {
+          if (first) { o.nextColumn("%a", f.queryName()); first = false; }
+          o.print("%a ", i);
+        }
       }
-      o.println();
+      if (!first) o.println();
     }
     o.endTable();
   }
