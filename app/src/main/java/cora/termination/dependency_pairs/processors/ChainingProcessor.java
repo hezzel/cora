@@ -53,6 +53,9 @@ public class ChainingProcessor implements Processor {
     _allowSelfChaining = allowSelfChaining;
   }
 
+  /** This technique can be disabled by runtime arguments. */
+  public static String queryDisabledCode() { return "chaining"; }
+
   @Override
   public boolean isApplicable(Problem dpp) {
     // TODO not applicable if there are non-values in arguments of the lhs
