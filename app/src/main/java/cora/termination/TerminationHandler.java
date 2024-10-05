@@ -29,6 +29,7 @@ import cora.termination.reduction_pairs.ReductionPairTerminationProver;
 import cora.termination.reduction_pairs.horpo.Horpo;
 import cora.termination.dependency_pairs.DPFramework;
 import cora.termination.dependency_pairs.FullDPFramework;
+import cora.termination.dependency_pairs.InnermostDPFramework;
 
 import java.util.ArrayList;
 
@@ -36,7 +37,7 @@ public class TerminationHandler {
   /** Main access function for proving termination. */
   public static ProofObject proveTermination(TRS trs) {
     trs = updateTRSConstraints(trs);
-    DPFramework framework = chooseFramework(trs, true);
+    DPFramework framework = chooseFramework(trs, false);
     ProofObject po = framework.checkApplicable();
     if (po.queryAnswer() != ProofObject.Answer.YES) {
       ReductionPairTerminationProver prover = new ReductionPairTerminationProver(new Horpo(true));
@@ -100,7 +101,11 @@ public class TerminationHandler {
 
   /** This selects the right DP Framework based on the settings and extra rules property */
   private static DPFramework chooseFramework(TRS trs, boolean extraRules) {
-    return new FullDPFramework(trs, extraRules);
+    return switch (Settings.queryRewritingStrategy()) {
+      case Settings.Strategy.Innermost -> new InnermostDPFramework(trs, extraRules);
+      case Settings.Strategy.CallByValue -> new InnermostDPFramework(trs, extraRules);
+      case Settings.Strategy.Full -> new FullDPFramework(trs, extraRules);
+    };
   }
 }
 

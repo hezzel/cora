@@ -72,7 +72,8 @@ public class ReductionPairProcessor implements Processor {
    */
   @Override
   public boolean isApplicable(Problem dpp) {
-    return _redpair.isApplicable(makeOProb(dpp));
+    return !dpp.hasExtraRules() &&
+           _redpair.isApplicable(makeOProb(dpp));
   }
 
   @Override

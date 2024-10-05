@@ -45,10 +45,10 @@ public abstract class DPFramework {
   }
 
   /** Children should call this with the TRS that we are going to try to apply the method on. */
-  protected DPFramework(TRS trs) {
+  protected DPFramework(TRS trs, boolean innermost, boolean extraRules) {
     _applicability = determineApplicability(trs);
     DPGenerator generator = new DPGenerator(trs);
-    _initialProblem = createInitialProblem(generator);
+    _initialProblem = generator.queryProblem(innermost, extraRules);
     if (Settings.isDisabled(queryPrivateDisabledCode())) {
       _initialProblem = _initialProblem.removeDPs(Set.of(), true);
     }
@@ -89,12 +89,6 @@ public abstract class DPFramework {
     AccessibilityChecker checker = new AccessibilityChecker(trs);
     return checker.checkAccessibility();
   }
-
-  /**
-   * Inheriting classes should implement functionality to set up the initial DP problem from the
-   * DPs computed by the generator.
-   */
-  protected abstract Problem createInitialProblem(DPGenerator generator);
 
   /**
    * All inheriting classes should implement this: this maps a processor INDEX to an actual

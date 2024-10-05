@@ -34,8 +34,7 @@ public class InnermostDPFramework extends DPFramework {
    * additional constructors of the existing sorts, nor rules defining any known symbol).
    */
   public InnermostDPFramework(TRS trs, boolean extraRules) {
-    super(trs);
-    _extraRules = extraRules;
+    super(trs, true, extraRules);
     _processors = new Processor[] {
         new SplittingProcessor(),
         new TheoryArgumentsProcessor(true),
@@ -46,10 +45,6 @@ public class InnermostDPFramework extends DPFramework {
         new TheoryArgumentsProcessor(false)
       };
     RESTARTLOOP = 3;
-  }
-
-  protected Problem createInitialProblem(DPGenerator generator) {
-    return generator.queryProblem(true, _extraRules);
   }
 
   protected Processor getProcessor(int index) {

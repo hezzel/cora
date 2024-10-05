@@ -22,7 +22,6 @@ import cora.termination.dependency_pairs.processors.graph.GraphProcessor;
 import cora.termination.dependency_pairs.processors.graph.ReachabilityProcessor;
 
 public class FullDPFramework extends DPFramework {
-  private boolean _extraRules;
   private Processor[] _processors;
   private int RESTARTLOOP;
     // this is the number of processors we do before starting the main loop,
@@ -35,8 +34,7 @@ public class FullDPFramework extends DPFramework {
    * additional constructors of the existing sorts, nor rules defining any known symbol).
    */
   public FullDPFramework(TRS trs, boolean extraRules) {
-    super(trs);
-    _extraRules = extraRules;
+    super(trs, false, extraRules);
     _processors = new Processor[] {
         new SplittingProcessor(),
         new TheoryArgumentsProcessor(true),
@@ -48,10 +46,6 @@ public class FullDPFramework extends DPFramework {
         new ReductionPairProcessor(new Horpo(false))
       };
     RESTARTLOOP = 3;
-  }
-
-  protected Problem createInitialProblem(DPGenerator generator) {
-    return generator.queryProblem(false, _extraRules);
   }
 
   protected Processor getProcessor(int index) {
