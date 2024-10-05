@@ -129,7 +129,7 @@ public class Problem {
     Set<FunctionSymbol> allFns = new TreeSet<>();
     for (DP dp : _dps) {
       if (dp.lhs().isFunctionalTerm()) allFns.add(dp.lhs().queryRoot());
-      if (dp.rhs().isFunctionalTerm()) allFns.add(dp.lhs().queryRoot());
+      if (dp.rhs().isFunctionalTerm()) allFns.add(dp.rhs().queryRoot());
     }
     return allFns;
   }
