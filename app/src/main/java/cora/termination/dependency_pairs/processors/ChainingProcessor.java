@@ -57,6 +57,10 @@ public class ChainingProcessor implements Processor {
   public boolean isApplicable(Problem dpp) {
     // TODO not applicable if there are non-values in arguments of the lhs
     // of some DP (currently caught in processDPP)
+    if (! dpp.isInnermost() &&
+        dpp.queryTerminationStatus() == Problem.TerminationFlag.Arbitrary) {
+      return false;
+    }
     return dpp.getDPList().size() >= (_allowSelfChaining ? 1 : 2);
     // may be restricted in the future
   }
