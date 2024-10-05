@@ -92,6 +92,40 @@ public record DP(Term lhs, Term rhs, Term constraint, List<Variable> vars, boole
     result.addAll(this.vars);
     return result;
   }
+
+  /**
+   *
+   * @param forbiddenVarNames variable names that must not occur in the result;
+   *                          will not be modified by this method
+   * @return a DP that is structurally equivalent to the present one
+   *  but does not use any of the names in forbiddenVarNames for its
+   *  variables
+   * @throws NullPointerException if forbiddenVarNames is null
+   */
+  public DP getRenamed(Set<String> forbiddenVarNames) {
+    Renamer renamer = new Renamer();
+    renamer.addForbiddenNames(forbiddenVarNames);
+    Substitution subst = TermFactory.createEmptySubstitution();
+    for (Variable x : getAllVariables()) {
+      extendSubstitution(subst, x, renamer);
+    }
+    Term newLhs = this.lhs.substitute(subst);
+    Term newRhs = this.rhs.substitute(subst);
+    Term newConstraint = this.constraint.substitute(subst);
+    List<Variable> newTheoryVars = new ArrayList<>();
+    for (Variable x : this.vars) {
+      newTheoryVars.add(subst.get(x).queryVariable());
+    }
+    return new DP(newLhs, newRhs, newConstraint, newTheoryVars, this.isPrivate);
+  }
+
+  private static void extendSubstitution(Substitution subst, Variable x, Renamer r) {
+    if (subst.get(x) == null) {
+      String newName = r.assignOrGetNewName(x.queryName());
+      subst.extend(x, TermFactory.createVar(newName, x.queryType()));
+    }
+  }
+
   @Override
   public String toString() {
     if (vars.size() == constraint.vars().size()) {
