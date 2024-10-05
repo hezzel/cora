@@ -337,6 +337,20 @@ public interface Term {
    */
   boolean equals(Term term);
 
+  /**
+   * Returns whether this term and other are equal up to a renaming of the free variables.
+   * <p>
+   * Implementation note: default implementation checks whether the terms mutually match.
+   * More efficient solutions are conceivable.
+   *
+   * @param other term to check for equality up to renaming of free variables
+   * @return whether this term and other are equal up to a renaming of the free variables
+   * @throws NullPointerException if term is the null reference
+   */
+  default boolean equalsModuloRenaming(Term other) {
+    return null != this.match(other) && null != other.match(this);
+  }
+
   /* ======== the following functions are intended for internal use in the terms package ======== */
 
   /**
