@@ -74,6 +74,24 @@ public record DP(Term lhs, Term rhs, Term constraint, List<Variable> vars, boole
     this(lhs, rhs, TheoryFactory.createValue(true), List.of(), true);
   }
 
+  /**
+   *
+   * @return a set of all variables occurring in this DP; may be modified
+   */
+  public Set<Variable> getAllVariables() {
+    Set<Variable> result = new LinkedHashSet<>();
+    for (Variable x : this.lhs.vars()) {
+      result.add(x);
+    }
+    for (Variable x : this.rhs.vars()) {
+      result.add(x);
+    }
+    for (Variable x : this.constraint.vars()) {
+      result.add(x);
+    }
+    result.addAll(this.vars);
+    return result;
+  }
   @Override
   public String toString() {
     if (vars.size() == constraint.vars().size()) {
