@@ -14,6 +14,22 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 
+/**
+ * Docu-guess (Carsten):
+ * Dependency Pair for Logically Constrained Simply-typed Term Rewrite Systems
+ * (LCSTRSs) as introduced in:
+ *<p>
+ * Liye Guo, Kasper Hagens, Cynthia Kop, Deivid Vale:
+ * Higher-Order Constrained Dependency Pairs for (Universal) Computability.
+ * MFCS 2024: 57:1-57:15
+ *
+ * @param lhs the left-hand side of the DP
+ * @param rhs the right-hand side of the DP
+ * @param constraint the constraint of the DP
+ * @param vars those variables of the DP that must be instantiated with
+ *             theory terms; must contain all variables of constraint
+ * @param isPrivate true if the DP is private; false otherwise
+ */
 public record DP(Term lhs, Term rhs, Term constraint, List<Variable> vars, boolean isPrivate) {
 
   private static boolean initialVarSetCondition(Term constraint, List<Variable> set) {
