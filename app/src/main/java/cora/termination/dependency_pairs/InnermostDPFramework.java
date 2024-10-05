@@ -40,6 +40,7 @@ public class InnermostDPFramework extends DPFramework {
         new TheoryArgumentsProcessor(true),
         new ReachabilityProcessor(),
         new GraphProcessor(),
+        new ChainingProcessor(false),
         new SubtermProcessor(),
         new IntegerMappingProcessor(),
         new TheoryArgumentsProcessor(false)
