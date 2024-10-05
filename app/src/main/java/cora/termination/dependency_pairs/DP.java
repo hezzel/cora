@@ -1,16 +1,17 @@
 package cora.termination.dependency_pairs;
 
-import com.google.errorprone.annotations.Var;
-import com.sun.jdi.event.StepEvent;
-import charlie.terms.Environment;
+import charlie.terms.Substitution;
 import charlie.terms.Term;
+import charlie.terms.TermFactory;
 import charlie.terms.TheoryFactory;
 import charlie.terms.Variable;
+import charlie.util.Renamer;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Set;
 import java.util.stream.StreamSupport;
 
 public record DP(Term lhs, Term rhs, Term constraint, List<Variable> vars, boolean isPrivate) {
