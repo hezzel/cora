@@ -25,7 +25,8 @@ import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.config.Settings;
 import cora.termination.transformation.CallByValueModifier;
-//import cora.termination.reduction_pairs.Horpo;
+import cora.termination.reduction_pairs.ReductionPairTerminationProver;
+import cora.termination.reduction_pairs.horpo.Horpo;
 import cora.termination.dependency_pairs.DPFramework;
 import cora.termination.dependency_pairs.FullDPFramework;
 
@@ -38,22 +39,21 @@ public class TerminationHandler {
     DPFramework framework = chooseFramework(trs, true);
     ProofObject po = framework.checkApplicable();
     if (po.queryAnswer() != ProofObject.Answer.YES) {
-      /*
-      ProofObject ret = Horpo.proveTermination(trs);
-      if (ret.queryAnswer() == ProofObject.Answer.YES) return wrap(ret, trs, "termination");
-      else return wrap(po, ret, trs, "termination");
-      */
-      return wrap(po, trs, "termination");
-
+      ReductionPairTerminationProver prover = new ReductionPairTerminationProver(new Horpo(true));
+      ProofObject ret = prover.proveTermination(trs);
+      if (ret.queryAnswer() == ProofObject.Answer.YES) {
+        return new WrapperProofObject(ret, trs, "termination");
+      }
+      return new WrapperProofObject(po, ret, trs, "termination", ProofObject.Answer.MAYBE);
     }
-    return wrap(framework.run(), trs, "termination");
+    return new WrapperProofObject(framework.run(), trs, "termination");
   }
 
   /** Main access function for proving universal computability. */
   public static ProofObject proveComputability(TRS trs) {
     trs = updateTRSConstraints(trs);
     DPFramework framework = chooseFramework(trs, true);
-    return wrap(framework.run(), trs, "universal computability");
+    return new WrapperProofObject(framework.run(), trs, "universal computability");
   }
 
   /**
@@ -102,21 +102,44 @@ public class TerminationHandler {
   private static DPFramework chooseFramework(TRS trs, boolean extraRules) {
     return new FullDPFramework(trs, extraRules);
   }
+}
 
-  /** Improve the justification in a proof by printing the TRS first. */
-  private static ProofObject wrap(ProofObject ob1, ProofObject ob2, TRS trs, String property) {
-    return new ProofObject() {
-      public Answer queryAnswer() { return ob1.queryAnswer(); }
-      public void justify(OutputModule module) {
-        module.print("We consider %a of the ", property);
-        module.printTrs(trs);
-        ob1.justify(module);
-        if (ob2 != null) ob2.justify(module);
-      }
-    };
+class WrapperProofObject implements ProofObject {
+  private TRS _trs;
+  private Answer _answer;
+  private String _property;
+  private ProofObject _ob1;
+  private ProofObject _ob2;
+
+  private void setup(TRS trs, Answer answer, String property, ProofObject ob1, ProofObject ob2) {
+    _trs = trs;
+    _answer = answer;
+    _property = property;
+    _ob1 = ob1;
+    _ob2 = ob2;
   }
-  private static ProofObject wrap(ProofObject ob, TRS trs, String property) {
-    return wrap(ob, null, trs, property);
+
+  WrapperProofObject(ProofObject ob, TRS trs, String property) {
+    setup(trs, ob.queryAnswer(), property, ob, null);
+  }
+
+  WrapperProofObject(ProofObject ob, TRS trs, String property, Answer answer) {
+    setup(trs, answer, property, ob, null);
+  }
+
+  WrapperProofObject(ProofObject ob1, ProofObject ob2, TRS trs, String property, Answer answer) {
+    setup(trs, answer, property, ob1, ob2);
+  }
+
+  public Answer queryAnswer() {
+    return _answer;
+  }
+
+  public void justify(OutputModule module) {
+    module.print("We consider %a of the ", _property);
+    module.printTrs(_trs);
+    _ob1.justify(module);
+    if (_ob2 != null) _ob2.justify(module);
   }
 }
 

@@ -19,6 +19,12 @@ import charlie.smt.SmtProblem;
 
 public interface ReductionPair {
   /**
+   * This returns whether the current reduction pair is strongly monotonic (so s ≻ t implies
+   * C[s] ≻ C[t]) or only weakly monotonic (so s ≽ t implies C[s] ≽ C[t]).
+   */
+  public boolean isStronglyMonotonic();
+
+  /**
    * Checks that the given ordering problem satisfies the requirements to try and apply this
    * particular reduction pair (for example by a check on the term restrictions in the
    * underlying TRS).

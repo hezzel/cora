@@ -59,11 +59,11 @@ class HorpoResult extends ReductionPairProofObject {
    */
   HorpoResult(OrderingProblem problem, Set<Integer> strict, Set<Integer> conds, Valuation valuation,
               HorpoParameters param, HorpoConstraintList hclst) {
-    super(problem, strict, conds, problem.queryMonotonicity().getRegardedArguments(valuation));
+    super(problem, strict, conds, problem.queryArgumentFilter().getRegardedArguments(valuation));
     _parameters = param;
     _constraints = hclst;
     _valuation = valuation;
-    _stronglyMonotonic = problem.queryMonotonicity().stronglyMonotonic();
+    _stronglyMonotonic = problem.queryArgumentFilter().everythingIsRegarded(valuation);
     _failReason = null;
   }
 

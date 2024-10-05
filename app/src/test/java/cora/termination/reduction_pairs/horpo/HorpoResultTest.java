@@ -38,7 +38,7 @@ public class HorpoResultTest {
   public void testFailedProof() {
     TRS trs = makeTrs("f :: Int -> Int g :: Int -> Int f(x) -> f(x-1) | x != 0 g(x) -> f(x)");
     SmtProblem smt = new SmtProblem();
-    OrderingProblem problem = new OrderingProblem(trs, new StrongMonotonicity(smt));
+    OrderingProblem problem = new OrderingProblem(trs, ArgumentFilter.createEmptyFilter(smt));
     for (Rule r : trs.queryRules()) {
       problem.require(new OrderingRequirement(r, OrderingRequirement.Relation.Strict));
     }
@@ -62,8 +62,8 @@ public class HorpoResultTest {
     TRS trs = makeTrs("f :: Int -> Int g :: Int -> Int h :: Int -> Int -> Int\n" +
                       "j :: Int -> Int -> Int f(x) -> f(x-1) | x > 0 g(x) -> f(x)");
     SmtProblem smt = new SmtProblem();
-    Monotonicity mono = new StrongMonotonicity(smt);
-    OrderingProblem problem = new OrderingProblem(trs, mono);
+    ArgumentFilter filter = new ArgumentFilter(smt);
+    OrderingProblem problem = new OrderingProblem(trs, filter);
     for (int i = 0; i < trs.queryRuleCount(); i++) {
       Rule r = trs.queryRule(i);
       problem.requireEither(new OrderingRequirement(r, OrderingRequirement.Relation.Strict), i * 2);
@@ -81,7 +81,7 @@ public class HorpoResultTest {
     valuation.setInt(param.getPrecedenceFor(j).queryIndex(), 1);
     valuation.setInt(((IVar)param.getStatusFor(h)).queryIndex(), 3);
     valuation.setInt(((IVar)param.getStatusFor(j)).queryIndex(), 1);
-    valuation.setBool(mono.regards(f, 1).queryIndex(), true);
+    valuation.setBool(filter.regards(f, 1).queryIndex(), true);
     valuation.setBool(param.getDirectionIsDownVariable().queryIndex(), true);
 
     HorpoResult result = new HorpoResult(problem, Set.of(0), Set.of(), valuation, param, lst);
@@ -124,8 +124,8 @@ public class HorpoResultTest {
     TRS trs = makeTrs("f :: Int -> Int g :: Int -> Int h :: Int -> Int -> Int\n" +
                       "f(x) -> f(x-1) | x > 0 g(x) -> f(x)");
     SmtProblem smt = new SmtProblem();
-    Monotonicity mono = new ArgumentFilter(smt);
-    OrderingProblem problem = new OrderingProblem(trs, mono);
+    ArgumentFilter filter = new ArgumentFilter(smt);
+    OrderingProblem problem = new OrderingProblem(trs, filter);
     for (int i = 0; i < trs.queryRuleCount(); i++) {
       Rule r = trs.queryRule(i);
       problem.requireEither(new OrderingRequirement(r, OrderingRequirement.Relation.Strict), i * 2);
@@ -143,11 +143,11 @@ public class HorpoResultTest {
     valuation.setInt(param.getPrecedenceFor(plus).queryIndex(), -3);
     valuation.setInt(((IVar)param.getStatusFor(h)).queryIndex(), 1);
     valuation.setInt(((IVar)param.getStatusFor(plus)).queryIndex(), 2);
-    valuation.setBool(mono.regards(f, 1).queryIndex(), true);
-    valuation.setBool(mono.regards(g, 1).queryIndex(), false);
-    valuation.setBool(mono.regards(h, 2).queryIndex(), false);
-    valuation.setBool(mono.regards(plus, 1).queryIndex(), true);
-    valuation.setBool(mono.regards(plus, 2).queryIndex(), true);
+    valuation.setBool(filter.regards(f, 1).queryIndex(), true);
+    valuation.setBool(filter.regards(g, 1).queryIndex(), false);
+    valuation.setBool(filter.regards(h, 2).queryIndex(), false);
+    valuation.setBool(filter.regards(plus, 1).queryIndex(), true);
+    valuation.setBool(filter.regards(plus, 2).queryIndex(), true);
     valuation.setBool(param.getDirectionIsDownVariable().queryIndex(), false);
     HorpoResult result = new HorpoResult(problem, Set.of(1), Set.of(), valuation, param, lst);
     assertTrue(result.queryAnswer() == ProofObject.Answer.YES);

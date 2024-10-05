@@ -40,18 +40,18 @@ public class OrderingProblem {
   private List<Pair<Constraint,OrderingRequirement>> _conditionalReqs;
   private List<Pair<Integer,OrderingRequirement>> _eitherReqs;
   private TRS _originalTRS;
-  private Monotonicity _monotonicity;
+  private ArgumentFilter _filter;
 
   /**
    * Creates an empty OrderingProblem, with restrictions on term formation based on the given TRS,
-   * and using the given monotonicity requirements.
+   * and using the given requirements on parameter filtering.
    */
-  public OrderingProblem(TRS original, Monotonicity mono) {
+  public OrderingProblem(TRS original, ArgumentFilter regards) {
     _alwaysReqs = new ArrayList<OrderingRequirement>();
     _conditionalReqs = new ArrayList<Pair<Constraint,OrderingRequirement>>();
     _eitherReqs = new ArrayList<Pair<Integer,OrderingRequirement>>();
     _originalTRS = original;
-    _monotonicity = mono;
+    _filter = regards;
   }
 
   /** Returns the origin TRS, which is relevant for the restrictions on term formation. */
@@ -59,9 +59,9 @@ public class OrderingProblem {
     return _originalTRS;
   }
 
-  /** Returns the monotonicity requirements a reduction pair for this problem must satisfy. */
-  public Monotonicity queryMonotonicity() {
-    return _monotonicity;
+  /** Returns the argument filtering requirements a reduction pair for this problem must satisfy. */
+  public ArgumentFilter queryArgumentFilter() {
+    return _filter;
   }
 
   /**

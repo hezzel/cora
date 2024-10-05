@@ -15,8 +15,9 @@
 
 package cora.termination.reduction_pairs;
 
-import java.util.Set;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.Collections;
 
@@ -41,7 +42,7 @@ public record OrderingRequirement(Term left, Term right, Term constraint, Relati
    * Creates an OrderingRequirement based on the given terms and set.
    * Note that the set should not be modified afterwards: it is stored inside the record.
    */
-  public OrderingRequirement(Term l, Term r, Term co, Relation relation, List<Variable> tv) {
+  public OrderingRequirement(Term l, Term r, Term co, Relation relation, Collection<Variable> tv) {
     this(l, r, co, relation, Collections.unmodifiableSet(new TreeSet<Variable>(tv)));
   }
 

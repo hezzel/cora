@@ -16,6 +16,7 @@
 package cora.termination.dependency_pairs;
 
 import charlie.trs.TRS;
+import cora.termination.reduction_pairs.horpo.Horpo;
 import cora.termination.dependency_pairs.processors.*;
 import cora.termination.dependency_pairs.processors.graph.GraphProcessor;
 import cora.termination.dependency_pairs.processors.graph.ReachabilityProcessor;
@@ -43,7 +44,8 @@ public class FullDPFramework extends DPFramework {
         new GraphProcessor(),
         new SubtermProcessor(),
         new TheoryArgumentsProcessor(false),
-        new IntegerMappingProcessor()
+        new IntegerMappingProcessor(),
+        new ReductionPairProcessor(new Horpo(false))
       };
     RESTARTLOOP = 3;
   }

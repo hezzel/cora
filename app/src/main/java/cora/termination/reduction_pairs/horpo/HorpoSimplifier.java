@@ -33,20 +33,20 @@ import java.util.TreeSet;
 
 /**
  * The HorpoSimplifier is a helper class for the Horpo reduction pair.
- * It captures all the data relevant to a Horpo problem: the _parameters, monotonicity requirements,
+ * It captures all the data relevant to a Horpo problem: the _parameters, argument filtering,
  * constraint list and SMT problem.  It can be used to simplify a single HorpoRequirement (from the
  * constraint list), which potentially affects all of the above.
  */
 class HorpoSimplifier {
   private final HorpoParameters _parameters;
   private final HorpoConstraintList _hcl;
-  private final Monotonicity _monotonicity;
+  private final ArgumentFilter _filter;
   private final SmtProblem _smt;
 
-  HorpoSimplifier(HorpoParameters params, HorpoConstraintList lst, Monotonicity mono) {
+  HorpoSimplifier(HorpoParameters params, HorpoConstraintList lst, ArgumentFilter filter) {
     _parameters = params;
     _hcl = lst;
-    _monotonicity = mono;
+    _filter = filter;
     _smt = _parameters.queryProblem();
   }
 
@@ -410,7 +410,7 @@ class HorpoSimplifier {
     for (int i = 1; i <= left.numberArguments(); i++) {
       BVar x = _hcl.store(left.queryArgument(i), subrel, right.queryArgument(i),
                               req.constraint(), req.theoryVariables());
-      BVar regards = _monotonicity.regards(f, i);
+      BVar regards = _filter.regards(f, i);
       _smt.requireImplication(req.variable(), SmtFactory.createDisjunction(
         regards.negate(), x));
     }
@@ -420,7 +420,7 @@ class HorpoSimplifier {
       for (int i = 1; i <= left.numberArguments(); i++) {
         BVar x = _hcl.store(left.queryArgument(i), HRelation.GREATER, right.queryArgument(i),
                                 req.constraint(), req.theoryVariables());
-        BVar regards = _monotonicity.regards(f, i);
+        BVar regards = _filter.regards(f, i);
         onestrict.add(SmtFactory.createConjunction(regards, x));
       }
       _smt.requireImplication(req.variable(), SmtFactory.createDisjunction(onestrict));
@@ -440,7 +440,7 @@ class HorpoSimplifier {
         FunctionSymbol f = req.left().queryRoot();
         int m = f.queryArity();
         for (int i = req.left().numberArguments() + 1; i <= m; i++) {
-          _smt.requireImplication(req.variable(), _monotonicity.regards(f, i));
+          _smt.requireImplication(req.variable(), _filter.regards(f, i));
         }
       }
       BVar x = _hcl.store(req.left(), HRelation.RPO, req.right(), req.constraint(),
@@ -454,7 +454,7 @@ class HorpoSimplifier {
     FunctionSymbol f = l.queryRoot();
     ArrayList<Constraint> args = new ArrayList<Constraint>(l.numberArguments());
     for (int i = 1; i <= l.numberArguments(); i++) {
-      BVar x = _monotonicity.regards(f, i);
+      BVar x = _filter.regards(f, i);
       Term a = l.queryArgument(i);
       BVar y = _hcl.store(a, HRelation.GEQ, req.right(), req.constraint(), req.theoryVariables());
       args.add(SmtFactory.createConjunction(x, y));
@@ -489,7 +489,7 @@ class HorpoSimplifier {
     for (int i = start; i <= r.numberArguments(); i++) {
       BVar subreq = _hcl.store(l, HRelation.RPO, r.queryArgument(i), req.constraint(),
                                    req.theoryVariables());
-      BVar regards = _monotonicity.regards(g, i);
+      BVar regards = _filter.regards(g, i);
       _smt.requireImplication(req.variable(),
         SmtFactory.createDisjunction(regards.negate(), subreq));
     }
@@ -548,8 +548,8 @@ class HorpoSimplifier {
       SmtFactory.createEqual(_parameters.getStatusFor(g), SmtFactory.createValue(1)));
     // if there is only one argument, the decrease should be there
     if (m == 1) {
-      _smt.requireImplication(req.variable(), _monotonicity.regards(f, 1));
-      _smt.requireImplication(req.variable(), _monotonicity.regards(g, 1));
+      _smt.requireImplication(req.variable(), _filter.regards(f, 1));
+      _smt.requireImplication(req.variable(), _filter.regards(g, 1));
       _smt.requireImplication(req.variable(), _hcl.store(l.queryArgument(1), HRelation.GREATER,
                                  r.queryArgument(1), req.constraint(), req.theoryVariables()));
     }   
@@ -571,8 +571,8 @@ class HorpoSimplifier {
     // for every i < index: either s_i ≈ t_i and both are regarded, or both are filtered
     for (int i = 1; i < m; i++) {
       Constraint igeqindex = SmtFactory.createGeq(SmtFactory.createValue(i), index);
-      BVar fregards = _monotonicity.regards(f, i);
-      BVar gregards = _monotonicity.regards(g, i);
+      BVar fregards = _filter.regards(f, i);
+      BVar gregards = _filter.regards(g, i);
       _smt.require(SmtFactory.createDisjunction(List.of(  // i < index ∧ f regarded => g too
         req.variable().negate(), igeqindex, fregards, gregards.negate())));
       _smt.require(SmtFactory.createDisjunction(List.of(  // i < index ∧ f disregarded => g too
@@ -585,9 +585,9 @@ class HorpoSimplifier {
     for (int i = 1; i <= m; i++) {
       Constraint ineqindex = SmtFactory.createUnequal(SmtFactory.createValue(i), index);
       _smt.require(SmtFactory.createDisjunction(List.of(  // i = index => f regards i
-        req.variable().negate(), ineqindex, _monotonicity.regards(f, i))));
+        req.variable().negate(), ineqindex, _filter.regards(f, i))));
       _smt.require(SmtFactory.createDisjunction(List.of(  // i = index => g regards i
-        req.variable().negate(), ineqindex, _monotonicity.regards(g, i))));
+        req.variable().negate(), ineqindex, _filter.regards(g, i))));
       _smt.require(SmtFactory.createDisjunction(List.of(  // i = index => s_i ≻ t_i
         req.variable().negate(), ineqindex, _hcl.store(l.queryArgument(i), HRelation.GREATER,
           r.queryArgument(i), req.constraint(), req.theoryVariables()))));
@@ -706,7 +706,7 @@ class HorpoSimplifier {
     for (int j = 1; j <= n; j++) {
       BVar strict_j = _smt.createBooleanVariable();
       _smt.requireImplication(reqvar, SmtFactory.createDisjunction(strict_j.negate(),
-        _monotonicity.regards(root, j)));
+        _filter.regards(root, j)));
       ret.put(j, strict_j);
       oneof.add(strict_j);
       if (j > 2) {
@@ -739,7 +739,7 @@ class HorpoSimplifier {
     for (int i = 1; i <= m; i++) {
       IVar pi_i = pi.get(i);
       Constraint reqdoesnothold = reqvar.negate();
-      Constraint idisregarded = _monotonicity.regards(root, i).negate();
+      Constraint idisregarded = _filter.regards(root, i).negate();
       Constraint inotinrange = SmtFactory.createGreater(SmtFactory.createValue(i), status);
       Constraint irrelevant =
         SmtFactory.createDisjunction(List.of(reqdoesnothold, idisregarded, inotinrange));
@@ -757,7 +757,7 @@ class HorpoSimplifier {
         // irrelevant OR π(i) != j OR j is regarded
         Constraint pi_i_not_j = SmtFactory.createUnequal(pi_i, SmtFactory.createValue(j));
         _smt.require(SmtFactory.createDisjunction(List.of(irrelevant, pi_i_not_j,
-          _monotonicity.regards(root, j))));
+          _filter.regards(root, j))));
       }
     }
     // require that π(i) != j if l_j and r_i do not have the same type structure

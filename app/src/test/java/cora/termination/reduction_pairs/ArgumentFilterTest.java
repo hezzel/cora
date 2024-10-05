@@ -34,49 +34,67 @@ import charlie.smt.Valuation;
 import charlie.smt.SmtProblem;
 import charlie.parser.CoraParser;
 
-public class MonotonicityTest {
+public class ArgumentFilterTest {
   private Type type(String txt) {
     return CoraParser.readType(txt);
   }
 
   @Test
-  public void testRegardsInStrict() {
+  public void testRegardsInEmptyFilter() {
     FunctionSymbol f = TermFactory.createConstant("f", type("Int -> Int"));
     FunctionSymbol g = TermFactory.createConstant("g", type("Int -> Int -> Int"));
     FunctionSymbol plus = TheoryFactory.plusSymbol;
     SmtProblem prob = new SmtProblem();
-    Monotonicity mono = new StrongMonotonicity(prob);
-    assertTrue(mono.stronglyMonotonic());
-    BVar x = mono.regards(f, 1);
-    BVar y = mono.regards(f, 2);
+    ArgumentFilter pi = ArgumentFilter.createEmptyFilter(prob);
+    BVar x = pi.regards(f, 1);
+    BVar y = pi.regards(f, 2);
     assertTrue(x == y);
-    y = mono.regards(g, 2);
+    y = pi.regards(g, 2);
     assertTrue(x == y);
-    y = mono.regards(plus, 1);
+    y = pi.regards(plus, 1);
     assertTrue(x == y);
     assertTrue(x.queryName().equals("[alwaystrue]"));
-    assertTrue(mono.getRegardedArguments(null).apply(f, 3));
-    assertTrue(mono.getRegardedArguments(null).apply(g, 1));
+    assertTrue(pi.getRegardedArguments(null).apply(f, 3));
+    assertTrue(pi.getRegardedArguments(null).apply(g, 1));
   }
 
   @Test
-  public void testRegardsInSymbol() {
+  public void testRegardsInNormalFilter() {
     FunctionSymbol f = TermFactory.createConstant("f", type("Int -> Int"));
     FunctionSymbol g = TermFactory.createConstant("g", type("Int -> Int -> Int"));
     FunctionSymbol plus = TheoryFactory.plusSymbol;
     SmtProblem prob = new SmtProblem();
-    Monotonicity mono = new ArgumentFilter(prob);
-    BVar x = mono.regards(f, 1);
+    ArgumentFilter filter = new ArgumentFilter(prob);
+    BVar x = filter.regards(f, 1);
     assertTrue(x.queryName().equals("[regards{f,1}]"));
-    BVar y = mono.regards(f, 3);
+    BVar y = filter.regards(f, 3);
     assertTrue(x != y);
     assertTrue(y.queryName().equals("[regards{f,3}]"));
-    y = mono.regards(g, 1);
+    y = filter.regards(g, 1);
     assertTrue(x != y);
     assertTrue(y.queryName().equals("[regards{g,1}]"));
-    x = mono.regards(plus, 1);
-    y = mono.regards(plus, 2);
+    x = filter.regards(plus, 1);
+    y = filter.regards(plus, 2);
     assertTrue(x != y);
+  }
+
+  @Test
+  public void testForceEmpty() {
+    FunctionSymbol f = TermFactory.createConstant("f", type("Int -> Int"));
+    FunctionSymbol g = TermFactory.createConstant("g", type("Int -> Int -> Int"));
+    SmtProblem prob = new SmtProblem();
+    ArgumentFilter filter = new ArgumentFilter(prob);
+    BVar x = filter.regards(f, 1);
+    assertTrue(x.queryName().equals("[regards{f,1}]"));
+    BVar y = filter.regards(f, 3);
+    assertTrue(y.queryName().equals("[regards{f,3}]"));
+    filter.forceEmpty();
+    y = filter.regards(g, 1);
+    assertTrue(y.queryName().equals("[alwaystrue]"));
+    assertTrue(prob.toString().equals(
+      "[regards{f,1}]\n" +
+      "[regards{f,3}]\n" +
+      "[alwaystrue]\n"));
   }
 
   @Test
@@ -86,26 +104,39 @@ public class MonotonicityTest {
     FunctionSymbol h = TermFactory.createConstant("h", type("Int -> Int"));
     FunctionSymbol plus = TheoryFactory.plusSymbol;
     SmtProblem prob = new SmtProblem();
-    ArgumentFilter mono = new ArgumentFilter(prob);
-    BVar a = mono.regards(g, 1);
-    BVar b = mono.regards(g, 2);
-    BVar c = mono.regards(plus, 2);
-    BVar d = mono.regards(h, 1);
+    ArgumentFilter filter = new ArgumentFilter(prob);
+    BVar a = filter.regards(g, 1);
+    BVar b = filter.regards(g, 2);
+    BVar c = filter.regards(plus, 2);
+    BVar d = filter.regards(h, 1);
     Valuation valuation = new Valuation();
     valuation.setBool(a.queryIndex(), true);
     valuation.setBool(c.queryIndex(), true);
     valuation.setBool(d.queryIndex(), false);
-    BiFunction<FunctionSymbol,Integer,Boolean> regarded = mono.getRegardedArguments(valuation);
+    BiFunction<FunctionSymbol,Integer,Boolean> regarded = filter.getRegardedArguments(valuation);
     assertTrue(regarded.apply(g, 1));
     assertFalse(regarded.apply(g, 2));
-    assertFalse(regarded.apply(plus, 1));
+    assertTrue(regarded.apply(plus, 1));
     assertTrue(regarded.apply(plus, 2));
     assertFalse(regarded.apply(h, 1));
-    assertFalse(regarded.apply(h, 2));
+    assertTrue(regarded.apply(h, 2));
     valuation.setBool(d.queryIndex(), true);
     assertFalse(regarded.apply(h, 1));
-    regarded = mono.getRegardedArguments(valuation);
+    regarded = filter.getRegardedArguments(valuation);
     assertTrue(regarded.apply(h, 1));
+  }
+
+  @Test
+  public void testEverythingIsRegarded() {
+    SmtProblem prob = new SmtProblem();
+    ArgumentFilter pi = new ArgumentFilter(prob);
+    Valuation valuation = new Valuation();
+    assertTrue(pi.everythingIsRegarded(valuation));
+    FunctionSymbol g = TermFactory.createConstant("g", type("Int -> Int -> Int"));
+    BVar a = pi.regards(g, 1);
+    assertFalse(pi.everythingIsRegarded(valuation));
+    valuation.setBool(a.queryIndex(), true);
+    assertTrue(pi.everythingIsRegarded(valuation));
   }
 }
 

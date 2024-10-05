@@ -34,14 +34,33 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 public class Horpo implements ReductionPair {
+  private boolean _strong;
+
+  /**
+   * When given true, creates a strongly monotonic constrained reduction pair based on the higher
+   * order recursive path ordering.  When given false, creates a weakly monotonic reduction pair.
+   */
+  public Horpo(boolean stronglyMonotonic) {
+    _strong = stronglyMonotonic;
+  }
+
   /** This technique can be disabled by runtime arguments. */
   public static String queryDisabledCode() { return "horpo"; }
+
+  /** Returns whether this Horpo instance is strongly monotonic */
+  public boolean isStronglyMonotonic() { return _strong; }
 
   /** Checks that the given ordering problem satisfies the requirements to try and apply HORPO */
   public boolean isApplicable(OrderingProblem prob) {
     return !Settings.isDisabled(queryDisabledCode()) &&
            prob.queryOriginalTRS().verifyProperties(Level.APPLICATIVE, Constrained.YES,
                                                     Products.DISALLOWED, Lhs.NONPATTERN, Root.ANY);
+  }
+
+  /** Returns a short description of what this reduction pair is. */
+  public String toString() {
+    if (_strong) return "(strongly monotonic) Constrained HORPO";
+    else return "(weakly monotonic) Constrained HORPO";
   }
 
   /** Main access function: start a HORPO proof to generate a suitable reduction pair. */
@@ -52,8 +71,10 @@ public class Horpo implements ReductionPair {
     TermPrinter printer = new TermPrinter(avoid);
     HorpoConstraintList lst = new HorpoConstraintList(printer, smt);
     TreeMap<Integer,BVar> choices = setupConstraintList(lst, problem, smt);
-    Monotonicity mono = problem.queryMonotonicity();
-    HorpoSimplifier simplifier = new HorpoSimplifier(param, lst, mono);
+    ArgumentFilter filter = problem.queryArgumentFilter();
+    // for Horpo, strong monotonicity just means regarding all arguments
+    if (_strong) filter.forceEmpty();
+    HorpoSimplifier simplifier = new HorpoSimplifier(param, lst, filter);
     for (int i = 0; i < lst.size(); i++) simplifier.simplify(lst.get(i));
     return finish(problem, choices, param, lst);
   }
@@ -166,7 +187,7 @@ public class Horpo implements ReductionPair {
     switch (Settings.smtSolver.checkSatisfiability(param.queryProblem())) {
       case SmtSolver.Answer.YES(Valuation val): valuation = val; break;
       default:  // no solution => let's return a MAYBE
-        return new HorpoResult(orderingProblem, "Could not find a HORPO proof.");
+        return new HorpoResult(orderingProblem, "No HORPO proof could be found.");
     };
     TreeSet<Integer> strict = new TreeSet<Integer>();
     for (Map.Entry<Integer,BVar> entry : choices.entrySet()) {
