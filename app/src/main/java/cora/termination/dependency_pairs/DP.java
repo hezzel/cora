@@ -15,12 +15,33 @@
 
 package cora.termination.dependency_pairs;
 
+import charlie.terms.Substitution;
 import charlie.terms.Term;
+import charlie.terms.TermFactory;
 import charlie.terms.TheoryFactory;
 import charlie.terms.Variable;
-import java.util.Set;
-import java.util.stream.StreamSupport;
+import charlie.util.Renamer;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * Docu-guess (Carsten):
+ * Dependency Pair for Logically Constrained Simply-typed Term Rewrite Systems
+ * (LCSTRSs) as introduced in:
+ *<p>
+ * Liye Guo, Kasper Hagens, Cynthia Kop, Deivid Vale:
+ * Higher-Order Constrained Dependency Pairs for (Universal) Computability.
+ * MFCS 2024: 57:1-57:15
+ *
+ * @param lhs the left-hand side of the DP
+ * @param rhs the right-hand side of the DP
+ * @param constraint the constraint of the DP
+ * @param lvars those variables of the DP that must be instantiated with
+ *             theory terms; must contain all variables of constraint
+ */
 public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars) {
   /** This verifies that all variables in the constraint are in the list */
   private static boolean initialVarSetCondition(Term constraint, Set<Variable> set) {
@@ -60,6 +81,58 @@ public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars) {
    */
   public DP(Term lhs, Term rhs) {
     this(lhs, rhs, TheoryFactory.createValue(true), Set.of());
+  }
+
+  /**
+   *
+   * @return a set of all variables occurring in this DP; may be modified
+   */
+  public Set<Variable> getAllVariables() {
+    Set<Variable> result = new LinkedHashSet<>();
+    for (Variable x : this.lhs.vars()) {
+      result.add(x);
+    }
+    for (Variable x : this.rhs.vars()) {
+      result.add(x);
+    }
+    for (Variable x : this.constraint.vars()) {
+      result.add(x);
+    }
+    result.addAll(this.lvars);
+    return result;
+  }
+
+  /**
+   *
+   * @param forbiddenVarNames variable names that must not occur in the result;
+   *                          will not be modified by this method
+   * @return a DP that is structurally equivalent to the present one
+   *  but does not use any of the names in forbiddenVarNames for its
+   *  variables
+   * @throws NullPointerException if forbiddenVarNames is null
+   */
+  public DP getRenamed(Set<String> forbiddenVarNames) {
+    Renamer renamer = new Renamer();
+    renamer.addForbiddenNames(forbiddenVarNames);
+    Substitution subst = TermFactory.createEmptySubstitution();
+    for (Variable x : getAllVariables()) {
+      extendSubstitution(subst, x, renamer);
+    }
+    Term newLhs = this.lhs.substitute(subst);
+    Term newRhs = this.rhs.substitute(subst);
+    Term newConstraint = this.constraint.substitute(subst);
+    Set<Variable> newTheoryVars = new LinkedHashSet<>();
+    for (Variable x : this.lvars) {
+      newTheoryVars.add(subst.get(x).queryVariable());
+    }
+    return new DP(newLhs, newRhs, newConstraint, newTheoryVars);
+  }
+
+  private static void extendSubstitution(Substitution subst, Variable x, Renamer r) {
+    if (subst.get(x) == null) {
+      String newName = r.assignOrGetNewName(x.queryName());
+      subst.extend(x, TermFactory.createVar(newName, x.queryType()));
+    }
   }
 
   @Override

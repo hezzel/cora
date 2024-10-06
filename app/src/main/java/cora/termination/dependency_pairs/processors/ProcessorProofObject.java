@@ -16,6 +16,8 @@
 package cora.termination.dependency_pairs.processors;
 
 import java.util.List;
+
+import cora.io.DefaultOutputModule;
 import cora.io.OutputModule;
 import cora.termination.dependency_pairs.Problem;
 
@@ -79,5 +81,13 @@ public abstract class ProcessorProofObject {
 
   /** This returns the name of the processor (e.g., Reachability, Subterm Criteiron). */
   public abstract String queryProcessorName();
+
+  @Override
+  public String toString() {
+    OutputModule module = DefaultOutputModule.createPlainModule();
+    justify(module);
+    String justification = module.toString();
+    return queryProcessorName() + "\n" + justification;
+  }
 }
 

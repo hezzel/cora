@@ -1,0 +1,16 @@
+/*
+function start(Int x) {
+  Int y = 0;
+  while (x > y) {
+    y = y + 1;
+  }
+}
+*/
+
+start :: Int -> A
+private l1 :: Int -> Int -> A
+private l2 :: Int -> Int -> A
+
+start(x) -> l1(x, 0)
+l1(x, y) -> l2(x, y) | x > y
+l2(x, y) -> l1(x, y+1)

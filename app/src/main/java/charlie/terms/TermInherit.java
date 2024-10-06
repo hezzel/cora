@@ -311,6 +311,12 @@ abstract class TermInherit implements Term {
     return false;
   }
 
+  @Override
+  public int hashCode() {
+    // hotfix: ensures consistency with equals with fast yet inefficient hashing
+    return 42; // TODO implement hashCode for the Term hierarchy properly
+  }
+
   /** This method returns a string representation of the current term. */
   public String toString() {
     return (new TermPrinter(Set.of())).print(this);

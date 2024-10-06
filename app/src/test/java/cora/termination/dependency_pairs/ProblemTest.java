@@ -123,6 +123,19 @@ public class ProblemTest {
   }
 
   @Test
+  public void testHeadsNonRec() {
+    List<DP> dps = List.of(createDP3());
+    List<Rule> rules = trs.queryRules();
+    Set<Integer> priv = Set.of();
+    Problem problem = new Problem(dps, rules, priv, trs, false, true,
+      Problem.TerminationFlag.Computable);
+    assertFalse(problem.hasPrivateDPs());
+    Set<FunctionSymbol> sharpheads = problem.getHeads();
+    assertEquals(2, sharpheads.size());
+    assertEquals("[add#, mul#]", sharpheads.toString());
+  }
+
+  @Test
   public void testNullCreation() {
     List<DP> dps = List.of(createDP1(), createDP2(), createDP2());
     List<Rule> rules = trs.queryRules();
