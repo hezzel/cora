@@ -73,10 +73,10 @@ string run_test(string filename, string settings, string outpfile,
 
   // run wanda with the given settings
   gettimeofday(&starttime, NULL);
-  cout << "running ./bin/app " << settings << " " << filename
+  cout << "running ./app/build/distributions/app/bin/app " << settings << " " << filename
        << " ... ";
   cout.flush();
-  execute("timeout " TIMEOUT " ./bin/app " + settings + " " +
+  execute("timeout " TIMEOUT " ./app/build/distributions/app/bin/app " + settings + " " +
           filename + " > evaluator.tmp");
   cout << " done" << endl;
   gettimeofday(&endtime, NULL);

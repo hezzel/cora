@@ -1,0 +1,23 @@
+nil :: list
+cons :: Int -> list -> list
+
+sumfun :: (Int -> Int) -> Int -> Int
+sumfun(F, x) -> F(x)                  | x ≤ 0
+sumfun(F, x) -> F(x) + sumfun(F, x-1) | x > 0
+
+fold :: Int -> (Int -> Int -> Int) -> list -> Int
+fold(v, G, nil) -> v
+fold(v, G, cons(h, t)) -> fold(G(v, h), G, t)
+
+map :: (Int -> Int) -> list -> list
+map(F, nil) -> nil
+map(F, cons(h, t)) -> cons(F(H), map(F, t))
+
+init :: Int -> list
+init(n) -> nil | n < 0
+init(n) -> cons(n, init(n-1)) | n ≥ 0
+
+/** induction rules */
+sumfun(F, n) -> fold(0 + F(n), [+], map(F, init(n-1))) | n ≥ 0
+x + fold(y, [+], z) -> fold(a, [+], z) | a = x + y
+
