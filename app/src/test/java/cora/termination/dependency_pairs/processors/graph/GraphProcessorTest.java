@@ -18,9 +18,18 @@ class GraphProcessorTest {
 
   @Test
   void processTest() {
+    /*
+    // We deliberately outcommented the use of TrsFactory.MSTRS here, to use the default CORA
+    // format instead (which is not supported by the Approximator, so ends up with a default
+    // approximation of "compare root symbols"), so we can avoid using the SMT-solver in a unit
+    // test.
     TRS trs = CoraInputReader.readTrsFromString(
       " a :: sort \n b :: sort \n c :: sort \n d :: sort \n" +
-      " a -> a \n a -> b \n b -> c \n c -> b", TrsFactory.LCTRS);
+      " a -> a \n a -> b \n b -> c \n c -> b", TrsFactory.MSTRS);
+    */
+    TRS trs = CoraInputReader.readTrsFromString(
+      " a :: sort \n b :: sort \n c :: sort \n d :: sort \n" +
+      " a -> a \n a -> b \n b -> c \n c -> b");
     GraphProcessor proc = new GraphProcessor();
 
     Problem dpp = (new DPGenerator(trs)).queryProblem(true, false);
