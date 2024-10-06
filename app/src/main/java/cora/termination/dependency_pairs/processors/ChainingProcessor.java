@@ -275,6 +275,7 @@ public class ChainingProcessor implements Processor {
         return;
       }
       module.println("We chain DPs according to the following mapping:");
+      module.println();
       module.startTable();
       _chainedToOriginalDPs.forEach(
         (c, p) -> {
@@ -283,6 +284,7 @@ public class ChainingProcessor implements Processor {
           module.nextColumn("%a", p.fst().toString());
           module.nextColumn("and");
           module.nextColumn("%a", p.snd().toString());
+          module.println();
         }
       );
       module.endTable();
