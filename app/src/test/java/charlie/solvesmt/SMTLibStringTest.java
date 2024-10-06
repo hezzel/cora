@@ -15,15 +15,10 @@
 
 package charlie.solvesmt;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import charlie.smt.*;
-import charlie.util.ProcessCaller;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SMTLibStringTest {
   @Test
