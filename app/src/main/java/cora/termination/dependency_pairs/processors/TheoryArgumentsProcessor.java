@@ -178,8 +178,6 @@ public class TheoryArgumentsProcessor implements Processor {
         module.println("%a", _targs.get(f).toString());
       }
       module.endTable();
-      if (_output.size() == 1) module.println("This yields:");
-      else module.println("This yields the following new DP problems:");
     }
   }
 
