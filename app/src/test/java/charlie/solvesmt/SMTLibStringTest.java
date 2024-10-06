@@ -18,7 +18,7 @@ package charlie.solvesmt;
 import charlie.smt.*;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SMTLibStringTest {
   @Test
@@ -34,15 +34,15 @@ class SMTLibStringTest {
     smtProblem.require(c);
 
     SMTLibString sls = new SMTLibString(SMTLibString.Version.V26, SMTLibString.Logic.QFNIA);
-      assertEquals("(set-info :smt-lib-version 2.6)" + System.lineSeparator() +
-              "(set-logic QF_NIA)" + System.lineSeparator() +
-              "(declare-fun b1() Bool)" + System.lineSeparator() +
-              "(declare-fun i1() Int)"  + System.lineSeparator() +
-              "(declare-fun i2() Int)"  + System.lineSeparator() +
-              "(assert (>= (+ i1 (- i2)) 0))" + System.lineSeparator() +
-              "(assert b1)" + System.lineSeparator() +
-              "(check-sat)" + System.lineSeparator() +
-              "(get-model)" + System.lineSeparator() +
-              "(exit)" + System.lineSeparator(), sls.buildSmtlibString(smtProblem));
+    assertEquals("(set-info :smt-lib-version 2.6)" + System.lineSeparator() +
+                 "(set-logic QF_NIA)" + System.lineSeparator() +
+                 "(declare-fun b1() Bool)" + System.lineSeparator() +
+                 "(declare-fun i1() Int)"  + System.lineSeparator() +
+                 "(declare-fun i2() Int)"  + System.lineSeparator() +
+                 "(assert (>= (+ i1 (- i2)) 0))" + System.lineSeparator() +
+                 "(assert b1)" + System.lineSeparator() +
+                 "(check-sat)" + System.lineSeparator() +
+                 "(get-model)" + System.lineSeparator() +
+                 "(exit)" + System.lineSeparator(), sls.buildSmtlibString(smtProblem));
   }
 }
