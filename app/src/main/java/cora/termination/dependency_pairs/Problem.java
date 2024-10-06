@@ -24,6 +24,7 @@ import charlie.types.Type;
 import charlie.types.TypeFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -107,6 +108,10 @@ public class Problem {
     return _privateIndexes.contains(dpIndex);
   }
 
+  public Set<Integer> queryPrivateIndexes() {
+    return Collections.unmodifiableSet(_privateIndexes);
+  }
+
   public boolean isInnermost() {
     return _innermost;
   }
@@ -129,7 +134,7 @@ public class Problem {
     Set<FunctionSymbol> allFns = new TreeSet<>();
     for (DP dp : _dps) {
       if (dp.lhs().isFunctionalTerm()) allFns.add(dp.lhs().queryRoot());
-      if (dp.rhs().isFunctionalTerm()) allFns.add(dp.lhs().queryRoot());
+      if (dp.rhs().isFunctionalTerm()) allFns.add(dp.rhs().queryRoot());
     }
     return allFns;
   }

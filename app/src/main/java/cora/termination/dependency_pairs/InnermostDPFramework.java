@@ -16,6 +16,7 @@
 package cora.termination.dependency_pairs;
 
 import charlie.trs.TRS;
+import cora.termination.reduction_pairs.horpo.Horpo;
 import cora.termination.dependency_pairs.processors.*;
 import cora.termination.dependency_pairs.processors.graph.GraphProcessor;
 import cora.termination.dependency_pairs.processors.graph.ReachabilityProcessor;
@@ -26,6 +27,7 @@ public class InnermostDPFramework extends DPFramework {
   private int RESTARTLOOP;
     // this is the number of processors we do before starting the main loop,
     // mostly to take advantage of the public/private information
+  private int THEORINDEX;
 
   /**
    * Create a DP framework for innermost termination and the given rules.  If extraRules is set to
@@ -42,7 +44,9 @@ public class InnermostDPFramework extends DPFramework {
         new GraphProcessor(),
         new SubtermProcessor(),
         new IntegerMappingProcessor(),
-        new TheoryArgumentsProcessor(false)
+        new TheoryArgumentsProcessor(false),
+        new UsableRulesProcessor(),
+        new ReductionPairProcessor(new Horpo(false))
       };
     RESTARTLOOP = 3;
   }
