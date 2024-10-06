@@ -1,0 +1,27 @@
+/*
+function start(Int x) {
+  Int y = 0;
+  while (x > y) {
+    Int z = y;
+    while (z > 0) {
+      z = z - y - 1;
+    }
+    y = y + 1;
+  }
+}
+*/
+
+start :: Int -> A
+private l1 :: Int -> Int -> A
+private l2 :: Int -> Int -> A
+private l3 :: Int -> Int -> Int -> A
+private l4 :: Int -> Int -> Int -> A
+private l5 :: Int -> Int -> Int -> A
+
+start(x) -> l1(x, 0)
+l1(x, y) -> l2(x, y) | x > y
+l2(x, y) -> l3(x, y, y)
+l3(x, y, z) -> l4(x, y, z) | z > 0
+l4(x, y, z) -> l3(x, y, z - y - 1)
+l4(x, y, z) -> l5(x, y + 1, z)
+l5(x, y, z) -> l1(x, y)
