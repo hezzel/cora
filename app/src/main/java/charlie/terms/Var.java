@@ -172,4 +172,9 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
     if (_index > other.queryIndex()) return 1;
     return queryType().toString().compareTo(other.queryType().toString());
   }
+
+  /** Returns a hashcode that (uniquely) identifies this Var */
+  public int hashCode() {
+    return 3 * _index;
+  }
 }

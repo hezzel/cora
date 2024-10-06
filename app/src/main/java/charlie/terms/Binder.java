@@ -167,4 +167,9 @@ class Binder extends LeafTermInherit implements Variable {
   public boolean equals(Variable other) {
     return other == this;
   }
+
+  /** Returns a hashcode that (uniquely) identifies this Binder */
+  public int hashCode() {
+    return 3 * _index + 1;
+  }
 }

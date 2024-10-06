@@ -1,15 +1,8 @@
 package cora.termination.dependency_pairs.processors;
 
-import charlie.terms.Environment;
-import charlie.terms.FunctionSymbol;
-import charlie.terms.Replaceable;
-import charlie.terms.Substitution;
-import charlie.terms.Term;
-import charlie.terms.TermFactory;
-import charlie.terms.TheoryFactory;
-import charlie.terms.Variable;
-import charlie.trs.TRS;
 import charlie.util.Pair;
+import charlie.terms.*;
+import charlie.trs.TRS;
 import cora.io.OutputModule;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
@@ -20,6 +13,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -209,13 +203,7 @@ public class ChainingProcessor implements Processor {
    */
   private static Optional<DP> chainDPs(DP dp1, DP dp2) {
     // TODO use unification instead of matching to make method more applicable
-    Set<String> varNames = new LinkedHashSet<>();
-    for (Variable x : dp1.getAllVariables()) {
-      varNames.add(x.queryName());
-    }
-    dp2 = dp2.getRenamed(varNames);
-    // dp1 and dp2 need to be variable-disjoint, and using different names
-    // is helpful for debugging
+    dp2 = dp2.getRenamed();
     Term dp1Rhs = dp1.rhs();
     Term dp2Lhs = dp2.lhs();
 
@@ -268,22 +256,45 @@ public class ChainingProcessor implements Processor {
       _deletedDPs = deletedDPs;
     }
 
+    /**
+     * Gets a Renaming that allows the given 3 DPs to be printed at the same time (so with
+     * their variables consistently named).
+     */
+    private Renaming getRenaming(TermPrinter printer, DP dp1, DP dp2, DP dp3) {
+      LinkedList<Term> vars = new LinkedList<Term>();
+      for (Variable x : dp1.getAllVariables()) vars.add(x);
+      Renaming ret = printer.generateUniqueNaming(vars);
+      for (Variable x : dp2.getAllVariables()) extend(ret, x);
+      for (Variable x : dp3.getAllVariables()) extend(ret, x);
+      return ret;
+    }
+
+    /** Helper function for getRenaming: extends the given renaming with a name for x */
+    private void extend(Renaming renaming, Variable x) {
+      if (renaming.getName(x) != null) return;
+      String name = x.queryName();
+      while (!renaming.isAvailable(name)) name += "'";
+      renaming.setName(x, name);
+    }
+
     @Override
     public void justify(OutputModule module) {
       if (_output == null) {
         module.println("No suitable chaining could be found.");
         return;
       }
+      TermPrinter printer = module.queryTermPrinter();
       module.println("We chain DPs according to the following mapping:");
       module.println();
       module.startTable();
       _chainedToOriginalDPs.forEach(
         (c, p) -> {
-          module.nextColumn("%a", c.toString());
+          Renaming renaming = getRenaming(printer, c, p.fst(), p.snd());
+          module.nextColumn("%a", new Pair<DP,Renaming>(c, renaming));
           module.nextColumn(" is obtained by chaining ");
-          module.nextColumn("%a", p.fst().toString());
+          module.nextColumn("%a", new Pair<DP,Renaming>(p.fst(), renaming));
           module.nextColumn("and");
-          module.nextColumn("%a", p.snd().toString());
+          module.nextColumn("%a", new Pair<DP,Renaming>(p.snd(), renaming));
           module.println();
         }
       );

@@ -15,12 +15,7 @@
 
 package cora.termination.dependency_pairs;
 
-import charlie.terms.Substitution;
-import charlie.terms.Term;
-import charlie.terms.TermFactory;
-import charlie.terms.TheoryFactory;
-import charlie.terms.Variable;
-import charlie.util.Renamer;
+import charlie.terms.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -28,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Docu-guess (Carsten):
  * Dependency Pair for Logically Constrained Simply-typed Term Rewrite Systems
  * (LCSTRSs) as introduced in:
  *<p>
@@ -76,82 +70,69 @@ public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars) {
     this(lhs, rhs, constraint, constraint.vars().toSet());
   }
 
-  /**
-   * Creates a new DP of the form s ⇒ t | true {}, to be used for unconstrained rewriting.
-   */
+  /** Creates a new DP of the form s ⇒ t | true {}, to be used for unconstrained rewriting. */
   public DP(Term lhs, Term rhs) {
     this(lhs, rhs, TheoryFactory.createValue(true), Set.of());
   }
 
   /**
-   *
-   * @return a set of all variables occurring in this DP; may be modified
+   * @return a modifiable set of all variables occurring in this DP
    */
-  public Set<Variable> getAllVariables() {
-    Set<Variable> result = new LinkedHashSet<>();
-    for (Variable x : this.lhs.vars()) {
-      result.add(x);
-    }
-    for (Variable x : this.rhs.vars()) {
-      result.add(x);
-    }
-    for (Variable x : this.constraint.vars()) {
-      result.add(x);
-    }
-    result.addAll(this.lvars);
+  public LinkedHashSet<Variable> getAllVariables() {
+    LinkedHashSet<Variable> result = new LinkedHashSet<>();
+    for (Variable x : this.lhs.vars()) result.add(x);
+    for (Variable x : this.rhs.vars()) result.add(x);
+    for (Variable x : this.constraint.vars()) result.add(x);
     return result;
   }
 
   /**
-   *
-   * @param forbiddenVarNames variable names that must not occur in the result;
-   *                          will not be modified by this method
-   * @return a DP that is structurally equivalent to the present one
-   *  but does not use any of the names in forbiddenVarNames for its
-   *  variables
-   * @throws NullPointerException if forbiddenVarNames is null
+   * @return a DP that is structurally equivalent to the present one but uses fresh variables
    */
-  public DP getRenamed(Set<String> forbiddenVarNames) {
-    Renamer renamer = new Renamer();
-    renamer.addForbiddenNames(forbiddenVarNames);
+  public DP getRenamed() {
     Substitution subst = TermFactory.createEmptySubstitution();
     for (Variable x : getAllVariables()) {
-      extendSubstitution(subst, x, renamer);
+      subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }
     Term newLhs = this.lhs.substitute(subst);
     Term newRhs = this.rhs.substitute(subst);
     Term newConstraint = this.constraint.substitute(subst);
     Set<Variable> newTheoryVars = new LinkedHashSet<>();
     for (Variable x : this.lvars) {
-      newTheoryVars.add(subst.get(x).queryVariable());
+      Term y = subst.get(x);
+      if (y != null) newTheoryVars.add(y.queryVariable());
     }
     return new DP(newLhs, newRhs, newConstraint, newTheoryVars);
   }
 
-  private static void extendSubstitution(Substitution subst, Variable x, Renamer r) {
-    if (subst.get(x) == null) {
-      String newName = r.assignOrGetNewName(x.queryName());
-      subst.extend(x, TermFactory.createVar(newName, x.queryType()));
-    }
-  }
-
+  /**
+   * Default toString() functionality; deliberately ugly because printing to the user should always
+   * be done through an output module.
+   */
   @Override
   public String toString() {
+    return toString(new Renaming(Set.of()));
+  }
+
+  /** Better toString() functionality for a given Renaming */
+  public String toString(Renaming renaming) {
     StringBuilder builder = new StringBuilder();
-    builder.append(lhs.toString());
+    TermPrinter printer = new TermPrinter(Set.of());
+    printer.print(lhs, renaming, builder);
     builder.append(" => ");
-    builder.append(rhs.toString());
+    printer.print(rhs, renaming, builder);
     builder.append(" | ");
-    builder.append(constraint.toString());
+    printer.print(constraint, renaming, builder);
     builder.append(" {");
     boolean first = true;
     for (Variable x : lvars) {
       if (constraint.vars().contains(x)) continue;
       if (first) { first = false; builder.append(" "); }
       else builder.append(", ");
-      builder.append(x.toString());
+      printer.print(x, renaming, builder);
     }
     builder.append(" }");
     return builder.toString();
   }
 }
+

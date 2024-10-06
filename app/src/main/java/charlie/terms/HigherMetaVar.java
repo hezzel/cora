@@ -99,6 +99,11 @@ class HigherMetaVar implements MetaVariable {
     return other == this;
   }
 
+  /** Returns a hashcode that (uniquely) identifies this meta-variable */
+  public int hashCode() {
+    return 3 * _index + 2;
+  }
+
   public String toString() {
     return _name;
   }

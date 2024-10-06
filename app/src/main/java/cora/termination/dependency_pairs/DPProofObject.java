@@ -314,16 +314,12 @@ class DPProofObject implements ProofObject {
   }
 
   /**
-   * This function handles the printing of a DP, by translating it into a Pair that the OutputModule
-   * knows how to print (but with good use of variables, and cleverly printing only those
-   * constraints and variables that we have to).
+   * This function handles the printing of a DP with a previously-fixed renaming for all its
+   * components, by translating it into a single Pair that the OutputModule knows how to print.
    */
-  private Pair<String,Object[]> makeDPObject(DP dp, OutputModule module) {
-    Renaming naming =
-      module.queryTermPrinter().generateUniqueNaming(dp.lhs(), dp.rhs(), dp.constraint());
-
+  private Pair<String,Object[]> makeDPObject(DP dp, Renaming naming) {
     StringBuilder ret = new StringBuilder("%a %{thickArrow} %a");
-    ArrayList<Object> args = new ArrayList<Object>();
+    ArrayList<Object> args = new ArrayList<Object>(4);
     args.add(new Pair<Term,Renaming>(dp.lhs(), naming));
     args.add(new Pair<Term,Renaming>(dp.rhs(), naming));
 
@@ -353,11 +349,27 @@ class DPProofObject implements ProofObject {
     return new Pair<String,Object[]>(ret.toString(), args.toArray());
   }
 
+  /**
+   * This function handles the printing of a DP, by translating it into a Pair that the OutputModule
+   * knows how to print (but with good use of variables, and cleverly printing only those
+   * constraints and variables that we have to).
+   */
+  private Pair<String,Object[]> makeDPObject(DP dp, OutputModule module) {
+    Renaming naming =
+      module.queryTermPrinter().generateUniqueNaming(dp.lhs(), dp.rhs(), dp.constraint());
+    return makeDPObject(dp, naming);
+  }
+
   /** We use this adapted OutputModule for printing, so we can naturally handle dependency pairs. */
   private class OutputModuleWithDependencyPairs extends OutputModuleAdapter {
     public OutputModuleWithDependencyPairs(OutputModule m) { super(m); }
     protected Object alterObject(Object ob) {
       if (ob instanceof DP dp) return makeDPObject(dp, _module);
+      if (ob instanceof Pair p) {
+        if (p.fst() instanceof DP dp && p.snd() instanceof Renaming r) {
+          return makeDPObject(dp, r);
+        }
+      }
       return null;
     }
   }

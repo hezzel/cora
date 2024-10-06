@@ -17,9 +17,7 @@ package cora.termination.dependency_pairs;
 
 import charlie.types.TypeFactory;
 import charlie.terms.Renaming;
-import charlie.terms.Term;
-import charlie.terms.Variable;
-import charlie.terms.TheoryFactory;
+import charlie.terms.*;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 
@@ -73,4 +71,45 @@ public class DPTest {
     DP dp = new DP(lhs, rhs);
     assertTrue(dp.toString().equals("eval(x, x) => eval(x - 1, y) | true { }"));
   }
+
+  @Test
+  public void testAllVariables() {
+    Renaming renaming = new Renaming(Set.of());
+    Term lhs = CoraInputReader.readTerm("eval(x, y)", renaming, true, trs);
+    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, true, trs);
+    Term constraint = CoraInputReader.readTerm("x > y ∧ z = z", renaming, true, trs);
+    Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"),
+                                renaming.getVariable("z"),
+                                TheoryFactory.createVar("a", TypeFactory.boolSort));
+    DP dp = new DP(lhs, rhs, constraint, vars);
+    Set<Variable> allvars = dp.getAllVariables();
+    assertTrue(allvars.size() == 3);
+    assertTrue(allvars.contains(renaming.getVariable("x")));
+    assertTrue(allvars.contains(renaming.getVariable("y")));
+    assertTrue(allvars.contains(renaming.getVariable("z")));
+    assertFalse(allvars.contains(renaming.getVariable("a")));
+  }
+
+  @Test
+  public void testRenaming() {
+    Renaming renaming = new Renaming(Set.of());
+    Term lhs = CoraInputReader.readTerm("eval(x, y)", renaming, true, trs);
+    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, true, trs);
+    Term constraint = CoraInputReader.readTerm("x > y ∧ z = z", renaming, true, trs);
+    Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"),
+                                renaming.getVariable("z"),
+                                TheoryFactory.createVar("a", TypeFactory.boolSort));
+    DP dp = new DP(lhs, rhs, constraint, vars);
+    DP dp2 = dp.getRenamed();
+    assertTrue(dp2.lvars().size() == 3);
+    assertTrue(dp.toString().equals(dp.toString()));
+    TermPrinter printer = new TermPrinter(Set.of());
+    renaming = printer.generateUniqueNaming(dp.lhs(), dp.rhs(), dp.constraint(),
+      dp2.lhs(), dp2.rhs(), dp2.constraint());
+    assertTrue(dp.toString(renaming).equals(
+      "eval(x__1, y__1) => eval(x__1 - 1, y__1) | x__1 > y__1 ∧ z__1 = z__1 { a }"));
+    assertTrue(dp2.toString(renaming).equals(
+      "eval(x__2, y__2) => eval(x__2 - 1, y__2) | x__2 > y__2 ∧ z__2 = z__2 { }"));
+  }
 }
+
