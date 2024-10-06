@@ -26,10 +26,6 @@ public interface SmtSolver {
     public record MAYBE(String reason) implements Answer { public boolean isYes() { return false; } }
   }
 
-  enum OS {
-    WINDOWS, UNIX
-  }
-
   /**
    * Given an SmtProblem, this function tries to find a valuation for the variables in the problem
    * that satisfies all the constraints stored in the problem.

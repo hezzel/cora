@@ -15,18 +15,13 @@
 
 package charlie.solvesmt;
 
-import charlie.exceptions.ParseException;
-import charlie.smt.*;
-import charlie.util.ExceptionLogger;
-import org.jetbrains.annotations.NotNull;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
-import java.util.Objects;
 import java.util.Scanner;
+import charlie.exceptions.ParseException;
+import charlie.util.ExceptionLogger;
+import charlie.smt.*;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An ExternalSmtSolver is a solver that operates by writing a file and calling a fixed external
@@ -36,16 +31,8 @@ import java.util.Scanner;
 public class ExternalSmtSolver implements SmtSolver {
   private String _cmd;
 
-  private OS currentOS;
-
   public ExternalSmtSolver(String command) {
     _cmd = command;
-
-    if (System.getProperty("os.name").startsWith("Windows")) {
-        currentOS = OS.WINDOWS;
-    } else {
-        currentOS = OS.UNIX;
-    }
   }
 
  /**
@@ -69,12 +56,7 @@ public class ExternalSmtSolver implements SmtSolver {
     // clean up old result, if any
     try { Process p = rt.exec(new String[] {"rm", "result"}); p.waitFor(); } catch (Exception e) {}
     // start new smtsolver process
-    Process p;
-    if (Objects.requireNonNull(currentOS) == OS.WINDOWS) {
-        p = rt.exec(new String[]{"smtsolver_win.bat", "problem.smt2", "result"});
-    } else {
-        p = rt.exec(new String[]{"./smtsolver", "problem.smt2", "result"});
-    }
+    Process p = rt.exec(new String[] {"./smtsolver", "problem.smt2", "result" });
     p.waitFor();
   }
 
