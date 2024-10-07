@@ -157,13 +157,27 @@ public class Problem {
                        _terminationFlag);
   }
 
+  /**
+   * Creates a default string representation for debugging purposes. This should never be printed
+   * to the user!  Use an OutputModule for that.
+   */
   @Override
   public String toString() {
+    return toString(false);
+  }
+
+  /**
+   * Creates a default string representation for debugging purposes.  For the sake of unit testing,
+   * the indexes on variables may be omitted; in this case, set forUnit to true.  If set to false,
+   * all indexes on variables, binders and meta-variables will be included.
+   */
+  public String toString(boolean forUnit) {
     StringBuilder builder = new StringBuilder();
     builder.append("DPs:\n");
     for (int i = 0; i < _dps.size(); i++) {
       builder.append("  ");
-      builder.append(_dps.get(i).toString());
+      if (forUnit) builder.append(_dps.get(i).ustr());
+      else builder.append(_dps.get(i).toString());
       if (_privateIndexes.contains(i)) builder.append(" (private)\n");
       else builder.append("\n");
     }

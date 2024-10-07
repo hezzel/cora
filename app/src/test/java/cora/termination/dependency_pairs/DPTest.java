@@ -38,7 +38,7 @@ public class DPTest {
     Term constraint = CoraInputReader.readTerm("x > y", renaming, true, trs);
     Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"));
     DP dp = new DP(lhs, rhs, constraint, vars);
-    assertTrue(dp.toString().equals("eval(x, y) => eval(x - 1, y) | x > y { }"));
+    assertTrue(dp.ustr().equals("eval(x, y) => eval(x - 1, y) | x > y { }"));
   }
 
   @Test
@@ -50,7 +50,7 @@ public class DPTest {
     Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"),
                                 TheoryFactory.createVar("z", TypeFactory.boolSort));
     DP dp = new DP(lhs, rhs, constraint, vars);
-    assertTrue(dp.toString().equals("eval(x, y) => eval(x - 1, y) | x > y { z }"));
+    assertTrue(dp.ustr().equals("eval(x, y) => eval(x - 1, y) | x > y { z }"));
   }
 
   @Test
@@ -60,7 +60,7 @@ public class DPTest {
     Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, true, trs);
     Term constraint = CoraInputReader.readTerm("x > y", renaming, true, trs);
     DP dp = new DP(lhs, rhs, constraint);
-    assertTrue(dp.toString().equals("eval(x, y) => eval(x - 1, y) | x > y { }"));
+    assertTrue(dp.ustr().equals("eval(x, y) => eval(x - 1, y) | x > y { }"));
   }
 
   @Test
@@ -69,7 +69,7 @@ public class DPTest {
     Term lhs = CoraInputReader.readTerm("eval(x, x)", renaming, true, trs);
     Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, true, trs);
     DP dp = new DP(lhs, rhs);
-    assertTrue(dp.toString().equals("eval(x, x) => eval(x - 1, y) | true { }"));
+    assertTrue(dp.ustr().equals("eval(x, x) => eval(x - 1, y) | true { }"));
   }
 
   @Test
@@ -102,7 +102,7 @@ public class DPTest {
     DP dp = new DP(lhs, rhs, constraint, vars);
     DP dp2 = dp.getRenamed();
     assertTrue(dp2.lvars().size() == 3);
-    assertTrue(dp.toString().equals(dp.toString()));
+    assertFalse(dp.toString().equals(dp2.toString()));
     TermPrinter printer = new TermPrinter(Set.of());
     renaming = printer.generateUniqueNaming(dp.lhs(), dp.rhs(), dp.constraint(),
       dp2.lhs(), dp2.rhs(), dp2.constraint());

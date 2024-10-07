@@ -111,13 +111,25 @@ public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars) {
    */
   @Override
   public String toString() {
-    return toString(new Renaming(Set.of()));
+    return toString(null);
   }
 
-  /** Better toString() functionality for a given Renaming */
+  /** Returns a string representation for unit testing (so without nasty variable indexes). */
+  public String ustr() {
+    TermPrinter printer = new TermPrinter(Set.of());
+    Renaming renaming = printer.generateUniqueNaming(lhs, rhs, constraint);
+    return toString(renaming);
+  }
+
+  /** Full toString() functionality for a given Renaming */
   public String toString(Renaming renaming) {
     StringBuilder builder = new StringBuilder();
-    TermPrinter printer = new TermPrinter(Set.of());
+    TermPrinter printer;
+    if (renaming == null) {
+      printer = new DebugTermPrinter();
+      renaming = printer.generateUniqueNaming(lhs, rhs, constraint);
+    }
+    else printer = new TermPrinter(Set.of());
     printer.print(lhs, renaming, builder);
     builder.append(" => ");
     printer.print(rhs, renaming, builder);

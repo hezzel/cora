@@ -49,7 +49,7 @@ class SplittingProcessorTest {
     ProcessorProofObject result = splitProc.processDPP(p);
     assertTrue(result.applicable());
     assertTrue(result.queryResults().size() == 1);
-    assertTrue(result.queryResults().get(0).toString().equals(
+    assertTrue(result.queryResults().get(0).toString(true).equals(
       "DPs:\n" +
       "  f#(x, y) => f#(x, y - 1) | x > y { }\n" +
       "  f#(x, y) => f#(x, y - 1) | x < y { }\n" +
@@ -69,7 +69,7 @@ class SplittingProcessorTest {
     ProcessorProofObject result = splitProc.processDPP(p);
     assertTrue(result.applicable());
     assertTrue(result.queryResults().size() == 1);
-    assertTrue(result.queryResults().get(0).toString().equals(
+    assertTrue(result.queryResults().get(0).toString(true).equals(
       "DPs:\n" +
       "  f#(x, y) => f#(x, y - 1) | x = 1 { }\n" +
       "  f#(x, y) => f#(x, y - 1) | x = 3 { }\n" +
@@ -90,7 +90,7 @@ class SplittingProcessorTest {
     ProcessorProofObject result = splitProc.processDPP(p);
     assertTrue(result.applicable());
     assertTrue(result.queryResults().size() == 1);
-    assertTrue(result.queryResults().get(0).toString().equals(
+    assertTrue(result.queryResults().get(0).toString(true).equals(
       "DPs:\n" +
       "  f#(x, y) => f#(x, y - 1) | x > y ∧ x ≤ y { }\n" +
       "  f#(x, y) => f#(x, y - 1) | x < y ∧ x ≤ y { }\n" +
@@ -114,7 +114,7 @@ class SplittingProcessorTest {
     ProcessorProofObject result = splitProc.processDPP(p);
     assertTrue(result.applicable());
     assertTrue(result.queryResults().size() == 1);
-    assertTrue(result.queryResults().get(0).toString().equals(
+    assertTrue(result.queryResults().get(0).toString(true).equals(
       "DPs:\n" +
       "  f#(x) => f#(x + 1) | 3 = 4 ∧ x < 0 { }\n" +
       "  f#(x) => f#(x + 1) | 3 = 4 ∧ x > 10 { }\n" +

@@ -79,7 +79,7 @@ public class ProblemTest {
     assertTrue(problem.queryTerminationStatus() == Problem.TerminationFlag.Computable);
     assertTrue(problem.terminating());
     assertFalse(problem.isEmpty());
-    assertTrue(problem.toString().equals(
+    assertTrue(problem.toString(true).equals(
       "DPs:\n" +
       "  eval#(x, y) => eval#(x - 1, y) | x > y { }\n" +
       "  add#(suc(x), y) => add#(x, y) | true { } (private)\n" +
