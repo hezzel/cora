@@ -79,7 +79,7 @@ public class SmtProblem implements Iterable<Constraint> {
    * functions, since this ensures that they are stored in the SmtProblem.
    */
   public void requireImplication(Constraint premise, Constraint conclusion) {
-    _constraints.add(new Disjunction(new Not(premise), conclusion));
+    _constraints.add(new Disjunction(premise.negate(), conclusion));
   }
 
   /** This reomves all stored constraints, but not variables. */

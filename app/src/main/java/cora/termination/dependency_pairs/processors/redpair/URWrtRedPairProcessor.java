@@ -32,6 +32,7 @@ import cora.termination.dependency_pairs.processors.ProcessorProofObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Map;
@@ -62,10 +63,20 @@ public class URWrtRedPairProcessor implements Processor {
    * being stored in map.  In doing so, amap is likely to be updated with the function symbols that
    * occur in t, and vmap with the variables that occur in t except for the variables of a theory
    * sort (these are all translated to themselves).
+   *
+   * The set lvar is given because theory terms will be returned unmodified if and only if all their
+   * variables occur in lvar.
    */
-  private Term translateTerm(AlphabetMap amap, TreeMap<Variable,Variable> vmap, Term t) {
+  private Term translateTerm(AlphabetMap amap, TreeMap<Variable,Variable> vmap, Term t,
+                             Set<Variable> lvar) {
     if (t.queryType().isBaseType() && t.queryType().isTheoryType() &&
-        t.isTheoryTerm() && t.isFirstOrder()) return t;
+        t.isTheoryTerm() && t.isFirstOrder()) {
+      boolean ok = true;
+      for (Variable x : t.vars()) {
+        if (!lvar.contains(x)) { ok = false; break; }
+      }
+      if (ok) return t;
+    }
 
     if (t.isVariable()) {
       Variable x = t.queryVariable();
@@ -78,7 +89,7 @@ public class URWrtRedPairProcessor implements Processor {
     if (t.isFunctionalTerm()) {
       FunctionSymbol f = amap.getTranslation(t.queryRoot(), t.numberArguments());
       ArrayList<Term> args = new ArrayList<Term>(t.numberArguments());
-      for (Term arg : t.queryArguments()) args.add(translateTerm(amap, vmap, arg));
+      for (Term arg : t.queryArguments()) args.add(translateTerm(amap, vmap, arg, lvar));
       return f.apply(args);
     }
     
@@ -89,8 +100,8 @@ public class URWrtRedPairProcessor implements Processor {
   /** Translates a DP to a first-order DP over the new signature */
   private DP translateDP(AlphabetMap amap, DP dp) {
     TreeMap<Variable,Variable> vmap = new TreeMap<Variable,Variable>();
-    Term lhs = translateTerm(amap, vmap, dp.lhs());
-    Term rhs = translateTerm(amap, vmap, dp.rhs());
+    Term lhs = translateTerm(amap, vmap, dp.lhs(), dp.lvars());
+    Term rhs = translateTerm(amap, vmap, dp.rhs(), dp.lvars());
     return new DP(lhs, rhs, dp.constraint(), dp.lvars());
   }
 
@@ -103,9 +114,10 @@ public class URWrtRedPairProcessor implements Processor {
     TreeMap<Variable,Variable> vmap = new TreeMap<Variable,Variable>();
     Term lhs = rule.queryLeftSide();
     Term rhs = rule.queryRightSide();
+    TreeSet<Variable> lvar = new TreeSet<Variable>(rule.queryLVars());
     for (int k = lhs.numberArguments() + 1; ; k++) {
-      Term l = translateTerm(amap, vmap, lhs);
-      Term r = translateTerm(amap, vmap, rhs);
+      Term l = translateTerm(amap, vmap, lhs, lvar);
+      Term r = translateTerm(amap, vmap, rhs, lvar);
       Rule rho = constrained
         ? TrsFactory.createRule(l, r, rule.queryConstraint(), TrsFactory.LCTRS)
         : TrsFactory.createRule(l, r, TrsFactory.MSTRS);
@@ -117,8 +129,24 @@ public class URWrtRedPairProcessor implements Processor {
         case Product x -> null;
       };
       if (sub == null) break;
-      Variable x = TermFactory.createVar("arg" + k, amap.sortFor(sub));
+      Variable x = TermFactory.createVar("arg" + k, sub);
+      lhs = lhs.apply(x);
+      rhs = rhs.apply(x);
     }
+  }
+
+  private void storeFilteredCalculationRule(FunctionSymbol original, FunctionSymbol filtered,
+                                            ArrayList<Rule> storage) {
+    ArrayList<Term> args = new ArrayList<Term>(original.queryArity());
+    Type t = original.queryType();
+    for (int i = 1; t instanceof Arrow(Type in, Type out); i++) {
+      args.add(TermFactory.createVar("x" + i, in));
+      t = out;
+    }
+    Term left = filtered.apply(args);
+    Variable right = TermFactory.createVar("y", t);
+    Term constraint = TheoryFactory.createEquality(right, original.apply(args));
+    storage.add(TrsFactory.createRule(left, right, constraint, TrsFactory.LCTRS));
   }
 
   /**
@@ -157,6 +185,11 @@ public class URWrtRedPairProcessor implements Processor {
 
     for (DP dp : dpp.getDPList()) dps.add(translateDP(amap, dp));
     for (Rule rho : dpp.getRuleList()) translateAndStoreRule(amap, rho, constrained, rules);
+    for (Pair<Pair<FunctionSymbol,Integer>,FunctionSymbol> p : amap.getAll()) {
+      if (p.fst().fst().isTheorySymbol() && p.fst().snd() == p.fst().fst().queryArity()) {
+        storeFilteredCalculationRule(p.fst().fst(), p.snd(), rules);
+      }
+    }
     for (Rule rho : rules) storeUsableVariables(rho, conditions, smt);
 
     TRS trs = TrsFactory.createTrs(amap.generateAlphabet(), rules,
@@ -202,7 +235,7 @@ public class URWrtRedPairProcessor implements Processor {
                                         TreeMap<FunctionSymbol,BVar> conditions, SmtProblem smt) {
     ArrayList<Constraint> sofar = new ArrayList<Constraint>();
     for (DP dp : dpp.getDPList()) {
-      addUsableRequirements(dp.rhs(), sofar, filter, conditions, amap, smt);
+      addUsableRequirements(dp.rhs(), sofar, filter, conditions, amap, dp.lvars(), smt);
     }
     for (Rule rho : dpp.getRuleList()) {
       FunctionSymbol f = rho.queryRoot();
@@ -214,11 +247,12 @@ public class URWrtRedPairProcessor implements Processor {
         conditions.put(g, null);  // we don't want unnecessary clauses usable_f → usable_f, which we
                                   // would get a lot of (from recursive rules) without this
         sofar.add(x.negate());
-        addUsableRequirements(rho.queryRightSide(), sofar, filter, conditions, amap, smt);
+        Set<Variable> lvar = new TreeSet<Variable>(rho.queryLVars());
+        addUsableRequirements(rhs, sofar, filter, conditions, amap, lvar, smt);
         conditions.put(g, x);
         sofar.clear();
         if (rhs.queryType() instanceof Arrow(Type in, Type out)) {
-          rhs = rhs.apply(TermFactory.createVar(amap.sortFor(in)));
+          rhs = rhs.apply(TermFactory.createVar(in));
         }
       }
     }
@@ -234,9 +268,19 @@ public class URWrtRedPairProcessor implements Processor {
    */
   private void addUsableRequirements(Term term, ArrayList<Constraint> sofar, ArgumentFilter filter,
                                      TreeMap<FunctionSymbol,BVar> conditions,
-                                     AlphabetMap amap, SmtProblem smt) {
+                                     AlphabetMap amap, Set<Variable> lvar, SmtProblem smt) {
     if (term.isVariable()) return;
     
+    // don't add requirements for theory terms that are going to get normalised to a value
+    if (term.queryType().isBaseType() && term.queryType().isTheoryType() &&
+        term.isTheoryTerm() && term.isFirstOrder()) {
+      boolean ok = true;
+      for (Variable x : term.vars()) {
+        if (!lvar.contains(x)) { ok = false; break; }
+      }
+      if (ok) return;
+    }
+
     if (term.isFunctionalTerm()) {
       FunctionSymbol f = term.queryRoot();
       int n = term.numberArguments();
@@ -250,7 +294,7 @@ public class URWrtRedPairProcessor implements Processor {
       int k = term.numberArguments();
       for (int i = 1; i <= k; i++) {
         sofar.add(filter.regards(g, i).negate());
-        addUsableRequirements(term.queryArgument(i), sofar, filter, conditions, amap, smt);
+        addUsableRequirements(term.queryArgument(i), sofar, filter, conditions, amap, lvar, smt);
         sofar.remove(sofar.size()-1);
       }
     }
@@ -299,7 +343,7 @@ public class URWrtRedPairProcessor implements Processor {
     storeRegardsRequirements(amap, dpp, filter, conditions, smt);
     storeHORuleRegardsRequirement(amap, dpp, filter, conditions, smt);
 
-    if (!_redpair.isApplicable(oprob)) return new WrtProofObject(dpp, _redpair.toString());
+    if (!_redpair.isApplicable(oprob)) return new WrtProofObject(dpp, _redpair.queryName());
     ReductionPairProofObject ob = _redpair.solve(oprob, smt);
     if (ob.queryAnswer() == ProofObject.Answer.YES) {
       TreeSet<Integer> remove = new TreeSet<Integer>();
@@ -308,9 +352,9 @@ public class URWrtRedPairProcessor implements Processor {
         if (ob.isStrictlyOriented(i)) remove.add(i);
       }
       Problem altered = dpp.removeDPs(remove, true);
-      return new WrtProofObject(dpp, altered, _redpair.toString(), ob);
+      return new WrtProofObject(dpp, altered, _redpair.queryName(), ob);
     }   
-    else return new WrtProofObject(dpp, _redpair.toString(), ob);
+    else return new WrtProofObject(dpp, _redpair.queryName(), ob);
   }
 }
 

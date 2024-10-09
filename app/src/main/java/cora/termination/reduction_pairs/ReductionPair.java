@@ -38,4 +38,7 @@ public interface ReductionPair {
    * the valuation).
    */
   public ReductionPairProofObject solve(OrderingProblem prob, SmtProblem smt);
+
+  /** Returns a unique name for the reduction pair, to be used in printing proofs. */
+  public String queryName();
 }
