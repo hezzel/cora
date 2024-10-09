@@ -20,6 +20,7 @@ import cora.termination.reduction_pairs.horpo.Horpo;
 import cora.termination.dependency_pairs.processors.*;
 import cora.termination.dependency_pairs.processors.graph.GraphProcessor;
 import cora.termination.dependency_pairs.processors.graph.ReachabilityProcessor;
+import cora.termination.dependency_pairs.processors.redpair.ReductionPairProcessor;
 
 public class FullDPFramework extends DPFramework {
   private Processor[] _processors;

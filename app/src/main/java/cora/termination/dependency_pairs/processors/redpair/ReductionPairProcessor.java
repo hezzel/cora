@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.termination.dependency_pairs.processors;
+package cora.termination.dependency_pairs.processors.redpair;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -25,6 +25,8 @@ import cora.io.ProofObject;
 import cora.termination.reduction_pairs.*;
 import cora.termination.dependency_pairs.Problem;
 import cora.termination.dependency_pairs.DP;
+import cora.termination.dependency_pairs.processors.Processor;
+import cora.termination.dependency_pairs.processors.ProcessorProofObject;
 
 public class ReductionPairProcessor implements Processor {
   private ReductionPair _redpair;

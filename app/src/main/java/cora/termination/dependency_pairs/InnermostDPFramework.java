@@ -20,6 +20,8 @@ import cora.termination.reduction_pairs.horpo.Horpo;
 import cora.termination.dependency_pairs.processors.*;
 import cora.termination.dependency_pairs.processors.graph.GraphProcessor;
 import cora.termination.dependency_pairs.processors.graph.ReachabilityProcessor;
+import cora.termination.dependency_pairs.processors.redpair.ReductionPairProcessor;
+import cora.termination.dependency_pairs.processors.redpair.URWrtRedPairProcessor;
 
 public class InnermostDPFramework extends DPFramework {
   private boolean _extraRules;
@@ -47,6 +49,7 @@ public class InnermostDPFramework extends DPFramework {
         new IntegerMappingProcessor(),
         new TheoryArgumentsProcessor(false),
         new UsableRulesProcessor(),
+        new URWrtRedPairProcessor(new Horpo(false)),
         new ReductionPairProcessor(new Horpo(false))
       };
     RESTARTLOOP = 3;
