@@ -89,10 +89,12 @@ public class TermAnalyser {
           Substitution ret = TermFactory.createEmptySubstitution();
           for (Variable x : t.vars()) {
             if (x.queryType().equals(TypeFactory.boolSort)) {
-              ret.extend(x, TheoryFactory.createValue(val.queryBoolAssignment(x.queryIndex())));
+              BVar bvar = translator.getBVar(x);
+              ret.extend(x, TheoryFactory.createValue(val.queryAssignment(bvar)));
             }
             else if (x.queryType().equals(TypeFactory.intSort)) {
-              ret.extend(x, TheoryFactory.createValue(val.queryIntAssignment(x.queryIndex())));
+              IVar ivar = translator.getIVar(x);
+              ret.extend(x, TheoryFactory.createValue(val.queryAssignment(ivar)));
             }
           }
           yield new Result.YES(ret);

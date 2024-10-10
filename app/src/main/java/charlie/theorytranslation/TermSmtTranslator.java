@@ -109,6 +109,22 @@ public class TermSmtTranslator {
   }
 
   /**
+   * This returns the integer variable that corresponds to the given user Variable, if any.  If
+   * this has not been used, null is returned instead.
+   */
+  public IVar getIVar(Variable x) {
+    return _ivars.get(x);
+  }
+
+  /**
+   * This returns the boolean variable that corresponds to the given user Variable, if any.  If
+   * this has not been used, null is returned instead.
+   */
+  public BVar getBVar(Variable x) {
+    return _bvars.get(x);
+  }
+
+  /**
    * Helper interface so the translate function can handle all kinds of symbols and values in one
    * big switch (which is important so we get compiler errors if someone adds a kind of calculation
    * symbol but fails to add a corresponding translation).
