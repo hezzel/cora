@@ -17,7 +17,11 @@ package charlie.solvesmt;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -53,7 +57,7 @@ public class ProcessSmtSolver implements SmtSolver {
     @Contract(pure = true)
     public @NotNull String getCommandName() {
       return switch (this) {
-        case Z3: yield  "z3 -in";
+        case Z3: yield  "z3";
         case CVC5: yield  "cvc";
         case YICES2: yield  "yices-smt2";
       };
@@ -85,13 +89,12 @@ public class ProcessSmtSolver implements SmtSolver {
     _physicalSolver = physicalSolver;
   }
 
-  /** Create a process caller for the given input string, with the given timeout (in seconds). */
-  private ProcessCaller createSmtSolverProcess(String smtLibString, int timeout) {
+  /** Create a process caller for the given input file with SMT problem, with the given timeout (in
+   * seconds). */
+  private ProcessCaller createSmtSolverProcess(Path smtProblemFile, int timeout) {
     List<String> commands = new ArrayList<>();
 
-    String commandEchoString = ProcessCaller.callSystemEcho(smtLibString);
-
-    commands.add(commandEchoString + " | " + _physicalSolver.getCommandName());
+    commands.add(_physicalSolver.getCommandName() + " " + smtProblemFile.toString());
 
     return new ProcessCaller(commands, timeout);
   }
@@ -112,10 +115,16 @@ public class ProcessSmtSolver implements SmtSolver {
   public Answer checkSatisfiability(SmtProblem problem) {
     SMTLibString file = new SMTLibString(V26, QFNIA);
     String stringOfSmtProblem = file.buildSmtlibString(problem);
-    ProcessCaller pc = createSmtSolverProcess(stringOfSmtProblem, TIMEOUT);
-    String smtResultString = null;
+    String smtResultString;
     try {
+      Path smtProblemFile = Files.createTempFile("coraSMTTask_sat_", null);
+      Files.writeString(smtProblemFile, stringOfSmtProblem);
+
+      ProcessCaller pc = createSmtSolverProcess(smtProblemFile, TIMEOUT);
       Optional<String> optionalSmtResultString = pc.getResultAsString();
+
+      Files.delete(smtProblemFile);
+
       if (!optionalSmtResultString.isPresent()) {
         return new Answer.MAYBE("SMT solver process did not return an answer within the " +
                                 "time limit.");
@@ -163,9 +172,16 @@ public class ProcessSmtSolver implements SmtSolver {
         negated
       );
 
-    ProcessCaller pc = createSmtSolverProcess(stringOfSmtProblem, TIMEOUT);
     try {
+
+      Path smtProblemFile = Files.createTempFile("coraSMTTask_validity_", null);
+      Files.writeString(smtProblemFile, stringOfSmtProblem);
+
+      ProcessCaller pc = createSmtSolverProcess(smtProblemFile, TIMEOUT);
       Optional<InputStream> is = pc.getResultAsInputStream();
+
+      Files.delete(smtProblemFile);
+
       if (is.isPresent()) {
         Scanner scanner = new Scanner(is.get());
         return SMTLibResponseHandler.readAnswer(scanner).equals("unsat");

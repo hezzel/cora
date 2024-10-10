@@ -21,6 +21,7 @@ import java.util.Scanner;
 import charlie.exceptions.ParseException;
 import charlie.util.ExceptionLogger;
 import charlie.smt.*;
+import charlie.util.SystemUtils;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -56,8 +57,15 @@ public class ExternalSmtSolver implements SmtSolver {
     // clean up old result, if any
     try { Process p = rt.exec(new String[] {"rm", "result"}); p.waitFor(); } catch (Exception e) {}
     // start new smtsolver process
-    Process p = rt.exec(new String[] {"./smtsolver", "problem.smt2", "result" });
-    p.waitFor();
+    Process p = null;
+    if (SystemUtils.IS_OS_WINDOWS) {
+      p = rt.exec(new String[] {"smtsolver_win.bat", "problem.smt2", "result"});
+    } else if (SystemUtils.IS_UNIX_LIKE){
+      p = rt.exec(new String[] {"./smtsolver", "problem.smt2", "result" });
+    }
+    if (p != null) {
+      p.waitFor();
+    }
   }
 
   /**
