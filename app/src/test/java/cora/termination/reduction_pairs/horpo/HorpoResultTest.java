@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.TreeMap;
 import charlie.terms.*;
 import charlie.trs.Rule;
@@ -52,7 +53,7 @@ public class HorpoResultTest {
     FunctionSymbol f = trs.lookupSymbol("f");
     FunctionSymbol g = trs.lookupSymbol("g");
     assertTrue(result.precedence(f, g) == 0);
-    assertTrue(result.status(f) == null);
+    assertTrue(result.permutation(f, 3) == 0);
     assertFalse(result.regards(f, 1));
     assertFalse(result.stronglyMonotonic());
   }
@@ -60,7 +61,7 @@ public class HorpoResultTest {
   @Test
   public void testStrictProof() {
     TRS trs = makeTrs("f :: Int -> Int g :: Int -> Int h :: Int -> Int -> Int\n" +
-                      "j :: Int -> Int -> Int f(x) -> f(x-1) | x > 0 g(x) -> f(x)");
+                      "j :: Int -> Int -> Int -> Int f(x) -> f(x-1) | x > 0 g(x) -> f(x)");
     SmtProblem smt = new SmtProblem();
     ArgumentFilter filter = new ArgumentFilter(smt);
     OrderingProblem problem = new OrderingProblem(trs, filter);
@@ -68,20 +69,32 @@ public class HorpoResultTest {
       Rule r = trs.queryRule(i);
       problem.requireEither(new OrderingRequirement(r, OrderingRequirement.Relation.Strict), i * 2);
     }
-    HorpoParameters param = new HorpoParameters(100, smt);
+    HorpoParameters param = new HorpoParameters(100,
+      new TreeSet<FunctionSymbol>(trs.queryAlphabet().getSymbols()), filter, smt);
     HorpoConstraintList lst = new HorpoConstraintList(new TermPrinter(Set.of()), smt);
     Valuation valuation = new Valuation();
     FunctionSymbol f = trs.lookupSymbol("f");
     FunctionSymbol g = trs.lookupSymbol("g");
     FunctionSymbol h = trs.lookupSymbol("h");
     FunctionSymbol j = trs.lookupSymbol("j");
-    valuation.setInt(param.getPrecedenceFor(f).queryIndex(), 1);
-    valuation.setInt(param.getPrecedenceFor(g).queryIndex(), 2);
-    valuation.setInt(param.getPrecedenceFor(h).queryIndex(), 2);
-    valuation.setInt(param.getPrecedenceFor(j).queryIndex(), 1);
-    valuation.setInt(((IVar)param.getStatusFor(h)).queryIndex(), 3);
-    valuation.setInt(((IVar)param.getStatusFor(j)).queryIndex(), 1);
+    valuation.setInt(param.getPrecedence(f).queryIndex(), 1);
+    valuation.setInt(param.getPrecedence(g).queryIndex(), 2);
+    valuation.setInt(param.getPrecedence(h).queryIndex(), 2);
+    valuation.setInt(param.getPrecedence(j).queryIndex(), 1);
+    valuation.setInt(param.getPermutation(f, 1).queryIndex(), 1);
+    valuation.setInt(param.getPermutation(g, 1).queryIndex(), 1);
+    valuation.setInt(param.getPermutation(h, 1).queryIndex(), 2);
+    valuation.setInt(param.getPermutation(h, 2).queryIndex(), 1);
+    valuation.setInt(param.getPermutation(j, 1).queryIndex(), 1);
+    valuation.setInt(param.getPermutation(j, 2).queryIndex(), 3);
+    valuation.setInt(param.getPermutation(j, 3).queryIndex(), 1);
     valuation.setBool(filter.regards(f, 1).queryIndex(), true);
+    valuation.setBool(filter.regards(g, 1).queryIndex(), true);
+    valuation.setBool(filter.regards(h, 1).queryIndex(), true);
+    valuation.setBool(filter.regards(h, 2).queryIndex(), true);
+    valuation.setBool(filter.regards(j, 1).queryIndex(), true);
+    valuation.setBool(filter.regards(j, 2).queryIndex(), true);
+    valuation.setBool(filter.regards(j, 3).queryIndex(), true);
     valuation.setBool(param.getDirectionIsDownVariable().queryIndex(), true);
 
     HorpoResult result = new HorpoResult(problem, Set.of(0), Set.of(), valuation, param, lst);
@@ -92,10 +105,10 @@ public class HorpoResultTest {
     assertFalse(result.isStrictlyOriented(2));
     assertTrue(result.precedence(f, g) == -1);
     assertTrue(result.precedence(f, j) == 0);
-    assertTrue(result.precedence(h, g) == 2);
-    assertTrue(result.status(h).equals("Mul_3"));
-    assertTrue(result.status(g).equals("Lex"));
-    assertTrue(result.status(j).equals("Lex"));
+    assertTrue(result.precedence(h, g) == 0);
+    assertTrue(result.permutation(h, 1) == 2);
+    assertTrue(result.permutation(h, 2) == 1);
+    assertTrue(result.permutation(j, 2) == 3);
     assertTrue(result.regards(f, 1));
     assertTrue(result.regards(g, 1));
     assertTrue(result.regards(h, 2));
@@ -107,22 +120,22 @@ public class HorpoResultTest {
       "  f(x) ≻ f(x - 1) | x > 0\n" +
       "  g(x) ≽ f(x)\n\n" +
       "We do this using the following settings:\n\n" +
-      "* Precedence and status (for non-mentioned symbols the precedence is irrelevant and " +
-        "the status is Lex):\n\n" +
-      "  h      (status: Mul_3) >\n" +
-      "  g      (status: Lex)   >\n" +
-      "  f = j  (status: Lex)\n\n" +
+      "* Monotonicity requirements: this is a strongly monotonic reduction pair " +
+        "(all arguments of function symbols were regarded).\n\n" +
+      "* Precedence and permutation:\n\n" +
+      "    g  { 1 }\n" +
+      "  = h  { 2 }   1\n" +
+      "  > f  { 1 }\n" +
+      "  = j  { 1 3 } _ 2\n\n" +
       "* Well-founded theory orderings:\n\n" +
       "  ⊐_{Bool} = {(true,false)}\n" +
-      "  ⊐_{Int}  = {(x,y) | x > -100 ∧ x > y }\n\n" +
-      "* Monotonicity requirements: this is a strongly monotonic reduction pair " +
-      "(all arguments of function symbols were regarded).\n\n"));
+      "  ⊐_{Int}  = {(x,y) | x > -100 ∧ x > y }\n\n"));
   }
 
   @Test
   public void testNonStrictProof() {
     TRS trs = makeTrs("f :: Int -> Int g :: Int -> Int h :: Int -> Int -> Int\n" +
-                      "f(x) -> f(x-1) | x > 0 g(x) -> f(x)");
+                      "f(x) -> f(x-1) | x > 0 g(x) -> f(h(x,x))");
     SmtProblem smt = new SmtProblem();
     ArgumentFilter filter = new ArgumentFilter(smt);
     OrderingProblem problem = new OrderingProblem(trs, filter);
@@ -130,58 +143,56 @@ public class HorpoResultTest {
       Rule r = trs.queryRule(i);
       problem.requireEither(new OrderingRequirement(r, OrderingRequirement.Relation.Strict), i * 2);
     }
-    HorpoParameters param = new HorpoParameters(3, smt);
+    HorpoParameters param = new HorpoParameters(3,
+      new TreeSet<FunctionSymbol>(trs.queryAlphabet().getSymbols()), filter, smt);
     HorpoConstraintList lst = new HorpoConstraintList(new TermPrinter(Set.of()), smt);
     Valuation valuation = new Valuation();
     FunctionSymbol f = trs.lookupSymbol("f");
     FunctionSymbol g = trs.lookupSymbol("g");
     FunctionSymbol h = trs.lookupSymbol("h");
     FunctionSymbol plus = TheoryFactory.plusSymbol;
-    valuation.setInt(param.getPrecedenceFor(f).queryIndex(), 1);
-    valuation.setInt(param.getPrecedenceFor(g).queryIndex(), 2);
-    valuation.setInt(param.getPrecedenceFor(h).queryIndex(), 2);
-    valuation.setInt(param.getPrecedenceFor(plus).queryIndex(), -3);
-    valuation.setInt(((IVar)param.getStatusFor(h)).queryIndex(), 1);
-    valuation.setInt(((IVar)param.getStatusFor(plus)).queryIndex(), 2);
+    valuation.setInt(param.getPrecedence(f).queryIndex(), 1);
+    valuation.setInt(param.getPrecedence(g).queryIndex(), 2);
+    valuation.setInt(param.getPrecedence(h).queryIndex(), 2);
     valuation.setBool(filter.regards(f, 1).queryIndex(), true);
     valuation.setBool(filter.regards(g, 1).queryIndex(), false);
-    valuation.setBool(filter.regards(h, 2).queryIndex(), false);
-    valuation.setBool(filter.regards(plus, 1).queryIndex(), true);
-    valuation.setBool(filter.regards(plus, 2).queryIndex(), true);
+    valuation.setBool(filter.regards(h, 1).queryIndex(), false);
+    valuation.setBool(filter.regards(h, 2).queryIndex(), true);
+    valuation.setInt(param.getPermutation(f, 1).queryIndex(), 1);
+    valuation.setInt(param.getPermutation(g, 1).queryIndex(), 0);
+    valuation.setInt(param.getPermutation(h, 1).queryIndex(), 0);
+    valuation.setInt(param.getPermutation(h, 2).queryIndex(), 2);
     valuation.setBool(param.getDirectionIsDownVariable().queryIndex(), false);
-    HorpoResult result = new HorpoResult(problem, Set.of(1), Set.of(), valuation, param, lst);
+    HorpoResult result = new HorpoResult(problem, Set.of(2), Set.of(), valuation, param, lst);
     assertTrue(result.queryAnswer() == ProofObject.Answer.YES);
     assertFalse(result.isStrictlyOriented(0));
-    assertTrue(result.isStrictlyOriented(1));
+    assertTrue(result.isStrictlyOriented(2));
     assertTrue(result.precedence(f, g) == -1);
     assertTrue(result.precedence(h, g) == 0);
-    assertTrue(result.precedence(plus, f) == -4);
-    assertTrue(result.status(h).equals("Lex"));
-    assertTrue(result.status(g).equals("Lex"));
-    assertTrue(result.status(plus).equals("Mul_2"));
+    assertTrue(result.permutation(h, 1) == 0);
+    assertTrue(result.permutation(h, 2) == 2);
     assertTrue(result.regards(f, 1));
     assertFalse(result.regards(g, 1));
-    assertFalse(result.regards(h, 2));
-    assertTrue(result.regards(plus, 1));
-    assertTrue(result.regards(plus, 2));
+    assertFalse(result.regards(h, 1));
+    assertTrue(result.regards(h, 2));
     assertFalse(result.stronglyMonotonic());
     OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
     result.justify(o);
     assertTrue(o.toString().equals(
       "Constrained HORPO yields:\n\n" +
       "  f(x) ≽ f(x - 1) | x > 0\n" +
-      "  g(x) ≽ f(x)\n\n" +
+      "  g(x) ≻ f(h(x, x))\n\n" +
       "We do this using the following settings:\n\n" +
-      "* Precedence and status (for non-mentioned symbols the precedence is irrelevant and the status is Lex):\n\n" +
-      "  g = h  (status: Lex)   >\n" +
-      "  f      (status: Lex)   >\n" +
-      "  +      (status: Mul_2)\n\n" +
+      "* Disregarded arguments:\n\n" +
+      "  g 1 \n" +
+      "  h 1 \n\n" +
+      "* Precedence and permutation:\n\n" +
+      "    g  { }\n" +
+      "  = h  { }   2\n" +
+      "  > f  { 1 }\n\n" +
       "* Well-founded theory orderings:\n\n" +
       "  ⊐_{Bool} = {(true,false)}\n" +
-      "  ⊐_{Int}  = {(x,y) | x < 3 ∧ x < y }\n\n" +
-      "* Regarded arguments:\n\n" +
-      "  + 1 2 \n" +
-      "  f 1 \n\n"));
+      "  ⊐_{Int}  = {(x,y) | x < 3 ∧ x < y }\n\n"));
   }
 }
 

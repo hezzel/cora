@@ -38,9 +38,12 @@ import java.util.function.BiFunction;
 public class ArgumentFilter {
   private SmtProblem _problem;
   private TreeMap<FunctionSymbol,TreeMap<Integer,BVar>> _variables;
-  private BVar _truthVar;
-    // if set to something other than null, nothing is allowed to be filtered, so we always return
-    // this variable
+  private boolean _strict;
+    // if set to true, nothing is allowed to be filtered, so the _everythingRegarded variable is
+    // forced to true, and returned on every regards question;
+  private BVar _everythingRegarded;
+    // a variable that represents everything being regarded; this is only initialised if it is
+    // every needed
 
   /**
    * Creates an argument filtering that will use the given SMT problem to create its "regards"
@@ -49,7 +52,8 @@ public class ArgumentFilter {
   public ArgumentFilter(SmtProblem problem) {
     _problem = problem;
     _variables = new TreeMap<FunctionSymbol,TreeMap<Integer,BVar>>();
-    _truthVar = null;
+    _strict = false;
+    _everythingRegarded = null;
   }
 
   /**
@@ -57,14 +61,17 @@ public class ArgumentFilter {
    * indicating whether an argument should be regarded is forced to true.
    */
   public void forceEmpty() {
-    if (_truthVar != null) return;  // it's been forced to empty before
-    for (Map.Entry<FunctionSymbol,TreeMap<Integer,BVar>> entry : _variables.entrySet()) {
-      for (Map.Entry<Integer,BVar> e : entry.getValue().entrySet()) {
-        _problem.require(e.getValue());
+    if (_strict) return;  // it was already forced to empty before
+    _strict = true;
+    if (_everythingRegarded == null) {
+      _everythingRegarded = _problem.createBooleanVariable("alwaystrue");
+      for (Map.Entry<FunctionSymbol,TreeMap<Integer,BVar>> entry : _variables.entrySet()) {
+        for (Map.Entry<Integer,BVar> e : entry.getValue().entrySet()) {
+          _problem.require(e.getValue());
+        }
       }
     }
-    _truthVar = _problem.createBooleanVariable("alwaystrue");
-    _problem.require(_truthVar);
+    _problem.require(_everythingRegarded);
   }
 
   /** This creates an ArgumentFiltering where every argument to every function must be regarded. */
@@ -76,20 +83,43 @@ public class ArgumentFilter {
 
   /** 
    * This returns a BVar indicating that function symbol f regards its indexth argument.
-  * Here, index really should be in {1...arity(f)}, but if not a variable will still be returned;
-  * it is the responsibility of the caller to deal with this properly.
+   * Here, index really should be in {1...arity(f)}, but if not a variable will still be returned;
+   * it is the responsibility of the caller to deal with this properly.
    * 
    * Note that if the argument filtering has been forced to be empty (through the forceEmpty
    * function), this will always return the same BVar, which has been forced to true.
    */
   public BVar regards(FunctionSymbol f, int index) {
-    if (_truthVar != null) return _truthVar;
+    if (_strict) return _everythingRegarded;
     if (!_variables.containsKey(f)) _variables.put(f, new TreeMap<Integer,BVar>());
     TreeMap<Integer,BVar> fmap = _variables.get(f);
     if (fmap.containsKey(index)) return fmap.get(index);
     BVar newvar = _problem.createBooleanVariable("regards{" + f.queryName() + "," + index + "}");
     fmap.put(index, newvar);
+    if (_everythingRegarded != null) _problem.requireImplication(_everythingRegarded, newvar);
     return newvar;
+  }
+
+  /**
+   * This returns a BVar indicating that all function symbols regard all their arguments.  (It also
+   * ensures that this implication holds both for regards variables that have been queried in the
+   * past and ones that will be queried in the future).
+   *
+   * Note that checking a valuation for this variable after the process completes is NOT a foolproof
+   * check whether everything is regarded!  If this variable is set to true, then everything is
+   * definitely regarded, but if set to false, then it might still be that all arguments are
+   * _coincidentally_ regarded.  So to check this, use the everythingIsRegarded() function.
+   */
+  public BVar regardsEverything() {
+    if (_everythingRegarded == null) {
+      _everythingRegarded = _problem.createBooleanVariable("regardsall");
+      for (Map.Entry<FunctionSymbol,TreeMap<Integer,BVar>> entry : _variables.entrySet()) {
+        for (Map.Entry<Integer,BVar> e : entry.getValue().entrySet()) {
+          _problem.requireImplication(_everythingRegarded, e.getValue());
+        }
+      }
+    }
+    return _everythingRegarded;
   }
 
   /**
@@ -117,6 +147,9 @@ public class ArgumentFilter {
 
   /** For the given valuation, checks if all regards variables are set to true. */
   public boolean everythingIsRegarded(Valuation valuation) {
+    // shortcut if the relevant variable has been set to true!
+    if (_everythingRegarded != null && valuation.queryAssignment(_everythingRegarded)) return true;
+    // otherwise, check everything
     for (Map.Entry<FunctionSymbol,TreeMap<Integer,BVar>> entry : _variables.entrySet()) {
       for (Map.Entry<Integer,BVar> e : entry.getValue().entrySet()) {
         if (!valuation.queryAssignment(e.getValue())) return false;

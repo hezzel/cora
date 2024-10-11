@@ -26,13 +26,15 @@ import cora.termination.reduction_pairs.*;
 import cora.termination.reduction_pairs.horpo.HorpoConstraintList.HRelation;
 import cora.termination.reduction_pairs.horpo.HorpoConstraintList.HorpoRequirement;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
+/**
+ * This class represents an implementation of Constrained Horpo: the question whether s! ≻ t! or
+ * s! ≽ t!, where u! represents the normal form of u with respect to only the calculation rules.
+ * We fix values to be minimal with respect to the precedence.
+ * For now, we do not yet support the f* mechanism, meta-variables, tuples or abstractions, but
+ * these are planned to be included in the future.
+ */
 public class Horpo implements ReductionPair {
   private boolean _strong;
 
@@ -58,20 +60,25 @@ public class Horpo implements ReductionPair {
   }
 
   /** Returns a short description of what this reduction pair is. */
+  public String queryName() {
+    if (_strong) return "strict-HORPO";
+    else return "HORPO";
+  }
+
+  /** Returns the name of this reduction pair */
   public String toString() {
-    if (_strong) return "(strongly monotonic) Constrained HORPO";
-    else return "(weakly monotonic) Constrained HORPO";
+    return queryName();
   }
 
   /** Main access function: start a HORPO proof to generate a suitable reduction pair. */
   public ReductionPairProofObject solve(OrderingProblem problem, SmtProblem smt) {
     int bound = computeIntegerVariableBound(problem);
-    HorpoParameters param = new HorpoParameters(bound, smt);
-    TreeSet<String> avoid = getFunctionSymbols(problem);
-    TermPrinter printer = new TermPrinter(avoid);
+    TreeSet<FunctionSymbol> symbols = getFunctionSymbols(problem);
+    ArgumentFilter filter = problem.queryArgumentFilter();
+    HorpoParameters param = new HorpoParameters(bound, symbols, filter, smt);
+    TermPrinter printer = new TermPrinter(getFunctionSymbolNames(symbols));
     HorpoConstraintList lst = new HorpoConstraintList(printer, smt);
     TreeMap<Integer,BVar> choices = setupConstraintList(lst, problem, smt);
-    ArgumentFilter filter = problem.queryArgumentFilter();
     // for Horpo, strong monotonicity just means regarding all arguments
     if (_strong) filter.forceEmpty();
     HorpoSimplifier simplifier = new HorpoSimplifier(param, lst, filter);
@@ -92,6 +99,29 @@ public class Horpo implements ReductionPair {
     for (OrderingRequirement r : problem.unconditionalReqs()) addTerms(ret, r);
     for (Pair<Constraint,OrderingRequirement> p : problem.conditionalReqs()) addTerms(ret, p.snd());
     for (Pair<Integer,OrderingRequirement> p : problem.eitherReqs()) addTerms(ret, p.snd());
+    return ret;
+  }
+
+  /**
+   * Returns a list with all left-hand and right-hand sides in constraints in problem, each coupled
+   * with the corresponding set of theory variables.
+   */
+  private LinkedList<Pair<Term,Set<Variable>>> getSideTerms(OrderingProblem problem) {
+    LinkedList<Pair<Term,Set<Variable>>> ret = new LinkedList<Pair<Term,Set<Variable>>>();
+    for (OrderingRequirement req : problem.unconditionalReqs()) {
+      ret.add(new Pair<Term,Set<Variable>>(req.left(), req.tvar()));
+      ret.add(new Pair<Term,Set<Variable>>(req.right(), req.tvar()));
+    }
+    for (Pair<Constraint,OrderingRequirement> p : problem.conditionalReqs()) {
+      OrderingRequirement req = p.snd();
+      ret.add(new Pair<Term,Set<Variable>>(req.left(), req.tvar()));
+      ret.add(new Pair<Term,Set<Variable>>(req.right(), req.tvar()));
+    }
+    for (Pair<Integer,OrderingRequirement> p : problem.eitherReqs()) {
+      OrderingRequirement req = p.snd();
+      ret.add(new Pair<Term,Set<Variable>>(req.left(), req.tvar()));
+      ret.add(new Pair<Term,Set<Variable>>(req.right(), req.tvar()));
+    }
     return ret;
   }
 
@@ -121,11 +151,29 @@ public class Horpo implements ReductionPair {
   }
 
   /** Returns a set with all the function symbols occurring in the given problem. */
-  private TreeSet<String> getFunctionSymbols(OrderingProblem problem) {
+  private TreeSet<FunctionSymbol> getFunctionSymbols(OrderingProblem problem) {
+    LinkedList<Pair<Term,Set<Variable>>> relevant = getSideTerms(problem);
     TreeSet<FunctionSymbol> symbs = new TreeSet<FunctionSymbol>();
-    for (Term term : getAllTerms(problem)) term.storeFunctionSymbols(symbs);
+    for (Pair<Term,Set<Variable>> p : relevant) {
+      Set<Variable> set = p.snd();
+      p.fst().visitSubterms( (s,pos) -> {
+        if (s.isFunctionalTerm()) {
+          if (s.isTheoryTerm()) {
+            for (Variable x : s.vars()) {
+              if (!set.contains(x)) { symbs.add(s.queryRoot()); break; }
+            }
+          }
+          else symbs.add(s.queryRoot());
+        }
+      } );
+    }
+    return symbs;
+  }
+
+  /** Returns a set with all the function symbol names occuring in the given set. */
+  private TreeSet<String> getFunctionSymbolNames(TreeSet<FunctionSymbol> symbols) {
     TreeSet<String> ret = new TreeSet<String>();
-    for (FunctionSymbol f : symbs) ret.add(f.queryName());
+    for (FunctionSymbol f : symbols) ret.add(f.queryName());
     return ret;
   }
 

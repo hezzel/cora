@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
+import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
@@ -28,6 +29,7 @@ import charlie.terms.TheoryFactory;
 import charlie.trs.TRS;
 import charlie.smt.*;
 import charlie.parser.CoraParser;
+import cora.termination.reduction_pairs.ArgumentFilter;
 
 public class HorpoParametersTest {
   private Type type(String txt) {
@@ -35,8 +37,10 @@ public class HorpoParametersTest {
   }
 
   @Test
-  public void testIntegerBound() {
-    HorpoParameters horpo = new HorpoParameters(37, new SmtProblem());
+  public void testBasics() {
+    SmtProblem smt = new SmtProblem();
+    HorpoParameters horpo = new HorpoParameters(37, new TreeSet<FunctionSymbol>(),
+                                                new ArgumentFilter(smt), smt);
     assertTrue(horpo.queryIntegerBound() == 37);
     BVar x = horpo.getDirectionIsDownVariable();
     assertTrue(x.toString().equals("[down]"));
@@ -44,70 +48,116 @@ public class HorpoParametersTest {
   }
 
   @Test
-  public void testPrecedenceFor() {
+  public void testSetup() {
     FunctionSymbol f = TermFactory.createConstant("f", type("Int -> Int"));
     FunctionSymbol g = TermFactory.createConstant("g", type("Int -> Int -> Int"));
     FunctionSymbol minus = TheoryFactory.minusSymbol;
+    FunctionSymbol three = TheoryFactory.createValue(3);
     SmtProblem prob = new SmtProblem();
-    HorpoParameters horpo = new HorpoParameters(40, prob);
-    IVar fx = horpo.getPrecedenceFor(f);
-    IVar mx = horpo.getPrecedenceFor(minus);
-    IVar gx = horpo.getPrecedenceFor(g);
-    assertTrue(horpo.getPrecedenceFor(f) == fx);
-    FunctionSymbol gg = TermFactory.createConstant("g", type("Int -> Int -> Int"));
-    assertTrue(gx == horpo.getPrecedenceFor(gg));
+    TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
+    set.add(f);
+    set.add(g);
+    set.add(minus);
+    set.add(three);
+    HorpoParameters horpo = new HorpoParameters(40, set, new ArgumentFilter(prob), prob);
     assertTrue(prob.toString().equals(
-      "[pred(f)] >= 0\n" +
-      "0 >= 1 + [pred(-)]\n" +
-      "[pred(g)] >= 0\n"));
+      // precedence: 1 ≤ pred(h) ≤ 4 for h ∈ {f,g,minus}, and pred(3) = 0
+      "[pred(-)] >= 1\n" +
+      "4 >= [pred(-)]\n" +
+      "[zero] = 0\n" +
+      "[pred(f)] >= 1\n" +
+      "4 >= [pred(f)]\n" +
+      "[pred(g)] >= 1\n" +
+      "4 >= [pred(g)]\n" +
+      // permutation: (¬regards{h,i} → π{h}(i) = 0) ∧ (regards{h,i} → π{h}(i) ≥ 1) ∧ π{h}(i) ≤ ar(h)
+      "[regards{-,1}] or ([pi{-}(1)] = 0)\n" +
+      "![regards{-,1}] or ([pi{-}(1)] = 1)\n" +
+      "[regards{f,1}] or ([pi{f}(1)] = 0)\n" +
+      "![regards{f,1}] or ([pi{f}(1)] = 1)\n" +
+      "[regards{g,1}] or ([pi{g}(1)] = 0)\n" +
+      "![regards{g,1}] or ([pi{g}(1)] >= 1)\n" +
+      "2 >= [pi{g}(1)]\n" +
+      "[regards{g,2}] or ([pi{g}(2)] = 0)\n" +
+      "![regards{g,2}] or ([pi{g}(2)] >= 1)\n" +
+      "2 >= [pi{g}(2)]\n" +
+      "([pi{g}(2)] # [pi{g}(1)]) or ([pi{g}(2)] = 1)\n"));
   }
 
   @Test
-  public void testStatusFor() {
+  public void testPrecedence() {
     FunctionSymbol f = TermFactory.createConstant("f", type("Int -> Int"));
     FunctionSymbol g = TermFactory.createConstant("g", type("Int -> Int -> Int"));
-    FunctionSymbol plus = TheoryFactory.plusSymbol;
-    HorpoParameters horpo = new HorpoParameters(3000, new SmtProblem());
-    assertTrue(horpo.getStatusFor(f).toString().equals("1"));
-    assertTrue(horpo.getStatusFor(g) == horpo.getStatusFor(g));
-    assertTrue(horpo.getStatusFor(plus) != null);
-    assertTrue(horpo.queryProblem().toString().equals(
-      "[stat(g)] >= 1\n" +
-      "2 >= [stat(g)]\n" +
-      "[pred(g)] >= 0\n" +
-      "[stat(+)] >= 1\n" +
-      "2 >= [stat(+)]\n" +
-      "0 >= 1 + [pred(+)]\n"));
+    SmtProblem prob = new SmtProblem();
+    TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
+    set.add(f);
+    set.add(g);
+    HorpoParameters horpo = new HorpoParameters(40, set, new ArgumentFilter(prob), prob);
+    IVar fx = horpo.getPrecedence(f);
+    IVar gx = horpo.getPrecedence(g);
+    assertFalse(fx.equals(gx));
+    assertTrue(horpo.getPrecedence(f) == fx);
+    FunctionSymbol gg = TermFactory.createConstant("g", type("Int -> Int -> Int"));
+    assertTrue(gx == horpo.getPrecedence(gg));
+  }
+
+  @Test
+  public void testPermutation() {
+    FunctionSymbol f = TermFactory.createConstant("f", type("Int -> Int"));
+    FunctionSymbol g = TermFactory.createConstant("g", type("Int -> Int -> Int"));
+    SmtProblem prob = new SmtProblem();
+    TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
+    set.add(f);
+    set.add(g);
+    HorpoParameters horpo = new HorpoParameters(40, set, new ArgumentFilter(prob), prob);
+    IVar f1 = horpo.getPermutation(f, 1);
+    IVar g1 = horpo.getPermutation(g, 1);
+    assertTrue(g1 == horpo.getPermutation(g, 1));
+    assertFalse(g1 == horpo.getPermutation(g, 2));
+    assertFalse(f1 == g1);
   }
 
   @Test
   public void testGetSymbolData() {
     FunctionSymbol f = TermFactory.createConstant("f", type("Int -> Int"));
     FunctionSymbol g = TermFactory.createConstant("g", type("Int -> Int -> Int"));
-    FunctionSymbol plus = TheoryFactory.plusSymbol;
-    HorpoParameters horpo = new HorpoParameters(3000, new SmtProblem());
-    IVar x = horpo.getPrecedenceFor(f);
-    IVar y = horpo.getPrecedenceFor(g);
-    IVar a = (IVar)horpo.getStatusFor(g);
-    horpo.getStatusFor(f);
-    IVar z = horpo.getPrecedenceFor(plus);
-    IVar b = (IVar)horpo.getStatusFor(plus);
+    FunctionSymbol h = TermFactory.createConstant("h", type("Int -> Int -> Int -> Int"));
+    FunctionSymbol three = TheoryFactory.createValue(3);
+    SmtProblem prob = new SmtProblem();
+    TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
+    set.add(f);
+    set.add(g);
+    set.add(h);
+    set.add(three);
+    set.add(TheoryFactory.createValue(4));
+    HorpoParameters horpo = new HorpoParameters(40, set, new ArgumentFilter(prob), prob);
+    IVar x = horpo.getPrecedence(f);
+    IVar y = horpo.getPrecedence(g);
+    IVar z = horpo.getPrecedence(h);
+    IVar t = horpo.getPrecedence(three);
+    IVar pf1 = horpo.getPermutation(f, 1);
+    IVar pg1 = horpo.getPermutation(g, 1);
+    IVar pg2 = horpo.getPermutation(g, 2);
+    IVar ph1 = horpo.getPermutation(h, 1);
+    IVar ph2 = horpo.getPermutation(h, 2);
+    IVar ph3 = horpo.getPermutation(h, 3);
     Valuation valuation = new Valuation();
     valuation.setInt(x.queryIndex(), 3);
     valuation.setInt(y.queryIndex(), 3);
-    valuation.setInt(z.queryIndex(), -2);
-    valuation.setInt(a.queryIndex(), 2);
-    valuation.setInt(b.queryIndex(), 1);
+    valuation.setInt(z.queryIndex(), 2);
+    valuation.setInt(t.queryIndex(), 0);
+    valuation.setInt(pf1.queryIndex(), 1);
+    valuation.setInt(pg1.queryIndex(), 0);
+    valuation.setInt(pg2.queryIndex(), 1);
+    valuation.setInt(ph1.queryIndex(), 1);
+    valuation.setInt(ph2.queryIndex(), 3);
+    valuation.setInt(ph3.queryIndex(), 1);
     ArrayList<HorpoParameters.SymbolData> data = horpo.getSymbolData(valuation);
-    assertTrue(data.get(0).symbol().equals("g"));
-    assertTrue(data.get(0).prec() == 3);
-    assertTrue(data.get(0).stat() == 2);
-    assertTrue(data.get(1).symbol().equals("f"));
-    assertTrue(data.get(1).prec() == 3);
-    assertTrue(data.get(1).stat() == 1);
-    assertTrue(data.get(2).symbol().equals("+"));
-    assertTrue(data.get(2).prec() == -2);
-    assertTrue(data.get(2).stat() == 1);
+    assertTrue(data.size() == 5);
+    assertTrue(data.get(0).toString().equals("f : [ { 1 } ] (3)"));
+    assertTrue(data.get(1).toString().equals("g : [ { 2 } _ ] (3)"));
+    assertTrue(data.get(2).toString().equals("h : [ { 1 3 } _ 2 ] (2)"));
+    assertTrue(data.get(3).toString().equals("3 : [ { } ] (0)"));
+    assertTrue(data.get(4).toString().equals("4 : [ { } ] (0)"));
   }
 }
 

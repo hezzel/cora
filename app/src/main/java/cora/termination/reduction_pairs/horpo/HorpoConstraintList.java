@@ -31,10 +31,10 @@ import cora.config.Settings;
  * "defining variable".
  */
 class HorpoConstraintList {
-  enum HRelation { GREATER, GREATERTHEORY, GREATERMONO, GREATERARGS, GREATERRPO,
-                   GEQ, GEQTHEORY, GEQEQUAL, GEQMONO, GEQARGS,
-                   GEQNOGR, GEQNOGRTHEORY, GEQNOGREQUAL, GEQNOGRMONO, GEQNOGRARGS,
-                   RPO, RPOSELECT, RPOAPPL, RPOCOPY, RPOLEX, RPOMUL, RPOTH };
+  enum HRelation { GREATER, GREATERTHEORY, GREATERVAR, GREATERFUN, GREATERRPO,
+                   GEQ, GEQTHEORY, GEQVAR, GEQFUN, GEQEQUAL,
+                   GEQNOGR, GEQNOGRTHEORY, GEQNOGRVAR, GEQNOGRFUN, GEQNOGREQUAL,
+                   RPO, RPOSELECT, RPOCOPY, RPOLEX, RPOMUL, RPOTH };
 
   /**
    * A HorpoRequirement models an inequality of the form left REL right | constraint, theorvar,
@@ -129,22 +129,21 @@ class HorpoConstraintList {
     builder.append(switch(relation) {
       case HRelation.GREATER       -> " ≻ ";
       case HRelation.GREATERTHEORY -> " ≻{theory} ";
-      case HRelation.GREATERMONO   -> " ≻{mono} ";
-      case HRelation.GREATERARGS   -> " ≻{args} ";
+      case HRelation.GREATERVAR    -> " ≻{var} ";
+      case HRelation.GREATERFUN    -> " ≻{fun} ";
       case HRelation.GREATERRPO    -> " ≻{rpo} ";
       case HRelation.GEQ           -> " ≽ ";
       case HRelation.GEQTHEORY     -> " ≽{theory} ";
+      case HRelation.GEQVAR        -> " ≽{var} ";
+      case HRelation.GEQFUN        -> " ≽{fun} ";
       case HRelation.GEQEQUAL      -> " ≽{equal} ";
-      case HRelation.GEQMONO       -> " ≽{mono} ";
-      case HRelation.GEQARGS       -> " ≽{args} ";
       case HRelation.GEQNOGR       -> " ≈ ";
       case HRelation.GEQNOGRTHEORY -> " ≈{theory} ";
+      case HRelation.GEQNOGRVAR    -> " ≈{var} ";
+      case HRelation.GEQNOGRFUN    -> " ≈{fun} ";
       case HRelation.GEQNOGREQUAL  -> " ≈{equal} ";
-      case HRelation.GEQNOGRMONO   -> " ≈{mono} ";
-      case HRelation.GEQNOGRARGS   -> " ≈{args} ";
       case HRelation.RPO           -> " ▷ ";
       case HRelation.RPOSELECT     -> " ▷{select} ";
-      case HRelation.RPOAPPL       -> " ▷{appl} ";
       case HRelation.RPOCOPY       -> " ▷{copy} ";
       case HRelation.RPOLEX        -> " ▷{lex} ";
       case HRelation.RPOMUL        -> " ▷{mul} ";

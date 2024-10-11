@@ -42,12 +42,14 @@ class HorpoSimplifier {
   private final HorpoConstraintList _hcl;
   private final ArgumentFilter _filter;
   private final SmtProblem _smt;
+  private int _counter; // only for human-readable output in the SmtProblem
 
   HorpoSimplifier(HorpoParameters params, HorpoConstraintList lst, ArgumentFilter filter) {
     _parameters = params;
     _hcl = lst;
     _filter = filter;
     _smt = _parameters.queryProblem();
+    _counter = 0;
   }
 
   /**
@@ -61,22 +63,21 @@ class HorpoSimplifier {
     switch (req.relation()) {
       case HRelation.GREATER:       handleGreater(req); break;
       case HRelation.GREATERTHEORY: handleTheory(req); break;
-      case HRelation.GREATERMONO:   handleGrMono(req); break;
-      case HRelation.GREATERARGS:   handleArgs(req); break;
+      case HRelation.GREATERVAR:    handleVar(req); break;
+      case HRelation.GREATERFUN:    handleFun(req); break;
       case HRelation.GREATERRPO:    handleGrRpo(req); break;
       case HRelation.GEQ:           handleGeq(req); break;
       case HRelation.GEQTHEORY:     handleTheory(req); break;
+      case HRelation.GEQVAR:        handleVar(req); break;
+      case HRelation.GEQFUN:        handleFun(req); break;
       case HRelation.GEQEQUAL:      handleEqual(req); break;
-      case HRelation.GEQMONO:       handleMono(req); break;
-      case HRelation.GEQARGS:       handleArgs(req); break;
       case HRelation.GEQNOGR:       handleGeqNoGr(req); break;
       case HRelation.GEQNOGRTHEORY: handleTheory(req); break;
+      case HRelation.GEQNOGRVAR:    handleVar(req); break;
+      case HRelation.GEQNOGRFUN:    handleFun(req); break;
       case HRelation.GEQNOGREQUAL:  handleEqual(req); break;
-      case HRelation.GEQNOGRMONO:   handleMono(req); break;
-      case HRelation.GEQNOGRARGS:   handleArgs(req); break;
       case HRelation.RPO:           handleRpo(req); break;
       case HRelation.RPOSELECT:     handleSelect(req); break;
-      case HRelation.RPOAPPL:       handleAppl(req); break;
       case HRelation.RPOCOPY:       handleCopy(req); break;
       case HRelation.RPOLEX:        handleLex(req); break;
       case HRelation.RPOMUL:        handleMul(req); break;
@@ -102,6 +103,11 @@ class HorpoSimplifier {
     };
   }
 
+  /** Helper function for brevity: requires one of the given constraints in the SmtProblem */
+  private void requireOr(Constraint ...args) {
+    _smt.require(SmtFactory.createDisjunction(args));
+  }
+
   /***********************************************************************************************/
   /* The functions below all serve to simplify different kinds of HorpoRequirements.             */
   /***********************************************************************************************/
@@ -115,22 +121,22 @@ class HorpoSimplifier {
     Term r = req.right();
     // the GREATER relation is only allowed to compare terms with the same type structure
     if (!sameTypeStructure(l.queryType(), r.queryType())) {
-      _smt.require(req.variable().negate());
-      return;
+      _smt.require(req.variable().negate()); return;
     }
+    // shortcut: if l = r, this can never hold
+    if (l.equals(r)) { _smt.require(req.variable().negate()); return; }
+
     Term c = req.constraint();
     TreeSet<Variable> v = req.theoryVariables();
-    ArrayList<Constraint> lst = new ArrayList<Constraint>(3);
-    // for theory terms, only Relation.GREATERTHEORY applies; for non-theory terms, only the
-    // other options apply
-    if (l.isTheoryTerm()) lst.add(_hcl.store(l, HRelation.GREATERTHEORY, r, c, v));
-    else {
-      lst.add(_hcl.store(l, HRelation.GREATERRPO, r, c, v));
-      lst.add(_hcl.store(l, HRelation.GREATERMONO, r, c, v));
-      lst.add(_hcl.store(l, HRelation.GREATERARGS, r, c, v));
+    if (l.isTheoryTerm()) {
+      _smt.requireImplication(req.variable(), _hcl.store(l, HRelation.GREATERTHEORY, r, c, v));
     }
-    Constraint combi = SmtFactory.createDisjunction(lst);
-    _smt.requireImplication(req.variable(), combi);
+    else {
+      requireOr(req.variable().negate(),
+                _hcl.store(l, HRelation.GREATERRPO, r, c, v),
+                _hcl.store(l, HRelation.GREATERVAR, r, c, v),
+                _hcl.store(l, HRelation.GREATERFUN, r, c, v));
+    }
   }
 
   /**
@@ -142,25 +148,27 @@ class HorpoSimplifier {
     Term r = req.right();
     // the GEQ relation is only allowed to compare terms with the same type structure
     if (!sameTypeStructure(l.queryType(), r.queryType())) {
-      _smt.require(req.variable().negate());
-      return;
+      _smt.require(req.variable().negate()); return;
     }
+
     Term c = req.constraint();
     TreeSet<Variable> v = req.theoryVariables();
-    ArrayList<Constraint> lst = new ArrayList<Constraint>(3);
-    // for theory terms, only GEQTHEORY and GEQEQUAL apply; for non-theory terms, only the other
-    // options apply
-    if (l.isTheoryTerm()) {
-      lst.add(_hcl.store(l, HRelation.GEQTHEORY, r, c, v));
-      lst.add(_hcl.store(l, HRelation.GEQEQUAL, r, c, v));
+    // if l = r, then we only try GEQEQUAL (which will succeed)
+    if (l.equals(r)) {
+      _smt.requireImplication(req.variable(), _hcl.store(l, HRelation.GEQEQUAL, r, c, v));
     }
+    // otherwise, for theory terms, only GEQTHEORY can apply
+    else if (l.isTheoryTerm()) {
+      _smt.requireImplication(req.variable(), _hcl.store(l, HRelation.GEQTHEORY, r, c, v));
+    }
+    // for non-theory terms, only the other options apply; instead of GREATER we immediately go to
+    // GREATERRPO, because the other "GREATER" options are already covered by GEQVAR and GEQFUN
     else {
-      lst.add(_hcl.store(l, HRelation.GREATERRPO, r, c, v));
-      lst.add(_hcl.store(l, HRelation.GEQMONO, r, c, v));
-      lst.add(_hcl.store(l, HRelation.GEQARGS, r, c, v));
+      requireOr(req.variable().negate(),
+                _hcl.store(l, HRelation.GREATERRPO, r, c, v),
+                _hcl.store(l, HRelation.GEQVAR, r, c, v),
+                _hcl.store(l, HRelation.GEQFUN, r, c, v));
     }
-    Constraint combi = SmtFactory.createDisjunction(lst);
-    _smt.requireImplication(req.variable(), combi);
   }
 
   /**
@@ -172,24 +180,24 @@ class HorpoSimplifier {
     Term r = req.right();
     // the GEQNOGR relation is only allowed to compare terms with the same type structure
     if (!sameTypeStructure(l.queryType(), r.queryType())) {
-      _smt.require(req.variable().negate());
-      return;
+      _smt.require(req.variable().negate()); return;
     }
+
     Term c = req.constraint();
     TreeSet<Variable> v = req.theoryVariables();
-    ArrayList<Constraint> lst = new ArrayList<Constraint>(2);
-    // for theory terms, only GEQNOGRTHEORY and GEQNOGREQUAL apply; for non-theory terms, only the
-    // other options apply
-    if (l.isTheoryTerm()) {
-      lst.add(_hcl.store(l, HRelation.GEQNOGRTHEORY, r, c, v));
-      lst.add(_hcl.store(l, HRelation.GEQNOGREQUAL, r, c, v));
+    // if l = r, then we only try GEQEQUAL (which will succeed)
+    if (l.equals(r)) {
+      _smt.requireImplication(req.variable(), _hcl.store(l, HRelation.GEQNOGREQUAL, r, c, v));
+    }
+    // otherwise, for theory terms, only GEQNOGRTHEORY can apply
+    else if (l.isTheoryTerm()) {
+      _smt.requireImplication(req.variable(), _hcl.store(l, HRelation.GEQNOGRTHEORY, r, c, v));
     }
     else {
-      lst.add(_hcl.store(l, HRelation.GEQNOGRMONO, r, c, v));
-      lst.add(_hcl.store(l, HRelation.GEQNOGRARGS, r, c, v));
+      requireOr(req.variable().negate(),
+                _hcl.store(l, HRelation.GEQNOGRVAR, r, c, v),
+                _hcl.store(l, HRelation.GEQNOGRFUN, r, c, v));
     }
-    Constraint combi = SmtFactory.createDisjunction(lst);
-    _smt.requireImplication(req.variable(), combi);
   }
 
   /**
@@ -203,15 +211,12 @@ class HorpoSimplifier {
     Term r = req.right();
     Term c = req.constraint();
     TreeSet<Variable> v = req.theoryVariables();
-    ArrayList<Constraint> lst = new ArrayList<Constraint>(6);
-    lst.add(_hcl.store(l, HRelation.RPOTH, r, c, v));
-    lst.add(_hcl.store(l, HRelation.RPOSELECT, r, c, v));
-    lst.add(_hcl.store(l, HRelation.RPOCOPY, r, c, v));
-    lst.add(_hcl.store(l, HRelation.RPOLEX, r, c, v));
-    lst.add(_hcl.store(l, HRelation.RPOMUL, r, c, v));
-    lst.add(_hcl.store(l, HRelation.RPOAPPL, r, c, v));
-    Constraint combi = SmtFactory.createDisjunction(lst);
-    _smt.requireImplication(req.variable(), combi);
+    requireOr(req.variable().negate(),
+              _hcl.store(l, HRelation.RPOTH, r, c, v),
+              _hcl.store(l, HRelation.RPOSELECT, r, c, v),
+              _hcl.store(l, HRelation.RPOCOPY, r, c, v),
+              _hcl.store(l, HRelation.RPOLEX, r, c, v),
+              _hcl.store(l, HRelation.RPOMUL, r, c, v));
   }
 
  /**
@@ -251,17 +256,19 @@ class HorpoSimplifier {
     else _smt.require(variable.negate());
   }
 
+  /** Returns whether s is a base-type theory term with all its variables in theoryVariables */
+  private boolean isTheory(Term s, TreeSet<Variable> theoryVariables) {
+    if (!s.isTheoryTerm() || !s.queryType().isBaseType() ||
+        !s.queryType().isTheoryType()) return false;
+    for (Replaceable x : s.freeReplaceables()) {
+      if (!theoryVariables.contains(x)) return false;
+    }
+    return true;
+  }
+
   /** Returns whether we are even allowed to apply one of the theory cases */
   private boolean theoryAllowed(Term l, Term r, TreeSet<Variable> theoryVariables) {
-    if (!l.isTheoryTerm() || !r.isTheoryTerm() || !l.queryType().isBaseType() ||
-        !l.queryType().isTheoryType() || !l.queryType().equals(r.queryType())) {
-      return false;
-    }
-    ReplaceableList lvars = l.freeReplaceables();
-    ReplaceableList rvars = r.freeReplaceables();
-    for (Replaceable x : lvars) if (!theoryVariables.contains(x)) return false;
-    for (Replaceable x : rvars) if (!theoryVariables.contains(x)) return false;
-    return true;
+    return isTheory(l, theoryVariables) && isTheory(r, theoryVariables);
   }
 
   /**
@@ -340,90 +347,243 @@ class HorpoSimplifier {
     else _smt.require(x.negate());
   }
 
-  private void handleEqual(HorpoRequirement req) {
-    if (req.left().equals(req.right())) _smt.require(req.variable());
-    else _smt.require(req.variable().negate());
-  }
-
   /**
-   * For now, this method simply adds a constraint that the given requirement is not satisfied.
-   * In the future, this may be used for NON-FILTERING reduction pairs to allow a strict decrease
-   * in a varterm.
-   * TODO
+   * This is only called for ≽ and ≈ requirements where we already know that both sides are
+   * equal, so this just forces the defining variable of the requirement to true.
    */
-  private void handleGrMono(HorpoRequirement req) {
-    _smt.require(req.variable().negate());
+  private void handleEqual(HorpoRequirement req) {
+    _smt.require(req.variable());
   }
 
   /**
-   * This adds the defining constraints for mono requirements:
-   * - x(s1,...,sn) ≽{mono} x(t1,...,tn) if each si ≽ ti
-   * - x(s1,...,sn) ≈{mono} x(t1,...,tn) if each si ≈ ti
+   * This adds the defining constraints for var requirements:
+   * - x(s1,...,sn) ≈{mono} x(t1,...,tn) implies that each si ≈ ti
+   * - x(s1,...,sn) ≽{var} x(t1,...,tn) and x(s1,...,sn) ≻{var} x(t1,...,tn) imply that each si ≽ ti
+   * - x(s1,...,sn) ≻{var} x(t1,...,tn) moreover implies that (1) nothing is filtered, and (2)
+   *   some si ≻ ti
    *
    * Note: by construction, any HorpoRequirements with one of these shapes necessarily have a
    * non-theory term as left-hand side.
    */
-  private void handleMono(HorpoRequirement req) {
+  private void handleVar(HorpoRequirement req) {
     Term left = req.left();
     Term right = req.right();
+    int n = left.numberArguments();
 
-    if (!left.isVarTerm() || left.numberArguments() != right.numberArguments() ||
+    if (!left.isVarTerm() || n != right.numberArguments() ||
         !left.queryHead().equals(right.queryHead())) {
       _smt.require(req.variable().negate());
       return;
     }
 
-    HRelation subrel = req.relation() == HRelation.GEQNOGRMONO ? HRelation.GEQNOGR : HRelation.GEQ;
-    for (int i = 1; i <= left.numberArguments(); i++) {
+    HRelation subrel = req.relation() == HRelation.GEQNOGRVAR ? HRelation.GEQNOGR : HRelation.GEQ;
+    for (int i = 1; i <= n; i++) {
       BVar x = _hcl.store(left.queryArgument(i), subrel, right.queryArgument(i),
-                         req.constraint(), req.theoryVariables());
+                          req.constraint(), req.theoryVariables());
       _smt.requireImplication(req.variable(), x);
     }
+
+    if (req.relation() == HRelation.GREATERVAR) {
+      _smt.requireImplication(req.variable(), _filter.regardsEverything());
+      ArrayList<Constraint> oneof = new ArrayList<Constraint>(n);
+      for (int i = 1; i <= n; i++) {
+        oneof.add(_hcl.store(left.queryArgument(i), HRelation.GREATER, right.queryArgument(i),
+                             req.constraint(), req.theoryVariables()));
+      }
+      _smt.requireImplication(req.variable(), SmtFactory.createDisjunction(oneof));
+    }
   }
 
   /**
-   * This adds the defining constraints for args requirements:
-   * - f(s1,...,sn) ≽{args} f(t1,...,tn) if each unfiltered si ≽ ti
-   * - f(s1,...,sn) ≻{args} f(t1,...,tn) if each unfiltered si ≽ ti and some unfiltered si ≻ ti
-   * - f(s1,...,sn) ≈{args} f(t1,...,tn) if each unfiltered si ≈ ti
-   * Here, position i is unfiltered if either a is a variable, or a is a function symbol that
-   * regards position i.
+   * This adds the defining constraints for fun requirements:
+   * - f(s1,...,sk) ≈{fun} g(t1,...,tn)
+   * - g(s1,...,sk) ≽{fun} g(t1,...,tn)
+   * - g(s1,...,sn) ≻{fun} g(t1,...,tn)
    *
-   * Note: by construction, any HorpoRequirements with one of these shapes necessarily have a
-   * non-theory term as left-hand side.
-   *
-   * TODO: this needs to be updated to take equivalent function symbols (with the same filter list)
-   * into account
+   * By construction, any HorpoRequirements with one of these shapes necessarily have a non-theory
+   * term as left-hand side.
    */
-  private void handleArgs(HorpoRequirement req) {
+  private void handleFun(HorpoRequirement req) {
     Term left = req.left();
     Term right = req.right();
-
-    if (!left.isFunctionalTerm() || left.numberArguments() != right.numberArguments() ||
-        !left.queryHead().equals(right.queryHead())) {
+    if (!left.isFunctionalTerm() || !right.isFunctionalTerm()) {
       _smt.require(req.variable().negate());
       return;
     }
 
-    HRelation subrel = req.relation() == HRelation.GEQNOGRARGS ? HRelation.GEQNOGR : HRelation.GEQ;
     FunctionSymbol f = left.queryRoot();
-    for (int i = 1; i <= left.numberArguments(); i++) {
-      BVar x = _hcl.store(left.queryArgument(i), subrel, right.queryArgument(i),
-                              req.constraint(), req.theoryVariables());
-      BVar regards = _filter.regards(f, i);
-      _smt.requireImplication(req.variable(), SmtFactory.createDisjunction(
-        regards.negate(), x));
-    }
+    FunctionSymbol g = right.queryRoot();
+    int k = left.numberArguments();
+    int n = right.numberArguments();
+    _counter++;  // update the fresh variable counter, since some fresh variables are going to
+                 // be created (e.g., for χ), and we want to give them a new name
+    requireOr(req.variable().negate(), SmtFactory.createEqual(_parameters.getPrecedence(f),
+                                                              _parameters.getPrecedence(g)));
+    requireFunRest(f, k, g, n, req.variable());
+    ArrayList<IVar> chi = createChiForFun(f, k, g, n, req.variable());
+    requireInjective(k, g, n, req.variable(), chi);
+    requireSamePermutation(f, k, g, n, req.variable(), chi);
+    requireChiGeq(k, n, req, chi,
+                  req.relation() == HRelation.GEQNOGRFUN ? HRelation.GEQNOGR : HRelation.GEQ);
 
-    if (req.relation() == HRelation.GREATERARGS) {
-      ArrayList<Constraint> onestrict = new ArrayList<Constraint>();
-      for (int i = 1; i <= left.numberArguments(); i++) {
-        BVar x = _hcl.store(left.queryArgument(i), HRelation.GREATER, right.queryArgument(i),
-                                req.constraint(), req.theoryVariables());
-        BVar regards = _filter.regards(f, i);
-        onestrict.add(SmtFactory.createConjunction(regards, x));
+    if (req.relation() == HRelation.GREATERFUN) requireChiGreater(f, k, n, req, chi);
+    else if (req.relation() == HRelation.GEQNOGRFUN) {
+      requireChiSurjective(f, k, n, req.variable(), chi);
+    }
+  }
+
+  /**
+   * Helper function for handleGeq: all <REL>{fun} requirements have the condition that arity(f) - k
+   * = arity(g) - n, and that writing m := arity(f) - k we have:
+   *   for 1 ≤ i ≤ m: π{f}(k+i) = π{g}(n+i) ∨ π{g}(n+i) = 0
+   * Here we require this conditional on reqvar
+   */
+  private void requireFunRest(FunctionSymbol f, int k, FunctionSymbol g, int n, BVar reqvar) {
+    int m = f.queryArity() - k;
+    if (m != g.queryArity() - n) { _smt.require(reqvar.negate()); return; }
+    for (int i = 1; i <= m; i++) {
+      IVar gni = _parameters.getPermutation(g, n + i);
+      Constraint equal = SmtFactory.createEqual(gni, _parameters.getPermutation(f, k + i));
+      Constraint zero = SmtFactory.createEqual(gni, SmtFactory.createValue(0));
+      _smt.requireImplication(reqvar, SmtFactory.createDisjunction(equal, zero));
+    }
+  }
+
+  /**
+   * Helper function for handleFun: creates a function χ from {1..n} to {0..k} such that
+   * - if reqvar then χ maps i with i ∉ regards[g] to 0
+   * - if reqvar then χ maps i with i ∉ regards[g] to something non-zero
+   */
+  private ArrayList<IVar> createChiForFun(FunctionSymbol f, int k, FunctionSymbol g, int n,
+                                          BVar reqvar) {
+    ArrayList<IVar> ret = new ArrayList<IVar>(n);
+    IntegerExpression zero = SmtFactory.createValue(0);
+    IntegerExpression one = SmtFactory.createValue(1);
+    IntegerExpression kk = SmtFactory.createValue(k);
+    // create the variables for χ, and require that χ maps i with i ∉ regards[g] to 0,
+    // and χ maps i with i ∉ regards[g] to an element j of {1..k}
+    for (int i = 1; i <= n; i++) {
+      IVar chi_i = _smt.createIntegerVariable("chi" + _counter + "(" + i + ")");
+      ret.add(chi_i);
+      // 0 ≤ χ(i) ≤ k -- the 0 ≤ χ(i) part is redundant, but may help the solver
+      _smt.require(SmtFactory.createGeq(chi_i, zero));
+      _smt.require(SmtFactory.createLeq(chi_i, kk));
+      // if regards[g,i] then χ(i) ≥ 1 else χ(i) = 0
+      requireOr(reqvar.negate(), _filter.regards(g,i).negate(), SmtFactory.createGeq(chi_i, one));
+      requireOr(reqvar.negate(), _filter.regards(g,i), SmtFactory.createEqual(chi_i, zero));
+    }
+    return ret;
+  }
+
+  /**
+   * Helper function for handleFun: this requires that, if reqvar holds, then χ is injective on
+   * {1..n} ∩ regards[g], where χ is already known to map regarded elements of {1..n} into {1..k},
+   * and disregarded elements to 0.
+   *
+   * Here, chi(i) is represented by chi.get(i-1).
+   */
+  private void requireInjective(int k, FunctionSymbol g, int n, BVar reqvar, ArrayList<IVar> chi) {
+    for (int i = 1; i < n; i++) {
+      IVar chi_i = chi.get(i-1);
+      for (int j = i+1; j <= n; j++) {
+        IVar chi_j = chi.get(j-1);
+        requireOr(reqvar.negate(), _filter.regards(g,i).negate(),
+                  SmtFactory.createUnequal(chi_i, chi_j));
       }
-      _smt.requireImplication(req.variable(), SmtFactory.createDisjunction(onestrict));
+    }
+  }
+
+  /**
+   * Helper function for handleFun: this requires that, if reqvar holds, then for all i ∈ {1..n}
+   * ∩ regards[g] we have π{f}(χ(i)) = π{g}(i), where χ is already known to map regarded elements
+   * of {1..n} into {1..k} and disregarded elements to 0.  Note that this implies that regarded
+   * elements of g are mapped to regarded elements of f.
+   *
+   * Here, chi(i) is represented by chi.get(i-1).
+   */
+  private void requireSamePermutation(FunctionSymbol f, int k, FunctionSymbol g, int n, BVar reqvar,
+                                      ArrayList<IVar> chi) {
+    for (int i = 1; i <= n; i++) {
+      IVar chi_i = chi.get(i-1);
+      // χ(i) is regarded if and only if χ(i) = j for some j ∈ {1..k}
+      for (int j = 1; j <= k; j++) {
+        requireOr(reqvar.negate(), SmtFactory.createUnequal(chi_i, SmtFactory.createValue(j)),
+          SmtFactory.createEqual(_parameters.getPermutation(f,j), _parameters.getPermutation(g,i))
+        );
+      }
+    }
+  }
+
+  /**
+   * Helper function for handleFun: this requires that, for all i ∈ {1..n} such that χ(i) = j ∈
+   * {1..k}, we have s_j <rel> t_i, where s_j is argument j of the left-hand side of the
+   * requirement, and t_i is argument i of the right-hand side of the requirement.
+   */
+  private void requireChiGeq(int k, int n, HorpoRequirement req, List<IVar> chi, HRelation rel) {
+    Term left = req.left();
+    Term right = req.right();
+    Term constr = req.constraint();
+    TreeSet<Variable> tvar = req.theoryVariables();
+    for (int i = 1; i <= n; i++) {
+      IVar chi_i = chi.get(i-1);
+      for (int j = 1; j <= k; j++) {
+        BVar comp = _hcl.store(left.queryArgument(j), rel, right.queryArgument(i), constr, tvar);
+        requireOr(req.variable().negate(), 
+          SmtFactory.createUnequal(chi_i, SmtFactory.createValue(j)), comp);
+      }
+    }
+  }
+
+  /**
+   * Helper function for handleFun: this requires that either χ is not surjective, or there is
+   * some i such that s_{χ(i)} ≻ t_i.  This exactly means that there is one a ∈ {1..k} ∩ regards[f]
+   * such that IF a = χ(i) THEN s_a ≻ t_i.  Note that if there is no i such that a = χ(i), then
+   * clearly χ is not surjective, so this suffices.
+   */
+  private void requireChiGreater(FunctionSymbol f, int k, int n, HorpoRequirement req,
+                                 List<IVar> chi) {
+    ArrayList<Constraint> parts = new ArrayList<Constraint>();
+
+    // a ∈ {1..k}
+    IVar a = _smt.createIntegerVariable("decrease" + _counter);
+    _smt.requireImplication(req.variable(), SmtFactory.createGeq(a, SmtFactory.createValue(1)));
+    _smt.requireImplication(req.variable(), SmtFactory.createLeq(a, SmtFactory.createValue(k)));
+    // a ∈ regards[f], so ∀ j ∈ {1..k}. a = j ⇒ j ∈ regards[f]
+    for (int j = 1; j <= k; j++) {
+      requireOr(req.variable().negate(),
+                SmtFactory.createUnequal(a, SmtFactory.createValue(j)),
+                _filter.regards(f, j));
+    }
+    // ∀ i ∈ {1..n}. ∀ j ∈ {1..k}. χ(i) = j ∧ j = a ⇒ left_j ≻ right_i
+    Term left = req.left();
+    Term right = req.right();
+    Term constr = req.constraint();
+    TreeSet<Variable> tvar = req.theoryVariables();
+    for (int i = 1; i <= n; i++) {
+      IVar chi_i = chi.get(i-1);
+      for (int j = 1; j <= k; j++) {
+        BVar sjgreaterti = _hcl.store(left.queryArgument(j), HRelation.GREATER,
+                                      right.queryArgument(i), constr, tvar);
+        requireOr(req.variable().negate(),
+                  SmtFactory.createUnequal(chi_i, a),
+                  SmtFactory.createUnequal(a, SmtFactory.createValue(j)),
+                  sjgreaterti);
+      }
+    }
+  }
+
+  /**
+   * Helper function for handleFun: this requires that for all j ∈ {1..k} ∩ regards[f] there exists
+   * some i ∈ {1..n} such that χ(i) = k, provided reqvar holds.
+   */
+  private void requireChiSurjective(FunctionSymbol f, int k, int n, BVar reqvar, List<IVar> chi) {
+    for (int j = 1; j <= k; j++) {
+      ArrayList<Constraint> parts = new ArrayList<Constraint>(n+2);
+      parts.add(reqvar.negate());
+      parts.add(_filter.regards(f,j).negate());
+      IntegerExpression jj = SmtFactory.createValue(j);
+      for (int i = 1; i <= n; i++) parts.add(SmtFactory.createEqual(chi.get(i-1), jj));
+      _smt.require(SmtFactory.createDisjunction(parts));
     }
   }
 
@@ -438,6 +598,7 @@ class HorpoSimplifier {
     else {
       if (req.left().queryType().isArrowType()) {
         FunctionSymbol f = req.left().queryRoot();
+        // all additional parameters should be regarded
         int m = f.queryArity();
         for (int i = req.left().numberArguments() + 1; i <= m; i++) {
           _smt.requireImplication(req.variable(), _filter.regards(f, i));
@@ -449,70 +610,97 @@ class HorpoSimplifier {
     }
   }
 
+  /**
+   * This simplifies requirements of the form l ▷{select} r by finding an immediate subterm li of
+   * l such that r = a r_1...r_n with li ≽ a and l ▷ each r_j.  This is a limitation of the full
+   * Select rule, where we omit the possibility of using f* (for now).
+   */
   private void handleSelect(HorpoRequirement req) {
     Term l = req.left();
     FunctionSymbol f = l.queryRoot();
-    ArrayList<Constraint> args = new ArrayList<Constraint>(l.numberArguments());
-    for (int i = 1; i <= l.numberArguments(); i++) {
-      BVar x = _filter.regards(f, i);
-      Term a = l.queryArgument(i);
-      BVar y = _hcl.store(a, HRelation.GEQ, req.right(), req.constraint(), req.theoryVariables());
-      args.add(SmtFactory.createConjunction(x, y));
-    }
+    int k = l.numberArguments();
 
-    if (args.size() == 0) { _smt.require(req.variable().negate()); return; }
-    else _smt.requireImplication(req.variable(),SmtFactory.createDisjunction(args));
+    Term r = req.right();
+    int n = r.numberArguments();
+    int rest = r.queryType().queryArity();
+    int m = n + rest; // total arity of h
+
+    ArrayList<Constraint> options = new ArrayList<Constraint>(k + 1);
+    options.add(req.variable().negate());
+
+    for (int i = 1; i <= k; i++) {
+      Constraint c = createSelectConstraint(l,f,i,r,n,m,req.constraint(), req.theoryVariables());
+      if (c != null) options.add(c);
+    }
+    _smt.require(SmtFactory.createDisjunction(options));
   }
 
-  private void handleAppl(HorpoRequirement req) {
-    Term r = req.right();
-    if (r.numberArguments() == 0) {
-      _smt.require(req.variable().negate());
-      return;
+  /**
+   * Helper function for handleSelect: this creates a requirement indicating that if
+   * left = f(l_1,...,l_k) and right = h(r_1,...,r_n) :: σ_{n+1} →...→ s_m → ι, then there is
+   * some i such that l_{index} ≽ h(r_1,...,i) and left ▷ r_j for i < j ≤ n.
+   */
+  private Constraint createSelectConstraint(Term left, FunctionSymbol f, int index,
+                                            Term right, int n, int m,
+                                            Term constr, TreeSet<Variable> tvar) {
+    Term arg = left.queryArgument(index);
+    int p = arg.queryType().queryArity();
+
+    if (p < m - n) return null;   // arg has a greater arity than right => select rule inapplicable
+    if (p > m) return null;       // can't do this ntil we implement the f* construct
+    ArrayList<Constraint> allof = new ArrayList<Constraint>(2 + p - n + m);
+    allof.add(_filter.regards(f, index));
+    Term head = right.queryImmediateHeadSubterm(m - p);
+    allof.add(_hcl.store(arg, HRelation.GEQ, head, constr, tvar));
+    for (int j = m - p + 1; j <= n; j++) {
+      allof.add(_hcl.store(left, HRelation.RPO, right.queryArgument(j), constr, tvar));
     }
-    Term a = r.queryImmediateHeadSubterm(r.numberArguments()-1);
-    Term b = r.queryArgument(r.numberArguments());
-    _smt.requireImplication(req.variable(),
-      _hcl.store(req.left(), HRelation.RPO, a, req.constraint(), req.theoryVariables()));
-    _smt.requireImplication(req.variable(),
-      _hcl.store(req.left(), HRelation.RPO, b, req.constraint(), req.theoryVariables()));
+    return SmtFactory.createConjunction(allof);
   }
 
   /**
    * Helper function: this requires that req.left ▷ t_i for every regarded argument t_i of
-   * req.right with i ≥ start.  Here, req.right is required to be a functional term.
+   * req.right().  Here, req.right() is required to be a functional term.
    */
-  private void requireLeftGreaterRightArguments(HorpoRequirement req, int start) {
+  private void requireLeftGreaterRightArguments(HorpoRequirement req) {
     Term l = req.left();
     Term r = req.right();
     FunctionSymbol g = r.queryRoot();
-    for (int i = start; i <= r.numberArguments(); i++) {
+    for (int i = 1; i <= r.numberArguments(); i++) {
       BVar subreq = _hcl.store(l, HRelation.RPO, r.queryArgument(i), req.constraint(),
-                                   req.theoryVariables());
+                               req.theoryVariables());
       BVar regards = _filter.regards(g, i);
-      _smt.requireImplication(req.variable(),
-        SmtFactory.createDisjunction(regards.negate(), subreq));
+      requireOr(req.variable().negate(), _filter.regards(g, i).negate(), subreq);
     }
   }
 
+  /**
+   * This simplifies requirements of the form l ▷{copy} r by requiring the precedences are
+   * well-ordered, and that l ▷ each of the arguments of r.
+   */
   private void handleCopy(HorpoRequirement req) {
     Term l = req.left();
     Term r = req.right();
     FunctionSymbol f = l.queryRoot();
-    if (!r.isFunctionalTerm() || r.queryRoot().equals(f) || r.isValue()) {
-      // values are excluded here because this case is already covered by thterm
+    if (!r.isFunctionalTerm() || r.queryRoot().equals(f) || isTheory(r, req.theoryVariables())) {
+      // theory terms are excluded here because they are already covered by thterm (plus,
+      // calculation symbols at the head of a theory term may not be included in the precedence)
       _smt.require(req.variable().negate());
     }
     else {
       FunctionSymbol g = r.queryRoot();
-      IVar predf = _parameters.getPrecedenceFor(f);
-      IVar predg = _parameters.getPrecedenceFor(g);
+      IVar predf = _parameters.getPrecedence(f);
+      IVar predg = _parameters.getPrecedence(g);
       _smt.requireImplication(req.variable(),
         SmtFactory.createGreater(predf, predg));
-      requireLeftGreaterRightArguments(req, 1);
+      requireLeftGreaterRightArguments(req);
     }
   }
 
+  /**
+   * This simplifies requirements of the form l ▷{th} r: the defining variable is forced to true
+   * if r is a theory term with only theory variables, and to false otherwise.
+   */
   private void handleRpoTh(HorpoRequirement req) {
     Term r = req.right();
     boolean isgood = r.isTheoryTerm();
@@ -526,275 +714,14 @@ class HorpoSimplifier {
   }
 
   private void handleLex(HorpoRequirement req) {
-    Term l = req.left();
-    Term r = req.right();
-    if (!r.isFunctionalTerm()) {
-      _smt.require(req.variable().negate());
-      return; 
-    }   
-    FunctionSymbol f = l.queryRoot();
-    FunctionSymbol g = r.queryRoot();
-    // get the maximum relevant number of arguments; this should be at least 1
-    int m = l.numberArguments();
-    if (r.numberArguments() < m) m = r.numberArguments();
-    if (m == 0) { _smt.require(req.variable().negate()); return; }
-    // to apply lex, both function symbols should have the same precedence
-    _smt.requireImplication(req.variable(),
-      SmtFactory.createEqual(_parameters.getPrecedenceFor(f), _parameters.getPrecedenceFor(g)));
-    // moreover, they should both have Lex status
-    _smt.requireImplication(req.variable(),
-      SmtFactory.createEqual(_parameters.getStatusFor(f), SmtFactory.createValue(1)));
-    _smt.requireImplication(req.variable(),
-      SmtFactory.createEqual(_parameters.getStatusFor(g), SmtFactory.createValue(1)));
-    // if there is only one argument, the decrease should be there
-    if (m == 1) {
-      _smt.requireImplication(req.variable(), _filter.regards(f, 1));
-      _smt.requireImplication(req.variable(), _filter.regards(g, 1));
-      _smt.requireImplication(req.variable(), _hcl.store(l.queryArgument(1), HRelation.GREATER,
-                                 r.queryArgument(1), req.constraint(), req.theoryVariables()));
-    }   
-    else handleLexComplicated(f, g, m, l, r, req);
-  }
-
-  /**
-   * Helper function for handleLex: handles the case where we actually have to do a lexicographic
-   * comparison rather than all the "not really" cases.
-   * Here, m is the number of arguments we should consider (at least 2).
-   * We let l = f(s1,...,sk) and r = g(t1,...,tn).
-   */
-  private void handleLexComplicated(FunctionSymbol f, FunctionSymbol g, int m, Term l, Term r,
-                                    HorpoRequirement req) {
-    // choose a parameter to decrease
-    IVar index = _smt.createIntegerVariable();
-    _smt.require(SmtFactory.createGeq(index, SmtFactory.createValue(1)));
-    _smt.require(SmtFactory.createLeq(index, SmtFactory.createValue(m)));
-    // for every i < index: either s_i ≈ t_i and both are regarded, or both are filtered
-    for (int i = 1; i < m; i++) {
-      Constraint igeqindex = SmtFactory.createGeq(SmtFactory.createValue(i), index);
-      BVar fregards = _filter.regards(f, i);
-      BVar gregards = _filter.regards(g, i);
-      _smt.require(SmtFactory.createDisjunction(List.of(  // i < index ∧ f regarded => g too
-        req.variable().negate(), igeqindex, fregards, gregards.negate())));
-      _smt.require(SmtFactory.createDisjunction(List.of(  // i < index ∧ f disregarded => g too
-        req.variable().negate(), igeqindex, fregards.negate(), gregards)));
-      _smt.require(SmtFactory.createDisjunction(List.of(  // i < index ∧ f regarded => si ≈ t_i
-        req.variable().negate(), igeqindex, fregards.negate(), _hcl.store(l.queryArgument(i),
-          HRelation.GEQNOGR, r.queryArgument(i), req.constraint(), req.theoryVariables()))));
-    }
-    // s_{index} ≻ t_{index} and both are regarded
-    for (int i = 1; i <= m; i++) {
-      Constraint ineqindex = SmtFactory.createUnequal(SmtFactory.createValue(i), index);
-      _smt.require(SmtFactory.createDisjunction(List.of(  // i = index => f regards i
-        req.variable().negate(), ineqindex, _filter.regards(f, i))));
-      _smt.require(SmtFactory.createDisjunction(List.of(  // i = index => g regards i
-        req.variable().negate(), ineqindex, _filter.regards(g, i))));
-      _smt.require(SmtFactory.createDisjunction(List.of(  // i = index => s_i ≻ t_i
-        req.variable().negate(), ineqindex, _hcl.store(l.queryArgument(i), HRelation.GREATER,
-          r.queryArgument(i), req.constraint(), req.theoryVariables()))));
-    }
-    // for every i: if t_i is regarded, then l ▷ t_i
-    // (we ignore the first argument, because that is definitely covered by the lex requirements)
-    requireLeftGreaterRightArguments(req, 2);
+    // TODO
+    _smt.require(req.variable().negate());
   }
 
   private void handleMul(HorpoRequirement req) {
-    Term l = req.left();
-    Term r = req.right();
-    // TODO: we're being very minimalistic here, and only allowing Mul if both sides have the same
-    // root; once we add support for different variables being compared, we should also require that
-    // f _can_ take at least two arguments below (and/or: abort if we get the constant 1 from the
-    // parameters as status(f))
-    FunctionSymbol f = l.queryRoot();
-    if (!r.isFunctionalTerm() || !r.queryRoot().equals(f) || r.numberArguments() <= 1 ||
-        l.numberArguments() == 0) {
-      _smt.require(req.variable().negate());
-      return; 
-    }
-    FunctionSymbol g = r.queryRoot();
-    int n = l.numberArguments(), m = r.numberArguments();
-    if (n > m) n = m;
-    // we let l = f l1 ... ln (perhaps with more arguments added, but these
-    // cannot possibly contribute to the mul relation) and r = f r1 ... rm
-    // note that m is at least 2; n may also be 1
-
-    // to apply mul, status(f) should be Mul_k, which we represent as k > 1
-    IntegerExpression status = _parameters.getStatusFor(f);
-    handleMulBasics(req, status);
-    TreeMap<Integer,TreeSet<Integer>> comparable = createComparable(l, n, r, m);
-    TreeMap<Integer,BVar> strict = createStrict(req.variable(), f, status, n);
-    TreeMap<Integer,IVar> pi = createProjection(req.variable(), f, status, n, m, comparable);
-    requirePiEqualityForNonStrict(req.variable(), status, n, m, comparable, strict, pi);
-
-    for (int i = 1; i <= m; i++) {
-      Constraint itoobig = SmtFactory.createGreater(SmtFactory.createValue(i), status);
-      TreeSet<Integer> ok = comparable.get(i);
-      for (int j = 1; j <= n; j++) {
-        if (!ok.contains(j)) continue;
-        Constraint pinotj = SmtFactory.createUnequal(SmtFactory.createValue(j), pi.get(i));
-        Constraint notstrict = SmtFactory.createNegation(strict.get(j));
-        // if [req] ∧ i ≤ status ∧ π(i) = j ∧ strict_j then s_i > t_j
-        BVar gr = _hcl.store(l.queryArgument(j), HRelation.GREATER, r.queryArgument(i),
-                             req.constraint(), req.theoryVariables());
-        Constraint c = SmtFactory.createDisjunction(
-          SmtFactory.createDisjunction(itoobig, pinotj),
-          SmtFactory.createDisjunction(notstrict, gr));
-        _smt.requireImplication(req.variable(), c);
-        // if [req] ∧ i ≤ status ∧ π(i) = j ∧ ¬strict_j then s_i ≥ t_j
-        BVar geq = _hcl.store(l.queryArgument(j), HRelation.GEQ, r.queryArgument(i),
-                              req.constraint(), req.theoryVariables());
-        c = SmtFactory.createDisjunction(
-          SmtFactory.createDisjunction(itoobig, pinotj),
-          SmtFactory.createDisjunction(strict.get(j), geq));
-        _smt.requireImplication(req.variable(), c);
-      }
-    }
-  }
-
-  /**
-   * Given a requirement f l1...ln ▷{φ} f r1...rm by Rpo-mul, this adds the constraints that for
-   * this requirement to hold, we need status(f) = Mul_k with k ≤ m, and that f l1...ln ▷{φ} for
-   * all unfiltered ri where this is not already automatically implied by the multiset requirements
-   */
-  private void handleMulBasics(HorpoRequirement req, IntegerExpression status) {
-    Term r = req.right();
-    int m = r.numberArguments();
-
-    // [req] → k > 1 (as k = 1 implies a Lex step)
-    _smt.requireImplication(req.variable(), SmtFactory.createGreater(status,
-        SmtFactory.createValue(1)));
-
-    // [req] → k ≤ m (we only require this if f r1 ... rm does not have base type, since otherwise
-    // it is already covered by the constraint on the creation of the status variable k)
-    if (r.queryType().isArrowType()) {
-      _smt.requireImplication(req.variable(),
-        SmtFactory.createLeq(status, SmtFactory.createValue(m)));
-    }
-
-    // [req] → l ▷{φ} r_i for all arguments i; however, we omit 1,2 since the multiset constraints
-    // always imply this (for i > 2, it could be that k = 2, and then these are not required)
-    requireLeftGreaterRightArguments(req, 3);
-  }
-
-  /**
-   * Given a requirement f l1...ln ▷{φ} f r1...rm by 1e, this returns which variables ri and lj can
-   * be compared (typewise).
-   */
-  private TreeMap<Integer,TreeSet<Integer>> createComparable(Term left, int n, Term right, int m) {
-    TreeMap<Integer,TreeSet<Integer>> ret = new TreeMap<Integer,TreeSet<Integer>>();
-    for (int i = 1; i <= m; i++) {
-      TreeSet<Integer> comp = new TreeSet<Integer>();
-      for (int j = 1; j <= n; j++) {
-        if (sameTypeStructure(left.queryArgument(j).queryType(),
-                              right.queryArgument(i).queryType())) {
-          comp.add(j);
-        }
-      }
-      ret.put(i, comp);
-    }
-    return ret;
-  }
-
-  /**
-   * Given a requirement f l1...ln ▷{φ} f r1...rm by 1e, this creates variables strict_1...strict_n
-   * and (conditional on the main requirement holding) requires that at least one of those, which
-   * is smaller than status and unfiltered, is true.
-   */
-  private TreeMap<Integer,BVar> createStrict(BVar reqvar, FunctionSymbol root,
-                                             IntegerExpression status, int n) {
-    TreeMap<Integer,BVar> ret = new TreeMap<Integer,BVar>();
-    ArrayList<Constraint> oneof = new ArrayList<Constraint>();
-    for (int j = 1; j <= n; j++) {
-      BVar strict_j = _smt.createBooleanVariable();
-      _smt.requireImplication(reqvar, SmtFactory.createDisjunction(strict_j.negate(),
-        _filter.regards(root, j)));
-      ret.put(j, strict_j);
-      oneof.add(strict_j);
-      if (j > 2) {
-        // [req] → ([strict_j] → k ≥ j)
-        Constraint constr = SmtFactory.createImplication(strict_j,
-          SmtFactory.createGeq(status, SmtFactory.createValue(j)));
-        _smt.requireImplication(reqvar, constr);
-      }
-    }
-
-    // [req] → [strict_1] ∨ ... ∨ [strict_n]
-    _smt.requireImplication(reqvar, SmtFactory.createDisjunction(oneof));
-    return ret;
-  }
-
-  /**
-   * Given a requirement f l1...ln ▷{φ} f r1...rm by 1e, this creates variables π(i) ∈ {1..n}
-   * for all i ∈ {1,..,m}.  It also adds the requirement that each unfiltered i ≤ status is
-   * mapped to some unfiltered j ≤ status.
-   */
-  private TreeMap<Integer,IVar> createProjection(BVar reqvar, FunctionSymbol root, IntegerExpression
-                              status, int n, int m, TreeMap<Integer,TreeSet<Integer>> comparable ) {
-    // create variables π(i)
-    TreeMap<Integer,IVar> pi = new TreeMap<Integer,IVar>();
-    for (int i = 1; i <= m; i++) pi.put(i, _smt.createIntegerVariable());
-    // require that, for 1 ≤ i ≤ status with i regarded
-    // - 1 ≤ π(i) ≤ status
-    // - π(i) ≤ n
-    // - π(i) is regarded
-    for (int i = 1; i <= m; i++) {
-      IVar pi_i = pi.get(i);
-      Constraint reqdoesnothold = reqvar.negate();
-      Constraint idisregarded = _filter.regards(root, i).negate();
-      Constraint inotinrange = SmtFactory.createGreater(SmtFactory.createValue(i), status);
-      Constraint irrelevant =
-        SmtFactory.createDisjunction(List.of(reqdoesnothold, idisregarded, inotinrange));
-      // 1 ≤ π(i)
-      Constraint atleastone = SmtFactory.createGeq(pi_i, SmtFactory.createValue(1));
-      _smt.require(SmtFactory.createDisjunction(irrelevant, atleastone));
-      // π(i) ≤ status
-      Constraint atmostk = SmtFactory.createLeq(pi_i, status);
-      _smt.require(SmtFactory.createDisjunction(irrelevant, atmostk));
-      // π(i) ≤ n
-      Constraint atmostn = SmtFactory.createLeq(pi_i, SmtFactory.createValue(n));
-      _smt.require(SmtFactory.createDisjunction(irrelevant, atmostn));
-      // π(i) is regarded
-      for (int j = 1; j <= n; j++) {
-        // irrelevant OR π(i) != j OR j is regarded
-        Constraint pi_i_not_j = SmtFactory.createUnequal(pi_i, SmtFactory.createValue(j));
-        _smt.require(SmtFactory.createDisjunction(List.of(irrelevant, pi_i_not_j,
-          _filter.regards(root, j))));
-      }
-    }
-    // require that π(i) != j if l_j and r_i do not have the same type structure
-    for (int i = 1; i <= m; i++) {
-      TreeSet<Integer> ok = comparable.get(i);
-      IVar pi_i = pi.get(i);
-      for (int j = 1; j <= n; j++) {
-        if (!ok.contains(j)) {
-          _smt.requireImplication(reqvar, SmtFactory.createUnequal(pi_i, SmtFactory.createValue(j)));
-        }
-      }
-    }
-    return pi;
-  }
-
-  private void requirePiEqualityForNonStrict(BVar reqvar, IntegerExpression status, int n, int m,
-                                             TreeMap<Integer,TreeSet<Integer>> comparable,
-                                             TreeMap<Integer,BVar> strict,
-                                             TreeMap<Integer,IVar> pi) {
-    // require that if π(i) = j ∧ pi(i') = j then strict_j
-    for (int i1 = 1; i1 < m; i1++) {
-      for (int i2 = i1+1; i2 <= m; i2++) {
-        for (int j = 1; j <= n; j++) {
-          if (!comparable.get(i1).contains(j)) continue;
-          if (!comparable.get(i2).contains(j)) continue;
-          // create: pi(i1) != j
-          Constraint c1 = SmtFactory.createUnequal(pi.get(i1), SmtFactory.createValue(j));
-          // create: pi(i2) != j
-          Constraint c2 = SmtFactory.createUnequal(pi.get(i2), SmtFactory.createValue(j));
-          // create: strict_j
-          Constraint c3 = strict.get(j);
-          // combine them
-          Constraint d = SmtFactory.createDisjunction(SmtFactory.createDisjunction(c1, c2), c3);
-          // and require for this clause to hold if req holds
-          _smt.requireImplication(reqvar, d);
-        }
-      }
-    }
+    // TODO
+    _smt.require(req.variable().negate());
   }
 }
+
+

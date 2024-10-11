@@ -98,6 +98,31 @@ public class ArgumentFilterTest {
   }
 
   @Test
+  public void testForceEmptyAfterEverythingRegardedVariableWasChecked() {
+    FunctionSymbol f = TermFactory.createConstant("f", type("Int -> Int"));
+    FunctionSymbol g = TermFactory.createConstant("g", type("Int -> Int -> Int"));
+    SmtProblem prob = new SmtProblem();
+    ArgumentFilter filter = new ArgumentFilter(prob);
+    BVar x = filter.regards(f, 1);
+    assertTrue(x.queryName().equals("[regards{f,1}]"));
+    assertTrue(prob.toString().equals(""));
+    BVar e = filter.regardsEverything();
+    assertTrue(prob.toString().equals("![regardsall] or [regards{f,1}]\n"));
+    BVar y = filter.regards(f, 3);
+    assertTrue(y.queryName().equals("[regards{f,3}]"));
+    assertTrue(prob.toString().equals(
+      "![regardsall] or [regards{f,1}]\n" +
+      "![regardsall] or [regards{f,3}]\n"));
+    filter.forceEmpty();
+    y = filter.regards(g, 1);
+    assertTrue(y == e);
+    assertTrue(prob.toString().equals(
+      "![regardsall] or [regards{f,1}]\n" +
+      "![regardsall] or [regards{f,3}]\n" +
+      "[regardsall]\n"));
+  }
+
+  @Test
   public void testGetFilterData() {
     FunctionSymbol f = TermFactory.createConstant("f", type("Int -> Int"));
     FunctionSymbol g = TermFactory.createConstant("g", type("Int -> Int -> Int"));

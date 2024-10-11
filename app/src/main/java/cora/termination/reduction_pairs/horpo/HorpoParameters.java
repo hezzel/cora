@@ -18,36 +18,101 @@ package cora.termination.reduction_pairs.horpo;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.Collections;
 import charlie.util.Pair;
 import charlie.terms.FunctionSymbol;
 import charlie.smt.*;
+import cora.termination.reduction_pairs.ArgumentFilter;
 
 /**
- * The parameters to Horpo are the precedence, the argument permutation, the relevant arguments
- * count, and the integer ordering.
+ * The parameters to Horpo are the precedence, the argument permutation, and the integer ordering.
  * The HorpoParameters class keeps track of Smt variables to represent these concepts, and also
  * maintains the SmtProblem to create variables in.
  */
 class HorpoParameters {
   private final SmtProblem _problem;
-  private final TreeMap<String,IVar> _precedence;
-  private final TreeMap<String,IVar> _status;
+  private final TreeMap<FunctionSymbol,IVar> _precedence;
+  private final TreeMap<FunctionSymbol,TreeMap<Integer,IVar>> _permutation;
   private final BVar _down;
   private final int _M;
 
   /**
-   * Sets up a set of HorpoParameters with empty precedence and argument comparison data: variables
-   * for these will be created on the fly, as they are requested.
-   * The given integer bound should be a positive number: it represents either the bound to count up
-   * to, or the negation of the bound to count down to.
+   * This sets up a set of HorpoParameters by generating boolean and integer variables in the SMT
+   * problem to represent the precedence and argument permutation.  We do not create any variable
+   * for N_f, because we implicitly assume that N_f is the maximum arity of any function symbol,
+   * and since the set is finite, such number always exists.
    */
-  HorpoParameters(int bound, SmtProblem problem) {
+  HorpoParameters(int bound, TreeSet<FunctionSymbol> allsymbols, ArgumentFilter regards,
+                  SmtProblem problem) {
     _problem = problem;
-    _precedence = new TreeMap<String,IVar>();
-    _status = new TreeMap<String,IVar>();
+    _precedence = new TreeMap<FunctionSymbol,IVar>();
+    _permutation = new TreeMap<FunctionSymbol,TreeMap<Integer,IVar>>();
     _down = _problem.createBooleanVariable("down");
     _M = bound > 0 ? bound : 1;
+    setupPrecedence(allsymbols);
+    setupPermutation(allsymbols, regards);
+  }
+
+  /**
+   * Helper function for the constructor: creates a precedence variable for each function symbol
+   * that occurs in the given list.
+   */
+  private void setupPrecedence(TreeSet<FunctionSymbol> symbols) {
+    IntegerExpression zero = SmtFactory.createValue(0);
+    IntegerExpression max = SmtFactory.createValue(symbols.size());
+    IVar valuevar = null;
+
+    for (FunctionSymbol f : symbols) {
+      // values are always mapped to 0
+      if (f.isValue()) {
+        if (valuevar == null) {
+          valuevar = _problem.createIntegerVariable("zero");
+          _problem.require(SmtFactory.createEqual(valuevar, zero));
+        }
+        _precedence.put(f, valuevar);
+      }
+      // other function symbols are mapped to a number between 1 and max
+      else {
+        IVar x = _problem.createIntegerVariable("pred(" + f.queryName() + ")");
+        _problem.require(SmtFactory.createSmaller(zero, x));
+        _problem.require(SmtFactory.createGeq(max, x));
+        _precedence.put(f, x);
+      }
+    }
+  }
+
+  /**
+   * For every function symbol f of arity m, we set up variables π{f}(i) for 1 ≤ i ≤ m, and
+   * require that π{f}(i) = 0 if and only if argument i is regarded (otherwise it is a number
+   * between 1 and m).  We additionally require that when i != j, either π{f}(i) != π{f}(j) or
+   * both are 1.
+   */
+  private void setupPermutation(TreeSet<FunctionSymbol> symbols, ArgumentFilter filter) {
+    IntegerExpression zero = SmtFactory.createValue(0);
+    IntegerExpression one = SmtFactory.createValue(1);
+    for (FunctionSymbol f : symbols) {
+      int m = f.queryArity();
+      if (m == 0) continue;
+      IntegerExpression mexp = SmtFactory.createValue(m);
+      TreeMap<Integer,IVar> map = new TreeMap<Integer,IVar>();
+      _permutation.put(f, map);
+      for (int i = 1; i <= m; i++) {
+        IVar x = _problem.createIntegerVariable("pi{" + f.queryName() + "}(" + i + ")");
+        BVar reg = filter.regards(f, i);
+        _problem.requireImplication(reg.negate(), SmtFactory.createEqual(x, zero));
+        if (m == 1) _problem.requireImplication(reg, SmtFactory.createEqual(x, one));
+        else {
+          _problem.requireImplication(reg, SmtFactory.createGreater(x, zero));
+          _problem.require(SmtFactory.createGeq(mexp, x));
+        }
+        map.put(i, x);
+        for (int j = 1; j < i; j++) {
+          _problem.requireImplication(SmtFactory.createEqual(x, map.get(j)),
+                                      SmtFactory.createEqual(x, one));
+        }
+      }
+    }
   }
 
   /**
@@ -60,47 +125,21 @@ class HorpoParameters {
     return _problem;
   }
 
-  /**
-   * The precedence is represented by mapping every function symbol to an integer: term symbols ≥
-   * 0, theory symbols < 0.
-   *
-   * This function returns an integer variable associated to the given symbol f.  It may be created
-   * first in the underlying SMT problem if we hadn't done so yet; but it will always give the
-   * same variable for the same function symbol.
+ /**
+   * The precedence is represented by mapping every function symbol to an integer variable.  The
+   * function symbol must be one that was passed to the parameters during initialisation.
    */
-  IVar getPrecedenceFor(FunctionSymbol f) {
-    String name = f.queryName();
-    if (_precedence.containsKey(name)) return _precedence.get(name);
-    IVar x = _problem.createIntegerVariable("pred(" + name + ")");
-    // theory symbols are always smaller than non-theory symbols
-    if (f.isTheorySymbol()) _problem.require(SmtFactory.createSmaller(x, SmtFactory.createValue(0)));
-    else _problem.require(SmtFactory.createGeq(x, SmtFactory.createValue(0)));
-    _precedence.put(name, x);
-    return x;
+  public IVar getPrecedence(FunctionSymbol f) {
+    return _precedence.get(f);
   }
 
   /**
-   * The status is represented by an integer: a number 1 for Lex status, and k ≥ 2 for Mul_k.
-   *
-   * This function either returns an integer variable associated to the given symbol, or the value
-   * 1.
-   * In case the arity is 0 or 1, the value 1 is returned, because status is entirely irrelevant in
-   * this case (so we may as well default to Lex).
-   * Otherwise, an integer variable is returned that ranges over 1..ar(f).  It may be creaed first
-   * in the underlying SMT problem if we hadn't done so yet; but it will always give the same
-   * variable for the same function symbol.
+   * The permutation is represented by mapping every functionsymbol-position pair to an integer
+   * variable.  The function symbol must be one that was passed to the parameters during
+   * initialisation, and the position between 1 and its arity.
    */
-  public IntegerExpression getStatusFor(FunctionSymbol f) {
-    if (f.queryArity() <= 1) return SmtFactory.createValue(1);
-    String name = f.queryName();
-    if (_status.containsKey(name)) return _status.get(name);
-    IVar x = _problem.createIntegerVariable("stat(" + name + ")");
-    _status.put(name, x);
-    _problem.require(SmtFactory.createGeq(x, SmtFactory.createValue(1)));
-    _problem.require(SmtFactory.createLeq(x, SmtFactory.createValue(f.queryArity())));
-    // ensure that a precedence variable also exists, since these are returned together
-    getPrecedenceFor(f);
-    return x;
+  public IVar getPermutation(FunctionSymbol f, int pos) {
+    return _permutation.get(f).get(pos);
   }
 
   /**
@@ -124,7 +163,23 @@ class HorpoParameters {
     return _M;
   }
 
-  record SymbolData(String symbol, int prec, int stat) {}
+  record SymbolData(FunctionSymbol symbol, int prec, TreeSet<Integer> mappedToOne,
+                    TreeMap<Integer,Integer> mappedToGreater) {
+    /** debug output */
+    public String toString() {
+      StringBuilder ret = new StringBuilder();
+      ret.append(symbol.queryName());
+      ret.append(" : [ {");
+      for (int i : mappedToOne) ret.append(" " + i);
+      ret.append(" }");
+      for (int i = 2; i <= symbol.queryArity(); i++) {
+        if (mappedToGreater.containsKey(i)) ret.append(" " + mappedToGreater.get(i));
+        else ret.append(" _");
+      }
+      ret.append(" ] (" + prec + ")");
+      return ret.toString();
+    }
+  }
   
   /**
    * For the given valuation, returns the precedence and status of all the function symbols where
@@ -132,16 +187,21 @@ class HorpoParameters {
    */
   public ArrayList<SymbolData> getSymbolData(Valuation valuation) {
     ArrayList<SymbolData> info = new ArrayList<SymbolData>();
-    for (String symbol : _precedence.keySet()) {
+    for (FunctionSymbol symbol : _precedence.keySet()) {
       int p = valuation.queryAssignment(_precedence.get(symbol));
-      IVar i = _status.get(symbol);
-      int s = (i == null) ? 1 : valuation.queryAssignment(i);
-      info.add(new SymbolData(symbol, p, s));
+      TreeSet<Integer> one = new TreeSet<Integer>();
+      TreeMap<Integer,Integer> other = new TreeMap<Integer,Integer>();
+      for (int i = 1; i <= symbol.queryArity(); i++) {
+        IVar x = _permutation.get(symbol).get(i);
+        int value = valuation.queryAssignment(x);
+        if (value == 1) one.add(i);
+        else if (value > 1) other.put(value, i);
+      }
+      info.add(new SymbolData(symbol, p, one, other));
     }
     Collections.sort(info, new Comparator<SymbolData>() {
       public int compare(SymbolData inf1, SymbolData inf2) {
         if (inf1.prec != inf2.prec) return inf2.prec - inf1.prec;
-        if (inf1.stat != inf2.stat) return inf2.stat - inf1.stat;
         return inf1.symbol.compareTo(inf2.symbol);
       }
     });

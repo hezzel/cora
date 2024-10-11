@@ -58,12 +58,12 @@ public class HorpoConstraintListTest {
       Set.of(right.querySubterm(Position.parse("1")).queryVariable(),
       TermFactory.createVar("z", type("Int")))
     );
-    BVar x2 = lst.store(rule.queryLeftSide(), HRelation.GEQMONO, right,
+    BVar x2 = lst.store(rule.queryLeftSide(), HRelation.GEQVAR, right,
                         rule.queryConstraint(), vars);
     assertTrue(x1 != x2);
     assertTrue(lst.toString().equals(
       "[f(x, d(y)) ≻ g(x, x) | x > 0 { x }]\n" +
-      "[g(x, d(x)) ≽{mono} f(y, x) | true { y }]\n"));
+      "[g(x, d(x)) ≽{var} f(y, x) | true { y }]\n"));
   }
 
   @Test

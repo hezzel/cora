@@ -75,19 +75,14 @@ class HorpoResult extends ReductionPairProofObject {
   public int precedence(FunctionSymbol f, FunctionSymbol g) {
     int fi, gi;
     if (_valuation == null) return 0;
-    int k = _parameters.getPrecedenceFor(f).evaluate(_valuation) -
-            _parameters.getPrecedenceFor(g).evaluate(_valuation);
-    if (k != 0) return k;
-    return _parameters.getStatusFor(f).evaluate(_valuation) -
-           _parameters.getStatusFor(g).evaluate(_valuation);
+    int k = _parameters.getPrecedence(f).evaluate(_valuation) -
+            _parameters.getPrecedence(g).evaluate(_valuation);
+    return k;
   }
 
-  /** Returns the status (Lex or Mul_i for some i ≥ 2) of the given symbol */
-  public String status(FunctionSymbol f) {
-    if (_valuation == null) return null;
-    int k = _parameters.getStatusFor(f).evaluate(_valuation);
-    if (k <= 1) return "Lex";
-    else return "Mul_" + k;
+  public int permutation(FunctionSymbol f, int index) {
+    if (_valuation == null) return 0;
+    return _parameters.getPermutation(f, index).evaluate(_valuation);
   }
 
   /** Returns whether the ordering is inherently strict. */
@@ -115,39 +110,35 @@ class HorpoResult extends ReductionPairProofObject {
   }
 
   /**
-   * This prints the precedence and status.  Note: this only works because the Horpo process
-   * ensures that the precedence is known whenever the status is known.
+   * This prints the precedence and permutation for all function symbols.
+   * As a side effect, this also shows the filter.
    */
-  private void printPrecedence(OutputModule o) {
+  private void printSymbolData(OutputModule o) {
     ArrayList<HorpoParameters.SymbolData> data = _parameters.getSymbolData(_valuation);
-    if (data.size() == 0) {
-      o.println("* Precedence and status: all symbols may be oriented with Lex, and have the " +
-        "same precedence.");
-      return;
-    }
-    o.println("* Precedence and status (for non-mentioned symbols the precedence is irrelevant " +
-      "and the status is Lex):");
+    o.println("* Precedence and permutation:");
     o.startTable();
-    o.print("%a ", data.get(0).symbol());
-    for (int index = 1; index <= data.size(); index++) {
-      if (index == data.size() ||
-          data.get(index).prec() != data.get(index-1).prec() ||
-          data.get(index).stat() != data.get(index-1).stat()) {
-        o.nextColumn();
-        o.print("(status: %a)", data.get(index-1).stat() == 1 ? "Lex" : "Mul_" +
-          data.get(index-1).stat());
-        o.nextColumn();
-        // Lex and Mul symbols cannot be equal (even if they are sometimes accidentally mapped to
-        // the same integer because they are never compared), but two Mul symbols with different
-        // counts *can* be equated
-        if (index < data.size()) {
-          if (data.get(index).prec() != data.get(index-1).prec() ||
-              data.get(index).stat() == 1) o.println("%{greater}");
-          else o.println("=");
+    for (int index = 0; index < data.size(); index++) {
+      HorpoParameters.SymbolData d = data.get(index);
+      // precedence: we print them in order, and note equality or greater then
+      if (index == 0) o.nextColumn();
+      else if (d.prec() == data.get(index-1).prec()) o.nextColumn("=");
+      else o.nextColumn(">");
+      // symbol
+      o.nextColumn("%a ", d.symbol().queryName());
+      // multiset arguments
+      o.print("{");
+      for (int i : d.mappedToOne()) o.print(" %a", i);
+      o.nextColumn(" }");
+      // lexicographically compared arguments
+      int skip = 0;
+      for (int i = 2; i <= d.symbol().queryArity(); i++) {
+        if (d.mappedToGreater().containsKey(i)) {
+          for (int j = 0; j < skip; j++) o.nextColumn("_");
+          o.nextColumn("%a", d.mappedToGreater().get(i));
         }
-      }
-      else o.print("= ");
-      if (index < data.size()) o.print("%a ", data.get(index).symbol());
+        else skip++;
+      }   
+      o.println();
     }
     o.endTable();
   }
@@ -173,12 +164,12 @@ class HorpoResult extends ReductionPairProofObject {
         "(all arguments of function symbols were regarded).");
       return;
     }
-    o.println("* Regarded arguments:");
+    o.println("* Disregarded arguments:");
     o.startTable();
     for (FunctionSymbol f : getSymbols()) {
       boolean first = true;
       for (int i = 1; i <= f.queryArity(); i++) {
-        if (regards(f, i)) {
+        if (!regards(f, i)) {
           if (first) { o.nextColumn("%a", f.queryName()); first = false; }
           o.print("%a ", i);
         }
@@ -197,8 +188,8 @@ class HorpoResult extends ReductionPairProofObject {
     o.println("Constrained HORPO yields:");
     printOrderingProblem(o);
     o.println("We do this using the following settings:");
-    printPrecedence(o);
-    printOrderings(o);
     printFilterings(o);
+    printSymbolData(o);
+    printOrderings(o);
   }
 }

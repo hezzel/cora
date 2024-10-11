@@ -1,0 +1,748 @@
+/**************************************************************************************************
+ Copyright 2024 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
+package cora.termination.reduction_pairs.horpo;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.TreeSet;
+import charlie.util.Pair;
+import charlie.types.Type;
+import charlie.terms.position.Position;
+import charlie.terms.*;
+import charlie.smt.*;
+import charlie.trs.Rule;
+import charlie.trs.TRS;
+import charlie.trs.TrsFactory;
+import charlie.reader.CoraInputReader;
+import cora.config.Settings;
+import cora.termination.reduction_pairs.ArgumentFilter;
+import cora.termination.reduction_pairs.horpo.HorpoConstraintList.HRelation;
+
+public class HorpoSimplifierTest {
+  private TRS makeTrs(String txt) {
+    return CoraInputReader.readTrsFromString(txt, TrsFactory.LCSTRS);
+  }
+
+  private Type type(String txt) {
+    return CoraInputReader.readType(txt);
+  }
+
+  private HorpoConstraintList makeList(TRS trs, SmtProblem smt) {
+    return new HorpoConstraintList(new TermPrinter(trs.queryFunctionSymbolNames()), smt);
+  }
+
+  /**
+   * This sets up a simplification problem l <relation> r | phi { x1,...,xn,y }, where l and r have
+   * the given types and x1,...,xn are the variables of phi.  Then, it does a single simplification
+   * step.
+   * Both the resulting list and the corresponding state of the SmtProblem are returned.
+   */
+  private Pair<HorpoConstraintList,SmtProblem> setupSimplify(String l, String lsort, String r,
+                 String rsort, String ysort, String phi, HRelation relation, String trsstring) {
+    SmtProblem smt = new SmtProblem();
+    TRS trs = makeTrs("Q :: (" + lsort + ") -> (" + rsort + ") -> (" + ysort + ") -> Bool -> unit"
+                      + "\n" + trsstring);
+    HorpoConstraintList lst = makeList(trs, smt);
+    ArgumentFilter filter = new ArgumentFilter(smt);
+    TreeSet<FunctionSymbol> funcs = new TreeSet<FunctionSymbol>(trs.queryAlphabet().getSymbols());
+    HorpoParameters param = new HorpoParameters(1000, funcs, filter, smt);
+    HorpoSimplifier simplifier = new HorpoSimplifier(param, lst, filter);
+    Term term = CoraInputReader.readTerm("Q(" + l + ", " + r + ", y, " + phi + ")", trs);
+    Term left = term.queryArgument(1);
+    Term right = term.queryArgument(2);
+    Term constraint = term.queryArgument(4);
+    Variable y = term.queryArgument(3).queryVariable();
+    TreeSet<Variable> tvar = new TreeSet<Variable>();
+    tvar.add(y);
+    for (Variable x : constraint.vars()) tvar.add(x);
+    lst.store(left, relation, right, constraint, tvar);
+    smt.clear();
+    simplifier.simplify(lst.get(0));
+    return new Pair<HorpoConstraintList,SmtProblem>(lst, smt);
+  }
+
+  /**
+   * This sets up a simplification problem of the form f(x, d(y)) REL g(x, x) | x > 0 { x },
+   * and does a single simplification step.  Here, REL is the given relation.
+   * Both the resulting list and the corresponding state of the SmtPorblem are returned.
+   */
+  private Pair<HorpoConstraintList,SmtProblem> setupSimplify(HRelation relation) {
+    return setupSimplify("f(x, d(y))", "Int", "g(x,x)", "Int", "Int", "y > 0", relation,
+                         "f :: Int -> Int -> Int g :: Int -> Int -> Int d :: Int -> Int");
+  }
+
+  /**
+   * This sets up a simplification problem of the form x+3 REL x+1 | x > 0 { x },
+   * and does a single simplification step.  Here, REL is the given relation.
+   * Both the resulting list and the corresponding state of the SmtPorblem are returned.
+   */
+  private Pair<HorpoConstraintList,SmtProblem> setupTheorySimplify(HRelation relation) {
+    return setupSimplify("x+3", "Int", "x+1", "Int", "Int", "x > 0", relation, "");
+  }
+
+  private Pair<HorpoConstraintList,SmtProblem> setupVarSimplify(HRelation relation) {
+    SmtProblem smt = new SmtProblem();
+    TRS trs = makeTrs("Q :: A -> A\na :: A\nb :: A\nc :: Int -> A" +
+                      "{ F :: A -> A -> A } Q(F(c(x), a)) -> Q(F(b, c(x))) | x = 0");
+    HorpoConstraintList lst = makeList(trs, smt);
+    ArgumentFilter filter = new ArgumentFilter(smt);
+    TreeSet<FunctionSymbol> funcs = new TreeSet<FunctionSymbol>(trs.queryAlphabet().getSymbols());
+    HorpoParameters param = new HorpoParameters(1000, funcs, filter, smt);
+    HorpoSimplifier simplifier = new HorpoSimplifier(param, lst, filter);
+    Term left = trs.queryRule(0).queryLeftSide().queryArgument(1);
+    Term right = trs.queryRule(0).queryRightSide().queryArgument(1);
+    Term constraint = trs.queryRule(0).queryConstraint();
+    TreeSet<Variable> tvar = new TreeSet<Variable>();
+    for (Variable x : constraint.vars()) tvar.add(x);
+    lst.store(left, relation, right, constraint, tvar);
+    smt.clear();
+    simplifier.simplify(lst.get(0));
+    return new Pair<HorpoConstraintList,SmtProblem>(lst, smt);
+  }
+
+
+  @Test
+  public void testSimplifyGreater() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify(HRelation.GREATER);
+    assertTrue(pair.fst().toString().equals(
+      "[f(x, d(y)) ≻ g(x, x) | y > 0 { y }]\n" +
+      "[f(x, d(y)) ≻{rpo} g(x, x) | y > 0 { y }]\n" +
+      "[f(x, d(y)) ≻{var} g(x, x) | y > 0 { y }]\n" +
+      "[f(x, d(y)) ≻{fun} g(x, x) | y > 0 { y }]\n"));
+    assertTrue(pair.snd().toString().equals(
+      "![f(x, d(y)) ≻ g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ≻{rpo} g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ≻{var} g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ≻{fun} g(x, x) | y > 0 { y }]\n"));
+    pair = setupTheorySimplify(HRelation.GREATER);
+    assertTrue(pair.fst().toString().equals(
+      "[x + 3 ≻ x + 1 | x > 0 { x }]\n" +
+      "[x + 3 ≻{theory} x + 1 | x > 0 { x }]\n"));
+    assertTrue(pair.snd().toString().equals(
+      "![x + 3 ≻ x + 1 | x > 0 { x }] or " +
+      "[x + 3 ≻{theory} x + 1 | x > 0 { x }]\n"));
+    pair = setupSimplify("x + 1", "Int", "x + 1", "Int", "Int", "y > 0", HRelation.GREATER, "");
+    assertTrue(pair.fst().toString().equals("[x + 1 ≻ x + 1 | y > 0 { }]\n"));
+    assertTrue(pair.snd().toString().equals("![x + 1 ≻ x + 1 | y > 0 { }]\n"));
+  }
+
+  @Test
+  public void testSimplifyGeq() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify(HRelation.GEQ);
+    assertTrue(pair.fst().toString().equals(
+      "[f(x, d(y)) ≽ g(x, x) | y > 0 { y }]\n" +
+      "[f(x, d(y)) ≻{rpo} g(x, x) | y > 0 { y }]\n" +
+      "[f(x, d(y)) ≽{var} g(x, x) | y > 0 { y }]\n" +
+      "[f(x, d(y)) ≽{fun} g(x, x) | y > 0 { y }]\n"));
+    assertTrue(pair.snd().toString().equals(
+      "![f(x, d(y)) ≽ g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ≻{rpo} g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ≽{var} g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ≽{fun} g(x, x) | y > 0 { y }]\n"));
+    pair = setupTheorySimplify(HRelation.GEQ);
+    assertTrue(pair.fst().toString().equals(
+      "[x + 3 ≽ x + 1 | x > 0 { x }]\n" +
+      "[x + 3 ≽{theory} x + 1 | x > 0 { x }]\n"));
+    assertTrue(pair.snd().toString().equals(
+      "![x + 3 ≽ x + 1 | x > 0 { x }] or " +
+      "[x + 3 ≽{theory} x + 1 | x > 0 { x }]\n"));
+    pair = setupSimplify("x + 1", "Int", "x + 1", "Int", "Int", "y > 0", HRelation.GEQ, "");
+    assertTrue(pair.snd().toString().equals(
+      "![x + 1 ≽ x + 1 | y > 0 { }] or " +
+      "[x + 1 ≽{equal} x + 1 | y > 0 { }]\n"));
+  }
+
+  @Test
+  public void testSimplifyGeqNoGr() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify(HRelation.GEQNOGR);
+    assertTrue(pair.snd().toString().equals(
+      "![f(x, d(y)) ≈ g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ≈{var} g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ≈{fun} g(x, x) | y > 0 { y }]\n"));
+    pair = setupTheorySimplify(HRelation.GEQNOGR);
+    assertTrue(pair.snd().toString().equals(
+      "![x + 3 ≈ x + 1 | x > 0 { x }] or " +
+      "[x + 3 ≈{theory} x + 1 | x > 0 { x }]\n"));
+    pair = setupSimplify("x + 1", "Int", "x + 1", "Int", "Int", "y > 0", HRelation.GEQNOGR, "");
+    assertTrue(pair.snd().toString().equals(
+      "![x + 1 ≈ x + 1 | y > 0 { }] or " +
+      "[x + 1 ≈{equal} x + 1 | y > 0 { }]\n"));
+}
+
+  @Test
+  public void testSimplifyRpo() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify(HRelation.RPO);
+    assertTrue(pair.snd().toString().equals(
+      "![f(x, d(y)) ▷ g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ▷{th} g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ▷{select} g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ▷{copy} g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ▷{lex} g(x, x) | y > 0 { y }] or " +
+      "[f(x, d(y)) ▷{mul} g(x, x) | y > 0 { y }]\n"));
+  }
+
+  @Test
+  public void testSimplifyDistinctTypesAllowed() {
+    String trs = "f :: Int -> A g :: Int -> B";
+    // you can have different types!
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(x)", "A", "g(x)", "B", "Int",
+                                                              "x > 0", HRelation.GEQNOGR, trs);
+    assertTrue(pair.snd().toString().equals(
+      "![f(x) ≈ g(x) | x > 0 { x }] or " +
+      "[f(x) ≈{var} g(x) | x > 0 { x }] or [f(x) ≈{fun} g(x) | x > 0 { x }]\n"));
+    pair = setupSimplify("f(x)", "A", "g(x)", "B", "Int", "x > 0", HRelation.GEQ, trs);
+    assertTrue(pair.snd().toString().equals(
+      "![f(x) ≽ g(x) | x > 0 { x }] or [f(x) ≻{rpo} g(x) | x > 0 { x }] or " +
+      "[f(x) ≽{var} g(x) | x > 0 { x }] or [f(x) ≽{fun} g(x) | x > 0 { x }]\n"));
+    pair = setupSimplify("f(x)", "A", "g(x)", "B", "Int", "x > 0", HRelation.GREATER, trs);
+    assertTrue(pair.snd().toString().equals(
+      "![f(x) ≻ g(x) | x > 0 { x }] or [f(x) ≻{rpo} g(x) | x > 0 { x }] or " +
+      "[f(x) ≻{var} g(x) | x > 0 { x }] or [f(x) ≻{fun} g(x) | x > 0 { x }]\n"));
+  }
+
+  @Test
+  public void testSimplifyDistinctTypeStructureNotAllowed() {
+    String trs = "f :: Int -> A g :: Int -> B -> B";
+    Pair<HorpoConstraintList,SmtProblem> pair;
+    pair = setupSimplify("f(x)", "A", "g(x)", "B -> B", "Int", "x > 0", HRelation.GEQNOGR, trs);
+    assertTrue(pair.snd().toString().equals("![f(x) ≈ g(x) | x > 0 { x }]\n"));
+    pair = setupSimplify("f(x)", "A", "g(x)", "B -> B", "Int", "x > 0", HRelation.GEQ, trs);
+    assertTrue(pair.snd().toString().equals("![f(x) ≽ g(x) | x > 0 { x }]\n"));
+    pair = setupSimplify("f(x)", "A", "g(x)", "B -> B", "Int", "x > 0", HRelation.GREATER, trs);
+    assertTrue(pair.snd().toString().equals("![f(x) ≻ g(x) | x > 0 { x }]\n"));
+  }
+
+  @Test
+  public void testGeqNoGrTheory() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("y", "Int", "y+x", "Int", "Int",
+                                                         "x <= 0", HRelation.GEQNOGRTHEORY, "");
+    assertTrue(pair.fst().toString().equals(
+      "[y ≈{theory} y + x | x ≤ 0 { y x }]\n" +
+      "[y ≽{theory} y + x | x ≤ 0 { y x }]\n" +
+      "[y ≻{theory} y + x | x ≤ 0 { y x }]\n"));
+    assertTrue(pair.snd().toString().equals(
+      "[y ≈{theory} y + x | x ≤ 0 { y x }] == " +
+        "([y ≽{theory} y + x | x ≤ 0 { y x }] and " +
+        "![y ≻{theory} y + x | x ≤ 0 { y x }])\n"));
+  }
+
+  private class FakeSolver implements SmtSolver {
+    private ArrayList<String> _requests;
+    private boolean[] _answers;
+    int _index;
+    public FakeSolver(boolean ...answers) {
+      _requests = new ArrayList<String>();
+      _answers = answers;
+      _index = 0;
+    }
+    // return the next stored answer
+    public boolean checkValidity(SmtProblem problem) {
+      _requests.add(problem.queryCombinedConstraint().toString());
+      return _answers[_index++];
+    }
+    // this shouldn't be getting called at all
+    public SmtSolver.Answer checkSatisfiability(SmtProblem problem) {
+      assertTrue(false);
+      return null;
+    }
+  }
+
+  @Test
+  public void testGreaterDown() {
+    FakeSolver solver = new FakeSolver(true, false);
+    Settings.smtSolver = solver;
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x+1", "Int", "x-1", "Int", "Int",
+                                                        "x >= -4", HRelation.GREATERTHEORY, "");
+    assertTrue(pair.fst().toString().equals("[x + 1 ≻{theory} x - 1 | x ≥ -4 { x }]\n"));
+    assertTrue(pair.snd().toString().equals("[x + 1 ≻{theory} x - 1 | x ≥ -4 { x }] == [down]\n"));
+    assertTrue(solver._requests.size() == 2);
+    assertTrue(solver._requests.get(0).equals(
+      "(0 >= 5 + i1) or ((1 + i1 >= i1) and (1001 + i1 >= 0))"));
+      // x ≥ -4 ⇒ x + 1 > x - 1 ∧ x + 1 ≥ -1000
+    assertTrue(solver._requests.get(1).equals(
+      "(0 >= 5 + i1) or ((i1 >= 3 + i1) and (999 >= i1))"));
+      // x ≥ -4 ⇒ x + 1 < x - 1 ∧ x + 1 ≤ 1000
+  }
+
+  @Test
+  public void testGreaterNeither() {
+    FakeSolver solver = new FakeSolver(false, false);
+    Settings.smtSolver = solver;
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x+y", "Int", "y", "Int", "Int",
+                                                        "x > y", HRelation.GREATERTHEORY, "");
+    assertTrue(pair.fst().toString().equals("[x + y ≻{theory} y | x > y { x y }]\n"));
+    assertTrue(pair.snd().toString().equals("![x + y ≻{theory} y | x > y { x y }]\n"));
+    assertTrue(solver._requests.size() == 2);
+    assertTrue(solver._requests.get(0).equals(
+      "(i2 >= i1) or ((i1 + i2 >= 1 + i2) and (1000 + i1 + i2 >= 0))"));
+      // x > y ⇒ x + y > y ∧ x + y ≥ -1000
+    assertTrue(solver._requests.get(1).equals(
+      "(i2 >= i1) or ((i2 >= 1 + i1 + i2) and (1000 >= i1 + i2))"));
+      // x > y ⇒ x + y < y ∧ x + y ≤ 1000
+  }
+
+  @Test
+  public void testGeqUp() {
+    FakeSolver solver = new FakeSolver(false, true);
+    Settings.smtSolver = solver;
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x+y", "Int", "y", "Int", "Int",
+                                                           "x >= 0", HRelation.GEQTHEORY, "");
+    assertTrue(pair.fst().toString().equals("[x + y ≽{theory} y | x ≥ 0 { x y }]\n"));
+    assertTrue(pair.snd().toString().equals("[x + y ≽{theory} y | x ≥ 0 { x y }] == ![down]\n"));
+    assertTrue(solver._requests.size() == 2);
+    assertTrue(solver._requests.get(0).equals("(0 >= 1 + i1) or (i1 + i2 >= i2)"));
+      // x ≥ 0 ⇒ x + y ≥ y
+    assertTrue(solver._requests.get(1).equals("(0 >= 1 + i1) or (i2 >= i1 + i2)"));
+      // x ≥ 0 ⇒ y ≥ x + y
+  }
+
+  @Test
+  public void testGeqBoth() {
+    FakeSolver solver = new FakeSolver(true, true);
+    Settings.smtSolver = solver;
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x+y", "Int", "y", "Int", "Int",
+                                                            "x = 0", HRelation.GEQTHEORY, "");
+    assertTrue(pair.fst().toString().equals("[x + y ≽{theory} y | x = 0 { x y }]\n"));
+    assertTrue(pair.snd().toString().equals("[x + y ≽{theory} y | x = 0 { x y }]\n"));
+    assertTrue(solver._requests.size() == 2);
+    assertTrue(solver._requests.get(0).equals("(i1 # 0) or (i1 + i2 >= i2)"));
+      // x ≥ 0 ⇒ x + y ≥ y
+    assertTrue(solver._requests.get(1).equals("(i1 # 0) or (i2 >= i1 + i2)"));
+      // x ≥ 0 ⇒ y ≥ x + y
+  }
+
+  @Test
+  public void testGreaterWhenNotAllVariablesAreConstrained() {
+    FakeSolver solver = new FakeSolver(true, true);
+    Settings.smtSolver = solver;
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x+y", "Int", "x", "Int", "Int",
+                                                            "y = 0", HRelation.GEQTHEORY, "");
+    assertTrue(pair.snd().toString().equals("![x + y ≽{theory} x | y = 0 { y }]\n"));
+    assertTrue(solver._requests.size() == 0);
+  }
+
+  @Test
+  public void testBoolComparisonGeqTrue() {
+    FakeSolver solver = new FakeSolver(true);
+    Settings.smtSolver = solver;
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x", "Bool", "x ∧ false", "Bool",
+                                                         "Bool", "x", HRelation.GEQTHEORY, "");
+    assertTrue(pair.snd().toString().equals("[x ≽{theory} x ∧ false | x { x }]\n"));
+    assertTrue(solver._requests.size() == 1);
+    // x ⇒ x ∨ ¬(x ∧ false)
+    assertTrue(solver._requests.get(0).equals("!b1 or b1 or (not (b1 and false))"));
+  }
+
+  @Test
+  public void testBoolComparisonGreaterFalse() {
+    FakeSolver solver = new FakeSolver(false);
+    Settings.smtSolver = solver;
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x", "Bool", "x ∨ false", "Bool",
+                                                     "Bool", "x", HRelation.GREATERTHEORY, "");
+    assertTrue(pair.snd().toString().equals("![x ≻{theory} x ∨ false | x { x }]\n"));
+    assertTrue(solver._requests.size() == 1);
+    // x ⇒ x ∧ ¬(x ∨ false)
+    assertTrue(solver._requests.get(0).equals("!b1 or (b1 and (not (b1 or false)))"));
+  }
+
+  @Test
+  public void testTheoryComparisonWrongTheoryTypes() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x", "Bool", "y", "Int", "Int",
+                                                           "x", HRelation.GREATERTHEORY, "");
+    assertTrue(pair.snd().toString().equals("![x ≻{theory} y | x { x y }]\n"));
+  }
+
+  @Test
+  public void testVar() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupVarSimplify(HRelation.GEQNOGRVAR);
+    assertTrue(pair.snd().toString().equals(
+      "![F(c(x), a) ≈{var} F(b, c(x)) | x = 0 { x }] or [c(x) ≈ b | x = 0 { x }]\n" +
+      "![F(c(x), a) ≈{var} F(b, c(x)) | x = 0 { x }] or [a ≈ c(x) | x = 0 { x }]\n"));
+
+    pair = setupVarSimplify(HRelation.GEQVAR);
+    assertTrue(pair.fst().toString().equals(
+      "[F(c(x), a) ≽{var} F(b, c(x)) | x = 0 { x }]\n" +
+      "[c(x) ≽ b | x = 0 { x }]\n" +
+      "[a ≽ c(x) | x = 0 { x }]\n"));
+    assertTrue(pair.snd().toString().equals(
+      "![F(c(x), a) ≽{var} F(b, c(x)) | x = 0 { x }] or [c(x) ≽ b | x = 0 { x }]\n" +
+      "![F(c(x), a) ≽{var} F(b, c(x)) | x = 0 { x }] or [a ≽ c(x) | x = 0 { x }]\n"));
+
+    pair = setupVarSimplify(HRelation.GREATERVAR);
+    assertTrue(pair.fst().toString().equals(
+      "[F(c(x), a) ≻{var} F(b, c(x)) | x = 0 { x }]\n" +
+      "[c(x) ≽ b | x = 0 { x }]\n" +
+      "[a ≽ c(x) | x = 0 { x }]\n" +
+      "[c(x) ≻ b | x = 0 { x }]\n" +
+      "[a ≻ c(x) | x = 0 { x }]\n"));
+    assertTrue(pair.snd().toString().equals(
+      // both arguments are oriented
+      "![F(c(x), a) ≻{var} F(b, c(x)) | x = 0 { x }] or [c(x) ≽ b | x = 0 { x }]\n" +
+      "![F(c(x), a) ≻{var} F(b, c(x)) | x = 0 { x }] or [a ≽ c(x) | x = 0 { x }]\n" +
+      // first introduction of the [regardsall] boolean variable
+      "![regardsall] or [regards{Q,1}]\n" +
+      "![regardsall] or [regards{c,1}]\n" +
+      // greatvar can only be used if all arguments are regarded
+      "![F(c(x), a) ≻{var} F(b, c(x)) | x = 0 { x }] or [regardsall]\n" +
+      // and if at least one of the arguments is strictly oriented
+      "![F(c(x), a) ≻{var} F(b, c(x)) | x = 0 { x }] or " +
+        "[c(x) ≻ b | x = 0 { x }] or [a ≻ c(x) | x = 0 { x }]\n"));
+  }
+
+  private String compCombination(String rel) {
+    return
+      "[y " + rel + " b | y ≥ 0 { y }]\n[a " + rel + " b | y ≥ 0 { }]\n" +
+      "[x " + rel + " b | y ≥ 0 { }]\n[y " + rel + " a | y ≥ 0 { y }]\n" +
+      "[a " + rel + " a | y ≥ 0 { }]\n[x " + rel + " a | y ≥ 0 { }]\n" +
+      "[y " + rel + " y + 1 | y ≥ 0 { y }]\n[a " + rel + " y + 1 | y ≥ 0 { y }]\n" +
+      "[x " + rel + " y + 1 | y ≥ 0 { y }]\n[y " + rel + " c(x) + y | y ≥ 0 { y }]\n" +
+      "[a " + rel + " c(x) + y | y ≥ 0 { y }]\n[x " + rel + " c(x) + y | y ≥ 0 { y }]\n";
+  }
+
+  /** f and g are equal in the precedence */
+  private String equalPred(String startvar) {
+    return "!" + startvar + " or ([pred(f)] = [pred(g)])\n";
+  }
+
+  /** ∀ i ∈ {1..ar(f)-k}. π{f}(k+i) = π{g}(n+i) or π{g}(n+i) = 0 */
+  private String laterArgs(String startvar) {
+    return
+      "!" + startvar + " or ([pi{g}(5)] = [pi{f}(4)]) or ([pi{g}(5)] = 0)\n" +
+      "!" + startvar + " or ([pi{g}(6)] = [pi{f}(5)]) or ([pi{g}(6)] = 0)\n";
+  }
+
+  /**
+   * χ maps {1..n} ∩ regards[g] into {1..k}, and coincidentally maps disregarded args to 0:
+   * ∀ i ∈ {1..4}. 0 ≤ χ(i) ≤ 3 ∧ (reqvar → (if i ∈ regards[g] then χ(i) ≥ 1 else χ(i) = 0))
+   */ 
+  private String chiDef(String startvar) {
+    return
+      "[chi1(1)] >= 0\n" +
+      "3 >= [chi1(1)]\n" +
+        "!" + startvar + " or ![regards{g,1}] or ([chi1(1)] >= 1)\n" +
+        "!" + startvar + " or [regards{g,1}] or ([chi1(1)] = 0)\n" +
+      "[chi1(2)] >= 0\n" +
+      "3 >= [chi1(2)]\n" +
+        "!" + startvar + " or ![regards{g,2}] or ([chi1(2)] >= 1)\n" +
+        "!" + startvar + " or [regards{g,2}] or ([chi1(2)] = 0)\n" +
+      "[chi1(3)] >= 0\n" +
+      "3 >= [chi1(3)]\n" +
+        "!" + startvar + " or ![regards{g,3}] or ([chi1(3)] >= 1)\n" +
+        "!" + startvar + " or [regards{g,3}] or ([chi1(3)] = 0)\n" +
+      "[chi1(4)] >= 0\n" +
+      "3 >= [chi1(4)]\n" +
+        "!" + startvar + " or ![regards{g,4}] or ([chi1(4)] >= 1)\n" +
+        "!" + startvar + " or [regards{g,4}] or ([chi1(4)] = 0)\n";
+  }
+
+  /**
+   * χ is injective on {1..n} ∩ regards[g]: ∀ i ∈ {1..4}. ∀ j ∈ {i+1..4}. i ∈ regards[g] ⇒ χ(i) != χ(j)
+   * (this suffices because if j ∉ regards[g], then χ(j) = 0 != χ(i) regardless)
+   */
+  private String injective(String startvar) {
+    return
+      "!" + startvar + " or ![regards{g,1}] or ([chi1(1)] # [chi1(2)])\n" +
+      "!" + startvar + " or ![regards{g,1}] or ([chi1(1)] # [chi1(3)])\n" +
+      "!" + startvar + " or ![regards{g,1}] or ([chi1(1)] # [chi1(4)])\n" +
+      "!" + startvar + " or ![regards{g,2}] or ([chi1(2)] # [chi1(3)])\n" +
+      "!" + startvar + " or ![regards{g,2}] or ([chi1(2)] # [chi1(4)])\n" +
+      "!" + startvar + " or ![regards{g,3}] or ([chi1(3)] # [chi1(4)])\n";
+  }
+
+  /**
+   * whenever χ(i) ∈ {1..k} then π{f}(χ(i)) = π{g}(i) (this also implies that regarded elements
+   * of g are mapped to regarded elements of f, as π{f}(j) = 0 when j ∉ regards[f]
+   */
+  private String samePi(String startvar) {
+    return
+      "!" + startvar + " or ([chi1(1)] # 1) or ([pi{f}(1)] = [pi{g}(1)])\n" +
+      "!" + startvar + " or ([chi1(1)] # 2) or ([pi{f}(2)] = [pi{g}(1)])\n" +
+      "!" + startvar + " or ([chi1(1)] # 3) or ([pi{f}(3)] = [pi{g}(1)])\n" +
+      "!" + startvar + " or ([chi1(2)] # 1) or ([pi{f}(1)] = [pi{g}(2)])\n" +
+      "!" + startvar + " or ([chi1(2)] # 2) or ([pi{f}(2)] = [pi{g}(2)])\n" +
+      "!" + startvar + " or ([chi1(2)] # 3) or ([pi{f}(3)] = [pi{g}(2)])\n" +
+      "!" + startvar + " or ([chi1(3)] # 1) or ([pi{f}(1)] = [pi{g}(3)])\n" +
+      "!" + startvar + " or ([chi1(3)] # 2) or ([pi{f}(2)] = [pi{g}(3)])\n" +
+      "!" + startvar + " or ([chi1(3)] # 3) or ([pi{f}(3)] = [pi{g}(3)])\n" +
+      "!" + startvar + " or ([chi1(4)] # 1) or ([pi{f}(1)] = [pi{g}(4)])\n" +
+      "!" + startvar + " or ([chi1(4)] # 2) or ([pi{f}(2)] = [pi{g}(4)])\n" +
+      "!" + startvar + " or ([chi1(4)] # 3) or ([pi{f}(3)] = [pi{g}(4)])\n";
+  }
+
+  /** ∀ i ∈ {1..n} ∩ regards[g]. left_{χ(i)} <relation> right_i */
+  private String allGeq(String startvar, String relation) {
+    return
+      "!" + startvar + " or ([chi1(1)] # 1) or [y " + relation + " b | y ≥ 0 { y }]\n" +
+      "!" + startvar + " or ([chi1(1)] # 2) or [a " + relation + " b | y ≥ 0 { }]\n" +
+      "!" + startvar + " or ([chi1(1)] # 3) or [x " + relation + " b | y ≥ 0 { }]\n" +
+      "!" + startvar + " or ([chi1(2)] # 1) or [y " + relation + " a | y ≥ 0 { y }]\n" +
+      "!" + startvar + " or ([chi1(2)] # 2) or [a " + relation + " a | y ≥ 0 { }]\n" +
+      "!" + startvar + " or ([chi1(2)] # 3) or [x " + relation + " a | y ≥ 0 { }]\n" +
+      "!" + startvar + " or ([chi1(3)] # 1) or [y " + relation + " y + 1 | y ≥ 0 { y }]\n" +
+      "!" + startvar + " or ([chi1(3)] # 2) or [a " + relation + " y + 1 | y ≥ 0 { y }]\n" +
+      "!" + startvar + " or ([chi1(3)] # 3) or [x " + relation + " y + 1 | y ≥ 0 { y }]\n" +
+      "!" + startvar + " or ([chi1(4)] # 1) or [y " + relation + " c(x) + y | y ≥ 0 { y }]\n" +
+      "!" + startvar + " or ([chi1(4)] # 2) or [a " + relation + " c(x) + y | y ≥ 0 { y }]\n" +
+      "!" + startvar + " or ([chi1(4)] # 3) or [x " + relation + " c(x) + y | y ≥ 0 { y }]\n";
+  }
+
+  /** ∃ j ∈ {1..k} ∩ regards[f]. ∀ i ∈ {1..n}. χ(i) = j ⇒ left_j ≻ right_i */
+  private String greaterReqs(String startvar) {
+    return
+      "!" + startvar + " or ([decrease1] >= 1)\n"+ 
+      "!" + startvar + " or (3 >= [decrease1])\n"+
+      "!" + startvar + " or ([decrease1] # 1) or [regards{f,1}]\n"+
+      "!" + startvar + " or ([decrease1] # 2) or [regards{f,2}]\n"+
+      "!" + startvar + " or ([decrease1] # 3) or [regards{f,3}]\n"+
+      "!" + startvar + " or ([chi1(1)] # [decrease1]) or ([decrease1] # 1) or [y ≻ b | y ≥ 0 { y }]\n"+
+      "!" + startvar + " or ([chi1(1)] # [decrease1]) or ([decrease1] # 2) or [a ≻ b | y ≥ 0 { }]\n"+
+      "!" + startvar + " or ([chi1(1)] # [decrease1]) or ([decrease1] # 3) or [x ≻ b | y ≥ 0 { }]\n"+
+      "!" + startvar + " or ([chi1(2)] # [decrease1]) or ([decrease1] # 1) or [y ≻ a | y ≥ 0 { y }]\n"+
+      "!" + startvar + " or ([chi1(2)] # [decrease1]) or ([decrease1] # 2) or [a ≻ a | y ≥ 0 { }]\n"+
+      "!" + startvar + " or ([chi1(2)] # [decrease1]) or ([decrease1] # 3) or [x ≻ a | y ≥ 0 { }]\n"+
+      "!" + startvar + " or ([chi1(3)] # [decrease1]) or ([decrease1] # 1) or [y ≻ y + 1 | y ≥ 0 { y }]\n"+
+      "!" + startvar + " or ([chi1(3)] # [decrease1]) or ([decrease1] # 2) or [a ≻ y + 1 | y ≥ 0 { y }]\n"+
+      "!" + startvar + " or ([chi1(3)] # [decrease1]) or ([decrease1] # 3) or [x ≻ y + 1 | y ≥ 0 { y }]\n"+
+      "!" + startvar + " or ([chi1(4)] # [decrease1]) or ([decrease1] # 1) or [y ≻ c(x) + y | y ≥ 0 { y }]\n"+
+      "!" + startvar + " or ([chi1(4)] # [decrease1]) or ([decrease1] # 2) or [a ≻ c(x) + y | y ≥ 0 { y }]\n"+
+      "!" + startvar + " or ([chi1(4)] # [decrease1]) or ([decrease1] # 3) or [x ≻ c(x) + y | y ≥ 0 { y }]\n";
+  }
+
+  private String isSurjective(String startvar) {
+    return
+      "!" + startvar + " or ![regards{f,1}] or ([chi1(1)] = 1) or ([chi1(2)] = 1) or ([chi1(3)] = 1) or ([chi1(4)] = 1)\n" +
+      "!" + startvar + " or ![regards{f,2}] or ([chi1(1)] = 2) or ([chi1(2)] = 2) or ([chi1(3)] = 2) or ([chi1(4)] = 2)\n" +
+      "!" + startvar + " or ![regards{f,3}] or ([chi1(1)] = 3) or ([chi1(2)] = 3) or ([chi1(3)] = 3) or ([chi1(4)] = 3)\n";
+  }
+
+  @Test
+  public void testFun() {
+    Pair<HorpoConstraintList,SmtProblem> p;
+    String trs = "f :: Int -> A -> A -> Int -> A -> Unit\n" +
+                 "g :: A -> A -> Int -> Int -> B -> A -> B\n" +
+                 "a :: A\nb :: A\nc :: A -> Int\n";
+
+    // ≽ functions as expected
+    p = setupSimplify("f(y, a, x)", "Int -> A -> Unit", "g(b, a, y+1, c(x) + y)", "B -> A -> B",
+                      "Int", "y >= 0", HRelation.GEQFUN, trs);
+    String startvar = "[f(y, a, x) ≽{fun} g(b, a, y + 1, c(x) + y) | y ≥ 0 { y }]";
+    assertTrue(p.fst().toString().equals(startvar + "\n" + compCombination("≽")));
+    assertTrue(p.snd().toString().equals(
+      equalPred(startvar) +
+      laterArgs(startvar) +
+      chiDef(startvar) +
+      injective(startvar) +
+      samePi(startvar) +
+      allGeq(startvar, "≽")
+    ));
+
+    // ≻ functions as expected
+    p = setupSimplify("f(y, a, x)", "Int -> A -> Unit", "g(b, a, y+1, c(x) + y)", "B -> A -> B",
+                      "Int", "y >= 0", HRelation.GREATERFUN, trs);
+    startvar = "[f(y, a, x) ≻{fun} g(b, a, y + 1, c(x) + y) | y ≥ 0 { y }]";
+    assertTrue(p.fst().toString().equals(startvar + "\n" + compCombination("≽") +
+                                         compCombination("≻")));
+    assertTrue(p.snd().toString().equals(
+      equalPred(startvar) +
+      laterArgs(startvar) +
+      chiDef(startvar) +
+      injective(startvar) +
+      samePi(startvar) +
+      allGeq(startvar, "≽") +
+      greaterReqs(startvar)
+    ));
+
+    // ≈ functions as expected
+    p = setupSimplify("f(y, a, x)", "Int -> A -> Unit", "g(b, a, y+1, c(x) + y)", "B -> A -> B",
+                      "Int", "y >= 0", HRelation.GEQNOGRFUN, trs);
+    startvar = "[f(y, a, x) ≈{fun} g(b, a, y + 1, c(x) + y) | y ≥ 0 { y }]";
+    assertTrue(p.fst().toString().equals(startvar + "\n" + compCombination("≈")));
+    assertTrue(p.snd().toString().equals(
+      equalPred(startvar) +
+      laterArgs(startvar) +
+      chiDef(startvar) +
+      injective(startvar) +
+      samePi(startvar) +
+      allGeq(startvar, "≈") +
+      isSurjective(startvar)
+    ));
+  }
+
+  @Test
+  public void testEquality() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f", "A -> A", "f", "A -> A", "Int",
+                                                       "true", HRelation.GEQEQUAL, "f :: A -> A");
+    assertTrue(pair.fst().toString().equals("[f ≽{equal} f | true { }]\n"));
+    assertTrue(pair.snd().toString().equals("[f ≽{equal} f | true { }]\n"));
+  }
+
+  @Test
+  public void testGreaterRpo() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(1)", "Int", "g(2)", "Int", "Int",
+                                  "true", HRelation.GREATERRPO, "f :: Int -> Int g :: Int -> Int");
+    assertTrue(pair.snd().toString().equals(
+      "![f(1) ≻{rpo} g(2) | true { }] or [f(1) ▷ g(2) | true { }]\n"));
+
+    pair = setupSimplify("f(1)", "Int -> Int -> Int", "3", "Int", "Int", "true",
+                         HRelation.GREATERRPO, "f :: Int -> Int -> Int -> Int");
+    assertTrue(pair.snd().toString().equals(
+      "![f(1) ≻{rpo} 3 | true { }] or [regards{f,2}]\n" +
+      "![f(1) ≻{rpo} 3 | true { }] or [regards{f,3}]\n" +
+      "![f(1) ≻{rpo} 3 | true { }] or [f(1) ▷ 3 | true { }]\n"));
+
+    pair = setupSimplify("x + 3", "Int", "x", "Int", "Int", "x > 0", HRelation.GREATERRPO, "");
+    assertTrue(pair.snd().toString().equals("![x + 3 ≻{rpo} x | x > 0 { x }]\n"));
+  }
+
+  @Test
+  public void testRpoSelectBaseRight() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(x,a,z)", "Unit", "c(a)", "A",
+      "Int", "true", HRelation.RPOSELECT,
+      "f :: (Int -> Bool) -> A -> (Int -> A -> Int) -> Unit\nc :: A -> A\na :: A");
+    assertTrue(pair.snd().toString().equals(
+      "![f(x, a, z) ▷{select} c(a) | true { }] or " +
+      "([regards{f,1}] and [x ≽ c | true { }] and [f(x, a, z) ▷ a | true { }]) or " +
+      "([regards{f,2}] and [a ≽ c(a) | true { }])\n"));
+  }
+
+  @Test
+  public void testRpoSelectHigherRight() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(x,a,z)", "Unit", "c(a)",
+      "(A -> A) -> C", "Int", "true", HRelation.RPOSELECT,
+      "f :: (Int -> Bool) -> A -> (Int -> A -> Int) -> Unit\nc :: A -> (A -> A) -> C\na :: A");
+    assertTrue(pair.snd().toString().equals(
+      "![f(x, a, z) ▷{select} c(a) | true { }] or " +
+      "([regards{f,1}] and [x ≽ c(a) | true { }]) or " +
+      "([regards{f,3}] and [z ≽ c | true { }] and [f(x, a, z) ▷ a | true { }])\n"));
+  }
+
+  @Test
+  public void testCopy() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(a)", "Int", "g(b,x)", "Int", "Int",
+              "true", HRelation.RPOCOPY, "f :: Int -> Int g :: Int -> Int -> Int a :: Int b :: Int");
+    assertTrue(pair.snd().toString().equals(
+      "![f(a) ▷{copy} g(b, x) | true { }] or ([pred(f)] >= 1 + [pred(g)])\n" +
+      "![f(a) ▷{copy} g(b, x) | true { }] or ![regards{g,1}] or [f(a) ▷ b | true { }]\n" +
+      "![f(a) ▷{copy} g(b, x) | true { }] or ![regards{g,2}] or [f(a) ▷ x | true { }]\n"));
+  }
+
+  @Test
+  public void testFailedCopy() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(a)", "Int", "f(b)", "Int", "Int",
+                                   "true", HRelation.RPOCOPY, "f :: Int -> Int a :: Int b :: Int");
+    assertTrue(pair.snd().toString().equals("![f(a) ▷{copy} f(b) | true { }]\n"));
+  }
+
+  @Test
+  public void testRpoTheory() {
+    // values
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("a", "Int", "true", "Bool", "Int",
+                                                           "true", HRelation.RPOTH, "a :: Int");
+    assertTrue(pair.snd().toString().equals("[a ▷{th} true | true { }]\n"));
+    // complex expressions with variable in theory
+    pair = setupSimplify("a", "A", "x + y/2", "Int", "Int", "x > 0", HRelation.RPOTH, "a :: A");
+    assertTrue(pair.snd().toString().equals("[a ▷{th} x + y / 2 | x > 0 { x y }]\n"));
+    // non-example: a variable that is not in the theory
+    pair = setupSimplify("a", "A", "x", "Int", "Int", "y > 0", HRelation.RPOTH, "a :: A");
+    assertTrue(pair.snd().toString().equals("![a ▷{th} x | y > 0 { }]\n"));
+  }
+
+  @Test
+  public void testFailedLex() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(F,x)", "A", "F(x)", "A", "Int",
+                                       "x > 0", HRelation.RPOLEX, "f :: (Int -> A) -> Int -> A");
+    assertTrue(pair.snd().toString().equals(
+      "![f(F, x) ▷{lex} F(x) | x > 0 { x }]\n"));
+  }
+
+//  @Test
+//  public void testLexWithZeroArguments() {
+//    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f", "Int -> B", "f(0)" ,"B", "Int",
+//                                                        "true", HRelation.RPOLEX, "f :: Int -> B");
+//    assertTrue(pair.snd().toString().equals("[alwaystrue]\n![f ▷{lex} f(0) | true { }]\n"));
+//  }
+//
+//  @Test
+//  public void testLexWithOneArgument() {
+//    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(x,y)", "A", "g(y)" ,"B", "Int",
+//                                 "true", HRelation.RPOLEX, "f :: Int -> Int -> A g :: Int -> B");
+//    assertTrue(pair.snd().toString().equals(
+//      "[alwaystrue]\n" +
+//      "[pred(f)] >= 0\n" +
+//      "[pred(g)] >= 0\n" +
+//      "(not [f(x, y) ▷{lex} g(y) | true { y }]) or ([pred(f)] = [pred(g)])\n" + // same precedence
+//      "[stat(f)] >= 1\n" +
+//      "2 >= [stat(f)]\n" +
+//      "(not [f(x, y) ▷{lex} g(y) | true { y }]) or ([stat(f)] = 1)\n" + // stat(f) = Lex
+//      "(not [f(x, y) ▷{lex} g(y) | true { y }]) or (0 = 0)\n" +         // stat(g) = Lex
+//      "(not [f(x, y) ▷{lex} g(y) | true { y }]) or [regards(f,1)]\n" +  // first arg of f regarded
+//      "(not [f(x, y) ▷{lex} g(y) | true { y }]) or [regards(g,1)]\n" +  // first arg of g regarded
+//      "(not [f(x, y) ▷{lex} g(y) | true { y }]) or [x ≻ y | true { y }]\n")); // argument decreases
+//  }
+//
+//  @Test
+//  public void testLexWithMultipleArguments() {
+//    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(a,b,c)", "A", "g(u,v,w,x)" ,"A",
+//             "Int", "true", HRelation.RPOLEX, "f :: B -> B -> B -> A g :: B -> B -> B -> B -> A");
+//    assertTrue(pair.snd().toString().equals(
+//      "[alwaystrue]\n" +
+//      // they have the same precedence
+//      "[pred(f)] >= 0\n" +
+//      "[pred(g)] >= 0\n" +
+//      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ([pred(f)] = [pred(g)])\n" +
+//      // they both have status lex
+//      "[stat(f)] >= 1\n" +
+//      "3 >= [stat(f)]\n" +
+//      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ([stat(f)] = 1)\n" +
+//      "[stat(g)] >= 1\n" +
+//      "4 >= [stat(g)]\n" +
+//      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ([stat(g)] = 1)\n" +
+//      // index ∈ {1,..3}
+//      "i5 >= 1\n" +
+//      "3 >= i5\n" +
+//      // for i ∈ {1..2}: if i < index then:
+//      //   * ¬regards(f,i) ⇒ ¬regards(g,i)
+//      //   * regards(f,i) ⇒ regards(g,i)
+//      //   * regards(f,i) ⇒ leftarg[i] ≈ rightarg[i]
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (1 >= i5) or [regards(f,1)] or ![regards(g,1)]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (1 >= i5) or ![regards(f,1)] or [regards(g,1)]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (1 >= i5) or ![regards(f,1)] or [a ≈ u | true { }]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (2 >= i5) or [regards(f,2)] or ![regards(g,2)]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (2 >= i5) or ![regards(f,2)] or [regards(g,2)]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (2 >= i5) or ![regards(f,2)] or [b ≈ v | true { }]\n" +
+//      // for i ∈ {1..3}: if i = index then:
+//      //   * regards(f,i)
+//      //   * regards(g,i)
+//      //   * leftarg[i] ≻ rightarg[i]
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (1 # i5) or [regards(f,1)]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (1 # i5) or [regards(g,1)]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (1 # i5) or [a ≻ u | true { }]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (2 # i5) or [regards(f,2)]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (2 # i5) or [regards(g,2)]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (2 # i5) or [b ≻ v | true { }]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (3 # i5) or [regards(f,3)]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (3 # i5) or [regards(g,3)]\n" +
+//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (3 # i5) or [c ≻ w | true { }]\n" +
+//      // left ▷ each right argument that is regarded (not including the first, because that one's covered)
+//      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ![regards(g,2)] or [f(a, b, c) ▷ v | true { }]\n" +
+//      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ![regards(g,3)] or [f(a, b, c) ▷ w | true { }]\n" +
+//      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ![regards(g,4)] or [f(a, b, c) ▷ x | true { }]\n" ));
+//  }
+}
+
