@@ -25,9 +25,19 @@ import charlie.exceptions.NullStorageException;
  * how SmtProblems track their variables.
  */
 public class SmtFactory {
-  /** Creates an integer variable with an index that has not yet been used. */
-  public static IVar createIntegerVariable(SmtProblem problem) {
-    return problem.createIntegerVariable();
+  /**
+   * Creates an integer variable with an index that has not yet been used, and which has the given
+   * bounds.  Throws an IllegalArgumentException if the variable has an empty range.
+   */
+  public static IVar createIntegerVariable(SmtProblem problem, String name, int lower, int higher) {
+    IVar ret = problem.createIntegerVariable(name);
+    problem.require(new Geq0(ret, new IValue(lower)));
+    problem.require(new Geq0(new IValue(higher), ret));
+    if (higher < lower) {
+      throw new IllegalArgumentException("Cannot create an integer variable in range {" +
+        lower + ".." + higher + "}!");
+    }
+    return ret;
   }
 
   public static IntegerExpression createValue(int v) {

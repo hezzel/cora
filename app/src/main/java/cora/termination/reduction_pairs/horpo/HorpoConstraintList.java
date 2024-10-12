@@ -34,7 +34,7 @@ class HorpoConstraintList {
   enum HRelation { GREATER, GREATERTHEORY, GREATERVAR, GREATERFUN, GREATERRPO,
                    GEQ, GEQTHEORY, GEQVAR, GEQFUN, GEQEQUAL,
                    GEQNOGR, GEQNOGRTHEORY, GEQNOGRVAR, GEQNOGRFUN, GEQNOGREQUAL,
-                   RPO, RPOSELECT, RPOCOPY, RPOLEX, RPOMUL, RPOTH };
+                   RPO, RPOSELECT, RPOCOPY, RPOEXT, RPOTH };
 
   /**
    * A HorpoRequirement models an inequality of the form left REL right | constraint, theorvar,
@@ -145,8 +145,7 @@ class HorpoConstraintList {
       case HRelation.RPO           -> " ▷ ";
       case HRelation.RPOSELECT     -> " ▷{select} ";
       case HRelation.RPOCOPY       -> " ▷{copy} ";
-      case HRelation.RPOLEX        -> " ▷{lex} ";
-      case HRelation.RPOMUL        -> " ▷{mul} ";
+      case HRelation.RPOEXT        -> " ▷{ext} ";
       case HRelation.RPOTH     -> " ▷{th} ";
     });
     _printer.print(right, naming, builder);

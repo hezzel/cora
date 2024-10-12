@@ -193,8 +193,7 @@ public class HorpoSimplifierTest {
       "[f(x, d(y)) ▷{th} g(x, x) | y > 0 { y }] or " +
       "[f(x, d(y)) ▷{select} g(x, x) | y > 0 { y }] or " +
       "[f(x, d(y)) ▷{copy} g(x, x) | y > 0 { y }] or " +
-      "[f(x, d(y)) ▷{lex} g(x, x) | y > 0 { y }] or " +
-      "[f(x, d(y)) ▷{mul} g(x, x) | y > 0 { y }]\n"));
+      "[f(x, d(y)) ▷{ext} g(x, x) | y > 0 { y }]\n"));
   }
 
   @Test
@@ -435,20 +434,20 @@ public class HorpoSimplifierTest {
     return
       "[chi1(1)] >= 0\n" +
       "3 >= [chi1(1)]\n" +
-        "!" + startvar + " or ![regards{g,1}] or ([chi1(1)] >= 1)\n" +
         "!" + startvar + " or [regards{g,1}] or ([chi1(1)] = 0)\n" +
+        "!" + startvar + " or ![regards{g,1}] or ([chi1(1)] >= 1)\n" +
       "[chi1(2)] >= 0\n" +
       "3 >= [chi1(2)]\n" +
-        "!" + startvar + " or ![regards{g,2}] or ([chi1(2)] >= 1)\n" +
         "!" + startvar + " or [regards{g,2}] or ([chi1(2)] = 0)\n" +
+        "!" + startvar + " or ![regards{g,2}] or ([chi1(2)] >= 1)\n" +
       "[chi1(3)] >= 0\n" +
       "3 >= [chi1(3)]\n" +
-        "!" + startvar + " or ![regards{g,3}] or ([chi1(3)] >= 1)\n" +
         "!" + startvar + " or [regards{g,3}] or ([chi1(3)] = 0)\n" +
+        "!" + startvar + " or ![regards{g,3}] or ([chi1(3)] >= 1)\n" +
       "[chi1(4)] >= 0\n" +
       "3 >= [chi1(4)]\n" +
-        "!" + startvar + " or ![regards{g,4}] or ([chi1(4)] >= 1)\n" +
-        "!" + startvar + " or [regards{g,4}] or ([chi1(4)] = 0)\n";
+        "!" + startvar + " or [regards{g,4}] or ([chi1(4)] = 0)\n" +
+        "!" + startvar + " or ![regards{g,4}] or ([chi1(4)] >= 1)\n";
   }
 
   /**
@@ -505,8 +504,8 @@ public class HorpoSimplifierTest {
   /** ∃ j ∈ {1..k} ∩ regards[f]. ∀ i ∈ {1..n}. χ(i) = j ⇒ left_j ≻ right_i */
   private String greaterReqs(String startvar) {
     return
-      "!" + startvar + " or ([decrease1] >= 1)\n"+ 
-      "!" + startvar + " or (3 >= [decrease1])\n"+
+      "[decrease1] >= 1\n" +
+      "3 >= [decrease1]\n" +
       "!" + startvar + " or ([decrease1] # 1) or [regards{f,1}]\n"+
       "!" + startvar + " or ([decrease1] # 2) or [regards{f,2}]\n"+
       "!" + startvar + " or ([decrease1] # 3) or [regards{f,3}]\n"+
@@ -581,6 +580,74 @@ public class HorpoSimplifierTest {
       samePi(startvar) +
       allGeq(startvar, "≈") +
       isSurjective(startvar)
+    ));
+  }
+
+  @Test
+  public void testFunEmptyLeft() {
+    Pair<HorpoConstraintList,SmtProblem> p;
+    String trs = "f :: A -> Unit\n" +
+                 "g :: A -> A -> Int -> Int\n" +
+                 "a :: A\nb :: A\n\n";
+
+    p = setupSimplify("f", "A -> Unit", "g(b, a)", "Int -> Int", "Int", "true",
+                      HRelation.GEQNOGRFUN, trs);
+    String startvar = "[f ≈{fun} g(b, a) | true { }]";
+    assertTrue(p.snd().toString().equals(
+      // root symbols are equal
+      "!" + startvar + " or ([pred(f)] = [pred(g)])\n" +
+      // additional arguments are mapped to the same π
+      "!" + startvar + " or ([pi{g}(3)] = [pi{f}(1)]) or ([pi{g}(3)] = 0)\n" +
+      // χ must map everything to 0 (which means the arguments must be disregarded)
+      "[chi1(1)] >= 0\n" +
+      "0 >= [chi1(1)]\n" +
+      "!" + startvar + " or [regards{g,1}] or ([chi1(1)] = 0)\n" +
+      "!" + startvar + " or ![regards{g,1}] or ([chi1(1)] >= 1)\n" +
+      "[chi1(2)] >= 0\n" +
+      "0 >= [chi1(2)]\n" +
+      "!" + startvar + " or [regards{g,2}] or ([chi1(2)] = 0)\n" +
+      "!" + startvar + " or ![regards{g,2}] or ([chi1(2)] >= 1)\n"));
+
+    p = setupSimplify("f", "A -> Unit", "g(b, a)", "Int -> Int", "Int", "true",
+                      HRelation.GREATERFUN, trs);
+    assertTrue(p.snd().toString().equals("![f ≻{fun} g(b, a) | true { }]\n"));
+  }
+
+  @Test
+  public void testFunEmptyRight() {
+    Pair<HorpoConstraintList,SmtProblem> p;
+    String trs = "f :: A -> Unit\n" +
+                 "g :: A -> A -> Int -> Int\n" +
+                 "a :: A\nb :: A\n\n";
+
+    p = setupSimplify("g(b, a)", "Int -> Int", "f", "A -> Unit", "Int", "true",
+                      HRelation.GEQNOGRFUN, trs);
+    String startvar = "[g(b, a) ≈{fun} f | true { }]";
+    assertTrue(p.snd().toString().equals(
+      // root symbols are equal
+      "!" + startvar + " or ([pred(g)] = [pred(f)])\n" +
+      // additional arguments are mapped to the same π
+      "!" + startvar + " or ([pi{f}(1)] = [pi{g}(3)]) or ([pi{f}(1)] = 0)\n" +
+      // no requirements on χ, since χ is necessarily empty, but we do have a surjectivity
+      // requirement -- which means that the arguments on the right cannot be regarded!
+      "!" + startvar + " or ![regards{g,1}]\n" +
+      "!" + startvar + " or ![regards{g,2}]\n"
+    ));
+
+    p = setupSimplify("g(b, a)", "Int -> Int", "f", "A -> Unit", "Int", "true",
+                      HRelation.GREATERFUN, trs);
+    startvar = "[g(b, a) ≻{fun} f | true { }]";
+    assertTrue(p.snd().toString().equals(
+      // root symbols are equal
+      "!" + startvar + " or ([pred(g)] = [pred(f)])\n" +
+      // additional arguments are mapped to the same π
+      "!" + startvar + " or ([pi{f}(1)] = [pi{g}(3)]) or ([pi{f}(1)] = 0)\n" +
+      // some argument must decrease -- either argument 1 or argument 2!
+      "[decrease1] >= 1\n" +
+      "2 >= [decrease1]\n" +
+      // for the decreasing argument, we only need it to be regarded, and this suffices!
+      "!" + startvar + " or ([decrease1] # 1) or [regards{g,1}]\n" +
+      "!" + startvar + " or ([decrease1] # 2) or [regards{g,2}]\n"
     ));
   }
 
@@ -664,38 +731,53 @@ public class HorpoSimplifierTest {
   }
 
   @Test
-  public void testFailedLex() {
+  public void testFailedExt() {
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(F,x)", "A", "F(x)", "A", "Int",
-                                       "x > 0", HRelation.RPOLEX, "f :: (Int -> A) -> Int -> A");
-    assertTrue(pair.snd().toString().equals(
-      "![f(F, x) ▷{lex} F(x) | x > 0 { x }]\n"));
+                                       "x > 0", HRelation.RPOEXT, "f :: (Int -> A) -> Int -> A");
+    assertTrue(pair.snd().toString().equals("![f(F, x) ▷{ext} F(x) | x > 0 { x }]\n"));
   }
 
-//  @Test
-//  public void testLexWithZeroArguments() {
-//    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f", "Int -> B", "f(0)" ,"B", "Int",
-//                                                        "true", HRelation.RPOLEX, "f :: Int -> B");
-//    assertTrue(pair.snd().toString().equals("[alwaystrue]\n![f ▷{lex} f(0) | true { }]\n"));
-//  }
-//
-//  @Test
-//  public void testLexWithOneArgument() {
-//    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(x,y)", "A", "g(y)" ,"B", "Int",
-//                                 "true", HRelation.RPOLEX, "f :: Int -> Int -> A g :: Int -> B");
-//    assertTrue(pair.snd().toString().equals(
-//      "[alwaystrue]\n" +
-//      "[pred(f)] >= 0\n" +
-//      "[pred(g)] >= 0\n" +
-//      "(not [f(x, y) ▷{lex} g(y) | true { y }]) or ([pred(f)] = [pred(g)])\n" + // same precedence
-//      "[stat(f)] >= 1\n" +
-//      "2 >= [stat(f)]\n" +
-//      "(not [f(x, y) ▷{lex} g(y) | true { y }]) or ([stat(f)] = 1)\n" + // stat(f) = Lex
-//      "(not [f(x, y) ▷{lex} g(y) | true { y }]) or (0 = 0)\n" +         // stat(g) = Lex
-//      "(not [f(x, y) ▷{lex} g(y) | true { y }]) or [regards(f,1)]\n" +  // first arg of f regarded
-//      "(not [f(x, y) ▷{lex} g(y) | true { y }]) or [regards(g,1)]\n" +  // first arg of g regarded
-//      "(not [f(x, y) ▷{lex} g(y) | true { y }]) or [x ≻ y | true { y }]\n")); // argument decreases
-//  }
-//
+  @Test
+  public void testExtWithZeroArguments() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f", "Int -> B", "g(0)" ,"B", "Int",
+                                        "true", HRelation.RPOEXT, "f :: Int -> B\ng :: Int -> B");
+    assertTrue(pair.snd().toString().equals("![f ▷{ext} g(0) | true { }]\n"));
+  }
+
+  @Test
+  public void testExtWithOneArgument() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(x,y)", "A", "g(y)" ,"B", "Int",
+                                 "true", HRelation.RPOEXT, "f :: Int -> Int -> A g :: Int -> B");
+    String startvar = "[f(x, y) ▷{ext} g(y) | true { y }]";
+    assertTrue(pair.snd().toString().equals(
+      // create a ∈ {1..2} (arity of f)
+      "[decr1] >= 1\n2 >= [decr1]\n" +
+      // create χ(1) ∈ {0..2}
+      "[chi1(1)] >= 0\n2 >= [chi1(1)]\n" +
+      // require that χ(1) > 0 if and only if regards{g,1} ∧ a ≥ π{g}(1) (that is, 1 ≤ π{g}(1) ≤ a)
+      "!" + startvar + " or [regards{g,1}] or ([chi1(1)] = 0)\n" +
+      "!" + startvar + " or ([decr1] >= [pi{g}(1)]) or ([chi1(1)] = 0)\n" +
+      "!" + startvar + " or ![regards{g,1}] or ([pi{g}(1)] >= 1 + [decr1]) or ([chi1(1)] >= 1)\n" +
+      // j ∈ strict can only hold when π{f}(j) = a
+      "!" + startvar + " or ![strict1_1] or ([pi{f}(1)] = [decr1])\n" +
+      "!" + startvar + " or ![strict1_2] or ([pi{f}(2)] = [decr1])\n" +
+      // at least one position is oriented strictly
+      "!" + startvar + " or [strict1_1] or [strict1_2]\n" +
+      // the function symbols have the same precedence
+      "!" + startvar + " or ([pred(f)] = [pred(g)])\n" +
+      // for i = 1: if χ(i) != 0 (so 1 ≤ π{g}(i) ≤ a) then π{f}(χ(i)) = π{g}(i)
+      "!" + startvar + " or ([chi1(1)] # 1) or ([pi{f}(1)] = [pi{g}(1)])\n" +
+      "!" + startvar + " or ([chi1(1)] # 2) or ([pi{f}(2)] = [pi{g}(1)])\n" +
+      // l ▷ the one argument on the right
+      "!" + startvar + " or ![regards{g,1}] or [f(x, y) ▷ y | true { y }]\n" +
+      // always left_{χ(i)} ≽ right_{i}
+      "!" + startvar + " or ([chi1(1)] # 1) or [x ≽ y | true { y }]\n" +
+      "!" + startvar + " or ([chi1(1)] # 2) or [y ≽ y | true { y }]\n" +
+      // if χ(i) ∈ strict then left_{χ(i)} ≻ right_{i}
+      "!" + startvar + " or ![strict1_1] or ([chi1(1)] # 1) or [x ≻ y | true { y }]\n" +
+      "!" + startvar + " or ![strict1_2] or ([chi1(1)] # 2) or [y ≻ y | true { y }]\n"));
+  }
+
 //  @Test
 //  public void testLexWithMultipleArguments() {
 //    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(a,b,c)", "A", "g(u,v,w,x)" ,"A",

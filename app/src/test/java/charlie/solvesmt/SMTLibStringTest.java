@@ -29,9 +29,9 @@ class SMTLibStringTest {
   void buildSmtlibString() {
     SmtProblem smtProblem = new SmtProblem();
 
-    IVar iVar = SmtFactory.createIntegerVariable(smtProblem);
-    IVar iVar2 = SmtFactory.createIntegerVariable(smtProblem);
-    BVar bVar = SmtFactory.createBooleanVariable(smtProblem);
+    IVar iVar = smtProblem.createIntegerVariable();
+    IVar iVar2 = smtProblem.createIntegerVariable();
+    BVar bVar = smtProblem.createBooleanVariable();
 
     Constraint c = SmtFactory.createGeq(iVar, iVar2);
     c = SmtFactory.createConjunction(c, bVar);

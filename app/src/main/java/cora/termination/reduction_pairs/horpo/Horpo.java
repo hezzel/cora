@@ -150,7 +150,10 @@ public class Horpo implements ReductionPair {
     return wrapper.num * 2;
   }
 
-  /** Returns a set with all the function symbols occurring in the given problem. */
+  /**
+   * Returns a set with all the function symbols occurring in the given problem, not including
+   * any symbol in a base-type theory term whose variables are all in tvar.
+   */
   private TreeSet<FunctionSymbol> getFunctionSymbols(OrderingProblem problem) {
     LinkedList<Pair<Term,Set<Variable>>> relevant = getSideTerms(problem);
     TreeSet<FunctionSymbol> symbs = new TreeSet<FunctionSymbol>();
@@ -158,7 +161,7 @@ public class Horpo implements ReductionPair {
       Set<Variable> set = p.snd();
       p.fst().visitSubterms( (s,pos) -> {
         if (s.isFunctionalTerm()) {
-          if (s.isTheoryTerm()) {
+          if (s.isTheoryTerm() && s.queryType().isBaseType()) {
             for (Variable x : s.vars()) {
               if (!set.contains(x)) { symbs.add(s.queryRoot()); break; }
             }

@@ -79,8 +79,7 @@ class HorpoSimplifier {
       case HRelation.RPO:           handleRpo(req); break;
       case HRelation.RPOSELECT:     handleSelect(req); break;
       case HRelation.RPOCOPY:       handleCopy(req); break;
-      case HRelation.RPOLEX:        handleLex(req); break;
-      case HRelation.RPOMUL:        handleMul(req); break;
+      case HRelation.RPOEXT:        handleExt(req); break;
       case HRelation.RPOTH:         handleRpoTh(req); break;
     }
   }
@@ -215,8 +214,7 @@ class HorpoSimplifier {
               _hcl.store(l, HRelation.RPOTH, r, c, v),
               _hcl.store(l, HRelation.RPOSELECT, r, c, v),
               _hcl.store(l, HRelation.RPOCOPY, r, c, v),
-              _hcl.store(l, HRelation.RPOLEX, r, c, v),
-              _hcl.store(l, HRelation.RPOMUL, r, c, v));
+              _hcl.store(l, HRelation.RPOEXT, r, c, v));
   }
 
  /**
@@ -268,7 +266,8 @@ class HorpoSimplifier {
 
   /** Returns whether we are even allowed to apply one of the theory cases */
   private boolean theoryAllowed(Term l, Term r, TreeSet<Variable> theoryVariables) {
-    return isTheory(l, theoryVariables) && isTheory(r, theoryVariables);
+    return isTheory(l, theoryVariables) && l.queryType().equals(r.queryType()) &&
+           isTheory(r, theoryVariables);
   }
 
   /**
@@ -406,7 +405,9 @@ class HorpoSimplifier {
   private void handleFun(HorpoRequirement req) {
     Term left = req.left();
     Term right = req.right();
-    if (!left.isFunctionalTerm() || !right.isFunctionalTerm()) {
+    if (!left.isFunctionalTerm() || !right.isFunctionalTerm() ||
+        isTheory(right, req.theoryVariables()) ||
+        (left.numberArguments() == 0 && req.relation() == HRelation.GREATERFUN)) {
       _smt.require(req.variable().negate());
       return;
     }
@@ -420,11 +421,11 @@ class HorpoSimplifier {
     requireOr(req.variable().negate(), SmtFactory.createEqual(_parameters.getPrecedence(f),
                                                               _parameters.getPrecedence(g)));
     requireFunRest(f, k, g, n, req.variable());
-    ArrayList<IVar> chi = createChiForFun(f, k, g, n, req.variable());
+    ArrayList<IVar> chi = createChiForFun(f, k, g, n, req.variable(), null);
     requireInjective(k, g, n, req.variable(), chi);
     requireSamePermutation(f, k, g, n, req.variable(), chi);
     requireChiGeq(k, n, req, chi,
-                  req.relation() == HRelation.GEQNOGRFUN ? HRelation.GEQNOGR : HRelation.GEQ);
+                  req.relation() == HRelation.GEQNOGRFUN ? HRelation.GEQNOGR : HRelation.GEQ, null);
 
     if (req.relation() == HRelation.GREATERFUN) requireChiGreater(f, k, n, req, chi);
     else if (req.relation() == HRelation.GEQNOGRFUN) {
@@ -450,27 +451,43 @@ class HorpoSimplifier {
   }
 
   /**
-   * Helper function for handleFun: creates a function χ from {1..n} to {0..k} such that
-   * - if reqvar then χ maps i with i ∉ regards[g] to 0
-   * - if reqvar then χ maps i with i ∉ regards[g] to something non-zero
+   * Helper function for handleFun and handleExt: creates a function χ from {1..n} to {0..k} such
+   * that:
+   * - if aa = null:
+   *   + if reqvar then χ maps i with i ∉ regards[g] to 0
+   *   + if reqvar then χ maps i with i ∈ regards[g] to something non-zero
+   * - if aa != null:
+   *   + if reqvar then χ maps i with i ∉ regards[g] or π{g}(i) > aa to 0
+   *   + if reqvar then χ maps i with i ∈ regards[g] and π{g}(i) ≤ aa to something non-zero
    */
   private ArrayList<IVar> createChiForFun(FunctionSymbol f, int k, FunctionSymbol g, int n,
-                                          BVar reqvar) {
+                                          BVar reqvar, IVar aa) {
     ArrayList<IVar> ret = new ArrayList<IVar>(n);
     IntegerExpression zero = SmtFactory.createValue(0);
     IntegerExpression one = SmtFactory.createValue(1);
-    IntegerExpression kk = SmtFactory.createValue(k);
-    // create the variables for χ, and require that χ maps i with i ∉ regards[g] to 0,
-    // and χ maps i with i ∉ regards[g] to an element j of {1..k}
+    // create the variables for χ, and require that χ maps i with i ∉ regards[g] or π{g}(i) > aa
+    // to 0, and χ maps i with i ∉ regards[g] and π{g}(i) ≤ aa to an element j of {1..k}
     for (int i = 1; i <= n; i++) {
-      IVar chi_i = _smt.createIntegerVariable("chi" + _counter + "(" + i + ")");
+      // create a variable χ(i) with 0 ≤ χ(i) ≤ k
+      IVar chi_i = SmtFactory.createIntegerVariable(_smt, "chi" + _counter + "(" + i + ")", 0, k);
       ret.add(chi_i);
-      // 0 ≤ χ(i) ≤ k -- the 0 ≤ χ(i) part is redundant, but may help the solver
-      _smt.require(SmtFactory.createGeq(chi_i, zero));
-      _smt.require(SmtFactory.createLeq(chi_i, kk));
-      // if regards[g,i] then χ(i) ≥ 1 else χ(i) = 0
-      requireOr(reqvar.negate(), _filter.regards(g,i).negate(), SmtFactory.createGeq(chi_i, one));
+      // if ¬regards[g,i] then χ(i) = 0
       requireOr(reqvar.negate(), _filter.regards(g,i), SmtFactory.createEqual(chi_i, zero));
+      if (aa == null) {
+        // if regards[g,i] then χ(i) ≥ 1
+        requireOr(reqvar.negate(), _filter.regards(g,i).negate(), SmtFactory.createGeq(chi_i, one));
+      }
+      else {
+        // if π{g}(i) > aa then χ(i) = 0
+        requireOr(reqvar.negate(),
+                  SmtFactory.createLeq(_parameters.getPermutation(g, i), aa),
+                  SmtFactory.createEqual(chi_i, zero));
+        // if regards[g,i] and π{g}(i) ≤ aa then χ(i) ≥ 1
+        requireOr(reqvar.negate(),
+                  _filter.regards(g,i).negate(),
+                  SmtFactory.createGreater(_parameters.getPermutation(g, i), aa),
+                  SmtFactory.createGeq(chi_i, one));
+      }
     }
     return ret;
   }
@@ -483,6 +500,7 @@ class HorpoSimplifier {
    * Here, chi(i) is represented by chi.get(i-1).
    */
   private void requireInjective(int k, FunctionSymbol g, int n, BVar reqvar, ArrayList<IVar> chi) {
+    if (k == 0) return; // we only have to show this when π{g}(i) = π{g}(j) ∈ {1..k}
     for (int i = 1; i < n; i++) {
       IVar chi_i = chi.get(i-1);
       for (int j = i+1; j <= n; j++) {
@@ -495,9 +513,11 @@ class HorpoSimplifier {
 
   /**
    * Helper function for handleFun: this requires that, if reqvar holds, then for all i ∈ {1..n}
-   * ∩ regards[g] we have π{f}(χ(i)) = π{g}(i), where χ is already known to map regarded elements
-   * of {1..n} into {1..k} and disregarded elements to 0.  Note that this implies that regarded
-   * elements of g are mapped to regarded elements of f.
+   * with χ(i) ∈ {1..k} we have π{f}(χ(i)) = π{g}(i).
+   *
+   * If it is already known that χ maps regarded elements of {1..n} into {1..k} and disregarded
+   * elements to 0, this exactly implies that π{f}(χ(i)) = π{g}(i) for all i ∈ {1..n} ∩ regards[g].
+   * Note that this implies that regarded elements of g are mapped to regarded elements of f.
    *
    * Here, chi(i) is represented by chi.get(i-1).
    */
@@ -505,7 +525,6 @@ class HorpoSimplifier {
                                       ArrayList<IVar> chi) {
     for (int i = 1; i <= n; i++) {
       IVar chi_i = chi.get(i-1);
-      // χ(i) is regarded if and only if χ(i) = j for some j ∈ {1..k}
       for (int j = 1; j <= k; j++) {
         requireOr(reqvar.negate(), SmtFactory.createUnequal(chi_i, SmtFactory.createValue(j)),
           SmtFactory.createEqual(_parameters.getPermutation(f,j), _parameters.getPermutation(g,i))
@@ -515,11 +534,15 @@ class HorpoSimplifier {
   }
 
   /**
-   * Helper function for handleFun: this requires that, for all i ∈ {1..n} such that χ(i) = j ∈
-   * {1..k}, we have s_j <rel> t_i, where s_j is argument j of the left-hand side of the
+   * Helper function for handleFun and handleExt: this requires that, for all i ∈ {1..n} such that
+   * χ(i) = j ∈ {1..k}, we have s_j <rel> t_i, where s_j is argument j of the left-hand side of the
    * requirement, and t_i is argument i of the right-hand side of the requirement.
+   *
+   * If onlyforthese is not null, then the requirement is only imposed for those j such that
+   * onlyforthese.get(j-1) holds.
    */
-  private void requireChiGeq(int k, int n, HorpoRequirement req, List<IVar> chi, HRelation rel) {
+  private void requireChiGeq(int k, int n, HorpoRequirement req, List<IVar> chi, HRelation rel,
+                             List<BVar> onlyforthese) {
     Term left = req.left();
     Term right = req.right();
     Term constr = req.constraint();
@@ -527,9 +550,13 @@ class HorpoSimplifier {
     for (int i = 1; i <= n; i++) {
       IVar chi_i = chi.get(i-1);
       for (int j = 1; j <= k; j++) {
+        Constraint uneq = SmtFactory.createUnequal(chi_i, SmtFactory.createValue(j));
         BVar comp = _hcl.store(left.queryArgument(j), rel, right.queryArgument(i), constr, tvar);
-        requireOr(req.variable().negate(), 
-          SmtFactory.createUnequal(chi_i, SmtFactory.createValue(j)), comp);
+        if (onlyforthese == null) requireOr(req.variable().negate(), uneq, comp);
+        else {
+          BVar bvar = onlyforthese.get(j-1);
+          requireOr(req.variable().negate(), bvar.negate(), uneq, comp);
+        }
       }
     }
   }
@@ -543,11 +570,11 @@ class HorpoSimplifier {
   private void requireChiGreater(FunctionSymbol f, int k, int n, HorpoRequirement req,
                                  List<IVar> chi) {
     ArrayList<Constraint> parts = new ArrayList<Constraint>();
-
-    // a ∈ {1..k}
-    IVar a = _smt.createIntegerVariable("decrease" + _counter);
-    _smt.requireImplication(req.variable(), SmtFactory.createGeq(a, SmtFactory.createValue(1)));
-    _smt.requireImplication(req.variable(), SmtFactory.createLeq(a, SmtFactory.createValue(k)));
+    
+    // this is never going to work if k = 0!
+    if (k == 0) { _smt.require(req.variable().negate()); return; }
+    // a ∈ {1..k} -- this can be required unconditionally because such a always exists
+    IVar a = SmtFactory.createIntegerVariable(_smt, "decrease" + _counter, 1, k);
     // a ∈ regards[f], so ∀ j ∈ {1..k}. a = j ⇒ j ∈ regards[f]
     for (int j = 1; j <= k; j++) {
       requireOr(req.variable().negate(),
@@ -691,8 +718,7 @@ class HorpoSimplifier {
       FunctionSymbol g = r.queryRoot();
       IVar predf = _parameters.getPrecedence(f);
       IVar predg = _parameters.getPrecedence(g);
-      _smt.requireImplication(req.variable(),
-        SmtFactory.createGreater(predf, predg));
+      _smt.requireImplication(req.variable(), SmtFactory.createGreater(predf, predg));
       requireLeftGreaterRightArguments(req);
     }
   }
@@ -713,15 +739,108 @@ class HorpoSimplifier {
     else _smt.require(req.variable().negate());
   }
 
-  private void handleLex(HorpoRequirement req) {
-    // TODO
-    _smt.require(req.variable().negate());
+  /**
+   * This function simplifies requirements of the form l ▷{ext} r and l ▷{mul} r.  That is,
+   * for l = f(l_1,...,l_k) and r = g(r_1,...,r_n) it requires that there exist
+   * - an integer a ∈ {1..arity(f)}
+   * - a function χ :: { i ∈ {1..n} | 1 ≤ π{g}(i) ≤ a } → { 1..k }
+   * - a non-empty set strict ⊆ { j ∈ {1..k} | π{f}(j) = a }
+   * such that the following properties are satisfied:
+   * - f = g in the precedence
+   * - π{f}(χ(i)) = π{g}(i) for all i in {1..n} with 1 ≤ π{g}(i) ≤ a
+   * - if g has arity m, then for n+1 ≤ i ≤ m: π{g}(i) ∉ {1..a}
+   * - for all i ∈ {1..n} with 1 ≤ π{g}(i) ≤ a, and all j ∈ {1..k} with χ(i) = j:
+   *   + if j ∈ strict then l_j ≻ r_i otherwise l_j ≽ r_i
+   *   + if j ∉ strict then there is no i' != i with χ(i') = j
+   * - for all i ∈ {1..n} ∩ regards[g]: l ▷ r_i
+   */
+  private void handleExt(HorpoRequirement req) {
+    Term l = req.left();
+    Term r = req.right();
+    int k = l.numberArguments();
+    if (!r.isFunctionalTerm() || isTheory(r, req.theoryVariables()) || k == 0) {
+      _smt.require(req.variable().negate());
+      return;
+    }
+    FunctionSymbol f = l.queryRoot();
+    FunctionSymbol g = r.queryRoot();
+    int n = r.numberArguments();
+    int m = g.queryArity();
+    _counter++;
+
+    // generate the variable a ∈ {1..ar(f)} that indicates where we are looking for a decrease
+    IVar a = SmtFactory.createIntegerVariable(_smt, "decr" + _counter, 1, f.queryArity());
+    // we let χ ∈ {1..n} → {0..k} be such that χ(i) = 0 iff i ∉ regards[g] ∨ π{g}(i) > a
+    ArrayList<IVar> chi = createChiForFun(f, k, g, n, req.variable(), a);
+    // we let strict ⊆ { j ∈ {1..k} | π{f}(j) = a } be a non-empty set
+    ArrayList<BVar> strict = createStrict(f, k, a, req.variable());
+    // require that f = g in the precedence
+    _smt.requireImplication(req.variable(), SmtFactory.createEqual(_parameters.getPrecedence(f),
+                                                                   _parameters.getPrecedence(g)));
+    // require that π{f}(χ(i)) = π{g}(i) for all {i ∈ {1..n} | 1 ≤ π{g}(i) ≤ a}
+    requireSamePermutation(f, k, g, n, req.variable(), chi);
+    // for all additional argument positions of right: π{g}(i) = 0 or π{g}(i) > a
+    for (int i = n + 1; i <= m; i++) {
+      IVar pgi = _parameters.getPermutation(g, i);
+      requireOr(req.variable().negate(), SmtFactory.createEqual(pgi, SmtFactory.createValue(0)),
+                SmtFactory.createGreater(pgi, a));
+    }
+    // l ▷ r_i for all regarded i
+    requireLeftGreaterRightArguments(req);
+    // require that left_{χ(i)} ≽ right_i whenever χ(i) ∈ {1..n} (this is required regardless
+    // of whether we are in the lex or mul state, because s ≻ t implies s ≽ t; redundancy might
+    // be helpful to exclude this case quicker in the SMT solver)
+    requireChiGeq(k, n, req, chi, HRelation.GEQ, null);
+    // left_{χ(i)} ≻ right_i whenever χ(i) ∈ strict
+    requireChiGeq(k, n, req, chi, HRelation.GREATER, strict);
+    // for all i1 != i2 ∈ {i ∈ {1..n} | 1 ≤ π{g}(i) ≤ a }: if χ(i1) = χ(i2) then χ(i1) ∈ strict
+    requireNonStrictInjective(k, n, chi, strict, req.variable());
   }
 
-  private void handleMul(HorpoRequirement req) {
-    // TODO
-    _smt.require(req.variable().negate());
+  /**
+   * Helper function for handleExt: this creates a list [strict_1,...,strict_k] and requires
+   * (conditional on reqvar) that strict_j can only hold if π{f}(j) = a, and that at least one
+   * variable is non-strict.
+   *
+   * Note that in the result, strict_j is at position j-1.
+   */
+  private ArrayList<BVar> createStrict(FunctionSymbol f, int k, IVar a, BVar reqvar) {
+    ArrayList<BVar> ret = new ArrayList<BVar>(k);
+    ArrayList<Constraint> parts = new ArrayList<Constraint>(k+1);
+    parts.add(reqvar.negate());
+    for (int j = 1; j <= k; j++) {
+      BVar strict_j = _smt.createBooleanVariable("strict" + _counter + "_" + j);
+      requireOr(reqvar.negate(), strict_j.negate(),
+                SmtFactory.createEqual(_parameters.getPermutation(f,j), a));
+      ret.add(strict_j);
+      parts.add(strict_j);
+    }
+    _smt.require(SmtFactory.createDisjunction(parts));
+    return ret;
+  }
+
+  /**
+   * Helper function for handleExt: this requires that χ is injective on the non-strict part of
+   * {1..k}; that is, ∀ i1,i2 ∈ {1..n} such that i1 != i2 and χ(i1) = χ(i2) != 0 we have
+   * χ(i1) ∈ strict.
+   */
+  private void requireNonStrictInjective(int k, int n, ArrayList<IVar> chi, ArrayList<BVar> strict,
+                                         BVar reqvar) {
+    for (int i1 = 1; i1 < n; i1++) {
+      IVar chi_i1 = chi.get(i1-1);
+      for (int i2 = i1+1; i2 <= n; i2++) {
+        IVar chi_i2 = chi.get(i2-1);
+        for (int j = 1; j <= k; j++) {
+          // reqvar ⇒ if χ(i1) = j ∧ χ(i2) = j then j ∈ strict
+          BVar jstrict = strict.get(j-1);
+          IntegerExpression jj = SmtFactory.createValue(j);
+          requireOr(reqvar.negate(),
+                    SmtFactory.createUnequal(chi_i1, jj),
+                    SmtFactory.createUnequal(chi_i2, jj),
+                    jstrict);
+        }
+      }
+    }
   }
 }
-
 
