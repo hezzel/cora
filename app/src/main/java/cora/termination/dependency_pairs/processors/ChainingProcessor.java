@@ -4,6 +4,7 @@ import charlie.util.Pair;
 import charlie.terms.*;
 import charlie.trs.TRS;
 import cora.io.OutputModule;
+import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
 
@@ -52,14 +53,13 @@ public class ChainingProcessor implements Processor {
 
   @Override
   public boolean isApplicable(Problem dpp) {
-    // TODO not applicable if there are non-values in arguments of the lhs
-    // of some DP (currently caught in processDPP)
-    if (! dpp.isInnermost() &&
-        dpp.queryTerminationStatus() == Problem.TerminationFlag.Arbitrary) {
-      return false;
-    }
+    if (Settings.isDisabled(queryDisabledCode())) return false;
+    if (!dpp.isInnermost()) return false;
+      // TODO: check if this processor is also applicable in full rewriting if the
+      // computability or termination flag is set
     return dpp.getDPList().size() >= (_allowSelfChaining ? 1 : 2);
-    // may be restricted in the future
+      // TODO not applicable if there are non-values in arguments of the lhs
+      // of some DP (currently caught in processDPP)
   }
 
   @Override

@@ -15,9 +15,11 @@
 
 package cora;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import charlie.trs.TRS;
 import charlie.smt.SmtSolver;
@@ -63,27 +65,29 @@ public class Parameters {
    * If you _change_ the code, everything will keep working (assuming it doesn't overlap with
    * another code), so please make sure you do not forget to also change the documentation!
    */
-  private TreeSet<String> disableableTechniques() {
-    TreeSet<String> set = new TreeSet<String>();
-    addTechnique(set, cora.termination.dependency_pairs.DPFramework.queryDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.DPFramework.queryPrivateDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.processors.graph.GraphProcessor.queryDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.processors.IntegerMappingProcessor.queryDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.processors.graph.ReachabilityProcessor.queryDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.processors.ChainingProcessor.queryDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.processors.SplittingProcessor.queryDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.processors.SubtermProcessor.queryDisabledCode());
-    addTechnique(set, cora.termination.dependency_pairs.processors.TheoryArgumentsProcessor.queryDisabledCode());
-    addTechnique(set, cora.termination.reduction_pairs.horpo.Horpo.queryDisabledCode());
-    return set;
+  private static TreeMap<String,String> disableableTechniques() {
+    TreeMap<String,String> map = new TreeMap<String,String>();
+    addTechnique(map, cora.termination.dependency_pairs.DPFramework.queryDisabledCode(), "static dependency pairs");
+    addTechnique(map, cora.termination.dependency_pairs.DPFramework.queryPrivateDisabledCode(), "consideration of public/private function symbols");
+    addTechnique(map, cora.termination.dependency_pairs.processors.graph.GraphProcessor.queryDisabledCode(), "the dependency graph processor");
+    addTechnique(map, cora.termination.dependency_pairs.processors.graph.ReachabilityProcessor.queryDisabledCode(), "the reachability processor");
+    addTechnique(map, cora.termination.dependency_pairs.processors.redpair.ReductionPairProcessor.queryDisabledCode(), "the reduction pair processor");
+    addTechnique(map, cora.termination.dependency_pairs.processors.redpair.URWrtRedPairProcessor.queryDisabledCode(), "the usable rules with respect to a reduction pair processor");
+    addTechnique(map, cora.termination.dependency_pairs.processors.IntegerMappingProcessor.queryDisabledCode(), "the integer mapping processor");
+    addTechnique(map, cora.termination.dependency_pairs.processors.ChainingProcessor.queryDisabledCode(), "the chaining processor");
+    addTechnique(map, cora.termination.dependency_pairs.processors.SplittingProcessor.queryDisabledCode(), "the constraint modification processor");
+    addTechnique(map, cora.termination.dependency_pairs.processors.SubtermProcessor.queryDisabledCode(), "the subterm criterion processor");
+    addTechnique(map, cora.termination.dependency_pairs.processors.TheoryArgumentsProcessor.queryDisabledCode(), "the theory arguments processor");
+    addTechnique(map, cora.termination.reduction_pairs.horpo.Horpo.queryDisabledCode(), "the reduction pair (Constrained) HORPO");
+    return map;
   }
 
   /** Helper function for disableableTechniques() */
-  private static void addTechnique(TreeSet<String> set, String value) {
-    if (set.contains(value)) {
+  private static void addTechnique(TreeMap<String,String> map, String value, String description) {
+    if (map.containsKey(value)) {
       throw new RuntimeException("Disable value " + value + " is used by more than one technique!");
     }
-    set.add(value);
+    map.put(value, description);
   }
 
   /** Creates the Parameters object based on user-given runtime arguments. */
@@ -202,9 +206,9 @@ public class Parameters {
 
   /** Sets up config.Settings based on what the input arguments were. */
   public void setupSettings() {
-    TreeSet<String> codes = disableableTechniques();
+    TreeMap<String,String> codes = disableableTechniques();
     for (String d : _disable) {
-      if (!codes.contains(d)) {
+      if (!codes.containsKey(d)) {
         throw new WrongParametersException("Unknown code for technique to disable: " + d);
       }
     }
@@ -271,117 +275,38 @@ public class Parameters {
     str.append("usage: cora [<options>] <input_file>").append(System.lineSeparator());
     str.append("options:").append(System.lineSeparator());
 
-    str.append("    -p | --print" +
-        "        " +
-        "        " +
-        "Print the given TRS on standard output.")
+    str.append("    -p | --print                Print the given TRS on standard output.")
       .append(System.lineSeparator());
-
-    str.append("    -y | --style  <style>" +
-      "   " +
-      "    " +
-      "Use the given style for printing; " +
+    str.append("    -y | --style  <style>       Use the given style for printing; " +
       "currently supported styles are \"plain\" and \"unicode\".")
       .append(System.lineSeparator());
-
-
-    str.append("    -r | --reduce <term>" +
-        "        " +
-        "Parse the given term, " +
+    str.append("    -r | --reduce <term>        Parse the given term, " +
         "and reduce it under the given TRS; no further parameters can be given after this " +
         "as they will be considered part of the term.")
       .append(System.lineSeparator());
-
-    str.append("    -t | --termination" +
-        "        " +
-        "    " +
-        "Try to prove or disprove termination of the given TRS.")
+    str.append("    -t | --termination          Try to prove or disprove termination of the " +
+      "given TRS.")
       .append(System.lineSeparator());
-
-    str.append("    -d | --disable [<tech>]" +
-        "     " +
-        "Disable the given techniques from being used by Cora.")
+    str.append("    -d | --disable [<tech>]     Disable the given techniques from being used by " +
+      "Cora.")
       .append(System.lineSeparator());
-
-    str.append("    " +
-      "    " +
-      "The following techniques can be disabled:")
+    str.append("        The following techniques can be disabled:")
       .append(System.lineSeparator());
-
-    str.append("    " +
-      "    " +
-      "    " +
-      "dp" +
-      "    " +
-      "    " +
-      " " +
-      "The DP framework (for termination, non-termination, and universal computability);" +
-      "if disabled, HORPO is used for termination proofs instead.")
-      .append(System.lineSeparator());
-
-    str.append("    " +
-        "    " +
-        "    " +
-        "graph" +
-        "      " +
-        "The graph processor in the DP framework.")
-      .append(System.lineSeparator());
-
-    str.append("    " +
-        "    " +
-        "    " +
-        "imap       The integer function processor in the DP framework.")
-      .append(System.lineSeparator());
-
-    str.append("    " +
-        "    " +
-        "    " +
-        "reach      The reachability processor in the DP framework (when using public functions).")
-      .append(System.lineSeparator());
-
-    str.append("    " +
-        "    " +
-        "    " +
-        "split      The splitting processor in the DP framework.")
-      .append(System.lineSeparator());
-
-    str.append("    " +
-        "    " +
-        "    " +
-        "subcrit    The subterm criterion processor in the DP framework.")
-      .append(System.lineSeparator());
-
-    str.append("    " +
-        "    " +
-        "    " +
-        "tharg      The theory arguments processor in the DP framework.")
-      .append(System.lineSeparator());
-
-    str.append("    -s | --solver  [<solver>]" +
-      "   " +
-      "Request the given SMT solver to be used." +
+    for (Map.Entry<String,String> entry : disableableTechniques().entrySet()) {
+      str.append("            " + entry.getKey() + " : " + entry.getValue())
+        .append(System.lineSeparator());
+    }
+    str.append("    -s | --solver  [<solver>]   Request the given SMT solver to be used." +
       "Note that this solver should be installed on your local computer.")
       .append(System.lineSeparator());
-
-    str.append("    " +
-        "    " +
-        "The following SMT solvers are supported.")
+    str.append("        The following SMT solvers are supported.")
       .append(System.lineSeparator());
-
-    str.append("    " +
-        "    " +
-        "    " +
-        "z3 | cvc5 | yices2    To use any of those, please install locally.")
+    str.append("            z3 | cvc5 | yices2    To use any of those, please install locally.")
       .append(System.lineSeparator());
-
-    str.append("    " +
-        "    " +
-        "    " +
-        "external:command    This allows a user to specify a command that is invoked, for " +
-        "example, a bash script, that calls an SMT solver in exactly the way you want.")
+    str.append("            external:command      This allows a user to specify a command that " +
+      "is invoked, for example, a bash script, that calls an SMT solver in exactly the way you " +
+      "want.")
       .append(System.lineSeparator());
-
     return str.toString();
   }
-
 }

@@ -22,6 +22,7 @@ import charlie.trs.Rule;
 import charlie.smt.SmtProblem;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
+import cora.config.Settings;
 import cora.termination.reduction_pairs.*;
 import cora.termination.dependency_pairs.Problem;
 import cora.termination.dependency_pairs.DP;
@@ -42,6 +43,9 @@ public class ReductionPairProcessor implements Processor {
   public ReductionPairProcessor(ReductionPair rp) {
     _redpair = rp;
   }
+
+  /** This technique can be disabled by runtime arguments. */
+  public static String queryDisabledCode() { return "redpair"; }
 
   /**
    * Makes the ordering problem for the given DP Problem.
@@ -74,7 +78,8 @@ public class ReductionPairProcessor implements Processor {
    */
   @Override
   public boolean isApplicable(Problem dpp) {
-    return !dpp.hasExtraRules() &&
+    return !Settings.isDisabled(queryDisabledCode()) &&
+           !dpp.hasExtraRules() &&
            _redpair.isApplicable(makeOProb(dpp));
   }
 

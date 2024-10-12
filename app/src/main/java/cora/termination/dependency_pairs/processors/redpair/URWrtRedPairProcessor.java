@@ -24,6 +24,7 @@ import charlie.trs.TrsProperties.*;
 import charlie.smt.*;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
+import cora.config.Settings;
 import cora.termination.reduction_pairs.*;
 import cora.termination.dependency_pairs.Problem;
 import cora.termination.dependency_pairs.DP;
@@ -40,6 +41,9 @@ import java.util.Map;
 public class URWrtRedPairProcessor implements Processor {
   private ReductionPair _redpair;
 
+  /** This technique can be disabled by runtime arguments. */
+  public static String queryDisabledCode() { return "urwrt"; }
+
   /**
    * Creates a processor based on the given reduction pair. This is supposed to be a weakly
    * monotonic reduction pair that can handle disregarded arguments (though if it is a reduction
@@ -53,7 +57,8 @@ public class URWrtRedPairProcessor implements Processor {
 
   @Override
   public boolean isApplicable(Problem dpp) {
-    return dpp.isInnermost() &&
+    return !Settings.isDisabled(queryDisabledCode()) &&
+           dpp.isInnermost() &&
            dpp.getOriginalTRS().verifyProperties(Level.APPLICATIVE, Constrained.YES,
                                                  Products.DISALLOWED, Lhs.PATTERN, Root.THEORY);
   }

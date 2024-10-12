@@ -21,6 +21,7 @@ import charlie.trs.Rule;
 import charlie.trs.TrsProperties.*;
 import charlie.trs.TrsFactory;
 import cora.io.OutputModule;
+import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
 
@@ -34,9 +35,13 @@ public class UsableRulesProcessor implements Processor {
   /** This method has only been defined for innermost LCSTRSs */
   public boolean isApplicable(Problem dpp) {
     return dpp.isInnermost() &&
+           !Settings.isDisabled(queryDisabledCode()) &&
            dpp.getOriginalTRS().verifyProperties(Level.APPLICATIVE, Constrained.YES,
                                                  Products.DISALLOWED, Lhs.PATTERN, Root.THEORY);
   }
+
+  /** This technique can be disabled by runtime arguments. */
+  public static String queryDisabledCode() { return "ur"; }
 
   /**
    * Creates a map that returns, for every function symbol f, a list of all rules whose left-hand
