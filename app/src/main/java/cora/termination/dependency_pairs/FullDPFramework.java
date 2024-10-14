@@ -41,7 +41,6 @@ public class FullDPFramework extends DPFramework {
         new TheoryArgumentsProcessor(true),
         new ReachabilityProcessor(),
         new GraphProcessor(),
-        new ChainingProcessor(false),
         new SubtermProcessor(),
         new TheoryArgumentsProcessor(false),
         new IntegerMappingProcessor(),
