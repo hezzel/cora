@@ -778,53 +778,85 @@ public class HorpoSimplifierTest {
       "!" + startvar + " or ![strict1_2] or ([chi1(1)] # 2) or [y ≻ y | true { y }]\n"));
   }
 
-//  @Test
-//  public void testLexWithMultipleArguments() {
-//    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(a,b,c)", "A", "g(u,v,w,x)" ,"A",
-//             "Int", "true", HRelation.RPOLEX, "f :: B -> B -> B -> A g :: B -> B -> B -> B -> A");
-//    assertTrue(pair.snd().toString().equals(
-//      "[alwaystrue]\n" +
-//      // they have the same precedence
-//      "[pred(f)] >= 0\n" +
-//      "[pred(g)] >= 0\n" +
-//      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ([pred(f)] = [pred(g)])\n" +
-//      // they both have status lex
-//      "[stat(f)] >= 1\n" +
-//      "3 >= [stat(f)]\n" +
-//      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ([stat(f)] = 1)\n" +
-//      "[stat(g)] >= 1\n" +
-//      "4 >= [stat(g)]\n" +
-//      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ([stat(g)] = 1)\n" +
-//      // index ∈ {1,..3}
-//      "i5 >= 1\n" +
-//      "3 >= i5\n" +
-//      // for i ∈ {1..2}: if i < index then:
-//      //   * ¬regards(f,i) ⇒ ¬regards(g,i)
-//      //   * regards(f,i) ⇒ regards(g,i)
-//      //   * regards(f,i) ⇒ leftarg[i] ≈ rightarg[i]
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (1 >= i5) or [regards(f,1)] or ![regards(g,1)]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (1 >= i5) or ![regards(f,1)] or [regards(g,1)]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (1 >= i5) or ![regards(f,1)] or [a ≈ u | true { }]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (2 >= i5) or [regards(f,2)] or ![regards(g,2)]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (2 >= i5) or ![regards(f,2)] or [regards(g,2)]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (2 >= i5) or ![regards(f,2)] or [b ≈ v | true { }]\n" +
-//      // for i ∈ {1..3}: if i = index then:
-//      //   * regards(f,i)
-//      //   * regards(g,i)
-//      //   * leftarg[i] ≻ rightarg[i]
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (1 # i5) or [regards(f,1)]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (1 # i5) or [regards(g,1)]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (1 # i5) or [a ≻ u | true { }]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (2 # i5) or [regards(f,2)]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (2 # i5) or [regards(g,2)]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (2 # i5) or [b ≻ v | true { }]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (3 # i5) or [regards(f,3)]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (3 # i5) or [regards(g,3)]\n" +
-//      "![f(a, b, c) ▷{lex} g(u, v, w, x) | true { }] or (3 # i5) or [c ≻ w | true { }]\n" +
-//      // left ▷ each right argument that is regarded (not including the first, because that one's covered)
-//      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ![regards(g,2)] or [f(a, b, c) ▷ v | true { }]\n" +
-//      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ![regards(g,3)] or [f(a, b, c) ▷ w | true { }]\n" +
-//      "(not [f(a, b, c) ▷{lex} g(u, v, w, x) | true { }]) or ![regards(g,4)] or [f(a, b, c) ▷ x | true { }]\n" ));
-//  }
+  @Test
+  public void testExtWithMultipleArguments() {
+    Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("f(a,b,c)", "A", "g(u,v,w,x)" ,"A",
+             "Int", "true", HRelation.RPOEXT, "f :: B -> B -> B -> A g :: B -> B -> B -> B -> A");
+    String startvar = "[f(a, b, c) ▷{ext} g(u, v, w, x) | true { }]";
+
+    StringBuilder req = new StringBuilder();
+    // create a ∈ {1..3} (arity of f)
+    req.append("[decr1] >= 1\n3 >= [decr1]\n");
+    // for i ∈ {1..4}. create χ(1) ∈ {0..3} and require that χ(i) > 0 if and only if regards{g,i} ∧ a ≥ π{g}(i)
+    for (int i = 1; i <= 4; i++) {
+      req.append(
+        "[chi1(" + i + ")] >= 0\n3 >= [chi1(" + i + ")]\n" +
+        "!" + startvar + " or [regards{g," + i + "}] or ([chi1(" + i + ")] = 0)\n" +
+        "!" + startvar + " or ([decr1] >= [pi{g}(" + i + ")]) or ([chi1(" + i + ")] = 0)\n" +
+        "!" + startvar + " or ![regards{g," + i + "}] or ([pi{g}(" + i + ")] >= 1 + [decr1]) or ([chi1(" + i + ")] >= 1)\n");
+    }
+    // for j ∈ {1..3}. j ∈ strict can only hold when π{f}(j) = a
+    for (int j = 1; j <= 3; j++) {
+      req.append("!" + startvar + " or ![strict1_" + j + "] or ([pi{f}(" + j + ")] = [decr1])\n");
+    }
+    // at least one position is oriented strictly
+    req.append("!" + startvar + " or [strict1_1] or [strict1_2] or [strict1_3]\n");
+    // the function symbols have the same precedence
+    req.append("!" + startvar + " or ([pred(f)] = [pred(g)])\n");
+    // for i ∈ {1..4}: if χ(i) != 0 (so 1 ≤ π{g}(i) ≤ a) then π{f}(χ(i)) = π{g}(i)
+    for (int i = 1; i <= 4; i++) {
+      for (int j = 1; j <= 3; j++) {
+        req.append("!" + startvar + " or ([chi1(" + i + ")] # " + j + ") or " +
+          "([pi{f}(" + j + ")] = [pi{g}(" + i + ")])\n");
+      }
+    }
+    // l ▷ all arguments on the right
+    req.append(
+      "!" + startvar + " or ![regards{g,1}] or [f(a, b, c) ▷ u | true { }]\n" +
+      "!" + startvar + " or ![regards{g,2}] or [f(a, b, c) ▷ v | true { }]\n" +
+      "!" + startvar + " or ![regards{g,3}] or [f(a, b, c) ▷ w | true { }]\n" +
+      "!" + startvar + " or ![regards{g,4}] or [f(a, b, c) ▷ x | true { }]\n"
+    );
+    // always left_{χ(i)} ≽ right_{i}
+    req.append(
+      "!" + startvar + " or ([chi1(1)] # 1) or [a ≽ u | true { }]\n" +
+      "!" + startvar + " or ([chi1(1)] # 2) or [b ≽ u | true { }]\n" +
+      "!" + startvar + " or ([chi1(1)] # 3) or [c ≽ u | true { }]\n" +
+      "!" + startvar + " or ([chi1(2)] # 1) or [a ≽ v | true { }]\n" +
+      "!" + startvar + " or ([chi1(2)] # 2) or [b ≽ v | true { }]\n" +
+      "!" + startvar + " or ([chi1(2)] # 3) or [c ≽ v | true { }]\n" +
+      "!" + startvar + " or ([chi1(3)] # 1) or [a ≽ w | true { }]\n" +
+      "!" + startvar + " or ([chi1(3)] # 2) or [b ≽ w | true { }]\n" +
+      "!" + startvar + " or ([chi1(3)] # 3) or [c ≽ w | true { }]\n" +
+      "!" + startvar + " or ([chi1(4)] # 1) or [a ≽ x | true { }]\n" +
+      "!" + startvar + " or ([chi1(4)] # 2) or [b ≽ x | true { }]\n" +
+      "!" + startvar + " or ([chi1(4)] # 3) or [c ≽ x | true { }]\n"
+    );
+    // if χ(i) ∈ strict then left_{χ(i)} ≻ right_{i}
+    req.append(
+      "!" + startvar + " or ![strict1_1] or ([chi1(1)] # 1) or [a ≻ u | true { }]\n" +
+      "!" + startvar + " or ![strict1_2] or ([chi1(1)] # 2) or [b ≻ u | true { }]\n" +
+      "!" + startvar + " or ![strict1_3] or ([chi1(1)] # 3) or [c ≻ u | true { }]\n" +
+      "!" + startvar + " or ![strict1_1] or ([chi1(2)] # 1) or [a ≻ v | true { }]\n" +
+      "!" + startvar + " or ![strict1_2] or ([chi1(2)] # 2) or [b ≻ v | true { }]\n" +
+      "!" + startvar + " or ![strict1_3] or ([chi1(2)] # 3) or [c ≻ v | true { }]\n" +
+      "!" + startvar + " or ![strict1_1] or ([chi1(3)] # 1) or [a ≻ w | true { }]\n" +
+      "!" + startvar + " or ![strict1_2] or ([chi1(3)] # 2) or [b ≻ w | true { }]\n" +
+      "!" + startvar + " or ![strict1_3] or ([chi1(3)] # 3) or [c ≻ w | true { }]\n" +
+      "!" + startvar + " or ![strict1_1] or ([chi1(4)] # 1) or [a ≻ x | true { }]\n" +
+      "!" + startvar + " or ![strict1_2] or ([chi1(4)] # 2) or [b ≻ x | true { }]\n" +
+      "!" + startvar + " or ![strict1_3] or ([chi1(4)] # 3) or [c ≻ x | true { }]\n"
+    );
+    // ∀ i1 ∈ {1..3}, i2 ∈ {i1+1..4}: if χ(i1) = χ(i2) != 0 then χ(i1) ∈ strict
+    for (int i1 = 1; i1 <= 3; i1++) {
+      for (int i2 = i1+1; i2 <= 4; i2++) {
+        for (int j = 1; j <= 3; j++) {
+          req.append("!" + startvar + " or ([chi1(" + i1 + ")] # " + j + ") or " +
+            "([chi1(" + i2 + ")] # " + j + ") or [strict1_" + j + "]\n");
+        }
+      }
+    }
+    assertTrue(pair.snd().toString().equals(req.toString()));
+  }
 }
 
