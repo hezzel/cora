@@ -389,7 +389,7 @@ class WrtProofObject extends ProcessorProofObject {
   }
 
   public String queryProcessorName() {
-    return "Usable rules with respect to " + _name;
+    return "Usable rules with respect to an argument wiltering [with " + _name + "]";
   }
 
   public void justify(OutputModule module) {

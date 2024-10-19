@@ -73,6 +73,7 @@ public class Parameters {
     addTechnique(map, cora.termination.dependency_pairs.processors.graph.ReachabilityProcessor.queryDisabledCode(), "the reachability processor");
     addTechnique(map, cora.termination.dependency_pairs.processors.redpair.ReductionPairProcessor.queryDisabledCode(), "the reduction pair processor");
     addTechnique(map, cora.termination.dependency_pairs.processors.redpair.URWrtRedPairProcessor.queryDisabledCode(), "the usable rules with respect to a reduction pair processor");
+    addTechnique(map, cora.termination.dependency_pairs.processors.UsableRulesProcessor.queryDisabledCode(), "the usable rules processor");
     addTechnique(map, cora.termination.dependency_pairs.processors.IntegerMappingProcessor.queryDisabledCode(), "the integer mapping processor");
     addTechnique(map, cora.termination.dependency_pairs.processors.ChainingProcessor.queryDisabledCode(), "the chaining processor");
     addTechnique(map, cora.termination.dependency_pairs.processors.SplittingProcessor.queryDisabledCode(), "the constraint modification processor");
