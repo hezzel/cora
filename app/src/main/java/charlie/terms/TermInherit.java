@@ -49,7 +49,7 @@ abstract class TermInherit implements Term {
    * set of bound variables to empty.
    * One of the setVariables functions should be called from the constructor, and only there.
    */
-  protected void setVariables(ReplaceableList vs) {
+  protected final void setVariables(ReplaceableList vs) {
     if (_freeReplaceables != null) throw new RuntimeException("Setting ReplaceableList twice for " +
       this.getClass().getSimpleName());
     _freeReplaceables = vs;
@@ -60,7 +60,7 @@ abstract class TermInherit implements Term {
    * Sets the sets of all free/meta and all bound variables occuring in this term.
    * One of the setVariables functions should be called from the constructor, and only there.
    */
-  protected void setVariables(ReplaceableList frees, ReplaceableList bounds) {
+  protected final void setVariables(ReplaceableList frees, ReplaceableList bounds) {
     if (_freeReplaceables != null) throw new RuntimeException("Setting ReplaceableList twice for " +
       this.getClass().getSimpleName());
     _freeReplaceables = frees;
@@ -115,35 +115,35 @@ abstract class TermInherit implements Term {
   }
 
   /** Returns the set of all variables occurring free in the current term. */
-  public Environment<Variable> vars() {
+  public final Environment<Variable> vars() {
     if (_freeReplaceables == null) throw new RuntimeException("Variable list requested when it " +
       "has not been set up for " + this.getClass().getSimpleName());
     return new VariableEnvironment(_freeReplaceables);
   }
 
   /** Returns the set of all meta-variables occurring in the current term. */
-  public Environment<MetaVariable> mvars() {
+  public final Environment<MetaVariable> mvars() {
     if (_freeReplaceables == null) throw new RuntimeException("Meta-variable list requested when " +
       "it has not been set up for " + this.getClass().getSimpleName());
     return new MetaVariableEnvironment(_freeReplaceables);
   }
 
   /** Returns the set of all meta-variables and variables occurring free in the current term. */
-  public ReplaceableList freeReplaceables() {
+  public final ReplaceableList freeReplaceables() {
     if (_freeReplaceables == null) throw new RuntimeException("Replaceable list has not been set " +
       "up for " + this.getClass().getSimpleName() + " when requesting free replaceables.");
     return _freeReplaceables;
   }
 
   /** Returns the set of all variables occurring bound in the current term. */
-  public ReplaceableList boundVars() {
+  public final ReplaceableList boundVars() {
     if (_freeReplaceables == null) throw new RuntimeException("Replaceable list has not been set " +
       "up for " + this.getClass().getSimpleName() + " when requesting bound variables");
     return _boundVariables;
   }
 
   /** Returns true if there are no free variables or meta-variables. */
-  public boolean isGround() {
+  public final boolean isGround() {
     return _freeReplaceables.size() == 0;
   }
 
@@ -156,7 +156,7 @@ abstract class TermInherit implements Term {
     return true;
   }
 
-  public boolean isLinear() {
+  public final boolean isLinear() {
     TreeSet<MetaVariable> mvars = new TreeSet<MetaVariable>();
     for (Pair<Term,Position> p : querySubterms()) {
       if (p.fst().isMetaApplication()) {
@@ -177,15 +177,18 @@ abstract class TermInherit implements Term {
     return true;
   }
 
-  /** Same as match(other, subst), but it creates a fresh substitution and returns the result. */
-  public Substitution match(Term other) {
+  /**
+   * This creates a fresh substitution for matching and calls match(other, subst) with it.  Note
+   * that this retuns null if and only if match(other,subst) does NOT return null.
+   */
+  public final Substitution match(Term other) {
     Substitution gamma = new Subst();
     if (match(other, gamma) == null) return gamma;
     return null;
   }
 
   /** Helper function to return the current classname for use in Exceptions. */
-  protected String queryMyClassName() {
+  protected final String queryMyClassName() {
     return this.getClass().getSimpleName();
   }
 
@@ -193,7 +196,7 @@ abstract class TermInherit implements Term {
    * Returns the set of all positions for this term (including partial positions if and only if
    * the "partial" argument is true).
    */
-  public ArrayList<Position> queryPositions(boolean partial) {
+  public final ArrayList<Position> queryPositions(boolean partial) {
     List<Pair<Term,Position>> subs = querySubterms();
     ArrayList<Position> ret = new ArrayList<Position>();
     for (Pair<Term,Position> pair : subs) {
@@ -228,7 +231,7 @@ abstract class TermInherit implements Term {
    * This function returns the subterm at position pos if pos is an empty position, and if not,
    * delegates the work to queryNonEmptySubterm(pos).
    */
-  public Term querySubterm(Position pos) {
+  public final Term querySubterm(Position pos) {
     switch (pos) {
       case FinalPos(int k):
         if (k == 0) return this;
@@ -244,7 +247,7 @@ abstract class TermInherit implements Term {
    */
   protected abstract Term replaceSubtermMain(Position pos, Term replacement);
 
-  public Term replaceSubterm(Position pos, Term replacement) {
+  public final Term replaceSubterm(Position pos, Term replacement) {
     switch (pos) {
       case FinalPos(int k):
         if (k == 0) {
@@ -262,14 +265,14 @@ abstract class TermInherit implements Term {
   }
 
   /** Executes the given function on all subterms. */
-  public void visitSubterms(BiConsumer<Term,Position> vis) {
+  public final void visitSubterms(BiConsumer<Term,Position> vis) {
     for (Pair<Term,Position> p : querySubterms()) {
       vis.accept(p.fst(), p.snd());
     }
   }
 
   /** Returns the first subterm/position pair where vis returns true (if any) */
-  public Pair<Term,Position> findSubterm(BiFunction<Term,Position,Boolean> vis) {
+  public final Pair<Term,Position> findSubterm(BiFunction<Term,Position,Boolean> vis) {
     for (Pair<Term,Position> p : querySubterms()) {
       if (vis.apply(p.fst(), p.snd())) return p;
     }
@@ -277,12 +280,12 @@ abstract class TermInherit implements Term {
   }
 
   /** Returns the present term with all binder-variables replaced by fresh ones. */
-  public Term refreshBinders() {
+  public final Term refreshBinders() {
     return substitute(new Subst());
   }
 
   /** Applies the current term (with functional type) to other. */
-  public Term apply(Term other) {
+  public final Term apply(Term other) {
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(other);
     return apply(args);
@@ -316,19 +319,19 @@ abstract class TermInherit implements Term {
   }
 
   /** This method verifies equality to another Java object. */
-  public boolean equals(Object other) {
+  public final boolean equals(Object other) {
     if (other instanceof Term) return equals((Term)other);
     return false;
   }
 
   /** This method returns a hashcode consistent with equality */
   @Override
-  public int hashCode() {
+  public final int hashCode() {
     return hashCode(null);
   }
 
   /** This method returns a string representation of the current term. */
-  public String toString() {
+  public final String toString() {
     return (new TermPrinter(Set.of())).print(this);
   }
 
