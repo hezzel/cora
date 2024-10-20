@@ -66,5 +66,7 @@ public final class Iff extends Constraint {
   public boolean equals(Constraint other) {
     return (other instanceof Iff o) && (_left.equals(o._left)) && (_right.equals(o._right));
   }
+
+  public int hashCode() { return 9 * (_left.hashCode() * 31 + _right.hashCode()) + 7; }
 }
 

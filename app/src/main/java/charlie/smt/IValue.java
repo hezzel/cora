@@ -55,5 +55,9 @@ public final class IValue extends IntegerExpression {
       default -> -1;
     };
   }
+
+  public int hashCode() {
+    return 7 * _k;
+  }
 }
 

@@ -56,5 +56,9 @@ public final class BVar extends Constraint {
   public boolean equals(Constraint other) {
     return (other instanceof BVar) && (_index == ((BVar)other).queryIndex());
   }
+
+  public int hashCode() {
+    return 9 * _index;
+  }
 }
 

@@ -34,10 +34,14 @@ public class DisjunctionTest {
   public void testEquality() {
     Constraint disj =
       new Disjunction(new BVar(1), SmtFactory.createGreater(new IValue(2), new IVar(3)));
-    assertTrue(disj.equals(new Disjunction(new BVar(1),
-      SmtFactory.createGreater(new IValue(2), new IVar(3)))));
-    assertFalse(disj.equals(new Conjunction(new BVar(1),
-      SmtFactory.createGreater(new IValue(2), new IVar(3)))));
+    Constraint disj2 =
+      new Disjunction(new BVar(1),SmtFactory.createGreater(new IValue(2), new IVar(3)));
+    Constraint conj = new Conjunction(new BVar(1),
+      SmtFactory.createGreater(new IValue(2), new IVar(3)));
+    assertTrue(disj.equals(disj2));
+    assertTrue(disj.hashCode() == disj2.hashCode());
+    assertTrue(disj.hashCode() != conj.hashCode());
+    assertFalse(disj.equals(conj));
     assertFalse(disj.equals(new Disjunction(
       SmtFactory.createGreater(new IValue(2), new IVar(3)), new BVar(1))));
   }

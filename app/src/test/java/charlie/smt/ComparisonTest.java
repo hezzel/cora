@@ -49,6 +49,8 @@ public class ComparisonTest {
     Comparison comp = (Comparison)SmtFactory.createEqual(expr);
     Comparison neqcomp = comp.negate();
     assertTrue(neqcomp.equals(SmtFactory.createUnequal(expr)));
+    assertTrue(neqcomp.hashCode() == SmtFactory.createUnequal(expr).hashCode());
+    assertTrue(neqcomp.hashCode() == comp.hashCode() + 1);
     assertTrue(neqcomp.negate().equals(comp));
     assertTrue(comp.toString().equals("i2 = 1"));
     assertTrue(neqcomp.toString().equals("i2 # 1"));
@@ -59,12 +61,15 @@ public class ComparisonTest {
   @Test
   public void testEquality() {
     Constraint comp = SmtFactory.createSmaller(new IVar(2), new IValue(2));
-    assertTrue(comp.equals(SmtFactory.createGreater(new IValue(2), new IVar(2))));
-    assertFalse(comp.equals(SmtFactory.createGreater(new IVar(2), new IValue(2))));
-    Constraint comp2 = SmtFactory.createGeq(new IValue(2), new IVar(2));
-    assertFalse(comp.equals(comp2));
-    assertFalse(comp2.equals(comp));
-    Constraint comp3 = SmtFactory.createLeq(new IVar(2), new IValue(1));
+    Constraint comp2 = SmtFactory.createGreater(new IValue(2), new IVar(2));
+    assertTrue(comp.equals(comp2));
+    assertTrue(comp.hashCode() == comp2.hashCode());
+    Constraint comp3 = SmtFactory.createGreater(new IVar(2), new IValue(2));
+    assertFalse(comp.equals(comp3));
+    assertTrue(comp.hashCode() != comp3.hashCode());
+    Constraint comp4 = SmtFactory.createGeq(new IValue(2), new IVar(2));
+    assertFalse(comp.equals(comp4));
+    assertFalse(comp4.equals(comp));
   }
 
   @Test

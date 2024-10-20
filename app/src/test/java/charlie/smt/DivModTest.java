@@ -104,6 +104,23 @@ public class DivModTest {
   }
 
   @Test
+  public void testDivisionHashCode() {
+    IntegerExpression a = new Division(new IValue(3), new IVar(2));
+    IntegerExpression b = new Division(new IValue(3), new IVar(2));
+    IntegerExpression c = new Division(new IValue(2), new IVar(3));
+    IntegerExpression d = new Division(new IValue(3), new IVar(1));
+    IntegerExpression e = new Division(new IValue(4), new IVar(2));
+    IntegerExpression f = new Division(new IValue(-3), new IVar(2));
+    IntegerExpression g = new Modulo(new IValue(3), new IVar(2));
+    assertTrue(a.hashCode() == b.hashCode());
+    assertTrue(a.hashCode() != c.hashCode());
+    assertTrue(a.hashCode() != d.hashCode());
+    assertTrue(a.hashCode() != e.hashCode());
+    assertTrue(a.hashCode() != f.hashCode());
+    assertTrue(a.hashCode() != g.hashCode());
+  }
+
+  @Test
   public void testModuloComparison() {
     IntegerExpression a = new Modulo(new IValue(3), new IVar(2));
     IntegerExpression b = new Modulo(new IValue(3), new IVar(2));
@@ -116,6 +133,21 @@ public class DivModTest {
     assertTrue(a.compareTo(d) > 0);
     assertTrue(a.compareTo(e) < 0);
     assertTrue(a.compareTo(f) > 0);
+  }
+
+  @Test
+  public void testModuloHashCode() {
+    IntegerExpression a = new Modulo(new IValue(3), new IVar(2));
+    IntegerExpression b = new Modulo(new IValue(3), new IVar(2));
+    IntegerExpression c = new Modulo(new IValue(2), new IVar(3));
+    IntegerExpression d = new Modulo(new IValue(3), new IVar(1));
+    IntegerExpression e = new Modulo(new IValue(4), new IVar(2));
+    IntegerExpression f = new Modulo(new IValue(-3), new IVar(2));
+    assertTrue(a.hashCode() == b.hashCode());
+    assertTrue(a.hashCode() != c.hashCode());
+    assertTrue(a.hashCode() != d.hashCode());
+    assertTrue(a.hashCode() != e.hashCode());
+    assertTrue(a.hashCode() != f.hashCode());
   }
 
   private IntegerExpression make(IntegerExpression d, IntegerExpression n, boolean div) {

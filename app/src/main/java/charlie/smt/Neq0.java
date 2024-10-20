@@ -21,5 +21,6 @@ public final class Neq0 extends Comparison {
   public Is0 negate() { return new Is0(_expr); }
   protected boolean evaluate(int num) { return num != 0; }
   protected String symbol() { return "distinct"; }
+  public int hashCode() { return 9 * _expr.hashCode() + 6; }
 }
 

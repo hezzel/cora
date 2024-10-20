@@ -30,5 +30,7 @@ public final class Falsehood extends Constraint {
   public boolean equals(Constraint other) {
     return other instanceof Falsehood;
   }
+
+  public int hashCode() { return 2; }
 }
 

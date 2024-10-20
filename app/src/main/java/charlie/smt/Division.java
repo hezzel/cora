@@ -116,5 +116,9 @@ public final class Division extends IntegerExpression {
       case Modulo m -> -1;
     };
   }
+
+  public int hashCode() {
+    return 7 * (_numerator.hashCode() * 31 + _denominator.hashCode()) + 5;
+  }
 }
 

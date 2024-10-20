@@ -113,5 +113,9 @@ public final class Modulo extends IntegerExpression {
       }   
     };
   }
+
+  public int hashCode() {
+    return 7 * (_numerator.hashCode() * 31 + _denominator.hashCode()) + 6;
+  }
 }
 

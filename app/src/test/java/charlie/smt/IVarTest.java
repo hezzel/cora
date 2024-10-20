@@ -54,6 +54,8 @@ public class IVarTest {
     assertTrue(x.compareTo(new IVar(13)) < 0);
     assertTrue(x.compareTo(new IVar(3)) > 0);
     // we don't test here against other kinds; this is handled in CMultTest
+    assertTrue(x.hashCode() == (new IVar(12)).hashCode());
+    assertTrue(x.hashCode() != (new IVar(13)).hashCode());
   }
 }
 

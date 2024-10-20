@@ -99,6 +99,22 @@ public class CMultTest {
   }
 
   @Test
+  public void testHashCode() {
+    IntegerExpression mf = new IValue(-4);
+    IntegerExpression mt = new IValue(-3);
+    IntegerExpression x = new IVar(1);
+    IntegerExpression m1 = new CMult(-2, new Addition(mf, x));
+    IntegerExpression m2 = new CMult(-2, new Addition(mf, x));
+    IntegerExpression m3 = new CMult(-2, new Addition(mt, x));
+    IntegerExpression m4 = new Multiplication(new IValue(-2), new Addition(mf, x));
+    IntegerExpression p = new Addition(new IValue(8), new CMult(-2, x));
+    assertTrue(m1.hashCode() == m2.hashCode());
+    assertTrue(m1.hashCode() != m3.hashCode());
+    assertTrue(m1.hashCode() != m4.hashCode());
+    assertTrue(m1.hashCode() != p.hashCode());
+  }
+
+  @Test
   public void testSimplified() {
     IntegerExpression x = new IVar(1);
     IntegerExpression y = new IVar(2);

@@ -42,6 +42,8 @@ public class IffTest {
     assertFalse(iff.equals(SmtFactory.createIff(other, neg)));
     assertFalse(iff.equals(SmtFactory.createIff(neg, neg)));
     assertFalse(iff.equals(SmtFactory.createIff(other, other)));
+    assertTrue(iff.hashCode() == SmtFactory.createIff(neg, other).hashCode());
+    assertTrue(iff.hashCode() != SmtFactory.createIff(other, neg).hashCode());
   }
 
   @Test

@@ -75,5 +75,9 @@ public final class CMult extends IntegerExpression {
       default -> _main.compareTo(other) >= 0 ? 1 : -1;
     };
   }
+
+  public int hashCode() {
+    return 2 + 7 * (_main.hashCode() * 5 + _constant);
+  }
 }
 

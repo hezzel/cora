@@ -30,5 +30,7 @@ public final class Truth extends Constraint {
   public boolean equals(Constraint other) {
     return other instanceof Truth;
   }
+
+  public int hashCode() { return 1; }
 }
 

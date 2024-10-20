@@ -40,5 +40,9 @@ public class BValueTest {
     assertTrue(y.equals(y));
     assertFalse(y.equals(x));
     assertFalse(y.equals(new Geq0(new IValue(1), new IValue(2))));
+
+    assertTrue(x.hashCode() != y.hashCode());
+    assertTrue(x.hashCode() == 1);
+    assertTrue(y.hashCode() == 2);
   }
 }

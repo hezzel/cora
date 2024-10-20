@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 
 public class MixedCompareToTest {
-  private ArrayList createDifferentIntegerExpressions() {
+  private ArrayList<IntegerExpression> createDifferentIntegerExpressions() {
     IntegerExpression x = new IVar(1);
     IntegerExpression y = new IVar(2);
     IntegerExpression k = new IValue(-3);
@@ -46,6 +46,18 @@ public class MixedCompareToTest {
         int comp = a.compareTo(b);
         assertTrue(comp != 0);
         assertTrue(comp == - b.compareTo(a), "comparing " + a + " and " + b);
+      }
+    }
+  }
+
+  @Test
+  public void testDifferentHashCodesForDifferentKinds() {
+    ArrayList<IntegerExpression> arr = createDifferentIntegerExpressions();
+    for (int i = 0; i < arr.size(); i++) {
+      IntegerExpression a = arr.get(i);
+      for (int j = i+1; j < arr.size(); j++) {
+        IntegerExpression b = arr.get(j);
+        assertTrue(a.hashCode() != b.hashCode(), "hashcodes for " + a + " and " + b);
       }
     }
   }

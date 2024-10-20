@@ -233,5 +233,9 @@ public final class Addition extends IntegerExpression {
       case Modulo m -> -1;
     };
   }
+
+  public int hashCode() {
+    return 7 * _children.hashCode() + 3;
+  }
 }
 

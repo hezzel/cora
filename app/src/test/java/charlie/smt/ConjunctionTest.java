@@ -33,12 +33,18 @@ public class ConjunctionTest {
   public void testEquality() {
     Constraint conj =
       new Conjunction(new BVar(1), SmtFactory.createGreater(new IValue(2), new IVar(3)));
-    assertTrue(conj.equals(new Conjunction(new BVar(1),
-      SmtFactory.createGreater(new IValue(2), new IVar(3)))));
-    assertFalse(conj.equals(new Disjunction(new BVar(1),
-      SmtFactory.createGreater(new IValue(2), new IVar(3)))));
-    assertFalse(conj.equals(new Conjunction(SmtFactory.createGreater(
-      new IValue(2), new IVar(3)), new BVar(1))));
+    Constraint conj2 =
+      new Conjunction(new BVar(1), SmtFactory.createGreater(new IValue(2), new IVar(3)));
+    Constraint conj3 =
+      new Disjunction(new BVar(1), SmtFactory.createGreater(new IValue(2), new IVar(3)));
+    Constraint conj4 =
+      new Conjunction(SmtFactory.createGreater(new IValue(2), new IVar(3)), new BVar(1));
+    assertTrue(conj.equals(conj2));
+    assertFalse(conj.equals(conj3));
+    assertFalse(conj.equals(conj4));
+    assertTrue(conj.hashCode() == conj2.hashCode());
+    assertTrue(conj.hashCode() != conj3.hashCode());
+    assertTrue(conj.hashCode() != conj4.hashCode());
   }
 
   @Test

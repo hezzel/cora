@@ -75,8 +75,12 @@ public class AdditionTest {
   @Test
   public void testEquality() {
     IntegerExpression plus = new Addition(new IValue(1), new IValue(2));
+    IntegerExpression plus2 = new Addition(new IValue(1), new IValue(2));
     assertTrue(plus.equals(new Addition(new IValue(1), new IValue(2))));
-    assertFalse(plus.equals(new Multiplication(new IValue(1), new IValue(2))));
+    assertTrue(plus.hashCode() == plus2.hashCode());
+    IntegerExpression mult = new Multiplication(new IValue(1), new IValue(2));
+    assertFalse(plus.equals(mult));
+    assertTrue(plus.hashCode() != mult.hashCode());
     assertFalse(plus.equals(new IValue(3)));
   }
 

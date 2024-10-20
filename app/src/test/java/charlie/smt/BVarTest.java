@@ -54,6 +54,10 @@ public class BVarTest {
     assertTrue(x.equals(new BVar(12)));
     assertFalse(x.equals(new BVar(13)));
     assertFalse(x.equals(new IVar(12)));
+    assertFalse(x.equals(x.negate()));
+    assertTrue(x.hashCode() == (new BVar(12)).hashCode());
+    assertTrue(x.hashCode() != (new BVar(13)).hashCode());
+    assertTrue(x.hashCode() != (new NBVar(x)).hashCode());
   }
 
   @Test

@@ -51,5 +51,7 @@ public final class NBVar extends Constraint {
   public boolean equals(Constraint other) {
     return (other instanceof NBVar n) && (_negated.queryIndex() == n.queryIndex());
   }
+
+  public int hashCode() { return _negated.hashCode() + 1; }
 }
 

@@ -76,6 +76,20 @@ public class MultiplicationTest {
   }
 
   @Test
+  public void testHashCode() {
+    // a * b * c < b * d
+    // b * c < a * b * c
+    IntegerExpression a = new IVar(1);
+    IntegerExpression b = new IVar(2);
+    IntegerExpression c = new IVar(3);
+    IntegerExpression abc1 = new Multiplication(a, new Multiplication(b, c));
+    IntegerExpression abc2 = new Multiplication(a, new Multiplication(b, c));
+    IntegerExpression acb = new Multiplication(a, new Multiplication(c, b));
+    assertTrue(abc1.hashCode() == abc2.hashCode());
+    assertTrue(abc1.hashCode() != acb.hashCode());
+  }
+
+  @Test
   public void testSimplified() {
     Multiplication m;
     IntegerExpression x = new IVar(1);

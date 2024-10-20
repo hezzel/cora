@@ -41,5 +41,8 @@ public class IValueTest {
     assertTrue(x.compareTo(new IValue(4)) < 0);
     assertFalse(x.equals(new IValue(4)));
     assertTrue(x.compareTo(new CMult(1, new IValue(1))) < 0);
+
+    assertTrue(x.hashCode() == (new IValue(3)).hashCode());
+    assertTrue(x.hashCode() != (new IValue(-3)).hashCode());
   }
 }

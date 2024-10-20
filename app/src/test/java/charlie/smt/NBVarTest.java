@@ -41,6 +41,8 @@ public class NBVarTest {
     assertFalse(y.equals(x));
     assertTrue(y.equals(new NBVar(new BVar(12))));
     assertFalse(y.equals(new NBVar(new BVar(13))));
+    assertTrue(y.hashCode() == (new NBVar(new BVar(12))).hashCode());
+    assertTrue(y.hashCode() != (new NBVar(new BVar(13))).hashCode());
   }
 
   @Test

@@ -44,5 +44,9 @@ public final class Not extends Constraint {
   public boolean equals(Constraint other) {
     return (other instanceof Not) && (_negated.equals(((Not)other).queryChild()));
   }
+
+  public int hashCode() {
+    return 9 * _negated.hashCode() + 8;
+  }
 }
 

@@ -36,6 +36,7 @@ public class NotTest {
     assertTrue(neg.equals(SmtFactory.createNegation(comp)));
     assertFalse(neg.equals(SmtFactory.createGeq(new IValue(2), new IVar(2))));
     assertFalse(neg.equals(SmtFactory.createNegation(new BVar(3))));
+    assertTrue(neg.hashCode() == SmtFactory.createNegation(comp).hashCode());
   }
 
   @Test

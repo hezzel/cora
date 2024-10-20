@@ -41,5 +41,9 @@ public final class Disjunction extends Junction {
     for (Constraint c : _children) arr.add(c.negate());
     return new Conjunction(arr);
   }
+
+  public int hashCode() {
+    return 9 * _children.hashCode() + 3;
+  }
 }
 
