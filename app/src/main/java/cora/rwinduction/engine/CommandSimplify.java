@@ -93,7 +93,7 @@ public class CommandSimplify implements Command {
       .getProofState()
       .getEquations()
       .get(equationIndex)
-      .getVarNaming()
+      .getRenaming()
       .copy();
 
     TRS trs = prover
@@ -119,17 +119,17 @@ public class CommandSimplify implements Command {
       }
       return new Right<>(new Pair<>(newRenaming, sub));
     } else {
-      return new Left("Cannot parse substitution. The argument [" + sub + "] is not a valid " +
+      return new Left<>("Cannot parse substitution. The argument [" + sub + "] is not a valid " +
         "substitution");
     }
   }
 
   // ----------------------------------------------------------------------------------------------
 
-
-
   @Override
   public Either<String, Boolean> run(Prover prover, String args) {
+    System.out.println(args);
+
     return null;
   }
 

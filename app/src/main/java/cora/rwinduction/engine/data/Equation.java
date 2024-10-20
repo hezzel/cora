@@ -2,9 +2,11 @@ package cora.rwinduction.engine.data;
 
 import charlie.terms.Renaming;
 import charlie.terms.Term;
-
 import java.util.Objects;
 
+/**
+ * Data structure for equations.
+ */
 public class Equation {
   private Term _lhs;
   private Term _rhs;
@@ -31,8 +33,8 @@ public class Equation {
     return _rhs;
   }
 
-  public Term getConstraint() { return _constraint; }
+  public Term getConstraint()   { return _constraint; }
 
-  public Renaming getVarNaming() {return _varNaming; }
+  public Renaming getRenaming() { return _varNaming;  }
 
 }

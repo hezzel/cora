@@ -9,14 +9,15 @@ import charlie.util.either.Right;
 import cora.config.Settings;
 import cora.rwinduction.engine.data.Equation;
 import cora.rwinduction.engine.data.ProofState;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.BinaryOperator;
 
 public final class DeductionDelete extends DeductionAbstractRule {
 
   /**
-   * In an equation of the form {@code s = t [c]}, this method checks if {@code c}
-   * is unsatisfiable.
+   * In an equation of the form {@code s = t [c]},
+   * this method checks if {@code c} is unsatisfiable.
    *
    * @return returns {@code Left<String> reason} if the equation is either satisfiable or the SMT
    * solver returned a maybe, which in this case we pass the SMT's reason for that through.
@@ -39,12 +40,8 @@ public final class DeductionDelete extends DeductionAbstractRule {
     };
   }
 
-  /**
-   * TODO write documentation
-   * @param equation
-   * @return
-   */
-  private static Either<String, Boolean> isLeftEqualsRight(Equation equation) {
+  @Contract("_ -> new")
+  private static @NotNull Either<String, Boolean> isLeftEqualsRight(@NotNull Equation equation) {
     return new Right<>(equation.getLhs().equals(equation.getRhs()));
   }
 
@@ -63,9 +60,15 @@ public final class DeductionDelete extends DeductionAbstractRule {
       .get(args.getEquationIndex());
 
     // Check if s is syntactically equal to t in the equation s = t [c].
+    // If this is the case, we can already return this case.
     Either<String, Boolean> leftRightSyntaxEq =
       DeductionDelete.isLeftEqualsRight(equation);
-    if (leftRightSyntaxEq.isLeft()) { return leftRightSyntaxEq; }
+    switch (leftRightSyntaxEq) {
+      case Left<String, Boolean>(_) :
+        return leftRightSyntaxEq;
+      case Right<String, Boolean>(Boolean b) :
+        if (b) { return leftRightSyntaxEq; } else { break; }
+    }
 
     // !(SMT usage) Check if the constraint in the equation is unsatisfiable.
     Either<String, Boolean> isUnsat = checkEqConstraint(equation);

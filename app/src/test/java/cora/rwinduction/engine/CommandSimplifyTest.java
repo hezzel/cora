@@ -1,9 +1,14 @@
 package cora.rwinduction.engine;
 
 import charlie.reader.CoraInputReader;
+import charlie.terms.Renaming;
+import charlie.terms.Term;
 import charlie.trs.TRS;
 import charlie.util.Pair;
+import com.google.common.collect.ImmutableList;
 import cora.io.DefaultOutputModule;
+import cora.io.OutputModule;
+import cora.rwinduction.engine.data.Equation;
 import cora.rwinduction.engine.data.ProverContext;
 import org.junit.jupiter.api.Test;
 
@@ -21,26 +26,24 @@ class CommandSimplifyTest {
       "sum(x) -> x + sum(x - 1) | x > 0"
   );
 
-//  Prover prover =
-//    new Prover(new ProverContext(trs, DefaultOutputModule.createUnicodeModule(trs)));
+  OutputModule outputModule =
+    DefaultOutputModule.createUnicodeModule(trs);
+
+  Term lhs = CoraInputReader.readTerm("sum(x)", trs);
+  Term rhs = CoraInputReader.readTerm("sum(y)", trs);
+  Term ctr = CoraInputReader.readTerm("true", trs);
+
+  Renaming eqRenaming =
+    outputModule.queryTermPrinter().generateUniqueNaming(lhs, rhs, ctr);
+
+  Equation eq = new Equation(lhs, rhs, ctr, eqRenaming);
+
+  Prover prover =
+    new Prover(new ProverContext(trs, ImmutableList.of(eq), outputModule));
 
   @Test
   void run() {
-    String c = "simplify 1 0.256 with [ x := f(x) ]";
-    String[] splitWith = c.trim().split("\\s with \\s");
-
-//    System.out.println(Arrays.toString(c.trim().split("with")));
-
-    Pattern p = Pattern.compile("\\s*(simplify)\\s*(\\d)\\s*(.*)\\s*with\\s*");
-    Matcher m = p.matcher(c);
-
-    System.out.println(m.groupCount());
-
-    for (int i = 1; i <= m.groupCount(); i++) {
-      if (m.find()) {
-        System.out.println(m.group(i) + i);
-      }
-    }
+    outputModule.print("%a = %a | %a", lhs, rhs, ctr);
   }
 
   @Test
@@ -48,10 +51,13 @@ class CommandSimplifyTest {
 
     String cmdFullTest = "simplify 0 0   2.3.4 with [ x := f(x) ]";
 
+    CommandSimplify commandSimplify = new CommandSimplify();
+    commandSimplify.run(prover, cmdFullTest);
+
     Optional<String[]> result =
       CommandSimplify.splitStringRegex(CommandSimplify.cmdRegexComplete, cmdFullTest);
 
-    result.ifPresent(x -> System.out.println(Arrays.toString(x)));
+//    result.ifPresent(x -> System.out.println(Arrays.toString(x)));
 
 
   }

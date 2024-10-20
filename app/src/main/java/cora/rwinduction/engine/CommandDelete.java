@@ -10,7 +10,7 @@ import cora.rwinduction.engine.deduction.DeductionArguments;
 import cora.rwinduction.engine.deduction.DeductionDelete;
 import org.jetbrains.annotations.NotNull;
 
-public class CommandDeleteRule implements Command {
+public class CommandDelete implements Command {
 
   private @NotNull Either<String, Boolean> runAux(Prover prover,
                                                   @NotNull DeductionDelete deleteRule,
@@ -79,7 +79,7 @@ public class CommandDeleteRule implements Command {
 
   @Override
   public String descriptor() {
-    return "applies the the delete deduction rule to the current proof state";
+    return "Applies the delete deduction rule to the current proof state.";
   }
 
   @Override
@@ -92,6 +92,6 @@ public class CommandDeleteRule implements Command {
 
   @Override
   public ImmutableList<String> argDescriptor() {
-    return null;
+    return ImmutableList.of("");
   }
 }

@@ -3,6 +3,7 @@ package cora.rwinduction.engine.data;
 import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
+import charlie.util.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import cora.io.OutputModule;
@@ -46,27 +47,36 @@ public class ProverContext {
     Objects.requireNonNull(outputModule);
 
     _initialSystem = initialSystem;
-    _outputModule = outputModule;
+    _outputModule  = outputModule;
     _ruleRenamings = genRuleRenaming(_initialSystem, _outputModule);
 
     _proofStates.push(ProofState.createInitialState(_initialSystem, initialEquations));
     _commandLiterals.push(_initializeCommandName);
   }
 
-  public Renaming getRuleRenaming(Integer ruleIndex) {return _ruleRenamings.get(ruleIndex); }
+  public Renaming getRuleRenaming(Integer ruleIndex) {
+    return _ruleRenamings.get(ruleIndex);
+  }
 
-  public OutputModule getOutputModule() { return _outputModule; }
+  public OutputModule getOutputModule() {
+    return _outputModule;
+  }
 
   /**
    * Returns the current proof state of the prover.
    * The current proof state is not altered.
    */
-  public ProofState getProofState() { return _proofStates.peek(); }
-
+  public ProofState getProofState() {
+    return _proofStates.peek();
+  }
 
   public void addProofStep(ProofState proofState, String commandLiteral) {
     _proofStates.push(proofState);
     _commandLiterals.push(commandLiteral);
+  }
+
+  public Pair<ProofState, String> getProofStep() {
+    return new Pair<>(_proofStates.peek(), _commandLiterals.peek());
   }
 
   public void undoProofStep() {
