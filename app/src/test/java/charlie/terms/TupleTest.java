@@ -17,6 +17,7 @@ package charlie.terms;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.exceptions.*;
@@ -64,14 +65,19 @@ class TupleTest extends TermTestFoundation {
     assertTrue(tuple.toString().equals("⦇λx1.x1, x⦈"));
   }
 
-  private Term exampleTuple() {
+  private Term exampleTuple(Term extra) {
     Term a = new Constant("a", baseType("N"));
     Variable x = new Binder("x", baseType("N"));
     Term abs = new Abstraction(x, unaryTerm("f", baseType("M"), x));
     Variable y = new Var("y", baseType("P"));
     Variable z = new Var("z", arrowType("P", "P"));
     Term fa = unaryTerm("f", baseType("M"), a);
-    return new Tuple(a, abs, new Tuple(fa, y));
+    if (extra == null) return new Tuple(a, abs, new Tuple(fa, y));
+    else return new Tuple(List.of(a, abs, new Tuple(fa, y), extra));
+  }
+
+  private Term exampleTuple() {
+    return exampleTuple(null);
   }
 
   @Test
@@ -288,5 +294,15 @@ class TupleTest extends TermTestFoundation {
     assertTrue(tuple.freeReplaceables().contains(x));
     assertTrue(tuple.freeReplaceables().contains(y));
     assertTrue(tuple.freeReplaceables().contains(z));
+  }
+
+  @Test
+  public void testHashCode() {
+    Variable z = new Binder("z", baseType("A"));
+    Term t = exampleTuple(z);
+    TreeMap<Variable,Integer> map = new TreeMap<Variable,Integer>();
+    assertTrue(t.hashCode() == t.hashCode(map));
+    map.put(z, z.queryIndex() + 1);
+    assertTrue(t.hashCode() != t.hashCode(map));
   }
 }

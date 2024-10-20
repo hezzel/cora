@@ -174,7 +174,7 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
   }
 
   /** Returns a hashcode that (uniquely) identifies this Var */
-  public int hashCode() {
+  public int hashCode(Map<Variable,Integer> mu) {
     return 3 * _index;
   }
 }

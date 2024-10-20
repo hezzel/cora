@@ -130,7 +130,8 @@ public class VarTest extends TermTestFoundation {
 
   @Test
   public void testTermVarEquality() {
-    Term s1 = new Var("x", baseType("o"));
+    Var x = new Var("x", baseType("o"));
+    Term s1 = x;
     Term s2 = new Var("x", baseType("o"));
     Term s3 = new Binder("x", baseType("o"));
     assertTrue(s1.equals(s1));
@@ -138,10 +139,14 @@ public class VarTest extends TermTestFoundation {
     assertFalse(s1.equals(null));
     assertFalse(s1.equals(s3));
     assertFalse(s2.equals(s3));
+    assertTrue(s1.hashCode() != s2.hashCode());
+    TreeMap<Variable,Integer> map = new TreeMap<Variable,Integer>();
+    map.put(x, s3.queryVariable().queryIndex());
+    assertTrue(s1.hashCode(map) != s3.hashCode(map));
   }
 
   @Test
-  public void testAlpaEquality() {
+  public void testAlphaEquality() {
     Var x = new Var("x", baseType("o"));
     Var z = new Var("z", baseType("o"));
     TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();

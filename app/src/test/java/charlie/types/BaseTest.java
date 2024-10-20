@@ -71,5 +71,12 @@ class BaseTest {
   void testTypeOrder() {
     assertEquals(0, (new Base("b")).queryTypeOrder());
   }
+
+  @Test
+  public void testHashCode() {
+    Base a = new Base("A");
+    Base b = new Base("A");
+    assertTrue(a.hashCode() == b.hashCode());
+  }
 }
 

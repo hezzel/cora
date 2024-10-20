@@ -61,6 +61,22 @@ public class CalculationTest extends TermTestFoundation {
   }
 
   @Test
+  public void testEquality() {
+    CalculationSymbol p = TheoryFactory.plusSymbol;
+    CalculationSymbol p2 = new CalculationConstant("+",
+      TypeFactory.createArrow(TypeFactory.intSort,TypeFactory.createArrow(TypeFactory.intSort,
+                                                                          TypeFactory.intSort)),
+      CalculationSymbol.Kind.PLUS,
+      CalculationSymbol.Associativity.ASSOC_LEFT,
+      CalculationSymbol.INFIX_PLUS);
+    CalculationSymbol t = TheoryFactory.timesSymbol;
+    assertTrue(p.equals(p2));
+    assertTrue(p.hashCode() == p2.hashCode());
+    assertFalse(p.equals(t));
+    assertFalse(p.hashCode() == t.hashCode());
+  }
+
+  @Test
   public void testStore() {
     TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
     CalculationSymbol d = TheoryFactory.divSymbol;

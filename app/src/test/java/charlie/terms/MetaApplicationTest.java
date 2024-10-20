@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import charlie.exceptions.*;
 import charlie.util.Pair;
@@ -465,6 +466,13 @@ class MetaApplicationTest extends TermTestFoundation {
     Term t = TermFactory.createMeta(m, args1);
     assertTrue(s.equals(t));
     assertTrue(t.equals(s));
+    assertTrue(s.hashCode() == t.hashCode());
+    TreeMap<Variable,Integer> umap1 = new TreeMap<Variable,Integer>();
+    TreeMap<Variable,Integer> umap2 = new TreeMap<Variable,Integer>();
+    umap1.put(u, 3);
+    umap2.put(u, 4);
+    assertTrue(s.hashCode(umap1) != t.hashCode(umap2));
+    assertTrue(s.hashCode(umap1) == t.hashCode(umap1));
   }
 
   @Test

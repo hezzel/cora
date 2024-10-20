@@ -973,15 +973,16 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testVarTermEquality() {
-    Variable x = new Var("x", baseType("o"));
+    Variable x = new Binder("x", baseType("o"));
     Variable y = new Var("y", arrowType(baseType("o"), arrowType("o", "o")));
+    Variable x2 = new Binder("x2", baseType("o"));
     List<Term> empty = new ArrayList<Term>();
     Term s1 = x;
     Term s2 = y;
     Term s3 = new Application(y, x);
     Term s4 = new Application(y, x, x);
     Term s5 = new Application(y, x, x);
-    Term s6 = new Application(y, x, new Var("x", baseType("o")));
+    Term s6 = new Application(y, x, x2);
     
     assertTrue(s1.equals(s1));
     assertFalse(s1.equals(s2));
@@ -990,6 +991,13 @@ public class ApplicationTest extends TermTestFoundation {
     assertFalse(s4.equals(s3));
     assertTrue(s4.equals(s5));
     assertFalse(s5.equals(s6));
+
+    assertTrue(s4.hashCode() == s5.hashCode());
+    TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
+    mu.put(x, 3);
+    assertTrue(s5.hashCode(mu) != s6.hashCode(mu));
+    mu.put(x2, 3);
+    assertTrue(s5.hashCode(mu) == s6.hashCode(mu));
   }
 
   @Test

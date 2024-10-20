@@ -16,6 +16,7 @@
 package charlie.terms;
 
 import java.util.List;
+import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
@@ -630,6 +631,8 @@ class AbstractionTest extends TermTestFoundation {
     mu.put(y, 1);
     xi.put(u, 1);
     assertTrue(s.alphaEquals(t, mu, xi, 2));
+    assertFalse(s.hashCode() == t.hashCode());
+    assertTrue(s.hashCode(mu) == t.hashCode(xi));
 
     // after a check, the size and contents of mu and xi are unaltered
     assertEquals(1, mu.size());
@@ -659,7 +662,7 @@ class AbstractionTest extends TermTestFoundation {
   }
 
   @Test
-  void testBidnerAlreadyInXi() {
+  void testBinderAlreadyInXi() {
     assertThrows(IllegalArgumentException.class, () -> {
       Variable x = new Binder("x", baseType("o"));
       Term term = new Abstraction(x, x);
@@ -694,6 +697,7 @@ class AbstractionTest extends TermTestFoundation {
 
     assertTrue(abs1.equals(abs1));
     assertTrue(abs1.equals(abs2));
+    assertTrue(abs1.hashCode() == abs2.hashCode());
   }
 
   @Test
@@ -710,6 +714,7 @@ class AbstractionTest extends TermTestFoundation {
     Term abs2 = new Abstraction(y, new Abstraction(x, new Application(f, y, fyx)));
 
     assertTrue(abs1.equals(abs2));
+    assertTrue(abs1.hashCode() == abs2.hashCode());
   }
 
   @Test
@@ -721,5 +726,21 @@ class AbstractionTest extends TermTestFoundation {
 
     assertFalse(abs1.equals(abs2));
     assertFalse(abs2.equals(abs1));
+  }
+
+  @Test
+  public void testHashCodeWithHashMap() {
+    Variable x = new Binder("x", baseType("o"));
+    Variable y = new Binder("u", baseType("o"));
+    Variable z = new Binder("z", baseType("o"));
+    Variable u = new Binder("u", baseType("o"));
+    Term f = new Constant("f", arrowType(baseType("o"), arrowType("o", "o")));
+    Term s = new Abstraction(x, new Application(f, x, y)); // λx.f(x, y)
+    Term t = new Abstraction(z, new Application(f, z, u)); // λz.f(z, u)
+    HashMap<Variable,Integer> mu = new HashMap<Variable,Integer>();
+    TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
+    mu.put(y, 1);
+    xi.put(u, 1);
+    assertTrue(s.hashCode(mu) == t.hashCode(xi));
   }
 }

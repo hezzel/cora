@@ -115,6 +115,19 @@ public class BinderTest extends TermTestFoundation {
   }
 
   @Test
+  public void testHashCode() {
+    Variable x = new Binder("x", baseType("o"));
+    Variable other = new Binder("x", baseType("o"));
+    Variable y = new Var("x", baseType("o"));
+    assertTrue(x.hashCode() != other.hashCode());
+    assertTrue(x.hashCode() != y.hashCode());
+    TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
+    mu.put(x, 412);
+    mu.put(other, 412);
+    assertTrue(x.hashCode(mu) == other.hashCode(mu));
+  }
+
+  @Test
   public void testFunctions() {
     FunctionSymbol a = new Constant("a", baseType("aa"));
     TreeSet<FunctionSymbol> symbols = new TreeSet<FunctionSymbol>();

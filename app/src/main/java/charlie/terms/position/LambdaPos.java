@@ -36,6 +36,10 @@ public record LambdaPos(Position tail) implements Position {
     }
   }
 
+  public int hashCode() {
+    return 7 * tail.hashCode();
+  }
+
   public Position append(Position p) {
     return new LambdaPos(this.tail.append(p));
   }

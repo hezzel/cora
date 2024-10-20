@@ -40,6 +40,12 @@ public record ArgumentPos(int index, Position tail) implements Position {
     }
   }
 
+  public int hashCode() {
+    // we choose 7 because it creates distinct hashcodes for most use cases: terms don't typically
+    // have more than 6 arguments (and multiplication by 7 can be done through a bitshift)
+    return 7 * tail.hashCode() + index;
+  }
+
   public Position append(Position p) {
     return new ArgumentPos(this.index, this.tail.append(p));
   }

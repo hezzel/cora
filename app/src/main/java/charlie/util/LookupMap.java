@@ -42,7 +42,7 @@ public class LookupMap<T> {
     _mymap = map;
   }
 
-  public static <T> LookupMap empty() { return new LookupMap<T>(new TreeMap<String,T>()); }
+  public static <T> LookupMap<T> empty() { return new LookupMap<T>(new TreeMap<String,T>()); }
 
   public static class Builder<T> {
     private TreeMap<String,T> _internal;
@@ -62,7 +62,7 @@ public class LookupMap<T> {
 
     /** Builds the created lookup map. Afterwards, this builder cannot be used anymore! */
     public LookupMap<T> build() {
-      LookupMap<T> ret = new LookupMap(_internal);
+      LookupMap<T> ret = new LookupMap<T>(_internal);
       _internal = null;
       return ret;
     }

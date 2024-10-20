@@ -136,4 +136,16 @@ class ProductTest {
     assertEquals(0, simple.queryTypeOrder());
     assertEquals(1, complex.queryTypeOrder());
   }
+
+  @Test
+  public void testHashCode() {
+    Type a = new Base("a");
+    Type b = new Base("b");
+    Type c = new Base("c");
+    Type d = new Base("d");
+    // a x (b -> c) x d
+    Type type1 = TypeFactory.createProduct(a, new Arrow(b, c), d);
+    Type type2 = TypeFactory.createProduct(a, new Arrow(b, c), new Base("d"));
+    assertTrue(type1.hashCode() == type2.hashCode());
+  }
 }

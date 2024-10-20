@@ -135,4 +135,11 @@ class ArrowTest {
     assertEquals(2, intpairbooltype.queryTypeOrder());
     assertEquals(1, intboolpairtype.queryTypeOrder());
   }
+
+  @Test
+  public void testHashCode() {
+    Arrow abc1 = new Arrow(new Arrow(new Base("a"), new Base("b")), new Base("c"));
+    Arrow abc2 = new Arrow(new Arrow(new Base("a"), new Base("b")), new Base("c"));
+    assertTrue(abc1.hashCode() == abc2.hashCode());
+  }
 }

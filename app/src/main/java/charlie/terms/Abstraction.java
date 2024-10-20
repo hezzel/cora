@@ -18,6 +18,7 @@ package charlie.terms;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import charlie.exceptions.*;
 import charlie.util.Pair;
@@ -228,6 +229,15 @@ class Abstraction extends TermInherit {
     mu.remove(x);
     xi.remove(y);
     return retval;
+  }
+
+  /** Returns a hashcode compatible with alpha-equivalence */
+  public int hashCode(Map<Variable,Integer> mu) {
+    if (mu == null) mu = new TreeMap<Variable,Integer>();
+    mu.put(_binder, mu.size()+1);
+    int ret = 3 * _subterm.hashCode(mu);
+    mu.remove(_binder);
+    return ret;
   }
 }
 

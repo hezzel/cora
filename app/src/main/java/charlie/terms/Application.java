@@ -402,4 +402,11 @@ class Application extends TermInherit {
     }
     return true;
   }
+
+  /** This method returns a hashCode that maps alpha-equal terms to the same code. */
+  public int hashCode(Map<Variable,Integer> mu) {
+    int ret = _head.hashCode(mu);
+    for (int i = 0; i < _args.size(); i++) ret = 31 * ret + _args.get(i).hashCode(mu);
+    return ret;
+  }
 }

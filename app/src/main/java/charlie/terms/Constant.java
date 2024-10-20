@@ -65,6 +65,10 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     return queryType().equals(symbol.queryType());
   }
 
+  public int hashCode(Map<Variable,Integer> mu) {
+    return _name.hashCode();
+  }
+
   /** @return true */
   public boolean isConstant() { return true; }
 

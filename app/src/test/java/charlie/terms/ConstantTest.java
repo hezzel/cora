@@ -102,6 +102,7 @@ public class ConstantTest extends TermTestFoundation {
     FunctionSymbol i = new Constant("f", arrowType(a,c));
 
     assertTrue(f.equals(g));
+    assertTrue(f.hashCode() == g.hashCode());
     assertFalse(f.equals(h));
     assertFalse(f.equals(i));
     assertFalse(f.equals(null));

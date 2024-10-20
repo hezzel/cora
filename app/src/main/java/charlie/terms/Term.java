@@ -339,17 +339,12 @@ public interface Term {
 
   /**
    * Returns whether this term and other are equal up to a renaming of the free variables.
-   * <p>
-   * Implementation note: default implementation checks whether the terms mutually match.
-   * More efficient solutions are conceivable.
    *
    * @param other term to check for equality up to renaming of free variables
    * @return whether this term and other are equal up to a renaming of the free variables
    * @throws NullPointerException if term is the null reference
    */
-  default boolean equalsModuloRenaming(Term other) {
-    return null != this.match(other) && null != other.match(this);
-  }
+  boolean equalsModuloRenaming(Term other);
 
   /* ======== the following functions are intended for internal use in the terms package ======== */
 
@@ -369,4 +364,12 @@ public interface Term {
 
   /** Determines the =_α^{μ,ξ,k} relation as described in the documentation. */
   boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k);
+
+  /**
+   * Returns a hashcode consistent with alpha-equality, using the given mapping mu (and assuming
+   * the term to be compared has a similar mapping xi for the corresponding bound variables, and
+   * k = mu.size()+1).
+   * Here, mu is allowed to be null, which will be treated the same as an empty map.
+   */
+  int hashCode(Map<Variable,Integer> mu);
 }

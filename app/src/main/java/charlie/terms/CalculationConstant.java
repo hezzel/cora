@@ -124,5 +124,10 @@ public class CalculationConstant extends LeafTermInherit implements CalculationS
     if (!queryType().equals(other.queryType())) return false;
     return _name.equals(other.queryName());
   }
+
+  /** For the hash code, we only really look at the name */
+  public int hashCode(Map<Variable,Integer> mu) {
+    return _name.hashCode();
+  }
 }
 

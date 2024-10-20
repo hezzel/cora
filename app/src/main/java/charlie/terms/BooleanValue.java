@@ -17,6 +17,7 @@ package charlie.terms;
 
 import charlie.exceptions.InappropriatePatternDataException;
 import charlie.types.TypeFactory;
+import java.util.Map;
 
 /** BooleanValues are the function symbols true and false (which are both theory symbols). */
 class BooleanValue extends ValueInherit {
@@ -43,6 +44,10 @@ class BooleanValue extends ValueInherit {
     if (!symbol.isValue()) return false;
     if (!symbol.queryType().equals(TypeFactory.boolSort)) return false;
     return symbol.toValue().getBool() == _value;
+  }
+
+  public int hashCode(Map<Variable,Integer> mu) {
+    return _value ? 19 : 11;
   }
 
   public boolean getBool() {

@@ -91,6 +91,10 @@ class StringValue extends ValueInherit {
     return symbol.toValue().queryName().equals(_escapedValue);
   }
 
+  public int hashCode(Map<Variable,Integer> mu) {
+    return _value.hashCode();
+  }
+
   public String getString() {
     return _value;
   }

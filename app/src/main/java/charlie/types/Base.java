@@ -65,6 +65,11 @@ public record Base(String name) implements Type {
   }
 
   @Override
+  public int hashCode() {
+    return name.hashCode();
+  }
+
+  @Override
   public Type queryOutputType() {
     return this;
   }

@@ -305,16 +305,26 @@ abstract class TermInherit implements Term {
     return alphaEquals(other, mu, xi, 1);
   }
 
+  /**
+   * Returns whether this term and other are equal up to a renaming of the free variables.
+   * <p>
+   * Implementation note: default implementation checks whether the terms mutually match.
+   * More efficient solutions are conceivable.
+   */
+  public final boolean equalsModuloRenaming(Term other) {
+    return null != this.match(other) && null != other.match(this);
+  }
+
   /** This method verifies equality to another Java object. */
   public boolean equals(Object other) {
     if (other instanceof Term) return equals((Term)other);
     return false;
   }
 
+  /** This method returns a hashcode consistent with equality */
   @Override
   public int hashCode() {
-    // hotfix: ensures consistency with equals with fast yet inefficient hashing
-    return 42; // TODO implement hashCode for the Term hierarchy properly
+    return hashCode(null);
   }
 
   /** This method returns a string representation of the current term. */

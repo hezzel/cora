@@ -17,6 +17,7 @@ package charlie.types;
 
 import charlie.exceptions.NullStorageException;
 import charlie.exceptions.IndexingException;
+import java.util.Objects;
 
 public record Arrow(Type left, Type right) implements Type {
   public Arrow(Type left, Type right) {
@@ -47,6 +48,11 @@ public record Arrow(Type left, Type right) implements Type {
       case Arrow(Type l, Type r) -> this.left.equals(l) && this.right.equals(r);
       default -> false;
     };
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(left, right);
   }
 
   /** For σ1 → ,,, → σm → τ, returns m. */

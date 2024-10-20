@@ -37,6 +37,10 @@ public record FinalPos(int chopcount) implements Position {
     }
   }
 
+  public int hashCode() {
+    return chopcount + 1;
+  }
+
   public Position append(Position p) {
     return p;
   }

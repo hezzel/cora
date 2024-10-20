@@ -282,4 +282,13 @@ public class Tuple extends TermInherit {
     }
     return true;
   }
+
+  /** Returns a hashcode compatible with alpha-equivalence */
+  public int hashCode(Map<Variable,Integer> mu) {
+    int ret = 0;
+    for (int i = 0; i < _components.size(); i++) {
+      ret += 31 * ret + _components.get(i).hashCode(mu);
+    }
+    return ret;
+  }
 }

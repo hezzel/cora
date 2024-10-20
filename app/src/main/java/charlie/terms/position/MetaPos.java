@@ -40,6 +40,12 @@ public record MetaPos(int index, Position tail) implements Position {
     }
   }
 
+  public int hashCode() {
+    return 7 * tail.hashCode() + index;
+    // this is the same as for ArgumentPos, but that's okay -- we would not typically have both
+    // i.p and !i.p in the same function, as they cannot be positions of the same term
+  }
+
   public Position append(Position p) {
     return new MetaPos(this.index, this.tail.append(p));
   }

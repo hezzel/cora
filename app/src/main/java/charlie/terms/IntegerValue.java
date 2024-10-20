@@ -49,6 +49,10 @@ class IntegerValue extends ValueInherit {
     return symbol.toValue().getInt() == _value;
   }
 
+  public int hashCode(Map<Variable,Integer> mu) {
+    return _value;
+  }
+
   public int getInt() {
     return _value;
   }

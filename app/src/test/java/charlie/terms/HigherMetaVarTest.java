@@ -117,6 +117,11 @@ public class HigherMetaVarTest {
     assertTrue(z.compareTo(y) < 0);
     assertTrue(x.compareTo(z) > 0);
     assertTrue(y.compareTo(z) > 0);
+    assertTrue(z.hashCode() == z.hashCode());
+    assertFalse(z.hashCode() == x.hashCode());
+    assertFalse(z.hashCode() == y.hashCode());
+    Replaceable zz = TermFactory.createMetaVar("z", muli(a,b), TypeFactory.createSort("c"));
+    assertFalse(z.hashCode() == zz.hashCode());
   }
 }
 

@@ -169,7 +169,8 @@ class Binder extends LeafTermInherit implements Variable {
   }
 
   /** Returns a hashcode that (uniquely) identifies this Binder */
-  public int hashCode() {
+  public int hashCode(Map<Variable,Integer> mu) {
+    if (mu != null && mu.containsKey(this)) return 3 * mu.get(this) + 1;
     return 3 * _index + 1;
   }
 }

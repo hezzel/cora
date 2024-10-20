@@ -92,9 +92,12 @@ public class ValueTest extends TermTestFoundation {
     Value s = new StringValue("test");
     assertTrue(n.equals(n));
     assertTrue(n.equals(new IntegerValue(42)));
+    assertTrue(n.hashCode() == 42);
     assertFalse(n.equals(new IntegerValue(-42)));
     assertFalse(n.equals(b));
     assertTrue(b.equals(b));
+    assertTrue(b.hashCode() == (new BooleanValue(false)).hashCode());
+    assertTrue(b.hashCode() != (new BooleanValue(true)).hashCode());
     assertTrue(b.equals(new BooleanValue(false)));
     assertFalse(b.equals(new BooleanValue(true)));
     assertFalse(b.equals(s));
@@ -107,6 +110,8 @@ public class ValueTest extends TermTestFoundation {
     assertFalse(bb.equals(b));
     assertFalse(s.equals(ss));
     assertFalse(ss.equals(s));
+    assertTrue(s.hashCode() == (new StringValue("test")).hashCode());
+    assertTrue(s.hashCode() != ss.hashCode());
   }
 
   @Test

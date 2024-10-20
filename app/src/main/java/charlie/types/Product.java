@@ -63,6 +63,11 @@ public record Product(ImmutableList<Type> types) implements Type {
     }
   }
 
+  @Override
+  public int hashCode() {
+    return types.hashCode();
+  }
+
   /** For σ1 → ,,, → σm → τ, returns τ; so this returns itself. */
   @Override
   public Type queryOutputType() {
