@@ -22,9 +22,9 @@ import charlie.parser.lib.*;
 
 /**
  * This file defines the tokens used to lex and parse a file or string using Cora's internal
- * input format.  It is used by the CoraParser and intentionally not public.
+ * input format.  It is used by the CoraParser, but may be extended by other parsers.
  */
-class CoraTokenData {
+public class CoraTokenData {
   /* First we define constants for all the tokens. */
   public static final String IDENTIFIER     = "IDENTIFIER";
   public static final String BRACKETOPEN    = "BRACKETOPEN";

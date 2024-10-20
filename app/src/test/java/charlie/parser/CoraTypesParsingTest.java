@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import charlie.exceptions.ParseException;
 import charlie.types.*;
 import charlie.parser.lib.ErrorCollector;
+import charlie.parser.lib.ParsingStatus;
 import charlie.parser.Parser.*;
 
 public class CoraTypesParsingTest {
@@ -241,6 +242,17 @@ public class CoraTypesParsingTest {
     assertTrue(t.toString().equals("x → a → b"));
     assertTrue(collector.queryCollectedMessages().equals(
       "1:15: Expected closing bracket but got IDENTIFIER (c).\n"));
+  }
+
+  @Test
+  public void testReadWithStatus() {
+    String txt = "Int a -> b (c -> d) -> e";
+    ParsingStatus status = new ParsingStatus(CoraTokenData.getConstrainedStringLexer(txt), 3);
+    assertTrue(CoraParser.readType(status).equals(TypeFactory.intSort));
+    assertTrue(CoraParser.readType(status).toString().equals("a → b"));
+    assertTrue(CoraParser.readType(status).toString().equals("(c → d) → e"));
+    assertTrue(status.nextToken().isEof());
+    status.throwCollectedErrors();
   }
 }
 

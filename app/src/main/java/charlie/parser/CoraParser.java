@@ -730,12 +730,13 @@ public class CoraParser {
   // ====================================== PUBLIC FUNCTIONS ======================================
 
   /**
-   * Helper function: creates a status to read the given string and store errors in the given
+   * This helper function creates a status to read the given string and store errors in the given
    * collector, which may be null (in which case errors are stored in a fresh collector in the
-   * status).
+   * status).  If "constrained" is true, then integers, strings, infix symbols etc. will be
+   * recognised; otherwise they will not be.
    */
   private static ParsingStatus makeStatus(String str, boolean constrained,
-                                          ErrorCollector collector) {
+                                         ErrorCollector collector) {
     if (collector == null) collector = new ErrorCollector();
     TokenQueue queue;
     if (constrained) queue = CoraTokenData.getConstrainedStringLexer(str);
@@ -772,6 +773,21 @@ public class CoraParser {
    public static Type readType(String str) { return readType(str, true, null); }
 
   /**
+   * This function takes a given parsing status, reads a type from it (reading as far as we can;
+   * if an unexpected symbol is encountered after a type we stop, but we DO NOT BACKTRACK), and
+   * returns the result.
+   * The ParsingStatus is advanced to point just after the type that was read.
+   * This may cause a ParseException to be thrown, or for errors to be stored in the status (call
+   * status.throwCollectedErrors() to ensure that stored errors are thrown).
+   * 
+   * @throws charlie.exceptions.ParseException
+   */
+  public static Type readType(ParsingStatus status) {
+    CoraParser parser = new CoraParser(status);
+    return parser.readType();
+   }
+
+  /**
    * Reads a term from the given string.
    * If constrainedTRS is set to true, then tokens for theories and constraints are recognised and
    * parsed accordingly; if not, these are just identifiers.
@@ -787,6 +803,21 @@ public class CoraParser {
     ParserTerm ret = parser.readTerm();
     finish(status, collector == null || ret == null);
     return ret;
+  }
+
+  /**
+   * This function takes a given parsing status, reads a term from it (reading as far as we can;
+   * if an unexpected symbol is encountered after a type we stop, but we DO NOT BACKTRACK), and
+   * returns the result.
+   * The ParsingStatus is advanced to point just after the term that was read.
+   * This may cause a ParseException to be thrown, or for errors to be stored in the status (call
+   * status.throwCollectedErrors() to ensure that stored errors are thrown).
+   * 
+   * @throws charlie.exceptions.ParseException
+   */
+  public static ParserTerm readTerm(ParsingStatus status) {
+    CoraParser parser = new CoraParser(status);
+    return parser.readTerm();
   }
 
   /**
