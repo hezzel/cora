@@ -152,6 +152,9 @@ public class Parameters {
         else if (args[index+1].length() > 10 && args[index+1].substring(0,9).equals("external:")) {
           _solver = new ExternalSmtSolver(args[index+1].substring(9));
         }
+        else if (args[index+1].length() == 8 && args[index+1].equals("external")) {
+          _solver = new ExternalSmtSolver();
+        }
         if (_solver == null) {
           throw new WrongParametersException("Unknown SMT solver: " + args[index+1] + "!");
         }
@@ -278,15 +281,21 @@ public class Parameters {
 
     str.append("    -p | --print                Print the given TRS on standard output.")
       .append(System.lineSeparator());
-    str.append("    -y | --style  <style>       Use the given style for printing; " +
-      "currently supported styles are \"plain\" and \"unicode\".")
-      .append(System.lineSeparator());
     str.append("    -r | --reduce <term>        Parse the given term, " +
         "and reduce it under the given TRS; no further parameters can be given after this " +
         "as they will be considered part of the term.")
       .append(System.lineSeparator());
     str.append("    -t | --termination          Try to prove or disprove termination of the " +
       "given TRS.")
+      .append(System.lineSeparator());
+    str.append("    -c | --computability        Try to prove or disprove universal computability " +
+      "of the given TRS.")
+      .append(System.lineSeparator());
+    str.append("    -g | --strategy             Set the given strategy for reduction.  " +
+      "Currently supported strategies are full, innermost and call-by-value (cbv).")
+      .append(System.lineSeparator());
+    str.append("    -y | --style  <style>       Use the given style for printing; " +
+      "currently supported styles are \"plain\" and \"unicode\".")
       .append(System.lineSeparator());
     str.append("    -d | --disable [<tech>]     Disable the given techniques from being used by " +
       "Cora.")
@@ -307,6 +316,9 @@ public class Parameters {
     str.append("            external:command      This allows a user to specify a command that " +
       "is invoked, for example, a bash script, that calls an SMT solver in exactly the way you " +
       "want.")
+      .append(System.lineSeparator());
+    str.append("            external              This calls the script ./smtsolver or " +
+      "smtsolver.bat, depending on your OS")
       .append(System.lineSeparator());
     return str.toString();
   }

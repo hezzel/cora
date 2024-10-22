@@ -25,8 +25,8 @@ import charlie.util.SystemUtils;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * An ExternalSmtSolver is a solver that operates by writing a file and calling a fixed external
- * SMT solver.
+ * An ExternalSmtSolver is a solver that operates by writing a file and calling an external
+ * SMT solver as specified by the user.
  * The output file of the solver is read to find the valuation.
  */
 public class ExternalSmtSolver implements SmtSolver {
@@ -34,6 +34,12 @@ public class ExternalSmtSolver implements SmtSolver {
 
   public ExternalSmtSolver(String command) {
     _cmd = command;
+  }
+
+  public ExternalSmtSolver() {
+    if (SystemUtils.IS_OS_WINDOWS) _cmd = "smtsolver.bat";
+    else if (SystemUtils.IS_UNIX_LIKE) _cmd = "./smtsolver.sh";
+    else _cmd = null;
   }
 
  /**
@@ -58,14 +64,8 @@ public class ExternalSmtSolver implements SmtSolver {
     try { Process p = rt.exec(new String[] {"rm", "result"}); p.waitFor(); } catch (Exception e) {}
     // start new smtsolver process
     Process p = null;
-    if (SystemUtils.IS_OS_WINDOWS) {
-      p = rt.exec(new String[] {"smtsolver_win.bat", "problem.smt2", "result"});
-    } else if (SystemUtils.IS_UNIX_LIKE){
-      p = rt.exec(new String[] {"./smtsolver", "problem.smt2", "result" });
-    }
-    if (p != null) {
-      p.waitFor();
-    }
+    if (_cmd != null) p = rt.exec(new String[] { _cmd, "problem.smt2", "result" });
+    if (p != null) p.waitFor();
   }
 
   /**
