@@ -17,7 +17,7 @@ package charlie.terms;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.ArrayList;
+import java.util.List;
 import charlie.exceptions.*;
 import charlie.types.TypeFactory;
 import charlie.types.Type;
@@ -57,16 +57,24 @@ public class ConnectiveTest extends TermTestFoundation {
   }
 
   @Test
+  public void testIffBasics() {
+    CalculationSymbol o = TheoryFactory.iffSymbol;
+    assertTrue(o.queryType().toString().equals("Bool → Bool → Bool"));
+    assertTrue(o.queryInfixPriority() == CalculationSymbol.INFIX_IFF);
+    assertTrue(o.queryName().equals("⇔"));
+    assertTrue(o.toString().equals("[⇔]"));
+    assertTrue(o.toUniqueString().equals("⇔{Bool → Bool → Bool}#calc"));
+    assertTrue(o.queryArity() == 2);
+  }
+
+  @Test
   public void testSimpleAndToString() {
     CalculationSymbol f = TheoryFactory.andSymbol;
     assertTrue(f.toString().equals("[∧]"));
     Value v = new BooleanValue(true);
     assertTrue(f.apply(v).toString().equals("[∧](true)"));
     Value w = new BooleanValue(false);
-    ArrayList<Term> args = new ArrayList<Term>();
-    args.add(v);
-    args.add(w);
-    assertTrue(f.apply(args).toString().equals("true ∧ false"));
+    assertTrue(f.apply(List.of(v, w)).toString().equals("true ∧ false"));
   }
 
   @Test
@@ -76,10 +84,7 @@ public class ConnectiveTest extends TermTestFoundation {
     Term v = new Var("x", TypeFactory.boolSort);
     assertTrue(f.apply(v).toString().equals("[∨](x)"));
     Value w = new BooleanValue(true);
-    ArrayList<Term> args = new ArrayList<Term>();
-    args.add(v);
-    args.add(w);
-    assertTrue(f.apply(args).toString().equals("x ∨ true"));
+    assertTrue(f.apply(List.of(v,w)).toString().equals("x ∨ true"));
   }
 
   @Test
@@ -88,6 +93,16 @@ public class ConnectiveTest extends TermTestFoundation {
     assertTrue(f.toString().equals("[¬]"));
     Term v = new Var("x", TypeFactory.boolSort);
     assertTrue(f.apply(v).toString().equals("¬x"));
+  }
+
+  @Test
+  public void testSimpleIffToString() {
+    CalculationSymbol f = TheoryFactory.iffSymbol;
+    assertTrue(f.toString().equals("[⇔]"));
+    Value v = new BooleanValue(true);
+    assertTrue(f.apply(v).toString().equals("[⇔](true)"));
+    Value w = new BooleanValue(false);
+    assertTrue(f.apply(List.of(v,w)).toString().equals("true ⇔ false"));
   }
 
   @Test
@@ -142,6 +157,52 @@ public class ConnectiveTest extends TermTestFoundation {
   }
 
   @Test
+  public void testIffNotAssociative() {
+    Var x = new Var("x", TypeFactory.boolSort);
+    Var y = new Var("y", TypeFactory.boolSort);
+    Var z = new Var("z", TypeFactory.boolSort);
+    CalculationSymbol i = TheoryFactory.iffSymbol;
+    Term xy_z = i.apply(List.of(i.apply(List.of(x, y)), z));
+    Term x_yz = i.apply(List.of(x, i.apply(List.of(y, z))));
+    assertTrue(xy_z.toString().equals("(x ⇔ y) ⇔ z"));
+    assertTrue(x_yz.toString().equals("x ⇔ (y ⇔ z)"));
+  }
+
+  @Test
+  public void testAndOrInIff() {
+    Var x = new Var("x", TypeFactory.boolSort);
+    Var y = new Var("y", TypeFactory.boolSort);
+    CalculationSymbol a = TheoryFactory.andSymbol;
+    CalculationSymbol o = TheoryFactory.orSymbol;
+    CalculationSymbol i = TheoryFactory.iffSymbol;
+    Term s = a.apply(List.of(x, y));
+    Term t = o.apply(List.of(x, y));
+    Term q = i.apply(List.of(s, t));
+    assertTrue(q.toString().equals("x ∧ y ⇔ x ∨ y"));
+  }
+
+  @Test
+  public void testIffInAnd() {
+    Var x = new Var("x", TypeFactory.boolSort);
+    Var y = new Var("y", TypeFactory.boolSort);
+    CalculationSymbol a = TheoryFactory.andSymbol;
+    CalculationSymbol i = TheoryFactory.iffSymbol;
+    Term q = a.apply(List.of(i.apply(List.of(x, y)), i.apply(List.of(y, x))));
+    assertTrue(q.toString().equals("(x ⇔ y) ∧ (y ⇔ x)"));
+  }
+
+  @Test
+  public void testIffWithNot() {
+    Var x = new Var("x", TypeFactory.boolSort);
+    Var y = new Var("y", TypeFactory.boolSort);
+    Term s = TheoryFactory.andSymbol.apply(List.of(x, y));
+    Term t = TheoryFactory.notSymbol.apply(s);
+    Term u = TheoryFactory.iffSymbol.apply(List.of(s, t));
+    Term q = TheoryFactory.notSymbol.apply(u);
+    assertTrue(q.toString().equals("¬(x ∧ y ⇔ ¬(x ∧ y))"));
+  }
+
+  @Test
   public void testAndOrEquality() {
     FunctionSymbol a = TheoryFactory.andSymbol;
     FunctionSymbol o = TheoryFactory.orSymbol;
@@ -162,5 +223,16 @@ public class ConnectiveTest extends TermTestFoundation {
     assertFalse(n.equals(TheoryFactory.orSymbol));
     assertFalse(n.equals(fakenot));
     assertFalse(fakenot.equals(n));
+  }
+
+  @Test
+  public void testIffEquality() {
+    FunctionSymbol i = TheoryFactory.iffSymbol;
+    FunctionSymbol o = TheoryFactory.orSymbol;
+    Type b = TypeFactory.boolSort;
+    FunctionSymbol fakeiff = new Constant("⇔", arrowType(b, arrowType(b, b)));
+    assertTrue(i.equals(TheoryFactory.iffSymbol));
+    assertFalse(i.equals(o));
+    assertFalse(i.equals(fakeiff));
   }
 }
