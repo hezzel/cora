@@ -58,7 +58,11 @@ class CoraTokenData {
   public static final String LEQ            = "LEQ";
   public static final String SMALLER        = "SMALLER";
   public static final String EQUAL          = "EQUAL";
+  public static final String EQUALINT       = "EQUALINT";
+  public static final String EQUALSTRING    = "EQUALSTRING";
   public static final String UNEQUAL        = "UNEQUAL";
+  public static final String UNEQUALINT     = "UNEQUALINT";
+  public static final String UNEQUALSTRING  = "UNEQUALSTRING";
   public static final String AND            = "AND";
   public static final String OR             = "OR";
   public static final String NOT            = "NOT";
@@ -96,8 +100,14 @@ class CoraTokenData {
     "≥|(>=)"                                  , GEQ,
     "≤|(<=)"                                  , LEQ,
     "="                                       , EQUAL,
+    "=_Int"                                   , EQUALINT,
+    "=_String"                                , EQUALSTRING,
     "≠"                                       , UNEQUAL,
+    "≠_Int"                                   , UNEQUALINT,
+    "≠_String"                                , UNEQUALSTRING,
     "!="                                      , UNEQUAL,
+    "!=_Int"                                  , UNEQUALINT,
+    "!=_String"                               , UNEQUALSTRING,
     "∧|(/\\\\)"                               , AND,
     "∨|(\\\\/)"                               , OR,
     "(not)|¬"                                 , NOT,
@@ -105,9 +115,10 @@ class CoraTokenData {
     "Int"                                     , INTTYPE,
     "Bool"                                    , BOOLTYPE,
     "String"                                  , STRINGTYPE,
-    "([^\\s()\\[\\]⟨⟩\\{\\}⦇⦈\"',:λ%\\.\\|\\*\\+\\\\\\.><=≥≤→∧∨¬/-]|)+" , IDENTIFIER,
+    "([^\\s()\\[\\]⟨⟩\\{\\}⦇⦈\"',:λ%\\.\\|\\*\\+\\\\\\.><=!≠≥≤→∧∨¬/-]|)+" , IDENTIFIER,
       // identifiers are now built from any characters other than whitespace, brackets (of any
-      // kind), braces, quotes, colons, lambda, dot, mid, *, %, -, +, >, =, <, ≥, ≤, /, \, ¬, →
+      // kind), braces, quotes, colons, lambda, dot, mid, or the operators / relation symbols
+      // *, %, -, +, >, =, !, ≠, <, ≥, ≤, /, \, ¬, →
   };
 
   /** Both constrained and unconstrained TRSs share the tokens below. */

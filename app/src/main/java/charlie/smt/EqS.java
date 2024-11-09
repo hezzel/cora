@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2024 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,44 +15,32 @@
 
 package charlie.smt;
 
-public final class Iff extends Constraint {
-  private Constraint _left;
-  private Constraint _right;
+/** This class represents equality on string expressions */
+public final class EqS extends Constraint {
+  private StringExpression _left;
+  private StringExpression _right;
 
-  /** The constructor is hidden, since Constraints should be made through the SmtFactory. */
-  Iff(Constraint a, Constraint b) {
-    _left = a;
-    _right = b;
+  /** Constructor is hidden, since StringExpressions should be made through the SmtFactory */
+  EqS(StringExpression left, StringExpression right) {
+    if (left.compareTo(right) >= 0) { _left = left; _right = right; }
+    else { _left = right; _right = left; }
   }
 
-  public Constraint queryLeft() {
+  public StringExpression queryLeft() {
     return _left;
   }
 
-  public Constraint queryRight() {
+  public StringExpression queryRight() {
     return _right;
   }
 
   public boolean evaluate(Valuation val) {
-    return _left.evaluate(val) == _right.evaluate(val);
+    return _left.evaluate(val).equals(_right.evaluate(val));
   }
 
-  /** Helper function for negate() */
-  private int queryConstraintKind(Constraint c) {
-    return switch(c) {
-      case BVar x -> 1;
-      case NBVar x -> 1;
-      case Iff x -> 2;
-      case Comparison x -> 3;
-      default -> 4;
-    };
-  }
-
-  public Iff negate() {
-    if (queryConstraintKind(_right) < queryConstraintKind(_left)) {
-      return new Iff(_left, _right.negate());
-    }
-    else return new Iff(_left.negate(), _right);
+  /** Returns the negation of the current constraint (an inequality) */
+  public UneqS negate() {
+    return new UneqS(_left, _right);
   }
 
   public void addToSmtString(StringBuilder builder) {
@@ -64,9 +52,11 @@ public final class Iff extends Constraint {
   }
 
   public boolean equals(Constraint other) {
-    return (other instanceof Iff o) && (_left.equals(o._left)) && (_right.equals(o._right));
+    return (other instanceof EqS o) && (_left.equals(o._left)) && (_right.equals(o._right));
   }
 
-  public int hashCode() { return 17 * (_left.hashCode() * 31 + _right.hashCode()) + 7; }
+  public int hashCode() {
+    return 17 * (_left.hashCode() + 31 * _right.hashCode()) + 9;
+  }
 }
 

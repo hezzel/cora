@@ -17,17 +17,18 @@ package charlie.smt;
 
 import charlie.exceptions.SmtEvaluationException;
 
-public final class BVar extends Constraint {
+public final class SVar extends StringExpression {
   private int _index;
   private String _name;
 
-  /** The constructors are hidden, since Constraints should be made through the SmtFactory. */
-  BVar(int i) {
+  /** The constructors are hidden, since StringExpressions should be made through an SmtProblem. */
+  SVar(int i) {
     _index = i;
-    _name = "b" + _index;
+    _name = "s" + _index;
   }
 
-  BVar(int i, String name) {
+  /** The constructors are hidden, since StringExpressions should be made through an SmtProblem. */
+  SVar(int i, String name) {
     _index = i;
     _name = "[" + name + "]";
   }
@@ -40,25 +41,24 @@ public final class BVar extends Constraint {
     return _name;
   }
 
-  public NBVar negate() {
-    return new NBVar(this);
-  }
-
-  public boolean evaluate(Valuation val) {
-    if (val == null) throw new SmtEvaluationException("b" + _index + " (" + _name + ")");
-    else return val.queryBoolAssignment(_index);
+  public String evaluate(Valuation val) {
+    if (val == null) throw new SmtEvaluationException("s" + _index + " (" + _name + ")");
+    else return val.queryStringAssignment(_index);
   }
 
   public void addToSmtString(StringBuilder builder) {
-    builder.append("b" + _index);
+    builder.append("s" + _index);
   }
 
-  public boolean equals(Constraint other) {
-    return (other instanceof BVar) && (_index == ((BVar)other).queryIndex());
+  public int compareTo(StringExpression other) {
+    return switch (other) {
+      case SValue v -> 1;
+      case SVar x -> _index  - x.queryIndex();
+    };
   }
 
   public int hashCode() {
-    return 17 * _index;
+    return 2 * _index + 1;
   }
 }
 

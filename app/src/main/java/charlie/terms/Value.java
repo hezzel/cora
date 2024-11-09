@@ -41,6 +41,12 @@ public interface Value extends FunctionSymbol {
   public int getInt();
 
   /**
+   * For string values, this returns the underlying string; for other values, it causes an
+   * InappropriatePatternDataException to be thrown.
+   */
+  public String getString();
+
+  /**
    * For boolean values, this returns the underlying boolean; for other values, it causes an
    * InappropriatePatternDataException to be thrown.
    */

@@ -30,7 +30,6 @@ import charlie.exceptions.NullStorageException;
 import charlie.util.ExceptionLogger;
 import charlie.smt.*;
 import charlie.util.ProcessCaller;
-import static charlie.solvesmt.SMTLibString.Logic.QFNIA;
 import static charlie.solvesmt.SMTLibString.Version.V26;
 import static charlie.solvesmt.ProcessSmtSolver.PhysicalSolver.Z3;
 
@@ -113,7 +112,7 @@ public class ProcessSmtSolver implements SmtSolver {
    */
   @Override
   public Answer checkSatisfiability(SmtProblem problem) {
-    SMTLibString file = new SMTLibString(V26, QFNIA);
+    SMTLibString file = new SMTLibString(V26);
     String stringOfSmtProblem = file.buildSmtlibString(problem);
     String smtResultString;
     try {
@@ -162,13 +161,15 @@ public class ProcessSmtSolver implements SmtSolver {
   @Override
   public boolean checkValidity(SmtProblem problem) {
 
-    SMTLibString file = new SMTLibString(V26, QFNIA);
+    SMTLibString file = new SMTLibString(V26);
     Constraint negated = SmtFactory.createNegation(problem.queryCombinedConstraint());
 
     String stringOfSmtProblem =
       file.buildSmtlibString(
         problem.numberBooleanVariables(),
         problem.numberIntegerVariables(),
+        problem.numberStringVariables(),
+        SMTLibString.getLogic(problem),
         negated
       );
 

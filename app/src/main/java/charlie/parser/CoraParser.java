@@ -41,7 +41,11 @@ public class CoraParser {
   public static final String GEQ = "≥";
   public static final String LEQ = "≤";
   public static final String EQUALS = "=";
+  public static final String EQUALSINT = "=_i";
+  public static final String EQUALSSTRING = "=_s";
   public static final String NEQ = "≠";
+  public static final String NEQINT = "≠_i";
+  public static final String NEQSTRING = "≠_s";
   public static final String AND = "∧";
   public static final String OR = "∨";
   public static final String NOT = "¬";
@@ -64,7 +68,8 @@ public class CoraParser {
     _manager = new InfixManager();
     _manager.addGroup(InfixManager.ASSOC_LEFT, 1, AND);
     _manager.addGroup(InfixManager.ASSOC_LEFT, 1, OR);
-    _manager.addGroup(InfixManager.ASSOC_NONE, 2, EQUALS, NEQ, GREATER, SMALLER, GEQ, LEQ);
+    _manager.addGroup(InfixManager.ASSOC_NONE, 2, EQUALS, EQUALSINT, EQUALSSTRING, NEQ, NEQINT,
+                                                  NEQSTRING, GREATER, SMALLER, GEQ, LEQ);
     _manager.addGroup(InfixManager.ASSOC_LEFT, 3, PLUS, MINUS);
     _manager.addGroup(InfixManager.ASSOC_LEFT, 4, TIMES, DIV, MOD);
   }
@@ -279,8 +284,8 @@ public class CoraParser {
       Token next;
       // IDENTIFIER METAOPEN termlist METACLOSE
       if ((next = _status.readNextIf(CoraTokenData.METAOPEN)) != null) {
-        ImmutableList args = readTermList(CoraTokenData.METACLOSE, "meta-closing bracket " +
-          (next.getText().equals("[") ? "]" : "⟩"));
+        ImmutableList<ParserTerm> args = readTermList(CoraTokenData.METACLOSE,
+          "meta-closing bracket " + (next.getText().equals("[") ? "]" : "⟩"));
         if (args == null) ret = new PErr(new Meta(token, token.getText(), ImmutableList.of()));
         else ret = new Meta(token, token.getText(), args);
       }
@@ -290,7 +295,7 @@ public class CoraParser {
 
     // if we see an argument list, read it, and make the application structure
     while (_status.readNextIf(CoraTokenData.BRACKETOPEN) != null) {
-      ImmutableList args = readTermList(CoraTokenData.BRACKETCLOSE, "closing bracket )");
+      ImmutableList<ParserTerm> args = readTermList(CoraTokenData.BRACKETCLOSE,"closing bracket )");
       if (args == null) ret = new PErr(ret);
       else ret = new Application(ret.token(), ret, args);
     }
@@ -453,6 +458,10 @@ public class CoraParser {
     if (_status.readNextIf(CoraTokenData.LEQ) != null)     return new OperatorData(token, LEQ);
     if (_status.readNextIf(CoraTokenData.EQUAL) != null)   return new OperatorData(token, EQUALS);
     if (_status.readNextIf(CoraTokenData.UNEQUAL) != null) return new OperatorData(token, NEQ);
+    if (_status.readNextIf(CoraTokenData.EQUALINT) != null)       return new OperatorData(token, EQUALSINT);
+    if (_status.readNextIf(CoraTokenData.EQUALSTRING) != null)    return new OperatorData(token, EQUALSSTRING);
+    if (_status.readNextIf(CoraTokenData.UNEQUALINT) != null)     return new OperatorData(token, NEQINT);
+    if (_status.readNextIf(CoraTokenData.UNEQUALSTRING) != null)  return new OperatorData(token, NEQSTRING);
     return null;
   }
 

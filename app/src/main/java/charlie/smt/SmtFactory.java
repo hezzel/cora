@@ -28,6 +28,11 @@ public class SmtFactory {
   /**
    * Creates an integer variable with an index that has not yet been used, and which has the given
    * bounds.  Throws an IllegalArgumentException if the variable has an empty range.
+   *
+   * Note: the bounds are only used as a shorthand for requiring that lower ≤ var ≤ higher, and
+   * hence are only to be used for SATISFIABILITY problems (as it is certainly not valid that
+   * lower ≤ var ≤ higher for all possible assignments to var).  Moreover, they will be removed if
+   * you call problem.clear().  
    */
   public static IVar createIntegerVariable(SmtProblem problem, String name, int lower, int higher) {
     IVar ret = problem.createIntegerVariable(name);
@@ -76,6 +81,15 @@ public class SmtFactory {
     if (arg1 == null) throw new NullStorageException("Modulo", "left argument");
     if (arg2 == null) throw new NullStorageException("Modulo", "right argument");
     return new Modulo(arg1, arg2);
+  }
+
+  /** Creates a string variable with an index that has not yet been used. */
+  public static SVar createStringVariable(SmtProblem problem) {
+    return problem.createStringVariable();
+  }
+
+  public static StringExpression createValue(String s) {
+    return new SValue(s);
   }
 
   /** Creates a boolean variable with an index that has not yet been used. */
@@ -132,6 +146,12 @@ public class SmtFactory {
     return new Is0(left, right);
   }
 
+  public static Constraint createEqual(StringExpression left, StringExpression right) {
+    if (left == null) throw new NullStorageException("Equal", "left argument");
+    if (right == null) throw new NullStorageException("Equal", "right argument");
+    return new EqS(left, right);
+  }
+
   /** Creates left = 0 */
   public static Constraint createEqual(IntegerExpression left) {
     if (left == null) throw new NullStorageException("Equal", "left argument");
@@ -142,6 +162,12 @@ public class SmtFactory {
     if (left == null) throw new NullStorageException("Distinct", "left argument");
     if (right == null) throw new NullStorageException("Distinct", "right argument");
     return new Neq0(left, right);
+  }
+
+  public static Constraint createUnequal(StringExpression left, StringExpression right) {
+    if (left == null) throw new NullStorageException("Distinct", "left argument");
+    if (right == null) throw new NullStorageException("Distinct", "right argument");
+    return new UneqS(left, right);
   }
 
   /** Creates left != 0 */

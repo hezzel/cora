@@ -37,7 +37,7 @@ class SMTLibStringTest {
     c = SmtFactory.createConjunction(c, bVar);
     smtProblem.require(c);
 
-    SMTLibString sls = new SMTLibString(SMTLibString.Version.V26, SMTLibString.Logic.QFNIA);
+    SMTLibString sls = new SMTLibString(SMTLibString.Version.V26);
     assertEquals("(set-info :smt-lib-version 2.6)" + System.lineSeparator() +
                  "(set-logic QF_NIA)" + System.lineSeparator() +
                  "(declare-fun b1() Bool)" + System.lineSeparator() +

@@ -140,7 +140,7 @@ public class IntegerMappingProcessor implements Processor {
     Term left = constraint.queryArgument(1);
     Term right = constraint.queryArgument(2);
     // left ≥ right  =>  left - right
-    if (f.equals(TheoryFactory.geqSymbol) || f.equals(TheoryFactory.equalSymbol) ||
+    if (f.equals(TheoryFactory.geqSymbol) || f.equals(TheoryFactory.intEqualSymbol) ||
         f.equals(TheoryFactory.greaterSymbol)) {
       if (right.equals(TheoryFactory.createValue(0))) ret.add(left);
       else {
@@ -157,7 +157,7 @@ public class IntegerMappingProcessor implements Processor {
       ret.add(makePlus(leftminright, minone));
     }
     // left ≤ right  =>  right - left
-    if (f.equals(TheoryFactory.leqSymbol) || f.equals(TheoryFactory.equalSymbol) ||
+    if (f.equals(TheoryFactory.leqSymbol) || f.equals(TheoryFactory.intEqualSymbol) ||
         f.equals(TheoryFactory.smallerSymbol)) {
       if (left.equals(TheoryFactory.createValue(0))) ret.add(right);
       else {

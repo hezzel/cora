@@ -920,5 +920,66 @@ public class TermTyperTest {
     t = readTerm("[/](3, 4)", null, true, null, "");
     assertTrue(t.toString().equals("3 / 4"));
   }
+
+  @Test
+  public void testReadEqualityTwoArgs() {
+    // when given =_Int (or !=_Int), the type is fixed so the types of arguments do not need to be
+    // derived
+    SymbolData data = generateSignature();
+    Term t = readTerm("x =_Int y", null, true, data, "");
+    assertTrue(t.queryType().equals(type("Bool")));
+    assertTrue(data.lookupVariable("x").queryType().equals(type("Int")));
+    assertTrue(t.toString().equals("x = y"));
+    // when given != (or =), the types of the arguments need to be derived, but if the first is
+    // derivable, that's good enough
+    t = readTerm("x != z", null, true, data, "");
+    assertTrue(t.queryType().equals(type("Bool")));
+    assertTrue(data.lookupVariable("z").queryType().equals(type("Int")));
+    assertTrue(t.toString().equals("x ≠ z"));
+    // same if the second is derivable!
+    t = readTerm("u = \"test\"", null, true, data, "");
+    assertTrue(t.queryType().equals(type("Bool")));
+    assertTrue(data.lookupVariable("u").queryType().toString().equals("String"));
+    assertTrue(t.toString().equals("u = \"test\""));
+    // and if the type cannot be derived, we have an appropriate error
+    t = readTerm("a != b", "Bool", true, null,
+      "1:3: Cannot deduce input type of overloaded operator.  " +
+      "Please indicate the type by subscripting (e.g., !=_Int).\n");
+    assertTrue(t.toString().equals("[!=](a, b)"));
+  }
+
+  @Test
+  public void testReadCorrectEqualityOneArg() {
+    // when given !=_Int (or =_Int), the type is fixed so the types of arguments do not need to be
+    // derived
+    SymbolData data = generateSignature();
+    Term t = readTerm("[!=_Int](x)", null, true, data, "");
+    assertTrue(t.queryType().equals(type("Int → Bool")));
+    assertTrue(data.lookupVariable("x").queryType().equals(type("Int")));
+    assertTrue(t.toString().equals("[≠](x)"));
+    // when an expected type is given, this is used to derive the argument's type
+    t = readTerm("[=](y)", "Int → Bool", true, data, "");
+    assertTrue(t.queryType().toString().equals("Int → Bool"));
+    assertTrue(data.lookupVariable("y").queryType().toString().equals("Int"));
+    // when given = (or !=), the types of the argument needs to be derived
+    t = readTerm("[!=](\"test\")", null, true, data, "");
+    assertTrue(t.queryType().equals(type("String → Bool")));
+    assertTrue(t.toString().equals("[≠](\"test\")"));
+    // and if the type cannot be derived, we have an appropriate error
+    t = readTerm("[=](a)", null, true, null,
+      "1:2: Cannot deduce input type of overloaded operator.  " +
+      "Please indicate the type by subscripting (e.g., =_Int).\n");
+    assertTrue(t.toString().equals("[=](a)"));
+  }
+
+  @Test
+  public void testReadIncorrectEquality() {
+    readTerm("\"hello\" = 3", null, true, null,
+      "1:11: Expected term of type String, but got value 3 which has type Int.\n");
+    readTerm("[=](4)", "String -> Bool", true, null,
+      "1:5: Expected term of type String, but got value 4 which has type Int.\n");
+    readTerm("[=](1, 2, 3)", null, true, null,
+      "1:2: Arity error: overloaded operator = can take 2 arguments, but 3 are given!\n");
+  }
 }
 

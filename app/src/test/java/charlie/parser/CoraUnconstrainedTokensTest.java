@@ -103,7 +103,7 @@ public class CoraUnconstrainedTokensTest {
 
   @Test
   public void testAllBasicTokens() throws LexerException {
-    Lexer lexer = createLexer("x-x⦇(y){,+#\\a∀ ∃7*}():::a⦈[b→b.⇒]>c--λ12");
+    Lexer lexer = createLexer("x-x⦇(y){,+#=_String\\a∀ ∃7*}():::a⦈[b→b.⇒]>c--λ12");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "x-x");
     verifyToken(lexer.nextToken(), CoraTokenData.TUPLEOPEN, "⦇");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETOPEN, "(");
@@ -111,7 +111,7 @@ public class CoraUnconstrainedTokensTest {
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETCLOSE, ")");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACEOPEN, "{");
     verifyToken(lexer.nextToken(), CoraTokenData.COMMA, ",");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "+#");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "+#=_String");
     verifyToken(lexer.nextToken(), CoraTokenData.LAMBDA, "\\");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "a∀");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "∃7*");

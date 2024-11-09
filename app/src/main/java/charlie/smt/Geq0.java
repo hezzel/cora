@@ -21,6 +21,6 @@ public final class Geq0 extends Comparison {
   public Geq0 negate() { return new Geq0(_expr.negate().add(-1)); }
   protected boolean evaluate(int num) { return num >= 0; }
   protected String symbol() { return ">="; }
-  public int hashCode() { return 9 * _expr.hashCode() + 4; }
+  public int hashCode() { return 17 * _expr.hashCode() + 4; }
 }
 

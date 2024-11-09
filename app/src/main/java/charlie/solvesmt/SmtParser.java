@@ -39,6 +39,54 @@ class SmtParser {
 
   // ==================================== READING S-EXPRESSIONS ===================================
 
+  private String getUnicodeSubstring(String txt, int pos) {
+    if (pos >= txt.length()) return null;
+    if (txt.charAt(pos) == '{') {
+      for (int i = pos + 1; i < txt.length(); i++) {
+        if (txt.charAt(i) == '}') return txt.substring(pos, i+1);
+      }
+      return null;
+    }
+    if (pos + 4 > txt.length()) return null;
+    return txt.substring(pos, pos + 4);
+  }
+
+  private String doTranslate(String unicode) {
+    if (unicode.charAt(0) == '{') unicode = unicode.substring(1, unicode.length()-1);
+    int code = 0;
+    for (int i = 0; i < unicode.length(); i++) {
+      char c = unicode.charAt(i);
+      code = code * 16 + (int)c;
+      if ('0' <= c && c <= '9') code -= (int)'0';
+      else if ('a' <= c && c <= 'f') code += 10 - (int)'a';
+      else if ('A' <= c && c <= 'F') code += 10 - (int)'A';
+      else return null;
+    }
+    return "" + (char)code;
+  }
+
+  private String translateUnicode(String txt, Token tok) {
+    StringBuilder builder = new StringBuilder();
+    int i = 0;
+    while (i < txt.length()) {
+      int j = txt.indexOf("\\u", i);
+      if (j == -1) {
+        builder.append(txt.substring(i));
+        return builder.toString();
+      }
+      builder.append(txt.substring(i, j));
+      String unistring = getUnicodeSubstring(txt, j + 2);
+      String transl = unistring == null || unistring.length() == 0 ? null : doTranslate(unistring);
+      if (transl == null) {
+        _status.storeError("Poorly formed string constant: " + txt.substring(j), tok);
+        return builder.toString();
+      }
+      builder.append(transl);
+      i = j + 2 + unistring.length();
+    }
+    return builder.toString();
+  }
+
   public SExpression readExpression() {
     Token tok = _status.readNextIf(SmtTokenData.NUMERAL);
     if (tok != null) {
@@ -48,6 +96,8 @@ class SmtParser {
           // likely a bigint or something, do what we can to avoid an unnecessary error
       }
     }
+    tok = _status.readNextIf(SmtTokenData.STRING);
+    if (tok != null) return new SExpression.StringConstant(translateUnicode(tok.getText(), tok));
     tok = _status.readNextIf(SmtTokenData.IDENTIFIER);
     if (tok != null) return new SExpression.Symbol(tok.getText());
     tok = _status.readNextIf(SmtTokenData.BRACKETOPEN);

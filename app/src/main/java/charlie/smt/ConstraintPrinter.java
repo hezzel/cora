@@ -26,13 +26,17 @@ import charlie.util.Pair;
 public class ConstraintPrinter {
   /** The printer used to print expressions below a Comparison */
   protected IExpPrinter _expPrinter;
+  /** The printer used to print string expressions */
+  protected SExpPrinter _stringPrinter;
 
   public ConstraintPrinter() {
     _expPrinter = new IExpPrinter();
+    _stringPrinter = new SExpPrinter();
   }
 
-  public ConstraintPrinter(IExpPrinter p) {
-    _expPrinter = p;
+  public ConstraintPrinter(IExpPrinter e, SExpPrinter s) {
+    _expPrinter = e;
+    _stringPrinter = s;
   }
 
   /**
@@ -53,7 +57,7 @@ public class ConstraintPrinter {
    * case there is no need to override any of the other methods in the class -- or override (some
    * of) the functions it calls directly, which are: printVar, printNegatedVar, printTruth,
    * printFalsehood, printGeq, printEquals, printDistinct, printConjunction, printDisjunction,
-   * printNot.
+   * printNot, printIff, printEqS, printUneqS.
    */
   public void print(Constraint c, StringBuilder builder) {
     switch (c) {
@@ -68,6 +72,8 @@ public class ConstraintPrinter {
       case Disjunction j: printDisjunction(j, builder); break;
       case Not n: printNot(n, builder); break;
       case Iff i: printIff(i, builder); break;
+      case EqS e: printEqS(e, builder); break;
+      case UneqS u: printUneqS(u, builder); break;
     }
   }
 
@@ -217,6 +223,26 @@ public class ConstraintPrinter {
     printBracketed(i.queryLeft(), builder);
     builder.append(" == ");
     printBracketed(i.queryRight(), builder);
+  }
+
+  /**
+   * Override this function to change how string equalities are printed (if print is left unmasked).
+   * The default functionality prints left = right.
+   */
+  protected void printEqS(EqS e, StringBuilder builder) {
+    _stringPrinter.print(e.queryLeft(), builder);
+    builder.append(" = ");
+    _stringPrinter.print(e.queryRight(), builder);
+  }
+
+  /**
+   * Override this function to change how string equalities are printed (if print is left unmasked).
+   * The default functionality prints left # right.
+   */
+  protected void printUneqS(UneqS u, StringBuilder builder) {
+    _stringPrinter.print(u.queryLeft(), builder);
+    builder.append(" # ");
+    _stringPrinter.print(u.queryRight(), builder);
   }
 }
 

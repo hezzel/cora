@@ -17,7 +17,7 @@ package charlie.smt;
 
 /** Boolean constraints, to be sent to an SMT solver. */
 public sealed abstract class Constraint
-  permits BVar, NBVar, Truth, Falsehood, Comparison, Junction, Not, Iff {
+  permits BVar, NBVar, Truth, Falsehood, Comparison, Junction, Not, Iff, EqS, UneqS {
   /**
    * This function evaluates the current constraint to its boolean value.  Any variables are
    * interpreted following the given valuation.
@@ -53,7 +53,7 @@ public sealed abstract class Constraint
     return builder.toString();
   }
 
-  public boolean equals(Object other) {
+  public final boolean equals(Object other) {
     return (other instanceof Constraint) && equals((Constraint)other);
   }
 

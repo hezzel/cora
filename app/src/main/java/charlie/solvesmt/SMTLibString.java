@@ -28,18 +28,16 @@ import java.util.ArrayList;
  */
 class SMTLibString {
   public enum Version { V25   , V26   }
-  public enum Logic   { QFLIA , QFNIA }
+  public enum Logic   { QFLIA , QFNIA , QFSNIA }
 
   private Version _version;
   private Logic _logic;
 
-  public SMTLibString(Version version, Logic logic) {
+  public SMTLibString(Version version) {
     _version = version;
-    _logic = logic;
   }
 
   public Version getVersion() { return _version; }
-  public Logic getLogic() {return _logic; }
 
   public static String versionToString(Version version) {
     return switch (version) {
@@ -52,27 +50,39 @@ class SMTLibString {
     return switch (logic) {
       case QFLIA -> "QF_LIA";
       case QFNIA -> "QF_NIA";
+      case QFSNIA -> "QF_SNIA";
     };
+  }
+
+  /**
+   * This returns a logic suitable for the given problem.
+   * Note that this may be an overestimate; for example, using non-linear arithmetic where linear
+   * arithmetic would suffice.
+   */
+  public static Logic getLogic(SmtProblem problem) {
+    if (problem.numberStringVariables() > 0) return Logic.QFSNIA;
+    else return Logic.QFNIA;
   }
 
   private String setVersionString() {
     return "(set-info :smt-lib-version " + SMTLibString.versionToString(this.getVersion()) + ")";
   }
 
-  private String setLogicString() {
-    return "(set-logic " + SMTLibString.logicToString(this.getLogic()) + ")";
+  private String setLogicString(Logic logic) {
+    return "(set-logic " + SMTLibString.logicToString(logic) + ")";
   }
 
   /**
    * Returns the SMTLIB string representation of the problem given as input.
    * @param {@link SmtProblem} problem
    */
-  public String buildSmtlibString(int boolCounter, int intCounter, Constraint constraint) {
+  public String buildSmtlibString(int boolCounter, int intCounter, int stringCounter,
+                                  Logic logic, Constraint constraint) {
     StringBuilder ret = new StringBuilder();
 
     // Create the SMTLIB file header.
     ret.append(this.setVersionString()).append(System.lineSeparator());
-    ret.append(this.setLogicString()).append(System.lineSeparator());
+    ret.append(this.setLogicString(logic)).append(System.lineSeparator());
 
     // Next, we collect all booleans and integer definitions.
     for (int i = 1; i <= boolCounter; i++) {
@@ -80,6 +90,9 @@ class SMTLibString {
     }
     for (int i = 1; i <= intCounter; i++) {
       ret.append("(declare-fun i").append(i).append("() Int)").append(System.lineSeparator());
+    }
+    for (int i = 1; i <= stringCounter; i++) {
+      ret.append("(declare-fun s").append(i).append("() String)").append(System.lineSeparator());
     }
 
     // Split up the constraints into separate clauses for human-readability (in case this is
@@ -110,6 +123,8 @@ class SMTLibString {
     return buildSmtlibString(
       problem.numberBooleanVariables(),
       problem.numberIntegerVariables(),
+      problem.numberStringVariables(),
+      getLogic(problem),
       problem.queryCombinedConstraint()
     );
   }

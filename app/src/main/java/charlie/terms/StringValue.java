@@ -74,7 +74,7 @@ class StringValue extends ValueInherit {
     return new StringValue(ret.toString(), str);
   }
 
-  /** Returns the escaped string representation (with quotes) of this integer. */
+  /** Returns the escaped string representation (with quotes) of this string. */
   public String queryName() {
     return _escapedValue;
   }
@@ -95,12 +95,12 @@ class StringValue extends ValueInherit {
     return _value.hashCode();
   }
 
-  public String getString() {
-    return _value;
-  }
-
   public int getInt() {
     throw new InappropriatePatternDataException("StringValue", "getInt", "integer values");
+  }
+
+  public String getString() {
+    return _value;
   }
 
   public boolean getBool() {

@@ -65,7 +65,7 @@ public class SplittingProcessor implements Processor {
    */
   private Optional<ArrayList<Term>> split(Term constraint) {
     if (!constraint.isFunctionalTerm()) return Optional.empty();
-    if (constraint.queryRoot().equals(TheoryFactory.distinctSymbol) &&
+    if (constraint.queryRoot().equals(TheoryFactory.intDistinctSymbol) &&
         constraint.numberArguments() == 2) {
       Term arg1 = constraint.queryArgument(1);
       Term arg2 = constraint.queryArgument(2);

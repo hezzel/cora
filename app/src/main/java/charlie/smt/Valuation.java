@@ -19,18 +19,20 @@ import java.util.TreeSet;
 import java.util.TreeMap;
 
 /**
- * A valuation is an assignment of booleans to BVars, and integers to IVars.
- * A Valuation is in principle mutable, so be careful how you use it! (It needs to be mutual to
+ * A valuation is an assignment of booleans to BVars, integers to IVars, and strings to SVars.
+ * A Valuation is in principle mutable, so be careful how you use it! (It needs to be muted to
  * support gradual creation.)
  */
 public class Valuation {
   private TreeSet<Integer> _trueBVars;
   private TreeMap<Integer,Integer> _iVarValues;
+  private TreeMap<Integer,String> _sVarValues;
 
-  /** Creates a new valuation with all booleans set to false, and no integer values set. */
+  /** Creates a new valuation with all booleans set to false, and no integer/string values set. */
   public Valuation() {
     _trueBVars = new TreeSet<Integer>();
     _iVarValues = new TreeMap<Integer,Integer>();
+    _sVarValues = new TreeMap<Integer,String>();
   }
 
   /** Returns the valuation for the boolean variable with the given index */
@@ -44,6 +46,12 @@ public class Valuation {
     else return 4242;
   }
 
+  /** Returns the valuation for the string variable with the given index */
+  public String queryStringAssignment(int index) {
+    if (_sVarValues.containsKey(index)) return _sVarValues.get(index);
+    else return "";
+  }
+
   /** Returns the valuation for the given boolean variable */
   public boolean queryAssignment(BVar x) {
     return queryBoolAssignment(x.queryIndex());
@@ -52,6 +60,11 @@ public class Valuation {
   /** Returns the valuation for the given integer variable */
   public int queryAssignment(IVar x) {
     return queryIntAssignment(x.queryIndex());
+  }
+
+  /** Returns the valuation for the given String variable */
+  public String queryAssignment(SVar x) {
+    return queryStringAssignment(x.queryIndex());
   }
 
   /** Set a boolean variable to the given value. */
@@ -65,14 +78,23 @@ public class Valuation {
     _iVarValues.put(index, value);
   }
 
+  /** Set a String variable to the given value. */
+  public void setString(int index, String value) {
+    _sVarValues.put(index, value);
+  }
+
   /** Give a human-readable representation of the valuation, for use in debugging. */
   public String toString() {
     StringBuilder ret = new StringBuilder();
     ret.append("True boolean variables:\n");
     for (Integer i : _trueBVars) ret.append("  b" + i.toString() + "\n");
-    ret.append("Integer variables:\n");
+    if (_iVarValues.size() > 0) ret.append("Integer variables:\n");
     for (Integer i : _iVarValues.keySet()) {
       ret.append("  i" + i.toString() + " : " + _iVarValues.get(i).toString() + "\n");
+    }
+    if (_sVarValues.size() > 0) ret.append("Stirng variables:");
+    for (Integer i : _sVarValues.keySet()) {
+      ret.append("  s" + i.toString() + " : " + _sVarValues.get(i).toString() + "\n");
     }
     return ret.toString();
   }

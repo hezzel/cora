@@ -16,10 +16,7 @@
 package charlie.solvesmt;
 
 import java.io.IOException;
-import charlie.parser.lib.Token;
-import charlie.parser.lib.LexerFactory;
-import charlie.parser.lib.TokenQueue;
-import charlie.parser.lib.Lexer;
+import charlie.parser.lib.*;
 
 /**
  * This file defines the tokens used to lex and parse a file or string using the smtlib format.
@@ -27,32 +24,38 @@ import charlie.parser.lib.Lexer;
  */
 class SmtTokenData {
   public static String NUMERAL        = "NUMERAL";
+  public static String STRING         = "STRING";
   public static String IDENTIFIER     = "IDENTIFIER";
   public static String BRACKETOPEN    = "BRACKETOPEN";
   public static String BRACKETCLOSE   = "BRACKETCLOSE";
 
   /* Next, we define the regular expressions for all tokens. */
   public static String[] tokens = new String[] {
+    "unsupported"                           , Token.SKIP, // Z3 does this for some logics
     "0|([1-9][0-9]*)"                       , NUMERAL,
-    "[^\\s();]+"                            , IDENTIFIER,
+    "[^\\s();\"]+"                          , IDENTIFIER,
+    "\""                                    , STRING,
     "\\("                                   , BRACKETOPEN,
     "\\)"                                   , BRACKETCLOSE,
     "\\s"                                   , Token.SKIP,
     ";.*$"                                  , Token.SKIP,
   };
 
-  /** Returns a TokenQueue that goes through the given file. */
-  public static TokenQueue getFileLexer(String filename) throws IOException {
-    Lexer lexer = LexerFactory.createFileLexer(tokens, filename);
+  private static TokenQueue makeTokenQueue(ChangeableLexer clexer) {
+    Lexer lexer = LexerFactory.createLongTokenLexer(clexer, STRING, "[^\"]+|\"\"", "\"", STRING);
+    lexer = LexerFactory.createStringEditLexer(lexer, STRING, new String[] { "\"\"", "\"" }, '\0');
     lexer = LexerFactory.createErrorLexer(lexer, "ILLEGAL", "Illegal token: @TEXT@.");
     return LexerFactory.createPushbackLexer(lexer);
   }
 
+  /** Returns a TokenQueue that goes through the given file. */
+  public static TokenQueue getFileLexer(String filename) throws IOException {
+    return makeTokenQueue(LexerFactory.createFileLexer(tokens, filename));
+  }
+
   /** Returns a TokenQueue that goes through the given string. */
   public static TokenQueue getStringLexer(String text) {
-    Lexer lexer = LexerFactory.createStringLexer(tokens, text);
-    lexer = LexerFactory.createErrorLexer(lexer, "ILLEGAL", "Illegal token: @TEXT@.");
-    return LexerFactory.createPushbackLexer(lexer);
+    return makeTokenQueue(LexerFactory.createStringLexer(tokens, text));
   }
 }
 

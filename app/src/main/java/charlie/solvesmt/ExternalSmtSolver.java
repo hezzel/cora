@@ -46,10 +46,11 @@ public class ExternalSmtSolver implements SmtSolver {
   * This creates a file for the SMT solver.
   * If creating the file fails for some reason, an IOException is thrown instead.
   */
-  private void createSmtFile(int numbool, int numint, Constraint constraint) throws IOException {
+  private void createSmtFile(int numbool, int numint, int numstring,
+                             Constraint constraint, SMTLibString.Logic logic) throws IOException {
     BufferedWriter writer = new BufferedWriter(new FileWriter("problem.smt2"));
-    SMTLibString file = new SMTLibString(SMTLibString.Version.V26, SMTLibString.Logic.QFNIA);
-    String stringOfFile = file.buildSmtlibString(numbool, numint, constraint);
+    SMTLibString file = new SMTLibString(SMTLibString.Version.V26);
+    String stringOfFile = file.buildSmtlibString(numbool, numint, numstring, logic, constraint);
     writer.write(stringOfFile);
     writer.close();
   }
@@ -100,7 +101,8 @@ public class ExternalSmtSolver implements SmtSolver {
     Constraint combinedConstraints = problem.queryCombinedConstraint();
     try {
       createSmtFile(problem.numberBooleanVariables(), problem.numberIntegerVariables(),
-                    combinedConstraints);
+                    problem.numberStringVariables(), combinedConstraints,
+                    SMTLibString.getLogic(problem));
     }
     catch (IOException e) {
       ExceptionLogger.log("Could not create SMT file: " + e.getMessage(), e);
@@ -150,7 +152,9 @@ public class ExternalSmtSolver implements SmtSolver {
   public boolean checkValidity(SmtProblem problem) {
     Constraint negated = SmtFactory.createNegation(problem.queryCombinedConstraint());
     try {
-      createSmtFile(problem.numberBooleanVariables(), problem.numberIntegerVariables(), negated);
+      createSmtFile(problem.numberBooleanVariables(), problem.numberIntegerVariables(),
+                    problem.numberStringVariables(), negated,
+                    SMTLibString.getLogic(problem));
       runSmtSolver();
       return readAnswer().equals("unsat");
     }

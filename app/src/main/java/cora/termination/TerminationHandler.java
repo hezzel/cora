@@ -86,7 +86,7 @@ public class TerminationHandler {
       for (Variable x : rho.queryLVars()) {
         if (!constraint.vars().contains(x)) {
           Term eq = TheoryFactory.createEquality(x, x); 
-          if (eq != null) newconstraint = TheoryFactory.createConjunction(newconstraint, eq);
+          newconstraint = TheoryFactory.createConjunction(newconstraint, eq);
         }
       }
       if (constraint == newconstraint) rules.add(rho);

@@ -77,7 +77,7 @@ public class DPTest {
     Renaming renaming = new Renaming(Set.of());
     Term lhs = CoraInputReader.readTerm("eval(x, y)", renaming, true, trs);
     Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, true, trs);
-    Term constraint = CoraInputReader.readTerm("x > y ∧ z = z", renaming, true, trs);
+    Term constraint = CoraInputReader.readTerm("x > y ∧ z =_Int z", renaming, true, trs);
     Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"),
                                 renaming.getVariable("z"),
                                 TheoryFactory.createVar("a", TypeFactory.boolSort));
@@ -95,7 +95,7 @@ public class DPTest {
     Renaming renaming = new Renaming(Set.of());
     Term lhs = CoraInputReader.readTerm("eval(x, y)", renaming, true, trs);
     Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, true, trs);
-    Term constraint = CoraInputReader.readTerm("x > y ∧ z = z", renaming, true, trs);
+    Term constraint = CoraInputReader.readTerm("x > y ∧ z =_Int z", renaming, true, trs);
     Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"),
                                 renaming.getVariable("z"),
                                 TheoryFactory.createVar("a", TypeFactory.boolSort));

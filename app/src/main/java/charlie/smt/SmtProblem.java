@@ -19,18 +19,17 @@ import java.lang.Iterable;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-/**
- * An SmtProblem keeps track of a list of integer and boolean variables, as well as a list of
- * requirements.
- */
+/** An SmtProblem keeps track of a list of theory variables, as well as a list of requirements. */
 public class SmtProblem implements Iterable<Constraint> {
   private int _lastBooleanIndex;
   private int _lastIntegerIndex;
+  private int _lastStringIndex;
   private ArrayList<Constraint> _constraints;
 
   public SmtProblem() {
     _lastBooleanIndex = 0;
     _lastIntegerIndex = 0;
+    _lastStringIndex = 0;
     _constraints = new ArrayList<Constraint>();
   }
 
@@ -64,10 +63,25 @@ public class SmtProblem implements Iterable<Constraint> {
     return new BVar(_lastBooleanIndex, name);
   }
 
+  /** Creates a string variable with an index that has not yet been used. */
+  public SVar createStringVariable() {
+    _lastStringIndex++;
+    return new SVar(_lastStringIndex);
+  }
+
+  /**
+   * Creates a string variable with an index that has not yet been used, and the given name to be
+   * used only for printing (and debugging) purposes.
+   */
+  public SVar createStringVariable(String name) {
+    _lastStringIndex++;
+    return new SVar(_lastStringIndex, name);
+  }
+
   /**
    * This requires that the constraint holds.  Note that all variables in the constraint must have
-   * been created through the createIntegerVariable or createBooleanVariable functions, since
-   * this ensures that they are stored in the SmtProblem.
+   * been created through the create<kind>Variable functions, since this ensures that they are
+   * stored in the SmtProblem.
    */
   public void require(Constraint c) {
     _constraints.add(c);
@@ -75,8 +89,8 @@ public class SmtProblem implements Iterable<Constraint> {
 
   /**
    * This requires that premise ⇒ conclusion holds.  Note that all variables in both premise and
-   * conclusion must have been created through the createIntegerVariable or createBooleanVariable
-   * functions, since this ensures that they are stored in the SmtProblem.
+   * conclusion must have been created through the create<kind>Variable functions, since this
+   * ensures that they are stored in the SmtProblem.
    */
   public void requireImplication(Constraint premise, Constraint conclusion) {
     _constraints.add(new Disjunction(premise.negate(), conclusion));
@@ -101,6 +115,14 @@ public class SmtProblem implements Iterable<Constraint> {
    */
   public int numberBooleanVariables() {
     return _lastBooleanIndex;
+  }
+
+  /**
+   * Returns the number of string variables in this problem.  Note that these variables are named
+   * s1 ... sn, where n = numberStringVariables().
+   */
+  public int numberStringVariables() {
+    return _lastStringIndex;
   }
 
   /**

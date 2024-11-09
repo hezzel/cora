@@ -54,6 +54,10 @@ class BooleanValue extends ValueInherit {
     return _value;
   }
 
+  public String getString() {
+    throw new InappropriatePatternDataException("BooleanValue", "getString", "string values");
+  }
+
   public int getInt() {
     throw new InappropriatePatternDataException("BooleanValue", "getInt", "integer values");
   }

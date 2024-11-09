@@ -19,9 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.parser.lib.Token;
-import charlie.parser.lib.LexerException;
-import charlie.parser.lib.Lexer;
+import charlie.parser.lib.*;
 
 public class SmtTokensTest {
   private Lexer createLexer(String str) {
@@ -53,17 +51,14 @@ public class SmtTokensTest {
     assertTrue(lexer.nextToken().isEof());
   }
 
-/** TODO: properly handle strings! (and everything else)
   @Test
   public void testString() throws LexerException {
     Lexer lexer = createLexer("a\"b c\nd \"\"e\" f \"gh\"");
     verifyToken(lexer.nextToken(), SmtTokenData.IDENTIFIER, "a");
-    System.out.println("nexttoken = " + lexer.nextToken());
-    verifyToken(lexer.nextToken(), SmtTokenData.STRING, "\"b c\nd \"e");
+    verifyToken(lexer.nextToken(), SmtTokenData.STRING, "b c\nd \"e");
     verifyToken(lexer.nextToken(), SmtTokenData.IDENTIFIER, "f");
-    verifyToken(lexer.nextToken(), SmtTokenData.STRING, "\"gh\"");
+    verifyToken(lexer.nextToken(), SmtTokenData.STRING, "gh");
     assertTrue(lexer.nextToken().isEof());
   }
-*/
 }
 

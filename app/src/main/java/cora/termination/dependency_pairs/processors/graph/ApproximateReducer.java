@@ -109,13 +109,6 @@ class ApproximateReducer {
     return TheoryFactory.createConjunction(phi, psi);
   }
 
-  /** Helper function: creates expr1 = expr2 if possible, otherwise just ⊤ */
-  private Term makeEqual(Term expr1, Term expr2) {
-    Term ret = TheoryFactory.createEquality(expr1, expr2);
-    if (ret != null) return ret;
-    return TheoryFactory.createValue(true);
-  }
-
   /**
    * This computes, for every defined symbol, the smallest number of arguments with which f occurs
    * in some rule, on the left-hand side.  If f is not a defined symbol, it is not stored.
@@ -165,11 +158,11 @@ class ApproximateReducer {
       // CASE 1: from is a base-type theory term whose variables are all instantiated by ground
       // theory terms ==> to must either be its value, or have the same either shape (in which case
       // we fall through to case 6)
-      if (from.isTheoryTerm() && !from.queryType().isArrowType() &&
-        !from.queryType().isArrowType() && allVarsInTheory(from.vars(), dp1.lvars())) {
+      if (from.isTheoryTerm() && from.queryType().isBaseType() &&
+          allVarsInTheory(from.vars(), dp1.lvars())) {
         if (!to.isTheoryTerm()) return false;
         if (to.isValue() || to.isVariable()) {
-          requirements = makeAnd(requirements, makeEqual(from, to));
+          requirements = makeAnd(requirements, TheoryFactory.createEquality(from, to));
           continue;
         }
         else {

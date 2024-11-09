@@ -57,6 +57,10 @@ class IntegerValue extends ValueInherit {
     return _value;
   }
 
+  public String getString() {
+    throw new InappropriatePatternDataException("IntegerValue", "getString", "string values");
+  }
+
   public boolean getBool() {
     throw new InappropriatePatternDataException("IntegerValue", "getBool", "boolean values");
   }

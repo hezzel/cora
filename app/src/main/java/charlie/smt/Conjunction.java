@@ -45,7 +45,7 @@ public final class Conjunction extends Junction {
   }
 
   public int hashCode() {
-    return 9 * _children.hashCode() + 2;
+    return 17 * _children.hashCode() + 2;
   }
 }
 

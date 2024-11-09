@@ -96,6 +96,10 @@ public class TermAnalyser {
               IVar ivar = translator.getIVar(x);
               ret.extend(x, TheoryFactory.createValue(val.queryAssignment(ivar)));
             }
+            else if (x.queryType().equals(TypeFactory.stringSort)) {
+              SVar svar = translator.getSVar(x);
+              ret.extend(x, TheoryFactory.createValue(val.queryAssignment(svar)));
+            }
           }
           yield new Result.YES(ret);
         }

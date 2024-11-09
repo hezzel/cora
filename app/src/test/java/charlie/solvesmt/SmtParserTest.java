@@ -41,6 +41,18 @@ public class SmtParserTest {
   }
 
   @Test
+  public void testReadString() {
+    switch (SmtParser.readExpressionFromString("\"123\"\"4a\"")) {
+      case SExpression.StringConstant(String t): assertTrue(t.equals("123\"4a")); break;
+      default: assertTrue(false);
+    }
+    switch (SmtParser.readExpressionFromString("\"\\u{48}\\u219E\"")) {
+      case SExpression.StringConstant(String t): assertTrue(t.equals("H↞")); break;
+      default: assertTrue(false);
+    }
+  }
+
+  @Test
   public void testReadComplexExpression() {
     SExpression expr = SmtParser.readExpressionFromString("(a ((b x) 3) (c))");
     assertTrue(expr instanceof SExpression.SExpList);
@@ -74,7 +86,7 @@ public class SmtParserTest {
 
   @Test
   public void testReadMultipleExpressinos() {
-    List<SExpression> lst = SmtParser.readExpressionsFromString("sat (= a 3) (= b (- 4))");
+    List<SExpression> lst = SmtParser.readExpressionsFromString("sat (= a \"test\") (= b (- 4))");
     assertTrue(lst.size() == 3);
     assertTrue(lst.get(0) instanceof SExpression.Symbol);
     assertTrue(lst.get(0).toString().equals("sat"));

@@ -46,7 +46,7 @@ public final class Not extends Constraint {
   }
 
   public int hashCode() {
-    return 9 * _negated.hashCode() + 8;
+    return 17 * _negated.hashCode() + 8;
   }
 }
 

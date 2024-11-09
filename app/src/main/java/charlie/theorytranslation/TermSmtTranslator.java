@@ -29,7 +29,8 @@ import charlie.smt.*;
  * - create an SmtProblem (it doesn't need to be fresh; it's allowed to already contain some
  *   variables and requirements)
  * - create a TermSmtTranslator with the SmtProblem as parameter
- * - use the translator to translate one or more terms to IntegerExpressions / Constraints
+ * - use the translator to translate one or more terms to IntegerExpressions / StringExpressions /
+ *   Constraints
  * - add what constraints you want to the SmtProblem (these could be the translated constraints,
  *   constraints obtained from restructuring them (e.g., wrapping them in a larger constraint),
  *   or entirely new (so long as the variables for the constraint are all created  for the same
@@ -37,7 +38,7 @@ import charlie.smt.*;
  * - use an SmtSolver to query satisfiability or validity of the SmtProblem
  *
  * For convenience, some extra functions have been supplied:
- * - you ca ngenerate the trnaslator without an SmtProblem; in this case a new SmtProblem is
+ * - you can generate the translator without an SmtProblem; in this case a new SmtProblem is
  *   created (and can be queried using queryProblem())
  * - you can immediately "require" theory terms of type Bool, rather than first translating this
  *   term and then requiring it in the underlying SmtProblem.
@@ -45,6 +46,7 @@ import charlie.smt.*;
 public class TermSmtTranslator {
   private SmtProblem _problem;
   private TreeMap<Variable,IVar> _ivars;
+  private TreeMap<Variable,SVar> _svars;
   private TreeMap<Variable,BVar> _bvars;
 
   /**
@@ -54,6 +56,7 @@ public class TermSmtTranslator {
   public TermSmtTranslator(SmtProblem problem) {
     _problem = problem;
     _ivars = new TreeMap<Variable,IVar>();
+    _svars = new TreeMap<Variable,SVar>();
     _bvars = new TreeMap<Variable,BVar>();
   }
 
@@ -64,6 +67,7 @@ public class TermSmtTranslator {
   public TermSmtTranslator() {
     _problem = new SmtProblem();
     _ivars = new TreeMap<Variable,IVar>();
+    _svars = new TreeMap<Variable,SVar>();
     _bvars = new TreeMap<Variable,BVar>();
   }
 
@@ -100,6 +104,15 @@ public class TermSmtTranslator {
   }
 
   /**
+   * If the given variable has been used before, returns the same SVar as we used then; otherwise,
+   * generates a new SVar and both stores and returns it.
+   */
+  private SVar getStringVariableFor(Variable x) {
+    if (!_svars.containsKey(x)) _svars.put(x, _problem.createStringVariable());
+    return _svars.get(x);
+  }
+
+  /**
    * If the given variable has been used before, returns the same BVar as we used then; otherwise,
    * generates a new BVar and both stores and returns it.
    */
@@ -117,6 +130,14 @@ public class TermSmtTranslator {
   }
 
   /**
+   * This returns the string variable that corresponds to the given user Variable, if any.  If
+   * this has not been used, null is returned instead.
+   */
+  public SVar getSVar(Variable x) {
+    return _svars.get(x);
+  }
+
+  /**
    * This returns the boolean variable that corresponds to the given user Variable, if any.  If
    * this has not been used, null is returned instead.
    */
@@ -131,6 +152,7 @@ public class TermSmtTranslator {
    */
   private sealed interface Exp {
     public record I(IntegerExpression iexp) implements Exp {}
+    public record S(StringExpression sexp) implements Exp {}
     public record B(Constraint bexp) implements Exp {}
   }
 
@@ -143,12 +165,14 @@ public class TermSmtTranslator {
       Variable x = t.queryVariable();
       if (t.queryType().equals(TypeFactory.intSort)) return new Exp.I(getIntegerVariableFor(x));
       if (t.queryType().equals(TypeFactory.boolSort)) return new Exp.B(getBooleanVariableFor(x));
+      if (t.queryType().equals(TypeFactory.stringSort)) return new Exp.S(getStringVariableFor(x));
       throw new UnsupportedTheoryException(t.toString(), "variable has type " + t.queryType() +
-        " which can neither be translated to an integer expression nor to a constraint");
+        " which can neither be translated to an SMT expression nor to a constraint");
     }
     if (t.isValue()) {
       Value v = t.toValue();
       if (v.isIntegerValue()) return new Exp.I(SmtFactory.createValue(v.getInt()));
+      if (v.isStringValue()) return new Exp.S(SmtFactory.createValue(v.getString()));
       if (v.isBooleanValue()) return new Exp.B(SmtFactory.createValue(v.getBool()));
       throw new UnsupportedTheoryException(t.toString(), "unsupported value " + t.isValue() +
         " (only integer values and boolean values are supported in the SMT solver");
@@ -201,13 +225,25 @@ public class TermSmtTranslator {
       }
       case CalculationSymbol.Kind.EQUALS -> {
         assertArgumentCount(t, 2);
-        yield new Exp.B(SmtFactory.createEqual(translateIntegerExpression(t.queryArgument(1)),
-                                               translateIntegerExpression(t.queryArgument(2))));
+        if (t.queryArgument(1).queryType().equals(TypeFactory.intSort)) {
+          yield new Exp.B(SmtFactory.createEqual(translateIntegerExpression(t.queryArgument(1)),
+                                                 translateIntegerExpression(t.queryArgument(2))));
+        }
+        else {
+          yield new Exp.B(SmtFactory.createEqual(translateStringExpression(t.queryArgument(1)),
+                                                 translateStringExpression(t.queryArgument(2))));
+        }
       }
       case CalculationSymbol.Kind.NEQ -> {
         assertArgumentCount(t, 2);
-        yield new Exp.B(SmtFactory.createUnequal(translateIntegerExpression(t.queryArgument(1)),
-                                                 translateIntegerExpression(t.queryArgument(2))));
+        if (t.queryArgument(1).queryType().equals(TypeFactory.intSort)) {
+          yield new Exp.B(SmtFactory.createUnequal(translateIntegerExpression(t.queryArgument(1)),
+                                                   translateIntegerExpression(t.queryArgument(2))));
+        }
+        else {
+          yield new Exp.B(SmtFactory.createUnequal(translateStringExpression(t.queryArgument(1)),
+                                                   translateStringExpression(t.queryArgument(2))));
+        }
       }
       case CalculationSymbol.Kind.AND -> {
         assertArgumentCount(t, 2);
@@ -253,6 +289,23 @@ public class TermSmtTranslator {
       case Exp.I(IntegerExpression e): return e;
       default: throw new TypingException("TermSmtTranslator", "translateIntegerExpression",
         t.toString(), t.queryType().toString(), "Int");
+    }
+  }
+
+  /**
+   * This takes a theory term of type String, and returns the corresponding StringExpression, for
+   * use in SMT analysis.
+   *
+   * Note that calling this function has side effects, in that SMT variables are generated for all
+   * the variables in t, and are stored.  If you use two different TermSmtTranslators to translate
+   * the same term, you may not get the same StringExpression out because variables might be
+   * renamed.
+   */
+  public StringExpression translateStringExpression(Term t) {
+    switch (translate(t)) {
+      case Exp.S(StringExpression e): return e;
+      default: throw new TypingException("TermSmtTranslator", "translateStringExpression",
+        t.toString(), t.queryType().toString(), "String");
     }
   }
 

@@ -32,6 +32,8 @@ public class TheoryFactory {
     TypeFactory.createArrow(TypeFactory.intSort, TypeFactory.intSort));
   private static Type binaryIntComparisonType = TypeFactory.createArrow(TypeFactory.intSort,
     TypeFactory.createArrow(TypeFactory.intSort, TypeFactory.boolSort));
+  private static Type binaryStringComparisonType = TypeFactory.createArrow(TypeFactory.stringSort,
+    TypeFactory.createArrow(TypeFactory.stringSort, TypeFactory.boolSort));
   private static Type binaryBoolConnectiveType = TypeFactory.createArrow(TypeFactory.boolSort,
     TypeFactory.createArrow(TypeFactory.boolSort, TypeFactory.boolSort));
 
@@ -66,9 +68,8 @@ public class TheoryFactory {
 
   /**
    * Create an equality between two terms of the same theory sort.
-   * If they do not have the same type, an IllegalArgumentException will be thrown.
-   * If these types are not theory sorts, or there is no equality symbol of these types, then
-   * null is returned instead.
+   * If they do not have the same type, or their type is not a (known) theory sort, an
+   * IllegalArgumentException will be thrown.
    */
   public static Term createEquality(Term a, Term b) {
     if (!a.queryType().equals(b.queryType())) {
@@ -79,9 +80,10 @@ public class TheoryFactory {
       return new Application(iffSymbol, a, b);
     }
     if (a.queryType().equals(TypeFactory.intSort)) {
-      return new Application(equalSymbol, a, b);
+      return new Application(intEqualSymbol, a, b);
     }
-    return null;
+    throw new IllegalArgumentException("Cannot create an equality for terms of type " +
+      a.queryType().toString());
   }
 
   /**
@@ -163,13 +165,24 @@ public class TheoryFactory {
     binaryIntComparisonType, Kind.LEQ, Associativity.ASSOC_NONE,
     CalculationSymbol.INFIX_COMPARISON);
 
-  /** The binary calculation symbol for equality */
-  public static final CalculationSymbol equalSymbol = new CalculationConstant("=",
+  /** The binary calculation symbol for integer equality */
+  public static final CalculationSymbol intEqualSymbol = new CalculationConstant("=",
     binaryIntComparisonType, Kind.EQUALS, Associativity.ASSOC_NONE,
     CalculationSymbol.INFIX_COMPARISON);
 
-  /** The binary calculation symbol for inequality */
-  public static final CalculationSymbol distinctSymbol = new CalculationConstant("≠",
+  /** The binary calculation symbol for string inequality */
+  public static final CalculationSymbol intDistinctSymbol = new CalculationConstant("≠",
     binaryIntComparisonType, Kind.NEQ, Associativity.ASSOC_NONE,
     CalculationSymbol.INFIX_COMPARISON);
+
+  /** The binary calculation symbol for string equality */
+  public static final CalculationSymbol stringEqualSymbol = new CalculationConstant("=",
+    binaryStringComparisonType, Kind.EQUALS, Associativity.ASSOC_NONE,
+    CalculationSymbol.INFIX_COMPARISON);
+
+  /** The binary calculation symbol for inequality */
+  public static final CalculationSymbol stringDistinctSymbol = new CalculationConstant("≠",
+    binaryStringComparisonType, Kind.NEQ, Associativity.ASSOC_NONE,
+    CalculationSymbol.INFIX_COMPARISON);
 }
+

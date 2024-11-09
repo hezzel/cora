@@ -119,6 +119,10 @@ class TermTyper {
     return TermFactory.createConstant(term.toString(), expected);
   }
 
+  private boolean hasInputSort(Base sort, Type type) {
+    return type != null && type.isArrowType() && type.subtype(1).equals(sort);
+  }
+
   private Term makeCalculationSymbol(Token token, String name, Type expected) {
     Term ret = switch (name) {
       case CoraParser.PLUS -> TheoryFactory.plusSymbol;
@@ -130,11 +134,22 @@ class TermTyper {
       case CoraParser.SMALLER -> TheoryFactory.smallerSymbol;
       case CoraParser.GEQ -> TheoryFactory.geqSymbol;
       case CoraParser.LEQ -> TheoryFactory.leqSymbol;
-      case CoraParser.EQUALS -> TheoryFactory.equalSymbol;
-      case CoraParser.NEQ -> TheoryFactory.distinctSymbol;
+      case CoraParser.EQUALSINT -> TheoryFactory.intEqualSymbol;
+      case CoraParser.EQUALSSTRING -> TheoryFactory.stringEqualSymbol;
+      case CoraParser.NEQINT -> TheoryFactory.intDistinctSymbol;
+      case CoraParser.NEQSTRING -> TheoryFactory.stringDistinctSymbol;
       case CoraParser.AND -> TheoryFactory.andSymbol;
       case CoraParser.OR -> TheoryFactory.orSymbol;
       case CoraParser.NOT -> TheoryFactory.notSymbol;
+      // get the right version for the overloaded symbols
+      case CoraParser.EQUALS -> {
+        if (hasInputSort(TypeFactory.stringSort, expected)) yield TheoryFactory.stringEqualSymbol;
+        else yield TheoryFactory.intEqualSymbol;
+      }
+      case CoraParser.NEQ -> {
+        if (hasInputSort(TypeFactory.stringSort, expected)) yield TheoryFactory.stringDistinctSymbol;
+        else yield TheoryFactory.intDistinctSymbol;
+      }
       default -> null;
     };
     if (ret == null) { // this shouldn't happen: it's been created by the CoraParser
@@ -422,15 +437,43 @@ class TermTyper {
 
   /**
    * Turn a ParserTerm representing an application into the corresponding term, and check that
-   * it matches the expected type.  We require that the term at the head of an application can
-   * always figure out its own type, so the expected type is only used for checking here.
+   * it matches the expected type.  This checks a few special cases of theory terms, and otherwise
+   * delegates the work to makeStandardApplication.
    */
   private Term makeApplication(Token token, ParserTerm apphead, ImmutableList<ParserTerm> args,
                                Type expected, boolean typeShouldBeDerivable) {
-    Term head = makeTerm(apphead, null, true);
-    if (head.equals(TheoryFactory.minusSymbol)) {
-      return makeMinusApplication(token, args, expected);
+    switch (apphead) {
+      case CalcSymbol(Token t, String name):
+        // minus can be used either with 1 or 2 arguments as syntactic sugar
+        if (name.equals(CoraParser.MINUS)) {
+          return makeMinusApplication(token, args, expected);
+        }
+        // = and != are overloaded function symbols, so their type needs to be derived from context
+        if (name.equals(CoraParser.EQUALS) || name.equals(CoraParser.NEQ)) {
+          if (expected == null || !expected.isArrowType()) {
+            return makeOverloadedApplication(t, name, args, expected);
+          }
+          Type input = expected.subtype(1);
+          if (input.equals(TypeFactory.intSort)) {
+            apphead = new CalcSymbol(t, CoraParser.EQUALSINT);
+          }
+          else if (input.equals(TypeFactory.stringSort)) {
+            apphead = new CalcSymbol(t, CoraParser.EQUALSSTRING);
+          }
+        }
+      default:
+        return makeStandardApplication(token, apphead, args, expected, typeShouldBeDerivable);
     }
+  }
+
+  /**
+   * Turn a ParserTerm representing an application into the corresponding term, and check that
+   * it matches the expected type.  We require that the term at the head of an application can
+   * always figure out its own type, so the expected type is only used for checking here.
+   */
+  private Term makeStandardApplication(Token token, ParserTerm apphead, ImmutableList<ParserTerm>
+                                       args, Type expected, boolean typeShouldBeDerivable) {
+    Term head = makeTerm(apphead, null, true);
     if (head.queryType().queryArity() >= args.size()) {
       for (int i = 0; i < args.size(); i++) {
         Term arg = makeTerm(args.get(i), head.queryType().subtype(1), true);
@@ -443,23 +486,32 @@ class TermTyper {
     else {
       storeError("Arity error: " + head.toString() + " has type " + head.queryType().toString() +
         ", but " + args.size() + " arguments are given.", token);
-      // read arguments
-      ArrayList<Term> parts = new ArrayList<Term>();
-      for (int i = 0; i < args.size(); i++) parts.add(makeTerm(args.get(i), null, false));
-      // make type that head _should_ have
-      Type type = (expected == null) ? head.queryType().queryOutputType() : expected;
-      for (int i = parts.size()-1; i >= 0; i--) {
-        type = TypeFactory.createArrow(parts.get(i).queryType(), type);
-      }
-      // create a fake term of the right type
-      Term start = TermFactory.createConstant(head.toString(), type);
-      return TermFactory.createApp(start, parts);
+      return makeFakeApplication(head.toString(), args,
+        expected == null ? head.queryType().queryOutputType() : expected);
     }
 
     // remaining case: head had the right arity, but the resulting term did not have the right type
     storeError("Type error: expected term of type " + expected.toString() + ", but got " +
       head.toString() + " of type " + head.queryType() + ".", token);
     return TermFactory.createConstant(head.toString(), expected);
+  }
+
+  /**
+   * Creates a fake term of the given output type, representing the head applied to the given
+   * arguments.
+   */
+  private Term makeFakeApplication(String head, ImmutableList<ParserTerm> args, Type exp) {
+    // read arguments
+    ArrayList<Term> parts = new ArrayList<Term>();
+    for (int i = 0; i < args.size(); i++) parts.add(makeTerm(args.get(i), null, false));
+    // make type that head _should_ have
+    Type type = exp;
+    for (int i = parts.size()-1; i >= 0; i--) {
+      type = TypeFactory.createArrow(parts.get(i).queryType(), type);
+    }
+    // create a fake term of the right type
+    Term start = TermFactory.createConstant(head, type);
+    return TermFactory.createApp(start, parts);
   }
 
   /**
@@ -496,6 +548,59 @@ class TermTyper {
     }
     Term fakehead = TermFactory.createConstant("[-]", type);
     return TermFactory.createApp(fakehead,targs);
+  }
+
+  /**
+   * A special case for makeApplication, where the head symbol is an overloaded theory symbol
+   * (which currently always means a binary symbol of a type α → α → Bool).
+   * In this case, the arguments should figure out their own types, and this should be used to
+   * derive the type of the head term.
+   * Note that this is only called if the type cannot be derived from the expected type.
+   */
+  private Term makeOverloadedApplication(Token token, String name,
+                                         ImmutableList<ParserTerm> args, Type expected) {
+    Term arg1, arg2;
+
+    // error case: too many arguments are given
+    if (args.size() > 2) {
+      storeError("Arity error: overloaded operator " + token.getText() + " can take 2 arguments, " +
+        "but " + args.size() + " are given!", token);
+      return makeFakeApplication("[" + token.getText() + "]", args,
+        expected == null ? TypeFactory.boolSort : expected);
+    }
+
+    // figure out the type that head should have by looking at the first argument
+    arg1 = makeTerm(args.get(0), null, false);
+    Type input = arg1.queryType();
+
+    // if there is a second argument, read it -- if an appropriate type could be derived for the
+    // first argument (it should be a theory sort, so not the default sort) then we require it to
+    // have the same type; otherwise, we use the type of the second to re-read the first
+    if (args.size() < 2) arg2 = null;
+    else if (input.equals(TypeFactory.defaultSort)) {
+      arg2 = makeTerm(args.get(1), null, false);
+      input = arg2.queryType();
+      arg1 = makeTerm(args.get(0), input, true);
+    }
+    else arg2 = makeTerm(args.get(1), input, true);
+
+    Type expectedHeadType = expected == null ? TypeFactory.boolSort : expected;
+    for (int i = 0; i < 2; i++) expectedHeadType = TypeFactory.createArrow(input, expectedHeadType);
+
+    // error handling: give an appropriate error if the type could not be derived
+    Term head;
+    if (input.equals(TypeFactory.defaultSort)) {
+      storeError("Cannot deduce input type of overloaded operator.  Please indicate the type " +
+        "by subscripting (e.g., " + token.getText() + "_Int).", token);
+      input = TypeFactory.intSort;
+      head = TermFactory.createConstant("[" + token.getText() + "]", expectedHeadType);
+    }
+
+    // read head, and apply it to the second argument if given
+    else head = makeCalculationSymbol(token, name, expectedHeadType);
+    Term ret = head.apply(arg1);
+    if (arg2 != null) ret = ret.apply(arg2);
+    return ret;
   }
 
   // ============================== ACCESS FUNCTIONS FOR UNIT TESTING =============================

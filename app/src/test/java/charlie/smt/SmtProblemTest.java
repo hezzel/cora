@@ -72,16 +72,22 @@ public class SmtProblemTest {
     BVar c = problem.createBooleanVariable();
     IVar d = problem.createIntegerVariable("x");
     BVar e = problem.createBooleanVariable("y");
+    SVar f = problem.createStringVariable();
+    SVar g = problem.createStringVariable("z");
     assertTrue(a.queryIndex() == 1);
     assertTrue(b.queryIndex() == 2);
     assertTrue(c.queryIndex() == 1);
     assertTrue(d.queryIndex() == 3);
     assertTrue(e.queryIndex() == 2);
+    assertTrue(f.queryIndex() == 1);
+    assertTrue(g.queryIndex() == 2);
     assertTrue(a.queryName().equals("i1"));
     assertTrue(b.queryName().equals("[x]"));
     assertTrue(c.queryName().equals("b1"));
     assertTrue(d.queryName().equals("[x]"));
     assertTrue(e.queryName().equals("[y]"));
+    assertTrue(f.queryName().equals("s1"));
+    assertTrue(g.queryName().equals("[z]"));
   }
 }
 

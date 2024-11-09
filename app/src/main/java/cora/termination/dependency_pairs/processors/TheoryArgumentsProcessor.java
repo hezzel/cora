@@ -152,7 +152,7 @@ public class TheoryArgumentsProcessor implements Processor {
         newvars.add(x);
         if (innermost) {
           Term eq = TheoryFactory.createEquality(x, x);
-          if (eq != null) constraint = TheoryFactory.createConjunction(constraint, eq);
+          constraint = TheoryFactory.createConjunction(constraint, eq);
         }
       }
     }

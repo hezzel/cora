@@ -484,9 +484,9 @@ public class CoraTermsParsingTest {
 
   @Test
   public void testMixedInfixPriorities() {
-    ParserTerm t = readTerm("q(x) < y /\\ y / 2 > Z[aa] + -13 * z +9", true, "");
+    ParserTerm t = readTerm("q(x) < y /\\ y / 2 =_Int Z[aa] + -13 * z +9", true, "");
     assertTrue(t.toString().equals("@(∧, [@(<, [@(q, [x]), y]), " +
-      "@(>, [@(/, [y, 2]), @(+, [@(+, [Z⟨[aa]⟩, @(*, [-13, z])]), 9])])])"));
+      "@(=_i, [@(/, [y, 2]), @(+, [@(+, [Z⟨[aa]⟩, @(*, [-13, z])]), 9])])])"));
   }
 
   @Test
@@ -505,8 +505,8 @@ public class CoraTermsParsingTest {
     assertTrue(t instanceof Application(Token t1, CalcSymbol(Token t2, String name),
                                         ImmutableList<ParserTerm> args));
     assertTrue(t.toString().equals("@(+, [2])"));
-    t = readTerm("⟨/⟩(2, x, 9)", true, "");
-    assertTrue(t.toString().equals("@(/, [2, x, 9])"));
+    t = readTerm("⟨!=_String⟩(2, x, 9)", true, "");
+    assertTrue(t.toString().equals("@(≠_s, [2, x, 9])"));
     t = readTerm("[¬]", true, "");
     assertTrue(t.toString().equals("¬"));
     t = readTerm("[¬](7)", true, "");

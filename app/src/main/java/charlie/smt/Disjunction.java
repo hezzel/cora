@@ -43,7 +43,7 @@ public final class Disjunction extends Junction {
   }
 
   public int hashCode() {
-    return 9 * _children.hashCode() + 3;
+    return 17 * _children.hashCode() + 3;
   }
 }
 

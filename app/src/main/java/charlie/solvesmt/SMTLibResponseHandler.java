@@ -70,6 +70,7 @@ class SMTLibResponseHandler {
     switch (expr) {
       case SExpression.Symbol _:
       case SExpression.Numeral _:
+      case SExpression.StringConstant _:
         return; // nothing to do
       case SExpression.SExpList(List<SExpression> lst):
         if (lst.size() == 3 && lst.get(0) instanceof SExpression.Symbol(String symb) &&
@@ -100,6 +101,7 @@ class SMTLibResponseHandler {
     int kind;
     if (varname.charAt(0) == 'b') kind = 1;
     else if (varname.charAt(0) == 'i') kind = 2;
+    else if (varname.charAt(0) == 's') kind = 3;
     else return;
     int index;
     try { index = Integer.parseInt(varname.substring(1)); }
@@ -113,7 +115,7 @@ class SMTLibResponseHandler {
         val.setBool(index, false);
       }
     }
-    else {
+    else if (kind == 2) {
       if (result instanceof SExpression.Numeral(int i)) val.setInt(index, i);
       if (result instanceof SExpression.SExpList(List<SExpression> lst)) {
         if (lst.size() == 2 && lst.get(0) instanceof SExpression.Symbol(String name) &&
@@ -121,6 +123,9 @@ class SMTLibResponseHandler {
           val.setInt(index, -k);
         }
       }
+    }
+    else {
+      if (result instanceof SExpression.StringConstant(String c)) val.setString(index, c);
     }
   }
 }

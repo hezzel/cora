@@ -383,8 +383,8 @@ public class ITrsInputReader {
         if (name.equals(ITrsParser.SMALLER)) return TheoryFactory.smallerSymbol;
         if (name.equals(ITrsParser.GEQ)) return TheoryFactory.geqSymbol;
         if (name.equals(ITrsParser.LEQ)) return TheoryFactory.leqSymbol;
-        if (name.equals(ITrsParser.EQUALS)) return TheoryFactory.equalSymbol;
-        if (name.equals(ITrsParser.NEQ)) return TheoryFactory.distinctSymbol;
+        if (name.equals(ITrsParser.EQUALS)) return TheoryFactory.intEqualSymbol;
+        if (name.equals(ITrsParser.NEQ)) return TheoryFactory.intDistinctSymbol;
         if (name.equals(ITrsParser.AND)) return TheoryFactory.andSymbol;
         if (name.equals(ITrsParser.OR)) return TheoryFactory.orSymbol;
         if (name.equals(ITrsParser.NOT)) return TheoryFactory.notSymbol;

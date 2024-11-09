@@ -67,7 +67,7 @@ public class CallByValueModifier {
         if (!x.queryType().isBaseType() || !x.queryType().isTheoryType()) continue;
         if (cvars.contains(x)) continue;
         Term eq = TheoryFactory.createEquality(x, x);
-        if (eq != null) newconstraint = TheoryFactory.createConjunction(newconstraint, eq);
+        newconstraint = TheoryFactory.createConjunction(newconstraint, eq);
       }
       newrules.add(TrsFactory.createRule(left, right, newconstraint));
     }

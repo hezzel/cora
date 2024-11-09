@@ -204,6 +204,36 @@ public class TermSmtTranslatorTest {
   }
 
   @Test
+  public void testTranslateEqual() {
+    TermSmtTranslator tst = new TermSmtTranslator();
+    // x = 2
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Term t = TheoryFactory.intEqualSymbol.apply(x).apply(TheoryFactory.createValue(2));
+    Constraint c = tst.translateConstraint(t);
+    assertTrue(c.toString().equals("i1 = 2"));
+    // y = "test\""
+    Variable y = TheoryFactory.createVar("y", TypeFactory.stringSort);
+    Term s = TheoryFactory.stringEqualSymbol.apply(y).apply(TheoryFactory.createValue("test\""));
+    Constraint d = tst.translateConstraint(s);
+    assertTrue(d.toString().equals("s1 = \"test\"\"\""));
+  }
+
+  @Test
+  public void testTranslateUnequal() {
+    TermSmtTranslator tst = new TermSmtTranslator();
+    // x # 2
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Term t = TheoryFactory.intDistinctSymbol.apply(x).apply(TheoryFactory.createValue(2));
+    Constraint c = tst.translateConstraint(t);
+    assertTrue(c.toString().equals("i1 # 2"));
+    // y # "test"
+    Variable y = TheoryFactory.createVar("y", TypeFactory.stringSort);
+    Term s = TheoryFactory.stringDistinctSymbol.apply(y).apply(TheoryFactory.createValue("test"));
+    Constraint d = tst.translateConstraint(s);
+    assertTrue(d.toString().equals("s1 # \"test\""));
+  }
+
+  @Test
   public void testTranslateComplexConstraint() {
     TermSmtTranslator tst = new TermSmtTranslator();
     // x > 3 ∧ ((2 ≤ 5 ∨ y) ∧ true)
@@ -222,7 +252,7 @@ public class TermSmtTranslatorTest {
   @Test
   public void testNonBoolTranslateConstraint() {
     TermSmtTranslator tst = new TermSmtTranslator();
-    assertThrows(UnsupportedTheoryException.class, () ->
+    assertThrows(TypingException.class, () ->
       tst.translateIntegerExpression(TheoryFactory.createValue("true")));
   }
 

@@ -25,6 +25,9 @@ sealed interface SExpression {
   public record Numeral(int num) implements SExpression {
     public String toString() { return "" + num; }
   }
+  public record StringConstant(String text) implements SExpression {
+    public String toString() { return "" + text.replace("\"", "\"\""); }
+  }
   public record Symbol(String name) implements SExpression {
     public String toString() { return name; }
   }
