@@ -197,7 +197,7 @@ public class RuleReducerTest {
     Term left = TermFactory.createApp(f, x, x);
     Term right = TermFactory.createApp(g, x.apply(u));
     Term constr = TermFactory.createApp(
-      TheoryFactory.equalSymbol, u, TheoryFactory.createValue(-3));
+      TheoryFactory.intEqualSymbol, u, TheoryFactory.createValue(-3));
     RuleReducer reducer = new RuleReducer(TrsFactory.createRule(left, right, constr));
 
     // instance: f(λy.h(y), λz.h(z), true, 7)

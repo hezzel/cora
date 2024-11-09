@@ -28,6 +28,7 @@ import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.*;
 import charlie.reader.CoraInputReader;
+import cora.config.Settings;
 
 public class ReducerTest {
   private Type type(String txt) {
@@ -89,7 +90,8 @@ public class ReducerTest {
     Reducer reducer = new Reducer(trs);
     String str = "g(f(a, b), f(g(a, b, a), g(b, b, b)), b)";
     Term term = CoraInputReader.readTerm(str, trs);
-    String reduct = reducer.leftmostInnermostReduce(term).toString();
+    Settings.setStrategy(Settings.Strategy.Innermost);
+    String reduct = reducer.reduce(term).toString();
     assertTrue(reduct.equals("g(f(a, b), f(g(a, b, a), f(b, b)), b)"));
   }
 
@@ -99,7 +101,8 @@ public class ReducerTest {
     Reducer reducer = new Reducer(trs);
     String str = "g(f(a, b), f(g(a, b, a), x), b)";
     Term term = CoraInputReader.readTerm(str, trs);
-    assertTrue(reducer.leftmostInnermostReduce(term) == null);
+    Settings.setStrategy(Settings.Strategy.Innermost);
+    assertTrue(reducer.reduce(term) == null);
   }
 
   private TRS createSTRS() {
@@ -146,11 +149,12 @@ public class ReducerTest {
     Reducer reducer = new Reducer(trs);
     String str = "f(g(a), a, i(g(j(a,b), b, a)))";
     Term term = CoraInputReader.readTerm(str, trs);
-    term = reducer.leftmostInnermostReduce(term);
+    Settings.setStrategy(Settings.Strategy.Innermost);
+    term = reducer.reduce(term);
     assertTrue(term.toString().equals("f(g(a), a, i(g(a, b, j(a, a))))"));
-    term = reducer.leftmostInnermostReduce(term);
+    term = reducer.reduce(term);
     assertTrue(term.toString().equals("g(a, a, i(g(a, b, j(a, a))))"));
-    term = reducer.leftmostInnermostReduce(term);
+    term = reducer.reduce(term);
     assertTrue(term == null);
   }
 
@@ -251,16 +255,145 @@ public class ReducerTest {
     Reducer reducer = new Reducer(trs);
     String str = "f(g(a, (λx::A.x)(b), a), λz.a)";
     Term term = CoraInputReader.readTerm(str, trs);
-    term = reducer.leftmostInnermostReduce(term);
+    Settings.setStrategy(Settings.Strategy.Innermost);
+    term = reducer.reduce(term);
     assertTrue(term.toString().equals("f(g(a, b, a), λz.a)"));
-    term = reducer.leftmostInnermostReduce(term);
+    term = reducer.reduce(term);
     assertTrue(term.toString().equals("f(g(b, a, h(λz.z, b)), λz.a)"));
-    term = reducer.leftmostInnermostReduce(term);
+    term = reducer.reduce(term);
     assertTrue(term.toString().equals("f(g(b, a, (λz.z)(b)), λz.a)"));
-    term = reducer.leftmostInnermostReduce(term);
+    term = reducer.reduce(term);
     assertTrue(term.toString().equals("f(g(b, a, b), λz.a)"));
-    term = reducer.leftmostInnermostReduce(term);
+    term = reducer.reduce(term);
     assertTrue(term == null);
+  }
+
+  @Test
+  public void testCallByValueReduceFirstOrder() {
+    TRS trs = createMSTRS();
+    Reducer reducer = new Reducer(trs);
+    String str = "f(g(x, y, b), g(a, a, b))";
+    Term term = CoraInputReader.readTerm(str, trs);
+    Settings.setStrategy(Settings.Strategy.CallByValue);
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("f(g(x, y, b), f(b, a))"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("f(g(x, y, b), b)"));
+    term = reducer.reduce(term);
+    assertTrue(term == null);
+  }
+
+  @Test
+  public void testVariablesAreValues() {
+    TRS trs = createMSTRS();
+    Reducer reducer = new Reducer(trs);
+    String str = "f(g(y, y, b), f(a, a))";
+    Term term = CoraInputReader.readTerm(str, trs);
+    Settings.setStrategy(Settings.Strategy.CallByValue);
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("f(f(b, y), f(a, a))"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("f(f(b, y), a)"));
+    term = reducer.reduce(term);  // it matches, but the subterm is not a value
+    assertTrue(term == null);
+  }
+
+  @Test
+  public void testCallByValueWithLambda() {
+    TRS trs = CoraInputReader.readTrsFromString(
+        "nil :: list\n" +
+        "cons :: Int -> list -> list\n" +
+        "map :: (Int -> Int) -> list -> list\n" +
+        "map(F, nil) -> nil\n" +
+        "map(F, cons(H,T)) -> cons(F(H), map(F, T))\n" +
+        "add :: Bool -> Int -> Int\n" +
+        "add(x, y) -> y + 1 | x\n" +
+        "add(x, y) -> y | not x\n",
+      TrsFactory.CORA);
+    Reducer reducer = new Reducer(trs);
+    Term term = CoraInputReader.readTerm("map(λx.add(true \\/ false, x), cons(3, nil))", trs);
+    Settings.setStrategy(Settings.Strategy.CallByValue);
+    term = reducer.reduce(term);  // we do reduce inside lambda, so long as we're not above a binder
+    assertTrue(term.toString().equals("map(λx.add(true, x), cons(3, nil))"));
+    term = reducer.reduce(term);  // we do NOT reduce add(true, x)!
+    assertTrue(term.toString().equals("cons((λx.add(true, x))(3), map(λx.add(true, x), nil))"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("cons(add(true, 3), map(λx.add(true, x), nil))"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("cons(3 + 1, map(λx.add(true, x), nil))"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("cons(4, map(λx.add(true, x), nil))"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("cons(4, nil)"));
+    term = reducer.reduce(term);
+    assertTrue(term == null);
+  }
+
+  @Test
+  public void testCallByValueWithPartialApplication() {
+    TRS trs = CoraInputReader.readTrsFromString(
+        "nil :: list\n" +
+        "cons :: Int -> list -> list\n" +
+        "map :: (Int -> Int) -> list -> list\n" +
+        "map(F, nil) -> nil\n" +
+        "map(F, cons(H,T)) -> cons(F(H), map(F, T))\n" +
+        "add :: Bool -> Int -> Int\n" +
+        "add(x, y) -> y + 1 | x\n" +
+        "add(x, y) -> y | not x\n",
+      TrsFactory.CORA);
+    Reducer reducer = new Reducer(trs);
+    Term term = CoraInputReader.readTerm("map(add(true), cons(3, nil))", trs);
+    Settings.setStrategy(Settings.Strategy.CallByValue);
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("cons(add(true, 3), map(add(true), nil))"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("cons(3 + 1, map(add(true), nil))"));
+  }
+
+  @Test
+  public void testCBVWithHigherRules() {
+    TRS trs = CoraInputReader.readTrsFromString(
+        "f :: Int -> Int -> Int -> Int\n" +
+        "f(x, y) -> λz::Int.z + x - y | x > y\n" +
+        "test1 :: Int -> Bool\n" +
+        "test1(x) -> true\n" +
+        "test2 :: (Int -> Int) -> Bool\n" +
+        "test2(x) -> test1(x(3))\n" +
+        "test3 :: (Int -> Int -> Int) -> Bool\n" +
+        "test3(x) -> test1(x(37, 42))\n",
+      TrsFactory.CORA);
+    Reducer reducer = new Reducer(trs);
+    Settings.setStrategy(Settings.Strategy.CallByValue);
+    Term term1 = CoraInputReader.readTerm("test1(f(7, 2, 3))", trs);
+    Term term2a = CoraInputReader.readTerm("test2(f(2, 7))", trs);
+    Term term2b = CoraInputReader.readTerm("test2(f(7, 2))", trs);
+    Term term3 = CoraInputReader.readTerm("test3(f(7))", trs);
+
+    Term term = reducer.reduce(term1);
+    assertTrue(term.toString().equals("test1((λz.z + 7 - 2)(3))"));
+    term = reducer.reduce(term);  // the first step is invisible: replacing +(7, -(2)) by +(7, -2)
+    assertTrue(term.toString().equals("test1((λz.z + 7 - 2)(3))"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("test1(3 + 7 - 2)"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("test1(10 - 2)"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("test1(8)"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("true"));
+
+    term = reducer.reduce(term2a);
+    assertTrue(term == null);
+
+    term = reducer.reduce(term2b);
+    assertTrue(term.toString().equals("test2(λz.z + 7 - 2)"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("test2(λz.z + 7 - 2)"));
+    term = reducer.reduce(term);
+    assertTrue(term.toString().equals("test1((λz.z + 7 - 2)(3))"));
+    
+    term = reducer.reduce(term3);
+    assertTrue(term.toString().equals("test1(f(7, 37, 42))"));
   }
 }
 
