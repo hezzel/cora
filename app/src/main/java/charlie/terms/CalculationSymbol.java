@@ -21,11 +21,12 @@ import java.util.Set;
 
 /** CalculationSymbols are symbols in the theory signature that can perform a computation. */
 public interface CalculationSymbol extends FunctionSymbol {
-  public enum Kind { AND, OR, IFF, GREATER, SMALLER, GEQ, LEQ, EQUALS, NEQ, NOT,
+  public enum Kind { AND, OR, IFF, XOR, GREATER, SMALLER, GEQ, LEQ, EQUALS, NEQ, NOT,
                      PLUS, TIMES, DIV, MOD, MINUS }
   public enum Associativity { ASSOC_LEFT, ASSOC_RIGHT, ASSOC_NONE, NOT_INFIX }
 
   public static int INFIX_IFF = 1;
+  public static int INFIX_XOR = 1;
   public static int INFIX_ANDOR = 2;
   public static int INFIX_COMPARISON = 3;
   public static int INFIX_PLUS = 4;

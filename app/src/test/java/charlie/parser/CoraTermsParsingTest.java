@@ -490,6 +490,26 @@ public class CoraTermsParsingTest {
   }
 
   @Test
+  public void testSimilarPriorities() {
+    readTerm("a ∧ b ∨ c", true,
+      "1:7: Ambiguous infix sequence: operators ∧ (at position 1:3) and ∨ have the same " +
+      "precedence, but are not in the same group.  Please use brackets to disambiguate.\n");
+    readTerm("a ∧ b =_Bool c ∧ d", true,
+      "1:7: Ambiguous infix sequence: operators ∧ (at position 1:3) and =_Bool have the same " +
+      "precedence, but are not in the same group.  Please use brackets to disambiguate.\n" +
+      "1:16: Ambiguous infix sequence: operators =_Bool (at position 1:7) and ∧ have the same " +
+      "precedence, but are not in the same group.  Please use brackets to disambiguate.\n");
+    readTerm("a <=> b !=_Bool c", true,
+      "1:9: Ambiguous infix sequence: operators <=> (at position 1:3) and !=_Bool have the " +
+      "same precedence, but are not in the same group.  Please use brackets to disambiguate.\n");
+    readTerm("a ∧ b = c ∧ d", true, ""); // no error here
+    ParserTerm t = readTerm("a <=> b =_Bool c", true, "");
+    assertTrue(t.toString().equals("@(⇔, [a, @(⇔, [b, c])])"));
+    t = readTerm("a !=_Bool b !=_Bool c", true, "");
+    assertTrue(t.toString().equals("@(XOR, [a, @(XOR, [b, c])])"));
+  }
+
+  @Test
   public void testDoublePlus() {
     ParserTerm t = readTerm("1 ++2", true,
       "1:4: Expected term, started by an identifier, λ, string or (, but got PLUS (+).\n");

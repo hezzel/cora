@@ -43,9 +43,11 @@ public class CoraParser {
   public static final String EQUALS = "=";
   public static final String EQUALSINT = "=_i";
   public static final String EQUALSSTRING = "=_s";
+  public static final String EQUALSBOOL = "⇔";
   public static final String NEQ = "≠";
   public static final String NEQINT = "≠_i";
   public static final String NEQSTRING = "≠_s";
+  public static final String NEQBOOL = "XOR";
   public static final String AND = "∧";
   public static final String OR = "∨";
   public static final String NOT = "¬";
@@ -66,12 +68,14 @@ public class CoraParser {
   private CoraParser(ParsingStatus status) {
     _status = status;
     _manager = new InfixManager();
-    _manager.addGroup(InfixManager.ASSOC_LEFT, 1, AND);
-    _manager.addGroup(InfixManager.ASSOC_LEFT, 1, OR);
-    _manager.addGroup(InfixManager.ASSOC_NONE, 2, EQUALS, EQUALSINT, EQUALSSTRING, NEQ, NEQINT,
-                                                  NEQSTRING, GREATER, SMALLER, GEQ, LEQ);
-    _manager.addGroup(InfixManager.ASSOC_LEFT, 3, PLUS, MINUS);
-    _manager.addGroup(InfixManager.ASSOC_LEFT, 4, TIMES, DIV, MOD);
+    _manager.addGroup(InfixManager.ASSOC_RIGHT, 1, EQUALSBOOL);
+    _manager.addGroup(InfixManager.ASSOC_RIGHT, 1, NEQBOOL);
+    _manager.addGroup(InfixManager.ASSOC_LEFT,  1, AND);
+    _manager.addGroup(InfixManager.ASSOC_LEFT,  1, OR);
+    _manager.addGroup(InfixManager.ASSOC_NONE,  2, EQUALS, EQUALSINT, EQUALSSTRING, NEQ, NEQINT,
+                                                   NEQSTRING, GREATER, SMALLER, GEQ, LEQ);
+    _manager.addGroup(InfixManager.ASSOC_LEFT,  3, PLUS, MINUS);
+    _manager.addGroup(InfixManager.ASSOC_LEFT,  4, TIMES, DIV, MOD);
   }
 
   // ===================================== PARSING CONSTANTS ======================================
@@ -210,7 +214,7 @@ public class CoraParser {
     Token token;
 
     // NOT mainterm
-    if ((token =_status.readNextIf(CoraTokenData.NOT)) != null) {
+    if ((token = _status.readNextIf(CoraTokenData.NOT)) != null) {
       ParserTerm child = readMainTerm();
       if (child == null) return new CalcSymbol(token, NOT);
       return new Application(token, new CalcSymbol(token, NOT), ImmutableList.of(child));
@@ -460,8 +464,10 @@ public class CoraParser {
     if (_status.readNextIf(CoraTokenData.UNEQUAL) != null) return new OperatorData(token, NEQ);
     if (_status.readNextIf(CoraTokenData.EQUALINT) != null)       return new OperatorData(token, EQUALSINT);
     if (_status.readNextIf(CoraTokenData.EQUALSTRING) != null)    return new OperatorData(token, EQUALSSTRING);
+    if (_status.readNextIf(CoraTokenData.EQUALBOOL) != null)      return new OperatorData(token, EQUALSBOOL);
     if (_status.readNextIf(CoraTokenData.UNEQUALINT) != null)     return new OperatorData(token, NEQINT);
     if (_status.readNextIf(CoraTokenData.UNEQUALSTRING) != null)  return new OperatorData(token, NEQSTRING);
+    if (_status.readNextIf(CoraTokenData.UNEQUALBOOL) != null)    return new OperatorData(token, NEQBOOL);
     return null;
   }
 

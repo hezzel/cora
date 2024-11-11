@@ -60,13 +60,14 @@ class CoraTokenData {
   public static final String EQUAL          = "EQUAL";
   public static final String EQUALINT       = "EQUALINT";
   public static final String EQUALSTRING    = "EQUALSTRING";
+  public static final String EQUALBOOL      = "EQUALBOOL";
   public static final String UNEQUAL        = "UNEQUAL";
   public static final String UNEQUALINT     = "UNEQUALINT";
   public static final String UNEQUALSTRING  = "UNEQUALSTRING";
+  public static final String UNEQUALBOOL    = "UNEQUALBOOL";
   public static final String AND            = "AND";
   public static final String OR             = "OR";
   public static final String NOT            = "NOT";
-  public static final String IMPLIES        = "IMPLIES";
   public static final String INTTYPE        = "INTTYPE";
   public static final String BOOLTYPE       = "BOOLTYPE";
   public static final String STRINGTYPE     = "STRINGTYPE";
@@ -102,23 +103,27 @@ class CoraTokenData {
     "="                                       , EQUAL,
     "=_Int"                                   , EQUALINT,
     "=_String"                                , EQUALSTRING,
+    "=_Bool"                                  , EQUALBOOL,
+    "=_Bool"                                  , EQUALBOOL,
+    "⇔|<=>"                                   , EQUALBOOL,
     "≠"                                       , UNEQUAL,
     "≠_Int"                                   , UNEQUALINT,
     "≠_String"                                , UNEQUALSTRING,
     "!="                                      , UNEQUAL,
     "!=_Int"                                  , UNEQUALINT,
     "!=_String"                               , UNEQUALSTRING,
+    "!=_Bool"                                 , UNEQUALBOOL,
+    "⊻"                                       , UNEQUALBOOL,
     "∧|(/\\\\)"                               , AND,
     "∨|(\\\\/)"                               , OR,
     "(not)|¬"                                 , NOT,
-    "=>"                                      , IMPLIES,
     "Int"                                     , INTTYPE,
     "Bool"                                    , BOOLTYPE,
     "String"                                  , STRINGTYPE,
-    "([^\\s()\\[\\]⟨⟩\\{\\}⦇⦈\"',:λ%\\.\\|\\*\\+\\\\\\.><=!≠≥≤→∧∨¬/-]|)+" , IDENTIFIER,
+    "([^\\s()\\[\\]⟨⟩\\{\\}⦇⦈\"',:λ%\\.\\|\\*\\+\\\\\\.><=!≠≥≤→∧∨¬⇔⊻/-]|)+" , IDENTIFIER,
       // identifiers are now built from any characters other than whitespace, brackets (of any
       // kind), braces, quotes, colons, lambda, dot, mid, or the operators / relation symbols
-      // *, %, -, +, >, =, !, ≠, <, ≥, ≤, /, \, ¬, →
+      // *, %, -, +, >, =, !, ≠, <, ≥, ≤, /, \, ¬, →, ⇔, ⊻
   };
 
   /** Both constrained and unconstrained TRSs share the tokens below. */

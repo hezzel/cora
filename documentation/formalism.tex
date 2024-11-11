@@ -282,18 +282,18 @@ they have a theory type.
   \texttt{charlie.trs.Alphabet}.  That is, while $\F$ can be infinite, we in
   principle assume \emph{for now} that $\F \setminus \thF$ is finite, and
   contains at most one function symbol for a given name (so for example we
-  have that both $(\afun :: \atype) \in \F$ and $(\afun :: \btype) \in \F$ if
-  $\atype \neq \btype$).
+  cannot have that both $(\afun :: \atype) \in \F$ and $(\afun :: \btype) \in
+  \F$ if $\atype \neq \btype$).
 \end{itemize}
 
 \medskip
 However, most of the sets that make up a signature are not directly represented:
 \begin{itemize}
 \item Every string can be a sort, and a sort is uniquely defined by the string
-  representing it, so $\thSorts$ is essentially always the same set.  However,
-  in practice, the set $\Sorts$ consists of those sorts that are actually
-  \emph{used} in a generalisd TRS (see Section~\ref{sec:trs}), since the
-  presence of sorts that are not actually used does not typically affect
+  representing it, so $\Sorts$ is essentially always the set of all strings.
+  However, in practice, the set $\Sorts$ consists of those sorts that are
+  actually \emph{used} in a generalisd TRS (see Section~\ref{sec:trs}), since
+  the presence of sorts that are not actually used does not typically affect
   properties such as termination or confluence.
 \item Variables and meta-variables can be renamed, and the renamings can be
   used interchangeably.  Hence, in \charlie\ these are essentially represented
@@ -312,7 +312,9 @@ However, most of the sets that make up a signature are not directly represented:
   \item the symbols $\wedge,\vee :: \bool \arrtype \bool \arrtype \bool$ and
     $\neg :: \bool \arrtype \bool$
   \item the symbols $>,<,\geq,\leq,=,\neq :: \tint \arrtype \tint \arrtype
-    \bool$ \\
+    \bool$
+  \item the symbols $=,\neq :: \tstring \arrtype \tstring \arrtype \bool$
+    (note that these are overloaded) \\
   \end{itemize}
   These symbols can all be created using \texttt{charlie.terms.TheoryFactory}.
   It is entirely possible (even likely) that more theory symbols will be added

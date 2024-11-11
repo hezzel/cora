@@ -250,6 +250,22 @@ public class TermSmtTranslatorTest {
   }
 
   @Test
+  public void testTranslateIffXor() {
+    TermSmtTranslator tst = new TermSmtTranslator();
+    // x > 3 ⇔ ((2 ≤ 5 ∨ y) ⊻ true)
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.boolSort);
+    Term t1 = TheoryFactory.greaterSymbol.apply(x).apply(TheoryFactory.createValue(3));
+    Term t2 = TheoryFactory.leqSymbol.apply(TheoryFactory.createValue(2)).apply(
+      TheoryFactory.createValue(5));
+    Term t3 = TheoryFactory.xorSymbol.apply(TheoryFactory.orSymbol.apply(t2).apply(y)).apply(
+      TheoryFactory.createValue(true));
+    Term t = TheoryFactory.iffSymbol.apply(t1).apply(t3);
+    Constraint c = tst.translateConstraint(t);
+    assertTrue(c.toString().equals("(i1 >= 4) == (((0 >= 4) and !b1) == true)"));
+  }
+
+  @Test
   public void testNonBoolTranslateConstraint() {
     TermSmtTranslator tst = new TermSmtTranslator();
     assertThrows(TypingException.class, () ->

@@ -82,6 +82,9 @@ public class TheoryFactory {
     if (a.queryType().equals(TypeFactory.intSort)) {
       return new Application(intEqualSymbol, a, b);
     }
+    if (a.queryType().equals(TypeFactory.stringSort)) {
+      return new Application(stringEqualSymbol, a, b);
+    }
     throw new IllegalArgumentException("Cannot create an equality for terms of type " +
       a.queryType().toString());
   }
@@ -144,6 +147,10 @@ public class TheoryFactory {
   /** The binary calculation symbol for if and only if */
   public static final CalculationSymbol iffSymbol = new CalculationConstant("⇔",
     binaryBoolConnectiveType, Kind.IFF, Associativity.ASSOC_NONE, CalculationSymbol.INFIX_IFF);
+
+  /** The binary calculation symbol for xor */
+  public static final CalculationSymbol xorSymbol = new CalculationConstant("⊻",
+    binaryBoolConnectiveType, Kind.XOR, Associativity.ASSOC_NONE, CalculationSymbol.INFIX_XOR);
 
   /** The binary calculation symbol for greater */
   public static final CalculationSymbol greaterSymbol = new CalculationConstant(">",

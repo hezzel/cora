@@ -201,7 +201,7 @@ public class CoraConstrainedTokensTest {
 
   @Test
   public void testAllBasicTokens() throws LexerException {
-    Lexer lexer = createLexer("xx⦈(y){,+#-\\a∀ \\/∃7*Q}():::a[b→b.⇒]>c-+-3|7λ12≥a≤b" +
+    Lexer lexer = createLexer("xx⦈(y){,+#-\\a∀ \\/∃7*Q}():::a[b→b.]>c-+-3|7λ12≥a≤b" +
       "bae/\\a∧b<=c>=d∨e<f/g!=_Inttest");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "xx");
     verifyToken(lexer.nextToken(), CoraTokenData.TUPLECLOSE, "⦈");
@@ -230,7 +230,6 @@ public class CoraConstrainedTokensTest {
     verifyToken(lexer.nextToken(), CoraTokenData.ARROW, "→");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "b");
     verifyToken(lexer.nextToken(), CoraTokenData.DOT, ".");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "⇒");
     verifyToken(lexer.nextToken(), CoraTokenData.METACLOSE, "]");
     verifyToken(lexer.nextToken(), CoraTokenData.GREATER, ">");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "c");
@@ -267,7 +266,7 @@ public class CoraConstrainedTokensTest {
 
   @Test
   public void testArrowsInIdentifer() throws LexerException {
-    Lexer lexer = createLexer("aa-b--->c⇒d=>-->e");
+    Lexer lexer = createLexer("aa-b--->c⇒d<==><=>-->e");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "aa");
     verifyToken(lexer.nextToken(), CoraTokenData.MINUS, "-");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "b");
@@ -275,7 +274,10 @@ public class CoraConstrainedTokensTest {
     verifyToken(lexer.nextToken(), CoraTokenData.MINUS, "-");
     verifyToken(lexer.nextToken(), CoraTokenData.ARROW, "->");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "c⇒d");
-    verifyToken(lexer.nextToken(), CoraTokenData.IMPLIES, "=>");
+    verifyToken(lexer.nextToken(), CoraTokenData.LEQ, "<=");
+    verifyToken(lexer.nextToken(), CoraTokenData.EQUAL, "=");
+    verifyToken(lexer.nextToken(), CoraTokenData.GREATER, ">");
+    verifyToken(lexer.nextToken(), CoraTokenData.EQUALBOOL, "<=>");
     verifyToken(lexer.nextToken(), CoraTokenData.MINUS, "-");
     verifyToken(lexer.nextToken(), CoraTokenData.ARROW, "->");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "e");

@@ -68,6 +68,17 @@ public class ConnectiveTest extends TermTestFoundation {
   }
 
   @Test
+  public void testXorBasics() {
+    CalculationSymbol o = TheoryFactory.xorSymbol;
+    assertTrue(o.queryType().toString().equals("Bool → Bool → Bool"));
+    assertTrue(o.queryInfixPriority() == CalculationSymbol.INFIX_IFF);
+    assertTrue(o.queryName().equals("⊻"));
+    assertTrue(o.toString().equals("[⊻]"));
+    assertTrue(o.toUniqueString().equals("⊻{Bool → Bool → Bool}#calc"));
+    assertTrue(o.queryArity() == 2);
+  }
+
+  @Test
   public void testSimpleAndToString() {
     CalculationSymbol f = TheoryFactory.andSymbol;
     assertTrue(f.toString().equals("[∧]"));
@@ -103,6 +114,16 @@ public class ConnectiveTest extends TermTestFoundation {
     assertTrue(f.apply(v).toString().equals("[⇔](true)"));
     Value w = new BooleanValue(false);
     assertTrue(f.apply(List.of(v,w)).toString().equals("true ⇔ false"));
+  }
+
+  @Test
+  public void testSimpleXorToString() {
+    CalculationSymbol f = TheoryFactory.xorSymbol;
+    assertTrue(f.toString().equals("[⊻]"));
+    Value v = new BooleanValue(true);
+    assertTrue(f.apply(v).toString().equals("[⊻](true)"));
+    Value w = new BooleanValue(false);
+    assertTrue(f.apply(List.of(v,w)).toString().equals("true ⊻ false"));
   }
 
   @Test
@@ -157,38 +178,52 @@ public class ConnectiveTest extends TermTestFoundation {
   }
 
   @Test
-  public void testIffNotAssociative() {
+  public void testIffAndXorNotAssociative() {
     Var x = new Var("x", TypeFactory.boolSort);
     Var y = new Var("y", TypeFactory.boolSort);
     Var z = new Var("z", TypeFactory.boolSort);
     CalculationSymbol i = TheoryFactory.iffSymbol;
+    CalculationSymbol o = TheoryFactory.xorSymbol;
+
     Term xy_z = i.apply(List.of(i.apply(List.of(x, y)), z));
     Term x_yz = i.apply(List.of(x, i.apply(List.of(y, z))));
     assertTrue(xy_z.toString().equals("(x ⇔ y) ⇔ z"));
     assertTrue(x_yz.toString().equals("x ⇔ (y ⇔ z)"));
+
+    xy_z = o.apply(List.of(o.apply(List.of(x, y)), z));
+    x_yz = o.apply(List.of(x, o.apply(List.of(y, z))));
+    assertTrue(xy_z.toString().equals("(x ⊻ y) ⊻ z"));
+    assertTrue(x_yz.toString().equals("x ⊻ (y ⊻ z)"));
+
+    xy_z = o.apply(List.of(i.apply(List.of(x, y)), z));
+    x_yz = i.apply(List.of(x, o.apply(List.of(y, z))));
+    assertTrue(xy_z.toString().equals("(x ⇔ y) ⊻ z"));
+    assertTrue(x_yz.toString().equals("x ⇔ (y ⊻ z)"));
   }
 
   @Test
-  public void testAndOrInIff() {
+  public void testAndOrInIffXor() {
     Var x = new Var("x", TypeFactory.boolSort);
     Var y = new Var("y", TypeFactory.boolSort);
     CalculationSymbol a = TheoryFactory.andSymbol;
     CalculationSymbol o = TheoryFactory.orSymbol;
-    CalculationSymbol i = TheoryFactory.iffSymbol;
     Term s = a.apply(List.of(x, y));
     Term t = o.apply(List.of(x, y));
-    Term q = i.apply(List.of(s, t));
+    Term q = TheoryFactory.iffSymbol.apply(List.of(s, t));
     assertTrue(q.toString().equals("x ∧ y ⇔ x ∨ y"));
+    q = TheoryFactory.xorSymbol.apply(List.of(s, t));
+    assertTrue(q.toString().equals("x ∧ y ⊻ x ∨ y"));
   }
 
   @Test
-  public void testIffInAnd() {
+  public void testIffXorInnd() {
     Var x = new Var("x", TypeFactory.boolSort);
     Var y = new Var("y", TypeFactory.boolSort);
     CalculationSymbol a = TheoryFactory.andSymbol;
     CalculationSymbol i = TheoryFactory.iffSymbol;
-    Term q = a.apply(List.of(i.apply(List.of(x, y)), i.apply(List.of(y, x))));
-    assertTrue(q.toString().equals("(x ⇔ y) ∧ (y ⇔ x)"));
+    CalculationSymbol o = TheoryFactory.xorSymbol;
+    Term q = a.apply(List.of(i.apply(List.of(x, y)), o.apply(List.of(y, x))));
+    assertTrue(q.toString().equals("(x ⇔ y) ∧ (y ⊻ x)"));
   }
 
   @Test

@@ -941,6 +941,10 @@ public class TermTyperTest {
     assertTrue(t.queryType().equals(type("Bool")));
     assertTrue(data.lookupVariable("u").queryType().toString().equals("String"));
     assertTrue(t.toString().equals("u = \"test\""));
+    // this also works for booleans
+    t = readTerm("v != false", null, true, data, "");
+    assertTrue(t.toString().equals("v ⊻ false"));
+    assertTrue(data.lookupVariable("v").queryType().toString().equals("Bool"));
     // and if the type cannot be derived, we have an appropriate error
     t = readTerm("a != b", "Bool", true, null,
       "1:3: Cannot deduce input type of overloaded operator.  " +
@@ -958,9 +962,10 @@ public class TermTyperTest {
     assertTrue(data.lookupVariable("x").queryType().equals(type("Int")));
     assertTrue(t.toString().equals("[≠](x)"));
     // when an expected type is given, this is used to derive the argument's type
-    t = readTerm("[=](y)", "Int → Bool", true, data, "");
-    assertTrue(t.queryType().toString().equals("Int → Bool"));
-    assertTrue(data.lookupVariable("y").queryType().toString().equals("Int"));
+    t = readTerm("[=](y)", "Bool → Bool", true, data, "");
+    assertTrue(t.queryType().toString().equals("Bool → Bool"));
+    assertTrue(data.lookupVariable("y").queryType().toString().equals("Bool"));
+    assertTrue(t.queryRoot().equals(TheoryFactory.iffSymbol));
     // when given = (or !=), the types of the argument needs to be derived
     t = readTerm("[!=](\"test\")", null, true, data, "");
     assertTrue(t.queryType().equals(type("String → Bool")));
@@ -970,6 +975,27 @@ public class TermTyperTest {
       "1:2: Cannot deduce input type of overloaded operator.  " +
       "Please indicate the type by subscripting (e.g., =_Int).\n");
     assertTrue(t.toString().equals("[=](a)"));
+  }
+
+  @Test
+  public void testEqualityNoArg() {
+    Term t;
+    t = readTerm("[=]", null, true, null, "");
+    assertTrue(t.equals(TheoryFactory.intEqualSymbol));
+    t = readTerm("[=_Int]", null, true, null, "");
+    assertTrue(t.equals(TheoryFactory.intEqualSymbol));
+    t = readTerm("[=_String]", null, true, null, "");
+    assertTrue(t.equals(TheoryFactory.stringEqualSymbol));
+    t = readTerm("[=_Bool]", null, true, null, "");
+    assertTrue(t.equals(TheoryFactory.iffSymbol));
+    t = readTerm("[!=]", null, true, null, "");
+    assertTrue(t.equals(TheoryFactory.intDistinctSymbol));
+    t = readTerm("[!=_Int]", null, true, null, "");
+    assertTrue(t.equals(TheoryFactory.intDistinctSymbol));
+    t = readTerm("[!=_String]", null, true, null, "");
+    assertTrue(t.equals(TheoryFactory.stringDistinctSymbol));
+    t = readTerm("[!=_Bool]", null, true, null, "");
+    assertTrue(t.equals(TheoryFactory.xorSymbol));
   }
 
   @Test

@@ -264,6 +264,11 @@ public class TermSmtTranslator {
         yield new Exp.B(SmtFactory.createIff(translateConstraint(t.queryArgument(1)),
                                              translateConstraint(t.queryArgument(2))));
       }
+      case CalculationSymbol.Kind.XOR -> {
+        assertArgumentCount(t, 2);
+        yield new Exp.B(SmtFactory.createIff(translateConstraint(t.queryArgument(1)),
+                                             translateConstraint(t.queryArgument(2))).negate());
+      }
     };
   }
 

@@ -136,18 +136,22 @@ class TermTyper {
       case CoraParser.LEQ -> TheoryFactory.leqSymbol;
       case CoraParser.EQUALSINT -> TheoryFactory.intEqualSymbol;
       case CoraParser.EQUALSSTRING -> TheoryFactory.stringEqualSymbol;
+      case CoraParser.EQUALSBOOL -> TheoryFactory.iffSymbol;
       case CoraParser.NEQINT -> TheoryFactory.intDistinctSymbol;
       case CoraParser.NEQSTRING -> TheoryFactory.stringDistinctSymbol;
+      case CoraParser.NEQBOOL -> TheoryFactory.xorSymbol;
       case CoraParser.AND -> TheoryFactory.andSymbol;
       case CoraParser.OR -> TheoryFactory.orSymbol;
       case CoraParser.NOT -> TheoryFactory.notSymbol;
       // get the right version for the overloaded symbols
       case CoraParser.EQUALS -> {
         if (hasInputSort(TypeFactory.stringSort, expected)) yield TheoryFactory.stringEqualSymbol;
+        else if (hasInputSort(TypeFactory.boolSort, expected)) yield TheoryFactory.iffSymbol;
         else yield TheoryFactory.intEqualSymbol;
       }
       case CoraParser.NEQ -> {
         if (hasInputSort(TypeFactory.stringSort, expected)) yield TheoryFactory.stringDistinctSymbol;
+        else if (hasInputSort(TypeFactory.boolSort, expected)) yield TheoryFactory.xorSymbol;
         else yield TheoryFactory.intDistinctSymbol;
       }
       default -> null;
@@ -459,6 +463,9 @@ class TermTyper {
           }
           else if (input.equals(TypeFactory.stringSort)) {
             apphead = new CalcSymbol(t, CoraParser.EQUALSSTRING);
+          }
+          else if (input.equals(TypeFactory.boolSort)) {
+            apphead = new CalcSymbol(t, CoraParser.EQUALSBOOL);
           }
         }
       default:
