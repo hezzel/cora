@@ -237,6 +237,20 @@ public class RuleTest {
   }
 
   @Test
+  public void testLhsPotentiallyTheory() {
+    // +((λx.Z[f(x)])(0), y)
+    Variable x = TermFactory.createBinder("x", TypeFactory.intSort);
+    Term fx = makeConstant("f", "Int → Int").apply(x);
+    MetaVariable z = TermFactory.createMetaVar("Z", type("Int → Int"), 1);
+    Term zfx = TermFactory.createMeta(z, fx);
+    Term abs = TermFactory.createAbstraction(x, zfx);
+    Term abso = abs.apply(TheoryFactory.createValue(0));
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
+    Term lhs = TheoryFactory.plusSymbol.apply(abso).apply(y);
+    assertThrows(IllegalRuleException.class, () -> new Rule(lhs, y));
+  }
+
+  @Test
   public void testVariableNaming() {
     // f(x, y) → g(y, λz.z) | x -- except all variables have the same default name
     Variable x = TermFactory.createVar("x", type("Bool"));

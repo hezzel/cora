@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.LinkedList;
 import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.NullStorageException;
 import charlie.exceptions.TypingException;
@@ -181,7 +182,7 @@ public class Rule {
   private void checkCorrectness() {
     checkNothingNull();
     checkTypesCorrect();
-    checkLeftClosed();    // we'll check the right and the constraint separately
+    checkBothSidesClosed();    // we'll check the constraint separately
     checkLeftNotTheory();
     checkConstraintTheory();
     checkConstraintFirstOrder();
@@ -207,19 +208,51 @@ public class Rule {
     }
   }
 
-  /** Checks that both sides are closed: no binder variables occur. */
-  private void checkLeftClosed() {
+  /** Checks that both left- and right-hand side are closed. */
+  private void checkBothSidesClosed() {
     if (!_left.isClosed()) { 
       throw new IllegalRuleException("left-hand side of rule [" + toString() + "] is not closed " +
         "(that is, freely contains a binder-variable).");
     }
+    if (!_right.isClosed()) { 
+      throw new IllegalRuleException("right-hand side of rule [" + toString() + "] is not closed " +
+        "(that is, freely contains a binder-variable).");
+    }
   }
 
-  /** Checks that the left-hand side is not a theory term. */
+  /**
+   * Checks that the left-hand side cannot be instantiated to a theory term.
+   * (Note that this is certainly the case if it is both a pattern and a theory term, but some
+   * non-theory terms can still be instantiated to theory.)
+   */
   private void checkLeftNotTheory() {
-    if (_left.isTheoryTerm()) {
-      throw new IllegalRuleException("left-hand side of rule [" + toString() +
-        "] is a theory term!");
+    LinkedList<Term> parts = new LinkedList<Term>();
+    parts.add(_left);
+    boolean couldBeTheory = true;
+    while (!parts.isEmpty() && couldBeTheory) {
+      Term t = parts.pop();
+      if (!t.queryType().isTheoryType()) couldBeTheory = false;
+      else if (t.isVariable() || t.isMetaApplication()) continue;
+        // the arguments of a meta-variable may be ignored by the instantiation
+      else if (t.isConstant()) couldBeTheory = t.queryRoot().isTheorySymbol();
+      else if (t.isAbstraction()) parts.add(t.queryAbstractionSubterm());
+      else if (t.isApplication()) {
+        parts.add(t.queryHead());
+        for (int i = 1; i <= t.numberArguments(); i++) parts.add(t.queryArgument(i));
+      }
+      else if (t.isTuple()) {
+        for (int i = 1; i <= t.numberTupleArguments(); i++) parts.add(t.queryTupleArgument(i));
+      }
+    }
+    if (couldBeTheory) {
+      if (_left.isTheoryTerm()) {
+        throw new IllegalRuleException("left-hand side of rule [" + toString() +
+          "] is a theory term!");
+      }
+      else {
+        throw new IllegalRuleException("left-hand side of rule [" + toString() +
+          "] could be instantiated to a theory term!");
+      }
     }
   }
 
