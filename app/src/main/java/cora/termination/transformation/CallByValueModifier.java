@@ -35,7 +35,7 @@ public class CallByValueModifier {
   /** Returns whether or not the current technique is applicable to the given TRS. */
   public static boolean isApplicable(TRS trs) {
     if (!trs.verifyProperties(TrsProperties.Level.META, TrsProperties.Constrained.YES,  
-                              TrsProperties.Products.ALLOWED, TrsProperties.Lhs.NONPATTERN,
+                              TrsProperties.TypeLevel.SIMPLE, TrsProperties.Lhs.NONPATTERN,
                               TrsProperties.Root.ANY)) {
       return false;
     }

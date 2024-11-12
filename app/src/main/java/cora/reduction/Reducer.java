@@ -45,7 +45,6 @@ public class Reducer {
         case RuleScheme.Eta: _components.add(new EtaReducer()); break;
         case RuleScheme.Beta: _components.add(new BetaReducer()); break;
         case RuleScheme.Calc: _components.add(new CalcReducer()); break;
-        case RuleScheme.Projection: break; // TODO: implement projection
       }
     }
     for (int i = 0; i < trs.queryRuleCount(); i++) {

@@ -56,7 +56,7 @@ public class Horpo implements ReductionPair {
   public boolean isApplicable(OrderingProblem prob) {
     return !Settings.isDisabled(queryDisabledCode()) &&
            prob.queryOriginalTRS().verifyProperties(Level.APPLICATIVE, Constrained.YES,
-                                                    Products.DISALLOWED, Lhs.NONPATTERN, Root.ANY);
+                                                    TypeLevel.SIMPLE, Lhs.NONPATTERN, Root.ANY);
   }
 
   /** Returns a short description of what this reduction pair is. */

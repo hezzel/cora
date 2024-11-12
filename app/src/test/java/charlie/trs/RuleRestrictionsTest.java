@@ -24,7 +24,7 @@ public class RuleRestrictionsTest {
   @Test
   public void testBasicCreate() {
     RuleRestrictions rest = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES,
-                                                 Products.DISALLOWED, Lhs.NONPATTERN, Root.ANY);
+                                                 TypeLevel.SIMPLE, Lhs.NONPATTERN, Root.ANY);
     assertTrue(rest.queryLevel() == Level.APPLICATIVE);
     assertTrue(rest.theoriesUsed());
     assertFalse(rest.productsUsed());
@@ -35,20 +35,20 @@ public class RuleRestrictionsTest {
   @Test
   public void testCovers() {
     RuleRestrictions nothing = new RuleRestrictions(Level.FIRSTORDER, Constrained.YES,
-                                                    Products.DISALLOWED, Lhs.PATTERN,
+                                                    TypeLevel.SIMPLE, Lhs.PATTERN,
                                                     Root.FUNCTION);
-    RuleRestrictions anything = new RuleRestrictions(Level.META, Constrained.YES, Products.ALLOWED,
+    RuleRestrictions anything = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.SIMPLEPRODUCTS,
                                                      Lhs.NONPATTERN, Root.ANY);
     assertTrue(nothing.checkCoverage(nothing) == null);
     assertTrue(nothing.checkCoverage(anything).equals(
       "rule level is limited to first-order terms, not meta-terms"));
-    RuleRestrictions a = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES, Products.ALLOWED,
+    RuleRestrictions a = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLEPRODUCTS,
                                               Lhs.PATTERN, Root.THEORY);
-    RuleRestrictions b = new RuleRestrictions(Level.LAMBDA, Constrained.NO, Products.DISALLOWED,
+    RuleRestrictions b = new RuleRestrictions(Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE,
                                               Lhs.SEMIPATTERN, Root.THEORY);
     RuleRestrictions c = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES,
-                                              Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY);
-    RuleRestrictions d = new RuleRestrictions(Level.META, Constrained.YES, Products.ALLOWED,
+                                              TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY);
+    RuleRestrictions d = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.SIMPLEPRODUCTS,
                                               Lhs.PATTERN, Root.ANY);
     assertTrue(a.checkCoverage(b).equals(
       "rule level is limited to applicative terms, not true terms"));
@@ -65,8 +65,8 @@ public class RuleRestrictionsTest {
   @Test
   public void testSupremum() {
     RuleRestrictions a = new RuleRestrictions(Level.APPLICATIVE, Constrained.NO,
-                                              Products.ALLOWED, Lhs.SEMIPATTERN, Root.ANY);
-    RuleRestrictions b = new RuleRestrictions(Level.META, Constrained.YES, Products.DISALLOWED,
+                                              TypeLevel.SIMPLEPRODUCTS, Lhs.SEMIPATTERN, Root.ANY);
+    RuleRestrictions b = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.SIMPLE,
                                               Lhs.PATTERN, Root.THEORY);
     // doing it from either side should result in the same
     RuleRestrictions c = a.supremum(b);

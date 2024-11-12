@@ -39,7 +39,8 @@ public class SubtermProcessor implements Processor {
     return !Settings.isDisabled(queryDisabledCode()) &&
            (dpp.isInnermost() || dpp.terminating()) &&
            dpp.getOriginalTRS().verifyProperties(Level.APPLICATIVE, Constrained.YES,
-                                                 Products.ALLOWED, Lhs.NONPATTERN, Root.ANY);
+                                                 TypeLevel.SIMPLEPRODUCTS, Lhs.NONPATTERN,
+                                                 Root.ANY);
   }
 
   /**

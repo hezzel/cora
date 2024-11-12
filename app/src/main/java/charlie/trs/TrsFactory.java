@@ -33,29 +33,29 @@ public class TrsFactory {
   public static class TrsKind {
     private String _name;
     private RuleRestrictions _restrictions;
-    private TrsKind(String name, Level lvl, Constrained theories, Products products, Lhs pattern,
+    private TrsKind(String name, Level lvl, Constrained theories, TypeLevel tlvl, Lhs pattern,
                     Root rootstat) {
       _name = name;
-      _restrictions = new RuleRestrictions(lvl, theories, products, pattern, rootstat);
+      _restrictions = new RuleRestrictions(lvl, theories, tlvl, pattern, rootstat);
     }
     public boolean theoriesIncluded() { return _restrictions.theoriesUsed(); }
     public String toString() { return _name + " with " + _restrictions.toString(); }
   }
 
   public static final TrsKind MSTRS = new TrsKind("MSTRS",
-    Level.FIRSTORDER,  Constrained.NO,  Products.DISALLOWED, Lhs.PATTERN,     Root.FUNCTION);
+    Level.FIRSTORDER,  Constrained.NO,  TypeLevel.SIMPLE,         Lhs.PATTERN,     Root.FUNCTION);
   public static final TrsKind STRS = new TrsKind("STRS",
-    Level.APPLICATIVE, Constrained.NO,  Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY);
+    Level.APPLICATIVE, Constrained.NO,  TypeLevel.SIMPLE,         Lhs.SEMIPATTERN, Root.ANY);
   public static final TrsKind CFS = new TrsKind("CFS",
-    Level.LAMBDA,      Constrained.NO,  Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY);
+    Level.LAMBDA,      Constrained.NO,  TypeLevel.SIMPLE,         Lhs.SEMIPATTERN, Root.ANY);
   public static final TrsKind AMS = new TrsKind("AMS",
-    Level.META,        Constrained.NO,  Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY);
+    Level.META,        Constrained.NO,  TypeLevel.SIMPLE,         Lhs.SEMIPATTERN, Root.ANY);
   public static final TrsKind LCTRS = new TrsKind("LCTRS",
-    Level.FIRSTORDER,  Constrained.YES, Products.DISALLOWED, Lhs.PATTERN,     Root.THEORY);
+    Level.FIRSTORDER,  Constrained.YES, TypeLevel.SIMPLE,         Lhs.PATTERN,     Root.THEORY);
   public static final TrsKind LCSTRS = new TrsKind("LCSTRS",
-    Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED, Lhs.SEMIPATTERN, Root.ANY);
+    Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE,         Lhs.SEMIPATTERN, Root.ANY);
   public static final TrsKind CORA = new TrsKind("Cora-TRS",
-    Level.META,        Constrained.YES, Products.ALLOWED,    Lhs.NONPATTERN,  Root.ANY);
+    Level.META,        Constrained.YES, TypeLevel.SIMPLEPRODUCTS, Lhs.NONPATTERN,  Root.ANY);
 
   /**
    * Check if the given rule is allowed in the given kind of TRS.  If not, throws an
@@ -117,7 +117,6 @@ public class TrsFactory {
         "includes abstraction.");
     }
     if (kind._restrictions.theoriesUsed()) newschemes.add(TRS.RuleScheme.Calc);
-    if (kind._restrictions.productsUsed()) newschemes.add(TRS.RuleScheme.Projection);
 
     return new TRS(alphabet, rules, newschemes.build(), privateSymbols, kind._name,
                    TrsProperties.translateRuleToTermLevel(kind._restrictions.queryLevel()),

@@ -428,8 +428,9 @@ public class DefaultOutputModule implements OutputModule {
     else if (trs.querySchemeCount() == 1) println("only rule scheme " + trs.queryScheme(0) + ":");
     else {
       print("rule schemes ");
-      for (int i = 0; i < trs.querySchemeCount() - 1; i++) print("%a, ", trs.queryScheme(i));
-      println("and %a:", trs.queryScheme(trs.querySchemeCount()-1));
+      for (int i = 0; i < trs.querySchemeCount() - 2; i++) print("%a, ", trs.queryScheme(i));
+      print("%a and %a:", trs.queryScheme(trs.querySchemeCount() - 2),
+                          trs.queryScheme(trs.querySchemeCount() - 1));
     }
     startTable();
     nextColumn("Signature:");

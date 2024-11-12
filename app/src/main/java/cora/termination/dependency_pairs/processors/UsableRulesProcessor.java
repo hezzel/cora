@@ -37,7 +37,7 @@ public class UsableRulesProcessor implements Processor {
     return dpp.isInnermost() &&
            !Settings.isDisabled(queryDisabledCode()) &&
            dpp.getOriginalTRS().verifyProperties(Level.APPLICATIVE, Constrained.YES,
-                                                 Products.DISALLOWED, Lhs.PATTERN, Root.THEORY);
+                                                 TypeLevel.SIMPLE, Lhs.PATTERN, Root.THEORY);
   }
 
   /** This technique can be disabled by runtime arguments. */

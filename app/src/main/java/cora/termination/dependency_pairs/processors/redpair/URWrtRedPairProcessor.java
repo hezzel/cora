@@ -60,7 +60,7 @@ public class URWrtRedPairProcessor implements Processor {
     return !Settings.isDisabled(queryDisabledCode()) &&
            dpp.isInnermost() &&
            dpp.getOriginalTRS().verifyProperties(Level.APPLICATIVE, Constrained.YES,
-                                                 Products.DISALLOWED, Lhs.PATTERN, Root.THEORY);
+                                                 TypeLevel.SIMPLE, Lhs.PATTERN, Root.THEORY);
   }
 
   /**

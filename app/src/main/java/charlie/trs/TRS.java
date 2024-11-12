@@ -76,7 +76,7 @@ import charlie.trs.TrsProperties.*;
  * starting points for analysis, which can be used in some analysis techniques.
  */
 public class TRS {
-  public enum RuleScheme { Beta, Eta, Calc, Projection };
+  public enum RuleScheme { Beta, Eta, Calc };
 
   private final Alphabet _alphabet;
   private final ImmutableList<Rule> _rules;
@@ -251,9 +251,10 @@ public class TRS {
   }
 
   /** 
-   * Creates a TRS with alphabet, restrictions and rule schemes the same as we have, but with the
-   * given rules and alphabet replacing the original ones.  No restrictions are imposed on the new
-   * rules.
+   * Creates a TRS with schemes and the restrictions for term rewriting as the current one has, but
+   * with the given rules and alphabet replacing the original ones.  No restrictions are imposed on
+   * the new rules, not even the restrictions on term formation that become a property of the new
+   * TRS.
    */
   public TRS createDerivative(List<Rule> newrules, Alphabet newAlphabet) {
     return new TRS(newAlphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
@@ -261,8 +262,9 @@ public class TRS {
   }
 
   /** 
-   * Creates a TRS with alphabet, restrictions and rule schemes the same as we have, but with the
-   * given rules replacing the original ones.  No restrictions are imposed on the new rules.
+   * Creates a TRS with alphabet, rule schemes and restrictions on term formation the same as we
+   * have, but with the given rules replacing the original ones.  No restrictions are imposed on
+   * the new rules.
    */
   public TRS createDerivative(List<Rule> newrules) {
     return new TRS(_alphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
@@ -282,17 +284,16 @@ public class TRS {
    * Note: some settings automatically imply the inclusion of certain rule schemes:
    *   - if lvl = Level.LAMBDA or lvl = Level.META, then Beta is automatically included
    *   - if theories = Constrained.YES, then Calc is automatically included
-   *   - if products = Products.ALLOWED, then Projection is automatically included
    * Hence, any method indicating these settings should also support the presence of these rule
    * schemes.  However, these do not need to be listed in the call to verifyProperties.
    */
-  public boolean verifyProperties(Level lvl, Constrained theories, Products products, Lhs pattern,
+  public boolean verifyProperties(Level lvl, Constrained theories, TypeLevel types, Lhs pattern,
                                   Root rootstat, RuleScheme ...additionalSchemes) {
     if (_theoriesIncluded && theories == Constrained.NO) return false;
-    if (_productsIncluded && products == Products.DISALLOWED) return false;
+    if (_productsIncluded && types == TypeLevel.SIMPLE) return false;
     if (TrsProperties.translateRuleToTermLevel(lvl).compareTo(_level) < 0) return false;
     if (!schemesIncluded(additionalSchemes)) return false;
-    RuleRestrictions rest = new RuleRestrictions(lvl, theories, products, pattern, rootstat);
+    RuleRestrictions rest = new RuleRestrictions(lvl, theories, types, pattern, rootstat);
     return rest.covers(_rulesProperties);
   }
 
@@ -307,20 +308,19 @@ public class TRS {
    * Note: some settings automatically imply the inclusion of certain rule schemes:
    *   - if termLevel = TermLevel.LAMBDA, then Beta is automatically included
    *   - if termTheories = Constrained.YES, then Calc is automatically included
-   *   - if termProducts = Products.ALLOWED, then Projection is automatically included
    * Hence, any method indicating these settings should also support the presence of these rule
    * schemes.  However, these do not need to be listed in the call to verifyProperties.
    */
-  public boolean verifyProperties(Level ruleLevel, Constrained ruleTheories, Products ruleProducts,
+  public boolean verifyProperties(Level ruleLevel, Constrained ruleTheories, TypeLevel ruleTypes,
                                   Lhs pattern, Root rootstat, TermLevel termLevel,
-                                  Constrained termTheories, Products termProducts,
+                                  Constrained termTheories, TypeLevel termTypes,
                                   RuleScheme ...additionalSchemes) {
     if (_theoriesIncluded && termTheories == Constrained.NO) return false;
-    if (_productsIncluded && termProducts == Products.DISALLOWED) return false;
+    if (_productsIncluded && termTypes == TypeLevel.SIMPLE) return false;
     if (termLevel.compareTo(_level) < 0) return false;
     if (!schemesIncluded(additionalSchemes)) return false;
     RuleRestrictions rest =
-      new RuleRestrictions(ruleLevel, ruleTheories, ruleProducts, pattern, rootstat);
+      new RuleRestrictions(ruleLevel, ruleTheories, ruleTypes, pattern, rootstat);
     return rest.covers(_rulesProperties);
   }
 

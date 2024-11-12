@@ -63,7 +63,7 @@ public abstract class DPFramework {
    * however, since this is only meant as a helper function for the constructor.
    */
   protected ProofObject determineApplicability(TRS trs) {
-    if (!trs.verifyProperties(Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED,
+    if (!trs.verifyProperties(Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE,
                               Lhs.PATTERN, Root.THEORY)) {
       return new ProofObject() {
         public Answer queryAnswer() { return Answer.NO; }

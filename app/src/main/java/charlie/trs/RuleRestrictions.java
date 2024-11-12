@@ -79,10 +79,10 @@ class RuleRestrictions {
    * if the given level is indeed one of the permitted constants) because this can only be called
    * from within the trs package.
    */
-  RuleRestrictions(Level lvl, Constrained theories, Products products, Lhs pattern, Root rootstat) {
+  RuleRestrictions(Level lvl, Constrained theories, TypeLevel types, Lhs pattern, Root rootstat) {
     _level = lvl;
     _theories = (theories == Constrained.YES);
-    _products = (products == Products.ALLOWED);
+    _products = (types == TypeLevel.SIMPLEPRODUCTS);
     _pattern = pattern;
     _rootStatus = rootstat;
   }
@@ -179,7 +179,7 @@ class RuleRestrictions {
     if (other._theories) maxtheories = true;
     if (other._products) maxproducts = true;
     return new RuleRestrictions(maxlevel, maxtheories ? Constrained.YES : Constrained.NO,
-      maxproducts ? Products.ALLOWED : Products.DISALLOWED, maxpattern, maxroot);
+      maxproducts ? TypeLevel.SIMPLEPRODUCTS : TypeLevel.SIMPLE, maxpattern, maxroot);
   }
 
   /** Used for debugging */

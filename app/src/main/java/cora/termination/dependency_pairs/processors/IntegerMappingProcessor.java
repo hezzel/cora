@@ -42,7 +42,7 @@ public class IntegerMappingProcessor implements Processor {
   public boolean isApplicable(Problem dp) {
     return !Settings.isDisabled(queryDisabledCode()) &&
            dp.getOriginalTRS().verifyProperties(Level.APPLICATIVE, Constrained.YES,
-                                                Products.DISALLOWED, Lhs.PATTERN, Root.THEORY);
+                                                TypeLevel.SIMPLE, Lhs.PATTERN, Root.THEORY);
   }
 
   /**

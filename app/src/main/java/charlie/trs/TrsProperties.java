@@ -42,12 +42,11 @@ public class TrsProperties {
    */
   public enum Constrained { NO, YES }
 
-  /**
-   * The "products" status of rules indicates whether rules are allowed to use tuples or symbols
-   * / variables whose type includes a product type in their construction (in left-hand side,
-   * right-hand side or constraint).
-   */
-  public enum Products { DISALLOWED, ALLOWED }
+  /** The type level of a TRS indicates the type system used for term formation and rules. */
+  public enum TypeLevel {
+    SIMPLE,         // simple types: built from sorts and the arrow operator
+    SIMPLEPRODUCTS  // simple types along with products
+  }
 
   /** The root status of rules gives restrictions on the left-hand sides of the rules. */
   public enum Root {

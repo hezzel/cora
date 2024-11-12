@@ -61,7 +61,7 @@ public class HelperFunctionTransformer {
   public HelperFunctionTransformer(TRS trs) {
     _trs = trs;
     _applicable = trs.isLeftLinear() && trs.verifyProperties(TrsProperties.Level.APPLICATIVE,
-      TrsProperties.Constrained.YES, TrsProperties.Products.DISALLOWED, TrsProperties.Lhs.PATTERN,
+      TrsProperties.Constrained.YES, TrsProperties.TypeLevel.SIMPLE, TrsProperties.Lhs.PATTERN,
       TrsProperties.Root.THEORY);
     getSymbolArities();
   }

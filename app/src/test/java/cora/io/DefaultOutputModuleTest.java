@@ -235,7 +235,7 @@ public class DefaultOutputModuleTest {
     OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
     o.printTrs(trs);
     assertTrue(o.toString().equals(
-      "Cora-TRS with rule schemes Beta, Calc, and Projection:\n\n" +
+      "Cora-TRS with rule schemes Beta and Calc:\n\n" +
       "  Signature: a :: Int → Int\n" +
       "             f :: Int → Int → Int\n\n" +
       "  Rules: f(x, y) → f(y, x) | x > y\n" +

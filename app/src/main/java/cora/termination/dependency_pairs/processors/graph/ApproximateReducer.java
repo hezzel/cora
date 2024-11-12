@@ -66,7 +66,7 @@ class ApproximateReducer {
 
   /** If this returns false, DO NOT CALL mayReduce!  This may lead to runtimes. */
   public boolean isApplicable() {
-    if (!_coreTRS.verifyProperties(Level.APPLICATIVE, Constrained.YES, Products.DISALLOWED,
+    if (!_coreTRS.verifyProperties(Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE,
                                    Lhs.NONPATTERN, Root.ANY)) {
       return false;
     }
