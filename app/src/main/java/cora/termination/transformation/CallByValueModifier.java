@@ -36,7 +36,7 @@ public class CallByValueModifier {
   public static boolean isApplicable(TRS trs) {
     if (!trs.verifyProperties(TrsProperties.Level.META, TrsProperties.Constrained.YES,  
                               TrsProperties.TypeLevel.SIMPLE, TrsProperties.Lhs.NONPATTERN,
-                              TrsProperties.Root.ANY)) {
+                              TrsProperties.Root.ANY, TrsProperties.FreshRight.ANY)) {
       return false;
     }
     // we're not applicable if term values of theory sort cannot be assumed to be theory values

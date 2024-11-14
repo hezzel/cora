@@ -21,6 +21,8 @@ import java.util.Collection;
 import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.Variable;
+import charlie.terms.Replaceable;
+import charlie.terms.ReplaceableList;
 import charlie.terms.position.Position;
 import charlie.trs.TrsProperties.*;
 
@@ -35,6 +37,7 @@ class RuleRestrictions {
   private boolean _products;
   private Lhs _pattern;
   private Root _rootStatus;
+  private FreshRight _fresh;
 
   /**
    * Returns the lowest level that both left and right hand side of the rule satisfy.
@@ -65,6 +68,14 @@ class RuleRestrictions {
    */
   Root rootStatus() { return _rootStatus; }
 
+  /**
+   * Returns FreshRight.NONE if all the meta-variables in the right-hand side of the rule also
+   * occur in the let-hand side, FreshRight.CVARS if they all occur in the left-hand side of the
+   * rule or the constraint, and FreshRight.ANY if there is some meta-variable that does not occur
+   * in the left-hand side or the constraint.
+   */
+  FreshRight rightReplaceablePolicy() { return _fresh; }
+
   /** Constructor that sets up the minimum value for all properties. */
   RuleRestrictions() {
     _level = Level.FIRSTORDER;
@@ -72,19 +83,21 @@ class RuleRestrictions {
     _products = false;
     _pattern = Lhs.PATTERN;
     _rootStatus = Root.FUNCTION;
+    _fresh = FreshRight.NONE;
   }
 
   /** 
-   * Constructor that sets up all values in order.  No error checking is done (for instance to see
-   * if the given level is indeed one of the permitted constants) because this can only be called
-   * from within the trs package.
+   * Constructor that sets up all values in order.  This can only be called from within the trs
+   * package.
    */
-  RuleRestrictions(Level lvl, Constrained theories, TypeLevel types, Lhs pattern, Root rootstat) {
+  RuleRestrictions(Level lvl, Constrained theories, TypeLevel types, Lhs pattern, Root rootstat,
+                   FreshRight fresh) {
     _level = lvl;
     _theories = (theories == Constrained.YES);
     _products = (types == TypeLevel.SIMPLEPRODUCTS);
     _pattern = pattern;
     _rootStatus = rootstat;
+    _fresh = fresh;
   }
 
   /** Constructor that sets up the values corresponding to a given rule. */
@@ -106,7 +119,6 @@ class RuleRestrictions {
     // theories and products
     _theories = false;
     _products = false;
-    if (!lvars.isEmpty()) _theories = true;
     List<Pair<Term,Position>> subterms = left.querySubterms();
     subterms.addAll(right.querySubterms());
     if (!constraint.isValue() || !constraint.toValue().getBool()) {
@@ -118,10 +130,20 @@ class RuleRestrictions {
       if (sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) _theories = true;
       if (sub.queryType().hasProducts()) _products = true;
     }
+    // fresh (meta-)variables
+    _fresh = FreshRight.NONE;
+    ReplaceableList inleft = left.freeReplaceables();
+    ReplaceableList incons = constraint.freeReplaceables();
+    for (Replaceable x : right.freeReplaceables()) {
+      if (!inleft.contains(x)) {
+        if (incons.contains(x)) _fresh = FreshRight.CVARS;
+        else { _fresh = FreshRight.ANY; break; }
+      }
+    }
   }
 
   /**
-   * This checks if all our properties are ≥ than those of other.
+   * This checks if all our properties are ≥ those of other.
    * If so, null is returned.
    * If not, a message is returned explaining the problem.
    */
@@ -152,6 +174,11 @@ class RuleRestrictions {
       return "left-hand side should be a " + explanation.get(_pattern) + ", not a " +
         explanation.get(other._pattern);
     }
+    if (_fresh.compareTo(other._fresh) < 0) {
+      return "right-hand side contains a " + (other._level == Level.META ? "meta-" : "") +
+        "variable that does not occur in the left-hand side" +
+        (_fresh == FreshRight.NONE ? "" : " or the constraint");
+    }
     if (!_theories && other._theories) {
       return "use of theory symbols / constraints is not supported";
     }
@@ -171,21 +198,24 @@ class RuleRestrictions {
     Level maxlevel = _level;
     Root maxroot = _rootStatus;
     Lhs maxpattern = _pattern;
+    FreshRight maxfresh = _fresh;
     boolean maxtheories = _theories;
     boolean maxproducts = _products;
     if (other._level.compareTo(maxlevel) > 0) maxlevel = other._level;
     if (other._rootStatus.compareTo(maxroot) > 0) maxroot = other._rootStatus;
     if (other._pattern.compareTo(maxpattern) > 0) maxpattern = other._pattern;
+    if (other._fresh.compareTo(maxfresh) > 0) maxfresh = other._fresh;
     if (other._theories) maxtheories = true;
     if (other._products) maxproducts = true;
     return new RuleRestrictions(maxlevel, maxtheories ? Constrained.YES : Constrained.NO,
-      maxproducts ? TypeLevel.SIMPLEPRODUCTS : TypeLevel.SIMPLE, maxpattern, maxroot);
+      maxproducts ? TypeLevel.SIMPLEPRODUCTS : TypeLevel.SIMPLE, maxpattern, maxroot,
+      maxfresh);
   }
 
   /** Used for debugging */
   public String toString() {
     return "{ " + _level + " ; " + _theories + " ; " + _products + " ; " + _pattern + " ; " +
-      _rootStatus + " }";
+      _rootStatus + " ; " + _fresh + " }";
   };
 }
 

@@ -92,7 +92,7 @@ public class CoraInputReaderTest {
   @Test
   public void testRuleWithVariableEnvironment() {
     Rule rule = CoraInputReader.readRule("{ F :: a -> a } f(F(x)) → y", generateTRS());
-    assertTrue(rule.toString().equals("f(F(x)) → y | true"));
+    assertTrue(rule.toString().equals("f(F(x)) → y | y = y"));
     Variable f = rule.queryLeftSide().queryArgument(1).queryHead().queryVariable();
     assertTrue(f.queryType().toString().equals("a → a"));
     Variable x = rule.queryLeftSide().queryArgument(1).queryArgument(1).queryVariable();
@@ -103,7 +103,7 @@ public class CoraInputReaderTest {
   @Test
   public void testRuleWithMetavariableEnvironment() {
     Rule rule = CoraInputReader.readRule("{ F :: [a] -> a } f(F[x]) → y", generateTRS());
-    assertTrue(rule.toString().equals("f(F⟨x⟩) → y | true"));
+    assertTrue(rule.toString().equals("f(F⟨x⟩) → y | y = y"));
     MetaVariable f = rule.queryLeftSide().queryArgument(1).queryHead().queryMetaVariable();
     assertTrue(f.queryType().toString().equals("a → a"));
     Variable x = rule.queryLeftSide().queryArgument(1).queryMetaArgument(1).queryVariable();
@@ -264,10 +264,9 @@ public class CoraInputReaderTest {
   public void testUnconstrainedRuleWithFreshVariableInRhs() {
     try { CoraInputReader.readRule(" i(x) -> y", generateTRS()); }
     catch (ParseException e) {
-      assertTrue(e.getMessage().equals("1:2: right-hand side of rule [i(x) → y] " +
-        "contains variable y of type a which does not occur on the left; only " +
-        "variables of theory sorts may occur fresh (and that only in some kinds " +
-        "of TRSs).\n"));
+      assertTrue(e.getMessage().equals("1:2: right-hand side of rule has a fresh variable y of " +
+        "type a which does not occur on the left; only variables of theory sorts may occur " +
+        "fresh (and that only in some kinds of TRSs).\n"));
       return;
     }
     assertTrue(false);
@@ -286,7 +285,7 @@ public class CoraInputReaderTest {
   @Test
   public void testRuleWithFreshTheoryVariableInRhs() {
     Rule rule = CoraInputReader.readRule("f(x) -> y", generateTRS());
-    assertTrue(rule.toString().equals("f(x) → y | true"));
+    assertTrue(rule.toString().equals("f(x) → y | y = y"));
   }
 
   @Test
@@ -392,9 +391,8 @@ public class CoraInputReaderTest {
         "3:9: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
         "5:1: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
         "5:11: Expected term of type o, but got function symbol a which has type 3.\n" +
-        "6:1: right-hand side of rule [f(2) → _3] contains variable 3 of type nat which does " +
-        "not occur on the left; only variables of theory sorts may occur fresh (and that only " +
-        "in some kinds of TRSs).\n"));
+        "6:1: The rule f(2) → _3 is not allowed to occur in AMSs: right-hand side contains a " +
+          "variable that does not occur in the left-hand side.\n"));
       return;
     }
     assertTrue(false);

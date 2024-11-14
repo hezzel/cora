@@ -62,6 +62,13 @@ public class TrsProperties {
     NONPATTERN,   // the lhs of rules is not required to be a pattern or semi-pattern
   }
 
+  /** Should meta-variables in the rhs of a rule occur also in the left or constraint? */
+  public enum FreshRight {
+    NONE,   // meta-variables in the right-hand side should also occur in the left
+    CVARS,  // meta-variables in the right-hand side should also occur in the left or the constraint
+    ANY     // the right-hand side may have meat-variables that do not occur in left or constraint
+  }
+
   /**
    * The constructions of terms permitted in a TRS may differ from the construction of its rules.
    * Hence, we sometimes also track specifically the properties admitted for rules.

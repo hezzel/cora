@@ -168,9 +168,9 @@ public class ITrsInputReaderTest {
     try { ITrsInputReader.readTrsFromString(str); }
     catch (ParseException e) {
       assertTrue(e.getMessage().equals(
-        "2:13: right-hand side of rule [f(x) → g(y, x)] contains variable y of type o " +
-          "which does not occur on the left; only variables of theory sorts may occur " +
-          "fresh (and that only in some kinds of TRSs).\n"));
+        "2:13: The rule f(x) → g(y, x) is not allowed to occur in LCTRSs: right-hand " +
+          "side contains a variable that does not occur in the left-hand side or the " +
+          "constraint.\n"));
       return;
     }
     assertTrue(false);
@@ -188,8 +188,8 @@ public class ITrsInputReaderTest {
     try { ITrsInputReader.readTrsFromString(str); }
     catch (ParseException e) {
       assertTrue(e.getMessage().equals(
-        "3:8: right-hand side of rule [f(x) → g(y, x)] contains variable y which does not " +
-        "occur on the left.\n"));
+        "3:8: The rule f(x) → g(y, x) is not allowed to occur in LCTRSs: right-hand side " +
+        "contains a variable that does not occur in the left-hand side or the constraint.\n"));
       return;
     }
   }

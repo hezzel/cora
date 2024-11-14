@@ -203,9 +203,8 @@ public class OCocoUnsortedInputReaderTest {
       assertTrue(e.getMessage().equals(
         "1:42: Expected a comma or closing bracket but got IDENTIFIER (y).\n" +
         "1:63: Function symbol f was previously used with 2 arguments, but is here used with 1.\n" +
-        "1:60: right-hand side of rule [g(x) → f(z)] contains variable z of type o which does " +
-        "not occur on the left; only variables of theory sorts may occur fresh (and that only " +
-        "in some kinds of TRSs).\n"));
+        "1:60: The rule g(x) → f(z) is not allowed to occur in MSTRSs: right-hand side contains " +
+        "a variable that does not occur in the left-hand side.\n"));
       return;
     }
     assertTrue(false);

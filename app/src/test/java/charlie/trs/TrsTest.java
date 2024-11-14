@@ -142,19 +142,19 @@ public class TrsTest {
   public void testVerifyPropertiesWithoutRules() {
     setupTRSs();
     assertTrue(_mstrs.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.SIMPLE,
-                                       Lhs.PATTERN, Root.FUNCTION));
+                                       Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
     assertFalse(_lctrs.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.SIMPLE,
-                                        Lhs.PATTERN, Root.FUNCTION));
+                                        Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
     assertTrue(_lctrs.verifyProperties(Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE,
-                                       Lhs.PATTERN, Root.FUNCTION));
+                                       Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
     assertTrue(_lcstrs.verifyProperties(Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE,
-                                        Lhs.PATTERN, Root.FUNCTION));
+                                        Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
     assertFalse(_cfs.verifyProperties(Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE,
-                                      Lhs.PATTERN, Root.FUNCTION));
+                                      Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
     assertFalse(_cora.verifyProperties(Level.META, Constrained.YES, TypeLevel.SIMPLE,
-                                       Lhs.PATTERN, Root.FUNCTION));
+                                       Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
     assertTrue(_cora.verifyProperties(Level.META, Constrained.YES, TypeLevel.SIMPLEPRODUCTS,
-                                      Lhs.PATTERN, Root.FUNCTION));
+                                      Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
   }
 
   @Test
@@ -168,10 +168,10 @@ public class TrsTest {
     assertTrue(trs.productsIncluded());
     assertFalse(trs.isApplicative());
     assertTrue(trs.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.SIMPLE,
-                                    Lhs.PATTERN, Root.FUNCTION, TermLevel.LAMBDA, Constrained.YES,
-                                    TypeLevel.SIMPLEPRODUCTS));
+                                    Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE, TermLevel.LAMBDA,
+                                    Constrained.YES, TypeLevel.SIMPLEPRODUCTS));
     assertFalse(trs.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.SIMPLE,
-                                     Lhs.PATTERN, Root.FUNCTION));
+                                     Lhs.PATTERN, Root.FUNCTION, FreshRight.CVARS));
   }
 
   @Test
@@ -186,41 +186,60 @@ public class TrsTest {
                    TermFactory.createApp(h, TermFactory.createAbstraction(x, b), y));
     // Z(A) -> B
     Rule rule2 = TrsFactory.createRule(z.apply(a), b);
-    // g(u) -> A | y > 0
+    // g(u) -> A | u > 0
     Rule rule3 = TrsFactory.createRule(g.apply(u), a, TermFactory.createApp(
       TheoryFactory.greaterSymbol, u, TheoryFactory.createValue(0)));
+    // A -> g(u) | u < 0
+    Rule rule4 = TrsFactory.createRule(a, g.apply(u), TermFactory.createApp(
+      TheoryFactory.smallerSymbol, u, TheoryFactory.createValue(0)));
+    // f(A, B) -> y
+    Rule rule5 = TrsFactory.createRule(f.apply(a).apply(b), y);
 
     Alphabet alf = new Alphabet(List.of(f,g,h,a,b));
     TRS ams1 = TrsFactory.createTrs(alf, List.of(rule1), TrsFactory.AMS);
     TRS ams2 = TrsFactory.createTrs(alf, List.of(rule1, rule2), TrsFactory.AMS);
     TRS ams3 = TrsFactory.createTrs(alf, List.of(rule1, rule2), Set.of("f"), true, TrsFactory.AMS);
     TRS lcstrs1 = TrsFactory.createTrs(alf, List.of(rule3), TrsFactory.LCSTRS);
-    TRS lcstrs2 = TrsFactory.createTrs(alf, List.of(rule2, rule3), TrsFactory.LCSTRS);
+    TRS lcstrs2 = TrsFactory.createTrs(alf, List.of(rule2, rule3, rule4), TrsFactory.LCSTRS);
+    TRS cora = TrsFactory.createTrs(alf, List.of(rule5), TrsFactory.CORA);
 
     assertTrue(ams1.verifyProperties(
-      Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION));
+      Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
     assertFalse(ams2.verifyProperties(
-      Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION));
+      Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
     assertTrue(ams2.verifyProperties(
-      Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY));
+      Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY, FreshRight.NONE));
     assertFalse(ams3.verifyProperties(
-      Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY));
+      Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY, FreshRight.NONE));
     assertTrue(ams3.verifyProperties(
-      Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY,
+      Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY, FreshRight.CVARS,
       RuleScheme.Eta));
 
     assertTrue(lcstrs1.verifyProperties(
-      Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION));
+      Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION,
+      FreshRight.NONE));
     assertFalse(lcstrs1.verifyProperties(
-      Level.FIRSTORDER, Constrained.YES, TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION));
+      Level.FIRSTORDER, Constrained.YES, TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION,
+      FreshRight.NONE));
     assertTrue(lcstrs1.verifyProperties(
       Level.FIRSTORDER, Constrained.YES, TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION,
-      TermLevel.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE));
+      FreshRight.NONE, TermLevel.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE));
     
     assertFalse(lcstrs2.verifyProperties(
-      Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION));
+      Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION,
+      FreshRight.ANY));
     assertTrue(lcstrs2.verifyProperties(
-      Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY));
+      Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY,
+      FreshRight.CVARS));
+    assertFalse(lcstrs2.verifyProperties(
+      Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY,
+      FreshRight.NONE));
+
+    assertTrue(cora.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.SIMPLE,
+      Lhs.PATTERN, Root.FUNCTION, FreshRight.ANY, TermLevel.LAMBDA, Constrained.YES,
+      TypeLevel.SIMPLEPRODUCTS));
+    assertFalse(cora.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.SIMPLE,
+      Lhs.PATTERN, Root.FUNCTION, FreshRight.CVARS));
   }
 
   @Test

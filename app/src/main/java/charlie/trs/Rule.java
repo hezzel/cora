@@ -15,11 +15,11 @@
 
 package charlie.trs;
 
-import com.google.common.collect.ImmutableList;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.LinkedList;
+import java.util.Collections;
 import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.NullStorageException;
 import charlie.exceptions.TypingException;
@@ -38,7 +38,8 @@ public class Rule {
   private final Term _left;
   private final Term _right;
   private final Term _constraint;
-  private ImmutableList<Variable> _lvars;
+  private final Set<Variable> _lvars;
+  private Set<Variable> _tvars;
   private RuleRestrictions _properties;
 
   /**
@@ -50,8 +51,9 @@ public class Rule {
     _left = left;
     _right = right;
     _constraint = constraint;
-    checkCorrectness(); // this goes first, because the null check is in checkCorrectness
-    calculateLVars();
+    checkCorrectness();
+    _lvars = Collections.unmodifiableSet(constraint.vars().toSet());
+    _tvars = null;
     _properties = new RuleRestrictions(_left, _right, _constraint, _lvars);
   }
 
@@ -65,7 +67,8 @@ public class Rule {
     _right = right;
     _constraint = TheoryFactory.createValue(true);
     checkCorrectness();
-    calculateLVars();
+    _lvars = Set.of();
+    _tvars = null;
     _properties = new RuleRestrictions(_left, _right, _constraint, _lvars);
   }
 
@@ -82,8 +85,31 @@ public class Rule {
     return _constraint;
   }
 
-  public ImmutableList<Variable> queryLVars() {
+  /**
+   * Returns an UNMODIFIABLE set containing the variables that must be instantiated by a value.
+   * These are exactly the variables in the constraint.
+   */
+  public Set<Variable> queryLVars() {
     return _lvars;
+  }
+
+  /**
+   * Returns an UNMODIFIABLE set containing the variables that occur both in the constraint, and in
+   * left or right (or both).  These are the variables that play a role both at the term level and
+   * at the theory level.
+   */
+  public Set<Variable> queryTVars() {
+    // as a small optimisation, we only compute this if we actually need it
+    if (_tvars == null) {
+      _tvars = new TreeSet<Variable>();
+      for (Variable x : _constraint.vars()) {
+        if (_left.freeReplaceables().contains(x) || _right.freeReplaceables().contains(x)) {
+          _tvars.add(x);
+        }
+      }
+      _tvars = Collections.unmodifiableSet(_tvars);
+    }
+    return _tvars;
   }
 
   /** Only for internal use within the trs package. */
@@ -176,8 +202,6 @@ public class Rule {
    /**
    * Helper function for the constructor: this checks that the rule is properly set up, e.g., no
    * null components, left- and right-hand side have the same type, and both sides are closed.
-   * The checks that MVars(r) ⊆ MVars(l) and MVars(φ) = ø are postponed to calculateLVars, where
-   * they are combined with checks on the free variables of non-theory type.
    */
   private void checkCorrectness() {
     checkNothingNull();
@@ -270,58 +294,6 @@ public class Rule {
       throw new IllegalRuleException("constraint [" + _constraint.toString() +
         "] is not first-order.");
     }
-  }
-
- /**
-   * Helper function for the constructor: calculates the variables (and meta-variables) that occur
-   * in the constraint and fresh in the right-hand side, and throws an IllegalRuleException if they
-   * are anything but non-binder variables of theory sort.
-   */
-  private void calculateLVars() {
-    ReplaceableList leftvars = _left.freeReplaceables();
-    ReplaceableList rightvars = _right.freeReplaceables();
-    ImmutableList.Builder<Variable> builder = ImmutableList.<Variable>builder();
-    TreeSet<Variable> sofar = new TreeSet<Variable>();
-    for (Replaceable x : rightvars) {
-      if (leftvars.contains(x)) continue;
-      switch (x.queryReplaceableKind()) {
-        case Replaceable.KIND_METAVAR:
-          throw new IllegalRuleException("right-hand side of rule [" + toString() + "] contains " +
-            "meta-variable " + x.toString() + " which does not occur on the left.");
-        case Replaceable.KIND_BINDER:
-          throw new IllegalRuleException("right-hand side of rule [" + toString() +
-            "] introduces a fresh binder variable " + x.toString() + " (so is not closed).");
-        case Replaceable.KIND_BASEVAR:
-          if (x.queryType().isBaseType() && x.queryType().isTheoryType()) {
-            Variable y = (Variable)x;
-            if (!sofar.contains(y)) { sofar.add(y); builder.add(y); }
-          }
-          else {
-            throw new IllegalRuleException("right-hand side of rule [" + toString() + "] contains " +
-              "variable " + x.queryName() + " of type " + x.queryType().toString() + " which does " +
-              "not occur on the left; only variables of theory sorts may occur fresh (and that " +
-              "only in some kinds of TRSs).");
-          }
-          break;
-        default: throw new UnexpectedPatternException("Rule", "calculateLVars",
-          x.toString(), "metavar, binder or base var (exhausted switch for queryReplaceableKind)");
-      }
-    }
-
-    // at this point we already checked that the constraint is first-order, so we're only dealing
-    // with non-binder variables
-    for (Variable y : _constraint.vars()) {
-      if (y.queryType().isBaseType() && y.queryType().isTheoryType()) {
-        if (!sofar.contains(y)) { sofar.add(y); builder.add(y); }
-      }
-      else {
-        throw new IllegalRuleException("constraint of rule [" + toString() +
-          "] contains variable " + y.queryName() + " of type " + y.queryType().toString() +
-          " which is not a theory sort.");
-      }
-    }
-    
-    _lvars = builder.build();
   }
 }
 

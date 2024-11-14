@@ -197,9 +197,8 @@ public class OCocoSortedInputReaderTest {
       assertTrue(e.getMessage().equals(
       "2:7: Undeclared function symbol: s.\n" +
       "2:18: Undeclared function symbol: s.\n" +
-      "2:13: right-hand side of rule [f(x, s(y__1)) → f(s(x), y__2)] contains variable y of " +
-        "type o which does not occur on the left; only variables of theory sorts may occur " +
-        "fresh (and that only in some kinds of TRSs).\n" +
+      "2:13: The rule f(x, s(y__1)) → f(s(x), y__2) is not allowed to occur in MSTRSs: " +
+        "right-hand side contains a variable that does not occur in the left-hand side.\n" +
       "3:13: Undeclared function symbol: g.\n"));
         // the third error is given because the variable below s is not recognised as the same
         // variable; this does not cause a problem in the last case, because then x is already
@@ -271,9 +270,8 @@ public class OCocoSortedInputReaderTest {
     try { OCocoSortedInputReader.readTrsFromString(str); }
     catch (ParseException e) {
       assertTrue(e.getMessage().equals(
-        "1:28: right-hand side of rule [f(x, y) → f(y, z)] contains variable z of type o which " +
-        "does not occur on the left; only variables of theory sorts may occur fresh (and that " +
-        "only in some kinds of TRSs).\n"));
+        "1:28: The rule f(x, y) → f(y, z) is not allowed to occur in MSTRSs: right-hand side " +
+        "contains a variable that does not occur in the left-hand side.\n"));
       return;
     }
     assertTrue(false);

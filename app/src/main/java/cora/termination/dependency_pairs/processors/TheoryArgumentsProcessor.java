@@ -42,7 +42,7 @@ public class TheoryArgumentsProcessor implements Processor {
     return !Settings.isDisabled(queryDisabledCode()) &&
            (!_fixPublic || dpp.hasPrivateDPs()) &&
            dpp.getOriginalTRS().verifyProperties(Level.APPLICATIVE, Constrained.YES,
-                                                 TypeLevel.SIMPLE, Lhs.PATTERN, Root.THEORY);
+                       TypeLevel.SIMPLE, Lhs.PATTERN, Root.THEORY, FreshRight.CVARS);
   }
 
   /**

@@ -53,7 +53,7 @@ public class RuleTest {
   }
 
   @Test
-  public void testIllegalFreshVariableOnTheRight() {
+  public void testFreshVariableOnTheRight() {
     // f(λx.x, y) → g(y, z)
     Variable x = TermFactory.createBinder("x", type("o"));
     Variable y = TermFactory.createVar("y", type("o"));
@@ -62,12 +62,13 @@ public class RuleTest {
     Term g = TermFactory.createConstant("g", type("o → o → o"));
     Term left = TermFactory.createApp(f, TermFactory.createAbstraction(x, x), y);
     Term right = TermFactory.createApp(g, y, z);
-    assertThrows(IllegalRuleException.class, () -> new Rule(left, right));
+    Rule rule = new Rule(left, right);
+    assertTrue(rule.queryProperties().rightReplaceablePolicy() == FreshRight.ANY);
   }
 
   @Test
-  public void testLegalFreshVariableOnTheRight() {
-    // f(λx.x, y) → g(y, z)
+  public void testFreshVariableOnTheRightAndInConstraint() {
+    // f(λx.x, y) → g(y, z) | z = z
     Variable x = TermFactory.createBinder("x", type("Int"));
     Variable y = TermFactory.createVar("y", type("Int"));
     Variable z = TermFactory.createVar("z", type("Int"));
@@ -75,9 +76,10 @@ public class RuleTest {
     Term g = TermFactory.createConstant("g", type("Int → Int → Int"));
     Term left = TermFactory.createApp(f, TermFactory.createAbstraction(x, x), y);
     Term right = TermFactory.createApp(g, y, z);
-    Rule rule = new Rule(left, right);
+    Term constraint = TheoryFactory.createEquality(z, z);
+    Rule rule = new Rule(left, right, constraint);
     assertTrue(rule.queryLVars().size() == 1);
-    assertTrue(rule.queryLVars().get(0) == z);
+    assertTrue(rule.queryLVars().contains(z));
   }
 
   @Test
@@ -103,6 +105,7 @@ public class RuleTest {
     assertFalse(properties.productsUsed());
     assertTrue(properties.patternStatus() == Lhs.PATTERN);
     assertTrue(properties.rootStatus() == Root.FUNCTION);
+    assertTrue(properties.rightReplaceablePolicy() == FreshRight.NONE);
     assertFalse(rule.isConstrained());
   }
 
@@ -124,6 +127,7 @@ public class RuleTest {
     assertTrue(properties.productsUsed());
     assertTrue(properties.patternStatus() == Lhs.SEMIPATTERN);
     assertTrue(properties.rootStatus() == Root.ANY);
+    assertTrue(properties.rightReplaceablePolicy() == FreshRight.NONE);
     assertFalse(rule.isConstrained());
   }
 
@@ -143,6 +147,7 @@ public class RuleTest {
     assertFalse(properties.productsUsed());
     assertTrue(properties.patternStatus() == Lhs.NONPATTERN);
     assertTrue(properties.rootStatus() == Root.THEORY);
+    assertTrue(properties.rightReplaceablePolicy() == FreshRight.CVARS);
     assertTrue(rule.isConstrained());
   }
 
@@ -213,7 +218,7 @@ public class RuleTest {
   }
 
   @Test
-  public void testDuplicateLVarOccurrence() {
+  public void testLVars() {
     // f(x) → y | x > y
     Term f = TermFactory.createConstant("f", type("Int → Int"));
     Variable x = TermFactory.createVar("x", type("Int"));
@@ -226,6 +231,36 @@ public class RuleTest {
     assertTrue(rule.queryLVars().contains(y));
     assertTrue(rule.isConstrained());
     assertTrue(rule.queryProperties().theoriesUsed());
+    Variable z = TermFactory.createVar("z", type("Int"));
+    assertThrows(java.lang.UnsupportedOperationException.class, () -> rule.queryLVars().add(z));
+    assertTrue(rule.queryLVars().size() == 2);
+
+    // f(x) -> y
+    Rule rule2 = new Rule(f.apply(x), y);
+    assertTrue(rule2.queryLVars().size() == 0);
+    assertThrows(java.lang.UnsupportedOperationException.class, () -> rule2.queryLVars().add(z));
+  }
+
+  @Test
+  public void testTVars() {
+    // f(x) -> f(y) | x > z ∧ z > y
+    Term f = TermFactory.createConstant("f", type("Int → Int"));
+    Variable x = TermFactory.createVar("x", type("Int"));
+    Variable y = TermFactory.createVar("y", type("Int"));
+    Variable z = TermFactory.createVar("y", type("Int"));
+    Term l = f.apply(x);
+    Term r = f.apply(y);
+    Term xz = TheoryFactory.greaterSymbol.apply(x).apply(z);
+    Term zy = TheoryFactory.greaterSymbol.apply(z).apply(y);
+    Term c = TheoryFactory.createConjunction(xz, zy);
+    Rule rule = new Rule(l, r, c);
+    assertTrue(rule.queryLVars().size() == 3);
+    java.util.Set<Variable> tvar = rule.queryTVars();
+    assertTrue(tvar.size() == 2);
+    assertTrue(tvar.contains(x));
+    assertTrue(tvar.contains(y));
+    assertFalse(tvar.contains(z));
+    assertThrows(java.lang.UnsupportedOperationException.class, () -> tvar.add(z));
   }
 
   @Test

@@ -288,12 +288,13 @@ public class TRS {
    * schemes.  However, these do not need to be listed in the call to verifyProperties.
    */
   public boolean verifyProperties(Level lvl, Constrained theories, TypeLevel types, Lhs pattern,
-                                  Root rootstat, RuleScheme ...additionalSchemes) {
+                                  Root rootstat, FreshRight fresh,
+                                  RuleScheme ...additionalSchemes) {
     if (_theoriesIncluded && theories == Constrained.NO) return false;
     if (_productsIncluded && types == TypeLevel.SIMPLE) return false;
     if (TrsProperties.translateRuleToTermLevel(lvl).compareTo(_level) < 0) return false;
     if (!schemesIncluded(additionalSchemes)) return false;
-    RuleRestrictions rest = new RuleRestrictions(lvl, theories, types, pattern, rootstat);
+    RuleRestrictions rest = new RuleRestrictions(lvl, theories, types, pattern, rootstat, fresh);
     return rest.covers(_rulesProperties);
   }
 
@@ -312,15 +313,15 @@ public class TRS {
    * schemes.  However, these do not need to be listed in the call to verifyProperties.
    */
   public boolean verifyProperties(Level ruleLevel, Constrained ruleTheories, TypeLevel ruleTypes,
-                                  Lhs pattern, Root rootstat, TermLevel termLevel,
-                                  Constrained termTheories, TypeLevel termTypes,
-                                  RuleScheme ...additionalSchemes) {
+                                  Lhs pattern, Root rootstat, FreshRight ruleFreshPolicy,
+                                  TermLevel termLevel, Constrained termTheories,
+                                  TypeLevel termTypes, RuleScheme ...additionalSchemes) {
     if (_theoriesIncluded && termTheories == Constrained.NO) return false;
     if (_productsIncluded && termTypes == TypeLevel.SIMPLE) return false;
     if (termLevel.compareTo(_level) < 0) return false;
     if (!schemesIncluded(additionalSchemes)) return false;
     RuleRestrictions rest =
-      new RuleRestrictions(ruleLevel, ruleTheories, ruleTypes, pattern, rootstat);
+      new RuleRestrictions(ruleLevel, ruleTheories, ruleTypes, pattern, rootstat, ruleFreshPolicy);
     return rest.covers(_rulesProperties);
   }
 

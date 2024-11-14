@@ -63,7 +63,7 @@ public class HorpoConstraintListTest {
     assertTrue(x1 != x2);
     assertTrue(lst.toString().equals(
       "[f(x, d(y)) ≻ g(x, x) | x > 0 { x }]\n" +
-      "[g(x, d(x)) ≽{var} f(y, x) | true { y }]\n"));
+      "[g(x, d(x)) ≽{var} f(y, x) | y = y { y }]\n"));
   }
 
   @Test

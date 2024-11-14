@@ -31,6 +31,7 @@ public interface Environment<T> extends Iterable<T> {
   /** Returns the number of elements in the environment.  Note: calling this takes linear time. */
   int size();
 
+  /** Translates the current environment to a set. */
   default Set<T> toSet() {
     return StreamSupport.stream(spliterator(), false).collect(Collectors.toSet());
   }

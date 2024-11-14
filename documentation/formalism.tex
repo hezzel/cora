@@ -1060,49 +1060,54 @@ $\thSorts = \emptyset$.  This is defined when the TRS is created.
 An \emph{unconstrained rule} is a pair of expressions $\ell \arrz r$ such that:
 \begin{itemize}
 \item $\ell$ and $r$ are closed terms of the same type
-\item $\ell$ is not a meta-variable application $\meta{\Avar}{\ell_1,\dots,
-  \ell_k}$ with $k \geq 0$ (so also not a variable)
+%\item $\ell$ is not a meta-variable application $\meta{\Avar}{\ell_1,\dots,
+%  \ell_k}$ with $k \geq 0$ (so also not a variable)
 \item there is no substitution $\gamma$ such that $\ell\gamma$ is a theory term
-\item $\FMV(r) \setminus \FMV(\ell) = \emptyset$
+%\item $\FMV(r) \setminus \FMV(\ell) = \emptyset$
 \end{itemize}
 
-Although the phrasing of this is arguably somewhat different from other sources,
-these requirements are quite standard, except perhaps for the third.
+These requirements are deliberately minimalistic: unlike many other sources, we
+do \emph{not} require that the left-hand side is not a variable, or that $\FV(r)
+\subseteq \FV(\ell)$.  This is because such rules might arise due to TRS
+transformations.  While we will usually assume that $\ell$ is not a
+meta-variable application $\meta{\Avar}{\ell_1,\dots,\ell_k}$ with $k \geq 0$
+(so also not a variable), and that $\FMV(r) \setminus \FMV(\ell) = \emptyset$,
+we might not need both properties for all techniques -- and hence can be more
+permissive in specific techniques if desired.
 
-First, we require rules to be type-preserving and closed.  The former is
-standard in any form of rewriting with types.  The latter point merely states
-that $\FV(\ell) \cup \FV(r) \subseteq \Vfree$; this is not a real restriction,
-but it ensures that matching is just on meta-variables, and thus makes it
-easier to reason about rules, reduction and subterms.
+The requirement that rules are type-preserving is standard in any form of
+rewriting with types.  The requirement that rules are closed merely states that
+$\FV(\ell) \cup \FV(r) \subseteq \Vfree$; this is not a real restriction, but it
+ensures that matching is just on meta-variables, and thus makes it easier to
+reason about rules, reduction and subterms.
 
-Next, we require that no fresh meta-variables are introduced in the right-hand
-side.  This corresponds to the usual requirement in rewriting that no fresh
-variables are introduced in the right-hand side (and implies it, since
-$\Vfree \subseteq \M$, but also extends it to meta-variables of higher arity).
+%Next, we require that no fresh meta-variables are introduced in the right-hand
+%side.  This corresponds to the usual requirement in rewriting that no fresh
+%variables are introduced in the right-hand side (and implies it, since
+%$\Vfree \subseteq \M$, but also extends it to meta-variables of higher arity).
+%
+%The last requirement corresponds to the usual requirement that variables cannot
+%be the left-hand side of a rule, as this would allow any term of that type to be
+%reduced.  We extend this here to meta-variable applications, which would have
+%the same effect.
+%Note that (unlike many sources) we do \emph{not} require that $\ell$ has a shape
+%$\afun(\ell_1,\dots,\ell_k)$ with $\afun \in \F$, or that $\ell$ is a pattern.
+%While this is typically true for realistic systems, exceptions are possible
+%(for example, the regularly used $\eta$ rule $\abs{\avar}{\AFvar(\avar)} \arrz
+%\AFvar$), so a priori we do not require it.  However, analysis techniques will
+%often be limited to either disallow such rules, or allow it only for a few
+%special cases (such as the $\eta$ rule).
 
-The last requirement corresponds to the usual requirement that variables cannot
-be the left-hand side of a rule, as this would allow any term of that type to be
-reduced.  We extend this here to meta-variable applications, which would have
-the same effect.
-Note that (unlike many sources) we do \emph{not} require that $\ell$ has a shape
-$\afun(\ell_1,\dots,\ell_k)$ with $\afun \in \F$, or that $\ell$ is a pattern.
-While this is typically true for realistic systems, exceptions are possible
-(for example, the regularly used $\eta$ rule $\abs{\avar}{\AFvar(\avar)} \arrz
-\AFvar$), so a priori we do not require it.  However, analysis techniques will
-often be limited to either disallow such rules, or allow it only for a few
-special cases (such as the $\eta$ rule).
-
-As for the third requirement: note that if $\thSorts = \emptyset$ then there are
-no theory terms, so if we are reasoning in a system without theories, the last
-rule does not apply. (And in systems with $\thSorts \neq \emptyset$, we would
-typically use \emph{constrained rules} instead).
+As for the second requirement: note that if $\thSorts = \emptyset$ then there
+are no theory terms, so if we are reasoning in a system without theories, the
+last rule does not apply. (And in systems with $\thSorts \neq \emptyset$, we
+would typically use \emph{constrained rules} instead).
 This rule is given in a semantic way (quantifying over all possible
-substitutions), but if $\ell$ is a \emph{pattern} it corresponds to: there is
-some $p \in \Positions(\ell,\mathsf{all})$ such that $\ell|_p$ has a non-theory
-type or $\ell|_p \in \F \setminus \thF$.  If $\ell$ is not a pattern it's a bit
-more complicated, because for instance if $\forall :: (\tint \arrtype \bool)
-\arrtype \bool \in \thF$ and $\bfun :: \tint \arrtype \bool \in \F \setminus
-\thF$, then $\forall(\abs{\avar}{\meta{\AFvar}{\bfun(\avar)}})$ has a
+substitutions), but if $\ell$ is a \emph{semi-pattern} this restriction
+coincides with $\ell$ being a theory term.  If $\ell$ is not a semi-pattern it
+is a bit more complicated, because for instance if $\forall :: (\tint \arrtype
+\bool) \arrtype \bool \in \thF$ and $\bfun :: \tint \arrtype \bool \in \F
+\setminus \thF$, then $\forall(\abs{\avar}{\meta{\AFvar}{\bfun(\avar)}})$ has a
 non-theory subterm $\bfun(\avar)$, but could still be instantiated to a theory
 term by choosing, e.g., $\gamma(\AFvar) = \abs{\bvar}{\strue}$.
 
@@ -1120,8 +1125,8 @@ subterm.
 We say that a theory type $\atype$ \emph{is represented} in $\thF$ if,
 \begin{itemize}
 \item $\atype$ is a product type $\tuple{\atype_1}{\atype_n}$ and each
-  $\atype_I$ is represented
-\item $\atype$ not a product type and there is a set $\Reps{\atype} \subseteq
+  $\atype_i$ is represented, or
+\item $\atype$ is not a product type and there is a set $\Reps{\atype} \subseteq
   \thF$ such that $\J$ gives a one-to-one mapping from $\Reps{\atype}$ to
   $\I_\atype$.
 \end{itemize}
@@ -1142,22 +1147,22 @@ a \emph{constrained rule} is a triple of expressions $\ell \arrz r \mid
 \varphi$, such that:
 \begin{itemize}
 \item $\ell$ and $r$ are closed terms of the same type
-\item $\ell$ is not a meta-variable application $\meta{\Avar}{\ell_1,\dots,
-  \ell_k}$ with $k \geq 0$ (so also not a variable)
+%\item $\ell$ is not a meta-variable application $\meta{\Avar}{\ell_1,\dots,
+%  \ell_k}$ with $k \geq 0$ (so also not a variable)
 \item there is no substitution $\gamma$ such that $\ell\gamma$ is a theory term
-\item $\FMV(r) \setminus \FMV(\ell) \subseteq \FV(\varphi)$
+%\item $\FMV(r) \setminus \FMV(\ell) \subseteq \FV(\varphi)$
 \item $\varphi$ is a closed constraint
 \item for any $(\avar :: \atype) \in \FV(\varphi)$:
   if $\avar \in \FV(\ell) \cup \FV(r)$ then $\atype$ is represented in
   $\thF$
 \end{itemize}
 
-The first three requirements are the same as for unconstrained rules.  The
-fourth differs in that fresh variables are allowed in the right-hand side of a
-rule provided they occur in the constraint.  Such a fresh variable could be
-obtained through a calculation in the constraint, or it could serve to model
-user input or non-determinism.
-
+The first two requirements are the same as for unconstrained rules.
+%The fourth differs in that fresh variables are allowed in the right-hand side of a
+%rule provided they occur in the constraint.  Such a fresh variable could be
+%obtained through a calculation in the constraint, or it could serve to model
+%user input or non-determinism.
+%
 The other two requirements are new to constrained rewriting.  The main one is
 the addition of a constraint $\varphi$: this constraint imposes limitations on
 the substitutions to reduce using this rule.  For example (as we will see
@@ -1178,6 +1183,8 @@ each element in the mathematical set must have a representative at the term
 level.
 In practice, we will typically limit interest to variables with type order $0$,
 which guarantees representation through values (or tuples of values).
+
+=====================
 
 We write $\LVar{\ell \arrz r \mid \varphi} = \FV(\varphi)$.  These are the
 variables that should be thought of as ``something in the theory''.

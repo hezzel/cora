@@ -24,32 +24,37 @@ public class RuleRestrictionsTest {
   @Test
   public void testBasicCreate() {
     RuleRestrictions rest = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES,
-                                                 TypeLevel.SIMPLE, Lhs.NONPATTERN, Root.ANY);
+                       TypeLevel.SIMPLE, Lhs.NONPATTERN, Root.ANY, FreshRight.CVARS);
     assertTrue(rest.queryLevel() == Level.APPLICATIVE);
     assertTrue(rest.theoriesUsed());
     assertFalse(rest.productsUsed());
     assertTrue(rest.patternStatus() == Lhs.NONPATTERN);
     assertTrue(rest.rootStatus() == Root.ANY);
+    assertTrue(rest.rightReplaceablePolicy() == FreshRight.CVARS);
   }
 
   @Test
   public void testCovers() {
     RuleRestrictions nothing = new RuleRestrictions(Level.FIRSTORDER, Constrained.YES,
                                                     TypeLevel.SIMPLE, Lhs.PATTERN,
-                                                    Root.FUNCTION);
+                                                    Root.FUNCTION, FreshRight.NONE);
     RuleRestrictions anything = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.SIMPLEPRODUCTS,
-                                                     Lhs.NONPATTERN, Root.ANY);
+                                                     Lhs.NONPATTERN, Root.ANY, FreshRight.ANY);
     assertTrue(nothing.checkCoverage(nothing) == null);
     assertTrue(nothing.checkCoverage(anything).equals(
       "rule level is limited to first-order terms, not meta-terms"));
-    RuleRestrictions a = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLEPRODUCTS,
-                                              Lhs.PATTERN, Root.THEORY);
+    RuleRestrictions a = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES,
+              TypeLevel.SIMPLEPRODUCTS, Lhs.PATTERN, Root.THEORY, FreshRight.NONE);
     RuleRestrictions b = new RuleRestrictions(Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE,
-                                              Lhs.SEMIPATTERN, Root.THEORY);
+                                              Lhs.SEMIPATTERN, Root.THEORY, FreshRight.ANY);
     RuleRestrictions c = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES,
-                                              TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY);
-    RuleRestrictions d = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.SIMPLEPRODUCTS,
-                                              Lhs.PATTERN, Root.ANY);
+                   TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY, FreshRight.CVARS);
+    RuleRestrictions d = new RuleRestrictions(Level.META, Constrained.YES,
+        TypeLevel.SIMPLEPRODUCTS, Lhs.PATTERN, Root.ANY, FreshRight.ANY);
+    RuleRestrictions e = new RuleRestrictions(Level.FIRSTORDER, Constrained.NO,
+        TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION, FreshRight.CVARS);
+    RuleRestrictions f = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.SIMPLE,
+                                              Lhs.SEMIPATTERN, Root.ANY, FreshRight.CVARS);
     assertTrue(a.checkCoverage(b).equals(
       "rule level is limited to applicative terms, not true terms"));
     assertTrue(a.checkCoverage(c).equals(
@@ -60,14 +65,20 @@ public class RuleRestrictionsTest {
       "use of tuples (or any occurrence of product types) is not supported"));
     assertTrue(d.checkCoverage(b).equals(
       "left-hand side should be a pattern, not a semi-pattern"));
+    assertTrue(nothing.checkCoverage(e).equals(
+      "right-hand side contains a variable that does not occur in the left-hand side"));
+    assertTrue(f.checkCoverage(d).equals(
+      "right-hand side contains a meta-variable that does not occur in the left-hand " +
+      "side or the constraint"));
   }
 
   @Test
   public void testSupremum() {
     RuleRestrictions a = new RuleRestrictions(Level.APPLICATIVE, Constrained.NO,
-                                              TypeLevel.SIMPLEPRODUCTS, Lhs.SEMIPATTERN, Root.ANY);
+                                              TypeLevel.SIMPLEPRODUCTS, Lhs.SEMIPATTERN, Root.ANY,
+                                              FreshRight.NONE);
     RuleRestrictions b = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.SIMPLE,
-                                              Lhs.PATTERN, Root.THEORY);
+                                              Lhs.PATTERN, Root.THEORY, FreshRight.CVARS);
     // doing it from either side should result in the same
     RuleRestrictions c = a.supremum(b);
     RuleRestrictions d = b.supremum(a);
@@ -81,6 +92,8 @@ public class RuleRestrictionsTest {
     assertTrue(d.patternStatus() == Lhs.SEMIPATTERN);
     assertTrue(c.rootStatus() == Root.ANY);
     assertTrue(d.rootStatus() == Root.ANY);
+    assertTrue(c.rightReplaceablePolicy() == FreshRight.CVARS);
+    assertTrue(d.rightReplaceablePolicy() == FreshRight.CVARS);
   }
 }
 

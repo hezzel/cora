@@ -64,7 +64,7 @@ public abstract class DPFramework {
    */
   protected ProofObject determineApplicability(TRS trs) {
     if (!trs.verifyProperties(Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE,
-                              Lhs.PATTERN, Root.THEORY)) {
+                              Lhs.PATTERN, Root.THEORY, FreshRight.CVARS)) {
       return new ProofObject() {
         public Answer queryAnswer() { return Answer.NO; }
         public void justify(OutputModule o) {

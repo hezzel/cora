@@ -100,6 +100,35 @@ public class CoraInputReader extends TermTyper {
   // ======================================= READING FULL TRSS ====================================
 
   /**
+   * Traditionally, fresh variables used in the right-hand side of a rule are used to model input
+   * or random behaviour.  However, in most styles of TRSs in Charlie, this is not allowed. 
+   * Instead, such variables should be included in the constraint.  Hence, we here do this move for
+   * the user, allowing them to omit fresh variables from the constraint as syntactic sugar.
+   *
+   * (If the user wishes to actually specify a rule where the right-hand side contains a variable
+   * that does not occur in the left or constraint, and that should not be considered a theory
+   * variable, then this should be explicitly indicated.  There is currently no syntax for this,
+   * but if the need arises such a syntax could be added in the future.)
+   */
+  private Term moveFreshVariablesIntoConstraint(Term left, Term right, Term constr, TrsKind kind,
+                                                Token token) {
+    for (Variable x : right.vars()) {
+      if (left.freeReplaceables().contains(x)) continue;
+      if (!x.queryType().isTheoryType() || !x.queryType().isBaseType()) {
+        storeError("right-hand side of rule has a fresh variable " + x.queryName() + " of type " +
+          x.queryType().toString() + " which does not occur on the left; only variables of " +
+          "theory sorts may occur fresh (and that only in some kinds of TRSs).", token);
+        continue;
+      }
+      if (constr == null) constr = TheoryFactory.createEquality(x, x);
+      else if (!constr.freeReplaceables().contains(x)) {
+        constr = TheoryFactory.createConjunction(constr, TheoryFactory.createEquality(x, x));
+      }
+    }
+    return constr;
+  }
+
+  /**
    * Either returns a valid rule, or returns null and potentially stores an erorr if the given
    * parser rule does not define a valid rule.
    * Here, kind is allowed to be null.
@@ -118,6 +147,10 @@ public class CoraInputReader extends TermTyper {
       c = makeTerm(rule.constraint(), TypeFactory.boolSort, true);
     }
     if (l == null || r == null) return null;
+
+    if (kind == null || kind.theoriesIncluded()) {
+      c = moveFreshVariablesIntoConstraint(l, r, c, kind, rule.left().token());
+    }
     
     try {
       if (c == null && kind == null) return TrsFactory.createRule(l, r);

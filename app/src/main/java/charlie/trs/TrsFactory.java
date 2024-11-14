@@ -34,28 +34,28 @@ public class TrsFactory {
     private String _name;
     private RuleRestrictions _restrictions;
     private TrsKind(String name, Level lvl, Constrained theories, TypeLevel tlvl, Lhs pattern,
-                    Root rootstat) {
+                    Root rootstat, FreshRight fresh) {
       _name = name;
-      _restrictions = new RuleRestrictions(lvl, theories, tlvl, pattern, rootstat);
+      _restrictions = new RuleRestrictions(lvl, theories, tlvl, pattern, rootstat, fresh);
     }
     public boolean theoriesIncluded() { return _restrictions.theoriesUsed(); }
     public String toString() { return _name + " with " + _restrictions.toString(); }
   }
 
   public static final TrsKind MSTRS = new TrsKind("MSTRS",
-    Level.FIRSTORDER,  Constrained.NO,  TypeLevel.SIMPLE,         Lhs.PATTERN,     Root.FUNCTION);
+    Level.FIRSTORDER,  Constrained.NO,  TypeLevel.SIMPLE,    Lhs.PATTERN,     Root.FUNCTION, FreshRight.NONE);
   public static final TrsKind STRS = new TrsKind("STRS",
-    Level.APPLICATIVE, Constrained.NO,  TypeLevel.SIMPLE,         Lhs.SEMIPATTERN, Root.ANY);
+    Level.APPLICATIVE, Constrained.NO,  TypeLevel.SIMPLE,    Lhs.SEMIPATTERN, Root.ANY,      FreshRight.NONE);
   public static final TrsKind CFS = new TrsKind("CFS",
-    Level.LAMBDA,      Constrained.NO,  TypeLevel.SIMPLE,         Lhs.SEMIPATTERN, Root.ANY);
+    Level.LAMBDA,      Constrained.NO,  TypeLevel.SIMPLE,    Lhs.SEMIPATTERN, Root.ANY,      FreshRight.NONE);
   public static final TrsKind AMS = new TrsKind("AMS",
-    Level.META,        Constrained.NO,  TypeLevel.SIMPLE,         Lhs.SEMIPATTERN, Root.ANY);
+    Level.META,        Constrained.NO,  TypeLevel.SIMPLE,    Lhs.SEMIPATTERN, Root.ANY,      FreshRight.NONE);
   public static final TrsKind LCTRS = new TrsKind("LCTRS",
-    Level.FIRSTORDER,  Constrained.YES, TypeLevel.SIMPLE,         Lhs.PATTERN,     Root.THEORY);
+    Level.FIRSTORDER,  Constrained.YES, TypeLevel.SIMPLE,    Lhs.PATTERN,     Root.THEORY,   FreshRight.CVARS);
   public static final TrsKind LCSTRS = new TrsKind("LCSTRS",
-    Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE,         Lhs.SEMIPATTERN, Root.ANY);
+    Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE,    Lhs.SEMIPATTERN, Root.ANY,      FreshRight.CVARS);
   public static final TrsKind CORA = new TrsKind("Cora-TRS",
-    Level.META,        Constrained.YES, TypeLevel.SIMPLEPRODUCTS, Lhs.NONPATTERN,  Root.ANY);
+    Level.META,   Constrained.YES, TypeLevel.SIMPLEPRODUCTS, Lhs.NONPATTERN,  Root.ANY,      FreshRight.ANY);
 
   /**
    * Check if the given rule is allowed in the given kind of TRS.  If not, throws an

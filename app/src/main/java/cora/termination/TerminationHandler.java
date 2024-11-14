@@ -64,39 +64,9 @@ public class TerminationHandler {
   private static TRS updateTRSConstraints(TRS trs) {
     if (Settings.queryRewritingStrategy().equals(Settings.Strategy.CallByValue) &&
         CallByValueModifier.isApplicable(trs)) {
-      trs = CallByValueModifier.modify(trs);
+      return CallByValueModifier.modify(trs);
     }
-    return includeLVarInConstraint(trs);
-  }
-
-  /**
-   * This function creates an updated TRS where all elements of LVar(l → r | φ) are included in
-   * the constraint.  (The original TRS is unaffected.)
-   * This allows any analysis to assume that the theory variables are exactly the elements of FV(φ).
-   *
-   * Made default instead of private only for the sake of unit testing.
-   */
-  static TRS includeLVarInConstraint(TRS trs) {
-    ArrayList<Rule> rules = new ArrayList<Rule>(trs.queryRuleCount());
-    boolean changed = false;
-    for (int i = 0; i < trs.queryRuleCount(); i++) {
-      Rule rho = trs.queryRule(i);
-      Term constraint = rho.queryConstraint();
-      Term newconstraint = constraint;
-      for (Variable x : rho.queryLVars()) {
-        if (!constraint.vars().contains(x)) {
-          Term eq = TheoryFactory.createEquality(x, x); 
-          newconstraint = TheoryFactory.createConjunction(newconstraint, eq);
-        }
-      }
-      if (constraint == newconstraint) rules.add(rho);
-      else {
-        rules.add(TrsFactory.createRule(rho.queryLeftSide(), rho.queryRightSide(), newconstraint));
-        changed = true;
-      }
-    }
-    if (!changed) return trs;
-    return trs.createDerivative(rules);
+    return trs;
   }
 
   /** This selects the right DP Framework based on the settings and extra rules property */

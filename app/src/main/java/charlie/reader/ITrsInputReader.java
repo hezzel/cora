@@ -408,7 +408,7 @@ public class ITrsInputReader {
     }   
     Term r = makeTerm(rule.right(), l.queryType());
     Term constraint = null;
-    if (rule.constraint() != null) constraint = makeTerm(rule.constraint(), null);
+    if (rule.constraint() != null) constraint = makeTerm(rule.constraint(), TypeFactory.boolSort);
 
     try {
       if (constraint != null) return TrsFactory.createRule(l, r, constraint, TrsFactory.LCTRS);

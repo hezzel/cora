@@ -40,7 +40,7 @@ public class SubtermProcessor implements Processor {
            (dpp.isInnermost() || dpp.terminating()) &&
            dpp.getOriginalTRS().verifyProperties(Level.APPLICATIVE, Constrained.YES,
                                                  TypeLevel.SIMPLEPRODUCTS, Lhs.NONPATTERN,
-                                                 Root.ANY);
+                                                 Root.ANY, FreshRight.ANY);
   }
 
   /**

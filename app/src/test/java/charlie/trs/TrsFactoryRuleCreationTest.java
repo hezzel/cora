@@ -85,10 +85,17 @@ public class TrsFactoryRuleCreationTest {
     FunctionSymbol f = TermFactory.createConstant("f", type("Bool -> Int -> o"));
     Term left = TermFactory.createApp(f, x, y);
     Term right = TermFactory.createApp(f, x, z);
+    // this is not allowed for an MSTRS
     assertThrows(IllegalRuleException.class,
       () -> TrsFactory.createRule(left, right, TrsFactory.MSTRS));
-    // for an LCTRS, it is allowed!
-    TrsFactory.createRule(left, right, TrsFactory.LCTRS);
+    // it's also disallowed for an LCTRS
+    assertThrows(IllegalRuleException.class,
+      () -> TrsFactory.createRule(left, right, TrsFactory.LCTRS));
+    // but it IS allowed if the fresh variable occurs in the constraint
+    Term constraint = TheoryFactory.greaterSymbol.apply(y).apply(z);
+    TrsFactory.createRule(left, right, constraint, TrsFactory.LCTRS);
+    // and it is allowed even without constraint in a CORA-TRS
+    TrsFactory.createRule(left, right, TrsFactory.CORA);
   }
 
   @Test
