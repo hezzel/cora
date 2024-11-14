@@ -1184,8 +1184,6 @@ level.
 In practice, we will typically limit interest to variables with type order $0$,
 which guarantees representation through values (or tuples of values).
 
-=====================
-
 We write $\LVar{\ell \arrz r \mid \varphi} = \FV(\varphi)$.  These are the
 variables that should be thought of as ``something in the theory''.
 We let $\TLVar{\ell \arrz r \mid \varphi} = \FV(\varphi) \cap (\FV(\ell) \cup
@@ -1322,8 +1320,7 @@ A rule $\ell \arrz r \mid \varphi$ is:
   \FMV(\ell)$ there is at most one position $p$ such that $\ell|_p$ has a form
   $\meta{\Avar}{\ell_1,\dots,\ell_k}$;
 \item \emph{meta-free} if $\FMV(\ell) = \FV(s)$.
-\item \emph{unconstrained} if $\varphi = \strue$, $\ell$ is not a theory term
-  and $\FMV(r) \subseteq \FMV(\ell)$
+\item \emph{unconstrained} if $\varphi = \strue$ and $\ell$ is not a theory term
 \item a \emph{theory rule} if $\ell$ is a theory term
 \item a \emph{calculation rule} if it has the form
   $\afun(\avar_1,\dots,\avar_k) \arrz \bvar \mid \bvar = \afun(\avar_1,\dots,
@@ -1347,7 +1344,7 @@ mandatory for the left-hand side to have such a shape.)
   higher-order calculation symbols.
 \item \emph{For now}, \charlie does not admit higher-order variables or tuple
   variables in constraints, because this is not yet supported by the SMT
-  modules.  This is very likely to change in the (near) future.
+  modules.  This is very likely to change in the future.
 \end{itemize}
 
 \section{Generalised term rewriting systems}\label{sec:trs}

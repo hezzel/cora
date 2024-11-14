@@ -133,10 +133,9 @@ public class Rule {
 
   /**
    * This returns whether the rule is a constrained rule -- which is the case if the constraint
-   * is anything other than the value true, or if lvar is non-empty.
+   * is anything other than the value true.
    */
   public boolean isConstrained() {
-    if (_lvars != null && !_lvars.isEmpty()) return true;
     Value value = _constraint.toValue();
     if (value == null) return true;
     return !value.getBool();
@@ -171,7 +170,7 @@ public class Rule {
   public boolean isLeftLinear() {
     return _left.isLinear();
   }
-  
+
   /** This returns whether the left-hand side has a root that is a (non-theory) function symbol. */
   public boolean queryTermFunctionRoot() {
     return _properties.rootStatus() == Root.FUNCTION;
