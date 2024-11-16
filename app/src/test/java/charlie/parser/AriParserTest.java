@@ -89,8 +89,20 @@ public class AriParserTest {
   }
 
   @Test
-  public void testReadCorrectHigherOrderTRS() {
+  public void testDoubleDeclaration() {
     ErrorCollector collector = new ErrorCollector();
+    ParserProgram prog = AriParser.readProgramFromString(
+      "(format higher-order)\n" +
+      "(sort o)\n" +
+      "(fun f (-> o o))\n" +
+      "(fun f (-> o o o))", collector);
+    assertTrue(collector.queryCollectedMessages().equals(
+      "4:6: Duplicate definition of function symbol f\n"));
+  }
+
+  @Test
+  public void testReadCorrectHigherOrderTRS() {
+    // we can parse constants nil, variables x, and identifiers with arguments
     ParserProgram program = AriParser.readProgramFromString(
       "(format higher-order)\n" +
       "(sort a)\n" +
@@ -100,9 +112,58 @@ public class AriParserTest {
       "(fun nil list)\n" +
       "(rule (map nil F) nil)\n" +
       "(rule (map (cons x l) F) (cons (F x) (map l F)))\n");
-    //System.out.println(program);
-    //assertTrue(false);
-    // TODO
+    assertTrue(program.rules().size() == 2);
+    assertTrue(program.rules().get(0).toString().equals("{ [] } @(map, [nil, F]) → nil"));
+    assertTrue(program.rules().get(1).toString().equals(
+      "{ [] } @(map, [@(cons, [x, l]), F]) → @(cons, [@(F, [x]), @(map, [l, F])])"));
+  }
+
+  @Test
+  public void testReadUndeclaredFunction() {
+    // this is totally allowed!
+    ErrorCollector collector = new ErrorCollector();
+    ParserProgram program = AriParser.readProgramFromString(
+      "(format higher-order)\n" +
+      "(sort a)\n" +
+      "(fun f (-> a a a))\n" +
+      "(rule (g x x) x)\n" +
+      "(rule (f x x) x)\n",
+      collector
+    );
+    assertTrue(program.rules().size() == 2);
+    assertTrue(program.rules().get(0).toString().equals("{ [] } @(g, [x, x]) → x"));
+    assertTrue(program.rules().get(1).toString().equals("{ [] } @(f, [x, x]) → x"));
+    assertTrue(collector.queryErrorCount() == 0);
+  }
+
+  @Test
+  public void testLambdaTerms() {
+    ParserProgram program = AriParser.readProgramFromString(
+      "(format higher-order)\n" +
+      "(sort a)\n" +
+      "(sort b)\n" +
+      "(rule (f Z) (g (lambda ((x b)) (Z x))))\n" +
+      "(rule (f Z) (g (lambda ((x (-> a b)) (y a)) (Z x))))\n" +
+      "(rule (app (lambda ((x a)) (Z x)) y) (Z y))\n");
+    assertTrue(program.rules().size() == 3);
+    assertTrue(program.rules().get(0).toString().equals(
+      "{ [] } @(f, [Z]) → @(g, [λx::b.@(Z, [x])])"));
+    assertTrue(program.rules().get(1).toString().equals(
+      "{ [] } @(f, [Z]) → @(g, [λx::a → b.λy::a.@(Z, [x])])"));
+    assertTrue(program.rules().get(2).toString().equals(
+      "{ [] } @(app, [λx::a.@(Z, [x]), y]) → @(Z, [y])"));
+  }
+
+  @Test
+  public void testBrokenLambda() {
+    ErrorCollector collector = new ErrorCollector();
+    ParserProgram program = AriParser.readProgramFromString(
+      "(format higher-order)\n" +
+      "(sort a)\n" +
+      "(rule b (lambda () b))\n",
+      collector);
+    assertTrue(collector.queryCollectedMessages().equals(
+      "3:10: Lambda should have at least one variable.\n"));
   }
 }
 

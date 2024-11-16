@@ -82,6 +82,7 @@ public class App {
     String extension = getExtension(file);
     if (extension.equals("trs")) return OCocoInputReader.readTrsFromFile(file);
     else if (extension.equals("itrs")) return ITrsInputReader.readTrsFromFile(file);
+    else if (extension.equals("ari")) return AriInputReader.readTrsFromFile(file);
     else return CoraInputReader.readTrsFromFile(file);
   }
 

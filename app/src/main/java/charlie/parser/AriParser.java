@@ -101,7 +101,8 @@ public class AriParser {
 
   /**
    * This reads a term from the current parsing status.  Only limited error recovery is done if the
-   * term is poorly formatted.
+   * term is poorly formatted.  It is possible that null is returned if there are errors in the
+   * specificiation.
    *
    * Grammar: term ::= IDENTIFIER | ( IDENTIFIER term+ ) | (LAMBDA (var+) term)
    */
@@ -111,10 +112,10 @@ public class AriParser {
     if (id != null) return new Identifier(id, id.getText());
 
     if (_status.expect(AriTokenData.BRACKETOPEN, "opening bracket") == null) return null;
-    Token main = _status.nextToken();
 
     // case: ( IDENTIFIER term+ )
-    if (main.getName().equals(AriTokenData.IDENTIFIER)) {
+    Token main = _status.readNextIf(AriTokenData.IDENTIFIER);
+    if (main != null) {
       ImmutableList.Builder<ParserTerm> builder = ImmutableList.<ParserTerm>builder();
       while (_status.readNextIf(AriTokenData.BRACKETCLOSE) == null) {
         ParserTerm arg = readTerm();
@@ -221,7 +222,11 @@ public class AriParser {
       Type type = name == null ? null : readType();
       _status.expect(AriTokenData.BRACKETCLOSE, "closing bracket");
       if (name != null && type != null) {
-        symbols.put(name.getText(), new ParserDeclaration(name, name.getText(), type));
+        String n = name.getText();
+        if (symbols.containsKey(n)) {
+          _status.storeError("Duplicate definition of function symbol " + n, name);
+        }
+        else symbols.put(n, new ParserDeclaration(name, n, type));
       }
     }
   }
@@ -305,7 +310,8 @@ public class AriParser {
    * Reads a full TRS from the given file, saving errors to the given collector.
    * @throws charlie.exceptions.ParseException
    */
-  public static ParserProgram readFile(String filename, ErrorCollector coll) throws IOException {
+  public static ParserProgram readProgramFromFile(String filename,
+                                                  ErrorCollector coll) throws IOException {
     return readProgram(AriTokenData.getFileLexer(filename), coll);
   }
 }
