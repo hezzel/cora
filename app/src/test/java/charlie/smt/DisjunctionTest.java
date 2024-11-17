@@ -17,7 +17,7 @@ package charlie.smt;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.ArrayList;
+import java.util.List;
 
 public class DisjunctionTest {
   @Test
@@ -47,11 +47,23 @@ public class DisjunctionTest {
   }
 
   @Test
+  public void testComparison() {
+    Constraint disj = new Disjunction(new BVar(2), new BVar(3));
+    Constraint disj2 = new Disjunction(List.of(new BVar(12)));
+    Constraint disj3 = new Disjunction(List.of(new BVar(1), new BVar(7), new BVar(2)));
+    Constraint disj4 = new Disjunction(new BVar(3), new BVar(2));
+    Constraint conj = new Conjunction(new BVar(2), new BVar(3));
+    assertTrue(disj.compareTo(disj2) > 0);  // more arguments
+    assertTrue(disj.compareTo(disj3) < 0);  // fewer arguments
+    assertTrue(disj.compareTo(disj4) < 0);  // first argument is smaller
+    assertTrue(disj.compareTo(conj) > 0);   // conjunctions before disjunctions
+  }
+
+  @Test
   public void testToString() {
-    ArrayList<Constraint> args = new ArrayList<Constraint>();
-    args.add(new Truth());
-    args.add(SmtFactory.createGeq(new IValue(7), new IVar(12)));
-    args.add(new BVar(12, "x"));
+    List<Constraint> args = List.of(new Truth(),
+                                    SmtFactory.createGeq(new IValue(7), new IVar(12)),
+                                    new BVar(12, "x"));
     Constraint disj = new Disjunction(args);
     assertTrue(disj.toSmtString().equals("(or true (>= (+ 7 (- i12)) 0) b12)"));
     assertTrue(disj.toString().equals("true or (7 >= i12) or [x]"));

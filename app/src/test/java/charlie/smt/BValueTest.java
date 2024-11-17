@@ -27,6 +27,10 @@ public class BValueTest {
     assertFalse(y.evaluate());
     assertTrue(x.toString().equals("true"));
     assertTrue(y.toString().equals("false"));
+    assertTrue(x.compareTo(x) == 0);
+    assertTrue(y.compareTo(y) == 0);
+    assertTrue(x.compareTo(y) == 1);
+    assertTrue(y.compareTo(x) == -1);
   }
 
   @Test

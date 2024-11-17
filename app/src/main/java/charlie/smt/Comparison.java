@@ -50,10 +50,22 @@ abstract sealed class Comparison extends Constraint permits Geq0, Is0, Neq0 {
     builder.append(" 0)");
   }
 
-  public boolean equals(Constraint other) {
-    if (!(other instanceof Comparison)) return false;
-    Comparison c = (Comparison)other;
-    return c.symbol().equals(symbol()) && _expr.equals(c.queryExpression());
+  public int compareTo(Constraint other) {
+    return switch (other) {
+      case Falsehood _ -> 1;
+      case Truth _ -> 1;
+      case BVar _ -> 1;
+      case NBVar _ -> 1;
+      case Comparison comp -> {
+        int cmp = symbol().compareTo(comp.symbol());
+        if (cmp != 0) yield cmp;
+        yield _expr.compareTo(comp._expr);
+      }
+      case Junction _ -> -1;
+      case Iff _ -> -1;
+      case EqS _ -> -1;
+      case UneqS _ -> -1;
+    };
   }
 }
 

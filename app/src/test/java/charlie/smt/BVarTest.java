@@ -61,6 +61,20 @@ public class BVarTest {
   }
 
   @Test
+  public void testComparison() {
+    BVar x = new BVar(12);
+    BVar a = new BVar(3);
+    BVar b = new BVar(12);
+    BVar c = new BVar(48);
+    assertTrue(x.compareTo(a) > 0);
+    assertTrue(x.compareTo(b) == 0);
+    assertTrue(x.compareTo(c) < 0);
+    assertTrue(x.compareTo(new NBVar(a)) > 0);
+    assertTrue(x.compareTo(new NBVar(b)) < 0);
+    assertTrue(x.compareTo(new NBVar(c)) < 0);
+  }
+
+  @Test
   public void testEvaluate() {
     BVar x = new BVar(3);
     assertThrows(charlie.exceptions.SmtEvaluationException.class, () -> x.evaluate());

@@ -160,7 +160,7 @@ public class TermSmtTranslatorTest {
     Variable x = TheoryFactory.createVar("x", TypeFactory.boolSort);
     Term t = TheoryFactory.notSymbol.apply(x);
     Constraint c = tst.translateConstraint(t);
-    assertTrue(c.toString().equals("not b1"));
+    assertTrue(c.toString().equals("!b1"));
   }
 
   @Test

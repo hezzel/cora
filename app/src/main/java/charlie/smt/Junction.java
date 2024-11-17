@@ -64,15 +64,26 @@ abstract sealed class Junction extends Constraint permits Conjunction, Disjuncti
     builder.append(")");
   }
 
-  public boolean equals(Constraint other) {
-    if (!(other instanceof Junction)) return false;
-    Junction j = (Junction)other;
-    if (!symbol().equals(j.symbol())) return false;
-    if (j.numChildren() != _children.size()) return false;
-    for (int i = 0; i < _children.size(); i++) {
-      if (!_children.get(i).equals(j.queryChild(i+1))) return false;
-    }
-    return true;
+  public int compareTo(Constraint other) {
+    return switch (other) {
+      case Falsehood _ -> 1;
+      case Truth _ -> 1;
+      case BVar _ -> 1;
+      case NBVar _ -> 1;
+      case Comparison _ -> 1;
+      case Junction junc -> {
+        int c = symbol().compareTo(junc.symbol());
+        if (c == 0) c = _children.size() - junc.numChildren();
+        if (c != 0) yield c;
+        for (int i = 1; i <= _children.size() && c == 0; i++) {
+          c = _children.get(i-1).compareTo(junc.queryChild(i));
+        }
+        yield c;
+      }
+      case Iff _ -> -1; 
+      case EqS _ -> -1; 
+      case UneqS _ -> -1; 
+    };  
   }
 }
 

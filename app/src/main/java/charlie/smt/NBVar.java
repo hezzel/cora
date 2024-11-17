@@ -48,8 +48,18 @@ public final class NBVar extends Constraint {
     builder.append(")");
   }
 
-  public boolean equals(Constraint other) {
-    return (other instanceof NBVar n) && (_negated.queryIndex() == n.queryIndex());
+  public int compareTo(Constraint other) {
+    return switch (other) {
+      case Falsehood _ -> 1;
+      case Truth _ -> 1;
+      case NBVar x -> _negated.queryIndex() - x.queryIndex();
+      case BVar x -> {
+        int ret = _negated.queryIndex() - x.queryIndex();
+        if (ret == 0) yield 1;
+        else yield ret;
+      }
+      default -> -1;
+    };
   }
 
   public int hashCode() { return _negated.hashCode() + 1; }

@@ -51,12 +51,20 @@ public final class EqS extends Constraint {
     builder.append(")");
   }
 
-  public boolean equals(Constraint other) {
-    return (other instanceof EqS o) && (_left.equals(o._left)) && (_right.equals(o._right));
+  public int compareTo(Constraint other) {
+    return switch (other) {
+      case UneqS _ -> -1;
+      case EqS eqs -> {
+        int c = _left.compareTo(eqs._left);
+        if (c == 0) c = _right.compareTo(eqs._right);
+        yield c;
+      }
+      default -> 1;
+    };
   }
 
   public int hashCode() {
-    return 17 * (_left.hashCode() + 31 * _right.hashCode()) + 9;
+    return 17 * (_left.hashCode() + 31 * _right.hashCode()) + 8;
   }
 }
 

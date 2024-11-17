@@ -345,7 +345,7 @@ public class HorpoSimplifierTest {
     assertTrue(pair.snd().toString().equals("[x ≽{theory} x ∧ false | x { x }]\n"));
     assertTrue(solver._requests.size() == 1);
     // x ⇒ x ∨ ¬(x ∧ false)
-    assertTrue(solver._requests.get(0).equals("!b1 or b1 or (not (b1 and false))"));
+    assertTrue(solver._requests.get(0).equals("!b1 or b1 or !b1 or true"));
   }
 
   @Test
@@ -357,7 +357,7 @@ public class HorpoSimplifierTest {
     assertTrue(pair.snd().toString().equals("![x ≻{theory} x ∨ false | x { x }]\n"));
     assertTrue(solver._requests.size() == 1);
     // x ⇒ x ∧ ¬(x ∨ false)
-    assertTrue(solver._requests.get(0).equals("!b1 or (b1 and (not (b1 or false)))"));
+    assertTrue(solver._requests.get(0).equals("!b1 or (b1 and !b1 and true)"));
   }
 
   @Test

@@ -53,8 +53,18 @@ public final class BVar extends Constraint {
     builder.append("b" + _index);
   }
 
-  public boolean equals(Constraint other) {
-    return (other instanceof BVar) && (_index == ((BVar)other).queryIndex());
+  public int compareTo(Constraint other) {
+    return switch (other) {
+      case Falsehood _ -> 1;
+      case Truth _ -> 1;
+      case BVar x -> _index - x._index;
+      case NBVar x -> {
+        int ret = _index - x.queryIndex();
+        if (ret == 0) yield -1;
+        else yield ret;
+      }
+      default -> -1; 
+    };
   }
 
   public int hashCode() {

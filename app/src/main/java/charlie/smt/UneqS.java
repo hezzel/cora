@@ -51,12 +51,19 @@ public final class UneqS extends Constraint {
     builder.append(")");
   }
 
-  public boolean equals(Constraint other) {
-    return (other instanceof UneqS o) && (_left.equals(o._left)) && (_right.equals(o._right));
+  public int compareTo(Constraint other) {
+    return switch (other) {
+      case UneqS unexp -> {
+        int c = _left.compareTo(unexp._left);
+        if (c == 0) c = _right.compareTo(unexp._right);
+        yield c;
+      }
+      default -> 1;
+    };
   }
 
   public int hashCode() {
-    return 17 * (_left.hashCode() + 31 * _right.hashCode()) + 10;
+    return 17 * (_left.hashCode() + 31 * _right.hashCode()) + 9;
   }
 }
 

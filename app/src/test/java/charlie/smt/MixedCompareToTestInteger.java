@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 
-public class MixedCompareToTest {
+public class MixedCompareToTestInteger {
   private ArrayList<IntegerExpression> createDifferentIntegerExpressions() {
     IntegerExpression x = new IVar(1);
     IntegerExpression y = new IVar(2);

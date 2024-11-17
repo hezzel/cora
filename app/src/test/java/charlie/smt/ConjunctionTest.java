@@ -48,6 +48,25 @@ public class ConjunctionTest {
   }
 
   @Test
+  public void testComparison() {
+    Constraint conj =
+      new Conjunction(new BVar(1), SmtFactory.createGreater(new IValue(2), new IVar(3)));
+    Constraint conj2 =
+      new Conjunction(new BVar(1), SmtFactory.createGreater(new IValue(2), new IVar(3)));
+    Constraint conj3 =
+      new Disjunction(new BVar(1), SmtFactory.createGreater(new IValue(2), new IVar(3)));
+    Constraint conj4 =
+      new Conjunction(SmtFactory.createGreater(new IValue(2), new IVar(3)), new BVar(1));
+    Constraint conj5 = new Conjunction(new Truth(), new Conjunction(new Truth(), new Falsehood()));
+    assertTrue(conj.compareTo(conj2) == 0);
+    assertTrue(conj.compareTo(conj3) < 0);  // conjunction < disjunction
+    assertTrue(conj.compareTo(conj4) < 0);  // same number of arguments, smaller first one
+    assertTrue(conj4.compareTo(conj) > 0);
+    assertTrue(conj.compareTo(conj5) < 0);  // fewer arguments
+    assertTrue(conj5.compareTo(conj) > 0);  // fewer arguments
+  }
+
+  @Test
   public void testToString() {
     ArrayList<Constraint> args = new ArrayList<Constraint>();
     args.add(new Truth());

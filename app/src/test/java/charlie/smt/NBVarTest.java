@@ -45,6 +45,21 @@ public class NBVarTest {
     assertTrue(y.hashCode() != (new NBVar(new BVar(13))).hashCode());
   }
 
+
+  @Test
+  public void testComparison() {
+    NBVar x = new NBVar(new BVar(12));
+    BVar a = new BVar(11);
+    BVar b = new BVar(12);
+    BVar c = new BVar(13);
+    assertTrue(x.compareTo(a) > 0);
+    assertTrue(x.compareTo(b) > 0);
+    assertTrue(x.compareTo(c) < 0);
+    assertTrue(x.compareTo(new NBVar(a)) > 0);
+    assertTrue(x.compareTo(new NBVar(b)) == 0);
+    assertTrue(x.compareTo(new NBVar(c)) < 0);
+  }
+
   @Test
   public void testEvaluate() {
     BVar x = new BVar(3);

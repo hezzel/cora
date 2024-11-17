@@ -57,7 +57,7 @@ public class ConstraintPrinter {
    * case there is no need to override any of the other methods in the class -- or override (some
    * of) the functions it calls directly, which are: printVar, printNegatedVar, printTruth,
    * printFalsehood, printGeq, printEquals, printDistinct, printConjunction, printDisjunction,
-   * printNot, printIff, printEqS, printUneqS.
+   * printIff, printEqS, printUneqS.
    */
   public void print(Constraint c, StringBuilder builder) {
     switch (c) {
@@ -70,7 +70,6 @@ public class ConstraintPrinter {
       case Neq0 n: printDistinct(n, builder); break;
       case Conjunction j: printConjunction(j, builder); break;
       case Disjunction j: printDisjunction(j, builder); break;
-      case Not n: printNot(n, builder); break;
       case Iff i: printIff(i, builder); break;
       case EqS e: printEqS(e, builder); break;
       case UneqS u: printUneqS(u, builder); break;
@@ -203,15 +202,6 @@ public class ConstraintPrinter {
         printBracketed(constr.queryChild(i), builder);
       }
     }
-  }
-
-  /**
-   * Override this function to change how negations are printed (if print is left unmasked).
-   * The default functionality prints not elem, where the element is bracketed if it is not basic.
-   */
-  protected void printNot(Not constr, StringBuilder builder) {
-    builder.append("not ");
-    printBracketed(constr.queryChild(), builder);
   }
 
   /**

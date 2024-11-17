@@ -59,6 +59,23 @@ public class ComparisonTest {
   }
 
   @Test
+  public void testComparison() {
+    IntegerExpression exp1 = new Addition(new IValue(-1), new IVar(2));
+    IntegerExpression exp2 = new IVar(12);
+    List<Constraint> parts = List.of(new Is0(exp1),  new Is0(exp2),
+                                     new Geq0(exp1), new Geq0(exp2),
+                                     new Neq0(exp1), new Neq0(exp2));
+    for (int i = 0; i < parts.size(); i++) {
+      for (int j = i+1; j < parts.size(); j++) {
+        int k = parts.get(i).compareTo(parts.get(j));
+        assertTrue(k != 0);
+        assertTrue(k == - parts.get(j).compareTo(parts.get(i)));
+      }
+    }
+    assertTrue(parts.get(0).equals(new Is0(exp1)));
+  }
+
+  @Test
   public void testEquality() {
     Constraint comp = SmtFactory.createSmaller(new IVar(2), new IValue(2));
     Constraint comp2 = SmtFactory.createGreater(new IValue(2), new IVar(2));

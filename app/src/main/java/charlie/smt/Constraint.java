@@ -15,9 +15,11 @@
 
 package charlie.smt;
 
+import java.lang.Comparable;
+
 /** Boolean constraints, to be sent to an SMT solver. */
-public sealed abstract class Constraint
-  permits BVar, NBVar, Truth, Falsehood, Comparison, Junction, Not, Iff, EqS, UneqS {
+public sealed abstract class Constraint implements Comparable<Constraint>
+  permits BVar, NBVar, Truth, Falsehood, Comparison, Junction, Iff, EqS, UneqS {
   /**
    * This function evaluates the current constraint to its boolean value.  Any variables are
    * interpreted following the given valuation.
@@ -27,8 +29,11 @@ public sealed abstract class Constraint
   /** Adds the SMT description of the current constraint to the given string builder. */
   public abstract void addToSmtString(StringBuilder builder);
 
-  /** Equality check between Constraints */
-  public abstract boolean equals(Constraint other);
+  /**
+   * This generates a total ordering on integer expressions.  Constants (true and false) are
+   * guaranteed to be minimal in the ordering (compared to constraints that are not constants).
+   */
+  public abstract int compareTo(Constraint other);
 
   /** Returns the negation of the current constraint */
   public abstract Constraint negate();
@@ -54,8 +59,7 @@ public sealed abstract class Constraint
   }
 
   public final boolean equals(Object other) {
-    return (other instanceof Constraint) && equals((Constraint)other);
+    return (other instanceof Constraint) && compareTo((Constraint)other) == 0;
   }
-
 }
 

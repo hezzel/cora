@@ -47,6 +47,14 @@ public class IffTest {
   }
 
   @Test
+  public void testCompareTo() {
+    Constraint iff = new Iff(new BVar(12), new BVar(17));
+    assertTrue(iff.compareTo(new Iff(new BVar(12), new BVar(17))) == 0);
+    assertTrue(iff.compareTo(new Iff(new BVar(17), new BVar(1))) < 0);
+    assertTrue(iff.compareTo(new Iff(new BVar(11), new BVar(17))) > 0);
+  }
+
+  @Test
   public void testLegalEvaluate() {
     Constraint a = SmtFactory.createNegation(new Truth());
     Constraint b = new Falsehood();
@@ -58,11 +66,11 @@ public class IffTest {
 
   @Test
   public void testQueryParts() {
-    Not n = new Not(SmtFactory.createGeq(new IVar(1), new IValue(3)));
+    Constraint comparison = SmtFactory.createSmaller(new IVar(1), new IValue(3));
     BVar a = new BVar(7);
-    Iff i = new Iff(a, n);
+    Iff i = new Iff(a, comparison);
     assertTrue(i.queryLeft().equals(a));
-    assertTrue(i.queryRight().equals(n));
+    assertTrue(i.queryRight().equals(comparison));
   }
 
   @Test

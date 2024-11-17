@@ -177,8 +177,7 @@ public class SmtFactory {
   }
 
   public static Constraint createNegation(Constraint c) {
-    if (c == null) throw new NullStorageException("Not", "argument");
-    return new Not(c);
+    return c.negate();
   }
 
   public static Constraint createConjunction(Constraint a, Constraint b) {
@@ -224,7 +223,7 @@ public class SmtFactory {
   public static Constraint createImplication(Constraint a, Constraint b) {
     if (a == null) throw new NullStorageException("Implication", "left argument");
     if (b == null) throw new NullStorageException("Implication", "right argument");
-    return new Disjunction(new Not(a), b);
+    return new Disjunction(a.negate(), b);
   }
 
   public static Constraint createIff(Constraint a, Constraint b) {

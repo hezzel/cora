@@ -27,8 +27,11 @@ public final class Falsehood extends Constraint {
     builder.append("false");
   }
 
-  public boolean equals(Constraint other) {
-    return other instanceof Falsehood;
+  public int compareTo(Constraint other) {
+    return switch (other) {
+      case Falsehood _ -> 0;
+      default -> -1;
+    };
   }
 
   public int hashCode() { return 2; }

@@ -27,8 +27,12 @@ public final class Truth extends Constraint {
     builder.append("true");
   }
 
-  public boolean equals(Constraint other) {
-    return other instanceof Truth;
+  public int compareTo(Constraint other) {
+    return switch (other) {
+      case Falsehood _ -> 1;
+      case Truth _ -> 0;
+      default -> -1;
+    };
   }
 
   public int hashCode() { return 1; }
