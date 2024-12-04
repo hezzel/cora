@@ -17,11 +17,13 @@ package charlie.smt;
 
 public final class Falsehood extends Constraint {
   /** Private constructor, as Constraints should be made through the SmtFactory. */
-  Falsehood() {}
+  Falsehood() { _simplified = true; }
 
   public Truth negate() { return new Truth(); }
 
   public boolean evaluate(Valuation val) { return false; }
+
+  public Falsehood simplify() { return this; }
 
   public void addToSmtString(StringBuilder builder) {
     builder.append("false");

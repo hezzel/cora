@@ -262,7 +262,7 @@ public class TermSmtTranslatorTest {
       TheoryFactory.createValue(true));
     Term t = TheoryFactory.iffSymbol.apply(t1).apply(t3);
     Constraint c = tst.translateConstraint(t);
-    assertTrue(c.toString().equals("(i1 >= 4) == (((0 >= 4) and !b1) == true)"));
+    assertTrue(c.toString().equals("(i1 >= 4) == (((3 >= 0) or b1) == false)"));
   }
 
   @Test

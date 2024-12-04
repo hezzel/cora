@@ -29,6 +29,7 @@ abstract sealed class Junction extends Constraint permits Conjunction, Disjuncti
     _children = new ArrayList<Constraint>();
     addChild(a);
     addChild(b);
+    _simplified = checkSimplified();
   }
 
   Junction(List<Constraint> args) {
@@ -52,6 +53,31 @@ abstract sealed class Junction extends Constraint permits Conjunction, Disjuncti
       throw new IndexingException("Junction", "queryChild", index, 1, _children.size());
     }
     return _children.get(index-1);
+  }
+
+  public boolean checkSimplified() {
+    // a conjunction or disjunction should always have 2 or more elements
+    if (_children.size() < 2) return false;
+    // neither conjunction nor disjunction may contain a boolean constant; this in particular means
+    // that the first cannot be a constant, since the ordering requirement then guarantees that the
+    // rest is not a constant either
+    if (_children.get(0) instanceof Truth || _children.get(0) instanceof Falsehood) return false;
+    if (!_children.get(0).isSimplified()) return false;
+    // the elements should be simplified, in the right order, and we cannot have both e R 0 and
+    // e R' 0, nor x and !x
+    for (int i = 1; i < _children.size(); i++) {
+      Constraint c = _children.get(i);
+      int k = _children.get(i-1).compareTo(c);
+      if (!c.isSimplified()) return false;
+      if (k >= 0) return false;
+      if (k == -1 && c instanceof Comparison) return false;
+      if (k == -1 && c instanceof NBVar n && n.negate().equals(_children.get(i-1))) return false;
+    }
+    return true;
+  }
+
+  public Constraint simplify() {
+    return this;
   }
 
   public void addToSmtString(StringBuilder builder) {

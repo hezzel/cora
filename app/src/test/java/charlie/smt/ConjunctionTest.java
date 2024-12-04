@@ -101,4 +101,110 @@ public class ConjunctionTest {
     assertTrue(conj.negate().negate().equals(conj));
     assertTrue(conj.negate().toString().equals("(6 >= i3) or !b2 or b12"));
   }
+
+  @Test
+  public void testNegationSimplifies() {
+    IVar x = new IVar(2, "x");
+    IntegerExpression three = new IValue(3);
+    // x # 3 ∧ 3 > x
+    Conjunction conj = new Conjunction((new Neq0(x, three)).simplify(),
+                                       (new Geq0(three, x.add(1))).simplify());
+    assertTrue(conj.isSimplified());
+    // negation is x = 3 ∨ x ≥ 3, but that one can be easily simplified by dropping the first part
+    assertTrue(conj.negate().toString().equals("[x] >= 3"));
+  }
+
+  @Test
+  public void testSimplifyConstants() {
+    IVar i = new IVar(1, "i");
+    BVar x = new BVar(2, "x");
+
+    // T ∧ x ∧ i >= 0 -- the only non-simplified aspect is the T
+    Conjunction conj = new Conjunction(new Truth(), new Conjunction(x, new Geq0(i)));
+    assertFalse(conj.isSimplified());
+    assertTrue(conj.simplify().toString().equals("[x] and ([i] >= 0)"));
+
+    // !x ∧ T -- so they're in the wrong order AND there's a T
+    conj = new Conjunction(new NBVar(x), new Truth());
+    assertFalse(conj.isSimplified());
+    assertTrue(conj.simplify().equals(new NBVar(x)));
+
+    // T ∧ T ∧ x -- so both T values need to be removed
+    conj = new Conjunction(new Truth(), new Conjunction(new Truth(), x));
+    assertTrue(conj.simplify() == x);
+
+    // F ∧ x ∧ i >= 0 -- this is simplified to F
+    conj = new Conjunction(new Falsehood(), new Conjunction(x, new Geq0(i)));
+    assertTrue(conj.simplify().equals(new Falsehood()));
+
+    // same for x ∧ F
+    conj = new Conjunction(x, new Falsehood());
+    assertTrue(conj.simplify().equals(new Falsehood()));
+  }
+
+  @Test
+  public void testSimplifyArguments() {
+    IVar x = new IVar(3, "x");
+    BVar y = new BVar(1, "y");
+    SVar z = new SVar(1, "z");
+    IntegerExpression zero = new IValue(0);
+
+    Conjunction conj = new Conjunction(y, new Geq0(new Addition(x, zero)));
+    assertFalse(conj.isSimplified());
+    assertTrue(conj.simplify().toString().equals("[y] and ([x] >= 0)"));
+
+    conj = new Conjunction(new Geq0(new Addition(x, zero)), new EqS(z, new SValue("a")));
+    assertFalse(conj.isSimplified());
+    assertTrue(conj.simplify().toString().equals("([x] >= 0) and ([z] = \"a\")"));
+
+    conj = new Conjunction(new Is0(new Addition(x, zero)), new Is0(x));
+    assertTrue(conj.simplify().equals(new Is0(x)));
+  }
+
+  @Test
+  public void testSimplifyComponentsAndReorder() {
+    ArrayList<Constraint> parts = new ArrayList<Constraint>();
+    parts.add(new Is0((new IVar(3, "i")).add(5)));
+    parts.add(new NBVar(new BVar(3, "y")));
+    parts.add(new Geq0((new IVar(3, "j")).add(4)));
+    parts.add(new Neq0(new IValue(7)));
+    parts.add(new EqS(new SVar(8, "s"), new SValue("test")));
+    parts.add(new Neq0(new Multiplication(new IVar(1, "a"), new IVar(2, "b"))));
+    parts.add(new Geq0(new Division(new CMult(3, new IVar(3, "i")), new IValue(-2))));
+    parts.add(new BVar(12, "x"));
+    parts.add(new Is0((new IVar(3, "i")).add(5)));
+    parts.add(new UneqS(new SVar(7, "t"), new SValue("test")));
+    Conjunction conj = new Conjunction(parts);
+    assertTrue(conj.simplify().toString().equals(
+      "![y] and [x] and ([a] # 0) and ([b] # 0) and (4 + [j] >= 0) and (5 + [i] = 0) " +
+      "and (-((3 * [i]) / 2) >= 0) and ([t] # \"test\") and ([s] = \"test\")"));
+  }
+
+  @Test
+  public void testSimplifyCombine() {
+    BVar x = new BVar(3, "x");
+    IVar y = new IVar(1, "y");
+    SVar z = new SVar(2, "z");
+    SVar a = new SVar(3, "a");
+    Conjunction conj = new Conjunction(x, x.negate());
+    assertTrue(conj.simplify().equals(new Falsehood()));
+
+    IntegerExpression expr = y.add(-1);
+    conj = new Conjunction(new Neq0(expr), new Is0(expr));
+    assertTrue(conj.simplify().equals(new Falsehood()));
+
+    StringExpression v = new SValue("A");
+    conj = new Conjunction(new EqS(z, v), new Conjunction(new EqS(a, v), new UneqS(z, v)));
+    assertTrue(conj.simplify().equals(new Falsehood()));
+  }
+
+  @Test
+  public void testSimplifyWithComparison() {
+    IVar x = new IVar(1, "x");
+    Conjunction conj = new Conjunction(new Is0(x), new Geq0(x));
+    assertTrue(conj.simplify().toString().equals("[x] = 0"));
+
+    conj = new Conjunction(new Neq0(x), new Geq0(x));
+    assertTrue(conj.simplify().toString().equals("[x] >= 1"));
+  }
 }

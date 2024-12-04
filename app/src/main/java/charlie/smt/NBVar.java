@@ -23,6 +23,7 @@ public final class NBVar extends Constraint {
 
   NBVar(BVar x) {
     _negated = x;
+    _simplified = true;
   }
 
   public int queryIndex() {
@@ -40,6 +41,10 @@ public final class NBVar extends Constraint {
   public boolean evaluate(Valuation val) {
     if (val == null) throw new SmtEvaluationException("!" + _negated.queryName());
     else return !val.queryBoolAssignment(_negated.queryIndex());
+  }
+
+  public NBVar simplify() {
+    return this;
   }
 
   public void addToSmtString(StringBuilder builder) {

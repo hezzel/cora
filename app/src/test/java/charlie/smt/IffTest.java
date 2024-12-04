@@ -110,5 +110,108 @@ public class IffTest {
     assertTrue(a.negate().equals(new Iff(new Disjunction(nb7, ncomp), conj)));
     assertTrue(a.negate().negate().equals(a));
   }
+
+  @Test
+  public void testSimplifyBasic() {
+    BVar x = new BVar(3);
+    BVar x4 = new BVar(4);
+    NBVar y12 = new NBVar(new BVar(12));
+
+    // x <--> !y
+    Iff iff = new Iff(x, y12);
+    assertTrue(iff.isSimplified());
+    assertTrue(iff.simplify() == iff);
+
+    // x <--> x
+    iff = new Iff(x, new BVar(3));
+    assertFalse(iff.isSimplified());
+    assertTrue(iff.simplify().equals(new Truth()));
+
+    // x4 <--> x -- so they need to be switched
+    iff = new Iff(x4, x);
+    assertFalse(iff.isSimplified());
+    assertTrue(iff.simplify().equals(new Iff(x, x4)));
+    assertTrue(iff.simplify().isSimplified());
+  }
+
+  @Test
+  public void testSimplifyConstants() {
+    BVar x = new BVar(3);
+    BVar y = new BVar(4);
+
+    // x <--> true -- this is just x
+    Iff iff = new Iff(x, new Truth());
+    assertFalse(iff.isSimplified());
+    assertTrue(iff.simplify() == x);
+
+    // x <--> false -- this is the negation of x
+    iff = new Iff(x, new Falsehood());
+    assertFalse(iff.isSimplified());
+    assertTrue(iff.simplify().equals(new NBVar(x)));
+
+    // y <--> (x <--> False) -- the second part is simplified without affecting the first
+    iff = new Iff(y, new Iff(x, new Falsehood()));
+    assertFalse(iff.isSimplified());
+    assertTrue(iff.simplify().equals(new Iff(x.negate(), y)));
+  }
+
+  @Test
+  public void testSimplifyTwoIncompatibleSides() {
+    BVar x = new BVar(3);
+    IVar y = new IVar(7);
+    IntegerExpression e = y.add(1);
+
+    // x <--> !x becomes false
+    Iff iff = new Iff(x, x.negate());
+    assertFalse(iff.isSimplified());
+    assertTrue(iff.simplify().equals(new Falsehood()));
+    
+    // x = 0 <--> x # 0 becomes false
+    iff = new Iff(new Neq0(e), new Is0(e));
+    assertFalse(iff.isSimplified());
+    assertTrue(iff.simplify().equals(new Falsehood()));
+  }
+
+  @Test
+  public void testSimplifyWithGeq() {
+    IVar y = new IVar(7, "y");
+    IntegerExpression e = y.add(-1);
+
+    // y = 0 <--> y - 1 ≥ 0 (because y < y - 1 in the IntegerExpression ordering)
+    Iff iff = new Iff(new Is0(y), new Geq0(e));
+    assertTrue(iff.isSimplified());
+
+    // y - 1 ≥ 0 <--> y - 1 = 0 is equivalent to y - 1 ≤ 0, so -y + 1 ≥ 0, so 1 ≥ y
+    iff = new Iff(new Is0(e), new Geq0(e));
+    assertFalse(iff.isSimplified());
+    assertTrue(iff.simplify().toString().equals("1 >= [y]"));
+
+    // z # 0 <--> y - 1 ≥ 0 is simplified;
+    // y - 1 ≥ 0 <--> z # 0 is simplified except for the reordin
+    iff = new Iff(new Geq0(e), new Neq0(new IVar(12)));
+    assertFalse(iff.isSimplified());
+    Constraint iff2 = iff.simplify();
+    assertTrue(iff2.toString().equals("(i12 # 0) == ([y] >= 1)"));
+    assertTrue(iff2.isSimplified());
+
+    // y - 1 ≥ 0 <--> y - 1 # 0 is equivalent to y - 1 > 0, so y ≥ 2
+    iff = new Iff(new Geq0(e), new Neq0(e));
+    assertFalse(iff.isSimplified());
+    assertTrue(iff.simplify().toString().equals("[y] >= 2"));
+  }
+
+  @Test
+  public void testNegateSimplified() {
+    // x = 0 <--> y ≥ 0
+    IVar x = new IVar(3, "x");
+    IVar y = new IVar(7, "y");
+    Constraint tmp = new Is0(x);
+    Iff iff = new Iff(new Is0(x), new Geq0(y));
+    Constraint neg = iff.negate();
+    assertTrue(iff.isSimplified());
+    assertTrue(iff.toString().equals("([x] = 0) == ([y] >= 0)"));
+    assertTrue(neg.isSimplified());
+    assertTrue(neg.toString().equals("([x] # 0) == ([y] >= 0)"));
+  }
 }
 

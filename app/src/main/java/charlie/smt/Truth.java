@@ -17,11 +17,13 @@ package charlie.smt;
 
 public final class Truth extends Constraint {
   /** Private constructor, as Constraints should be made through the SmtFactory. */
-  Truth() {}
+  Truth() { _simplified = true; }
 
   public Falsehood negate() { return new Falsehood(); }
 
   public boolean evaluate(Valuation val) { return true; }
+
+  public Truth simplify() { return this; }
 
   public void addToSmtString(StringBuilder builder) {
     builder.append("true");

@@ -31,6 +31,8 @@ public class NBVarTest {
     BVar y = new BVar(12, "xx");
     NBVar ny = new NBVar(y);
     assertTrue(ny.toString().equals("![xx]"));
+    assertTrue(x.isSimplified());
+    assertTrue(x.simplify() == x);
   }
 
   @Test

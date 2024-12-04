@@ -31,6 +31,10 @@ public class BValueTest {
     assertTrue(y.compareTo(y) == 0);
     assertTrue(x.compareTo(y) == 1);
     assertTrue(y.compareTo(x) == -1);
+    assertTrue(x.isSimplified());
+    assertTrue(y.isSimplified());
+    assertTrue(x.simplify() == x);
+    assertTrue(y.simplify() == y);
   }
 
   @Test

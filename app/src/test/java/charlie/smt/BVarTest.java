@@ -26,6 +26,7 @@ public class BVarTest {
     assertTrue(x.queryName().equals("b12"));
     assertTrue(x.toString().equals("b12"));
     assertTrue(x.toSmtString().equals("b12"));
+    assertTrue(x.isSimplified());
   }
 
   @Test
@@ -35,6 +36,7 @@ public class BVarTest {
     assertTrue(x.queryName().equals("[z]"));
     assertTrue(x.toString().equals("[z]"));
     assertTrue(x.toSmtString().equals("b12"));
+    assertTrue(x.simplify() == x);
   }
 
   @Test

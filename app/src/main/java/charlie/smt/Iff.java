@@ -23,6 +23,7 @@ public final class Iff extends Constraint {
   Iff(Constraint a, Constraint b) {
     _left = a;
     _right = b;
+    _simplified = checkSimplified();
   }
 
   public Constraint queryLeft() {
@@ -37,22 +38,72 @@ public final class Iff extends Constraint {
     return _left.evaluate(val) == _right.evaluate(val);
   }
 
-  /** Helper function for negate() */
-  private int queryConstraintKind(Constraint c) {
-    return switch(c) {
-      case BVar x -> 1;
-      case NBVar x -> 1;
-      case Iff x -> 2;
-      case Comparison x -> 3;
-      default -> 4;
+  private boolean checkSimplified() {
+    if (!_left.isSimplified() || !_right.isSimplified()) return false;
+    int c = _left.compareTo(_right);
+    if (c >= 0) return false;
+    return switch (_left) {
+      case Falsehood _ -> false;
+      case Truth _ -> false;
+      case BVar x -> !(_right instanceof NBVar y && x.queryIndex() == y.queryIndex());
+      case Comparison _ -> c <= -2;
+      default -> true;
     };
   }
 
-  public Iff negate() {
-    if (queryConstraintKind(_right) < queryConstraintKind(_left)) {
-      return new Iff(_left, _right.negate());
+  public Constraint simplify() {
+    if (_simplified) return this;
+    Constraint l = _left.simplify();
+    Constraint r = _right.simplify();
+    int c = l.compareTo(r);
+    if (c == 0) return new Truth();
+    if (c > 0) { Constraint tmp = l; l = r; r = tmp; c = -c; }
+
+    if (l instanceof Falsehood) return r.negate();
+    if (l instanceof Truth) return r;
+    // x <--> !x is equivalent to false
+    if (l instanceof BVar x) {
+      if (r instanceof NBVar y && x.queryIndex() == y.queryIndex()) return new Falsehood();
     }
-    else return new Iff(_left.negate(), _right);
+    else if (l instanceof Is0 a && c == -1) { // two comparisons with c == -1 implies the same expr
+      // a = 0 <--> a # 0 is equivalent to false
+      if (r instanceof Neq0) return new Falsehood();
+      // a = 0 <--> a ≥ 0 is equivalent to a ≤ 0: if a = 0 then both sides are true,
+      // if a < 0 then both sides are false, and one is false, one is true
+      else if (r instanceof Geq0) return (new Geq0(a.queryExpression().negate())).simplify();
+    }
+    else if (l instanceof Geq0 a && c == -1) {
+      // a ≥ 0 <--> a # 0 is equivalent to a > 0: then both are true, and if a < 0 or a = 0, one
+      // is true, the other alse
+      if (r instanceof Neq0) return (new Geq0(a.queryExpression().add(-1))).simplify();
+    }
+
+    return new Iff(l, r);
+  }
+
+  /** Helper function for negate() */
+  private int queryConstraintKind(Constraint c) {
+    return switch(c) {
+      case Truth x -> 1;
+      case Falsehood x -> 1;
+      case BVar x -> 1;
+      case NBVar x -> 1;
+      case EqS x -> 2;
+      case UneqS x -> 2;
+      case Iff x -> 3;
+      case Comparison x -> 4;
+      default -> 5;
+    };
+  }
+
+  public Constraint negate() {
+    Iff ret;
+    if (queryConstraintKind(_right) < queryConstraintKind(_left)) {
+      ret = new Iff(_left, _right.negate());
+    }
+    else ret = new Iff(_left.negate(), _right);
+    if (_simplified) return ret.simplify();
+    else return ret;
   }
 
   public void addToSmtString(StringBuilder builder) {

@@ -24,6 +24,8 @@ public final class EqS extends Constraint {
   EqS(StringExpression left, StringExpression right) {
     if (left.compareTo(right) >= 0) { _left = left; _right = right; }
     else { _left = right; _right = left; }
+    if (_left.equals(_right)) _simplified = false;
+    else _simplified = (_left instanceof SVar || _right instanceof SVar);
   }
 
   public StringExpression queryLeft() {
@@ -36,6 +38,12 @@ public final class EqS extends Constraint {
 
   public boolean evaluate(Valuation val) {
     return _left.evaluate(val).equals(_right.evaluate(val));
+  }
+
+  public Constraint simplify() {
+    if (_left.equals(_right)) return new Truth();
+    if (_left instanceof SValue l && _right instanceof SValue r) return new Falsehood();
+    return this;
   }
 
   /** Returns the negation of the current constraint (an inequality) */
@@ -51,13 +59,23 @@ public final class EqS extends Constraint {
     builder.append(")");
   }
 
+  /** 
+   * String equalities and inequalities are the largest of all constraint in the ordering.  When
+   * comparing an equality and an inequality, their components are compared; if those are the same,
+   * then 0 is returned when comparing to another EqS or -1 for an UneqS; otherwise an even number.
+   */
   public int compareTo(Constraint other) {
     return switch (other) {
-      case UneqS _ -> -1;
+      case UneqS uns -> {
+        int c = _left.compareTo(uns.queryLeft());
+        if (c == 0) c = _right.compareTo(uns.queryRight());
+        if (c == 0) yield -1;
+        else yield 2 * c;
+      }
       case EqS eqs -> {
         int c = _left.compareTo(eqs._left);
         if (c == 0) c = _right.compareTo(eqs._right);
-        yield c;
+        yield c * 2;
       }
       default -> 1;
     };

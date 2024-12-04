@@ -25,11 +25,13 @@ public final class BVar extends Constraint {
   BVar(int i) {
     _index = i;
     _name = "b" + _index;
+    _simplified = true;
   }
 
   BVar(int i, String name) {
     _index = i;
     _name = "[" + name + "]";
+    _simplified = true;
   }
 
   public int queryIndex() {
@@ -47,6 +49,10 @@ public final class BVar extends Constraint {
   public boolean evaluate(Valuation val) {
     if (val == null) throw new SmtEvaluationException("b" + _index + " (" + _name + ")");
     else return val.queryBoolAssignment(_index);
+  }
+
+  public BVar simplify() {
+    return this;
   }
 
   public void addToSmtString(StringBuilder builder) {

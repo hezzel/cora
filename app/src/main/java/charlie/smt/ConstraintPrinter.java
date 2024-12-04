@@ -125,7 +125,7 @@ public class ConstraintPrinter {
       _expPrinter.print(pair.snd(), builder);
     }
     else {
-      _expPrinter.print(main);
+      _expPrinter.print(main, builder);
       builder.append(symbol);
       builder.append("0");
     }
