@@ -172,7 +172,10 @@ public class TRS {
     return _rules.size();
   }
 
-  /** For 0 ≤ index < queryRuleCount(), this returns one of the rules in the system. */
+  /**
+   * For 0 ≤ index < queryRuleCount(), this returns one of the rules in the system.
+   * @throws IndexingException
+   */
   public Rule queryRule(int index) {
     if (index < 0 || index >= queryRuleCount()) {
       throw new IndexingException("TRS", "queryRule", index, 0, queryRuleCount()-1);

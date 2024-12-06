@@ -26,9 +26,7 @@ import java.util.List;
  *  <p>
  *    Notice that instantiating an object of this class computes the solution to the reachability
  *    problem and save the result as data in the object.
- *    This
  *  </p>
- *
  */
 public class Reachability {
 
