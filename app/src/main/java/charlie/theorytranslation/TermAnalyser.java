@@ -30,7 +30,7 @@ import charlie.smt.SmtSolver.Answer;
 public class TermAnalyser {
   private static Random _rnd = new Random();
 
-  public sealed interface Result {
+  public sealed interface Result permits Result.YES, Result.NO, Result.MAYBE {
     public record YES(Substitution subts) implements Result {}
     public record NO() implements Result {}
     public record MAYBE(String reason) implements Result {}
