@@ -745,9 +745,10 @@ public class CoraParser {
   // ====================================== PUBLIC FUNCTIONS ======================================
 
   /**
-   * Helper function: creates a status to read the given string and store errors in the given
+   * This helper function creates a status to read the given string and store errors in the given
    * collector, which may be null (in which case errors are stored in a fresh collector in the
-   * status).
+   * status).  If "constrained" is true, then integers, strings, infix symbols etc. will be
+   * recognised; otherwise they will not be.
    */
   private static ParsingStatus makeStatus(String str, boolean constrained,
                                           ErrorCollector collector) {
