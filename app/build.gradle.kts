@@ -12,6 +12,7 @@ dependencies {
     // Development dependencies
     implementation("org.jetbrains:annotations:24.0.0")
     implementation("com.google.guava:guava:33.2.1-jre")
+    implementation("org.jline:jline:3.26.1")
 
     // Testing dependencies
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
