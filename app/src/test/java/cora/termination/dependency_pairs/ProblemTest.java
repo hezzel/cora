@@ -16,6 +16,7 @@
 package cora.termination.dependency_pairs;
 
 import charlie.exceptions.NullStorageException;
+import charlie.util.FixedList;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
 import charlie.trs.*;
@@ -65,7 +66,7 @@ public class ProblemTest {
   @Test
   void testCreateProblem() {
     List<DP> dps = List.of(createDP1(), createDP2(), createDP3());
-    List<Rule> rules = trs.queryRules();
+    FixedList<Rule> rules = trs.queryRules();
     Set<Integer> priv = Set.of(1);
     Problem problem = new Problem(dps, rules, priv, trs, false, true,
                                   Problem.TerminationFlag.Computable);
@@ -97,7 +98,7 @@ public class ProblemTest {
   @Test
   public void testProblemWithNullPrivates() {
     List<DP> dps = List.of(createDP1(), createDP2(), createDP3());
-    List<Rule> rules = trs.queryRules();
+    FixedList<Rule> rules = trs.queryRules();
     Problem problem = new Problem(dps, rules, null, trs, true, false,
                                   Problem.TerminationFlag.Arbitrary);
     assertFalse(problem.hasExtraRules());
@@ -112,7 +113,7 @@ public class ProblemTest {
   @Test
   public void testHeads() {
     List<DP> dps = List.of(createDP1(), createDP2(), createDP2());
-    List<Rule> rules = trs.queryRules();
+    FixedList<Rule> rules = trs.queryRules();
     Set<Integer> priv = Set.of();
     Problem problem = new Problem(dps, rules, priv, trs, false, true,
                                   Problem.TerminationFlag.Computable);
@@ -125,7 +126,7 @@ public class ProblemTest {
   @Test
   public void testHeadsNonRec() {
     List<DP> dps = List.of(createDP3());
-    List<Rule> rules = trs.queryRules();
+    FixedList<Rule> rules = trs.queryRules();
     Set<Integer> priv = Set.of();
     Problem problem = new Problem(dps, rules, priv, trs, false, true,
       Problem.TerminationFlag.Computable);
@@ -138,7 +139,7 @@ public class ProblemTest {
   @Test
   public void testNullCreation() {
     List<DP> dps = List.of(createDP1(), createDP2(), createDP2());
-    List<Rule> rules = trs.queryRules();
+    FixedList<Rule> rules = trs.queryRules();
     Set<Integer> priv = Set.of();
     assertThrows(NullStorageException.class, () ->
       new Problem(null, rules, priv, trs, false, true, Problem.TerminationFlag.Terminating));
@@ -156,7 +157,7 @@ public class ProblemTest {
     DP dp2 = createDP3();
     DP dp3 = createDP1();
     List<DP> dps = List.of(dp0, dp1, dp2, dp3);
-    List<Rule> rules = trs.queryRules();
+    FixedList<Rule> rules = trs.queryRules();
     Set<Integer> priv = Set.of(0, 2);
     Problem problem = new Problem(dps, rules, priv, trs, false, true,
                                   Problem.TerminationFlag.Computable);

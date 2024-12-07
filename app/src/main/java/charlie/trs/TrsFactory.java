@@ -15,11 +15,11 @@
 
 package charlie.trs;
 
-import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import charlie.exceptions.IllegalRuleException;
+import charlie.util.FixedList;
 import charlie.terms.Term;
 import charlie.trs.TrsProperties.*;
 
@@ -107,7 +107,7 @@ public class TrsFactory {
   public static TRS createTrs(Alphabet alphabet, List<Rule> rules, Set<String> privateSymbols,
                               boolean includeEta, TrsKind kind) {
     // build the list of rule schemes
-    ImmutableList.Builder<TRS.RuleScheme> newschemes = ImmutableList.<TRS.RuleScheme>builder();
+    FixedList.Builder<TRS.RuleScheme> newschemes = new FixedList.Builder<TRS.RuleScheme>();
     if (kind._restrictions.queryLevel().compareTo(Level.LAMBDA) >= 0) {
       newschemes.add(TRS.RuleScheme.Beta);
       if (includeEta) newschemes.add(TRS.RuleScheme.Eta);

@@ -15,6 +15,7 @@
 
 package cora.termination.dependency_pairs;
 
+import charlie.util.FixedList;
 import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.Variable;
@@ -123,7 +124,7 @@ class DPProofObject implements ProofObject {
     // the names of its DPs and rules are stored in pnames and rnames respectively
     HashMap<Problem,String> names = new HashMap<Problem,String>();
     HashMap<List<DP>,String> pnames = new HashMap<List<DP>,String>();
-    HashMap<List<Rule>,String> rnames = new HashMap<List<Rule>,String>();
+    HashMap<FixedList<Rule>,String> rnames = new HashMap<FixedList<Rule>,String>();
     rnames.put(_initialProblem.getOriginalTRS().queryRules(), "R");
 
     justifyStart(module, names, pnames, rnames);
@@ -159,7 +160,7 @@ class DPProofObject implements ProofObject {
    * the mapping of known rule lists (and is not empty), then we store it, and return true.  If it
    * does exist, then nothing is done and we return false.
    */
-  private boolean storeRuleList(Problem prob, HashMap<List<Rule>,String> rnames) {
+  private boolean storeRuleList(Problem prob, HashMap<FixedList<Rule>,String> rnames) {
     if (prob.getRuleList().isEmpty()) return false;
     if (rnames.containsKey(prob.getRuleList())) return false;
     rnames.put(prob.getRuleList(), "R" + (rnames.size() + 1));
@@ -171,7 +172,7 @@ class DPProofObject implements ProofObject {
    * dependency pairs and the set of variables are named (they are not explained in this function).
    */
   private void printDPP(OutputModule module, Problem problem, HashMap<Problem,String> probnames,
-                        HashMap<List<DP>,String> pnames, HashMap<List<Rule>,String> rnames) {
+                        HashMap<List<DP>,String> pnames, HashMap<FixedList<Rule>,String> rnames) {
     String name = probnames.get(problem);
     String pname = pnames.get(problem.getDPList());
     String rules = problem.getRuleList().isEmpty() ? "%{emptyset}"
@@ -226,7 +227,8 @@ class DPProofObject implements ProofObject {
    * that we have encountered so far, and prints the information for the initial DP problem.
    */
   private void justifyStart(OutputModule module, HashMap<Problem,String> probnames,
-                            HashMap<List<DP>,String> pnames, HashMap<List<Rule>,String> rnames) {
+                            HashMap<List<DP>,String> pnames,
+                            HashMap<FixedList<Rule>,String> rnames) {
     storeDPP(_initialProblem, probnames);
     boolean dpnew = storeDPList(_initialProblem, pnames);
     boolean rnew = storeRuleList(_initialProblem, rnames);
@@ -244,7 +246,7 @@ class DPProofObject implements ProofObject {
    */
   private void justifyProcessor(OutputModule module, ProcessorProofObject po,
                                 HashMap<Problem,String> probnames, HashMap<List<DP>,String> pnames,
-                                HashMap<List<Rule>, String> rnames) {
+                                HashMap<FixedList<Rule>, String> rnames) {
     module.print("***** We apply the %a Processor on ", po.queryProcessorName());
     Problem input = po.queryInput();
     if (!probnames.containsKey(input)) {
@@ -282,7 +284,7 @@ class DPProofObject implements ProofObject {
   }
   
   private void justifyEnd(OutputModule module, HashMap<Problem,String> probnames,
-                          HashMap<List<DP>,String> pnames, HashMap<List<Rule>,String> rnames) {
+                          HashMap<List<DP>,String> pnames, HashMap<FixedList<Rule>,String> rnames) {
     if (_failure != null) {
       module.print("***** No progress could be made on DP problem ");
       if (probnames.containsKey(_failure)) {
@@ -300,8 +302,8 @@ class DPProofObject implements ProofObject {
    * problem and its rules are; we do not name them, and do not check if they already have a name.
    */
   private void describeUnknownDPP(OutputModule module, Problem problem, HashMap<Problem,String>
-                                  probnames, HashMap<List<DP>,String> pnames, HashMap<List<Rule>,
-                                  String> rnames) {
+                                  probnames, HashMap<List<DP>,String> pnames,
+                                  HashMap<FixedList<Rule>, String> rnames) {
     storeDPP(problem, probnames);
     boolean dpnew = storeDPList(problem, pnames);
     boolean rnew = storeRuleList(problem, rnames);

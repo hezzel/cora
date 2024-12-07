@@ -20,6 +20,7 @@
 
 package cora.termination.dependency_pairs.processors.graph;
 
+import charlie.util.FixedList;
 import charlie.types.*;
 import charlie.terms.*;
 import charlie.trs.*;
@@ -78,8 +79,9 @@ class ApproximateApproximateReducerTest {
       "id -> [+](0)\n"
     );
     // rules contains all rules except for the last (which affects arities!)
-    ArrayList<Rule> rules = new ArrayList<Rule>();
-    for (int i = 0; i < trs.queryRuleCount()-1; i++) rules.add(trs.queryRule(i));
+    FixedList.Builder<Rule> builder = new FixedList.Builder<Rule>();
+    for (int i = 0; i < trs.queryRuleCount()-1; i++) builder.add(trs.queryRule(i));
+    FixedList<Rule> rules = builder.build();
     // gather all the symbols
     FunctionSymbol id = trs.lookupSymbol("id");
     FunctionSymbol f = trs.lookupSymbol("f");

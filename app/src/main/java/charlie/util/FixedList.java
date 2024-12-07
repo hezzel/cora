@@ -84,6 +84,7 @@ public class FixedList<T> implements Iterable<T> {
   public T get(int index) { return _mylist.get(index); }
   public int hashCode() { return _mylist.hashCode(); }
   public boolean isEmpty() { return _mylist.isEmpty(); }
+  public boolean contains(T elem) { return _mylist.contains(elem); }
   public Stream<T> parallelStream() { return _mylist.parallelStream(); }
   public int size() { return _mylist.size(); }
   public Stream<T> stream() { return _mylist.stream(); }

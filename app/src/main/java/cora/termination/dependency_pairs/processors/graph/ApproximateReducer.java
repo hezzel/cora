@@ -16,6 +16,7 @@
 package cora.termination.dependency_pairs.processors.graph;
 
 import charlie.exceptions.NullStorageException;
+import charlie.util.FixedList;
 import charlie.util.Pair;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
@@ -25,8 +26,6 @@ import charlie.trs.TRS;
 import charlie.theorytranslation.TermAnalyser;
 import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -42,7 +41,7 @@ import java.util.TreeSet;
  */
 class ApproximateReducer {
   private TRS _coreTRS;
-  private List<Rule> _rules;
+  private FixedList<Rule> _rules;
 
   /**
    * Creates an ApproximateReducer assessment object that will use the given TRS both for term
@@ -58,7 +57,7 @@ class ApproximateReducer {
    * Creates an ApproximateReducer assessment object that will use the given TRS for term
    * formation and the given rules for reduction.
    */
-  public ApproximateReducer(TRS trs, List<Rule> rules) {
+  public ApproximateReducer(TRS trs, FixedList<Rule> rules) {
     if (trs == null) throw new NullStorageException("ApproximateReducer", "trs argument.");
     _coreTRS = trs;
     _rules = rules;

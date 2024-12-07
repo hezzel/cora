@@ -38,8 +38,11 @@ class FixedListTest {
     assertTrue(flst.get(1).equals("there"));
     assertTrue(flst.get(2).equals("World"));
     assertFalse(flst.isEmpty());
+    assertTrue(flst.contains("there"));
+    assertFalse(flst.contains("There"));
     llst.set(1, "There");
     assertTrue(flst.get(1).equals("there"));
+    assertFalse(flst.contains("There"));
   }
 
   @Test
