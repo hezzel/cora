@@ -15,6 +15,7 @@
 
 package cora.termination.dependency_pairs.processors;
 
+import charlie.util.FixedList;
 import charlie.util.Pair;
 import charlie.terms.*;
 import charlie.trs.Rule;
@@ -25,7 +26,6 @@ import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
 
-import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
@@ -47,7 +47,7 @@ public class UsableRulesProcessor implements Processor {
    * Creates a map that returns, for every function symbol f, a list of all rules whose left-hand
    * side has f as the root symbol.
    */
-  private TreeMap<FunctionSymbol,LinkedList<Rule>> indexRulesByRoot(List<Rule> source) {
+  private TreeMap<FunctionSymbol,LinkedList<Rule>> indexRulesByRoot(FixedList<Rule> source) {
     TreeMap<FunctionSymbol,LinkedList<Rule>> ret = new TreeMap<FunctionSymbol,LinkedList<Rule>>();
     for (Rule rho : source) {
       FunctionSymbol f = rho.queryRoot();
@@ -93,7 +93,7 @@ public class UsableRulesProcessor implements Processor {
    * This function updates the sets symbols and todo to include (f,n) in symbols, and add new
    * right-hand sides of rules to be considered for their usable symbols.
    */
-  private void updateUsableSymbols(FunctionSymbol f, int n, List<Rule> rules,
+  private void updateUsableSymbols(FunctionSymbol f, int n, LinkedList<Rule> rules,
                                    TreeMap<FunctionSymbol,TreeSet<Integer>> symbols,
                                    LinkedList<Term> todo) {
     // if f is a constructor, there's nothing for us to do!
@@ -165,12 +165,12 @@ public class UsableRulesProcessor implements Processor {
    * However, if the usable rules are exactly the same as the original rules, this returns null
    * instead.
    */
-  private List<Rule> computeUsableRules(TreeMap<FunctionSymbol,TreeSet<Integer>> usableSymbols,
-                                        TreeMap<FunctionSymbol,LinkedList<Rule>> index,
-                                        int originalRuleCount) {
+  private FixedList<Rule> computeUsableRules(TreeMap<FunctionSymbol,TreeSet<Integer>> usableSymbs,
+                                             TreeMap<FunctionSymbol,LinkedList<Rule>> index,
+                                             int originalRuleCount) {
     int rulesFromOriginal = 0;
-    LinkedList<Rule> ret = new LinkedList<Rule>();
-    for (Map.Entry<FunctionSymbol,TreeSet<Integer>> entry : usableSymbols.entrySet()) {
+    FixedList.Builder<Rule> ret = new FixedList.Builder<Rule>();
+    for (Map.Entry<FunctionSymbol,TreeSet<Integer>> entry : usableSymbs.entrySet()) {
       FunctionSymbol f = entry.getKey();
       LinkedList<Rule> relevant = index.get(f);
       if (relevant != null) {
@@ -182,19 +182,19 @@ public class UsableRulesProcessor implements Processor {
       }
     }
     if (rulesFromOriginal == originalRuleCount) return null;  // we didn't change anything!
-    return ret; // we did change something!
+    return ret.build(); // we did change something!
   }
 
   /** Runs the processor, trying to remove one or more rules */
   public ProcessorProofObject processDPP(Problem dpp) {
     // compute the usable rules
-    List<Rule> orgrules = dpp.getRuleList();
+    FixedList<Rule> orgrules = dpp.getRuleList();
     TreeMap<FunctionSymbol,LinkedList<Rule>> index = indexRulesByRoot(orgrules);
     TreeMap<FunctionSymbol,TreeSet<Integer>> usableSymbols = computeUsableSymbols(dpp, index);
     if (usableSymbols == null) {
       return new URProofObject(dpp, "The Usable Rules method is not applicable.");
     }
-    List<Rule> ret = computeUsableRules(usableSymbols, index, orgrules.size());
+    FixedList<Rule> ret = computeUsableRules(usableSymbols, index, orgrules.size());
 
     // handle the case where everything is usable
     String message = null;

@@ -15,7 +15,6 @@
 
 package charlie.trs;
 
-import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -27,6 +26,7 @@ import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.IllegalSymbolException;
 import charlie.exceptions.NullStorageException;
 import charlie.util.Pair;
+import charlie.util.FixedList;
 import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
@@ -79,8 +79,8 @@ public class TRS {
   public enum RuleScheme { Beta, Eta, Calc };
 
   private final Alphabet _alphabet;
-  private final ImmutableList<Rule> _rules;
-  private final ImmutableList<RuleScheme> _schemes;
+  private final FixedList<Rule> _rules;
+  private final FixedList<RuleScheme> _schemes;
   private final TreeSet<String> _private;
   private TreeSet<FunctionSymbol> _defined;
   private String _trsKind;
@@ -93,21 +93,47 @@ public class TRS {
    * Create a TRS with the given settings.  Default because this should only be called by the
    * factory.
    */
-  TRS(Alphabet alphabet, List<Rule> rules, ImmutableList<RuleScheme> schemes,
+  TRS(Alphabet alphabet, List<Rule> rules, FixedList<RuleScheme> schemes,
       Collection<String> privateSymbols, String trsKindName, TermLevel trsLevel,
       boolean includeTheories, boolean includeProducts, RuleRestrictions restrictions) {
 
-    if (alphabet == null) throw new NullStorageException("TRS", "alphabet");
-    if (rules == null) throw new NullStorageException("TRS", "rules");
+    _alphabet = alphabet;
+    _rules = FixedList.copy(rules);
+    _schemes = schemes;
+    if (privateSymbols == null) _private = new TreeSet<String>();
+    else _private = new TreeSet<String>(privateSymbols);
+
+    construct(trsKindName, trsLevel, includeTheories, includeProducts, restrictions);
+  }
+
+  /**
+   * Create a TRS with the given settings.  Default because this should only be called by the
+   * createDerivative function
+   */
+  TRS(Alphabet alphabet, FixedList<Rule> rules, FixedList<RuleScheme> schemes,
+      Collection<String> privateSymbols, String trsKindName, TermLevel trsLevel,
+      boolean includeTheories, boolean includeProducts, RuleRestrictions restrictions) {
+
+    _alphabet = alphabet;
+    _rules = rules;
+    _schemes = schemes;
+    if (privateSymbols == null) _private = new TreeSet<String>();
+    else _private = new TreeSet<String>(privateSymbols);
+
+    construct(trsKindName, trsLevel, includeTheories, includeProducts, restrictions);
+  }
+
+  /** Helper function for the constructors: does all the work for the construction. */
+  private void construct(String trsKindName, TermLevel trsLevel, boolean includeTheories,
+                         boolean includeProducts, RuleRestrictions restrictions) {
+    if (_alphabet == null) throw new NullStorageException("TRS", "alphabet");
+    if (_rules == null) throw new NullStorageException("TRS", "rules");
+    if (_schemes == null) throw new NullStorageException("TRS", "rule schemes");
 
     _theoriesIncluded = includeTheories;
     _productsIncluded = includeProducts;
     _level = trsLevel;
-    _alphabet = alphabet;
-    _schemes = schemes;
     _trsKind = trsKindName;
-    if (privateSymbols == null) _private = new TreeSet<String>();
-    else _private = new TreeSet<String>(privateSymbols);
     _defined = new TreeSet<FunctionSymbol>();
 
     // ensure that the alphabet follows the requirements we just stored
@@ -115,15 +141,12 @@ public class TRS {
 
     // build the rules list, and collect the actual rule restrictions while we're at it
     _rulesProperties = new RuleRestrictions();
-    ImmutableList.Builder<Rule> rulebuilder = ImmutableList.<Rule>builder();
-    for (Rule rule : rules) {
+    for (Rule rule : _rules) {
       if (rule == null) throw new NullStorageException("TRS", "one of the rules");
       _rulesProperties = _rulesProperties.supremum(rule.queryProperties());
-      rulebuilder.add(rule);
       FunctionSymbol root = rule.queryRoot();
       if (root != null) _defined.add(root);
     }
-    _rules = rulebuilder.build();
 
     // and give an error if we don't satisfy the given restrictions on the rules
     if (restrictions != null) {
@@ -184,7 +207,7 @@ public class TRS {
   }
 
   /** Returns the rules in this TRS as a list. */
-  public ImmutableList<Rule> queryRules() {
+  public FixedList<Rule> queryRules() {
     return _rules;
   }
 
@@ -260,6 +283,17 @@ public class TRS {
    * TRS.
    */
   public TRS createDerivative(List<Rule> newrules, Alphabet newAlphabet) {
+    return new TRS(newAlphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
+                   _productsIncluded, null);
+  }
+
+  /**
+   * Creates a TRS with schemes and the restrictions for term rewriting as the current one has, but
+   * with the given rules and alphabet replacing the original ones.  No restrictions are imposed on
+   * the new rules, not even the restrictions on term formation that become a property of the new
+   * TRS.
+   */
+  public TRS createDerivative(FixedList<Rule> newrules, Alphabet newAlphabet) {
     return new TRS(newAlphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
                    _productsIncluded, null);
   }

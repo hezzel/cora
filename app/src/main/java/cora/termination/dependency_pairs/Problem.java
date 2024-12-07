@@ -17,6 +17,7 @@ package cora.termination.dependency_pairs;
 
 import charlie.exceptions.IndexingException;
 import charlie.exceptions.NullStorageException;
+import charlie.util.FixedList;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.terms.FunctionSymbol;
@@ -32,7 +33,7 @@ import java.util.TreeSet;
 public class Problem {
   public enum TerminationFlag { Computable, Terminating, Arbitrary };
   private final List<DP> _dps;
-  private final List<Rule> _rules;
+  private final FixedList<Rule> _rules;
   private final Set<Integer> _privateIndexes;
   private TRS _originalTrs;
   private boolean _innermost;
@@ -65,7 +66,7 @@ public class Problem {
    * @param flag All strict subterms of right-hand sides of DPs are expected to be instantiated to
    *  computable, terminating or arbitrary terms (with respect to original), as given by flag.
    */
-  public Problem(List<DP> dps, List<Rule> rules, Set<Integer> privates, TRS original,
+  public Problem(List<DP> dps, FixedList<Rule> rules, Set<Integer> privates, TRS original,
                  boolean innermost, boolean extraRules, TerminationFlag flag) {
     if (dps == null) throw new NullStorageException("Problem", "set of dependency pairs");
     if (rules == null) throw new NullStorageException("Problem", "set of rules");
@@ -88,7 +89,7 @@ public class Problem {
     return _dps;
   }
 
-  public List<Rule> getRuleList() {
+  public FixedList<Rule> getRuleList() {
     return _rules;
   }
 
@@ -182,9 +183,9 @@ public class Problem {
       else builder.append("\n");
     }
     builder.append("Rules:\n");
-    for (int i = 0; i < _rules.size(); i++) {
+    for (Rule rule : _rules) {
       builder.append("  ");
-      builder.append(_rules.get(i).toString());
+      builder.append(rule.toString());
       builder.append("\n");
     }
     if (_extraRules) builder.append("  ... and an unknown number of additional rules\n");

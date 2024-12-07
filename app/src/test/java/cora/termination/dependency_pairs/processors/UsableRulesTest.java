@@ -15,6 +15,7 @@
 
 package cora.termination.dependency_pairs.processors;
 
+import charlie.util.FixedList;
 import charlie.terms.FunctionSymbol;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
@@ -27,7 +28,6 @@ import cora.termination.dependency_pairs.Problem;
 import cora.termination.dependency_pairs.DP;
 
 import java.util.Set;
-import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -70,7 +70,7 @@ class UsableRulesTest {
     ProcessorProofObject po = proc.processDPP(prob);
     assertTrue(po.applicable());
     assertTrue(po.queryResults().size() == 1);
-    List<Rule> result = po.queryOutput().getRuleList();
+    FixedList<Rule> result = po.queryOutput().getRuleList();
     assertTrue(result.size() == 2);
     assertTrue(result.get(0).toString().equals("minus(x, y) → x - y | x ≥ y"));
     assertTrue(result.get(1).toString().equals("minus(x, y) → 0 | x < y"));

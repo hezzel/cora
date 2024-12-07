@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import charlie.util.FixedList;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -82,7 +83,7 @@ class DPProofObjectTest {
     private static Problem helperProblem(Problem inp) {
       ArrayList<Rule> newrules = new ArrayList<Rule>();
       for (int i = 2; i < inp.getRuleList().size(); i++) newrules.add(inp.getRuleList().get(i));
-      return new Problem(inp.getDPList(), newrules, null, inp.getOriginalTRS(),
+      return new Problem(inp.getDPList(), FixedList.copy(newrules), null, inp.getOriginalTRS(),
                          false, inp.isInnermost(), inp.queryTerminationStatus());
     }
     public HelperC(Problem inp) {
