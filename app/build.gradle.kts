@@ -52,5 +52,6 @@ tasks {
 
     named<JavaExec>("run") {
         jvmArgs = listOf("--enable-preview")
+        standardInput = System.`in`
     }
 }
