@@ -785,7 +785,22 @@ public class CoraParser {
    * Reads the given type from string, recognising the pre-defined sorts.
    * This is the same as readTypeFromString(true, null).
    */
-   public static Type readType(String str) { return readType(str, true, null); }
+  public static Type readType(String str) { return readType(str, true, null); }
+
+  /**
+   * This function takes a given parsing status, reads a type from it (reading as far as we can;
+   * if an unexpected symbol is encountered after a type we stop, but we DO NOT BACKTRACK), and
+   * returns the result.
+   * The ParsingStatus is advanced to point just after the type that was read.
+   * This may cause a ParseException to be thrown, or for errors to be stored in the status (call
+   * status.throwCollectedErrors() to ensure that stored errors are thrown).
+   *
+   * @throws charlie.exceptions.ParseException
+   */
+  public static Type readType(ParsingStatus status) {
+    CoraParser parser = new CoraParser(status);
+    return parser.readType();
+  }
 
   /**
    * Reads a term from the given string.
@@ -803,6 +818,21 @@ public class CoraParser {
     ParserTerm ret = parser.readTerm();
     finish(status, collector == null || ret == null);
     return ret;
+  }
+
+  /**
+   * This function takes a given parsing status, reads a term from it (reading as far as we can;
+   * if an unexpected symbol is encountered after a type we stop, but we DO NOT BACKTRACK), and
+   * returns the result.
+   * The ParsingStatus is advanced to point just after the term that was read.
+   * This may cause a ParseException to be thrown, or for errors to be stored in the status (call
+   * status.throwCollectedErrors() to ensure that stored errors are thrown).
+   *
+   * @throws charlie.exceptions.ParseException
+   */
+  public static ParserTerm readTerm(ParsingStatus status) {
+    CoraParser parser = new CoraParser(status);
+    return parser.readTerm();
   }
 
   /**

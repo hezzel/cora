@@ -22,9 +22,9 @@ import charlie.parser.lib.*;
 
 /**
  * This file defines the tokens used to lex and parse a file or string using Cora's internal
- * input format.  It is used by the CoraParser and intentionally not public.
+ * input format.  It is used by the CoraParser, but may be extended by other parsers.
  */
-class CoraTokenData {
+public class CoraTokenData {
   /* First we define constants for all the tokens. */
   public static final String IDENTIFIER     = "IDENTIFIER";
   public static final String BRACKETOPEN    = "BRACKETOPEN";
@@ -206,6 +206,19 @@ class CoraTokenData {
   /** Returns a TokenQueue that goes through the given string, tokenising for a constrained TRS. */
   public static TokenQueue getConstrainedStringLexer(String text) {
     return setupLexer(LexerFactory.createStringLexer(getConstrainedTokens(), text), true);
+  }
+
+  /**
+   * Returns a TokenQueue for the given string, which accepts both the constrained tokens and the
+   * given list of additional tokens.  These are considered a top priority in the token list.
+   */
+  public static TokenQueue getUpdatedConstrainedStringLexer(String text, String ... extraTokens) {
+    ArrayList<String> tmp = new ArrayList<String>();
+    Collections.addAll(tmp, extraTokens);
+    Collections.addAll(tmp, shared);
+    Collections.addAll(tmp, ctokens);
+    String[] toks = tmp.toArray(new String[tmp.size()]);
+    return setupLexer(LexerFactory.createStringLexer(toks, text), true);
   }
 
   /**

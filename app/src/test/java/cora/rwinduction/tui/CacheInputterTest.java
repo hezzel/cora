@@ -17,6 +17,7 @@ package cora.rwinduction.tui;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
 
 class CacheInputterTest {
   @Test
@@ -47,6 +48,17 @@ class CacheInputterTest {
     assertTrue(ainp.readLine().equals("C"));
     assertTrue(binp.readLine().equals("A"));
     assertTrue(binp.readLine().equals(":quit"));
+  }
+
+  @Test
+  public void testCacheWithList() {
+    Inputter inp = new CacheInputter(List.of("A", "B", "C"),
+                      new CacheInputter(List.of("D"), new QuitInputter()));
+    assertTrue(inp.readLine().equals("A"));
+    assertTrue(inp.readLine().equals("B"));
+    assertTrue(inp.readLine().equals("C"));
+    assertTrue(inp.readLine().equals("D"));
+    assertTrue(inp.readLine().equals(":quit"));
   }
 }
 

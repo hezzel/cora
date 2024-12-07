@@ -15,9 +15,12 @@
 
 package cora.rwinduction;
 
+import charlie.trs.TRS;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
+import cora.rwinduction.engine.*;
 import cora.rwinduction.tui.*;
+import cora.rwinduction.parser.CommandParser;
 import java.util.List;
 
 public class InteractiveRewritingInducter {
@@ -29,11 +32,27 @@ public class InteractiveRewritingInducter {
     _output = output;
   }
 
-  public static ProofObject run(List<String> inputs, OutputModule output) {
-    Inputter inputter = new BasicInputter();
-    //Inputter inputter = new ReplInputter();
-    InteractiveRewritingInducter inducter = new InteractiveRewritingInducter(inputter, output);
+  public static ProofObject run(TRS trs, List<String> inputs, OutputModule output) {
+    // set up Inputter
+    Inputter inputter = new ReplInputter(); // use BasicInputter if ReplInputter doesn't compile
+    if (!inputs.isEmpty()) inputter = new CacheInputter(inputs, inputter);
+    
+    // verify that the TRS is legal
+    String problem = CommandParser.checkTrs(trs);
+    if (problem != null) return new ProofObject() {
+      public Answer queryAnswer() { return Answer.MAYBE; }
+      public void justify(OutputModule module) { module.println(problem); }
+    };
 
+    // get initial equations
+    String firstInput = inputter.readLine("Please input one or more equations: ");
+    List<Equation> eqs = CommandParser.parseEquationList(firstInput, trs);
+    for (Equation eq : eqs) {
+      System.out.println("Got equation: " + eq);
+    }
+
+    // set up the inducter that will do all the work, and run it
+    InteractiveRewritingInducter inducter = new InteractiveRewritingInducter(inputter, output);
     inducter.test();
 
     return null;
