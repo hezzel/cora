@@ -42,7 +42,7 @@ public class Parameters {
   private Request _request;
   private SmtSolver _solver;
 
-  public enum Request { Print, Reduce, Termination, Computability };
+  public enum Request { Print, Reduce, Termination, Computability, Equivalence };
 
   public class WrongParametersException extends RuntimeException {
     public WrongParametersException(String reason) {
@@ -125,6 +125,12 @@ public class Parameters {
         }
         for (String s : args[index+1].split(",")) _disable.add(s);
         return index+2;
+      case "-e": case "--equivalence":
+        setRequest(Request.Equivalence);
+        String equation = "";
+        for (index++; index < args.length; index++) equation += args[index];
+        if (!equation.equals("")) _input.add(equation);
+        return index+1;
       case "-g": case "--strategy":
         if (index + 1 == args.length) {
           throw new WrongParametersException("Parameter " + arg + " without a given strategy!");
@@ -290,6 +296,8 @@ public class Parameters {
       .append(System.lineSeparator());
     str.append("    -c | --computability        Try to prove or disprove universal computability " +
       "of the given TRS.")
+      .append(System.lineSeparator());
+    str.append("    -e | --equivalence <equation> Starts the interactive equivalence prover.")
       .append(System.lineSeparator());
     str.append("    -g | --strategy             Set the given strategy for reduction.  " +
       "Currently supported strategies are full, innermost and call-by-value (cbv).")

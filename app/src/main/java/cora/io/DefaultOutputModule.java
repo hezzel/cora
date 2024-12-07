@@ -323,7 +323,7 @@ public class DefaultOutputModule implements OutputModule {
   /** This prints the results so far to standard out. */
   @Override
   public void printToStdout() {
-    System.out.println(toString());
+    System.out.print(toString());
   }
 
   /** This returns a string representation of the results so far. */

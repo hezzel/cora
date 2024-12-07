@@ -23,6 +23,7 @@ import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.reduction.Reducer;
 import cora.termination.TerminationHandler;
+import cora.rwinduction.InteractiveRewritingInducter;
 import cora.Parameters.Request;
 
 import java.io.IOException;
@@ -40,10 +41,10 @@ public class App {
       parameters.setupSettings();
       Request req = parameters.queryRequest();
       TRS trs = readTRS(parameters.querySingleFile());
-      ProofObject pobject = executeRequest(req, trs, parameters.queryModuleInput());
+      OutputModule om = parameters.queryOutputModule(trs);
+      ProofObject pobject = executeRequest(req, trs, parameters.queryModuleInput(), om);
       if (pobject == null) System.exit(1);
       System.out.println(pobject.printAnswer());
-      OutputModule om = parameters.queryOutputModule(trs);
       pobject.justify(om);
       om.printToStdout();
     }
@@ -98,7 +99,8 @@ public class App {
    * object.
    * (This only considers the requests that take a TRS as argument and return a Proof Object.)
    */
-  private static ProofObject executeRequest(Request request, TRS trs, List<String> moduleInput) {
+  private static ProofObject executeRequest(Request request, TRS trs, List<String> moduleInput,
+                                            OutputModule output) {
     return switch (request) {
       case Computability -> TerminationHandler.proveComputability(trs);
       case Print -> new ProofObject() {
@@ -108,6 +110,7 @@ public class App {
       };
       case Termination -> TerminationHandler.proveTermination(trs);
       case Reduce -> executeReduce(trs, moduleInput);
+      case Equivalence -> InteractiveRewritingInducter.run(moduleInput, output);
     };
   }
 
