@@ -110,7 +110,7 @@ public class App {
       };
       case Termination -> TerminationHandler.proveTermination(trs);
       case Reduce -> executeReduce(trs, moduleInput);
-      case Equivalence -> InteractiveRewritingInducter.run(moduleInput, output);
+      case Equivalence -> InteractiveRewritingInducter.run(trs, moduleInput, output);
     };
   }
 

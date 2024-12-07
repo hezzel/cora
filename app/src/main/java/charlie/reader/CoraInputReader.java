@@ -266,7 +266,7 @@ public class CoraInputReader extends TermTyper {
   }
 
   /**
-   * Helper function for readTerm.  This function updates the given renaming
+   * Helper function for readTerm (multiple instances).  This function updates the given renaming
    * by giving all variables that occur in t but not yet in naming their own name.
    * This should work as expected if the given renaming was used when reading the term, and the
    * only blocked function symbols in the renaming are either not valid identifiers, or are the
@@ -302,6 +302,25 @@ public class CoraInputReader extends TermTyper {
     CoraInputReader reader = new CoraInputReader(data, collector);
     Term ret = reader.makeTerm(pt, null, true);
     if (ret != null && updateNaming) updateRenaming(naming, ret, collector);
+    throwIfErrors(collector);
+    return ret;
+  }
+
+  /**
+   * Reads the given parser term into a proper term, using the TRS to assess the function symbols
+   * (and to know if theory symbols should be created), and the Renaming to map (meta-)variable
+   * names to (meta-)variables.
+   *
+   * It is allowed for the parser term to contain variable identifiers that are not yet in the
+   * given renaming.  These will be added to the renaming (so the naming should be expected to be
+   * altered).
+   */
+  public static Term readTerm(ParserTerm pt, Renaming naming, TRS trs) {
+    ErrorCollector collector = new ErrorCollector();
+    SymbolData data = setupSymbolData(trs, naming);
+    CoraInputReader reader = new CoraInputReader(data, collector);
+    Term ret = reader.makeTerm(pt, null, true);
+    if (ret != null) updateRenaming(naming, ret, collector);
     throwIfErrors(collector);
     return ret;
   }

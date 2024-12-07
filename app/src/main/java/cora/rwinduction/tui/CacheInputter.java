@@ -15,6 +15,8 @@
 
 package cora.rwinduction.tui;
 
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Scanner;
 import java.util.Stack;
 
@@ -25,6 +27,17 @@ import java.util.Stack;
 public class CacheInputter implements Inputter {
   private Inputter _child;
   private Stack<String> _cache;
+
+  /**
+   * Creates a Cache Inputter that first returns everything in the given list (in that order),
+   * and then passes control to the child.
+   */
+  public CacheInputter(List<String> cached, Inputter child) {
+    _child = child;
+    _cache = new Stack<String>();
+    ListIterator<String> li = cached.listIterator(cached.size());
+    while (li.hasPrevious()) _cache.push(li.previous());
+  }
 
   public CacheInputter(Inputter child) {
     _child = child;
