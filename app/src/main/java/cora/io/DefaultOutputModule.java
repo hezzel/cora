@@ -74,6 +74,7 @@ public class DefaultOutputModule implements OutputModule {
     codes.add(new Pair<String,String>("%{not}", "not "));
     codes.add(new Pair<String,String>("%{implies}", "=>"));
     codes.add(new Pair<String,String>("%{distinct}", "!="));
+    codes.add(new Pair<String,String>("%{approx}", "-><-"));
     codes.add(new Pair<String,String>("%{alpha}", "alpha"));
     codes.add(new Pair<String,String>("%{beta}", "beta"));
     codes.add(new Pair<String,String>("%{gamma}", "gamma"));
@@ -141,6 +142,7 @@ public class DefaultOutputModule implements OutputModule {
     codes.add(new Pair<String,String>("%{not}", "¬"));
     codes.add(new Pair<String,String>("%{implies}", "⇒"));
     codes.add(new Pair<String,String>("%{distinct}", "≠"));
+    codes.add(new Pair<String,String>("%{approx}", "≈"));
     codes.add(new Pair<String,String>("%{alpha}", "α"));
     codes.add(new Pair<String,String>("%{beta}", "β"));
     codes.add(new Pair<String,String>("%{gamma}", "γ"));
@@ -391,10 +393,16 @@ public class DefaultOutputModule implements OutputModule {
     if (ob instanceof Type y) {
       return _typePrinter.print(y);
     }
+    // for rules we generate their own Renaming, and then treat them as pairs
+    if (ob instanceof Rule r) {
+      Renaming ren = _termPrinter.generateUniqueNaming(r.queryLeftSide(), r.queryRightSide(),
+                                                       r.queryConstraint());
+      ob = new Pair<Rule,Renaming>(r, ren);
+    }
     // no need to special-case Terms, as these have all been transformed into Pairs
     if (ob instanceof Pair p) {
-      if (p.fst() instanceof Term t && p.snd() instanceof Renaming r) {
-        return _termPrinter.print(t, r);
+      if (p.fst() instanceof Term t && p.snd() instanceof Renaming renaming) {
+        return _termPrinter.print(t, renaming);
       }
       if (p.fst() instanceof String s && p.snd() instanceof Object[] obs) {
         return makeString(s, obs);
@@ -402,21 +410,17 @@ public class DefaultOutputModule implements OutputModule {
       if (p.fst() instanceof String s) {
         return makeString(s, new Object[] { p.snd() });
       }
-    }
-    if (ob instanceof Rule r) {
-      Term left = r.queryLeftSide();
-      Term right = r.queryRightSide();
-      Term constraint = r.queryConstraint();
-      Renaming renaming = _termPrinter.generateUniqueNaming(left, right, constraint);
-      StringBuilder ret = new StringBuilder();
-      _termPrinter.print(left, renaming, ret);
-      ret.append(replaceCodes(" %{ruleArrow} "));
-      _termPrinter.print(right, renaming, ret);
-      if (r.isConstrained()) {
-        ret.append(" | ");
-        _termPrinter.print(constraint, renaming, ret);
+      if (p.fst() instanceof Rule rho && p.snd() instanceof Renaming renaming) {
+        StringBuilder ret = new StringBuilder();
+        _termPrinter.print(rho.queryLeftSide(), renaming, ret);
+        ret.append(replaceCodes(" %{ruleArrow} "));
+        _termPrinter.print(rho.queryRightSide(), renaming, ret);
+        if (rho.isConstrained()) {
+          ret.append(" | ");
+          _termPrinter.print(rho.queryConstraint(), renaming, ret);
+        }
+        return ret.toString();
       }
-      return ret.toString();
     }
     return ob.toString();
   }

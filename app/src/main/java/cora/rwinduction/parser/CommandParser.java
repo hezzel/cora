@@ -16,8 +16,8 @@
 package cora.rwinduction.parser;
 
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
 
+import charlie.util.FixedList;
 import charlie.parser.lib.*;
 import charlie.parser.Parser.*;
 import charlie.parser.CoraTokenData;
@@ -89,15 +89,15 @@ public class CommandParser {
    * If there is any error with the input, a ParseException will be thrown.
    * @throws charlie.exceptions.ParseException
    */
-  public static ArrayList<Equation> parseEquationList(String str, TRS trs) {
+  public static FixedList<Equation> parseEquationList(String str, TRS trs) {
     ParsingStatus status = createStatus(str);
-    ArrayList<Equation> ret = new ArrayList<Equation>();
+    FixedList.Builder<Equation> ret = new FixedList.Builder<Equation>();
     while (true) {
       ret.add(parseSingleEquation(status, trs));
       if (status.readNextIf(SEPARATOR) == null) {
         status.expect(Token.EOF, "semi-colon or end of input");
       }
-      if (status.peekNext().isEof()) return ret;
+      if (status.peekNext().isEof()) return ret.build();
     }
   }
   

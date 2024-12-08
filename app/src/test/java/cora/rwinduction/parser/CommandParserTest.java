@@ -17,8 +17,8 @@ package cora.rwinduction.parser;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.List;
 
+import charlie.util.FixedList;
 import charlie.terms.Term;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -88,7 +88,7 @@ class CommandParserTest {
 
   @Test
   public void testReadMultipleEquations() {
-    List<Equation> lst = CommandParser.parseEquationList(
+    FixedList<Equation> lst = CommandParser.parseEquationList(
       "sum(x) ≈ sum(y) | x = y ; sum(y) -><- sum(x+y) ; sum(1) = sum(2)", trs);
     assertTrue(lst.size() == 3);
     assertTrue(lst.get(0).toString().equals("sum(x) ≈ sum(y) | x = y"));

@@ -88,6 +88,13 @@ public class FixedList<T> implements Iterable<T> {
   public Stream<T> parallelStream() { return _mylist.parallelStream(); }
   public int size() { return _mylist.size(); }
   public Stream<T> stream() { return _mylist.stream(); }
+  public FixedList<T> append(FixedList<T> other) { return append(other._mylist); }
+
+  public FixedList<T> append(List<T> other) {
+    ArrayList<T> arr = new ArrayList<T>(_mylist);
+    arr.addAll(other);
+    return new FixedList<T>(arr);
+  }
   
   private class ImmutableIterator<T> implements Iterator<T> {
     Iterator<T> _mine;

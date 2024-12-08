@@ -92,7 +92,8 @@ public interface OutputModule {
    * then this will lead to the given term being printed with the given Renaming, and not being
    * considered for the naming of other terms in the given list.  Hence, if there is a need to
    * print terms across multiple paragraphs using the same Renaming, then the calling method can
-   * use this to do so (but needs to keep track of the Renaming by itself).
+   * use this to do so (but needs to keep track of the Renaming by itself).  The same works for a
+   * Pair<Rule,Renaming>.
    *
    * Note also: if you pass a Pair<String,Object[]> as one of the Object arguments (say (s,lst)),
    * that's the same as calling print(s, lst).
