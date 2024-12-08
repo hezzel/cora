@@ -59,6 +59,11 @@ public class Equation {
     return _constraint;
   }
 
+  public boolean isConstrained() {
+    if (_constraint.toValue() == null) return true;
+    return !_constraint.toValue().getBool();
+  }
+
   public Renaming getRenaming() {
     return _varNaming;
   }
