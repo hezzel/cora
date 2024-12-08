@@ -17,7 +17,9 @@ package cora.rwinduction.parser;
 
 import com.google.common.collect.ImmutableList;
 
+import charlie.exceptions.ParseException;
 import charlie.util.FixedList;
+import charlie.types.TypeFactory;
 import charlie.parser.lib.*;
 import charlie.parser.Parser.*;
 import charlie.parser.CoraTokenData;
@@ -69,6 +71,18 @@ public class CommandParser {
     return new ParsingStatus(queue, 1);
   }
 
+  /** This checks if the given Equation is a legal one, and throws a ParseException if not. */
+  private static void checkEquation(Equation equation) {
+    if (!equation.getLhs().queryType().equals(equation.getRhs().queryType())) {
+      throw new ParseException("Left-hand side of equation " + equation + " has type " +
+        equation.getLhs().queryType().toString() + " while right-hand side has type " +
+        equation.getRhs().queryType().toString() + "!");
+    }
+    if (!equation.getConstraint().queryType().equals(TypeFactory.boolSort)) {
+      throw new ParseException("Constraint of " + equation + " has type " +
+        equation.getConstraint().toString() + " (should be Bool)");
+    }
+  }
 
   /**
    * This reads an equation of the form a ≈ b | c from the given string.
@@ -79,6 +93,7 @@ public class CommandParser {
   public static Equation parseEquation(String str, TRS trs) {
     ParsingStatus status = createStatus(str);
     Equation ret = parseSingleEquation(status, trs);
+    checkEquation(ret);
     status.expect(Token.EOF, "end of input");
     return ret;
   }
@@ -93,7 +108,9 @@ public class CommandParser {
     ParsingStatus status = createStatus(str);
     FixedList.Builder<Equation> ret = new FixedList.Builder<Equation>();
     while (true) {
-      ret.add(parseSingleEquation(status, trs));
+      Equation eq = parseSingleEquation(status, trs);
+      checkEquation(eq);
+      ret.add(eq);
       if (status.readNextIf(SEPARATOR) == null) {
         status.expect(Token.EOF, "semi-colon or end of input");
       }

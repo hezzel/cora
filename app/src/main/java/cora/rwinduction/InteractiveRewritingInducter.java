@@ -36,9 +36,22 @@ public class InteractiveRewritingInducter {
     _context = context;
   }
 
+  private static FixedList<Equation> readEquations(Inputter inputter, TRS trs) {
+    try {
+      String firstInput = inputter.readLine("Please input one or more equations: ");
+      if (firstInput.equals(":quit") || firstInput.equals("")) return null;
+      return CommandParser.parseEquationList(firstInput, trs);
+    }
+    catch (Exception e) {
+      System.out.println("Invalid input: " + e.getMessage());
+      return readEquations(inputter, trs);
+    }
+  }
+
   public static ProofObject run(TRS trs, List<String> inputs, OutputModule output) {
     // set up Inputter
-    Inputter inputter = new ReplInputter(); // use BasicInputter if ReplInputter doesn't compile
+    //Inputter inputter = new ReplInputter();
+    Inputter inputter = new BasicInputter(); // use BasicInputter if ReplInputter doesn't compile
     if (!inputs.isEmpty()) inputter = new CacheInputter(inputs, inputter);
     
     // verify that the TRS is legal
@@ -53,8 +66,8 @@ public class InteractiveRewritingInducter {
     output.clear();
 
     // get initial equations and set up
-    String firstInput = inputter.readLine("Please input one or more equations: ");
-    FixedList<Equation> eqs = CommandParser.parseEquationList(firstInput, trs);
+    FixedList<Equation> eqs = readEquations(inputter, trs);
+    if (eqs == null) return new AbortedProofObject();
     ProverContext context = new ProverContext(trs, eqs, output.queryTermPrinter());
 
     // set up the inducter that will do all the work, and run it
