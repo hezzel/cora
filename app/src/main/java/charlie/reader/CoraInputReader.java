@@ -285,7 +285,6 @@ public class CoraInputReader extends TermTyper {
     }
   }
 
-
   /**
    * Reads the given term from string.
    * The given renaming is used to recognise variables and meta-variables.  If updateRenaming is
