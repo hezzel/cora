@@ -17,22 +17,27 @@ package cora.rwinduction;
 
 import java.util.List;
 
+import charlie.util.Either;
 import charlie.util.FixedList;
 import charlie.trs.TRS;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.rwinduction.engine.*;
 import cora.rwinduction.tui.*;
-import cora.rwinduction.parser.ExtendedTermParser;
+import cora.rwinduction.command.Command;
+import cora.rwinduction.parser.*;
 
 public class InteractiveRewritingInducter {
   private Inputter _input;
   private Outputter _output;
+  private CommandParser _parser;
   private ProverContext _context;
 
-  InteractiveRewritingInducter(Inputter input, Outputter output, ProverContext context) {
+  InteractiveRewritingInducter(Inputter input, Outputter output,
+                               CommandParser cparse, ProverContext context) {
     _input = input;
     _output = output;
+    _parser = cparse;
     _context = context;
   }
 
@@ -48,12 +53,21 @@ public class InteractiveRewritingInducter {
     }
   }
 
+  private static CommandParser createCommandParser(TRS trs) {
+    CommandParser cp = new CommandParser();
+    cp.registerSyntax(new SyntaxMetaQuit());
+    cp.registerSyntax(new SyntaxMetaSyntax(cp));
+    cp.registerSyntax(new SyntaxMetaRules(trs));
+    return cp;
+  }
+
   public static ProofObject run(TRS trs, List<String> inputs, OutputModule output) {
-    // set up Inputter
+    // set up Inputter, outputter and command parser
     //Inputter inputter = new ReplInputter();
     Inputter inputter = new BasicInputter(); // use BasicInputter if ReplInputter doesn't compile
     Outputter outputter = new Outputter(output);
     if (!inputs.isEmpty()) inputter = new CacheInputter(inputs, inputter);
+    CommandParser parser = createCommandParser(trs);
     
     // verify that the TRS is legal
     String problem = ExtendedTermParser.checkTrs(trs);
@@ -72,7 +86,7 @@ public class InteractiveRewritingInducter {
 
     // set up the inducter that will do all the work, and run it
     InteractiveRewritingInducter inducter =
-      new InteractiveRewritingInducter(inputter, outputter, context);
+      new InteractiveRewritingInducter(inputter, outputter, parser, context);
     return inducter.proveEquivalence();
   }
 
@@ -81,11 +95,15 @@ public class InteractiveRewritingInducter {
       _output.println("Top equation: %a", _context.getProofState().getTopEquation());
       _output.flush();
       String str = _input.readLine();
-      if (str.equals(":quit")) {
-        _input.close();
-        return new AbortedProofObject();
+      Either<String,Command> result = _parser.parse(str);
+      if (result instanceof Either.Left<String,Command>(String s)) _output.println(s);
+      if (result instanceof Either.Right<String,Command>(Command cmd)) {
+        if (cmd.isQuit()) {
+          _input.close();
+          return new AbortedProofObject();
+        }
+        else cmd.run(_context, _output);
       }
-      _output.println("I read: %a", str);
     }
     return new SuccesfulProofObject(_context);
   }

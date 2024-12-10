@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.engine;
+package cora.rwinduction.command;
 
 import charlie.util.Pair;
 import charlie.types.Arrow;
@@ -22,6 +22,7 @@ import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import cora.io.OutputModule;
+import cora.rwinduction.engine.ProverContext;
 
 /**
  * The :rules command: it simply shows all the required rules, or the rules starting with the given
@@ -29,7 +30,6 @@ import cora.io.OutputModule;
  */
 public class CmdMetaRules implements Command {
   private FunctionSymbol _startSymbol;
-  private String _startSymbolName;
 
   /** The command :rules to just print all rules available to the user. */
   public CmdMetaRules() {
@@ -39,14 +39,11 @@ public class CmdMetaRules implements Command {
   /** The command :rules f, to print all rules starting with f. */
   public CmdMetaRules(FunctionSymbol f, String name) {
     _startSymbol = f;
-    _startSymbolName = name;
   }
 
-  /** The descriptor of the command. */
-  public String callDescriptor() {
-    if (_startSymbol == null) return ":rules";
-    else if (_startSymbolName == null) return ":rules " + _startSymbol.toString();
-    else return ":rules " + _startSymbolName;
+  /** Primarily for unit testing */
+  public FunctionSymbol queryStartSymbol() {
+    return _startSymbol;
   }
 
   /** Executes the command */
