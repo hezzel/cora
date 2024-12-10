@@ -17,37 +17,33 @@ package cora.rwinduction.parser;
 
 import charlie.util.Either;
 import charlie.util.FixedList;
-import charlie.terms.Term;
-import charlie.trs.TRS;
-import charlie.reader.CoraInputReader;
 import cora.rwinduction.command.Command;
-import cora.rwinduction.command.CmdMetaRules;
+import cora.rwinduction.command.CmdMetaSyntax;
 
-/** The syntax for the :rules meta command. */
-public class SyntaxMetaRules extends Syntax {
-  private TRS _trs;
+/** The syntax for the :syntax meta command. */
+public class SyntaxMetaSyntax extends Syntax {
+  private CommandParser _cparse;
 
-  public SyntaxMetaRules(TRS trs) {
-    _trs = trs;
+  /**
+   * Creates the Syntax for the syntax command, taking its commands from the given command parser.
+   */
+  public SyntaxMetaSyntax(CommandParser cp) {
+    _cparse = cp;
   }
 
   public String queryName() {
-    return ":rules";
+    return ":syntax";
   }
 
   public FixedList<String> callDescriptor() {
-    return FixedList.of(":rules", ":rules <function symbol>");
+    return FixedList.of(":syntax", ":syntax <command>");
   }
 
   public Either<String,Command> parse(String str) {
-    if (str.indexOf(' ') != -1) return makeEither("Too many arguments: :rules takes 0 or 1");
-    if (str.equals("")) return makeEither(new CmdMetaRules());
-    try {
-      Term fterm = CoraInputReader.readTerm(str, _trs);
-      if (fterm.isConstant()) return makeEither(new CmdMetaRules(fterm.queryRoot(), str));
-      return makeEither("Argument to :rules should be a single function symbol");
-    }
-    catch (Exception e) { return makeEither(e.getMessage().trim()); }
+    if (str.indexOf(' ') != -1) return makeEither("Too many arguments: :syntax takes 0 or 1");
+    Syntax cmd = str.equals("") ? this : _cparse.querySyntax(str);
+    if (cmd == null) return makeEither("Unknown command: " + str);
+    return makeEither(new CmdMetaSyntax(cmd.queryName(), cmd.callDescriptor()));
   }
 }
 

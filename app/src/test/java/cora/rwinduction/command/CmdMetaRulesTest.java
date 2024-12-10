@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.engine;
+package cora.rwinduction.command;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,6 +25,8 @@ import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
+import cora.rwinduction.engine.Equation;
+import cora.rwinduction.engine.ProverContext;
 import cora.rwinduction.parser.ExtendedTermParser;
 
 class CmdMetaRulesTest {

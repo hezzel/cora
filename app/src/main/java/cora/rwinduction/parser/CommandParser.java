@@ -16,8 +16,9 @@
 package cora.rwinduction.parser;
 
 import java.util.HashMap;
+import java.util.Set;
 import charlie.util.Either;
-import cora.rwinduction.engine.Command;
+import cora.rwinduction.command.Command;
 
 public class CommandParser {
   private HashMap<String,Syntax> _syntaxes;
@@ -26,8 +27,8 @@ public class CommandParser {
     _syntaxes = new HashMap<String,Syntax>();
   }
 
-  public void registerSyntax(String name, Syntax syntax) {
-    _syntaxes.put(name, syntax);
+  public void registerSyntax(Syntax syntax) {
+    _syntaxes.put(syntax.queryName(), syntax);
   }
 
   public Either<String,Command> parse(String str) {
@@ -41,6 +42,16 @@ public class CommandParser {
         "Use \":help commands\" to list available commands.");
     }
     return _syntaxes.get(cmd).parse(rest);
+  }
+
+  /** Returns the set of all command names known to the parser. */
+  public Set<String> queryCommands() {
+    return _syntaxes.keySet();
+  }
+
+  /** Returns the Syntax associated to the given command, or null if the command is unknown. */
+  public Syntax querySyntax(String name) {
+    return _syntaxes.get(name);
   }
 }
 

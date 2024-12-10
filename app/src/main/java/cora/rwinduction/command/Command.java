@@ -13,18 +13,22 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.engine;
+package cora.rwinduction.command;
 
 import cora.io.OutputModule;
+import cora.rwinduction.engine.ProverContext;
 
 /**
  * A Command either gives information to the user, or updates the ProverContext, to correspond with
  * a user-generated or generated command.
  */
 public interface Command {
-  /** This returns a syntax that could be used to create the current Command instance. */
-  String callDescriptor();
   /** This executes the Command. */
   void run(ProverContext context, OutputModule module);
+
+  /** Returns whether this is the quit command. */
+  default boolean isQuit() {
+    return false;
+  }
 }
 

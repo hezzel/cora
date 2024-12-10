@@ -21,7 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import charlie.util.Either;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
-import cora.rwinduction.engine.Command;
+import cora.rwinduction.command.Command;
+import cora.rwinduction.command.CmdMetaRules;
 
 class SyntaxMetaRulesTest {
   TRS trs = CoraInputReader.readTrsFromString (
@@ -34,7 +35,6 @@ class SyntaxMetaRulesTest {
   public void testBasics() {
     Syntax syntax = new SyntaxMetaRules(trs);
     assertTrue(syntax.queryName().equals(":rules"));
-    assertTrue(syntax.callDescriptor().size() == 2);
     assertTrue(syntax.callDescriptor().get(0).equals(":rules"));
     assertTrue(syntax.callDescriptor().get(1).equals(":rules <function symbol>"));
   }
@@ -50,7 +50,7 @@ class SyntaxMetaRulesTest {
       }
       case Either.Right(Command c) -> c;
     };
-    assertTrue(cmd.callDescriptor().equals(":rules"));
+    assertTrue(((CmdMetaRules)cmd).queryStartSymbol() == null);
   }
 
   @Test
@@ -64,7 +64,7 @@ class SyntaxMetaRulesTest {
       }
       case Either.Right(Command c) -> c;
     };
-    assertTrue(cmd.callDescriptor().equals(":rules sum"));
+    assertTrue(((CmdMetaRules)cmd).queryStartSymbol().equals(trs.lookupSymbol("sum")));
   }
 
   @Test
@@ -78,7 +78,9 @@ class SyntaxMetaRulesTest {
       }
       case Either.Right(Command c) -> c;
     };
-    assertTrue(cmd.callDescriptor().equals(":rules [=_Bool]"));
+    assertTrue(((CmdMetaRules)cmd).queryStartSymbol().toString().equals("[⇔]"));
+    assertTrue(((CmdMetaRules)cmd).queryStartSymbol().queryType().toString().equals(
+      "Bool → Bool → Bool"));
   }
 
   @Test

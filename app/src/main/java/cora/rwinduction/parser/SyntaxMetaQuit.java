@@ -17,37 +17,16 @@ package cora.rwinduction.parser;
 
 import charlie.util.Either;
 import charlie.util.FixedList;
-import charlie.terms.Term;
-import charlie.trs.TRS;
-import charlie.reader.CoraInputReader;
 import cora.rwinduction.command.Command;
-import cora.rwinduction.command.CmdMetaRules;
+import cora.rwinduction.command.CmdMetaQuit;
 
-/** The syntax for the :rules meta command. */
-public class SyntaxMetaRules extends Syntax {
-  private TRS _trs;
-
-  public SyntaxMetaRules(TRS trs) {
-    _trs = trs;
-  }
-
-  public String queryName() {
-    return ":rules";
-  }
-
-  public FixedList<String> callDescriptor() {
-    return FixedList.of(":rules", ":rules <function symbol>");
-  }
-
+/** The syntax for the :quit meta command. */
+public class SyntaxMetaQuit extends Syntax {
+  public String queryName() { return ":quit"; }
+  public FixedList<String> callDescriptor() { return FixedList.of(":quit"); }
   public Either<String,Command> parse(String str) {
-    if (str.indexOf(' ') != -1) return makeEither("Too many arguments: :rules takes 0 or 1");
-    if (str.equals("")) return makeEither(new CmdMetaRules());
-    try {
-      Term fterm = CoraInputReader.readTerm(str, _trs);
-      if (fterm.isConstant()) return makeEither(new CmdMetaRules(fterm.queryRoot(), str));
-      return makeEither("Argument to :rules should be a single function symbol");
-    }
-    catch (Exception e) { return makeEither(e.getMessage().trim()); }
+    if (str.equals("")) return makeEither(new CmdMetaQuit());
+    else return makeEither(":quit should be invoked without arguments");
   }
 }
 
