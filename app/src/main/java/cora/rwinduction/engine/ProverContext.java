@@ -72,26 +72,16 @@ public class ProverContext {
     return _trs;
   }
 
+  public String getRuleName(int index) {
+    return _ruleNames.get(index);
+  }
+
   public Rule getRule(String name) {
     return _trs.queryRule(_nameToRule.get(name));
   }
 
   public Renaming getRenaming(String ruleName) {
     return _ruleRenamings.get(_nameToRule.get(ruleName));
-  }
-
-  /**
-   * Prints the rules to the given output module, along with their names, and using a consistent
-   * variable naming so that users can refer to specific variables.
-   */
-  public void printRules(OutputModule module) {
-    module.startTable();
-    for (int i = 0; i < _trs.queryRuleCount(); i++) {
-      module.nextColumn("%a:", _ruleNames.get(i));
-      Renaming renaming = _ruleRenamings.get(i);
-      module.println("%a", new Pair<Rule,Renaming>(_trs.queryRule(i), renaming));
-    }
-    module.endTable();
   }
 
   /**

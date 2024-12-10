@@ -23,14 +23,14 @@ import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.rwinduction.engine.*;
 import cora.rwinduction.tui.*;
-import cora.rwinduction.parser.CommandParser;
+import cora.rwinduction.parser.ExtendedTermParser;
 
 public class InteractiveRewritingInducter {
   private Inputter _input;
-  private OutputModule _output;
+  private Outputter _output;
   private ProverContext _context;
 
-  InteractiveRewritingInducter(Inputter input, OutputModule output, ProverContext context) {
+  InteractiveRewritingInducter(Inputter input, Outputter output, ProverContext context) {
     _input = input;
     _output = output;
     _context = context;
@@ -40,7 +40,7 @@ public class InteractiveRewritingInducter {
     try {
       String firstInput = inputter.readLine("Please input one or more equations: ");
       if (firstInput.equals(":quit") || firstInput.equals("")) return null;
-      return CommandParser.parseEquationList(firstInput, trs);
+      return ExtendedTermParser.parseEquationList(firstInput, trs);
     }
     catch (Exception e) {
       System.out.println("Invalid input: " + e.getMessage());
@@ -52,52 +52,40 @@ public class InteractiveRewritingInducter {
     // set up Inputter
     //Inputter inputter = new ReplInputter();
     Inputter inputter = new BasicInputter(); // use BasicInputter if ReplInputter doesn't compile
+    Outputter outputter = new Outputter(output);
     if (!inputs.isEmpty()) inputter = new CacheInputter(inputs, inputter);
     
     // verify that the TRS is legal
-    String problem = CommandParser.checkTrs(trs);
+    String problem = ExtendedTermParser.checkTrs(trs);
     if (problem != null) return new ProofObject() {
       public Answer queryAnswer() { return Answer.MAYBE; }
       public void justify(OutputModule module) { module.println(problem); }
     };
 
-    output.printTrs(trs);
-    output.printToStdout();
-    output.clear();
+    outputter.printTrs(trs);
+    outputter.flush();
 
     // get initial equations and set up
     FixedList<Equation> eqs = readEquations(inputter, trs);
     if (eqs == null) return new AbortedProofObject();
-    ProverContext context = new ProverContext(trs, eqs, output.queryTermPrinter());
+    ProverContext context = new ProverContext(trs, eqs, outputter.queryTermPrinter());
 
     // set up the inducter that will do all the work, and run it
     InteractiveRewritingInducter inducter =
-      new InteractiveRewritingInducter(inputter, output, context);
+      new InteractiveRewritingInducter(inputter, outputter, context);
     return inducter.proveEquivalence();
-  }
-
-  private void printEquation(Equation eq) {
-    if (eq.isConstrained()) {
-      _output.println("%a %{approx} %a | %a", eq.getLhs(), eq.getRhs(), eq.getConstraint());
-    }
-    else {
-      _output.println("%a %{approx} %a", eq.getLhs(), eq.getRhs());
-    }
-    _output.printToStdout();
-    _output.clear();
   }
 
   private ProofObject proveEquivalence() {
     while (!_context.getProofState().isFinalState()) {
-      printEquation(_context.getProofState().getTopEquation());
+      _output.println("Top equation: %a", _context.getProofState().getTopEquation());
+      _output.flush();
       String str = _input.readLine();
       if (str.equals(":quit")) {
         _input.close();
         return new AbortedProofObject();
       }
       _output.println("I read: %a", str);
-      _output.printToStdout();
-      _output.clear();
     }
     return new SuccesfulProofObject(_context);
   }

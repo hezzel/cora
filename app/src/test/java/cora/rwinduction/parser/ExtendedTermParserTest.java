@@ -24,7 +24,7 @@ import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.rwinduction.engine.Equation;
 
-class CommandParserTest {
+class ExtendedTermParserTest {
   TRS trs = CoraInputReader.readTrsFromString (
     "sum :: Int -> Int\n" +
     "sum(x) -> 0         | x ≤ 0\n" +
@@ -33,7 +33,7 @@ class CommandParserTest {
 
   @Test
   public void testEquationWithConstraint() {
-    Equation equation = CommandParser.parseEquation("sum(x) ≈ sum(y) | x = y", trs);
+    Equation equation = ExtendedTermParser.parseEquation("sum(x) ≈ sum(y) | x = y", trs);
     Term l = equation.getLhs();
     Term r = equation.getRhs();
     Term c = equation.getConstraint();
@@ -49,7 +49,7 @@ class CommandParserTest {
 
   @Test
   public void testEquationWithoutConstraint() {
-    Equation equation = CommandParser.parseEquation("sum(y) -><- sum(x+y)", trs);
+    Equation equation = ExtendedTermParser.parseEquation("sum(y) -><- sum(x+y)", trs);
     Term l = equation.getLhs();
     Term r = equation.getRhs();
     Term c = equation.getConstraint();
@@ -63,7 +63,7 @@ class CommandParserTest {
 
   @Test
   public void testEquationWithEqualsSymbol() {
-    Equation equation = CommandParser.parseEquation("sum(x) = sum(y) | x = y", trs);
+    Equation equation = ExtendedTermParser.parseEquation("sum(x) = sum(y) | x = y", trs);
     Term l = equation.getLhs();
     Term r = equation.getRhs();
     Term c = equation.getConstraint();
@@ -72,7 +72,7 @@ class CommandParserTest {
     assertTrue(c.toString().equals("x = y"));
     assertTrue(equation.getRenaming().domain().size() == 2);
 
-    equation = CommandParser.parseEquation("sum(y) = sum(y+y)", trs);
+    equation = ExtendedTermParser.parseEquation("sum(y) = sum(y+y)", trs);
     assertTrue(equation.getLhs().toString().equals("sum(y)"));
     assertTrue(equation.getRhs().toString().equals("sum(y + y)"));
     assertTrue(equation.getRenaming().domain().size() == 1);
@@ -81,20 +81,20 @@ class CommandParserTest {
   @Test
   public void testEquationDoesNotEndThere() {
     assertThrows(charlie.exceptions.ParseException.class, () ->
-      CommandParser.parseEquation("sum(x) = sum(y) | x = y sum(x)", trs));
+      ExtendedTermParser.parseEquation("sum(x) = sum(y) | x = y sum(x)", trs));
     assertThrows(charlie.exceptions.ParseException.class, () ->
-      CommandParser.parseEquation("sum(1) = sum(2) x = y", trs));
+      ExtendedTermParser.parseEquation("sum(1) = sum(2) x = y", trs));
   }
 
   @Test
   public void testReadMultipleEquations() {
-    FixedList<Equation> lst = CommandParser.parseEquationList(
+    FixedList<Equation> lst = ExtendedTermParser.parseEquationList(
       "sum(x) ≈ sum(y) | x = y ; sum(y) -><- sum(x+y) ; sum(1) = sum(2)", trs);
     assertTrue(lst.size() == 3);
     assertTrue(lst.get(0).toString().equals("sum(x) ≈ sum(y) | x = y"));
     assertTrue(lst.get(1).toString().equals("sum(y) ≈ sum(x + y) | true"));
     assertTrue(lst.get(2).toString().equals("sum(1) ≈ sum(2) | true"));
-    lst = CommandParser.parseEquationList("sum(x) ≈ sum(y) | x = y ;", trs);
+    lst = ExtendedTermParser.parseEquationList("sum(x) ≈ sum(y) | x = y ;", trs);
     assertTrue(lst.size() == 1);
     assertTrue(lst.get(0).toString().equals("sum(x) ≈ sum(y) | x = y"));
   }

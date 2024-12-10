@@ -26,7 +26,7 @@ import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
-import cora.rwinduction.parser.CommandParser;
+import cora.rwinduction.parser.ExtendedTermParser;
 
 class ProofStateTest {
   private TRS setupTRS() {
@@ -42,7 +42,7 @@ class ProofStateTest {
   }
 
   private ProofState setupProofState(TRS trs) {
-    Equation equation = CommandParser.parseEquation("sum1(x) = sum2(x) | x > 0", trs);
+    Equation equation = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x > 0", trs);
     return new ProofState(FixedList.of(equation));
   }
 
@@ -50,7 +50,7 @@ class ProofStateTest {
   public void testToString() {
     TRS trs = setupTRS();
     ProofState state1 = setupProofState(trs);
-    Equation hypo = CommandParser.parseEquation("sum1(x) = iter(x, 0, 0) | x > 0", trs);
+    Equation hypo = ExtendedTermParser.parseEquation("sum1(x) = iter(x, 0, 0) | x > 0", trs);
     ProofState state2 = state1.addHypothesis(hypo);
     Rule req = CoraInputReader.readRule("sum1(x) -> iter(x, 0, 0) | x > 0", trs);
     ProofState state3 = state2.addOrderingRequirement(req);
@@ -75,9 +75,9 @@ class ProofStateTest {
   public void testAddReplaceDelete() {
     TRS trs = setupTRS();
     ProofState state1 = setupProofState(trs);
-    Equation eq1 = CommandParser.parseEquation("sum1(x) -><- iter(x, 0, 0) | x > 0", trs);
-    Equation eq2 = CommandParser.parseEquation("0 -><- iter(x, 0, 0) | x = 0", trs);
-    Equation eq3 = CommandParser.parseEquation("x + sum1(x-1) -><- iter(x, 0, 0) | x > 0", trs);
+    Equation eq1 = ExtendedTermParser.parseEquation("sum1(x) -><- iter(x, 0, 0) | x > 0", trs);
+    Equation eq2 = ExtendedTermParser.parseEquation("0 -><- iter(x, 0, 0) | x = 0", trs);
+    Equation eq3 = ExtendedTermParser.parseEquation("x + sum1(x-1) -><- iter(x, 0, 0) | x > 0", trs);
     assertTrue(state1.getTopEquation().toString().equals("sum1(x) ≈ sum2(x) | x > 0"));
     ProofState state2 = state1.replaceTopEquation(eq1);
     assertTrue(state2.getEquations().size() == 1);

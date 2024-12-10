@@ -15,132 +15,32 @@
 
 package cora.rwinduction.parser;
 
-import com.google.common.collect.ImmutableList;
-
-import charlie.exceptions.ParseException;
-import charlie.util.FixedList;
-import charlie.types.TypeFactory;
-import charlie.parser.lib.*;
-import charlie.parser.Parser.*;
-import charlie.parser.CoraTokenData;
-import charlie.parser.CoraParser;
-import charlie.terms.Term;
-import charlie.terms.Renaming;
-import charlie.terms.TheoryFactory;
-import charlie.trs.TRS;
-import charlie.reader.CoraInputReader;
-import cora.rwinduction.engine.Equation;
+import java.util.HashMap;
+import charlie.util.Either;
+import cora.rwinduction.engine.Command;
 
 public class CommandParser {
-  private static String APPROX = "APPROX";
-  private static String ASSIGN = "ASSIGN";
-  private static String SEPARATOR = "SEPARATOR";
+  private HashMap<String,Syntax> _syntaxes;
 
-  /**
-   * This function checks if the given TRS is allowed: there are no symbols in the alphabet that
-   * would interfere with the extra symbols needed for the command parser language.
-   *
-   * If null is returned, everything is alright.  If a string is returned, it describes the error.
-   */
-  public static String checkTrs(TRS trs) {
-    for (String s : trs.queryFunctionSymbolNames()) {
-      if (s.indexOf("≈") >= 0 || s.indexOf(":=") >= 0 || s.indexOf(";") >= 0) {
-        return "This TRS has a function symbol " + s + " that would interfere with the input " +
-          "language of the interactive prover.  Therefore, it is unfortunately not possible to " +
-          "use the interactive prover.";
-      }
-    }
-    return null;
+  public CommandParser() {
+    _syntaxes = new HashMap<String,Syntax>();
   }
 
-  /**
-   * We parse terms, equations and substitutions through an adaptation of the CoraInputReader.
-   * To this end, we set up special tokens, and a parser that does not tolerate any errors.
-   */
-  private static ParsingStatus createStatus(String str) {
-    str = str.replace("≈", " ≈ ")
-             .replace("-><-", " -><- ")
-             .replace(":=", " := ")
-             .replace(";", " ; ");
-    TokenQueue queue = CoraTokenData.getUpdatedConstrainedStringLexer(str,
-        "≈",    APPROX,
-        "-><-", APPROX,
-        ":=",   ASSIGN,
-        ";",    SEPARATOR
-      );
-    return new ParsingStatus(queue, 1);
+  public void registerSyntax(String name, Syntax syntax) {
+    _syntaxes.put(name, syntax);
   }
 
-  /** This checks if the given Equation is a legal one, and throws a ParseException if not. */
-  private static void checkEquation(Equation equation) {
-    if (!equation.getLhs().queryType().equals(equation.getRhs().queryType())) {
-      throw new ParseException("Left-hand side of equation " + equation + " has type " +
-        equation.getLhs().queryType().toString() + " while right-hand side has type " +
-        equation.getRhs().queryType().toString() + "!");
+  public Either<String,Command> parse(String str) {
+    String cmd, rest;
+    str = str.trim();
+    int c = str.indexOf(' ');
+    if (c == -1) { cmd = str; rest = ""; }
+    else { cmd = str.substring(0, c); rest = str.substring(c+1).trim(); }
+    if (!_syntaxes.containsKey(cmd)) {
+      return new Either.Left<String,Command>("Unknown command: " + cmd + ".  " +
+        "Use \":help commands\" to list available commands.");
     }
-    if (!equation.getConstraint().queryType().equals(TypeFactory.boolSort)) {
-      throw new ParseException("Constraint of " + equation + " has type " +
-        equation.getConstraint().toString() + " (should be Bool)");
-    }
-  }
-
-  /**
-   * This reads an equation of the form a ≈ b | c from the given string.
-   * The string is expected to end after that.
-   * If there is any error with the input, a ParseException will be thrown.
-   * @throws charlie.exceptions.ParseException
-   */
-  public static Equation parseEquation(String str, TRS trs) {
-    ParsingStatus status = createStatus(str);
-    Equation ret = parseSingleEquation(status, trs);
-    checkEquation(ret);
-    status.expect(Token.EOF, "end of input");
-    return ret;
-  }
-
-  /**
-   * This reads a non-empty list of equations of the form a ≈ b | c, separated by semi-colons,
-   * from the given string.  The string is expected to end there.
-   * If there is any error with the input, a ParseException will be thrown.
-   * @throws charlie.exceptions.ParseException
-   */
-  public static FixedList<Equation> parseEquationList(String str, TRS trs) {
-    ParsingStatus status = createStatus(str);
-    FixedList.Builder<Equation> ret = new FixedList.Builder<Equation>();
-    while (true) {
-      Equation eq = parseSingleEquation(status, trs);
-      checkEquation(eq);
-      ret.add(eq);
-      if (status.readNextIf(SEPARATOR) == null) {
-        status.expect(Token.EOF, "semi-colon or end of input");
-      }
-      if (status.peekNext().isEof()) return ret.build();
-    }
-  }
-  
-  /** This reads an equation of the form a ≈ b | c from the given ParsingStatus */
-  private static Equation parseSingleEquation(ParsingStatus status, TRS trs) {
-    ParserTerm left, right = null, constr = null;
-    left = CoraParser.readTerm(status);
-    if (status.readNextIf(APPROX) != null) right = CoraParser.readTerm(status);
-    else if (left instanceof Application(Token tok1, ParserTerm head,
-                                         ImmutableList<ParserTerm> args) &&
-             head instanceof CalcSymbol(Token tok2, String name) &&
-             args.size() == 2 && name.equals(CoraParser.EQUALS)) {
-      left = args.get(0);
-      right = args.get(1);
-    }
-    if (right == null) {
-      throw new charlie.exceptions.ParseException("Unexpected equation: I expected a form " +
-        "\"a -><- b (| c)?\" but only found " + left + ".");
-    }
-    if (status.readNextIf(CoraTokenData.MID) != null) constr = CoraParser.readTerm(status);
-    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
-    Term l = CoraInputReader.readTerm(left, renaming, trs);
-    Term r = CoraInputReader.readTerm(right, renaming, trs);
-    Term constraint = constr == null ? TheoryFactory.createValue(true)
-                                     : CoraInputReader.readTerm(constr, renaming, trs);
-    return new Equation(l, r, constraint, renaming);
+    return _syntaxes.get(cmd).parse(rest);
   }
 }
 

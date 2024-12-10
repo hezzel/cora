@@ -29,7 +29,7 @@ import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
-import cora.rwinduction.parser.CommandParser;
+import cora.rwinduction.parser.ExtendedTermParser;
 
 class ProverContextTest {
   private TRS setupTRS() {
@@ -45,31 +45,16 @@ class ProverContextTest {
   }
 
   @Test
-  public void testPrintRules() {
-    TRS trs = setupTRS();
-    OutputModule module = DefaultOutputModule.createUnicodeModule(trs);
-    Equation eq = CommandParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs);
-    ProverContext context = new ProverContext(trs, FixedList.of(eq), module.queryTermPrinter());
-    context.printRules(module);
-    assertTrue(module.toString().equals(
-      "  R1: sum1(x) → 0 | x ≤ 0\n" +
-      "  R2: sum1(x) → x + sum1(x - 1) | x > 0\n" +
-      "  R3: sum2(x) → iter(x, 0, 0)\n" +
-      "  R4: iter(x, i, z) → z | i > x\n" +
-      "  R5: iter(x, i, z) → iter(x, i + 1, z + i) | i ≤ x\n\n"));
-  }
-
-  @Test
   public void testAddUndoRedo() {
     TRS trs = setupTRS();
-    Equation eq = CommandParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs);
+    Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs);
     ProverContext context =
       new ProverContext(trs, FixedList.of(eq), new TermPrinter(trs.queryFunctionSymbolNames()));
     ProofState state1 = context.getProofState();
     assertTrue(state1.getEquations().size() == 1);
     assertTrue(state1.getTopEquation() == eq);
-    Equation eq2 = CommandParser.parseEquation("0 -><- iter(x, 0, 0) | x = 0", trs);
-    Equation eq3 = CommandParser.parseEquation("x + sum1(x-1) -><- iter(x, 0, 0) | x > 0", trs);
+    Equation eq2 = ExtendedTermParser.parseEquation("0 -><- iter(x, 0, 0) | x = 0", trs);
+    Equation eq3 = ExtendedTermParser.parseEquation("x + sum1(x-1) -><- iter(x, 0, 0) | x > 0", trs);
     ProofState state2 = state1.replaceTopEquation(List.of(eq2, eq3));
     context.addProofStep(state2, "action 1");
     assertTrue(context.getProofState() == state2);
@@ -86,14 +71,14 @@ class ProverContextTest {
   @Test
   public void testCommandHistory() {
     TRS trs = setupTRS();
-    Equation eq = CommandParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs);
+    Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs);
     ProverContext context =
       new ProverContext(trs, FixedList.of(eq), new TermPrinter(trs.queryFunctionSymbolNames()));
     ProofState state1 = context.getProofState();
     assertTrue(state1.getEquations().size() == 1);
     assertTrue(state1.getTopEquation() == eq);
-    Equation eq2 = CommandParser.parseEquation("0 -><- iter(x, 0, 0) | x = 0", trs);
-    Equation eq3 = CommandParser.parseEquation("x + sum1(x-1) -><- iter(x, 0, 0) | x > 0", trs);
+    Equation eq2 = ExtendedTermParser.parseEquation("0 -><- iter(x, 0, 0) | x = 0", trs);
+    Equation eq3 = ExtendedTermParser.parseEquation("x + sum1(x-1) -><- iter(x, 0, 0) | x > 0", trs);
     ProofState state2 = state1.replaceTopEquation(List.of(eq2, eq3));
     context.addProofStep(state2, "action 1");
     ProofState state3 = state2.addHypothesis(eq);
