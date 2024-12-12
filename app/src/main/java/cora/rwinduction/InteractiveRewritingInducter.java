@@ -22,23 +22,24 @@ import charlie.util.FixedList;
 import charlie.trs.TRS;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
-import cora.rwinduction.engine.*;
+import cora.rwinduction.engine.Equation;
+import cora.rwinduction.engine.PartialProof;
+import cora.rwinduction.engine.Command;
 import cora.rwinduction.tui.*;
-import cora.rwinduction.command.Command;
 import cora.rwinduction.parser.*;
 
 public class InteractiveRewritingInducter {
   private Inputter _input;
   private Outputter _output;
   private CommandParser _parser;
-  private ProverContext _context;
+  private PartialProof _proof;
 
   InteractiveRewritingInducter(Inputter input, Outputter output,
-                               CommandParser cparse, ProverContext context) {
+                               CommandParser cparse, PartialProof pp) {
     _input = input;
     _output = output;
     _parser = cparse;
-    _context = context;
+    _proof = pp;
   }
 
   private static FixedList<Equation> readEquations(Inputter inputter, TRS trs) {
@@ -83,30 +84,25 @@ public class InteractiveRewritingInducter {
     // get initial equations and set up
     FixedList<Equation> eqs = readEquations(inputter, trs);
     if (eqs == null) return new AbortedProofObject();
-    ProverContext context = new ProverContext(trs, eqs, outputter.queryTermPrinter());
+    PartialProof proof = new PartialProof(trs, eqs, outputter.queryTermPrinter());
 
     // set up the inducter that will do all the work, and run it
     InteractiveRewritingInducter inducter =
-      new InteractiveRewritingInducter(inputter, outputter, parser, context);
+      new InteractiveRewritingInducter(inputter, outputter, parser, proof);
     return inducter.proveEquivalence();
   }
 
   private ProofObject proveEquivalence() {
-    while (!_context.getProofState().isFinalState()) {
-      _output.println("Top equation: %a", _context.getProofState().getTopEquation());
+    while (!_proof.isDone()) {
+      _output.println("Top equation: %a", _proof.getProofState().getTopEquation());
       _output.flush();
       String str = _input.readLine();
       Either<String,Command> result = _parser.parse(str);
       if (result instanceof Either.Left<String,Command>(String s)) _output.println(s);
-      if (result instanceof Either.Right<String,Command>(Command cmd)) {
-        if (cmd.isQuit()) {
-          _input.close();
-          return new AbortedProofObject();
-        }
-        else cmd.run(_context, _output);
-      }
+      if (result instanceof Either.Right<String,Command>(Command cmd)) cmd.run(_proof, _output);
     }
-    return new SuccesfulProofObject(_context);
+    if (_proof.getProofState().isFinalState()) return new SuccesfulProofObject(_proof);
+    else return new AbortedProofObject();
   }
 }
 
@@ -116,12 +112,12 @@ class AbortedProofObject implements ProofObject {
 }
 
 class SuccesfulProofObject implements ProofObject {
-  private ProverContext _context;
-  SuccesfulProofObject(ProverContext context) { _context = context; }
+  private PartialProof _proof;
+  SuccesfulProofObject(PartialProof pp) { _proof = pp; }
   public Answer queryAnswer() { return Answer.YES; }
   public void justify(OutputModule out) {
     out.startTable();
-    for (String s : _context.getCommandHistory()) out.println("%a", s);
+    for (String s : _proof.getCommandHistory()) out.println("%a", s);
     out.endTable();
   }
 }

@@ -68,6 +68,10 @@ public class Equation {
     return _varNaming;
   }
 
+  /**
+   * Only for debugging or testing purposes!
+   * Use cora.rwinduction.tui.Outputter to properly print an Equation.
+   */
   public String toString() {
     StringBuilder builder = new StringBuilder();
     TermPrinter printer = new TermPrinter(Set.of());

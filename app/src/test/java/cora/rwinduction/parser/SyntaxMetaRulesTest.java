@@ -21,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import charlie.util.Either;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
-import cora.rwinduction.command.Command;
-import cora.rwinduction.command.CmdMetaRules;
+import cora.rwinduction.engine.Command;
+import cora.rwinduction.interactive.CmdMetaRules;
 
 class SyntaxMetaRulesTest {
   TRS trs = CoraInputReader.readTrsFromString (

@@ -17,19 +17,26 @@ package cora.rwinduction.parser;
 
 import charlie.util.Either;
 import charlie.util.FixedList;
-import cora.rwinduction.command.Command;
-import cora.rwinduction.command.CmdMetaQuit;
+import cora.rwinduction.engine.Command;
+import cora.rwinduction.interactive.CommandQuit;
 
 /** The syntax for the :quit meta command. */
 public class SyntaxMetaQuit extends Syntax {
-  public String queryName() { return ":quit"; }
-  public FixedList<String> callDescriptor() { return FixedList.of(":quit"); }
+  public String queryName() {
+    return ":quit";
+  }
+  
+  public FixedList<String> callDescriptor() {
+    return FixedList.of(":quit");
+  }
+  
   public String helpDescriptor() {
     return "Use this to abort the interactive prover process.  " +
            "Note that your result will not be saved!";
   }
+  
   public Either<String,Command> parse(String str) {
-    if (str.equals("")) return makeEither(new CmdMetaQuit());
+    if (str.equals("")) return makeEither(new CommandQuit());
     else return makeEither(":quit should be invoked without arguments");
   }
 }

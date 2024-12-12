@@ -28,10 +28,13 @@ import charlie.util.Pair;
 import cora.io.OutputModule;
 
 /**
- * The ProverContext keeps track of the current state, the history, and all other information
- * that is not contained in a proof state but is relevant for the proof process.
+ * A PartialProof keeps track of the current proof state, the history, and all other information
+ * that is not contained in a proof state but is relevant for the overall proof process.  If the
+ * current state of a PartialProof is final, then a partial proof in fact represents a full proof.
+ *
+ * A partial proof is mutable, and can for instance have new proof states added to it.
  */
-public class ProverContext {
+public class PartialProof {
   private final TRS _trs;
   private final ArrayList<String> _ruleNames;
   private final ArrayList<Renaming> _ruleRenamings;
@@ -43,14 +46,15 @@ public class ProverContext {
   private final Stack<String> _futureCommands = new Stack<String>();
 
   private ProofState _currentState;
+  private boolean _aborted;
 
   /**
-   * Constructor: sets up a prover context with empty history, the proof state
-   * (initialEquations,ø,ø), and rules with Renamings built by the given term printer.
+   * Constructor: sets up a partial proof empty history, the proof state (initialEquations,ø,ø),
+   * and rules from the given TRS, with Renamings built by the given term printer.
    */
-  public ProverContext(TRS initialSystem, FixedList<Equation> initialEquations, TermPrinter tp) {
-    if (initialSystem == null) throw new NullStorageException("ProverContext", "initial TRS");
-    if (initialEquations == null) throw new NullStorageException("ProverContext", "initial eqs");
+  public PartialProof(TRS initialSystem, FixedList<Equation> initialEquations, TermPrinter tp) {
+    if (initialSystem == null) throw new NullStorageException("PartialProof", "initial TRS");
+    if (initialEquations == null) throw new NullStorageException("PartialProof", "initial eqs");
     _trs = initialSystem;
     _currentState = new ProofState(initialEquations);
     int n = initialSystem.queryRuleCount();
@@ -94,15 +98,31 @@ public class ProverContext {
 
   /**
    * Returns a list with all the commands needed to get from the initial state to the current state.
-   * Note that while this list is mutable, altering it will not affect the current ProverContext.
+   * Note that while this list is mutable, altering it will not affect the current PartialProof.
    */
   public ArrayList<String> getCommandHistory() {
     return new ArrayList<String>(_previousCommands);
   }
 
   /**
+   * This returns true if either the current state is final, or the partial proof has been forcibly
+   * marked as aborted.
+   */
+  public boolean isDone() {
+    return _aborted || _currentState.isFinalState();
+  }
+
+  /**
+   * This marks the PartialProof as "aborted": the proof process should end, whether or not we are
+   * in a final state.
+   */
+  public void abort() {
+    _aborted = true;
+  }
+
+  /**
    * Sets the given proof state as current, and marks that we used the given commandLiteral to get
-   * there from the previous tate.
+   * there from the previous state.
    */
   public void addProofStep(ProofState proofState, String commandLiteral) {
     _previousStates.push(_currentState);

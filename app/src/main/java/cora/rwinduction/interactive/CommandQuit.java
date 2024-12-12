@@ -13,14 +13,15 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.command;
+package cora.rwinduction.interactive;
 
 import cora.io.OutputModule;
-import cora.rwinduction.engine.ProverContext;
+import cora.rwinduction.engine.PartialProof;
 
-/** The :quit command, which serves only to be recognisable by the interactive prover. */
-public class CmdMetaQuit implements Command {
-  public void run(ProverContext context, OutputModule module) { }
-  public boolean isQuit() { return true; }
+/** The :quit command, which ends the current proof attempt. */
+public class CommandQuit extends EnvironmentCommand {
+  public void run(PartialProof pp, OutputModule module) {
+    pp.abort();
+  }
 }
 

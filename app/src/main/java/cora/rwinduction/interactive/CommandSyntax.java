@@ -13,23 +13,22 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.command;
+package cora.rwinduction.interactive;
 
 import charlie.util.FixedList;
 import cora.io.OutputModule;
-import cora.rwinduction.engine.ProverContext;
 
 /** The syntax command, that describes the syntax of a specific command. */
-public class CmdMetaSyntax implements Command {
+public class CommandSyntax extends EnvironmentCommand {
   private String _commandName;
   private FixedList<String> _syntaxes;
 
-  public CmdMetaSyntax(String name, FixedList<String> syntaxes) {
+  public CommandSyntax(String name, FixedList<String> syntaxes) {
     _commandName = name;
     _syntaxes = syntaxes;
   }
 
-  public void run(ProverContext context, OutputModule module) {
+  public void run(OutputModule module) {
     module.println("Syntax for the command " + _commandName);
     module.startTable();
     for (String str : _syntaxes) module.println("%a", str);

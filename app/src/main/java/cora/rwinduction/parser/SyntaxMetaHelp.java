@@ -17,8 +17,8 @@ package cora.rwinduction.parser;
 
 import charlie.util.Either;
 import charlie.util.FixedList;
-import cora.rwinduction.command.Command;
-import cora.rwinduction.command.CmdMetaHelp;
+import cora.rwinduction.engine.Command;
+import cora.rwinduction.interactive.CommandHelp;
 
 /** The syntax for the :help meta command. */
 public class SyntaxMetaHelp extends Syntax {
@@ -43,13 +43,13 @@ public class SyntaxMetaHelp extends Syntax {
 
   public Either<String,Command> parse(String str) {
     if (str.indexOf(' ') != -1) return makeEither("Too many arguments: :help takes 0 or 1");
-    if (str.equals("")) return makeEither(new CmdMetaHelp());
+    if (str.equals("")) return makeEither(new CommandHelp());
     if (str.equals("commands")) {
-      return makeEither(new CmdMetaHelp(FixedList.copy(_cparse.queryCommands())));
+      return makeEither(new CommandHelp(FixedList.copy(_cparse.queryCommands())));
     }
     Syntax cmd = _cparse.querySyntax(str);
     if (cmd == null) return makeEither("Unknown command: " + str);
-    return makeEither(new CmdMetaHelp(cmd.queryName(), cmd.helpDescriptor(), cmd.callDescriptor()));
+    return makeEither(new CommandHelp(cmd.queryName(), cmd.helpDescriptor(), cmd.callDescriptor()));
   }
 }
 

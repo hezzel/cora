@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.command;
+package cora.rwinduction.interactive;
 
 import charlie.util.Pair;
 import charlie.types.Arrow;
@@ -22,22 +22,22 @@ import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import cora.io.OutputModule;
-import cora.rwinduction.engine.ProverContext;
+import cora.rwinduction.engine.PartialProof;
 
 /**
  * The :rules command: it simply shows all the required rules, or the rules starting with the given
  * symbol.
  */
-public class CmdMetaRules implements Command {
+public class CommandRules extends EnvironmentCommand {
   private FunctionSymbol _startSymbol;
 
   /** The command :rules to just print all rules available to the user. */
-  public CmdMetaRules() {
+  public CommandRules() {
     _startSymbol = null;
   }
 
   /** The command :rules f, to print all rules starting with f. */
-  public CmdMetaRules(FunctionSymbol f, String name) {
+  public CommandRules(FunctionSymbol f, String name) {
     _startSymbol = f;
   }
 
@@ -47,22 +47,22 @@ public class CmdMetaRules implements Command {
   }
 
   /** Executes the command */
-  public void run(ProverContext context, OutputModule module) {
-    printAllMatchingRules(context, module);
+  public void run(PartialProof pp, OutputModule module) {
+    printAllMatchingRules(pp, module);
     printCalculationRule(module);
   }
 
   /** Helper function for run: prints the normal rules (with the required start symbol) */
-  private void printAllMatchingRules(ProverContext context, OutputModule module) {
-    TRS trs = context.getTRS();
+  private void printAllMatchingRules(PartialProof pp, OutputModule module) {
+    TRS trs = pp.getTRS();
     boolean printed = false;
     for (int i = 0; i < trs.queryRuleCount(); i++) {
       Rule rule = trs.queryRule(i);
       FunctionSymbol f = rule.queryRoot();
       if (_startSymbol != null && f != null && !_startSymbol.equals(f)) continue;
       if (!printed) { module.startTable(); printed = true; }
-      String name = context.getRuleName(i);
-      Renaming renaming = context.getRenaming(name);
+      String name = pp.getRuleName(i);
+      Renaming renaming = pp.getRenaming(name);
       module.nextColumn("%a:", name);
       module.println("%a", new Pair<Rule,Renaming>(rule, renaming));
     }

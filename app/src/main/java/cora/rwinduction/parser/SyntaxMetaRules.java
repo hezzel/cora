@@ -20,8 +20,8 @@ import charlie.util.FixedList;
 import charlie.terms.Term;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
-import cora.rwinduction.command.Command;
-import cora.rwinduction.command.CmdMetaRules;
+import cora.rwinduction.engine.Command;
+import cora.rwinduction.interactive.CommandRules;
 
 /** The syntax for the :rules meta command. */
 public class SyntaxMetaRules extends Syntax {
@@ -46,10 +46,10 @@ public class SyntaxMetaRules extends Syntax {
 
   public Either<String,Command> parse(String str) {
     if (str.indexOf(' ') != -1) return makeEither("Too many arguments: :rules takes 0 or 1");
-    if (str.equals("")) return makeEither(new CmdMetaRules());
+    if (str.equals("")) return makeEither(new CommandRules());
     try {
       Term fterm = CoraInputReader.readTerm(str, _trs);
-      if (fterm.isConstant()) return makeEither(new CmdMetaRules(fterm.queryRoot(), str));
+      if (fterm.isConstant()) return makeEither(new CommandRules(fterm.queryRoot(), str));
       return makeEither("Argument to :rules should be a single function symbol");
     }
     catch (Exception e) { return makeEither(e.getMessage().trim()); }
