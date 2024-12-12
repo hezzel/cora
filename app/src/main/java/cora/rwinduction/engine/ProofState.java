@@ -147,6 +147,7 @@ public class ProofState {
     return _equations.isEmpty();
   }
 
+  /** Only for debugging / testing purposes! */
   public String toString() {
     StringBuilder builder = new StringBuilder();
     builder.append("Equations:\n");

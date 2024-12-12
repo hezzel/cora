@@ -17,8 +17,8 @@ package cora.rwinduction.parser;
 
 import charlie.util.Either;
 import charlie.util.FixedList;
-import cora.rwinduction.command.Command;
-import cora.rwinduction.command.CmdMetaSyntax;
+import cora.rwinduction.engine.Command;
+import cora.rwinduction.interactive.CommandSyntax;
 
 /** The syntax for the :syntax meta command. */
 public class SyntaxMetaSyntax extends Syntax {
@@ -47,7 +47,7 @@ public class SyntaxMetaSyntax extends Syntax {
     if (str.indexOf(' ') != -1) return makeEither("Too many arguments: :syntax takes 0 or 1");
     Syntax cmd = str.equals("") ? this : _cparse.querySyntax(str);
     if (cmd == null) return makeEither("Unknown command: " + str);
-    return makeEither(new CmdMetaSyntax(cmd.queryName(), cmd.callDescriptor()));
+    return makeEither(new CommandSyntax(cmd.queryName(), cmd.callDescriptor()));
   }
 }
 

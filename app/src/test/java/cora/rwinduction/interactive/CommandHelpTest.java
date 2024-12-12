@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.command;
+package cora.rwinduction.interactive;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,29 +25,24 @@ import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
 import cora.rwinduction.engine.Equation;
-import cora.rwinduction.engine.ProverContext;
+import cora.rwinduction.engine.PartialProof;
+import cora.rwinduction.engine.Command;
 import cora.rwinduction.parser.ExtendedTermParser;
 
-class CmdMetaHelpTest {
-  /* If we want to do it neatly we can build a ProverContext, but the command doesn't really need
-     one, as it shouldn't be using the ProverContext.
-  private TRS setupTRS() {
-    return CoraInputReader.readTrsFromString(
-      "sum1 :: Int -> result\n" +
-      "sum2 :: Int -> result\n");
-  }
-
-  private ProverContext createContext(TRS trs, OutputModule module) {
+class CommandHelpTest {
+  private PartialProof createPP(OutputModule module) {
+    TRS trs = CoraInputReader.readTrsFromString(
+        "sum1 :: Int -> result\n" +
+        "sum2 :: Int -> result\n");
     Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs);
-    return new ProverContext(trs, FixedList.of(eq), module.queryTermPrinter());
+    return new PartialProof(trs, FixedList.of(eq), module.queryTermPrinter());
   }
-  */
 
   @Test
   public void testHelpPlain() {
-    Command cmd = new CmdMetaHelp();
+    Command cmd = new CommandHelp();
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    cmd.run(null, module);
+    cmd.run(createPP(module), module);
     assertTrue(module.toString().equals(
     "Welcome to the interactive equivalence prover!\n\n" +
     "  To list available commands, use: :help commands\n" +
@@ -56,9 +51,9 @@ class CmdMetaHelpTest {
 
   @Test
   public void testHelpCommands() {
-    Command cmd = new CmdMetaHelp(FixedList.of(":quit", ":rules", "simplify", "delete", ":help"));
+    Command cmd = new CommandHelp(FixedList.of(":quit", ":rules", "simplify", "delete", ":help"));
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    cmd.run(null, module);
+    cmd.run(createPP(module), module);
     assertTrue(module.toString().equals(
       "You can use the following commands to interact with the prover:\n\n" +
       "  Prover commands: :help :quit :rules \n" +
@@ -67,9 +62,9 @@ class CmdMetaHelpTest {
 
   @Test
   public void testHelpSingle() {
-    Command cmd = new CmdMetaHelp(":rules", "haha", FixedList.of(":rules", ":rules arg"));
+    Command cmd = new CommandHelp(":rules", "haha", FixedList.of(":rules", ":rules arg"));
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    cmd.run(null, module);
+    cmd.run(createPP(module), module);
     assertTrue(module.toString().equals(
       ":rules: haha\n\n" +
       "  :rules\n" +

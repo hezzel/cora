@@ -18,7 +18,7 @@ package cora.rwinduction.parser;
 import java.util.HashMap;
 import java.util.Set;
 import charlie.util.Either;
-import cora.rwinduction.command.Command;
+import cora.rwinduction.engine.Command;
 
 public class CommandParser {
   private HashMap<String,Syntax> _syntaxes;

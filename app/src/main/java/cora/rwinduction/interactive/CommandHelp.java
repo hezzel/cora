@@ -13,42 +13,41 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.command;
+package cora.rwinduction.interactive;
 
 import java.util.TreeSet;
 import charlie.util.FixedList;
 import cora.io.OutputModule;
-import cora.rwinduction.engine.ProverContext;
 
-/** The syntax command, that describes the syntax of a specific command. */
-public class CmdMetaHelp implements Command {
+/** The environment command ":syntax", that describes the syntax of a specific command. */
+public class CommandHelp extends EnvironmentCommand {
   private enum Kind { Plain, Commands, SingleCommand }
   private Kind _kind;
   private String _strInfo;
   private FixedList<String> _args;
 
   /** Creates the pure :help command. */
-  public CmdMetaHelp() {
+  public CommandHelp() {
     _kind = Kind.Plain;
     _strInfo = null;
     _args = null;
   }
 
   /** Creates the ":help commands" command, with the given list of commands. */
-  public CmdMetaHelp(FixedList<String> commands) {
+  public CommandHelp(FixedList<String> commands) {
     _kind = Kind.Commands;
     _strInfo = null;
     _args = commands;
   }
 
   /** Creates the :help <command> version of the command. */
-  public CmdMetaHelp(String name, String explanation, FixedList<String> syntaxes) {
+  public CommandHelp(String name, String explanation, FixedList<String> syntaxes) {
     _kind = Kind.SingleCommand;
     _strInfo = name + ": " + explanation;
     _args = syntaxes;
   }
 
-  public void run(ProverContext context, OutputModule module) {
+  public void run(OutputModule module) {
     switch (_kind) {
       case Plain: printGeneralHelp(module); break;
       case Commands: printCommandList(module); break;

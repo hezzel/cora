@@ -17,7 +17,7 @@ package cora.rwinduction.parser;
 
 import charlie.util.Either;
 import charlie.util.FixedList;
-import cora.rwinduction.command.Command;
+import cora.rwinduction.engine.Command;
 
 /**
  * A Syntax provides the technology to call a given command.  It handles the parsing, and can be

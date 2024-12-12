@@ -13,22 +13,20 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.command;
+package cora.rwinduction.engine;
 
 import cora.io.OutputModule;
-import cora.rwinduction.engine.ProverContext;
 
 /**
- * A Command either gives information to the user, or updates the ProverContext, to correspond with
- * a user-generated or generated command.
+ * A Command either gives information to the user, or updates a PartialProof, to correspond with
+ * a user-given or automatically generated command.
  */
 public interface Command {
-  /** This executes the Command. */
-  void run(ProverContext context, OutputModule module);
-
-  /** Returns whether this is the quit command. */
-  default boolean isQuit() {
-    return false;
-  }
+  /**
+   * This executes the Command.  The given module is used for a potential response from the command,
+   * for example if a deduction rule does not apply, or to provide the information requested by an
+   * environment command like :rules.
+   */
+  void run(PartialProof proof, OutputModule module);
 }
 
