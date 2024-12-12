@@ -37,7 +37,7 @@ public class Outputter extends OutputModuleAdapter {
 
   protected Object alterObject(Object ob) {
     if (ob instanceof Equation eq) {
-      String ret = "%a %{thickArrow} %a";
+      String ret = "%a %{approx} %a";
       ArrayList<Object> args = new ArrayList<Object>(4);
       Renaming naming = eq.getRenaming();
       Term constraint = eq.getConstraint();

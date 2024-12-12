@@ -19,6 +19,8 @@ import charlie.exceptions.NullStorageException;
 
 import java.lang.Iterable;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -40,8 +42,8 @@ public class FixedList<T> implements Iterable<T> {
     _mylist = lst;
   }
 
-  /** Create a fixed copy of the given list */
-  public static <T> FixedList<T> copy(List<T> args) {
+  /** Create a fixed copy of the given collection */
+  public static <T> FixedList<T> copy(Collection<T> args) {
     if (args == null) throw new NullStorageException("FixedList", "list to be copied");
     final ArrayList<T> result = new ArrayList<T>(args.size());
     for (T x : args) {
@@ -89,6 +91,7 @@ public class FixedList<T> implements Iterable<T> {
   public int size() { return _mylist.size(); }
   public Stream<T> stream() { return _mylist.stream(); }
   public FixedList<T> append(FixedList<T> other) { return append(other._mylist); }
+  public HashSet<T> toSet() { return new HashSet<T>(_mylist); }
 
   public FixedList<T> append(List<T> other) {
     ArrayList<T> arr = new ArrayList<T>(_mylist);

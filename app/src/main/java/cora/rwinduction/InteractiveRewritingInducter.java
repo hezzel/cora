@@ -57,6 +57,7 @@ public class InteractiveRewritingInducter {
     CommandParser cp = new CommandParser();
     cp.registerSyntax(new SyntaxMetaQuit());
     cp.registerSyntax(new SyntaxMetaSyntax(cp));
+    cp.registerSyntax(new SyntaxMetaHelp(cp));
     cp.registerSyntax(new SyntaxMetaRules(trs));
     return cp;
   }

@@ -18,36 +18,38 @@ package cora.rwinduction.parser;
 import charlie.util.Either;
 import charlie.util.FixedList;
 import cora.rwinduction.command.Command;
-import cora.rwinduction.command.CmdMetaSyntax;
+import cora.rwinduction.command.CmdMetaHelp;
 
-/** The syntax for the :syntax meta command. */
-public class SyntaxMetaSyntax extends Syntax {
+/** The syntax for the :help meta command. */
+public class SyntaxMetaHelp extends Syntax {
   private CommandParser _cparse;
 
-  /**
-   * Creates the Syntax for the syntax command, taking its commands from the given command parser.
-   */
-  public SyntaxMetaSyntax(CommandParser cp) {
+  /** Creates the Syntax for the help command, taking its commands from the given command parser. */
+  public SyntaxMetaHelp(CommandParser cp) {
     _cparse = cp;
   }
 
   public String queryName() {
-    return ":syntax";
+    return ":help";
   }
 
   public FixedList<String> callDescriptor() {
-    return FixedList.of(":syntax <command>");
+    return FixedList.of(":help", ":help commands", ":help <command>");
   }
 
   public String helpDescriptor() {
-    return "Query the ways to invoke a given command.";
+    return "Prints short description to explain how the prover works.";
   }
 
   public Either<String,Command> parse(String str) {
-    if (str.indexOf(' ') != -1) return makeEither("Too many arguments: :syntax takes 0 or 1");
-    Syntax cmd = str.equals("") ? this : _cparse.querySyntax(str);
+    if (str.indexOf(' ') != -1) return makeEither("Too many arguments: :help takes 0 or 1");
+    if (str.equals("")) return makeEither(new CmdMetaHelp());
+    if (str.equals("commands")) {
+      return makeEither(new CmdMetaHelp(FixedList.copy(_cparse.queryCommands())));
+    }
+    Syntax cmd = _cparse.querySyntax(str);
     if (cmd == null) return makeEither("Unknown command: " + str);
-    return makeEither(new CmdMetaSyntax(cmd.queryName(), cmd.callDescriptor()));
+    return makeEither(new CmdMetaHelp(cmd.queryName(), cmd.helpDescriptor(), cmd.callDescriptor()));
   }
 }
 
