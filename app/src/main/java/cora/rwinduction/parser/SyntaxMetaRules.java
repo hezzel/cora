@@ -39,6 +39,11 @@ public class SyntaxMetaRules extends Syntax {
     return FixedList.of(":rules", ":rules <function symbol>");
   }
 
+  public String helpDescriptor() {
+    return "List all the rules available in the original TRS.  " +
+           "You can also list only the rules with a specific root symbol.";
+  }
+
   public Either<String,Command> parse(String str) {
     if (str.indexOf(' ') != -1) return makeEither("Too many arguments: :rules takes 0 or 1");
     if (str.equals("")) return makeEither(new CmdMetaRules());

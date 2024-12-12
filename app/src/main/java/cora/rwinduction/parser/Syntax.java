@@ -30,6 +30,9 @@ public abstract class Syntax {
   /** Returns a FixedList of strings describing how to call the command. */
   public abstract FixedList<String> callDescriptor();
 
+  /** Returns a description for the help command. */
+  public abstract String helpDescriptor();
+
   /**
    * Parses the given string, and either yields a Command to execute it, or a string describing
    * why the string is not syntax-correct.
