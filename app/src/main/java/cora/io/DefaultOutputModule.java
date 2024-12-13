@@ -26,8 +26,6 @@ import charlie.terms.Renaming;
 import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 public class DefaultOutputModule implements OutputModule {
   private TypePrinter _typePrinter;
@@ -39,8 +37,7 @@ public class DefaultOutputModule implements OutputModule {
   private ArrayList< Pair<String,String> > _codes;
 
   /** This creates a module with Plain style (pure text, no unicode). */
-  @Contract("_ -> new")
-  public static @NotNull OutputModule createPlainModule(TRS trs) {
+  public static OutputModule createPlainModule(TRS trs) {
     TypePrinter typr = new PlainTypePrinter();
     Set<String> avoid = trs == null ? Set.of() : trs.queryFunctionSymbolNames();
     ArrayList<Pair<String,String>> codes = new ArrayList<Pair<String,String>>();
