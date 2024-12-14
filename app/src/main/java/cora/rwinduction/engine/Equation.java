@@ -15,6 +15,7 @@
 
 package cora.rwinduction.engine;
 
+import charlie.exceptions.IndexingException;
 import charlie.terms.Renaming;
 import charlie.terms.Term;
 import charlie.terms.TermPrinter;
@@ -66,6 +67,16 @@ public class Equation {
 
   public Renaming getRenaming() {
     return _varNaming;
+  }
+
+  /**
+   * Returns the subterm at the given position, assuming that this is indeed a position of the
+   * current term.  Otherwise, returns null.
+   */
+  public Term querySubterm(EquationPosition pos) {
+    Term t = pos.querySide() == EquationPosition.Side.Left ? _lhs : _rhs;
+    try { return t.querySubterm(pos.queryPosition()); }
+    catch (IndexingException e) { return null; }
   }
 
   /**
