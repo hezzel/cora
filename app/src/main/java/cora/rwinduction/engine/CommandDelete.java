@@ -15,7 +15,6 @@
 
 package cora.rwinduction.engine;
 
-import java.util.Optional;
 import java.util.ArrayList;
 import charlie.util.Pair;
 import charlie.terms.Term;
