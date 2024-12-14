@@ -25,23 +25,25 @@ import charlie.theorytranslation.TermAnalyser;
 import cora.config.Settings;
 import cora.io.OutputModule;
 
-public final class CommandDelete implements Command {
-  public void run(PartialProof proof, OutputModule module) {
+public final class DeductionDelete implements DeductionRule {
+  public boolean apply(PartialProof proof, OutputModule module) {
     Equation eq = proof.getProofState().getTopEquation();
-    boolean ok = false;
-    if (eq.getLhs().equals(eq.getRhs())) ok = true;
-    else {
+    // if lhs = rhs we may do the proof step regardless of the constraint
+    if (!eq.getLhs().equals(eq.getRhs())) {
       TermAnalyser.Result res = TermAnalyser.satisfy(eq.getConstraint(), Settings.smtSolver);
-      ok = switch (res) {
-        case TermAnalyser.Result.NO() -> true;
-        case TermAnalyser.Result.MAYBE(String reason) -> { explain(reason, module); yield false; }
-        case TermAnalyser.Result.YES(Substitution val) -> { explain(eq, val, module); yield false; }
-      };
+      switch (res) {
+        case TermAnalyser.Result.MAYBE(String reason):
+          if (module != null) explain(reason, module);
+          return false;
+        case TermAnalyser.Result.YES(Substitution val):
+          if (module != null) explain(eq, val, module);
+          return false;
+        case TermAnalyser.Result.NO(): break;
+      }
     }
-    if (ok) {
-      ProofState state = proof.getProofState().deleteTopEquation();
-      proof.addProofStep(state, "delete");
-    }
+    ProofState state = proof.getProofState().deleteTopEquation();
+    proof.addProofStep(state, "delete");
+    return true;
   }
 
   /** The SMT solver isn't sure whether the constraint is satisfiable: this prints the reason. */

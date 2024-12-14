@@ -13,22 +13,17 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.parser;
+package cora.rwinduction.command;
 
-import charlie.util.Either;
 import charlie.util.FixedList;
-import cora.rwinduction.engine.Command;
-import cora.rwinduction.interactive.CommandSyntax;
 
-/** The syntax for the :syntax meta command. */
-public class SyntaxMetaSyntax extends Syntax {
-  private CommandParser _cparse;
+/** The environment command :syntax, which provides invocation information for a given command. */
+public class CommandSyntax extends Command {
+  private CmdList _clist;
 
-  /**
-   * Creates the Syntax for the syntax command, taking its commands from the given command parser.
-   */
-  public SyntaxMetaSyntax(CommandParser cp) {
-    _cparse = cp;
+  /** Set up the command, using the given command list to query information from. */
+  public CommandSyntax(CmdList lst) {
+    _clist = lst;
   }
 
   public String queryName() {
@@ -43,11 +38,15 @@ public class SyntaxMetaSyntax extends Syntax {
     return "Query the ways to invoke a given command.";
   }
 
-  public Either<String,Command> parse(String str) {
-    if (str.indexOf(' ') != -1) return makeEither("Too many arguments: :syntax takes 0 or 1");
-    Syntax cmd = str.equals("") ? this : _cparse.querySyntax(str);
-    if (cmd == null) return makeEither("Unknown command: " + str);
-    return makeEither(new CommandSyntax(cmd.queryName(), cmd.callDescriptor()));
+  protected boolean run(String args) {
+    if (args.indexOf(' ') != -1) return failure("Too many arguments: :syntax takes 0 or 1");
+    Command cmd = args.equals("") ? this : _clist.queryCommand(args);
+    if (cmd == null) return failure("Unknown command: " + args);
+    _module.println("Syntax for the command %a:", cmd.queryName());
+    _module.startTable();
+    for (String str : cmd.callDescriptor()) _module.println("%a", str);
+    _module.endTable();
+    return true;
   }
 }
 

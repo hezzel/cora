@@ -18,15 +18,22 @@ package cora.rwinduction.engine;
 import cora.io.OutputModule;
 
 /**
- * A Command either gives information to the user, or updates a PartialProof, to correspond with
- * a user-given or automatically generated command.
+ * A DeductionRule is a structure that can update the current proof state.  It may correspond either
+ * to a user-given or to an automatically generated command.
  */
-public interface Command {
+public interface DeductionRule {
   /**
-   * This executes the Command.  The given module is used for a potential response from the command,
-   * for example if a deduction rule does not apply, or to provide the information requested by an
-   * environment command like :rules.
+   * This executes the deduction rule on the proof state, and returns true if it applies (and
+   * changed the proof state), false if it didn't.  The given module is used for a potential
+   * response from the command, in particular to provide an explanation if the deduction rule does
+   * not apply.
    */
-  void run(PartialProof proof, OutputModule module);
+  boolean apply(PartialProof proof, OutputModule module);
+
+  /**
+   * This executes the deduction rule on the proof state, and returns true if it applies (and
+   * changed the proof state), false if it didn't.  Nothing is printed.
+   */
+  default boolean apply(PartialProof proof) { return apply(proof, null); }
 }
 

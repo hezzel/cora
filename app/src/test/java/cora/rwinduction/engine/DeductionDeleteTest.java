@@ -35,7 +35,7 @@ import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
 import cora.rwinduction.parser.ExtendedTermParser;
 
-class CommandDeleteTest {
+class DeductionDeleteTest {
   private Equation _defaultEquation = null;
 
   private TRS setupTRS() {
@@ -61,8 +61,8 @@ class CommandDeleteTest {
   private void testDeleteEquation(String eqdesc) {
     PartialProof pp = setupProof(eqdesc);
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    Command cmd = new CommandDelete();
-    cmd.run(pp, module);
+    DeductionRule drule = new DeductionDelete();
+    assertTrue(drule.apply(pp, module));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation() == _defaultEquation);
     assertTrue(pp.getProofState().getHypotheses().size() == 0);
@@ -74,10 +74,11 @@ class CommandDeleteTest {
   private String testFailToDeleteEquation(String eqdesc) {
     PartialProof pp = setupProof(eqdesc);
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    Command cmd = new CommandDelete();
-    cmd.run(pp, module);
+    DeductionRule drule = new DeductionDelete();
+    assertFalse(drule.apply(pp, module));
     assertTrue(pp.getProofState().getEquations().size() == 2);
     assertTrue(pp.getCommandHistory().size() == 0);
+    assertFalse(drule.apply(pp)); // it also works without an output module!
     return module.toString();
   }
 
@@ -106,6 +107,23 @@ class CommandDeleteTest {
     Settings.smtSolver = solver;
     testDeleteEquation("sum1(x) -><- sum2(x) | x > 0 ∧ x < 0");
     assertTrue(solver._storage.equals("(i1 >= 1) and (0 >= 1 + i1)\n"));
+  }
+
+  @Test
+  public void testOmitOutputModule() {
+    MySmtSolver solver = new MySmtSolver(new SmtSolver.Answer.NO());
+    Settings.smtSolver = solver;
+    TRS trs = setupTRS();
+    Equation eq1 = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs);
+    Equation eq2 = ExtendedTermParser.parseEquation("sum1(x) = sum1(x) | x > 0", trs);
+    Equation eq3 = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x > x", trs);
+    PartialProof pp = new PartialProof(trs, FixedList.of(eq1, eq2, eq3), new TermPrinter(Set.of()));
+    DeductionRule drule = new DeductionDelete();
+    assertTrue(drule.apply(pp));
+    assertTrue(drule.apply(pp));
+    solver = new MySmtSolver(new SmtSolver.Answer.MAYBE("something"));
+    Settings.smtSolver = solver;
+    assertFalse(drule.apply(pp));
   }
 
   @Test

@@ -13,26 +13,30 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.interactive;
+package cora.rwinduction.command;
 
 import charlie.util.FixedList;
-import cora.io.OutputModule;
+import cora.rwinduction.engine.DeductionDelete;
 
-/** The syntax command, that describes the syntax of a specific command. */
-public class CommandSyntax extends EnvironmentCommand {
-  private String _commandName;
-  private FixedList<String> _syntaxes;
-
-  public CommandSyntax(String name, FixedList<String> syntaxes) {
-    _commandName = name;
-    _syntaxes = syntaxes;
+/** The syntax for the deduction command delete. */
+public class CommandDelete extends Command {
+  public String queryName() {
+    return "delete";
   }
-
-  public void run(OutputModule module) {
-    module.println("Syntax for the command " + _commandName);
-    module.startTable();
-    for (String str : _syntaxes) module.println("%a", str);
-    module.endTable();
+  
+  public FixedList<String> callDescriptor() {
+    return FixedList.of("delete");
+  }
+  
+  public String helpDescriptor() {
+    return "Use this deduction rule to delete the current equation, if either the left- and " +
+           "right-hand side are equal, or if the constraint is unsatisfiable.";
+  }
+  
+  protected boolean run(String args) {
+    if (!args.equals("")) return failure("delete should be invoked without arguments");
+    DeductionDelete dd = new DeductionDelete();
+    return dd.apply(_proof, _module);
   }
 }
 

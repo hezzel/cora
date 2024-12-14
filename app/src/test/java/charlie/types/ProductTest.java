@@ -48,9 +48,9 @@ class ProductTest {
 
   @Test
   public void testConstructedTooShort() {
-    ImmutableList.Builder builder = ImmutableList.builder();
+    ImmutableList.Builder<Type> builder = ImmutableList.<Type>builder();
     ImmutableList<Type> l0 = builder.build();
-    builder = ImmutableList.builder();
+    builder = ImmutableList.<Type>builder();
     builder.add(new Arrow(new Base("a"), new Base("b")));
     ImmutableList<Type> l1 = builder.build();
     assertThrows(IllegalArgumentException.class, () -> new Product(l0));
