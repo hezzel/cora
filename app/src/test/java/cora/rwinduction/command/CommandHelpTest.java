@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.interactive;
+package cora.rwinduction.command;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +26,6 @@ import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
 import cora.rwinduction.engine.Equation;
 import cora.rwinduction.engine.PartialProof;
-import cora.rwinduction.engine.Command;
 import cora.rwinduction.parser.ExtendedTermParser;
 
 class CommandHelpTest {
@@ -38,11 +37,21 @@ class CommandHelpTest {
     return new PartialProof(trs, FixedList.of(eq), module.queryTermPrinter());
   }
 
+  private CmdList makeCmdList() {
+    CmdList lst = new CmdList();
+    lst.registerCommand(new CommandQuit());
+    lst.registerCommand(new CommandRules());
+    lst.registerCommand(new CommandDelete());
+    lst.registerCommand(new CommandHelp(lst));
+    return lst;
+  }
+
   @Test
   public void testHelpPlain() {
-    Command cmd = new CommandHelp();
+    Command cmd = new CommandHelp(makeCmdList());
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    cmd.run(createPP(module), module);
+    cmd.storeContext(createPP(module), module);
+    assertTrue(cmd.execute(""));
     assertTrue(module.toString().equals(
     "Welcome to the interactive equivalence prover!\n\n" +
     "  To list available commands, use: :help commands\n" +
@@ -51,24 +60,40 @@ class CommandHelpTest {
 
   @Test
   public void testHelpCommands() {
-    Command cmd = new CommandHelp(FixedList.of(":quit", ":rules", "simplify", "delete", ":help"));
+    Command cmd = new CommandHelp(makeCmdList());
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    cmd.run(createPP(module), module);
+    cmd.storeContext(createPP(module), module);
+    assertTrue(cmd.execute("commands"));
     assertTrue(module.toString().equals(
       "You can use the following commands to interact with the prover:\n\n" +
       "  Prover commands: :help :quit :rules \n" +
-      "  Deduction rules: delete simplify \n\n"));
+      "  Deduction rules: delete \n\n"));
   }
 
   @Test
   public void testHelpSingle() {
-    Command cmd = new CommandHelp(":rules", "haha", FixedList.of(":rules", ":rules arg"));
+    Command cmd = new CommandHelp(makeCmdList());
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    cmd.run(createPP(module), module);
+    cmd.storeContext(createPP(module), module);
+    assertTrue(cmd.execute(":help"));
     assertTrue(module.toString().equals(
-      ":rules: haha\n\n" +
-      "  :rules\n" +
-      "  :rules arg\n\n"));
+      ":help: Prints a short description to explain how the prover works.\n\n" +
+      "  :help\n" +
+      "  :help commands\n" +
+      "  :help <command>\n\n"));
+  }
+
+  @Test
+  public void testBadInvocation() {
+    Command cmd = new CommandHelp(makeCmdList());
+    assertThrows(RuntimeException.class, () -> cmd.execute(""));
+    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    cmd.storeContext(createPP(module), module);
+    assertFalse(cmd.execute("quit"));
+    assertTrue(module.toString().equals("Unknown command: quit\n\n"));
+    module.clear();
+    assertFalse(cmd.execute("a b"));
+    assertTrue(module.toString().equals("Too many arguments: :help takes 0 or 1\n\n"));
   }
 }
 

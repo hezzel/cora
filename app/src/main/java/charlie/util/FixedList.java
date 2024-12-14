@@ -92,6 +92,7 @@ public class FixedList<T> implements Iterable<T> {
   public Stream<T> stream() { return _mylist.stream(); }
   public FixedList<T> append(FixedList<T> other) { return append(other._mylist); }
   public HashSet<T> toSet() { return new HashSet<T>(_mylist); }
+  public String toString() { return _mylist.toString(); }
 
   public FixedList<T> append(List<T> other) {
     ArrayList<T> arr = new ArrayList<T>(_mylist);

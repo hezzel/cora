@@ -17,6 +17,7 @@ package cora.rwinduction;
 
 import java.util.List;
 
+import charlie.util.Pair;
 import charlie.util.Either;
 import charlie.util.FixedList;
 import charlie.trs.TRS;
@@ -24,21 +25,21 @@ import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.rwinduction.engine.Equation;
 import cora.rwinduction.engine.PartialProof;
-import cora.rwinduction.engine.Command;
+import cora.rwinduction.parser.ExtendedTermParser;
+import cora.rwinduction.command.*;
 import cora.rwinduction.tui.*;
-import cora.rwinduction.parser.*;
 
 public class InteractiveRewritingInducter {
   private Inputter _input;
   private Outputter _output;
-  private CommandParser _parser;
+  private CmdList _cmdList;
   private PartialProof _proof;
 
   InteractiveRewritingInducter(Inputter input, Outputter output,
-                               CommandParser cparse, PartialProof pp) {
+                               CmdList lst, PartialProof pp) {
     _input = input;
     _output = output;
-    _parser = cparse;
+    _cmdList = lst;
     _proof = pp;
   }
 
@@ -54,25 +55,28 @@ public class InteractiveRewritingInducter {
     }
   }
 
-  private static CommandParser createCommandParser(TRS trs) {
-    CommandParser cp = new CommandParser();
+  private static CmdList createCmdList(TRS trs) {
+    CmdList clst = new CmdList();
 
-    cp.registerSyntax(new SyntaxMetaQuit());
-    cp.registerSyntax(new SyntaxMetaSyntax(cp));
-    cp.registerSyntax(new SyntaxMetaHelp(cp));
-    cp.registerSyntax(new SyntaxMetaRules(trs));
+    // environment commands
+    clst.registerCommand(new CommandQuit());
+    clst.registerCommand(new CommandSyntax(clst));
+    clst.registerCommand(new CommandHelp(clst));
+    clst.registerCommand(new CommandRules());
 
-    cp.registerSyntax(new SyntaxDeductionDelete());
-    return cp;
+    // deduction commands
+    clst.registerCommand(new CommandDelete());
+    
+    return clst;
   }
 
   public static ProofObject run(TRS trs, List<String> inputs, OutputModule output) {
-    // set up Inputter, outputter and command parser
+    // set up Inputter, outputter and command list
     //Inputter inputter = new ReplInputter();
     Inputter inputter = new BasicInputter(); // use BasicInputter if ReplInputter doesn't compile
     Outputter outputter = new Outputter(output);
     if (!inputs.isEmpty()) inputter = new CacheInputter(inputs, inputter);
-    CommandParser parser = createCommandParser(trs);
+    CmdList clst = createCmdList(trs);
     
     // verify that the TRS is legal
     String problem = ExtendedTermParser.checkTrs(trs);
@@ -88,10 +92,11 @@ public class InteractiveRewritingInducter {
     FixedList<Equation> eqs = readEquations(inputter, trs);
     if (eqs == null) return new AbortedProofObject();
     PartialProof proof = new PartialProof(trs, eqs, outputter.queryTermPrinter());
+    clst.storeContext(proof, outputter);
 
     // set up the inducter that will do all the work, and run it
     InteractiveRewritingInducter inducter =
-      new InteractiveRewritingInducter(inputter, outputter, parser, proof);
+      new InteractiveRewritingInducter(inputter, outputter, clst, proof);
     return inducter.proveEquivalence();
   }
 
@@ -99,10 +104,18 @@ public class InteractiveRewritingInducter {
     while (!_proof.isDone()) {
       _output.println("Top equation: %a", _proof.getProofState().getTopEquation());
       _output.flush();
-      String str = _input.readLine();
-      Either<String,Command> result = _parser.parse(str);
-      if (result instanceof Either.Left<String,Command>(String s)) _output.println(s);
-      if (result instanceof Either.Right<String,Command>(Command cmd)) cmd.run(_proof, _output);
+      Either<Pair<Command,String>,String> either = _cmdList.parse(_input.readLine());
+      switch (either) {
+        case Either.Left(Pair<Command,String> p):
+          Command cmd = p.fst();
+          String args = p.snd();
+          cmd.execute(args);
+          break;
+        case Either.Right(String cmdname):
+          _output.println("Unknown command: %a.  Use \":help commands\" to list available " +
+            "commands.", cmdname);
+          break;
+      }
     }
     if (_proof.getProofState().isFinalState()) return new SuccesfulProofObject(_proof);
     else return new AbortedProofObject();

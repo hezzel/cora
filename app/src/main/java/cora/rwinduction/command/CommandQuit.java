@@ -13,15 +13,29 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.interactive;
+package cora.rwinduction.command;
 
-import cora.io.OutputModule;
-import cora.rwinduction.engine.PartialProof;
+import charlie.util.FixedList;
 
-/** The :quit command, which ends the current proof attempt. */
-public class CommandQuit extends EnvironmentCommand {
-  public void run(PartialProof pp, OutputModule module) {
-    pp.abort();
+/** The environment command :quit, which allows the user to end the interactive process. */
+public class CommandQuit extends Command {
+  public String queryName() {
+    return ":quit";
+  }
+  
+  public FixedList<String> callDescriptor() {
+    return FixedList.of(":quit");
+  }
+  
+  public String helpDescriptor() {
+    return "Use this to abort the interactive prover process.  " +
+           "Note that your result will not be saved!";
+  }
+
+  protected boolean run(String args) {
+    if (!args.equals("")) return failure(":quit should be invoked without arguments");
+    _proof.abort();
+    return true;
   }
 }
 
