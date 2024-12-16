@@ -194,7 +194,7 @@ class TupleTest extends TermTestFoundation {
       () -> tp.queryImmediateHeadSubterm(1));
     List<Position> positions = tp.queryPositions(false);
     assertTrue(positions.toString().equals(
-      "[1.ε, 2.0.1.ε, 2.0.ε, 2.ε, 3.1.1.ε, 3.1.ε, 3.2.ε, 3.ε, ε]"));
+      "[1, 2.0.1, 2.0, 2, 3.1.1, 3.1, 3.2, 3, ε]"));
     assertTrue(tp.querySubterm(Position.parse("3.1")).toString().equals("f(a)"));
     assertTrue(tp.querySubterm(Position.parse("2.0*1")).toString().equals("f"));
     Term t = tp.replaceSubterm(positions.get(0), constantTerm("b", baseType("N")));

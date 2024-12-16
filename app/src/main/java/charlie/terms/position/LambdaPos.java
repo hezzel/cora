@@ -25,9 +25,7 @@ public record LambdaPos(Position tail) implements Position {
     this.tail = tail;
   }
 
-  public String toString() {
-    return "0." + tail.toString();
-  }
+  public String toString() { return toStringDefault(); }
 
   public boolean equals(Position other) {
     switch (other) {

@@ -403,11 +403,11 @@ public class ApplicationTest extends TermTestFoundation {
     Term term = new Application(z, arg1, arg2);    // Z(g(x),c)
     List<Pair<Term,Position>> lst = term.querySubterms();
     assertTrue(lst.size() == 4);
-    assertTrue(lst.get(0).snd().toString().equals("1.1.ε"));
+    assertTrue(lst.get(0).snd().toString().equals("1.1"));
     assertTrue(lst.get(0).fst().toString().equals("x"));
-    assertTrue(lst.get(1).snd().toString().equals("1.ε"));
+    assertTrue(lst.get(1).snd().toString().equals("1"));
     assertTrue(lst.get(1).fst() == arg1);
-    assertTrue(lst.get(2).snd().toString().equals("2.ε"));
+    assertTrue(lst.get(2).snd().toString().equals("2"));
     assertTrue(lst.get(2).fst() == term.queryArgument(2));
     assertTrue(lst.get(3).snd().toString().equals("ε"));
     assertTrue(lst.get(3).fst() == term);
@@ -438,10 +438,10 @@ public class ApplicationTest extends TermTestFoundation {
     Term term = new Application(new Abstraction(x, f.apply(x)), a, b); // (λx.f(x))(a, b)
     List<Position> lst = term.queryPositions(false);
     assertTrue(lst.size() == 5);
-    assertTrue(lst.get(0).toString().equals("0.1.ε"));
-    assertTrue(lst.get(1).toString().equals("0.ε"));
-    assertTrue(lst.get(2).toString().equals("1.ε"));
-    assertTrue(lst.get(3).toString().equals("2.ε"));
+    assertTrue(lst.get(0).toString().equals("0.1"));
+    assertTrue(lst.get(1).toString().equals("0"));
+    assertTrue(lst.get(2).toString().equals("1"));
+    assertTrue(lst.get(3).toString().equals("2"));
     assertTrue(lst.get(4).toString().equals("ε"));
   }
 
@@ -454,10 +454,10 @@ public class ApplicationTest extends TermTestFoundation {
     Term term = new Application(z, arg1, arg2);    // Z(g(x),c)
     List<Position> lst = term.queryPositions(true);
     assertTrue(lst.size() == 7);
-    assertTrue(lst.get(0).toString().equals("1.1.ε"));
+    assertTrue(lst.get(0).toString().equals("1.1"));
     assertTrue(lst.get(1).toString().equals("1.☆1"));
-    assertTrue(lst.get(2).toString().equals("1.ε"));
-    assertTrue(lst.get(3).toString().equals("2.ε"));
+    assertTrue(lst.get(2).toString().equals("1"));
+    assertTrue(lst.get(3).toString().equals("2"));
     assertTrue(lst.get(4).toString().equals("☆2"));
     assertTrue(lst.get(5).toString().equals("☆1"));
     assertTrue(lst.get(6).toString().equals("ε"));

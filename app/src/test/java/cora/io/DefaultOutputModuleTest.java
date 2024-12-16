@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import charlie.util.Pair;
 import charlie.types.Type;
+import charlie.terms.position.Position;
 import charlie.terms.Term;
 import charlie.terms.TermFactory;
 import charlie.terms.Renaming;
@@ -179,6 +180,17 @@ public class DefaultOutputModuleTest {
     u.println("%a", t);
     assertTrue(p.toString().equals("(a -> b) -> c -> d\n\n"));
     assertTrue(u.toString().equals("(a → b) → c → d\n\n"));
+  }
+
+  @Test
+  public void testPrintPosition() throws charlie.exceptions.CustomParserException {
+    OutputModule p = DefaultOutputModule.createPlainModule();
+    OutputModule u = DefaultOutputModule.createUnicodeModule();
+    Position pos = Position.parse("1.2.☆3");
+    p.println("%a", pos);
+    u.println("%a", pos);
+    assertTrue(p.toString().equals("1.2.*3\n\n"));
+    assertTrue(u.toString().equals("1.2.☆3\n\n"));
   }
 
   @Test

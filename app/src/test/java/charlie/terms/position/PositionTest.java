@@ -78,7 +78,7 @@ public class PositionTest {
   @Test
   public void testArgumentPosition() {
     Position pos = new ArgumentPos(17, new MetaPos(2, new FinalPos(0)));
-    assertTrue(pos.toString().equals("17.!2.ε"));
+    assertTrue(pos.toString().equals("17.!2"));
     assertTrue(pos.equals(new ArgumentPos(17, new MetaPos(2, Position.empty))));
     assertTrue(pos.hashCode() == 17 + 7 * (2 + 7));
     assertFalse(pos.equals(new ArgumentPos(17, new ArgumentPos(2, new FinalPos(0)))));
@@ -97,7 +97,7 @@ public class PositionTest {
       case MetaPos(int i, Position tail): break;
       case LambdaPos(Position tail): break;
       case ArgumentPos(int i, Position tail):
-        ok = i == 17 && tail.toString().equals("!2.ε");
+        ok = i == 17 && tail.toString().equals("!2");
     }
     assertTrue(ok);
   }
@@ -113,7 +113,7 @@ public class PositionTest {
     assertFalse(pos.equals(new ArgumentPos(2, new LambdaPos(new FinalPos(9)))));
     assertFalse(pos.equals(new MetaPos(1, new LambdaPos(new FinalPos(9)))));
     Position pos2 = new ArgumentPos(12, new FinalPos(0));
-    assertTrue(pos.append(pos2).toString().equals("!2.0.12.ε"));
+    assertTrue(pos.append(pos2).toString().equals("!2.0.12"));
     assertFalse(pos.isEmpty());
     assertFalse(pos.isFinal());
     assertTrue(pos.queryHead() == -2);
@@ -133,7 +133,7 @@ public class PositionTest {
   @Test
   public void testLambdaPosition() {
     Position pos = new LambdaPos(new ArgumentPos(1, Position.empty));
-    assertTrue(pos.toString().equals("0.1.ε"));
+    assertTrue(pos.toString().equals("0.1"));
     assertTrue(pos.equals(new LambdaPos(new ArgumentPos(1, Position.empty))));
     assertTrue(pos.hashCode() == 56);
     assertFalse(pos.equals(new ArgumentPos(1, Position.empty)));
@@ -149,7 +149,7 @@ public class PositionTest {
       case FinalPos(int k): break;
       case ArgumentPos(int i, Position tail): break;
       case MetaPos(int i, Position tail): break;
-      case LambdaPos(Position tail): ok = tail.toString().equals("1.ε");
+      case LambdaPos(Position tail): ok = tail.toString().equals("1");
     }
     assertTrue(ok);
   }
@@ -174,15 +174,17 @@ public class PositionTest {
   @Test
   public void testCorrectFullPositionParsing() throws CustomParserException {
     Position pos = Position.parse("5.6.7");
-    assertTrue(pos.toString().equals("5.6.7.ε"));
-    pos = Position.parse("19.!12.ε");
-    assertTrue(pos.toString().equals("19.!12.ε"));
+    assertTrue(pos.toString().equals("5.6.7"));
+    pos = Position.parse("19.!12");
+    assertTrue(pos.toString().equals("19.!12"));
     pos = Position.parse("!2.1.");
-    assertTrue(pos.toString().equals("!2.1.ε"));
-    pos = Position.parse("0.19.12.ε");
-    assertTrue(pos.toString().equals("0.19.12.ε"));
-    pos = Position.parse("19.-1.12.ε");
-    assertTrue(pos.toString().equals("19.!1.12.ε"));
+    assertTrue(pos.toString().equals("!2.1"));
+    pos = Position.parse("0.19.12.e");
+    assertTrue(pos.toString().equals("0.19.12"));
+    pos = Position.parse("19.-1.12");
+    assertTrue(pos.toString().equals("19.!1.12"));
+    pos = Position.parse("e");
+    assertTrue(pos.toString().equals("ε"));
   }
 
   @Test

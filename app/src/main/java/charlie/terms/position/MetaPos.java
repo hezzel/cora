@@ -29,9 +29,7 @@ public record MetaPos(int index, Position tail) implements Position {
     this.tail = tail;
   }
 
-  public String toString() {
-    return "!" + index + "." + tail.toString();
-  }
+  public String toString() { return toStringDefault(); }
 
   public boolean equals(Position other) {
     switch (other) {

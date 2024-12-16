@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 import charlie.types.Type;
+import charlie.terms.position.Position;
 import charlie.terms.Term;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
@@ -36,6 +37,17 @@ public class PlainPrintersTest {
     PlainTypePrinter p = new PlainTypePrinter();
     Type type = CoraInputReader.readType("a → (Int -> Bool) → bb");
     assertTrue(p.print(type).equals("a -> (Int -> Bool) -> bb"));
+  }
+
+  @Test
+  public void testPrintPosition() throws charlie.exceptions.CustomParserException {
+    PlainPositionPrinter p = new PlainPositionPrinter();
+    Position pos = Position.parse("1.2.ε");
+    assertTrue(p.print(pos).equals("1.2"));
+    pos = Position.parse(".ε");
+    assertTrue(p.print(pos).equals("e"));
+    pos = Position.parse("1.!2.☆7");
+    assertTrue(p.print(pos).equals("1.!2.*7"));
   }
 
   @Test

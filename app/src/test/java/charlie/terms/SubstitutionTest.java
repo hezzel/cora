@@ -154,6 +154,21 @@ public class SubstitutionTest {
   }
 
   @Test
+  public void testCopy() {
+    Variable x = TermFactory.createVar("x", baseType("Int"));
+    Term xterm = constantTerm("37", baseType("Int"));
+    Substitution gamma = new Subst(x, xterm);
+    Substitution delta = gamma.copy();
+    Variable y = TermFactory.createVar("y", baseType("o"));
+    Term yterm = TermFactory.createVar("z", baseType("o"));
+    delta.extend(y, yterm);
+    assertTrue(gamma.get(x) == xterm);
+    assertTrue(gamma.get(y) == null);
+    assertTrue(delta.get(x) == xterm);
+    assertTrue(delta.get(y) == yterm);
+  }
+
+  @Test
   public void testExtendingWithMetavariable() {
     MetaVariable z = TermFactory.createMetaVar("z", arrowType("o", "o"), 1);
     Variable x = TermFactory.createBinder("x", baseType("o"));

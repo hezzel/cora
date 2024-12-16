@@ -58,7 +58,7 @@ public sealed interface Position permits
   boolean equals(Position other);
 
   /** Gives a unique string representation for the position. */
-  String toString();
+  default String toStringDefault() { return (new PositionPrinter()).print(this); }
 
   /** Returns a copy of the current position with p appended to the end. */
   Position append(Position p);
@@ -115,6 +115,7 @@ public sealed interface Position permits
       n = star;
     }
     else if (text.charAt(text.length()-1) == 'ε') n = text.length()-1;
+    else if (text.charAt(text.length()-1) == 'e') n = text.length()-1;
     else n = text.length();
     if (n > 0 && text.charAt(n-1) == '.') n--;
 

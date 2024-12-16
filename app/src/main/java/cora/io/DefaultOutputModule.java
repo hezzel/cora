@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.types.TypePrinter;
+import charlie.terms.position.Position;
+import charlie.terms.position.PositionPrinter;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
 import charlie.terms.Renaming;
@@ -29,6 +31,7 @@ import charlie.trs.TRS;
 
 public class DefaultOutputModule implements OutputModule {
   private TypePrinter _typePrinter;
+  private PositionPrinter _positionPrinter;
   private TermPrinter _termPrinter;
   private Style _style;
   private StringBuilder _builder;
@@ -39,6 +42,7 @@ public class DefaultOutputModule implements OutputModule {
   /** This creates a module with Plain style (pure text, no unicode). */
   public static OutputModule createPlainModule(TRS trs) {
     TypePrinter typr = new PlainTypePrinter();
+    PositionPrinter popr = new PlainPositionPrinter();
     Set<String> avoid = trs == null ? Set.of() : trs.queryFunctionSymbolNames();
     ArrayList<Pair<String,String>> codes = new ArrayList<Pair<String,String>>();
     codes.add(new Pair<String,String>("%{ruleArrow}", "->"));
@@ -94,7 +98,7 @@ public class DefaultOutputModule implements OutputModule {
     codes.add(new Pair<String,String>("%{chi}", "chi"));
     codes.add(new Pair<String,String>("%{psi}", "psi"));
     codes.add(new Pair<String,String>("%{omega}", "omega"));
-    return new DefaultOutputModule(typr, new PlainTermPrinter(avoid), Style.Plain, codes);
+    return new DefaultOutputModule(typr, popr, new PlainTermPrinter(avoid), Style.Plain, codes);
   }
 
   /**
@@ -107,6 +111,7 @@ public class DefaultOutputModule implements OutputModule {
   /** This creates a module with Unicode style (pure text, but unicode symbols are allowed). */
   public static OutputModule createUnicodeModule(TRS trs) {
     TypePrinter typr = new TypePrinter();
+    PositionPrinter popr = new PositionPrinter();
     Set<String> avoid = trs == null ? Set.of() : trs.queryFunctionSymbolNames();
     ArrayList<Pair<String,String>> codes = new ArrayList<Pair<String,String>>();
     codes.add(new Pair<String,String>("%{ruleArrow}", "→"));
@@ -162,7 +167,7 @@ public class DefaultOutputModule implements OutputModule {
     codes.add(new Pair<String,String>("%{chi}", "χ"));
     codes.add(new Pair<String,String>("%{psi}", "ψ"));
     codes.add(new Pair<String,String>("%{omega}", "ω"));
-    return new DefaultOutputModule(typr, new TermPrinter(avoid), Style.Unicode, codes);
+    return new DefaultOutputModule(typr, popr, new TermPrinter(avoid), Style.Unicode, codes);
   }
 
   /**
@@ -174,7 +179,6 @@ public class DefaultOutputModule implements OutputModule {
 
   /** This creates a standard module for printing. */
   public static OutputModule createDefaultModule(TRS trs) {
-    TypePrinter typr = new PlainTypePrinter();
     return createUnicodeModule(trs);
   }
 
@@ -185,9 +189,10 @@ public class DefaultOutputModule implements OutputModule {
    */
   public static OutputModule createDefaultModule() { return createDefaultModule(null); }
 
-  private DefaultOutputModule(TypePrinter types, TermPrinter terms, Style style,
-                              ArrayList<Pair<String,String>> codes) {
+  private DefaultOutputModule(TypePrinter types, PositionPrinter posses, TermPrinter terms,
+                              Style style, ArrayList<Pair<String,String>> codes) {
     _typePrinter = types;
+    _positionPrinter = posses;
     _termPrinter = terms;
     _style = style;
     _codes = codes;
@@ -199,7 +204,11 @@ public class DefaultOutputModule implements OutputModule {
   @Override
   public void clear() { _builder = new StringBuilder(); }
 
+  @Override
   public TypePrinter queryTypePrinter() { return _typePrinter; }
+
+  @Override
+  public PositionPrinter queryPositionPrinter() { return _positionPrinter; }
 
   @Override
   public TermPrinter queryTermPrinter() { return _termPrinter; }
@@ -389,6 +398,9 @@ public class DefaultOutputModule implements OutputModule {
   private String printObject(Object ob) {
     if (ob instanceof Type y) {
       return _typePrinter.print(y);
+    }
+    if (ob instanceof Position p) {
+      return _positionPrinter.print(p);
     }
     // for rules we generate their own Renaming, and then treat them as pairs
     if (ob instanceof Rule r) {
