@@ -292,10 +292,10 @@ class MetaApplicationTest extends TermTestFoundation {
     Term term = createTestTerm();
     List<Pair<Term,Position>> lst = term.querySubterms();
     assertTrue(lst.size() == 4);
-    assertTrue(lst.get(0).snd().toString().equals("!1.1.ε"));
-    assertTrue(lst.get(1).snd().toString().equals("!1.ε"));
+    assertTrue(lst.get(0).snd().toString().equals("!1.1"));
+    assertTrue(lst.get(1).snd().toString().equals("!1"));
     assertTrue(lst.get(2).fst() == term.queryMetaArgument(2));
-    assertTrue(lst.get(2).snd().toString().equals("!2.ε"));
+    assertTrue(lst.get(2).snd().toString().equals("!2"));
     assertTrue(lst.get(3).fst() == term);
     assertTrue(lst.get(3).snd().toString().equals("ε"));
     assertTrue(term.hasSubterm(lst.get(0).fst()));
@@ -306,11 +306,11 @@ class MetaApplicationTest extends TermTestFoundation {
     Term term = createTestTerm().apply(constantTerm("a", baseType("a")));
     List<Pair<Term,Position>> lst = term.querySubterms();
     assertTrue(lst.size() == 5);
-    assertTrue(lst.get(0).snd().toString().equals("!1.1.ε"));
-    assertTrue(lst.get(1).snd().toString().equals("!1.ε"));
+    assertTrue(lst.get(0).snd().toString().equals("!1.1"));
+    assertTrue(lst.get(1).snd().toString().equals("!1"));
     assertTrue(lst.get(2).fst() == term.queryMetaArgument(2));
-    assertTrue(lst.get(2).snd().toString().equals("!2.ε"));
-    assertTrue(lst.get(3).snd().toString().equals("1.ε"));
+    assertTrue(lst.get(2).snd().toString().equals("!2"));
+    assertTrue(lst.get(3).snd().toString().equals("1"));
     assertTrue(lst.get(4).snd().toString().equals("ε"));
     assertTrue(term.hasSubterm(lst.get(3).fst()));
     assertTrue(term.hasSubterm(lst.get(4).fst()));
@@ -322,13 +322,13 @@ class MetaApplicationTest extends TermTestFoundation {
     Term term = createTestTerm().apply(constantTerm("a", baseType("a")));
     List<Position> lst = term.queryPositions(true);
     assertTrue(lst.size() == 7);
-    assertTrue(lst.get(0).toString().equals("!1.1.ε"));   // x
-    assertTrue(lst.get(1).toString().equals("!1.☆1"));    // g
-    assertTrue(lst.get(2).toString().equals("!1.ε"));     // g(x)
-    assertTrue(lst.get(3).toString().equals("!2.ε"));     // c
-    assertTrue(lst.get(4).toString().equals("1.ε"));      // a
-    assertTrue(lst.get(5).toString().equals("☆1"));       // Z⟨g(x),c⟩
-    assertTrue(lst.get(6).toString().equals("ε"));        // Z⟨g(x),c⟩(a)
+    assertTrue(lst.get(0).toString().equals("!1.1"));   // x
+    assertTrue(lst.get(1).toString().equals("!1.☆1"));  // g
+    assertTrue(lst.get(2).toString().equals("!1"));     // g(x)
+    assertTrue(lst.get(3).toString().equals("!2"));     // c
+    assertTrue(lst.get(4).toString().equals("1"));      // a
+    assertTrue(lst.get(5).toString().equals("☆1"));     // Z⟨g(x),c⟩
+    assertTrue(lst.get(6).toString().equals("ε"));      // Z⟨g(x),c⟩(a)
   }
 
   @Test
@@ -390,7 +390,7 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testSubtermReplacementBadPositionKind() throws CustomParserException {
     Term term = createTestTerm();
-    Position pos = Position.parse("2.ε");
+    Position pos = Position.parse("2");
     Term replacement = constantTerm("uu", baseType("b"));
     assertThrows(IndexingException.class, () -> term.replaceSubterm(pos, replacement));
   }
@@ -398,7 +398,7 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testSubtermReplacementBadPositionRange() throws CustomParserException {
     Term term = createTestTerm();
-    Position pos = Position.parse("!3.ε");
+    Position pos = Position.parse("!3");
     Term replacement = constantTerm("uu", baseType("b"));
     assertThrows(IndexingException.class, () -> term.replaceSubterm(pos, replacement));
   }

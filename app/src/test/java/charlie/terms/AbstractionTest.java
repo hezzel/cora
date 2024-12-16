@@ -268,12 +268,12 @@ class AbstractionTest extends TermTestFoundation {
     List<Pair<Term,Position>> subs = term.querySubterms();
 
     assertEquals(5, subs.size());
-    assertEquals("0.1.ε", subs.get(0).snd().toString());
+    assertEquals("0.1", subs.get(0).snd().toString());
     assertSame(subs.get(0).fst(), x);
-    assertEquals("0.2.0.ε", subs.get(1).snd().toString());
-    assertEquals("0.2.ε", subs.get(2).snd().toString());
+    assertEquals("0.2.0", subs.get(1).snd().toString());
+    assertEquals("0.2", subs.get(2).snd().toString());
     assertSame(subs.get(1).fst(), subs.get(2).fst().queryVariable());
-    assertEquals("0.ε", subs.get(3).snd().toString());
+    assertEquals("0", subs.get(3).snd().toString());
     assertTrue(subs.get(4).snd().isEmpty());
     // subterms below a binder are only acceptable if the bound variable does not occur free in them
     assertFalse(term.hasSubterm(subs.get(3).fst()));
@@ -289,8 +289,8 @@ class AbstractionTest extends TermTestFoundation {
     List<Position> pos1 = term.queryPositions(false);
     List<Position> pos2 = term.queryPositions(true);
     
-    assertTrue(pos1.toString().equals("[0.1.ε, 0.2.0.ε, 0.2.ε, 0.ε, ε]"));
-    assertTrue(pos2.toString().equals("[0.1.ε, 0.2.0.ε, 0.2.ε, 0.☆2, 0.☆1, 0.ε, ε]"));
+    assertTrue(pos1.toString().equals("[0.1, 0.2.0, 0.2, 0, ε]"));
+    assertTrue(pos2.toString().equals("[0.1, 0.2.0, 0.2, 0.☆2, 0.☆1, 0, ε]"));
   }
 
   @Test

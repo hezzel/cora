@@ -25,10 +25,7 @@ public record FinalPos(int chopcount) implements Position {
     this.chopcount = chopcount;
   }
 
-  public String toString() {
-    if (chopcount == 0) return "ε";
-    else return "☆" + chopcount;
-  }
+  public String toString() { return toStringDefault(); }
 
   public boolean equals(Position other) {
     switch (other) {

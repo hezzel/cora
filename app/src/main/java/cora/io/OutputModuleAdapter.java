@@ -17,6 +17,8 @@ package cora.io;
 
 import java.util.List;
 import charlie.exceptions.NullStorageException;
+import charlie.types.TypePrinter;
+import charlie.terms.position.PositionPrinter;
 import charlie.terms.TermPrinter;
 import charlie.trs.TRS;
 
@@ -38,6 +40,8 @@ public class OutputModuleAdapter implements OutputModule {
   }
 
   public Style queryStyle() { return _module.queryStyle(); }
+  public TypePrinter queryTypePrinter() { return _module.queryTypePrinter(); }
+  public PositionPrinter queryPositionPrinter() { return _module.queryPositionPrinter(); }
   public TermPrinter queryTermPrinter() { return _module.queryTermPrinter(); }
   public boolean queryInParagraph() { return _module.queryInParagraph(); }
   public void println() { _module.println(); }

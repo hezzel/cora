@@ -81,7 +81,7 @@ public class ReducerTest {
     String str = "g(f(a, b), f(g(a, b, a), g(b, b, b)), b)";
     Term term = CoraInputReader.readTerm(str, trs);
     Position pos = reducer.leftmostInnermostRedexPosition(term);
-    assertTrue(pos.toString().equals("2.2.ε"));
+    assertTrue(pos.toString().equals("2.2"));
   }
 
   @Test
@@ -140,7 +140,7 @@ public class ReducerTest {
     String str = "f(g(a), a, i(g(j(a,b), b, a)))";
     Term term = CoraInputReader.readTerm(str, trs);
     Position pos = reducer.leftmostInnermostRedexPosition(term);
-    assertTrue(pos.toString().equals("3.1.ε"));
+    assertTrue(pos.toString().equals("3.1"));
   }
 
   @Test
@@ -202,7 +202,7 @@ public class ReducerTest {
     String str = "f(g(a, b, a), λz.a)";
     Term term = CoraInputReader.readTerm(str, trs);
     Position pos = reducer.leftmostInnermostRedexPosition(term);
-    assertTrue(pos.toString().equals("1.ε"));
+    assertTrue(pos.toString().equals("1"));
   }
 
   @Test
@@ -212,7 +212,7 @@ public class ReducerTest {
     String str = "f(g(a, (λx::A.x)(b), a), λz.a)";
     Term term = CoraInputReader.readTerm(str, trs);
     Position pos = reducer.leftmostInnermostRedexPosition(term);
-    assertTrue(pos.toString().equals("1.2.ε"));
+    assertTrue(pos.toString().equals("1.2"));
   }
 
   @Test
@@ -244,9 +244,9 @@ public class ReducerTest {
 
     Position pos;
     pos = reducerwith.leftmostInnermostRedexPosition(term);
-    assertTrue(pos.toString().equals("1.ε"));
+    assertTrue(pos.toString().equals("1"));
     pos = reducerwithout.leftmostInnermostRedexPosition(term);
-    assertTrue(pos.toString().equals("2.ε"));
+    assertTrue(pos.toString().equals("2"));
   }
 
   @Test

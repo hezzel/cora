@@ -16,6 +16,8 @@
 package cora.io;
 
 import java.util.List;
+import charlie.types.TypePrinter;
+import charlie.terms.position.PositionPrinter;
 import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
@@ -42,6 +44,12 @@ public interface OutputModule {
    * (Note that for most purposes, using the designated codes and print methods should suffice.)
    */
   Style queryStyle();
+
+  /** This returns the TypePrinter used for printing types in this OutputModule. */
+  TypePrinter queryTypePrinter();
+
+  /** This returns the PositionPrinter used for printing positions in this OutputModule. */
+  PositionPrinter queryPositionPrinter();
 
   /**
    * This returns the TermPrinter used for printing terms in this OutputModule.  It can also be
