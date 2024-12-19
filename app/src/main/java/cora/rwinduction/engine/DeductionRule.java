@@ -18,22 +18,50 @@ package cora.rwinduction.engine;
 import cora.io.OutputModule;
 
 /**
- * A DeductionRule is a structure that can update the current proof state.  It may correspond either
- * to a user-given or to an automatically generated command.
+ * A DeductionRule is a structure that can update the current proof state.
+ * It may correspond either to a user-given or to an automatically generated command.
  */
-public interface DeductionRule {
-  /**
-   * This executes the deduction rule on the proof state, and returns true if it applies (and
-   * changed the proof state), false if it didn't.  The given module is used for a potential
-   * response from the command, in particular to provide an explanation if the deduction rule does
-   * not apply.
-   */
-  boolean apply(PartialProof proof, OutputModule module);
+abstract class DeductionRule {
+  protected PartialProof _proof;
+  protected OutputModule _module; // warning: might be null!
 
   /**
-   * This executes the deduction rule on the proof state, and returns true if it applies (and
-   * changed the proof state), false if it didn't.  Nothing is printed.
+   * Generates a deduction rule that will manipulate proof states in the given partial proof.
+   * Any printing will be done to the given output module.
    */
-  default boolean apply(PartialProof proof) { return apply(proof, null); }
+  protected DeductionRule(PartialProof proof, OutputModule module) {
+    _proof = proof;
+    _module = module;
+  }
+
+  /**
+   * Generates a deduction rule that will manipulate proof states in the given partial proof.
+   * No printing will be done to the given output module.
+   */
+  protected DeductionRule(PartialProof proof) {
+    _proof = proof;
+    _module = null;
+  }
+
+  /**
+   * This executes a println to the underlying output module, provided one is set, and otherwise
+   * does nothing.
+   */
+  protected void println(String str, Object ...objects) {
+    if (_module != null) _module.println(str, objects);
+  }
+
+  /*
+   * For consistency, every deduction rule is expected to define a method
+   *   boolean apply(arg_1,...,arg_n)
+   *
+   * This method should execute the deduction rule on the current proof state (in the underlying
+   * PartialProof), and return true if it applies (and changed the proof state), false if it didn't.
+   * The application may have side effects both on the partial proof, and on the underlying
+   * output module as explanations and failure messages are printed to it.
+   *
+   * We do not include this function as an abstract method, because argument counts may vary between
+   * different instances of DeductionRule.
+   */
 }
 

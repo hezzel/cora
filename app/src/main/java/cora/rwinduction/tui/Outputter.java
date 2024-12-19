@@ -38,7 +38,7 @@ public class Outputter extends OutputModuleAdapter {
 
   protected Object alterObject(Object ob) {
     if (ob instanceof Equation eq) return alterEquation(eq);
-    if (ob instanceof EquationPosition ep) return alterPosition(ep);
+    if (ob instanceof EquationPosition pos) return alterPosition(pos);
     return null;
   }
 
@@ -57,9 +57,7 @@ public class Outputter extends OutputModuleAdapter {
   }
 
   protected Object alterPosition(EquationPosition pos) {
-    String side = pos.querySide() == EquationPosition.Side.Left ? "L" : "R";
-    if (pos.queryPosition().isEmpty()) return side;
-    return new Pair<String,Object[]>("%a.%a", new Object[] { side, pos.queryPosition() });
+    return pos.toString(queryPositionPrinter());
   }
 
   /**

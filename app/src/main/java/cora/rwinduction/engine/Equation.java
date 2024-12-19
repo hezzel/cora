@@ -16,10 +16,7 @@
 package cora.rwinduction.engine;
 
 import charlie.exceptions.IndexingException;
-import charlie.terms.Renaming;
-import charlie.terms.Term;
-import charlie.terms.TermPrinter;
-import charlie.terms.TheoryFactory;
+import charlie.terms.*;
 import java.util.Set;
 
 /**
@@ -77,6 +74,49 @@ public class Equation {
     Term t = pos.querySide() == EquationPosition.Side.Left ? _lhs : _rhs;
     try { return t.querySubterm(pos.queryPosition()); }
     catch (IndexingException e) { return null; }
+  }
+
+  /**
+   * Helper function for replaceSubterm: this creates a copy of Renaming appropriate for the new
+   * equation, 
+   */
+  private Renaming limitRenaming(Renaming original, Term l, Term r, Term c) {
+    Renaming ret = original.copy();
+    ret.limitDomain(l, r, c);
+    Set<Replaceable> dom = ret.domain();
+    for (Replaceable x : l.freeReplaceables()) {
+      if (!dom.contains(x)) throw new IllegalArgumentException("Fresh var in replacement: " + x);
+    }
+    for (Replaceable x : r.freeReplaceables()) {
+      if (!dom.contains(x)) throw new IllegalArgumentException("Fresh var in replacement: " + x);
+    }
+    for (Replaceable x : c.freeReplaceables()) {
+      if (!dom.contains(x)) throw new IllegalArgumentException("Fresh var in replacement: " + x);
+    }
+    if (dom.size() == original.size()) return original;
+    return ret;
+  }
+
+  /**
+   * Replaces the subterm at the given position, assuming that this is indeed a position of the
+   * current term and the types match.  Otherwise, throws an appropriate RuntimeException.
+   * It is required that all Replaceables in the replacement already occur in this equation's
+   * renaming (except for variables that are captured by placing the replacement at the given
+   * position); if not, an IllegalArgumentException will be thrown.
+   */
+  public Equation replaceSubterm(EquationPosition pos, Term replacement) {
+    return switch (pos.querySide()) {
+      case EquationPosition.Side.Left -> {
+        Term l = _lhs.replaceSubterm(pos.queryPosition(), replacement);
+        Renaming ren = limitRenaming(_varNaming, l, _rhs, _constraint);
+        yield new Equation(l, _rhs, _constraint, ren);
+      }
+      case EquationPosition.Side.Right -> {
+        Term r = _rhs.replaceSubterm(pos.queryPosition(), replacement);
+        Renaming ren = limitRenaming(_varNaming, _lhs, r, _constraint);
+        yield new Equation(_lhs, r, _constraint, ren);
+      }
+    };
   }
 
   /**
