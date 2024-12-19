@@ -20,6 +20,12 @@ import cora.rwinduction.engine.DeductionDelete;
 
 /** The syntax for the deduction command delete. */
 public class CommandDelete extends Command {
+  private DeductionDelete _drule;
+
+  public CommandDelete() {
+    _drule = null;
+  }
+
   public String queryName() {
     return "delete";
   }
@@ -35,8 +41,8 @@ public class CommandDelete extends Command {
   
   protected boolean run(String args) {
     if (!args.equals("")) return failure("delete should be invoked without arguments");
-    DeductionDelete dd = new DeductionDelete();
-    return dd.apply(_proof, _module);
+    if (_drule == null) _drule = new DeductionDelete(_proof, _module);
+    return _drule.apply();
   }
 }
 

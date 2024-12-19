@@ -62,5 +62,8 @@ public interface Substitution {
 
   /** Remove the given key/value pair from the mapping. */
   void delete(Replaceable key);
+
+  /** Returns a copy of the current substitution. */
+  public Substitution copy();
 }
 

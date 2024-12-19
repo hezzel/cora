@@ -61,8 +61,8 @@ class DeductionDeleteTest {
   private void testDeleteEquation(String eqdesc) {
     PartialProof pp = setupProof(eqdesc);
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    DeductionRule drule = new DeductionDelete();
-    assertTrue(drule.apply(pp, module));
+    DeductionDelete drule = new DeductionDelete(pp, module);
+    assertTrue(drule.apply());
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation() == _defaultEquation);
     assertTrue(pp.getProofState().getHypotheses().size() == 0);
@@ -74,11 +74,13 @@ class DeductionDeleteTest {
   private String testFailToDeleteEquation(String eqdesc) {
     PartialProof pp = setupProof(eqdesc);
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    DeductionRule drule = new DeductionDelete();
-    assertFalse(drule.apply(pp, module));
+    DeductionDelete drule = new DeductionDelete(pp, module);
+    assertFalse(drule.apply());
     assertTrue(pp.getProofState().getEquations().size() == 2);
     assertTrue(pp.getCommandHistory().size() == 0);
-    assertFalse(drule.apply(pp)); // it also works without an output module!
+    // it also works without an output module!
+    drule = new DeductionDelete(pp);
+    assertFalse(drule.apply());
     return module.toString();
   }
 
@@ -118,12 +120,12 @@ class DeductionDeleteTest {
     Equation eq2 = ExtendedTermParser.parseEquation("sum1(x) = sum1(x) | x > 0", trs);
     Equation eq3 = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x > x", trs);
     PartialProof pp = new PartialProof(trs, FixedList.of(eq1, eq2, eq3), new TermPrinter(Set.of()));
-    DeductionRule drule = new DeductionDelete();
-    assertTrue(drule.apply(pp));
-    assertTrue(drule.apply(pp));
+    DeductionDelete drule = new DeductionDelete(pp);
+    assertTrue(drule.apply());
+    assertTrue(drule.apply());
     solver = new MySmtSolver(new SmtSolver.Answer.MAYBE("something"));
     Settings.smtSolver = solver;
-    assertFalse(drule.apply(pp));
+    assertFalse(drule.apply());
   }
 
   @Test

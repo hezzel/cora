@@ -16,11 +16,14 @@
 package cora.rwinduction.engine;
 
 import charlie.terms.position.Position;
-import charlie.terms.position.FinalPos;
+import charlie.terms.position.PositionPrinter;
 
 /** A position in an equation is just the combination of a side (left/right) and a position. */
 public class EquationPosition {
   public enum Side { Left, Right };
+
+  public static EquationPosition TOPLEFT = new EquationPosition(Side.Left, Position.empty);
+  public static EquationPosition TOPRIGHT = new EquationPosition(Side.Right, Position.empty);
 
   private Side _side;
   private Position _position;
@@ -32,7 +35,7 @@ public class EquationPosition {
 
   public EquationPosition(Side side) {
     _side = side;
-    _position = new FinalPos(0);
+    _position = Position.empty;
   }
 
   public Side querySide() {
@@ -43,8 +46,19 @@ public class EquationPosition {
     return _position;
   }
 
-  public String toString() {
-    return _side.toString() + "." + _position.toString();
+  /**
+   * A variant of the toString function that takes into account how positions should be printed.
+   */
+  public String toString(PositionPrinter printer) {
+    String s = switch (_side) { case Left -> "L"; case Right -> "R"; };
+    if (_position.isEmpty()) return s;
+    return "s." + printer.print(_position);
   }
+
+  /**
+   * Default implementation for debugging; however, proper printing should use the Outputter, or
+   * the other toString() function.
+   */
+  public String toString() { return toString(new PositionPrinter()); }
 }
 

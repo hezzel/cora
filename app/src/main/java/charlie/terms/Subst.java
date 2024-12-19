@@ -43,6 +43,16 @@ class Subst implements Substitution {
     extend(key, value);
   }
 
+  /** Creates a copy of the given subtitution */
+  private Subst(Subst copyme) {
+    _mapping = new HashMap<Replaceable,Term>(copyme._mapping);
+  }
+
+  /** Returns a copy of the current substitution */
+  public Substitution copy() {
+    return new Subst(this);
+  }
+
   /** @return the term that x is mapped to, or null if x is not mapped to anything */
   public Term get(Replaceable x) {
     return _mapping.get(x);
