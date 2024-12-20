@@ -43,23 +43,23 @@ public class ProblemTest {
 
   private DP createDP1() {
     Renaming renaming = new Renaming(Set.of());
-    Term lhs = CoraInputReader.readTerm("eval#(x, y)", renaming, true, trs);
-    Term rhs = CoraInputReader.readTerm("eval#(x-1, y)", renaming, true, trs);
-    Term constraint = CoraInputReader.readTerm("x > y", renaming, true, trs);
+    Term lhs = CoraInputReader.readTermAndUpdateNaming("eval#(x, y)", renaming, trs);
+    Term rhs = CoraInputReader.readTerm("eval#(x-1, y)", renaming, trs);
+    Term constraint = CoraInputReader.readTerm("x > y", renaming, trs);
     return new DP(lhs, rhs, constraint);
   }
 
   private DP createDP2() {
     Renaming renaming = new Renaming(Set.of());
-    Term lhs = CoraInputReader.readTerm("add#(suc(x), y)", renaming, true, trs);
-    Term rhs = CoraInputReader.readTerm("add#(x, y)", renaming, true, trs);
+    Term lhs = CoraInputReader.readTermAndUpdateNaming("add#(suc(x), y)", renaming, trs);
+    Term rhs = CoraInputReader.readTerm("add#(x, y)", renaming, trs);
     return new DP(lhs, rhs);
   }
 
   private DP createDP3() {
     Renaming renaming = new Renaming(Set.of());
-    Term lhs = CoraInputReader.readTerm("mul#(suc(x), y)", renaming, true, trs);
-    Term rhs = CoraInputReader.readTerm("add#(x, mul(x, y))", renaming, true, trs);
+    Term lhs = CoraInputReader.readTermAndUpdateNaming("mul#(suc(x), y)", renaming, trs);
+    Term rhs = CoraInputReader.readTerm("add#(x, mul(x, y))", renaming, trs);
     return new DP(lhs, rhs);
   }
 

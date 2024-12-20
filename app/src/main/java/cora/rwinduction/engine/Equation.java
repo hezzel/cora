@@ -31,18 +31,57 @@ public class Equation {
   private Term _constraint;
   private Renaming _varNaming;
 
+  /**
+   * Creates the given equation.  Note that the Renaming should contain ALL variables and
+   * meta-variables occurring free in the left-hand side, right-hand side, and constraints, or an
+   * Exception will be thrown.  A local copy of the Renaming will be made, so modifying it
+   * afterwards is safe.
+   */
   public Equation(Term lhs, Term rhs, Term constraint, Renaming varNaming) {
     _lhs = lhs;
     _rhs = rhs;
     _constraint = constraint;
-    _varNaming = varNaming;
+    _varNaming = varNaming.copy();
+    checkReplaceableNaming();
   }
 
+  /**
+   * Creates the given equation, with constraint true.  Note that the Renaming should contain ALL
+   * variables and meta-variables occurring free in the left-hand side, right-hand side, and
+   * constraints, or an Exception will be thrown.  A local copy of the Renaming will be made, so
+   * modifying it afterwards is safe.
+   */
   public Equation(Term lhs, Term rhs, Renaming varNaming) {
     _lhs = lhs;
     _rhs = rhs;
     _constraint = TheoryFactory.createValue(true);
-    _varNaming = varNaming;
+    _varNaming = varNaming.copy();
+    checkReplaceableNaming();
+  }
+
+  /**
+   * Helper function for the constructor.  This ensures that the domain for _varNaming consists of
+   * exactly the (meta-)variables occurring in this Equation, and throws an IllegalArgumentException
+   * if any are missing.
+   */
+  private void checkReplaceableNaming() {
+    _varNaming.limitDomain(_lhs, _rhs, _constraint);
+    Set<Replaceable> dom = _varNaming.domain();
+    for (Replaceable x : _lhs.freeReplaceables()) {
+      if (!dom.contains(x)) {
+        throw new IllegalArgumentException("Unknown replaceable in equation left-hand side: " + x);
+      }
+    }
+    for (Replaceable x : _rhs.freeReplaceables()) {
+      if (!dom.contains(x)) {
+        throw new IllegalArgumentException("Unknown replaceable in equation right-hand side: " + x);
+      }
+    }
+    for (Replaceable x : _constraint.freeReplaceables()) {
+      if (!dom.contains(x)) {
+        throw new IllegalArgumentException("Unknown replaceable in equation constraint: " + x);
+      }
+    }
   }
 
   public Term getLhs() {
@@ -62,6 +101,11 @@ public class Equation {
     return !_constraint.toValue().getBool();
   }
 
+  /**
+   * Warning: the caller may check the given Renaming and use it for printing and parsing, but
+   * should not modify it, since the internal stored Renaming is returned for this (so changing
+   * it will also affect future calls to getRenaming).
+   */
   public Renaming getRenaming() {
     return _varNaming;
   }
@@ -77,29 +121,9 @@ public class Equation {
   }
 
   /**
-   * Helper function for replaceSubterm: this creates a copy of Renaming appropriate for the new
-   * equation, 
-   */
-  private Renaming limitRenaming(Renaming original, Term l, Term r, Term c) {
-    Renaming ret = original.copy();
-    ret.limitDomain(l, r, c);
-    Set<Replaceable> dom = ret.domain();
-    for (Replaceable x : l.freeReplaceables()) {
-      if (!dom.contains(x)) throw new IllegalArgumentException("Fresh var in replacement: " + x);
-    }
-    for (Replaceable x : r.freeReplaceables()) {
-      if (!dom.contains(x)) throw new IllegalArgumentException("Fresh var in replacement: " + x);
-    }
-    for (Replaceable x : c.freeReplaceables()) {
-      if (!dom.contains(x)) throw new IllegalArgumentException("Fresh var in replacement: " + x);
-    }
-    if (dom.size() == original.size()) return original;
-    return ret;
-  }
-
-  /**
    * Replaces the subterm at the given position, assuming that this is indeed a position of the
    * current term and the types match.  Otherwise, throws an appropriate RuntimeException.
+   *
    * It is required that all Replaceables in the replacement already occur in this equation's
    * renaming (except for variables that are captured by placing the replacement at the given
    * position); if not, an IllegalArgumentException will be thrown.
@@ -108,13 +132,11 @@ public class Equation {
     return switch (pos.querySide()) {
       case EquationPosition.Side.Left -> {
         Term l = _lhs.replaceSubterm(pos.queryPosition(), replacement);
-        Renaming ren = limitRenaming(_varNaming, l, _rhs, _constraint);
-        yield new Equation(l, _rhs, _constraint, ren);
+        yield new Equation(l, _rhs, _constraint, _varNaming);
       }
       case EquationPosition.Side.Right -> {
         Term r = _rhs.replaceSubterm(pos.queryPosition(), replacement);
-        Renaming ren = limitRenaming(_varNaming, _lhs, r, _constraint);
-        yield new Equation(_lhs, r, _constraint, ren);
+        yield new Equation(_lhs, r, _constraint, _varNaming);
       }
     };
   }

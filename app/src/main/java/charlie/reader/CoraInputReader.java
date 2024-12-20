@@ -293,7 +293,7 @@ public class CoraInputReader extends TermTyper {
    * The TRS is used for its alphabet (function symbols are automatically recognised), and to
    * know whether or not we should include theories.  The rules and rule schemes are ignored.
    */
-  public static Term readTerm(String str, Renaming naming, boolean updateNaming, TRS trs) {
+  private static Term readTermHelper(String str, Renaming naming, boolean updateNaming, TRS trs) {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm pt = CoraParser.readTerm(str, trs.theoriesIncluded(), collector);
     throwIfErrors(collector);
@@ -303,6 +303,28 @@ public class CoraInputReader extends TermTyper {
     if (ret != null && updateNaming) updateRenaming(naming, ret, collector);
     throwIfErrors(collector);
     return ret;
+  }
+
+  /**
+   * Reads the given term from string.  The given renaming is used to recognise variables and
+   * meta-variables.  It will be used in a read-only way; no modification to the renaming is done.
+   * The TRS is used for its alphabet (function symbols are automatically recognised), and to
+   * know whether or not we should include theories.  The rules and rule schemes are ignored.
+   */
+  public static Term readTerm(String str, Renaming naming, TRS trs) {
+    return readTermHelper(str, naming, false, trs);
+  }
+
+  /**
+   * Reads the given term from string.
+   * The given renaming is used to recognise variables and meta-variables, and in the end, is
+   * updated by storing the true names of new variables and meta-variables into the naming
+   * (provided these names are legal for the given Renaming; if not a ParserException occurs).
+   * The TRS is used for its alphabet (function symbols are automatically recognised), and to
+   * know whether or not we should include theories.  The rules and rule schemes are ignored.
+   */
+  public static Term readTermAndUpdateNaming(String str, Renaming naming, TRS trs) {
+    return readTermHelper(str, naming, true, trs);
   }
 
   /**

@@ -33,9 +33,9 @@ public class DPTest {
   @Test
   void testCreateFullDP() {
     Renaming renaming = new Renaming(Set.of());
-    Term lhs = CoraInputReader.readTerm("eval(x, y)", renaming, true, trs);
-    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, true, trs);
-    Term constraint = CoraInputReader.readTerm("x > y", renaming, true, trs);
+    Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, y)", renaming, trs);
+    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, trs);
+    Term constraint = CoraInputReader.readTerm("x > y", renaming, trs);
     Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"));
     DP dp = new DP(lhs, rhs, constraint, vars);
     assertTrue(dp.ustr().equals("eval(x, y) => eval(x - 1, y) | x > y { }"));
@@ -44,9 +44,9 @@ public class DPTest {
   @Test
   void testCreateFullDPWithExtraVariable() {
     Renaming renaming = new Renaming(Set.of());
-    Term lhs = CoraInputReader.readTerm("eval(x, y)", renaming, true, trs);
-    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, true, trs);
-    Term constraint = CoraInputReader.readTerm("x > y", renaming, true, trs);
+    Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, y)", renaming, trs);
+    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, trs);
+    Term constraint = CoraInputReader.readTerm("x > y", renaming, trs);
     Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"),
                                 TheoryFactory.createVar("z", TypeFactory.boolSort));
     DP dp = new DP(lhs, rhs, constraint, vars);
@@ -56,9 +56,9 @@ public class DPTest {
   @Test
   void testDeduceVariables() {
     Renaming renaming = new Renaming(Set.of());
-    Term lhs = CoraInputReader.readTerm("eval(x, y)", renaming, true, trs);
-    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, true, trs);
-    Term constraint = CoraInputReader.readTerm("x > y", renaming, true, trs);
+    Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, y)", renaming, trs);
+    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, trs);
+    Term constraint = CoraInputReader.readTerm("x > y", renaming, trs);
     DP dp = new DP(lhs, rhs, constraint);
     assertTrue(dp.ustr().equals("eval(x, y) => eval(x - 1, y) | x > y { }"));
   }
@@ -66,8 +66,8 @@ public class DPTest {
   @Test
   void testDeduceConstraint() {
     Renaming renaming = new Renaming(Set.of());
-    Term lhs = CoraInputReader.readTerm("eval(x, x)", renaming, true, trs);
-    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, true, trs);
+    Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, x)", renaming, trs);
+    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, trs);
     DP dp = new DP(lhs, rhs);
     assertTrue(dp.ustr().equals("eval(x, x) => eval(x - 1, y) | true { }"));
   }
@@ -75,9 +75,9 @@ public class DPTest {
   @Test
   public void testAllVariables() {
     Renaming renaming = new Renaming(Set.of());
-    Term lhs = CoraInputReader.readTerm("eval(x, y)", renaming, true, trs);
-    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, true, trs);
-    Term constraint = CoraInputReader.readTerm("x > y ∧ z =_Int z", renaming, true, trs);
+    Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, y)", renaming, trs);
+    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, trs);
+    Term constraint = CoraInputReader.readTermAndUpdateNaming("x > y ∧ z =_Int z", renaming, trs);
     Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"),
                                 renaming.getVariable("z"),
                                 TheoryFactory.createVar("a", TypeFactory.boolSort));
@@ -93,9 +93,9 @@ public class DPTest {
   @Test
   public void testRenaming() {
     Renaming renaming = new Renaming(Set.of());
-    Term lhs = CoraInputReader.readTerm("eval(x, y)", renaming, true, trs);
-    Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, true, trs);
-    Term constraint = CoraInputReader.readTerm("x > y ∧ z =_Int z", renaming, true, trs);
+    Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, y)", renaming, trs);
+    Term rhs = CoraInputReader.readTermAndUpdateNaming("eval(x-1, y)", renaming, trs);
+    Term constraint = CoraInputReader.readTermAndUpdateNaming("x > y ∧ z =_Int z", renaming, trs);
     Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"),
                                 renaming.getVariable("z"),
                                 TheoryFactory.createVar("a", TypeFactory.boolSort));
