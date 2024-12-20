@@ -46,7 +46,9 @@ class DeductionSimplifyTest {
       "iter(x, i, z) -> z | i > x\n" +
       "iter(x, i, z) -> iter(x, i+1, z+i) | i <= x\n" +
       "input :: Int\n" +
-      "input -> x | y > 0\n");
+      "input -> x | y > 0\n" +
+      "tmp :: Int -> Int\n" +
+      "tmp(x) -> 0\n");
   }
 
   public PartialProof setupProof(String eqdesc) {
@@ -183,6 +185,19 @@ class DeductionSimplifyTest {
     assertFalse(ds.apply("R2", EquationPosition.TOPLEFT));
     assertTrue(module.toString().equals(
       "The rule does not apply: I could not prove that z ≥ 0 ⊨ z > 0.\n\n"));
+  }
+
+  @Test
+  public void testOnlyNeededVariablesAfterSimplify() {
+    PartialProof pp = setupProof("0 = tmp(z) | x < 0");
+    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    MySmtSolver solver = new MySmtSolver(false);
+    Settings.smtSolver = solver;
+    DeductionSimplify ds = new DeductionSimplify(pp, module);
+    assertTrue(ds.apply("R7", EquationPosition.TOPRIGHT));
+    Equation equation = pp.getProofState().getTopEquation();
+    assertTrue(equation.toString().equals("0 ≈ 0 | x < 0"));
+    assertTrue(equation.getRenaming().getReplaceable("z") == null);
   }
 }
 
