@@ -15,6 +15,7 @@
 
 package cora.rwinduction.command;
 
+import charlie.util.Pair;
 import charlie.util.FixedList;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.PartialProof;
@@ -93,9 +94,14 @@ public abstract class Command {
    */
   protected abstract boolean run(String str);
 
-  /** Helper function for inheriting classes: splits the command into words */
-  protected final String[] split(String command) {
-    return command.trim().split("\\s+");
+  /**
+   * Helper function for inheriting classes: splits the text into the first word, and the rest.
+   */
+  protected final Pair<String,String> splitWord(String text) {
+    text = text.trim();
+    int k = text.indexOf(' ');
+    if (k == -1) return new Pair<String,String>(text, "");
+    return new Pair<String,String>(text.substring(0, k), text.substring(k+1).trim());
   }
 
   /**
