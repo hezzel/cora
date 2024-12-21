@@ -38,6 +38,11 @@ public record ArgumentPos(int index, Position tail) implements Position {
     }
   }
 
+  public boolean equals(Object other) {
+    if (other instanceof Position p) return equals(p);
+    return false;
+  }
+
   public int hashCode() {
     // we choose 7 because it creates distinct hashcodes for most use cases: terms don't typically
     // have more than 6 arguments (and multiplication by 7 can be done through a bitshift)

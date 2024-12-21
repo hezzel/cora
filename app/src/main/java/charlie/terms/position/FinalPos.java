@@ -34,6 +34,11 @@ public record FinalPos(int chopcount) implements Position {
     }
   }
 
+  public boolean equals(Object other) {
+    if (other instanceof Position p) return equals(p);
+    return false;
+  }
+
   public int hashCode() {
     return chopcount + 1;
   }
