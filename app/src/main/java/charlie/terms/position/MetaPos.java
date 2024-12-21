@@ -38,6 +38,11 @@ public record MetaPos(int index, Position tail) implements Position {
     }
   }
 
+  public boolean equals(Object other) {
+    if (other instanceof Position p) return equals(p);
+    return false;
+  }
+
   public int hashCode() {
     return 7 * tail.hashCode() + index;
     // this is the same as for ArgumentPos, but that's okay -- we would not typically have both

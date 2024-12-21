@@ -62,6 +62,17 @@ public class EquationPosition {
    */
   public String toString() { return toString(new PositionPrinter()); }
 
+  /** Checks if both the side and the position are the same as other. */
+  public boolean equals(EquationPosition other) {
+    return _side.equals(other._side) && _position.equals(other._position);
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other instanceof EquationPosition pos) return equals(pos);
+    return false;
+  }
+
   /**
    * This parses the given string into an EquationPosition if possible, and if not, throws an
    * appropriate CustomParserException.

@@ -34,6 +34,11 @@ public record LambdaPos(Position tail) implements Position {
     }
   }
 
+  public boolean equals(Object other) {
+    if (other instanceof Position p) return equals(p);
+    return false;
+  }
+
   public int hashCode() {
     return 7 * tail.hashCode();
   }
