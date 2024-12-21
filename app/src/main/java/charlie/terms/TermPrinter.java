@@ -22,6 +22,7 @@ import java.util.TreeSet;
 import java.util.Set;
 import java.util.function.Predicate;
 import charlie.exceptions.UnexpectedPatternException;
+import charlie.types.Type;
 
 /**
  * TermPrinters are used in the overall output process of the tool.  This class provides a default
@@ -275,7 +276,8 @@ public class TermPrinter {
    */
   protected void printSoloCalculationSymbol(CalculationSymbol constant, StringBuilder builder) {
     builder.append("[");
-    builder.append(queryCalculationName(constant.queryKind(), constant.queryName()));
+    builder.append(queryCalculationName(constant.queryKind(), constant.queryName(),
+                                        constant.queryType()));
     builder.append("]");
   }
 
@@ -361,7 +363,8 @@ public class TermPrinter {
       Value v = arg.toValue();
       if (v.isIntegerValue() && v.getInt() < 0) brackets = true;
     }
-    builder.append(queryCalculationName(rootsymb.queryKind(), rootsymb.queryName()));
+    builder.append(queryCalculationName(rootsymb.queryKind(), rootsymb.queryName(),
+                                        rootsymb.queryType()));
     if (brackets) builder.append("(");
     print(arg, naming, builder);
     if (brackets) builder.append(")");
@@ -412,7 +415,7 @@ public class TermPrinter {
     if (root.queryAssociativity().equals(CalculationSymbol.Associativity.ASSOC_RIGHT) &&
         right.isFunctionalTerm() && right.queryRoot().equals(root)) rightpriority--;
     printInfixHelper(left, naming, builder, leftpriority);
-    printInfixOperator(rootkind, rootname, builder);
+    printInfixOperator(rootkind, rootname, root.queryType(), builder);
     printInfixHelper(right, naming, builder, rightpriority);
   }
 
@@ -422,9 +425,9 @@ public class TermPrinter {
    * binary way).
    */
   protected void printInfixOperator(CalculationSymbol.Kind operatorkind, String operatorname,
-                                    StringBuilder builder) {
+                                    Type operatortype, StringBuilder builder) {
     builder.append(" ");
-    builder.append(queryCalculationName(operatorkind, operatorname));
+    builder.append(queryCalculationName(operatorkind, operatorname, operatortype));
     builder.append(" ");
   }
 
@@ -580,7 +583,8 @@ public class TermPrinter {
    * If the default names of the in-built calculation symbols do not suit you, then you can override
    * this to return a different name.
    */
-  protected String queryCalculationName(CalculationSymbol.Kind kind, String defaultName) {
+  protected String queryCalculationName(CalculationSymbol.Kind kind, String defaultName,
+                                        Type operatorType) {
     return defaultName;
   }
 }
