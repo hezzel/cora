@@ -65,7 +65,7 @@ public class PartialProof {
       Rule rule = initialSystem.queryRule(i);
       Renaming renaming =
         tp.generateUniqueNaming(rule.queryLeftSide(), rule.queryRightSide(), rule.queryConstraint());
-      String name = "R" + (i+1);
+      String name = "O" + (i+1);
       _ruleNames.add(name);
       _nameToRule.put(name, i);
       _ruleRenamings.add(renaming);
@@ -80,12 +80,20 @@ public class PartialProof {
     return _ruleNames.get(index);
   }
 
+  public boolean hasRule(String name) {
+    return _nameToRule.containsKey(name);
+  }
+
   public Rule getRule(String name) {
-    return _trs.queryRule(_nameToRule.get(name));
+    Integer i = _nameToRule.get(name);
+    if (i == null) return null;
+    return _trs.queryRule(i);
   }
 
   public Renaming getRenaming(String ruleName) {
-    return _ruleRenamings.get(_nameToRule.get(ruleName));
+    Integer i = _nameToRule.get(ruleName);
+    if (i == null) return null;
+    return _ruleRenamings.get(i);
   }
 
   /**

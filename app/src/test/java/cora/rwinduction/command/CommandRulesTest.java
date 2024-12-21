@@ -62,13 +62,13 @@ class CommandRulesTest {
     Command cmd = setupCommand(module);
     assertTrue(cmd.execute(""));
     assertTrue(module.toString().equals(
-      "  R1: sum1(x) → return(0) | x ≤ 0\n" +
-      "  R2: sum1(x) → add(x, sum1(x - 1)) | x > 0\n" +
-      "  R3: add(x, return(y)) → return(x + y)\n" +
-      "  R4: add(x, error) → error\n" +
-      "  R5: sum2(x) → iter(x, 0, 0)\n" +
-      "  R6: iter(x, i, z) → return(z) | i > x\n" +
-      "  R7: iter(x, i, z) → iter(x, i + 1, z + i) | i ≤ x\n\n"));
+      "  O1: sum1(x) → return(0) | x ≤ 0\n" +
+      "  O2: sum1(x) → add(x, sum1(x - 1)) | x > 0\n" +
+      "  O3: add(x, return(y)) → return(x + y)\n" +
+      "  O4: add(x, error) → error\n" +
+      "  O5: sum2(x) → iter(x, 0, 0)\n" +
+      "  O6: iter(x, i, z) → return(z) | i > x\n" +
+      "  O7: iter(x, i, z) → iter(x, i + 1, z + i) | i ≤ x\n\n"));
   }
 
   @Test
@@ -85,8 +85,8 @@ class CommandRulesTest {
     Command cmd = setupCommand(module);
     assertTrue(cmd.execute("iter"));
     assertTrue(module.toString().equals(
-      "  R6: iter(x, i, z) → return(z) | i > x\n" +
-      "  R7: iter(x, i, z) → iter(x, i + 1, z + i) | i ≤ x\n\n"));
+      "  O6: iter(x, i, z) → return(z) | i > x\n" +
+      "  O7: iter(x, i, z) → iter(x, i + 1, z + i) | i ≤ x\n\n"));
   }
 
   @Test
