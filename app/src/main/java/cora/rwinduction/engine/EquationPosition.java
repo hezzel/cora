@@ -15,6 +15,7 @@
 
 package cora.rwinduction.engine;
 
+import charlie.exceptions.CustomParserException;
 import charlie.terms.position.Position;
 import charlie.terms.position.PositionPrinter;
 
@@ -60,5 +61,20 @@ public class EquationPosition {
    * the other toString() function.
    */
   public String toString() { return toString(new PositionPrinter()); }
+
+  /**
+   * This parses the given string into an EquationPosition if possible, and if not, throws an
+   * appropriate CustomParserException.
+   */
+  public static EquationPosition parse(String desc) throws CustomParserException {
+    desc = desc.trim();
+    if (desc.equals("") || desc.equals("L")) return TOPLEFT;
+    if (desc.equals("R")) return TOPRIGHT;
+    Side side = Side.Left;
+    if (desc.charAt(0) == 'L') desc = desc.substring(1);
+    if (desc.charAt(0) == 'R') { desc = desc.substring(1); side = Side.Right; }
+    Position pos = Position.parse(desc);
+    return new EquationPosition(side, pos);
+  }
 }
 
