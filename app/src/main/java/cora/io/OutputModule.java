@@ -83,15 +83,16 @@ public interface OutputModule {
    *   codes %a, in order, are replaced by a string representation of the object of the same
    *   index in the given list.
    *
-   * Special behaviour is defined for %a for Type, Term and Rule bbjects, as well as
-   * Pair<Term,Renaming> and Pair<String,Object[]> objects; all other objects are printed through
-   * ob.toString() (although it is possible for extensions of OutputModule to define their own
-   * improved ways of printing other kinds of objects).
+   * Special behaviour is defined for %a for Type, Position, Term and Rule bbjects,
+   * as well as Pair<Term,Renaming>, Pair<Term,Renaming>, Pair<Substitution,Renaming>,
+   * Pair<Substitution,Pair<Renaming,Renaming>> and Pair<String,Object[]> objects; all other objects
+   * are printed through ob.toString() (although it is possible for extensions of OutputModule to
+   * define their own improved ways of printing other kinds of objects).
    *
    * In particular, the Term objects are printed in such a way that occurrences of the same
    * variables in multiple terms (in the given object list) are all printed with the same name,
    * and this name is only used for ONE variable.  (Formally: they are printed using the same
-   * naming: TermPrinter.Renaming.)
+   * naming).
    *
    * For example, print("%a %{ruleArrow} %a | %a", [a,b,c]) causes"a → b | c" to be printed if the
    * current style has set the code for %{ruleArrow} to →.
@@ -104,7 +105,7 @@ public interface OutputModule {
    * Pair<Rule,Renaming>.
    *
    * Note also: if you pass a Pair<String,Object[]> as one of the Object arguments (say (s,lst)),
-   * that's the same as calling print(s, lst).
+   * that's the same as calling print(s, lst) at the point where %a is printed.
    */
   void print(String text, Object ...objects);
 

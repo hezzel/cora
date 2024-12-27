@@ -20,12 +20,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.Set;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.position.Position;
-import charlie.terms.Term;
-import charlie.terms.TermFactory;
-import charlie.terms.Renaming;
+import charlie.terms.*;
 import charlie.trs.*;
 import charlie.reader.CoraInputReader;
 
@@ -263,6 +262,79 @@ public class DefaultOutputModuleTest {
       "AMS with only rule scheme Beta:\n\n" +
       "  Signature: (empty)\n\n" +
       "  Rules: (empty)\n\n"));
+  }
+
+  @Test
+  public void testPrintSubstitutionWithOneRenaming() {
+    Type itype = CoraInputReader.readType("Int");
+    Variable x = TermFactory.createVar("x", itype);
+    Variable y = TermFactory.createVar("x", itype);
+    Variable z = TermFactory.createBinder("x", itype);
+    MetaVariable zz = TermFactory.createMetaVar("Z", CoraInputReader.readType("Int -> Int"), 1);
+    Term zz0 = TermFactory.createMeta(zz, TheoryFactory.createValue(0));
+    TRS trs = exampleTrs();
+    Term faxy = trs.lookupSymbol("f").apply(trs.lookupSymbol("a").apply(x)).apply(y);
+    Term lfzx = TermFactory.createAbstraction(z, trs.lookupSymbol("f").apply(z).apply(x));
+    Renaming renaming = (new TermPrinter(Set.of())).generateUniqueNaming(faxy, lfzx, zz0);
+
+    // []
+    Substitution gamma = TermFactory.createEmptySubstitution();
+    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    o.println("%a", new Pair<Substitution,Renaming>(gamma, renaming));
+    assertTrue(o.toString().equals("[]\n\n"));
+
+    // [x := f(a(x),y)]
+    gamma.extend(x, faxy);
+    o.println("%a", new Pair<Substitution,Renaming>(gamma, renaming));
+
+    // [x := f(a(x), y); Z := λz.f(z,x)]
+    gamma.extend(zz, lfzx);
+    o.println("%a", new Pair<Substitution,Renaming>(gamma, renaming));
+
+    assertTrue(o.toString().equals("[]\n\n" +
+      "[x__1 := f(a(x__1), x__2)]\n\n" +
+      "[x__1 := f(a(x__1), x__2); Z := λx1.f(x1, x__1)]\n\n"));
+  }
+
+  @Test
+  public void testPrintSubstitutionWithTwoRenamings() {
+    Type itype = CoraInputReader.readType("Int");
+    Variable x = TermFactory.createVar("x", itype);
+    Variable y = TermFactory.createVar("x", itype);
+    Variable z = TermFactory.createBinder("z", itype);
+    MetaVariable zz = TermFactory.createMetaVar("Z", CoraInputReader.readType("Int -> Int"), 1);
+    Term zz0 = TermFactory.createMeta(zz, TheoryFactory.createValue(0));
+    TRS trs = exampleTrs();
+    Term faxy = trs.lookupSymbol("f").apply(trs.lookupSymbol("a").apply(x)).apply(y);
+    Term lfzx = TermFactory.createAbstraction(z, trs.lookupSymbol("f").apply(z).apply(x));
+
+    TermPrinter tmp = new TermPrinter(Set.of());
+    Renaming keys = tmp.generateUniqueNaming(x, zz0);
+    Renaming values = tmp.generateUniqueNaming(faxy, lfzx);
+
+    Substitution gamma = TermFactory.createEmptySubstitution();
+    Pair<Substitution,Pair<Renaming,Renaming>> p =  new Pair<Substitution,Pair<Renaming,Renaming>>(
+      gamma,new Pair<Renaming,Renaming>(keys, values));
+
+    // []
+    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    o.println("%a", p);
+    assertTrue(o.toString().equals("[]\n\n"));
+
+    // [x := f(a(x),y)]
+    gamma.extend(x, faxy);
+    o.println("%a", p);
+
+    // [x := f(a(x), y); Z := λz.f(z,x)]
+    gamma.extend(zz, lfzx);
+    o.println("%a", p);
+
+    assertTrue(o.toString().equals("[]\n\n" +
+        "[x := f(a(x__1), x__2)]\n\n" +
+        "[x := f(a(x__1), x__2); Z := λz.f(z, x__1)]\n\n") ||
+      o.toString().equals("[]\n\n" +
+        "[x := f(a(x__1), x__2)]\n\n" +
+        "[Z := λz.f(z, x__1); x := f(a(x__1), x__2)]\n\n"));
   }
 }
 
