@@ -17,6 +17,7 @@ package cora.io;
 
 import java.util.Set;
 import java.util.ArrayList;
+import java.util.Collections;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.types.TypePrinter;
@@ -454,19 +455,25 @@ public class DefaultOutputModule implements OutputModule {
    * for the values taken from valueNaming.
    */
   private String printSubstitution(Substitution gamma, Renaming keyNaming, Renaming valueNaming) {
-    StringBuilder ret = new StringBuilder("[");
-    boolean first = true;
+    // put the names in a list, so we can order them
+    ArrayList<Pair<Replaceable,String>> dom = new ArrayList<Pair<Replaceable,String>>();
     for (Replaceable x : gamma.domain()) {
-      if (first) first = false;
-      else ret.append("; ");
-      String keyname = keyNaming.getName(x);
-      if (keyname == null) {
+      String xname = keyNaming.getName(x);
+      if (xname == null) {
         throw new IllegalArgumentException("KeyNaming given to printSubstitution does not have " +
           "a mapping for " + x.queryName() + ".");
       }
-      ret.append(keyname);
+      dom.add(new Pair<Replaceable,String>(x, xname));
+    }
+    Collections.sort(dom, (x,y) -> x.snd().compareTo(y.snd()));
+
+    // print the lot
+    StringBuilder ret = new StringBuilder("[");
+    for (int i = 0; i < dom.size(); i++) {
+      if (i > 0) ret.append("; ");
+      ret.append(dom.get(i).snd());
       ret.append(" := ");
-      _termPrinter.print(gamma.get(x), valueNaming, ret);
+      _termPrinter.print(gamma.get(dom.get(i).fst()), valueNaming, ret);
     }
     ret.append("]");
     return ret.toString();

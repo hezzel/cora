@@ -293,7 +293,7 @@ public class DefaultOutputModuleTest {
 
     assertTrue(o.toString().equals("[]\n\n" +
       "[x__1 := f(a(x__1), x__2)]\n\n" +
-      "[x__1 := f(a(x__1), x__2); Z := λx1.f(x1, x__1)]\n\n"));
+      "[Z := λx1.f(x1, x__1); x__1 := f(a(x__1), x__2)]\n\n"));
   }
 
   @Test
@@ -331,10 +331,20 @@ public class DefaultOutputModuleTest {
 
     assertTrue(o.toString().equals("[]\n\n" +
         "[x := f(a(x__1), x__2)]\n\n" +
-        "[x := f(a(x__1), x__2); Z := λz.f(z, x__1)]\n\n") ||
-      o.toString().equals("[]\n\n" +
-        "[x := f(a(x__1), x__2)]\n\n" +
         "[Z := λz.f(z, x__1); x := f(a(x__1), x__2)]\n\n"));
+  }
+
+  @Test
+  public void testMissingKeyInSubstitutionPrint() {
+    Substitution gamma = TermFactory.createEmptySubstitution();
+    TRS trs = exampleTrs();
+    Term fx3 = CoraInputReader.readTerm("f(x, 3)", trs);
+    Substitution subst = TermFactory.createEmptySubstitution();
+    subst.extend(TermFactory.createVar("x", CoraInputReader.readType("Int")), fx3);
+    Renaming renaming = (new TermPrinter(Set.of())).generateUniqueNaming(fx3);
+    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    assertThrows(IllegalArgumentException.class, () ->
+      o.println("%a", new Pair<Substitution,Renaming>(subst, renaming)));
   }
 }
 
