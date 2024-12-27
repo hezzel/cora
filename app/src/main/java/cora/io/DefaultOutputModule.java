@@ -22,10 +22,7 @@ import charlie.types.Type;
 import charlie.types.TypePrinter;
 import charlie.terms.position.Position;
 import charlie.terms.position.PositionPrinter;
-import charlie.terms.FunctionSymbol;
-import charlie.terms.Term;
-import charlie.terms.Renaming;
-import charlie.terms.TermPrinter;
+import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 
@@ -396,18 +393,9 @@ public class DefaultOutputModule implements OutputModule {
    * used.
    */
   private String printObject(Object ob) {
-    if (ob instanceof Type y) {
-      return _typePrinter.print(y);
-    }
-    if (ob instanceof Position p) {
-      return _positionPrinter.print(p);
-    }
-    // for rules we generate their own Renaming, and then treat them as pairs
-    if (ob instanceof Rule r) {
-      Renaming ren = _termPrinter.generateUniqueNaming(r.queryLeftSide(), r.queryRightSide(),
-                                                       r.queryConstraint());
-      ob = new Pair<Rule,Renaming>(r, ren);
-    }
+    if (ob instanceof Type y) return _typePrinter.print(y);
+    if (ob instanceof Position p) return _positionPrinter.print(p);
+    if (ob instanceof Rule r) return printRule(r, null);
     // no need to special-case Terms, as these have all been transformed into Pairs
     if (ob instanceof Pair p) {
       if (p.fst() instanceof Term t && p.snd() instanceof Renaming renaming) {
@@ -420,18 +408,68 @@ public class DefaultOutputModule implements OutputModule {
         return makeString(s, new Object[] { p.snd() });
       }
       if (p.fst() instanceof Rule rho && p.snd() instanceof Renaming renaming) {
-        StringBuilder ret = new StringBuilder();
-        _termPrinter.print(rho.queryLeftSide(), renaming, ret);
-        ret.append(replaceCodes(" %{ruleArrow} "));
-        _termPrinter.print(rho.queryRightSide(), renaming, ret);
-        if (rho.isConstrained()) {
-          ret.append(" | ");
-          _termPrinter.print(rho.queryConstraint(), renaming, ret);
+        return printRule(rho, renaming);
+      }
+      if (p.fst() instanceof Substitution subst) {
+        if (p.snd() instanceof Renaming ren) return printSubstitution(subst, ren, ren);
+        if (p.snd() instanceof Pair p2 && p2.fst() instanceof Renaming ren1 &&
+                                          p2.snd() instanceof Renaming ren2) {
+          return printSubstitution(subst, ren1, ren2);
         }
-        return ret.toString();
       }
     }
     return ob.toString();
+  }
+
+  /** Helper function for printObject: replaces a rule by a Pair<Rule,Renaming>. */
+  private Object generateRuleNaming(Rule r) {
+    Renaming ren = _termPrinter.generateUniqueNaming(r.queryLeftSide(), r.queryRightSide(),
+                                                     r.queryConstraint());
+    return new Pair<Rule,Renaming>(r, ren);
+  }
+
+  /**
+   * Helper function for printObject: determines a string representation for the given rule, along
+   * with the given renaming.  If the renaming is null, then a suitable renaming will be generated.
+   */
+  private String printRule(Rule rho, Renaming renaming) {
+    if (renaming == null) {
+      renaming = _termPrinter.generateUniqueNaming(rho.queryLeftSide(), rho.queryRightSide(),
+                                                   rho.queryConstraint());
+    }
+    StringBuilder ret = new StringBuilder();
+    _termPrinter.print(rho.queryLeftSide(), renaming, ret);
+    ret.append(replaceCodes(" %{ruleArrow} "));
+    _termPrinter.print(rho.queryRightSide(), renaming, ret);
+    if (rho.isConstrained()) {
+      ret.append(" | ");
+      _termPrinter.print(rho.queryConstraint(), renaming, ret);
+    }
+    return ret.toString();
+  }
+
+  /**
+   * Helper function for printSubstitution: this creates a string representation for the
+   * substitution, with (meta-)variable names for the domain taken from keyNaming, and the names
+   * for the values taken from valueNaming.
+   */
+  private String printSubstitution(Substitution gamma, Renaming keyNaming, Renaming valueNaming) {
+    StringBuilder ret = new StringBuilder("[");
+    boolean first = true;
+    for (Replaceable x : gamma.domain()) {
+      if (first) first = false;
+      else ret.append("; ");
+      String keyname = keyNaming.getName(x);
+      if (keyname == null) {
+        throw new IllegalArgumentException("KeyNaming given to printSubstitution does not have " +
+          "a mapping for " + x.queryName() + ".");
+      }
+      ret.append(keyname);
+      ret.append(" := ");
+      _termPrinter.print(gamma.get(x), valueNaming, ret);
+    }
+    ret.append("]");
+    return ret.toString();
   }
 
   @Override
