@@ -33,13 +33,14 @@ class ExtendedTermParserTest {
 
   @Test
   public void testEquationWithConstraint() {
-    Equation equation = ExtendedTermParser.parseEquation("sum(x) ≈ sum(y) | x = y", trs);
+    Equation equation = ExtendedTermParser.parseEquation("sum(x) ≈ sum(y) | x = y", trs, 3);
     Term l = equation.getLhs();
     Term r = equation.getRhs();
     Term c = equation.getConstraint();
     assertTrue(l.toString().equals("sum(x)"));
     assertTrue(r.toString().equals("sum(y)"));
     assertTrue(c.toString().equals("x = y"));
+    assertTrue(equation.getIndex() == 3);
     assertTrue(equation.getRenaming().domain().size() == 2);
     assertTrue(l.queryArgument(1) == equation.getRenaming().getVariable("x"));
     assertTrue(r.queryArgument(1) == equation.getRenaming().getVariable("y"));
@@ -49,13 +50,14 @@ class ExtendedTermParserTest {
 
   @Test
   public void testEquationWithoutConstraint() {
-    Equation equation = ExtendedTermParser.parseEquation("sum(y) -><- sum(x+y)", trs);
+    Equation equation = ExtendedTermParser.parseEquation("sum(y) -><- sum(x+y)", trs, 15);
     Term l = equation.getLhs();
     Term r = equation.getRhs();
     Term c = equation.getConstraint();
     assertTrue(l.toString().equals("sum(y)"));
     assertTrue(r.toString().equals("sum(x + y)"));
     assertTrue(c.toString().equals("true"));
+    assertTrue(equation.getIndex() == 15);
     assertTrue(l.queryArgument(1) == equation.getRenaming().getVariable("y"));
     assertTrue(r.queryArgument(1).queryArgument(1) == equation.getRenaming().getVariable("x"));
     assertTrue(r.queryArgument(1).queryArgument(2) == equation.getRenaming().getVariable("y"));
@@ -63,7 +65,7 @@ class ExtendedTermParserTest {
 
   @Test
   public void testEquationWithEqualsSymbol() {
-    Equation equation = ExtendedTermParser.parseEquation("sum(x) = sum(y) | x = y", trs);
+    Equation equation = ExtendedTermParser.parseEquation("sum(x) = sum(y) | x = y", trs, 1);
     Term l = equation.getLhs();
     Term r = equation.getRhs();
     Term c = equation.getConstraint();
@@ -72,7 +74,7 @@ class ExtendedTermParserTest {
     assertTrue(c.toString().equals("x = y"));
     assertTrue(equation.getRenaming().domain().size() == 2);
 
-    equation = ExtendedTermParser.parseEquation("sum(y) = sum(y+y)", trs);
+    equation = ExtendedTermParser.parseEquation("sum(y) = sum(y+y)", trs, 1);
     assertTrue(equation.getLhs().toString().equals("sum(y)"));
     assertTrue(equation.getRhs().toString().equals("sum(y + y)"));
     assertTrue(equation.getRenaming().domain().size() == 1);
@@ -81,9 +83,9 @@ class ExtendedTermParserTest {
   @Test
   public void testEquationDoesNotEndThere() {
     assertThrows(charlie.exceptions.ParseException.class, () ->
-      ExtendedTermParser.parseEquation("sum(x) = sum(y) | x = y sum(x)", trs));
+      ExtendedTermParser.parseEquation("sum(x) = sum(y) | x = y sum(x)", trs, 1));
     assertThrows(charlie.exceptions.ParseException.class, () ->
-      ExtendedTermParser.parseEquation("sum(1) = sum(2) x = y", trs));
+      ExtendedTermParser.parseEquation("sum(1) = sum(2) x = y", trs, 2));
   }
 
   @Test
@@ -91,11 +93,14 @@ class ExtendedTermParserTest {
     FixedList<Equation> lst = ExtendedTermParser.parseEquationList(
       "sum(x) ≈ sum(y) | x = y ; sum(y) -><- sum(x+y) ; sum(1) = sum(2)", trs);
     assertTrue(lst.size() == 3);
-    assertTrue(lst.get(0).toString().equals("sum(x) ≈ sum(y) | x = y"));
-    assertTrue(lst.get(1).toString().equals("sum(y) ≈ sum(x + y) | true"));
-    assertTrue(lst.get(2).toString().equals("sum(1) ≈ sum(2) | true"));
+    assertTrue(lst.get(0).toString().equals("1: sum(x) ≈ sum(y) | x = y"));
+    assertTrue(lst.get(1).toString().equals("2: sum(y) ≈ sum(x + y) | true"));
+    assertTrue(lst.get(2).toString().equals("3: sum(1) ≈ sum(2) | true"));
+    assertTrue(lst.get(0).getIndex() == 1);
+    assertTrue(lst.get(1).getIndex() == 2);
+    assertTrue(lst.get(2).getIndex() == 3);
     lst = ExtendedTermParser.parseEquationList("sum(x) ≈ sum(y) | x = y ;", trs);
     assertTrue(lst.size() == 1);
-    assertTrue(lst.get(0).toString().equals("sum(x) ≈ sum(y) | x = y"));
+    assertTrue(lst.get(0).toString().equals("1: sum(x) ≈ sum(y) | x = y"));
   }
 }

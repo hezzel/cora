@@ -29,6 +29,7 @@ import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
+import cora.io.ParseableTermPrinter;
 import cora.rwinduction.parser.ExtendedTermParser;
 
 class PartialProofTest {
@@ -44,49 +45,72 @@ class PartialProofTest {
       "iter(x, i, z) -> iter(x, i+1, z+i) | i <= x\n");
   }
 
+  private class MyStep extends DeductionStep {
+    private String _txt;
+    public MyStep(String txt) { _txt = txt; }
+    protected ProofState applyIgnoreExceptions(PartialProof proof) { return null; }
+    public String commandDescription(ParseableTermPrinter termPrinter) { return _txt; }
+    public void explain(OutputModule module) { module.println("Explanation: %a", _txt); }
+  }
+
   @Test
   public void testAddUndoRedo() {
     TRS trs = setupTRS();
-    Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs);
+    Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs, 11);
     PartialProof proof =
       new PartialProof(trs, FixedList.of(eq), new TermPrinter(trs.queryFunctionSymbolNames()));
     ProofState state1 = proof.getProofState();
     assertTrue(state1.getEquations().size() == 1);
     assertTrue(state1.getTopEquation() == eq);
-    Equation eq2 = ExtendedTermParser.parseEquation("0 -><- iter(x, 0, 0) | x = 0", trs);
-    Equation eq3 = ExtendedTermParser.parseEquation("x + sum1(x-1) -><- iter(x, 0, 0) | x > 0", trs);
+    assertTrue(proof.getFirstAvailableIndex() == 12);
+    Equation eq2 = ExtendedTermParser.parseEquation("0 -><- iter(x, 0, 0) | x = 0", trs, 19);
+    Equation eq3 =
+      ExtendedTermParser.parseEquation("x + sum1(x-1) -><- iter(x, 0, 0) | x > 0", trs, 18);
+    assertTrue(proof.getFirstAvailableIndex() == 12);
     ProofState state2 = state1.replaceTopEquation(List.of(eq2, eq3));
-    proof.addProofStep(state2, "action 1");
+    proof.addProofStep(state2, new MyStep("action 1"));
+    assertTrue(proof.getFirstAvailableIndex() == 20);
+    assertTrue(proof.getProofState() == state2);
+    proof.addProofStep(state1, new MyStep("double delete"));
+    assertTrue(proof.getProofState() == state1);
+    assertTrue(proof.getFirstAvailableIndex() == 20);
+    assertTrue(proof.undoProofStep());
     assertTrue(proof.getProofState() == state2);
     assertTrue(proof.undoProofStep());
     assertTrue(proof.getProofState() == state1);
+    assertTrue(proof.getFirstAvailableIndex() == 12);
     assertFalse(proof.undoProofStep());
     assertTrue(proof.getProofState() == state1);
+    assertTrue(proof.getFirstAvailableIndex() == 12);
     assertTrue(proof.redoProofStep());
     assertTrue(proof.getProofState() == state2);
+    assertTrue(proof.getFirstAvailableIndex() == 20);
+    assertTrue(proof.redoProofStep());
+    assertTrue(proof.getProofState() == state1);
     assertFalse(proof.redoProofStep());
-    assertTrue(proof.getProofState() == state2);
+    assertTrue(proof.getProofState() == state1);
+    assertTrue(proof.getFirstAvailableIndex() == 20);
   }
 
   @Test
   public void testCommandHistory() {
     TRS trs = setupTRS();
-    Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs);
+    Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs, 3);
     PartialProof proof =
       new PartialProof(trs, FixedList.of(eq), new TermPrinter(trs.queryFunctionSymbolNames()));
     ProofState state1 = proof.getProofState();
     assertTrue(state1.getEquations().size() == 1);
     assertTrue(state1.getTopEquation() == eq);
-    Equation eq2 = ExtendedTermParser.parseEquation("0 -><- iter(x, 0, 0) | x = 0", trs);
-    Equation eq3 = ExtendedTermParser.parseEquation("x + sum1(x-1) -><- iter(x, 0, 0) | x > 0", trs);
+    Equation eq2 = ExtendedTermParser.parseEquation("0 -><- iter(x, 0, 0) | x = 0", trs, 4);
+    Equation eq3 = ExtendedTermParser.parseEquation("x + sum1(x-1) = iter(x,0,0) | x > 0", trs, 5);
     ProofState state2 = state1.replaceTopEquation(List.of(eq2, eq3));
-    proof.addProofStep(state2, "action 1");
+    proof.addProofStep(state2, new MyStep("action 1"));
     ProofState state3 = state2.addHypothesis(eq);
-    proof.addProofStep(state3, "action 2");
+    proof.addProofStep(state3, new MyStep("action 2"));
     ProofState state4 = state3.deleteTopEquation();
-    proof.addProofStep(state4, "action 3");
+    proof.addProofStep(state4, new MyStep("action 3"));
     ProofState state5 = state4.deleteTopEquation();
-    proof.addProofStep(state5, "action 4");
+    proof.addProofStep(state5, new MyStep("action 4"));
     assertTrue(proof.getProofState().isFinalState());
     List<String> commands = proof.getCommandHistory();
     assertTrue(commands.size() == 4);

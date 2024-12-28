@@ -29,6 +29,7 @@ public class Equation {
   private Term _lhs;
   private Term _rhs;
   private Term _constraint;
+  private int _index;
   private Renaming _varNaming;
 
   /**
@@ -37,12 +38,14 @@ public class Equation {
    * Exception will be thrown.  A local copy of the Renaming will be made, so modifying it
    * afterwards is safe.
    */
-  public Equation(Term lhs, Term rhs, Term constraint, Renaming varNaming) {
+  public Equation(Term lhs, Term rhs, Term constraint, int index, Renaming varNaming) {
     _lhs = lhs;
     _rhs = rhs;
     _constraint = constraint;
+    _index = index;
     _varNaming = varNaming.copy();
     checkReplaceableNaming();
+    checkIndex();
   }
 
   /**
@@ -51,12 +54,14 @@ public class Equation {
    * constraints, or an Exception will be thrown.  A local copy of the Renaming will be made, so
    * modifying it afterwards is safe.
    */
-  public Equation(Term lhs, Term rhs, Renaming varNaming) {
+  public Equation(Term lhs, Term rhs, Renaming varNaming, int index) {
     _lhs = lhs;
     _rhs = rhs;
     _constraint = TheoryFactory.createValue(true);
+    _index = index;
     _varNaming = varNaming.copy();
     checkReplaceableNaming();
+    checkIndex();
   }
 
   /**
@@ -84,6 +89,14 @@ public class Equation {
     }
   }
 
+  /**
+   * Helper function for the constructor.  This ensures that the index is a positive integer.
+   */
+  private void checkIndex() {
+    if (_index <= 0) throw new IllegalArgumentException("Equation " + toString() + " given " +
+      "index " + _index + "; all indexes must be > 0.");
+  }
+
   public Term getLhs() {
     return _lhs;
   }
@@ -94,6 +107,14 @@ public class Equation {
 
   public Term getConstraint() {
     return _constraint;
+  }
+
+  public int getIndex() {
+    return _index;
+  }
+
+  public String getName() {
+    return "E" + getIndex();
   }
 
   public boolean isConstrained() {
@@ -127,16 +148,18 @@ public class Equation {
    * It is required that all Replaceables in the replacement already occur in this equation's
    * renaming (except for variables that are captured by placing the replacement at the given
    * position); if not, an IllegalArgumentException will be thrown.
+   *
+   * The newly returned Equation will be given newIndex as its index.
    */
-  public Equation replaceSubterm(EquationPosition pos, Term replacement) {
+  public Equation replaceSubterm(EquationPosition pos, Term replacement, int newIndex) {
     return switch (pos.querySide()) {
       case EquationPosition.Side.Left -> {
         Term l = _lhs.replaceSubterm(pos.queryPosition(), replacement);
-        yield new Equation(l, _rhs, _constraint, _varNaming);
+        yield new Equation(l, _rhs, _constraint, newIndex, _varNaming);
       }
       case EquationPosition.Side.Right -> {
         Term r = _rhs.replaceSubterm(pos.queryPosition(), replacement);
-        yield new Equation(_lhs, r, _constraint, _varNaming);
+        yield new Equation(_lhs, r, _constraint, newIndex, _varNaming);
       }
     };
   }
@@ -148,6 +171,7 @@ public class Equation {
   public String toString() {
     StringBuilder builder = new StringBuilder();
     TermPrinter printer = new TermPrinter(Set.of());
+    builder.append("" + _index + ": ");
     printer.print(_lhs, _varNaming, builder);
     builder.append(" ≈ ");
     printer.print(_rhs, _varNaming, builder);

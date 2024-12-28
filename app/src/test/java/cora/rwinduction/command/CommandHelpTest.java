@@ -33,7 +33,7 @@ class CommandHelpTest {
     TRS trs = CoraInputReader.readTrsFromString(
         "sum1 :: Int -> result\n" +
         "sum2 :: Int -> result\n");
-    Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs);
+    Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs, 9);
     return new PartialProof(trs, FixedList.of(eq), module.queryTermPrinter());
   }
 

@@ -42,7 +42,7 @@ class ProofStateTest {
   }
 
   private ProofState setupProofState(TRS trs) {
-    Equation equation = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x > 0", trs);
+    Equation equation = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x > 0", trs, 1);
     return new ProofState(FixedList.of(equation));
   }
 
@@ -50,23 +50,23 @@ class ProofStateTest {
   public void testToString() {
     TRS trs = setupTRS();
     ProofState state1 = setupProofState(trs);
-    Equation hypo = ExtendedTermParser.parseEquation("sum1(x) = iter(x, 0, 0) | x > 0", trs);
+    Equation hypo = ExtendedTermParser.parseEquation("sum1(x) = iter(x, 0, 0) | x > 0", trs, 2);
     ProofState state2 = state1.addHypothesis(hypo);
     Rule req = CoraInputReader.readRule("sum1(x) -> iter(x, 0, 0) | x > 0", trs);
     ProofState state3 = state2.addOrderingRequirement(req);
     assertTrue(state1.toString().equals(
       "Equations:\n" +
-      " * sum1(x) ≈ sum2(x) | x > 0\n"));
+      " E1: sum1(x) ≈ sum2(x) | x > 0\n"));
     assertTrue(state2.toString().equals(
       "Equations:\n" +
-      " * sum1(x) ≈ sum2(x) | x > 0\n" +
+      " E1: sum1(x) ≈ sum2(x) | x > 0\n" +
       "Induction hypotheses:\n" +
-      " * sum1(x) ≈ iter(x, 0, 0) | x > 0\n"));
+      " H2: sum1(x) ≈ iter(x, 0, 0) | x > 0\n"));
     assertTrue(state3.toString().equals(
       "Equations:\n" +
-      " * sum1(x) ≈ sum2(x) | x > 0\n" +
+      " E1: sum1(x) ≈ sum2(x) | x > 0\n" +
       "Induction hypotheses:\n" +
-      " * sum1(x) ≈ iter(x, 0, 0) | x > 0\n" +
+      " H2: sum1(x) ≈ iter(x, 0, 0) | x > 0\n" +
       "Ordering requirements: all rules and\n" +
       " * sum1(x) → iter(x, 0, 0) | x > 0\n"));
   }
@@ -75,28 +75,35 @@ class ProofStateTest {
   public void testAddReplaceDelete() {
     TRS trs = setupTRS();
     ProofState state1 = setupProofState(trs);
-    Equation eq1 = ExtendedTermParser.parseEquation("sum1(x) -><- iter(x, 0, 0) | x > 0", trs);
-    Equation eq2 = ExtendedTermParser.parseEquation("0 -><- iter(x, 0, 0) | x = 0", trs);
-    Equation eq3 = ExtendedTermParser.parseEquation("x + sum1(x-1) -><- iter(x, 0, 0) | x > 0", trs);
-    assertTrue(state1.getTopEquation().toString().equals("sum1(x) ≈ sum2(x) | x > 0"));
+    Equation eq1 = ExtendedTermParser.parseEquation("sum1(x) -><- iter(x, 0, 0) | x > 0", trs, 3);
+    Equation eq2 = ExtendedTermParser.parseEquation("0 -><- iter(x, 0, 0) | x = 0", trs, 4);
+    Equation eq3 =
+      ExtendedTermParser.parseEquation("x + sum1(x-1) -><- iter(x, 0, 0) | x > 0", trs, 7);
+    assertTrue(state1.getTopEquation().toString().equals("1: sum1(x) ≈ sum2(x) | x > 0"));
     ProofState state2 = state1.replaceTopEquation(eq1);
+    assertTrue(state2.queryLargestIndex() == 3);
     assertTrue(state2.getEquations().size() == 1);
-    assertTrue(state2.getTopEquation().toString().equals("sum1(x) ≈ iter(x, 0, 0) | x > 0"));
+    assertTrue(state2.getTopEquation().toString().equals("3: sum1(x) ≈ iter(x, 0, 0) | x > 0"));
     ProofState state3 = state1.addEquation(eq1);
+    assertTrue(state3.queryLargestIndex() == 3);
     assertTrue(state3.getEquations().size() == 2);
-    assertTrue(state3.getTopEquation().toString().equals("sum1(x) ≈ iter(x, 0, 0) | x > 0"));
-    assertTrue(state3.getEquations().get(0).toString().equals("sum1(x) ≈ sum2(x) | x > 0"));
+    assertTrue(state3.getTopEquation().toString().equals("3: sum1(x) ≈ iter(x, 0, 0) | x > 0"));
+    assertTrue(state3.getEquations().get(0).toString().equals("1: sum1(x) ≈ sum2(x) | x > 0"));
     ProofState state4 = state3.replaceTopEquation(List.of(eq2, eq3));
+    assertTrue(state4.queryLargestIndex() == 7);
     assertTrue(state4.getEquations().size() == 3);
     assertTrue(state4.getTopEquation() == eq3);
     ProofState state5 = state4.deleteTopEquation();
     assertTrue(state5.getEquations().size() == 2);
+    assertTrue(state5.queryLargestIndex() == 4);
     assertTrue(state5.getTopEquation() == eq2);
     ProofState state6 = state5.replaceTopEquation(List.of());
     assertTrue(state6.getEquations().size() == 1);
-    assertTrue(state6.getTopEquation().toString().equals("sum1(x) ≈ sum2(x) | x > 0"));
+    assertTrue(state6.queryLargestIndex() == 1);
+    assertTrue(state6.getTopEquation().toString().equals("1: sum1(x) ≈ sum2(x) | x > 0"));
     assertFalse(state6.isFinalState());
     ProofState state7 = state6.deleteTopEquation();
+    assertTrue(state7.queryLargestIndex() == 0);
     assertTrue(state7.isFinalState());
     assertThrows(charlie.exceptions.IndexingException.class,
       () -> state7.deleteTopEquation());

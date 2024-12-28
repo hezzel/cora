@@ -133,9 +133,8 @@ class SuccesfulProofObject implements ProofObject {
   SuccesfulProofObject(PartialProof pp) { _proof = pp; }
   public Answer queryAnswer() { return Answer.YES; }
   public void justify(OutputModule out) {
-    out.startTable();
-    for (String s : _proof.getCommandHistory()) out.println("%a", s);
-    out.endTable();
+    out = new Outputter(out);
+    _proof.explain(out);
   }
 }
 
