@@ -333,15 +333,16 @@ public class CoraInputReader extends TermTyper {
    * names to (meta-)variables.
    *
    * It is allowed for the parser term to contain variable identifiers that are not yet in the
-   * given renaming.  These will be added to the renaming (so the naming should be expected to be
-   * altered).
+   * given renaming.  If updateNaming is set to true, these will be added to the renaming (so in
+   * this case, the naming should be expected to be altered).  If it is set to false, then they
+   * will not be added.
    */
-  public static Term readTerm(ParserTerm pt, Renaming naming, TRS trs) {
+  public static Term readTerm(ParserTerm pt, Renaming naming, boolean updateNaming, TRS trs) {
     ErrorCollector collector = new ErrorCollector();
     SymbolData data = setupSymbolData(trs, naming);
     CoraInputReader reader = new CoraInputReader(data, collector);
     Term ret = reader.makeTerm(pt, null, true);
-    if (ret != null) updateRenaming(naming, ret, collector);
+    if (ret != null && updateNaming) updateRenaming(naming, ret, collector);
     throwIfErrors(collector);
     return ret;
   }

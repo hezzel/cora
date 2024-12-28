@@ -63,7 +63,7 @@ public class StepSimplify extends DeductionStep {
     boolean first = true;
     for (Replaceable x : keys) {
       if (first) first = false;
-      else substitutionString.append("; ");
+      else substitutionString.append(", ");
       substitutionString.append(_ruleRenaming.getName(x));
       substitutionString.append(" := ");
       printer.print(_substitution.get(x), _equation.getRenaming(), substitutionString);

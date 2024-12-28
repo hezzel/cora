@@ -293,7 +293,7 @@ public class DefaultOutputModuleTest {
 
     assertTrue(o.toString().equals("[]\n\n" +
       "[x__1 := f(a(x__1), x__2)]\n\n" +
-      "[x__1 := f(a(x__1), x__2); Z := λx1.f(x1, x__1)]\n\n"));
+      "[x__1 := f(a(x__1), x__2), Z := λx1.f(x1, x__1)]\n\n"));
   }
 
   @Test
@@ -331,7 +331,7 @@ public class DefaultOutputModuleTest {
 
     assertTrue(o.toString().equals("[]\n\n" +
         "[x := f(a(x__1), x__2)]\n\n" +
-        "[x := f(a(x__1), x__2); Z := λz.f(z, x__1)]\n\n"));
+        "[x := f(a(x__1), x__2), Z := λz.f(z, x__1)]\n\n"));
   }
 
   @Test

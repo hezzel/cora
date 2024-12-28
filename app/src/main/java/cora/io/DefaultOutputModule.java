@@ -472,7 +472,7 @@ public class DefaultOutputModule implements OutputModule {
     // print the lot
     StringBuilder ret = new StringBuilder("[");
     for (int i = 0; i < dom.size(); i++) {
-      if (i > 0) ret.append("; ");
+      if (i > 0) ret.append(", ");
       ret.append(dom.get(i).snd());
       ret.append(" := ");
       _termPrinter.print(gamma.get(dom.get(i).fst()), valueNaming, ret);
