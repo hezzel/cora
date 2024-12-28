@@ -152,7 +152,7 @@ class ClauseDeleteTest {
     String output = testFailToDeleteEquation("sum1(x) -><- sum2(x) | x > y ∧ x ≤ y+1");
     assertTrue(solver._storage.equals("(i1 >= 1 + i2) and (1 + i2 >= i1)\n"));
     assertTrue(output.equals("The DELETE rule is not applicable: the left- and right-hand side " +
-      "are not the same, and the constraint is satisfiable using substitution [x := 4; y := 3]." +
+      "are not the same, and the constraint is satisfiable using substitution [x := 4, y := 3]." +
       "\n\n"));
   }
 

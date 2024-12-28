@@ -24,9 +24,7 @@ import charlie.parser.lib.*;
 import charlie.parser.Parser.*;
 import charlie.parser.CoraTokenData;
 import charlie.parser.CoraParser;
-import charlie.terms.Term;
-import charlie.terms.Renaming;
-import charlie.terms.TheoryFactory;
+import charlie.terms.*;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.rwinduction.engine.Equation;
@@ -141,11 +139,45 @@ public class ExtendedTermParser {
     }
     if (status.readNextIf(CoraTokenData.MID) != null) constr = CoraParser.readTerm(status);
     Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
-    Term l = CoraInputReader.readTerm(left, renaming, trs);
-    Term r = CoraInputReader.readTerm(right, renaming, trs);
+    Term l = CoraInputReader.readTerm(left, renaming, true, trs);
+    Term r = CoraInputReader.readTerm(right, renaming, true, trs);
     Term constraint = constr == null ? TheoryFactory.createValue(true)
-                                     : CoraInputReader.readTerm(constr, renaming, trs);
+                                     : CoraInputReader.readTerm(constr, renaming, true, trs);
     return new Equation(l, r, constraint, index, renaming);
+  }
+
+  /**
+   * This reads a substitution of the form [x1:=term1,...,xn:=termn] from the given string, using
+   * the first renaming to look up the keys, and the second renaming to look up the values.  The
+   * latter Renaming may be modified, if some value includes fresh (meta-)variables.
+   *
+   * Note that this may absolutely throw a ParseException.
+   */
+  public static Substitution parseSubstitution(String str, TRS trs,
+                                               Renaming keyNames, Renaming valueNames) {
+    ParsingStatus status = createStatus(str);
+    Substitution ret = TermFactory.createEmptySubstitution();
+    status.expect(CoraTokenData.METAOPEN, "substitution opening bracket [");
+    boolean first = true;
+    while (status.readNextIf(CoraTokenData.METACLOSE) == null) {
+      if (first) first = false;
+      else status.expect(CoraTokenData.COMMA, "comma");
+      Token vartok = status.expect(CoraTokenData.IDENTIFIER, "(meta-)variable name");
+      status.expect(ASSIGN, ":=");
+      ParserTerm pterm = CoraParser.readTerm(status);
+      String varname = vartok.getText();
+      Replaceable x = keyNames.getReplaceable(varname);
+      if (x == null) { status.storeError("No such variable: " + varname, vartok); break; }
+      Term term = CoraInputReader.readTerm(pterm, valueNames, true, trs);
+      if (!x.queryType().equals(term.queryType())) {
+        status.storeError(varname + " has type " + x.queryType().toString() + " but is mapped to " +
+          "term " + term.toString() + " of type " + term.queryType().toString() + ".", vartok);
+        break;
+      }
+      ret.extend(x, term);
+    }
+    status.expect(Token.EOF, "end of command");
+    return ret;
   }
 }
 

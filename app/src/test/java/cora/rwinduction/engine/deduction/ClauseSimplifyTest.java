@@ -135,7 +135,7 @@ class ClauseSimplifyTest {
     subst.extend(y, TheoryFactory.createValue(8));
     assertTrue(ds.apply("O6", EquationPosition.TOPLEFT, subst));
     assertTrue(pp.getProofState().getTopEquation().toString().equals("18: -1 ≈ 7 | true"));
-    assertTrue(pp.getCommandHistory().get(0).equals("simplify O6 L with [x := -1; y := 8]"));
+    assertTrue(pp.getCommandHistory().get(0).equals("simplify O6 L with [x := -1, y := 8]"));
     assertTrue(module.toString().equals(""));
   }
 
@@ -153,7 +153,7 @@ class ClauseSimplifyTest {
     subst.extend(y, TheoryFactory.createValue(1));
     assertTrue(ds.apply("O6", EquationPosition.TOPLEFT, subst));
     assertTrue(pp.getProofState().getTopEquation().toString().equals("18: z ≈ 7 | z = 7"));
-    assertTrue(pp.getCommandHistory().get(0).equals("simplify O6 L with [x := z; y := 1]"));
+    assertTrue(pp.getCommandHistory().get(0).equals("simplify O6 L with [x := z, y := 1]"));
   }
 
   @Test
@@ -252,11 +252,11 @@ class ClauseSimplifyTest {
     empty.extend(TermFactory.createVar("u", CoraInputReader.readType("Int")),
                  TheoryFactory.createValue(5));
     ParseableTermPrinter ptp = new ParseableTermPrinter(Set.of());
-    assertTrue(step.commandDescription(ptp).equals("simplify O4 R with [x := z; i := 0; z := 0]"));
+    assertTrue(step.commandDescription(ptp).equals("simplify O4 R with [x := z, i := 0, z := 0]"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
     assertTrue(module.toString().equals("We apply SIMPLIFICATION to E17 with rule O4 and " +
-      "substitution [i := 0; x := z; z := 0].\n\n"));
+      "substitution [i := 0, x := z, z := 0].\n\n"));
   }
 }
 
