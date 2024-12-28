@@ -465,7 +465,9 @@ public class DefaultOutputModule implements OutputModule {
       }
       dom.add(new Pair<Replaceable,String>(x, xname));
     }
-    Collections.sort(dom, (x,y) -> x.snd().compareTo(y.snd()));
+    Collections.sort(dom, (x,y) ->
+      x.fst().queryReplaceableKind() == y.fst().queryReplaceableKind() ? x.snd().compareTo(y.snd())
+                                : x.fst().queryReplaceableKind() - y.fst().queryReplaceableKind());
 
     // print the lot
     StringBuilder ret = new StringBuilder("[");

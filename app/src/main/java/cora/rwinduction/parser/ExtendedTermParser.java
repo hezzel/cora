@@ -88,11 +88,12 @@ public class ExtendedTermParser {
    * This reads an equation of the form a ≈ b | c from the given string.
    * The string is expected to end after that.
    * If there is any error with the input, a ParseException will be thrown.
+   * The equation is assigned the given index.
    * @throws charlie.exceptions.ParseException
    */
-  public static Equation parseEquation(String str, TRS trs) {
+  public static Equation parseEquation(String str, TRS trs, int index) {
     ParsingStatus status = createStatus(str);
-    Equation ret = parseSingleEquation(status, trs);
+    Equation ret = parseSingleEquation(status, trs, index);
     checkEquation(ret);
     status.expect(Token.EOF, "end of input");
     return ret;
@@ -102,13 +103,14 @@ public class ExtendedTermParser {
    * This reads a non-empty list of equations of the form a ≈ b | c, separated by semi-colons,
    * from the given string.  The string is expected to end there.
    * If there is any error with the input, a ParseException will be thrown.
+   * The equations are assigned indexes 1..N, where N is the number of equations given.
    * @throws charlie.exceptions.ParseException
    */
   public static FixedList<Equation> parseEquationList(String str, TRS trs) {
     ParsingStatus status = createStatus(str);
     FixedList.Builder<Equation> ret = new FixedList.Builder<Equation>();
-    while (true) {
-      Equation eq = parseSingleEquation(status, trs);
+    for (int index = 1; ; index++) {
+      Equation eq = parseSingleEquation(status, trs, index);
       checkEquation(eq);
       ret.add(eq);
       if (status.readNextIf(SEPARATOR) == null) {
@@ -118,8 +120,11 @@ public class ExtendedTermParser {
     }
   }
   
-  /** This reads an equation of the form a ≈ b | c from the given ParsingStatus */
-  private static Equation parseSingleEquation(ParsingStatus status, TRS trs) {
+  /**
+   * This reads an equation of the form a ≈ b | c from the given ParsingStatus, and assigns it the
+   * given index.
+   */
+  private static Equation parseSingleEquation(ParsingStatus status, TRS trs, int index) {
     ParserTerm left, right = null, constr = null;
     left = CoraParser.readTerm(status);
     if (status.readNextIf(APPROX) != null) right = CoraParser.readTerm(status);
@@ -140,7 +145,7 @@ public class ExtendedTermParser {
     Term r = CoraInputReader.readTerm(right, renaming, trs);
     Term constraint = constr == null ? TheoryFactory.createValue(true)
                                      : CoraInputReader.readTerm(constr, renaming, trs);
-    return new Equation(l, r, constraint, renaming);
+    return new Equation(l, r, constraint, index, renaming);
   }
 }
 

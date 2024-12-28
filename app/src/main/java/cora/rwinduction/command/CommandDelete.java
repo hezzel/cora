@@ -16,11 +16,11 @@
 package cora.rwinduction.command;
 
 import charlie.util.FixedList;
-import cora.rwinduction.engine.DeductionDelete;
+import cora.rwinduction.engine.deduction.ClauseDelete;
 
 /** The syntax for the deduction command delete. */
 public class CommandDelete extends Command {
-  private DeductionDelete _drule;
+  private ClauseDelete _drule;
 
   public CommandDelete() {
     _drule = null;
@@ -41,7 +41,7 @@ public class CommandDelete extends Command {
   
   protected boolean run(String args) {
     if (!args.equals("")) return failure("delete should be invoked without arguments");
-    if (_drule == null) _drule = new DeductionDelete(_proof, _module);
+    if (_drule == null) _drule = new ClauseDelete(_proof, _module);
     return _drule.apply();
   }
 }

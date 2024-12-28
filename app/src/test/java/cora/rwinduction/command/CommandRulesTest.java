@@ -50,7 +50,7 @@ class CommandRulesTest {
   private Command setupCommand(OutputModule module) {
     CommandRules cmd = new CommandRules();
     TRS trs = setupTRS();
-    Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs);
+    Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs, 1);
     PartialProof proof = new PartialProof(trs, FixedList.of(eq), module.queryTermPrinter());
     cmd.storeContext(proof, module);
     return cmd;

@@ -19,11 +19,11 @@ import charlie.exceptions.CustomParserException;
 import charlie.util.Pair;
 import charlie.util.FixedList;
 import cora.rwinduction.engine.EquationPosition;
-import cora.rwinduction.engine.DeductionSimplify;
+import cora.rwinduction.engine.deduction.ClauseSimplify;
 
 /** The syntax for the deduction command simplify. */
 public class CommandSimplify extends Command {
-  private DeductionSimplify _drule;
+  private ClauseSimplify _drule;
 
   public CommandSimplify() {
     _drule = null;
@@ -81,7 +81,7 @@ public class CommandSimplify extends Command {
     // TODO: substitution (and function refactoring)
 
     // run the simplify command with appropriate arguments
-    if (_drule == null) _drule = new DeductionSimplify(_proof, _module);
+    if (_drule == null) _drule = new ClauseSimplify(_proof, _module);
     return _drule.apply(ruleName, pos);
   }
 }

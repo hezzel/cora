@@ -26,7 +26,8 @@ import charlie.trs.TRS;
 /**
  * The current state of the proof, consisting of the set of equations that should be proved, a set
  * of equations that may be used as induction hypotheses, and a number of ordering requirements,
- * stored as rules.
+ * stored as rules.  We also keep track of which equation indexes have been used so far, so we can
+ * always choose a fresh one for new equations.
  *
  * @apiNote A ProofState is immutable.
  */
@@ -68,6 +69,18 @@ public class ProofState {
   /** Returns the list of hypotheses in this proof state. */
   public FixedList<Equation> getHypotheses() {
     return _hypotheses;
+  }
+
+  /**
+   * Returns the largest index in the equations of this proof state, or 0 if the proof state has
+   * an empty set of equations.
+   */
+  public int queryLargestIndex() {
+    int ret = 0;
+    for (Equation eq : _equations) {
+      if (eq.getIndex() > ret) ret = eq.getIndex();
+    }
+    return ret;
   }
 
   /**
@@ -151,9 +164,9 @@ public class ProofState {
   public String toString() {
     StringBuilder builder = new StringBuilder();
     builder.append("Equations:\n");
-    for (Equation eq : _equations) builder.append(" * " + eq.toString() + "\n");
+    for (Equation eq : _equations) builder.append(" E" + eq.toString() + "\n");
     if (!_hypotheses.isEmpty()) builder.append("Induction hypotheses:\n");
-    for (Equation eq : _hypotheses) builder.append(" * " + eq.toString() + "\n");
+    for (Equation eq : _hypotheses) builder.append(" H" + eq.toString() + "\n");
     if (!_ordering.isEmpty()) builder.append("Ordering requirements: all rules and\n");
     for (Rule req : _ordering) builder.append(" * " + req.toString() + "\n");
     return builder.toString();
