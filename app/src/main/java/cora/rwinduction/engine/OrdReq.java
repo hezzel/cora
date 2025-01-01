@@ -13,34 +13,29 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.command;
+package cora.rwinduction.engine;
 
-import charlie.util.FixedList;
-import charlie.parser.lib.ParsingStatus;
+import charlie.util.Pair;
+import charlie.terms.Term;
 
-/** The environment command :quit, which allows the user to end the interactive process. */
-public class CommandQuit extends Command {
-  @Override
-  public String queryName() {
-    return ":quit";
-  }
-  
-  @Override
-  public FixedList<String> callDescriptor() {
-    return FixedList.of(":quit");
-  }
-  
-  @Override
-  public String helpDescriptor() {
-    return "Use this to abort the interactive prover process.  " +
-           "Note that your result will not be saved!";
+/**
+ * A requirement that left ≻ right under some condition.
+ * This really is stub code, to design ProofState as it will eventually be needed.  Expand (and do
+ * proper testing / renamings) when ordering requirements are added!
+ */
+public class OrdReq {
+  private Term _lhs;
+  private Term _rhs;
+  private Term _constraint;
+
+  public OrdReq(Term left, Term right, Term constraint) {
+    _lhs = left;
+    _rhs = right;
+    _constraint = constraint;
   }
 
-  @Override
-  protected boolean run(ParsingStatus status) {
-    if (!commandEnds(status)) return failure(":quit should be invoked without arguments");
-    _proof.abort();
-    return true;
+  public String toString() {
+    return _lhs.toString() + " ≻ " + _rhs.toString() + " | " + _constraint.toString();
   }
 }
 

@@ -13,34 +13,24 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.command;
+package cora.rwinduction.parser;
 
-import charlie.util.FixedList;
 import charlie.parser.lib.ParsingStatus;
+import charlie.parser.CoraTokenData;
 
-/** The environment command :quit, which allows the user to end the interactive process. */
-public class CommandQuit extends Command {
-  @Override
-  public String queryName() {
-    return ":quit";
-  }
-  
-  @Override
-  public FixedList<String> callDescriptor() {
-    return FixedList.of(":quit");
-  }
-  
-  @Override
-  public String helpDescriptor() {
-    return "Use this to abort the interactive prover process.  " +
-           "Note that your result will not be saved!";
-  }
-
-  @Override
-  protected boolean run(ParsingStatus status) {
-    if (!commandEnds(status)) return failure(":quit should be invoked without arguments");
-    _proof.abort();
-    return true;
+public class CommandParser {
+  /**
+   * Given a parsing status built by the RWParser -- so without ANY error tolerance -- this returns
+   * the "command" that it starts with.  This is either an identifier, or COLON identifier.  It may
+   * also be empty if no tokens are given.
+   */
+  public static String parseCommand(ParsingStatus status) {
+    if (status.peekNext().isEof() ||
+        status.peekNext().getName().equals(RWParser.SEPARATOR)) return "";
+    boolean colon = (status.readNextIf(CoraTokenData.COLON) != null);
+    String txt = status.expect(CoraTokenData.IDENTIFIER, "command name").getText();
+    if (colon) return ":" + txt;
+    else return txt;
   }
 }
 

@@ -163,6 +163,60 @@ public class CoraParser {
     return TypeFactory.createProduct(components);
   }
 
+  // ================================= READING INDIVIDUAL SYMBOLS =================================
+
+  /**
+   * singlesymbol = value
+   *              | infixsymbol (or NOT)
+   *              | NOT
+   *              | IDENTIFIER
+   *              | METAOPEN infixsymbol METACLOSE
+   * 
+   * Note that reading individual symbols is not needed for parsing a TRS, but may be useful for
+   * other applications (there is a static access function for this method).
+   */
+  private ParserTerm readSingleSymbol() {
+    Token token;
+
+    // value
+    if (_status.nextTokenIs(CoraTokenData.STRING) || _status.nextTokenIs(CoraTokenData.INTEGER) ||
+        _status.nextTokenIs(CoraTokenData.TRUE) || _status.nextTokenIs(CoraTokenData.FALSE)) {
+      return readValue();
+    }
+
+    // infixsymbol
+    OperatorData data = tryReadInfixSymbol();
+    if (data != null) return new CalcSymbol(data.token(), data.name());
+
+    // NOT
+    token = _status.readNextIf(CoraTokenData.NOT);
+    if (token != null) return new CalcSymbol(token, NOT);
+
+    // METAOPEN infixsymbol METACLOSE
+    if (_status.readNextIf(CoraTokenData.METAOPEN) != null) {
+      token = _status.peekNext();
+      data = tryReadInfixSymbol();
+      if (data == null && _status.readNextIf(CoraTokenData.NOT) != null) {
+        data = new OperatorData(token, NOT);
+      }
+      if (data == null) {
+        _status.storeError("Expected infix symbol but got " + token.getName() + " (" +
+          token.getText() + ")", token);
+        ParserTerm ret = new PErr(new Identifier(token, token.getText()));
+        _status.nextToken();
+        return ret;
+      }
+      _status.expect(CoraTokenData.METACLOSE, "infix closing bracket ]");
+      return new CalcSymbol(data.token(), data.name());
+    }
+
+    // IDENTIFIER
+    token = _status.expect(CoraTokenData.IDENTIFIER, "function symbol (or variable) name");
+    if (token == null) return new PErr(new Identifier(_status.nextToken(), "UNKNOWN"));
+    return new Identifier(token, token.getText());
+  }
+
+
   // ======================================== READING TERMS =======================================
 
   /**
@@ -833,6 +887,16 @@ public class CoraParser {
   public static ParserTerm readTerm(ParsingStatus status) {
     CoraParser parser = new CoraParser(status);
     return parser.readTerm();
+  }
+
+  /**
+   * This function reads a single function symbol from the given parsing status, which could be an
+   * identifier, value or calculation symbol.  The ParsingStatus is advanced to the point just after
+   * the symbol.
+   */
+  public static ParserTerm readSingleSymbol(ParsingStatus status) {
+    CoraParser parser = new CoraParser(status);
+    return parser.readSingleSymbol();
   }
 
   /**

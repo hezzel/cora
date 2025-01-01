@@ -53,6 +53,7 @@ public class EquationPosition {
   public String toString(PositionPrinter printer) {
     String s = switch (_side) { case Left -> "L"; case Right -> "R"; };
     if (_position.isEmpty()) return s;
+    else if (_position.isFinal()) return s + "." + printer.print(_position);
     return s + printer.print(_position);
   }
 

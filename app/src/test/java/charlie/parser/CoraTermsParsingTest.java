@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import charlie.types.*;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.lib.Token;
+import charlie.parser.lib.ParsingStatus;
 import charlie.parser.Parser.*;
 
 public class CoraTermsParsingTest {
@@ -572,6 +573,75 @@ public class CoraTermsParsingTest {
       "1:4: Expected a comma or tuple closing bracket ⦈ but got IDENTIFIER (y).\n" +
       "1:7: Expected end of input but got ARROW (->).\n");
     assertTrue(t.toString().equals("⦇[x, ERR(y)]⦈"));
+  }
+
+  private ParserTerm readSymbol(String str, String next) {
+    ErrorCollector collector = new ErrorCollector(3);
+    ParsingStatus status =
+      new ParsingStatus(CoraTokenData.getConstrainedStringLexer(str), collector);
+    ParserTerm ret = CoraParser.readSingleSymbol(status);
+    assertTrue(status.nextToken().getText().equals(next));
+    assertTrue(collector.queryErrorCount() == 0);
+    return ret;
+  }
+
+  @Test
+  public void testReadSingleSymbolSuccessfully() {
+    ParserTerm t;
+
+    // identifier
+    t = readSymbol("ff +", "+");
+    assertTrue(t.toString().equals("ff"));
+    // value
+    t = readSymbol("3 g", "g");
+    assertTrue(t.toString().equals("3"));
+    assertTrue(t instanceof IntVal);
+    // binary calculation symbol
+    t = readSymbol("+9", "9");
+    assertTrue(t.toString().equals("+"));
+    assertTrue(t instanceof CalcSymbol);
+    // single unary calculation symbol (not)
+    t = readSymbol("¬x", "x");
+    assertTrue(t.toString().equals("¬"));
+    assertTrue(t instanceof CalcSymbol);
+    // single bracketed binary calculation symbol
+    t = readSymbol("[=_String](", "(");
+    assertTrue(t.toString().equals("=_s"));
+    assertTrue(t instanceof CalcSymbol);
+    // single bracketed unary calculation symbol
+    t = readSymbol("[ not]", "");
+    assertTrue(t.toString().equals("¬"));
+    assertTrue(t instanceof CalcSymbol);
+  }
+
+  private void readSymbolFailure(String str, String errmess, String result, String next) {
+    ErrorCollector collector = new ErrorCollector(3);
+    ParsingStatus status =
+      new ParsingStatus(CoraTokenData.getConstrainedStringLexer(str), collector);
+    ParserTerm ret = CoraParser.readSingleSymbol(status);
+    if (!collector.queryCollectedMessages().equals(errmess)) {
+      System.out.println("Errors: " + collector.queryCollectedMessages());
+      assertTrue(false);
+    }
+    if (!ret.toString().equals(result)) {
+      System.out.println("Result: " + ret.toString());
+      assertTrue(false);
+    }
+    if (!status.peekNext().getText().equals(next)) {
+      System.out.println("Next token: " + status.peekNext());
+      assertTrue(false);
+    }
+  }
+
+  @Test
+  public void testFailToReadSingleSymbol() {
+    readSymbolFailure("[f]", "1:2: Expected infix symbol but got IDENTIFIER (f)\n",
+      "ERR(f)", "]");
+    readSymbolFailure("[+ a", "1:4: Expected infix closing bracket ] but got IDENTIFIER (a).\n",
+      "+", "a");
+    readSymbolFailure("(f)",
+      "1:1: Expected function symbol (or variable) name but got BRACKETOPEN (().\n",
+      "ERR(UNKNOWN)", "f");
   }
 }
 

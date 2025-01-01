@@ -16,6 +16,8 @@
 package cora.rwinduction.command;
 
 import charlie.util.FixedList;
+import charlie.parser.lib.ParsingStatus;
+import cora.rwinduction.parser.CommandParser;
 
 /** The environment command :syntax, which provides invocation information for a given command. */
 public class CommandSyntax extends Command {
@@ -26,22 +28,27 @@ public class CommandSyntax extends Command {
     _clist = lst;
   }
 
+  @Override
   public String queryName() {
     return ":syntax";
   }
 
+  @Override
   public FixedList<String> callDescriptor() {
     return FixedList.of(":syntax <command>");
   }
 
+  @Override
   public String helpDescriptor() {
     return "Query the ways to invoke a given command.";
   }
 
-  protected boolean run(String args) {
-    if (args.indexOf(' ') != -1) return failure("Too many arguments: :syntax takes 0 or 1");
-    Command cmd = args.equals("") ? this : _clist.queryCommand(args);
-    if (cmd == null) return failure("Unknown command: " + args);
+  @Override
+  protected boolean run(ParsingStatus status) {
+    String cmdname = CommandParser.parseCommand(status);
+    if (!commandEnds(status)) return failure("Too many arguments: :syntax takes only a command.");
+    Command cmd = cmdname.equals("") ? this : _clist.queryCommand(cmdname);
+    if (cmd == null) return failure("Unknown command: " + cmdname);
     _module.println("Syntax for the command %a:", cmd.queryName());
     _module.startTable();
     for (String str : cmd.callDescriptor()) _module.println("%a", str);

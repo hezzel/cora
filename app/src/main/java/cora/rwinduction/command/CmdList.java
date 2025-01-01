@@ -16,32 +16,56 @@
 package cora.rwinduction.command;
 
 import java.util.HashMap;
-import java.util.Set;
-import charlie.util.Pair;
-import charlie.util.Either;
+import java.util.TreeSet;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.PartialProof;
 
-/** A class to keep track of all commands by name. */
+/** A class to keep track of all commands by name, along with aliases. */
 public final class CmdList {
+  private TreeSet<String> _originals;
   private HashMap<String,Command> _commands;
   private PartialProof _proof;
   private OutputModule _module;
 
   public CmdList() {
+    _originals = new TreeSet<String>();
     _commands = new HashMap<String,Command>();
     _proof = null;
     _module = null;
   }
 
   public void registerCommand(Command cmd) {
+    String name = cmd.queryName();
+    if (_commands.containsKey(name)) {
+      throw new IllegalArgumentException("Double registration of command " + name + ".");
+    }
     _commands.put(cmd.queryName(), cmd);
+    _originals.add(cmd.queryName());
     if (_proof != null && _module != null) cmd.storeContext(_proof, _module);
   }
 
-  /** Returns the set of all command names known to the parser. */
-  public Set<String> queryCommands() {
-    return _commands.keySet();
+  /**
+   * This stores "alias" as an alternative way to use the command identified by "original".  Note
+   * that a command named original must be registered fist.
+   */
+  public void registerAlias(String alias, String original) {
+    if (!_originals.contains(original)) {
+      throw new IllegalArgumentException("Cannot register alias for " + original + " as there " +
+        "is no command by that name defined.");
+    }
+    if (_commands.containsKey(alias)) {
+      throw new IllegalArgumentException("Double registration of command " + alias +
+        " (as alias).");
+    }
+    _commands.put(alias, _commands.get(original));
+  }
+
+  /**
+   * Returns the set of all command names known to the parser.
+   * This will only return the main commands; not the aliases.
+   */
+  public TreeSet<String> queryCommands() {
+    return new TreeSet<String>(_originals);
   }
 
   /** Returns the Command with the given name, or null if the name is unknown. */
@@ -55,25 +79,9 @@ public final class CmdList {
    * registered in the CmdList, as well as all Commands that are added in the future.
    */
   public void storeContext(PartialProof pp, OutputModule module) {
-    for (Command cmd : _commands.values()) cmd.storeContext(pp, module);
+    for (String name : _originals) _commands.get(name).storeContext(pp, module);
     _proof = pp;
     _module = module;
-  }
-
-  /**
-   * IF the given string has the form <command> <args>, where <command> is a command that is known
-   * to us (and <args> may be empty), then this returns LEFT(the pair of <command> and <args>).
-   * Otherwise, it returns RIGHT(the <command> that is unknown).
-   */
-  public Either<Pair<Command,String>,String> parse(String str) {
-    String cmd, rest;
-    str = str.trim();
-    int c = str.indexOf(' ');
-    if (c == -1) { cmd = str; rest = ""; }
-    else { cmd = str.substring(0, c); rest = str.substring(c+1).trim(); }
-    Command command = _commands.get(cmd);
-    if (command == null) return new Either.Right<Pair<Command,String>,String>(cmd);
-    return new Either.Left<Pair<Command,String>,String>(new Pair<Command,String>(command, rest));
   }
 }
 

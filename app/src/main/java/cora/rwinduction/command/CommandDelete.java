@@ -15,34 +15,36 @@
 
 package cora.rwinduction.command;
 
+import java.util.Optional;
+
 import charlie.util.FixedList;
-import cora.rwinduction.engine.deduction.ClauseDelete;
+import charlie.parser.lib.ParsingStatus;
+import cora.rwinduction.engine.deduction.DeductionDelete;
 
 /** The syntax for the deduction command delete. */
 public class CommandDelete extends Command {
-  private ClauseDelete _drule;
-
-  public CommandDelete() {
-    _drule = null;
-  }
-
+  @Override
   public String queryName() {
     return "delete";
   }
   
+  @Override
   public FixedList<String> callDescriptor() {
     return FixedList.of("delete");
   }
   
+  @Override
   public String helpDescriptor() {
     return "Use this deduction rule to delete the current equation, if either the left- and " +
            "right-hand side are equal, or if the constraint is unsatisfiable.";
   }
   
-  protected boolean run(String args) {
-    if (!args.equals("")) return failure("delete should be invoked without arguments");
-    if (_drule == null) _drule = new ClauseDelete(_proof, _module);
-    return _drule.apply();
+  @Override
+  protected boolean run(ParsingStatus status) {
+    if (!commandEnds(status)) return failure("Delete should be invoked without arguments.");
+    Optional<DeductionDelete> step = DeductionDelete.createStep(_proof, optionalModule());
+    if (step.isEmpty()) return false;
+    return step.get().verifyAndExecute(_proof, optionalModule());
   }
 }
 

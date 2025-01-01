@@ -21,11 +21,12 @@ import java.util.Set;
 
 import charlie.exceptions.CustomParserException;
 import charlie.exceptions.TypingException;
-import charlie.terms.position.Position;
 import charlie.terms.Term;
 import charlie.terms.Renaming;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
+import cora.io.OutputModule;
+import cora.io.DefaultOutputModule;
 
 class EquationTest {
   @Test
@@ -34,45 +35,11 @@ class EquationTest {
     TRS trs = CoraInputReader.readTrsFromString(
       "sum1 :: Int -> Int\n" +
       "sum2 :: Int -> Int\n");
-    Term left = CoraInputReader.readTermAndUpdateNaming("sum1(x)", renaming, trs);
+    Term left = CoraInputReader.readTerm("sum1(x)", renaming, trs);
     Term right = CoraInputReader.readTermAndUpdateNaming("sum2(x + y)", renaming, trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > 0 ∧ y = 0", renaming, trs);
-    Equation equation = new Equation(left, right, constraint, 7, renaming);
-    assertTrue(equation.toString().equals("7: sum1(x) ≈ sum2(x + y) | x > 0 ∧ y = 0"));
-  }
-
-  @Test
-  public void testRenaming() {
-    Renaming renaming = new Renaming(Set.of());
-    TRS trs = CoraInputReader.readTrsFromString(
-      "sum1 :: Int -> Int\n" +
-      "sum2 :: Int -> Int\n");
-    Term left = CoraInputReader.readTermAndUpdateNaming("sum1(x)", renaming, trs);
-    Term right = CoraInputReader.readTermAndUpdateNaming("sum2(x + y)", renaming, trs);
-    Term constraint = CoraInputReader.readTermAndUpdateNaming("x > 0 ∧ y = 0", renaming, trs);
-    Term kk = CoraInputReader.readTermAndUpdateNaming("sum1(z)", renaming, trs);
-    Equation equation = new Equation(left, right, constraint, 8, renaming);
-    assertTrue(equation.getRenaming().getReplaceable("z") == null);
-    assertTrue(renaming.getReplaceable("z") != null);
-    assertThrows(IllegalArgumentException.class, () -> new Equation(kk, right, constraint,
-      7, equation.getRenaming()));
-  }
-
-  @Test
-  public void testIndex() {
-    Renaming renaming = new Renaming(Set.of());
-    TRS trs = CoraInputReader.readTrsFromString(
-      "sum1 :: Int -> Int\n" +
-      "sum2 :: Int -> Int\n");
-    Term left = CoraInputReader.readTermAndUpdateNaming("sum1(x)", renaming, trs);
-    Term right = CoraInputReader.readTermAndUpdateNaming("sum2(x + y)", renaming, trs);
-    Term constraint = CoraInputReader.readTermAndUpdateNaming("x > 0 ∧ y = 0", renaming, trs);
-    Equation equation = new Equation(left, right, constraint, 8, renaming);
-    assertTrue(equation.getIndex() == 8);
-    assertThrows(IllegalArgumentException.class, () ->
-      new Equation(left, right, constraint, 0, renaming));
-    assertThrows(IllegalArgumentException.class, () ->
-      new Equation(left, right, constraint, -1, renaming));
+    Equation equation = new Equation(left, right, constraint);
+    assertTrue(equation.toString().equals("sum1(x__1) ≈ sum2(x__2 + y) | x__2 > 0 ∧ y = 0"));
   }
 
   @Test
@@ -84,11 +51,12 @@ class EquationTest {
     Term left = CoraInputReader.readTermAndUpdateNaming("f(f(x))", renaming, trs);
     Term right = CoraInputReader.readTermAndUpdateNaming("g(x,y)", renaming, trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > 0 ∧ y = 0", renaming, trs);
-    Equation equation = new Equation(left, right, constraint, 2, renaming);
-    EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
+    Equation equation = new Equation(left, right, constraint);
+    EquationPosition pos = EquationPosition.parse("L1");
+    assertTrue(equation.querySubterm(pos).toString().equals("f(x)"));
     Term replacement = CoraInputReader.readTerm("g(3,y)", renaming, trs);
-    Equation eq2 = equation.replaceSubterm(pos, replacement, 9);
-    assertTrue(eq2.toString().equals("9: f(g(3, y)) ≈ g(x, y) | x > 0 ∧ y = 0"));
+    Equation eq2 = equation.replaceSubterm(pos, replacement);
+    assertTrue(eq2.toString().equals("f(g(3, y)) ≈ g(x, y) | x > 0 ∧ y = 0"));
   }
 
   @Test
@@ -101,25 +69,27 @@ class EquationTest {
     Term left = CoraInputReader.readTermAndUpdateNaming("f(f(x))", renaming, trs);
     Term right = CoraInputReader.readTermAndUpdateNaming("g(x,y)", renaming, trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > 0 ∧ y = 0", renaming, trs);
-    Equation equation = new Equation(left, right, constraint, 103, renaming);
-    EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
+    Equation equation = new Equation(left, right, constraint);
+    EquationPosition pos = EquationPosition.parse("L1");
     Term replacement = CoraInputReader.readTerm("h(3)", renaming, trs);
-    assertThrows(TypingException.class, () -> equation.replaceSubterm(pos, replacement, 3));
+    assertThrows(TypingException.class, () -> equation.replaceSubterm(pos, replacement));
   }
 
   @Test
-  public void testReplaceBadRenaming() throws CustomParserException {
+  public void testPrintableObject() {
     Renaming renaming = new Renaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n" +
+      "h :: Int -> o\n" +
       "g :: Int -> Int -> Int\n");
     Term left = CoraInputReader.readTermAndUpdateNaming("f(f(x))", renaming, trs);
     Term right = CoraInputReader.readTermAndUpdateNaming("g(x,y)", renaming, trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > 0 ∧ y = 0", renaming, trs);
-    Equation equation = new Equation(left, right, constraint, 1, renaming);
-    EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
-    Term replacement = CoraInputReader.readTermAndUpdateNaming("f(z)", renaming, trs);
-    assertThrows(IllegalArgumentException.class, () -> equation.replaceSubterm(pos, replacement, 3));
+    Equation equation = new Equation(left, right, constraint);
+    renaming.setName(renaming.getVariable("x"), "z");
+    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    module.println("%a", equation.getPrintableObject(renaming));
+    assertTrue(module.toString().equals("f(f(z)) ≈ g(z, y) | z > 0 ∧ y = 0\n\n"));
   }
 }
 

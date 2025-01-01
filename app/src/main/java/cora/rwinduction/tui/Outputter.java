@@ -23,7 +23,7 @@ import charlie.terms.Renaming;
 import cora.io.OutputModule;
 import cora.io.OutputModuleAdapter;
 import cora.rwinduction.engine.EquationPosition;
-import cora.rwinduction.engine.Equation;
+import cora.rwinduction.engine.EquationContext;
 
 /**
  * The Outputter is an OutputModule specifically for use in the interactive rewriting induction
@@ -37,27 +37,9 @@ public class Outputter extends OutputModuleAdapter {
   }
 
   protected Object alterObject(Object ob) {
-    if (ob instanceof Equation eq) return alterEquation(eq);
-    if (ob instanceof EquationPosition pos) return alterPosition(pos);
+    if (ob instanceof EquationContext context) return context.getPrintableObject();
+    if (ob instanceof EquationPosition pos) return pos.toString(queryPositionPrinter());
     return null;
-  }
-
-  protected Object alterEquation(Equation eq) {
-    String ret = "%a %{approx} %a";
-    ArrayList<Object> args = new ArrayList<Object>(4);
-    Renaming naming = eq.getRenaming();
-    Term constraint = eq.getConstraint();
-    args.add(new Pair<Term,Renaming>(eq.getLhs(), naming));
-    args.add(new Pair<Term,Renaming>(eq.getRhs(), naming));
-    if (!constraint.isValue() || !constraint.toValue().getBool()) {
-      ret += " | %a";
-      args.add(new Pair<Term,Renaming>(constraint, naming));
-    }
-    return new Pair<String,Object[]>(ret, args.toArray());
-  }
-
-  protected Object alterPosition(EquationPosition pos) {
-    return pos.toString(queryPositionPrinter());
   }
 
   /**

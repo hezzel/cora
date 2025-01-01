@@ -17,6 +17,10 @@ package cora.rwinduction.command;
 
 import java.util.TreeSet;
 import charlie.util.FixedList;
+import charlie.parser.lib.Token;
+import charlie.parser.lib.ParsingStatus;
+import charlie.parser.CoraTokenData;
+import cora.rwinduction.parser.CommandParser;
 
 /** The environment command :help, which provides general of command-specific help. */
 public class CommandHelp extends Command {
@@ -27,24 +31,40 @@ public class CommandHelp extends Command {
     _clist = lst;
   }
 
+  @Override
   public String queryName() {
     return ":help";
   }
 
+  @Override
   public FixedList<String> callDescriptor() {
     return FixedList.of(":help", ":help commands", ":help <command>");
   }
 
+  @Override
   public String helpDescriptor() {
     return "Prints a short description to explain how the prover works.";
   }
 
-  protected boolean run(String args) {
-    if (args.indexOf(' ') != -1) return failure("Too many arguments: :help takes 0 or 1");
-    if (args.equals("")) return printGeneralHelp();
-    if (args.equals("commands")) return printCommandList();
-    Command cmd = _clist.queryCommand(args);
-    if (cmd == null) return failure("Unknown command: " + args);
+  protected boolean run(ParsingStatus status) {
+    // syntax: :help
+    if (commandEnds(status)) return printGeneralHelp();
+    // syntax: :help commands
+    if (status.peekNext().getName().equals(CoraTokenData.IDENTIFIER) &&
+        status.peekNext().getText().equals("commands")) {
+      status.nextToken();
+      if (!commandEnds(status)) {
+        status.storeError("Too many arguments to :help commands.", status.peekNext());
+      }
+      return printCommandList();
+    }
+    // syntax: :help command
+    String txt = CommandParser.parseCommand(status);
+    Command cmd = _clist.queryCommand(txt);
+    if (cmd == null) return failure("Unknown command: " + txt);
+    if (!commandEnds(status)) {
+      status.storeError("Unexpected argument: :help takes at most 1.", status.peekNext());
+    }
     return printCommandHelp(cmd);
   }
 
@@ -60,17 +80,13 @@ public class CommandHelp extends Command {
 
   /** Prints a list of all commands to the underlying output module, and returns true */
   private boolean printCommandList() {
-    TreeSet<String> env = new TreeSet<String>();
-    TreeSet<String> deduction = new TreeSet<String>();
-    for (String str : _clist.queryCommands()) {
-      if (str.charAt(0) == ':') env.add(str);
-      else deduction.add(str);
-    }
     _module.println("You can use the following commands to interact with the prover:");
     StringBuilder envcmds = new StringBuilder();
-    for (String m : env) envcmds.append(m + " ");
     StringBuilder deducmds = new StringBuilder();
-    for (String d : deduction) deducmds.append(d + " ");
+    for (String str : _clist.queryCommands()) {
+      if (str.charAt(0) == ':') envcmds.append(str + " ");
+      else deducmds.append(str + " ");
+    }
     _module.startTable();
     _module.println("Prover commands: %a", envcmds.toString());
     _module.println("Deduction rules: %a", deducmds.toString());

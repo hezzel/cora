@@ -19,52 +19,68 @@ import charlie.util.Pair;
 import charlie.util.FixedList;
 import charlie.types.Type;
 import charlie.types.Arrow;
+import charlie.parser.lib.ParsingStatus;
+import charlie.parser.CoraParser;
+import charlie.parser.Parser.ParserTerm;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
+import cora.rwinduction.engine.ProofContext;
+import cora.rwinduction.engine.PartialProof;
 
 /** The environment command :rules, which prints all or a specific subset of rules to the user. */
 public class CommandRules extends Command {
+  @Override
   public String queryName() {
     return ":rules";
   }
 
+  @Override
   public FixedList<String> callDescriptor() {
     return FixedList.of(":rules", ":rules <function symbol>");
   }
 
+  @Override
   public String helpDescriptor() {
     return "List all the rules available in the original TRS.  " +
            "You can also list only the rules with a specific root symbol.";
   }
 
-  protected boolean run(String args) {
-    if (args.indexOf(' ') != -1) return failure("Too many arguments: :rules takes 0 or 1");
-    if (args.equals("")) { printAllMatchingRules(null); return true; }
-    try {
-      Term fterm = CoraInputReader.readTerm(args, _proof.getTRS());
-      if (!fterm.isConstant()) {
-        return failure("Argument to :rules should be a single function symbol");
-      }
-      printAllMatchingRules(fterm.queryRoot());
-      printCalculationRule(fterm.queryRoot());
+  @Override
+  protected boolean run(ParsingStatus status) {
+    if (commandEnds(status)) {  // syntax: :rules
+      printAllMatchingRules(null);
       return true;
     }
-    catch (Exception e) { return failure(e.getMessage().trim()); }
+    // remaining syntax option: :rules <function symbol>
+    ParserTerm pterm = CoraParser.readSingleSymbol(status);
+    Renaming renaming = new Renaming(_proof.getContext().getTRS().queryFunctionSymbolNames());
+    Term fterm = CoraInputReader.readTerm(pterm, renaming, false, _proof.getContext().getTRS());
+    if (!fterm.isConstant()) {
+      return failure("Argument to :rules should be a single function symbol");
+    }
+    if (!commandEnds(status)) {
+      status.storeError("Too many arguments: :rules takes 0 or 1.", status.nextToken());
+      return false;
+    }
+    printAllMatchingRules(fterm.queryRoot());
+    printCalculationRule(fterm.queryRoot());
+    return true;
   }
 
   /** Prints the normal rules (with the required start symbol) */
   private void printAllMatchingRules(FunctionSymbol start) {
-    TRS trs = _proof.getTRS();
+    ProofContext pc = _proof.getContext();
+    TRS trs = pc.getTRS();
     boolean printed = false;
     for (int i = 0; i < trs.queryRuleCount(); i++) {
       Rule rule = trs.queryRule(i);
       FunctionSymbol f = rule.queryRoot();
       if (start != null && f != null && !start.equals(f)) continue;
       if (!printed) { _module.startTable(); printed = true; }
-      String name = _proof.getRuleName(i);
-      Renaming renaming = _proof.getRenaming(name);
+      String name = pc.getRuleName(i);
+      Renaming renaming = pc.getRenaming(name);
       _module.nextColumn("%a:", name);
       _module.println("%a", new Pair<Rule,Renaming>(rule, renaming));
     }
@@ -85,6 +101,5 @@ public class CommandRules extends Command {
     _module.println("The calculation rule for this symbol is: %a %{ruleArrow} %a | %a .",
       left, right, constraint);
   }
-
 }
 
