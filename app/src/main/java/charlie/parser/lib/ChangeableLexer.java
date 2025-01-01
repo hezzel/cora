@@ -25,7 +25,7 @@ package charlie.parser.lib;
 public interface ChangeableLexer extends Lexer {
   /**
    * Change the TokenFinder used by this lexer.  Any subsequent tokens will be parsed using the new
-   * token finger, continuing from the current point of the input.
+   * token finder, continuing from the current point of the input.
    */
   public void changeTokenData(TokenFinder newfinder);
 

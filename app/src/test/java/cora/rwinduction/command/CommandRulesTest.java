@@ -21,13 +21,16 @@ import java.util.Set;
 
 import charlie.util.FixedList;
 import charlie.terms.TheoryFactory;
+import charlie.parser.lib.ParsingStatus;
+import charlie.parser.CoraParser;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
-import cora.rwinduction.engine.Equation;
+import cora.rwinduction.engine.EquationContext;
 import cora.rwinduction.engine.PartialProof;
-import cora.rwinduction.parser.ExtendedTermParser;
+import cora.rwinduction.parser.RWParser;
+import cora.rwinduction.parser.EquationParser;
 
 class CommandRulesTest {
   private TRS setupTRS() {
@@ -47,20 +50,22 @@ class CommandRulesTest {
       "iter(x, i, z) -> iter(x, i+1, z+i) | i <= x\n");
   }
 
-  private Command setupCommand(OutputModule module) {
+  private boolean runCommand(OutputModule module, String str) {
     CommandRules cmd = new CommandRules();
     TRS trs = setupTRS();
-    Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs, 1);
-    PartialProof proof = new PartialProof(trs, FixedList.of(eq), module.queryTermPrinter());
+    EquationContext ec = EquationParser.parseEquationData("sum1(x) = sum2(x) | x ≥ 0", trs, 1);
+    PartialProof proof = new PartialProof(trs, FixedList.of(ec), module.queryTermPrinter());
     cmd.storeContext(proof, module);
-    return cmd;
+    ParsingStatus status = RWParser.createStatus(str);
+    status.nextToken(); // :
+    status.nextToken(); // rules
+    return cmd.execute(status);
   }
 
   @Test
   public void testPrintAll() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    Command cmd = setupCommand(module);
-    assertTrue(cmd.execute(""));
+    assertTrue(runCommand(module, ":rules"));
     assertTrue(module.toString().equals(
       "  O1: sum1(x) → return(0) | x ≤ 0\n" +
       "  O2: sum1(x) → add(x, sum1(x - 1)) | x > 0\n" +
@@ -74,16 +79,14 @@ class CommandRulesTest {
   @Test
   public void testPrintConstructorSymbol() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    Command cmd = setupCommand(module);
-    assertTrue(cmd.execute("return"));
+    assertTrue(runCommand(module, ":rules return"));
     assertTrue(module.toString().equals("There are no rules with return as root symbol.\n\n"));
   }
 
   @Test
   public void testPrintDefinedSymbol() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    Command cmd = setupCommand(module);
-    assertTrue(cmd.execute("iter"));
+    assertTrue(runCommand(module, ":rules iter"));
     assertTrue(module.toString().equals(
       "  O6: iter(x, i, z) → return(z) | i > x\n" +
       "  O7: iter(x, i, z) → iter(x, i + 1, z + i) | i ≤ x\n\n"));
@@ -92,36 +95,43 @@ class CommandRulesTest {
   @Test
   public void testPrintCalculationSymbol() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    Command cmd = setupCommand(module);
-    assertTrue(cmd.execute("[=_Bool]"));
+    assertTrue(runCommand(module, ":rules [=_Bool]"));
     assertTrue(module.toString().equals(
       "There are no rules with [⇔] as root symbol.\n\n" +
       "The calculation rule for this symbol is: x1 ⇔ x2 → z | z ⇔ (x1 ⇔ x2) .\n\n"));
   }
 
   @Test
+  public void testPrintCalculationSymbolWithSpaces() {
+    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    assertTrue(runCommand(module, ":rules [ + ]"));
+    assertTrue(module.toString().equals(
+      "There are no rules with [+] as root symbol.\n\n" +
+      "The calculation rule for this symbol is: x1 + x2 → z | z = x1 + x2 .\n\n"));
+  }
+
+  @Test
   public void testParseTwoArguments() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    Command cmd = setupCommand(module);
-    assertFalse(cmd.execute("sum +"));
-    assertTrue(module.toString().equals("Too many arguments: :rules takes 0 or 1\n\n"));
+    assertFalse(runCommand(module, ":rules sum1 +"));
+    assertTrue(module.toString().equals(
+      "Parse error at 1:13: Too many arguments: :rules takes 0 or 1.\n\n"));
   }
 
   @Test
   public void testParseUnknownArgument() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    Command cmd = setupCommand(module);
-    assertFalse(cmd.execute("sum3"));
-    assertTrue(module.toString().equals("1:1: Undeclared symbol: sum3.  " +
+    assertFalse(runCommand(module, ":rules sum3"));
+    assertTrue(module.toString().equals("Parse error at 1:8: Undeclared symbol: sum3.  " +
       "Type cannot easily be deduced from context.\n\n"));
   }
 
   @Test
   public void testParseUnknownCalculation() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    Command cmd = setupCommand(module);
-    assertFalse(cmd.execute("[and]"));
-    assertTrue(module.toString().equals("1:2: Expected infix symbol but got IDENTIFIER (and)\n\n"));
+    assertFalse(runCommand(module, ":rules [and]"));
+    assertTrue(module.toString().equals(
+      "Parse error at 1:9: Expected infix symbol but got IDENTIFIER (and)\n\n"));
   }
 }
 

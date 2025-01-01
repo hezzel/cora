@@ -15,10 +15,15 @@
 
 package cora.rwinduction.command;
 
+import java.util.Optional;
+
+import charlie.exceptions.ParseException;
 import charlie.util.Pair;
 import charlie.util.FixedList;
+import charlie.parser.lib.ParsingStatus;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.PartialProof;
+import cora.rwinduction.parser.RWParser;
 
 /**
  * A Command is an action that the user can call within the interactive prover.
@@ -67,41 +72,45 @@ public abstract class Command {
   public abstract String helpDescriptor();
 
   /**
-   * This parses the given string, and if it describes a correct invocation of the current Command,
-   * it executes the command.  If not, the underlying OutputModule is updated with a description why
-   * the command failed, both if it's a syntax failure or if the command defines a deduction rule
-   * that is not applicable.  The return value indicates whether the invocation was succesful or
-   * not.
+   * Given that status represents the parsing status of reading a command AFTER having read the
+   * command name that corresponds to the current command, this continues parsing the input.  If
+   * the input indeed describes a correct invocation of the current Command, it executes the
+   * Command.  If it does not, the underlying OutputModule is updated with a description why the
+   * command failed, both if it's a syntax failure or if the command defines a deduction rule that
+   * is not applicable.  The return value indicates whether the invocation was succesful or not.
    *
    * Note: the context (PartialProof and OutputModule) MUST be set before calling execute; otherwise
    * a RuntimeException will be thrown.
    *
-   * Note: when the user invokes <command> <args>, this function should be called with just the
-   * <args> part, stripped of surrounding whitespace.  It should only be called when <command> is
-   * equal to queryName().
+   * Note: when the user invokes <command> <args>, this function should be called with status
+   * pointing at the <args> parts.
    */
-  public final boolean execute(String str) {
+  public final boolean execute(ParsingStatus status) {
     if (_proof == null || _module == null) {
       throw new RuntimeException("Command " + queryName() + " was called without the context " +
         "being set!");
     }
-    return run(str);
+    try { return run(status); }
+    catch (ParseException e) {
+      _module.println("Parse error at %a", e.getMessage().trim());
+      return false;
+    }
   }
 
   /**
    * All inheriting classes should implement this.  This method implements the execute function,
-   * and may assume that _proof and _module have already been set.
+   * and may assume that _proof and _module have already been set.  It is perfectly okay for run
+   * to ignore ParseExceptions; these will be caught and printed by execute.
    */
-  protected abstract boolean run(String str);
+  protected abstract boolean run(ParsingStatus status);
 
   /**
-   * Helper function for inheriting classes: splits the text into the first word, and the rest.
+   * Helper function for inheriting classes: this returns whether the status is currently pointing
+   * to the end of a command (i.e., the next token is EOF).
    */
-  protected final Pair<String,String> splitWord(String text) {
-    text = text.trim();
-    int k = text.indexOf(' ');
-    if (k == -1) return new Pair<String,String>(text, "");
-    return new Pair<String,String>(text.substring(0, k), text.substring(k+1).trim());
+  protected final boolean commandEnds(ParsingStatus status) {
+    return status.peekNext().isEof() ||
+           status.peekNext().getName().equals(RWParser.SEPARATOR);
   }
 
   /**
@@ -111,6 +120,11 @@ public abstract class Command {
   protected final boolean failure(String mess) {
     _module.println("%a", mess);
     return false;
+  }
+
+  /** Returns _module wrapped in an Optional, as deduction steps often need. */
+  protected final Optional<OutputModule> optionalModule() {
+    return Optional.of(_module);
   }
 
   public final String toString() { return "Command: " + queryName(); }

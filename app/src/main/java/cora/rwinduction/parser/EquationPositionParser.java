@@ -13,34 +13,25 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.rwinduction.command;
+package cora.rwinduction.parser;
 
-import charlie.util.FixedList;
+import charlie.exceptions.CustomParserException;
+import charlie.parser.lib.Token;
 import charlie.parser.lib.ParsingStatus;
+import charlie.parser.CoraTokenData;
+import cora.rwinduction.engine.EquationPosition;
 
-/** The environment command :quit, which allows the user to end the interactive process. */
-public class CommandQuit extends Command {
-  @Override
-  public String queryName() {
-    return ":quit";
-  }
-  
-  @Override
-  public FixedList<String> callDescriptor() {
-    return FixedList.of(":quit");
-  }
-  
-  @Override
-  public String helpDescriptor() {
-    return "Use this to abort the interactive prover process.  " +
-           "Note that your result will not be saved!";
-  }
-
-  @Override
-  protected boolean run(ParsingStatus status) {
-    if (!commandEnds(status)) return failure(":quit should be invoked without arguments");
-    _proof.abort();
-    return true;
+public class EquationPositionParser {
+  /**
+   * If the next token is EQPOS or IDENTIFIER, it is read.  If not, null is returned.
+   * If the token indeed represents an EquationPosition, this is parsed and returned.
+   * Otherwise, a CustomParserException is thrown.
+   */
+  public static EquationPosition readPosition(ParsingStatus status) throws CustomParserException {
+    Token tok = status.readNextIf(CoraTokenData.IDENTIFIER);
+    if (tok == null) tok = status.readNextIf(RWParser.EQPOS);
+    if (tok == null) return null;
+    return EquationPosition.parse(tok.getText());
   }
 }
 

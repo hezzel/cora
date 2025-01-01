@@ -74,6 +74,7 @@ public class DefaultOutputModule implements OutputModule {
     codes.add(new Pair<String,String>("%{implies}", "=>"));
     codes.add(new Pair<String,String>("%{distinct}", "!="));
     codes.add(new Pair<String,String>("%{approx}", "-><-"));
+    codes.add(new Pair<String,String>("%{bullet}", "#"));
     codes.add(new Pair<String,String>("%{alpha}", "alpha"));
     codes.add(new Pair<String,String>("%{beta}", "beta"));
     codes.add(new Pair<String,String>("%{gamma}", "gamma"));
@@ -143,6 +144,7 @@ public class DefaultOutputModule implements OutputModule {
     codes.add(new Pair<String,String>("%{implies}", "⇒"));
     codes.add(new Pair<String,String>("%{distinct}", "≠"));
     codes.add(new Pair<String,String>("%{approx}", "≈"));
+    codes.add(new Pair<String,String>("%{bullet}", "•"));
     codes.add(new Pair<String,String>("%{alpha}", "α"));
     codes.add(new Pair<String,String>("%{beta}", "β"));
     codes.add(new Pair<String,String>("%{gamma}", "γ"));

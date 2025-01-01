@@ -17,15 +17,20 @@ package cora.rwinduction;
 
 import java.util.List;
 
-import charlie.util.Pair;
-import charlie.util.Either;
+import charlie.exceptions.ParseException;
 import charlie.util.FixedList;
+import charlie.parser.lib.Token;
+import charlie.parser.lib.ParsingStatus;
+import charlie.parser.CoraTokenData;
 import charlie.trs.TRS;
+import charlie.trs.TrsProperties.*;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
-import cora.rwinduction.engine.Equation;
+import cora.rwinduction.engine.EquationContext;
 import cora.rwinduction.engine.PartialProof;
-import cora.rwinduction.parser.ExtendedTermParser;
+import cora.rwinduction.parser.RWParser;
+import cora.rwinduction.parser.EquationParser;
+import cora.rwinduction.parser.CommandParser;
 import cora.rwinduction.command.*;
 import cora.rwinduction.tui.*;
 
@@ -43,11 +48,11 @@ public class InteractiveRewritingInducter {
     _proof = pp;
   }
 
-  private static FixedList<Equation> readEquations(Inputter inputter, TRS trs) {
+  private static FixedList<EquationContext> readEquations(Inputter inputter, TRS trs) {
     try {
       String firstInput = inputter.readLine("Please input one or more equations: ");
       if (firstInput.equals(":quit") || firstInput.equals("")) return null;
-      return ExtendedTermParser.parseEquationList(firstInput, trs);
+      return EquationParser.parseEquationList(firstInput, trs);
     }
     catch (Exception e) {
       System.out.println("Invalid input: " + e.getMessage());
@@ -80,7 +85,7 @@ public class InteractiveRewritingInducter {
     CmdList clst = createCmdList(trs);
     
     // verify that the TRS is legal
-    String problem = ExtendedTermParser.checkTrs(trs);
+    String problem = checkLegalTrs(trs);
     if (problem != null) return new ProofObject() {
       public Answer queryAnswer() { return Answer.MAYBE; }
       public void justify(OutputModule module) { module.println(problem); }
@@ -90,8 +95,11 @@ public class InteractiveRewritingInducter {
     outputter.flush();
 
     // get initial equations and set up
-    FixedList<Equation> eqs = readEquations(inputter, trs);
-    if (eqs == null) return new AbortedProofObject();
+    FixedList<EquationContext> eqs = readEquations(inputter, trs);
+    if (eqs == null) return new ProofObject() {
+      public Answer queryAnswer() { return Answer.MAYBE; }
+      public void justify(OutputModule module) { module.println("No valid equations gives."); }
+    };
     PartialProof proof = new PartialProof(trs, eqs, outputter.queryTermPrinter());
     clst.storeContext(proof, outputter);
 
@@ -101,40 +109,49 @@ public class InteractiveRewritingInducter {
     return inducter.proveEquivalence();
   }
 
+  /**
+   * This checks if the TRS satisfies the requirements to use rewriting induction in the
+   * first place.  If it does, null is returned.  If not, a string describing the problem is
+   * returned instead.
+   */
+  private static String checkLegalTrs(TRS trs) {
+    if (!trs.verifyProperties(Level.META, Constrained.YES, TypeLevel.SIMPLEPRODUCTS,
+                              Lhs.SEMIPATTERN, Root.THEORY, FreshRight.ANY)) {
+      return "The TRS does not satisfy the requirements to apply rewriting induction: " +
+        "(a simply-typed LCSTRS with left-hand sides being functional terms).";
+    }
+    return RWParser.checkTrs(trs);
+  }
+
   private ProofObject proveEquivalence() {
     while (!_proof.isDone()) {
       _output.println("Top equation: %a", _proof.getProofState().getTopEquation());
       _output.flush();
-      Either<Pair<Command,String>,String> either = _cmdList.parse(_input.readLine());
-      switch (either) {
-        case Either.Left(Pair<Command,String> p):
-          Command cmd = p.fst();
-          String args = p.snd();
-          cmd.execute(args);
-          break;
-        case Either.Right(String cmdname):
-          _output.println("Unknown command: %a.  Use \":help commands\" to list available " +
+      ParsingStatus status = RWParser.createStatus(_input.readLine());
+      try {
+        while (!status.peekNext().isEof()) {
+          String cmdname = CommandParser.parseCommand(status);
+          if (cmdname.equals("")) {
+            while (status.readNextIf(RWParser.SEPARATOR) != null);
+            continue;
+          }
+          Command cmd = _cmdList.queryCommand(cmdname);
+          if (cmd == null) {
+            _output.println("Unknown command: %a.  Use \":help commands\" to list available " +
             "commands.", cmdname);
-          break;
+            break;
+          }
+          else if (!cmd.execute(status)) break;
+          if (status.readNextIf(RWParser.SEPARATOR) == null) {
+            status.expect(Token.EOF, "Semi-colon or end of line");
+          }
+        }
+      }
+      catch (ParseException e) {
+        _output.println("%a", e.getMessage());
       }
     }
-    if (_proof.getProofState().isFinalState()) return new SuccesfulProofObject(_proof);
-    else return new AbortedProofObject();
-  }
-}
-
-class AbortedProofObject implements ProofObject {
-  public Answer queryAnswer() { return Answer.MAYBE; }
-  public void justify(OutputModule out) { out.println("Proof attempt was aborted by user."); }
-}
-
-class SuccesfulProofObject implements ProofObject {
-  private PartialProof _proof;
-  SuccesfulProofObject(PartialProof pp) { _proof = pp; }
-  public Answer queryAnswer() { return Answer.YES; }
-  public void justify(OutputModule out) {
-    out = new Outputter(out);
-    _proof.explain(out);
+    return new RewritingInductionProof(_proof);
   }
 }
 

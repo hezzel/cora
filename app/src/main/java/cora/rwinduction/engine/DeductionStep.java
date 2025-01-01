@@ -15,45 +15,102 @@
 
 package cora.rwinduction.engine;
 
+import java.util.Optional;
 import java.util.Set;
 import cora.io.OutputModule;
 import cora.io.ParseableTermPrinter;
 
 /**
  * A DeductionStep carries all the information to execute a specific deduction step on a fixed
- * equation.  These are used for storing, recovering, and explaining a proof history.
+ * equation.  These are used to update the proof state, but also for storing, recovering, and
+ * explaining a proof history.
  *
- * Instances of DeductionStep are allowed to be a mutable objects, since they may be built
- * gradually; however, once completed, a DeductionStep is not meant to be changed.
+ * Instances of DeductionStep are expected to be immutable objects.  They do not have a public
+ * constructor, so can only be created through a static createStep() method.
  */
 public abstract class DeductionStep {
-  public class InapplicableStepException extends Exception {
-    public InapplicableStepException(String cmd, String mess) {
-      super("Could not apply deduction step \"" + cmd + "\": " + mess);
-    }
+  protected final ProofState _state;        // the proof state on which this step is applied
+  protected final ProofContext _pcontext;   // the proof context in which this step is applied
+
+  /**
+   * Inheriting classes should call this constructor to set up the proof state and proof
+   * context on which the deduction step will be applied.
+   */
+  protected DeductionStep(ProofState state, ProofContext context) {
+    _state = state;
+    _pcontext = context;
   }
 
   /**
-   * Call this to get the result of applying the deduction step on the given partial proof.  This
-   * will not do any labour-intensive checks!
-   * Rather, it assumes that all the prerequisites to apply the step are already satisfied.  If
-   * there is a problem with the application even when all steps are ignored that can be (for
+   * Creating a step does basic checks, but avoids any labour-intensive verification such as calls
+   * to the SMT solver or termination checker.  Hence, before executing a step it is essential to
+   * verify that we may indeed do so by calling verify.  This returns true if the step is valid,
+   * false if not; in the latter case, an appropriate error message will be printed to the
+   * given output module (if any).
+   */
+  public abstract boolean verify(Optional<OutputModule> module);
+
+  /**
+   * This function applies the step to the given partial proof.  If any errors occur while applying
+   * it (for example because the step was not set up correctly), an error message will be printed to
+   * the underlying output module (if any) instead; in this case false is returned.
+   *
+   * Note: this will not do any labour-intensive correctness checks!  Rather, it assumes that all
+   * the prerequisites to apply the step are already satisfied.  To ensure that this is the case,
+   * create the step using createStep(), and then call verify before calling execute.
+   *
+   * If there is a problem with the application even when all checks are ignored that can be (for
    * example, the step refers to a position in an equation that has no subterm at that position),
-   * then an InapplicableStepException will be thrown instead.
+   * then an appropriate error message is printed to the given output module (if any), and false
+   * is returned.  Otherwise, true is returned.
    */
-  public final ProofState apply(PartialProof proof) throws InapplicableStepException {
-    try { return applyIgnoreExceptions(proof); }
+  public final boolean execute(PartialProof proof, Optional<OutputModule> o) {
+    if (proof.isDone()) return println(o, "The proof is already finished.");
+    if (proof.getProofState() != _state) return println(o, "Cannot apply step to different state.");
+
+    try {
+      ProofState newstate = tryApply(o);
+      if (newstate == null) return false; // in this case an error message was already given
+      proof.addProofStep(newstate, this);
+      return true;
+    }
     catch (RuntimeException e) {
-      throw new InapplicableStepException(toString(), e.getMessage());
+      println(o, "Error applying step: %a", e.getMessage());
+      return false;
     }
   }
 
   /**
-   * Inheriting classes should override this function to implement the apply function.  Any
-   * RuntimeExceptions may be ignored, as they will be caught and converted into an
-   * InapplicableStepException.
+   * This function verifies the step, and if successful, executes it.
+   * If either the verification or the application is unsuccessful, false is returned.
    */
-  protected abstract ProofState applyIgnoreExceptions(PartialProof proof);
+  public final boolean verifyAndExecute(PartialProof proof, Optional<OutputModule> o) {
+    return verify(o) && execute(proof, o);
+  }
+
+  /**
+   * Inheriting classes should override this function to implement the execute function: it
+   * should determine a new proof state (based on _state, _pcontext, and the nature of this
+   * particular step), or return null.
+   *
+   * This function does not need to try catching any errors, as this will be handled by execute().
+   */
+  protected abstract ProofState tryApply(Optional<OutputModule> module);
+
+  /**
+   * Helper function for inheriting classes.
+   * This executes a println to the underlying output module, provided one is set, and otherwise
+   * does nothing.  It always returns false, to accommodate convenient printing before failure.
+   */
+  protected final boolean println(Optional<OutputModule> module, String str, Object ...objects) {
+    module.ifPresent( o -> o.println(str, objects) );
+    return false;
+  }
+
+  /** This returns the proof state that this command was applied on. */
+  public final ProofState getOriginalState() {
+    return _state;
+  }
 
   /**
    * This function provides a command that the user can execute to lead to the current deduction
@@ -68,5 +125,18 @@ public abstract class DeductionStep {
   public abstract void explain(OutputModule module);
 
   public final String toString() { return commandDescription(new ParseableTermPrinter(Set.of())); }
+
+  /**
+   * Helper function for the static createStep function: this returns either the top equation
+   * in the given proof state, or null if the proof state is already final.  If the module is set,
+   * then an appropriate error message will be printed in the latter case.
+   */
+  public static Equation getTopEquation(ProofState state, Optional<OutputModule> module) {
+    if (state.isFinalState()) {
+      module.ifPresent( o -> o.println("The proof is already complete.") );
+      return null;
+    }
+    return state.getTopEquation().getEquation();
+  }
 }
 

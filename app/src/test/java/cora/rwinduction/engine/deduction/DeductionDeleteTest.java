@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.Set;
+import java.util.Optional;
 
 import charlie.util.FixedList;
 import charlie.terms.Term;
@@ -34,12 +35,10 @@ import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
 import cora.io.ParseableTermPrinter;
-import cora.rwinduction.parser.ExtendedTermParser;
+import cora.rwinduction.parser.EquationParser;
 import cora.rwinduction.engine.*;
 
-class ClauseDeleteTest {
-  private Equation _defaultEquation = null;
-
+class DeductionDeleteTest {
   private TRS setupTRS() {
     return CoraInputReader.readTrsFromString(
       "sum1 :: Int -> Int\n" +
@@ -54,21 +53,20 @@ class ClauseDeleteTest {
 
   public PartialProof setupProof(String eqdesc) {
     TRS trs = setupTRS();
-    Equation eq1 = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs, 2);
-    Equation eq2 = ExtendedTermParser.parseEquation(eqdesc, trs, 5);
-    _defaultEquation = eq1;
-    return new PartialProof(trs, FixedList.of(eq1, eq2), new TermPrinter(Set.of()));
+    return new PartialProof(trs,
+      EquationParser.parseEquationList("sum1(x) = sum2(x) | x ≥ 0 ; " + eqdesc, trs),
+      new TermPrinter(Set.of()));
   }
 
   private void testDeleteEquation(String eqdesc) {
     PartialProof pp = setupProof(eqdesc);
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    ClauseDelete drule = new ClauseDelete(pp, module);
-    assertTrue(drule.apply());
+    Optional<OutputModule> o = Optional.of(module);
+    DeductionDelete step = DeductionDelete.createStep(pp, o).get();
+    assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
-    assertTrue(pp.getProofState().getTopEquation() == _defaultEquation);
+    assertTrue(pp.getProofState().getTopEquation().getIndex() == 1);
     assertTrue(pp.getProofState().getHypotheses().size() == 0);
-    assertTrue(pp.getProofState().getTopEquation().getIndex() == 2);
     assertTrue(pp.getCommandHistory().size() == 1);
     assertTrue(pp.getCommandHistory().get(0).equals("delete"));
     assertTrue(module.toString().equals(""));
@@ -77,13 +75,19 @@ class ClauseDeleteTest {
   private String testFailToDeleteEquation(String eqdesc) {
     PartialProof pp = setupProof(eqdesc);
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    ClauseDelete drule = new ClauseDelete(pp, module);
-    assertFalse(drule.apply());
-    assertTrue(pp.getProofState().getEquations().size() == 2);
-    assertTrue(pp.getCommandHistory().size() == 0);
+    Optional<OutputModule> o = Optional.of(module);
+    Optional<DeductionDelete> dd = DeductionDelete.createStep(pp, o);
+    if (dd.isEmpty()) return module.toString();
+    DeductionDelete step = dd.get();
+    assertFalse(step.verify(o));
     // it also works without an output module!
-    drule = new ClauseDelete(pp);
-    assertFalse(drule.apply());
+    o = Optional.empty();
+    step = DeductionDelete.createStep(pp, o).get();
+    assertFalse(step.verifyAndExecute(pp, o));
+    assertTrue(pp.getProofState().getEquations().size() == 2);
+    assertTrue(pp.getProofState().getTopEquation().getIndex() == 2);
+    assertTrue(pp.getCommandHistory().size() == 0);
+    // return the output created when we did use an output module
     return module.toString();
   }
 
@@ -119,16 +123,22 @@ class ClauseDeleteTest {
     MySmtSolver solver = new MySmtSolver(new SmtSolver.Answer.NO());
     Settings.smtSolver = solver;
     TRS trs = setupTRS();
-    Equation eq1 = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs, 11);
-    Equation eq2 = ExtendedTermParser.parseEquation("sum1(x) = sum1(x) | x > 0", trs, 12);
-    Equation eq3 = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x > x", trs, 13);
-    PartialProof pp = new PartialProof(trs, FixedList.of(eq1, eq2, eq3), new TermPrinter(Set.of()));
-    ClauseDelete drule = new ClauseDelete(pp);
-    assertTrue(drule.apply());
-    assertTrue(drule.apply());
+    PartialProof pp = new PartialProof(trs,
+      EquationParser.parseEquationList("sum1(x) = sum2(x) | x ≥ 0 ; " +
+                                       "sum1(x) = sum1(x) | x > 0 ; " +
+                                       "sum1(x) = sum2(x) | x > x", trs),
+      new TermPrinter(Set.of()));
+    Optional<OutputModule> oo = Optional.empty();
+    DeductionDelete step = DeductionDelete.createStep(pp, oo).get();
+    assertTrue(step.verifyAndExecute(pp, oo));
+    step = DeductionDelete.createStep(pp, oo).get();
+    assertTrue(step.verifyAndExecute(pp, oo));
     solver = new MySmtSolver(new SmtSolver.Answer.MAYBE("something"));
     Settings.smtSolver = solver;
-    assertFalse(drule.apply());
+    step = DeductionDelete.createStep(pp, oo).get();
+    assertFalse(step.verify(oo));
+    assertTrue(step.execute(pp, oo));
+    assertTrue(pp.isDone());
   }
 
   @Test
@@ -157,17 +167,18 @@ class ClauseDeleteTest {
   }
 
   @Test
-  public void testStep() {
+  public void testHistory() {
     MySmtSolver solver = new MySmtSolver(new SmtSolver.Answer.NO());
-    Settings.smtSolver = solver;
     PartialProof pp = setupProof("sum1(x) -><- sum2(x) | x > 0 ∧ x < 0");
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    ClauseDelete drule = new ClauseDelete(pp, module);
-    DeductionStep step = drule.createStep();
+    Optional<OutputModule> o = Optional.of(module);
+    DeductionDelete step = DeductionDelete.createStep(pp, o).get();
     ParseableTermPrinter ptp = new ParseableTermPrinter(Set.of());
     assertTrue(step.commandDescription(ptp).equals("delete"));
+    assertTrue(module.toString().equals(""));
     step.explain(module);
-    assertTrue(module.toString().equals("We apply DELETION to E5 because the constraint is " +
+    assertTrue(solver._storage == null);
+    assertTrue(module.toString().equals("We apply DELETION to E2 because the constraint is " +
       "unsatisfiable.  Thus, we may remove this equation from the proof state.\n\n"));
   }
 }

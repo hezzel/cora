@@ -16,85 +16,34 @@
 package cora.rwinduction.engine;
 
 import charlie.exceptions.IndexingException;
-import charlie.terms.*;
+import charlie.util.Pair;
+import charlie.terms.Term;
+import charlie.terms.Renaming;
+import charlie.terms.TermPrinter;
+import charlie.terms.TheoryFactory;
 import java.util.Set;
 
 /**
  * The basic data structure representing equations: this is a tuple of a left-hand side, a
- * right-hand side, and a constraint.  Moreover, since users need to be able to refer to specific
- * variables in the interactive prover, we also store a naming for the variables inside the
- * equation, so they are always printed in the same way.
+ * right-hand side, and a constraint.  Equations are immutable.
  */
-public class Equation {
+public final class Equation {
   private Term _lhs;
   private Term _rhs;
   private Term _constraint;
-  private int _index;
-  private Renaming _varNaming;
 
-  /**
-   * Creates the given equation.  Note that the Renaming should contain ALL variables and
-   * meta-variables occurring free in the left-hand side, right-hand side, and constraints, or an
-   * Exception will be thrown.  A local copy of the Renaming will be made, so modifying it
-   * afterwards is safe.
-   */
-  public Equation(Term lhs, Term rhs, Term constraint, int index, Renaming varNaming) {
+  /** Creates the equation lhs ≈ rhs | constraint */
+  public Equation(Term lhs, Term rhs, Term constraint) {
     _lhs = lhs;
     _rhs = rhs;
     _constraint = constraint;
-    _index = index;
-    _varNaming = varNaming.copy();
-    checkReplaceableNaming();
-    checkIndex();
   }
 
-  /**
-   * Creates the given equation, with constraint true.  Note that the Renaming should contain ALL
-   * variables and meta-variables occurring free in the left-hand side, right-hand side, and
-   * constraints, or an Exception will be thrown.  A local copy of the Renaming will be made, so
-   * modifying it afterwards is safe.
-   */
-  public Equation(Term lhs, Term rhs, Renaming varNaming, int index) {
+  /** Creates the equation lhs ≈ rhs | true */
+  public Equation(Term lhs, Term rhs) {
     _lhs = lhs;
     _rhs = rhs;
     _constraint = TheoryFactory.createValue(true);
-    _index = index;
-    _varNaming = varNaming.copy();
-    checkReplaceableNaming();
-    checkIndex();
-  }
-
-  /**
-   * Helper function for the constructor.  This ensures that the domain for _varNaming consists of
-   * exactly the (meta-)variables occurring in this Equation, and throws an IllegalArgumentException
-   * if any are missing.
-   */
-  private void checkReplaceableNaming() {
-    _varNaming.limitDomain(_lhs, _rhs, _constraint);
-    Set<Replaceable> dom = _varNaming.domain();
-    for (Replaceable x : _lhs.freeReplaceables()) {
-      if (!dom.contains(x)) {
-        throw new IllegalArgumentException("Unknown replaceable in equation left-hand side: " + x);
-      }
-    }
-    for (Replaceable x : _rhs.freeReplaceables()) {
-      if (!dom.contains(x)) {
-        throw new IllegalArgumentException("Unknown replaceable in equation right-hand side: " + x);
-      }
-    }
-    for (Replaceable x : _constraint.freeReplaceables()) {
-      if (!dom.contains(x)) {
-        throw new IllegalArgumentException("Unknown replaceable in equation constraint: " + x);
-      }
-    }
-  }
-
-  /**
-   * Helper function for the constructor.  This ensures that the index is a positive integer.
-   */
-  private void checkIndex() {
-    if (_index <= 0) throw new IllegalArgumentException("Equation " + toString() + " given " +
-      "index " + _index + "; all indexes must be > 0.");
   }
 
   public Term getLhs() {
@@ -109,26 +58,9 @@ public class Equation {
     return _constraint;
   }
 
-  public int getIndex() {
-    return _index;
-  }
-
-  public String getName() {
-    return "E" + getIndex();
-  }
-
   public boolean isConstrained() {
     if (_constraint.toValue() == null) return true;
     return !_constraint.toValue().getBool();
-  }
-
-  /**
-   * Warning: the caller may check the given Renaming and use it for printing and parsing, but
-   * should not modify it, since the internal stored Renaming is returned for this (so changing
-   * it will also affect future calls to getRenaming).
-   */
-  public Renaming getRenaming() {
-    return _varNaming;
   }
 
   /**
@@ -144,39 +76,55 @@ public class Equation {
   /**
    * Replaces the subterm at the given position, assuming that this is indeed a position of the
    * current term and the types match.  Otherwise, throws an appropriate RuntimeException.
-   *
-   * It is required that all Replaceables in the replacement already occur in this equation's
-   * renaming (except for variables that are captured by placing the replacement at the given
-   * position); if not, an IllegalArgumentException will be thrown.
-   *
-   * The newly returned Equation will be given newIndex as its index.
    */
-  public Equation replaceSubterm(EquationPosition pos, Term replacement, int newIndex) {
+  public Equation replaceSubterm(EquationPosition pos, Term replacement) {
     return switch (pos.querySide()) {
       case EquationPosition.Side.Left -> {
         Term l = _lhs.replaceSubterm(pos.queryPosition(), replacement);
-        yield new Equation(l, _rhs, _constraint, newIndex, _varNaming);
+        yield new Equation(l, _rhs, _constraint);
       }
       case EquationPosition.Side.Right -> {
         Term r = _rhs.replaceSubterm(pos.queryPosition(), replacement);
-        yield new Equation(_lhs, r, _constraint, newIndex, _varNaming);
+        yield new Equation(_lhs, r, _constraint);
       }
     };
   }
 
-  /**
+  /** Returns an object that can be conveniently printed to an OutputModule. */
+  public Pair<String,Object[]> getPrintableObject(Renaming renaming) {
+    Pair<Term,Renaming> l = new Pair<Term,Renaming>(_lhs, renaming);
+    Pair<Term,Renaming> r = new Pair<Term,Renaming>(_rhs, renaming);
+    if (isConstrained()) {
+      Pair<Term,Renaming> c = new Pair<Term,Renaming>(_constraint, renaming);
+      return new Pair<String,Object[]>("%a %{approx} %a | %a", new Object[] { l, r, c});
+    }
+    else return new Pair<String,Object[]>("%a %{approx} %a", new Object[] { l, r });
+  }
+
+  /*
    * Only for debugging or testing purposes!
-   * Use cora.rwinduction.tui.Outputter to properly print an Equation.
+   * Use cora.rwinduction.tui.Outputter to properly print an Equation.  (And note that they should
+   * typically be printed with the same Renaming, as given by the EquationContext in which the
+   * Equation lives.)
    */
   public String toString() {
+    TermPrinter printer = new TermPrinter(Set.of());
+    return toString(printer.generateUniqueNaming(_lhs, _rhs, _constraint));
+  }
+
+  /**
+   * Slightly cleverer version of toString that takes an existing renaming into account, but for
+   * printing to the user you really should still be using the Outputter and getPrintableObject
+   * instead!
+   */
+  public String toString(Renaming renaming) {
     StringBuilder builder = new StringBuilder();
     TermPrinter printer = new TermPrinter(Set.of());
-    builder.append("" + _index + ": ");
-    printer.print(_lhs, _varNaming, builder);
+    printer.print(_lhs, renaming, builder);
     builder.append(" ≈ ");
-    printer.print(_rhs, _varNaming, builder);
+    printer.print(_rhs, renaming, builder);
     builder.append(" | ");
-    printer.print(_constraint, _varNaming, builder);
+    printer.print(_constraint, renaming, builder);
     return builder.toString();
   }
 }

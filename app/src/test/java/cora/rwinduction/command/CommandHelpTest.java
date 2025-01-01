@@ -20,21 +20,23 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
 import charlie.util.FixedList;
+import charlie.parser.lib.ParsingStatus;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
-import cora.rwinduction.engine.Equation;
 import cora.rwinduction.engine.PartialProof;
-import cora.rwinduction.parser.ExtendedTermParser;
+import cora.rwinduction.parser.RWParser;
+import cora.rwinduction.parser.EquationParser;
 
 class CommandHelpTest {
   private PartialProof createPP(OutputModule module) {
     TRS trs = CoraInputReader.readTrsFromString(
         "sum1 :: Int -> result\n" +
         "sum2 :: Int -> result\n");
-    Equation eq = ExtendedTermParser.parseEquation("sum1(x) = sum2(x) | x ≥ 0", trs, 9);
-    return new PartialProof(trs, FixedList.of(eq), module.queryTermPrinter());
+    return new PartialProof(trs,
+      EquationParser.parseEquationList("sum1(x) = sum2(x) | x ≥ 0", trs),
+      module.queryTermPrinter());
   }
 
   private CmdList makeCmdList() {
@@ -46,12 +48,22 @@ class CommandHelpTest {
     return lst;
   }
 
+  private boolean runCommand(OutputModule module, String str) {
+    CommandHelp cmd = new CommandHelp(makeCmdList());
+    PartialProof pp = createPP(module);
+    cmd.storeContext(pp, module);
+    ParsingStatus status = RWParser.createStatus(str);
+    status.nextToken(); // :
+    status.nextToken(); // help
+    boolean ret = cmd.execute(status);
+    assertTrue(status.nextToken().isEof());
+    return ret;
+  }
+
   @Test
   public void testHelpPlain() {
-    Command cmd = new CommandHelp(makeCmdList());
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    cmd.storeContext(createPP(module), module);
-    assertTrue(cmd.execute(""));
+    runCommand(module, ":help");
     assertTrue(module.toString().equals(
     "Welcome to the interactive equivalence prover!\n\n" +
     "  To list available commands, use: :help commands\n" +
@@ -60,10 +72,8 @@ class CommandHelpTest {
 
   @Test
   public void testHelpCommands() {
-    Command cmd = new CommandHelp(makeCmdList());
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    cmd.storeContext(createPP(module), module);
-    assertTrue(cmd.execute("commands"));
+    runCommand(module, ": help   commands");
     assertTrue(module.toString().equals(
       "You can use the following commands to interact with the prover:\n\n" +
       "  Prover commands: :help :quit :rules \n" +
@@ -72,10 +82,8 @@ class CommandHelpTest {
 
   @Test
   public void testHelpSingle() {
-    Command cmd = new CommandHelp(makeCmdList());
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    cmd.storeContext(createPP(module), module);
-    assertTrue(cmd.execute(":help"));
+    runCommand(module, ":help : help");
     assertTrue(module.toString().equals(
       ":help: Prints a short description to explain how the prover works.\n\n" +
       "  :help\n" +
@@ -86,14 +94,16 @@ class CommandHelpTest {
   @Test
   public void testBadInvocation() {
     Command cmd = new CommandHelp(makeCmdList());
-    assertThrows(RuntimeException.class, () -> cmd.execute(""));
+    assertThrows(RuntimeException.class, () ->
+      cmd.execute(RWParser.createStatus(":help")));
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     cmd.storeContext(createPP(module), module);
-    assertFalse(cmd.execute("quit"));
+    assertFalse(cmd.execute(RWParser.createStatus("quit")));
     assertTrue(module.toString().equals("Unknown command: quit\n\n"));
     module.clear();
-    assertFalse(cmd.execute("a b"));
-    assertTrue(module.toString().equals("Too many arguments: :help takes 0 or 1\n\n"));
+    assertFalse(cmd.execute(RWParser.createStatus(":quit :help")));
+    assertTrue(module.toString().equals(
+      "Parse error at 1:7: Unexpected argument: :help takes at most 1.\n\n"));
   }
 }
 

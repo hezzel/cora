@@ -19,12 +19,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.Set;
+import java.util.Optional;
 
 import charlie.exceptions.CustomParserException;
-import charlie.util.FixedList;
 import charlie.terms.position.Position;
 import charlie.terms.*;
-import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import charlie.smt.Truth;
@@ -34,10 +33,10 @@ import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
 import cora.io.ParseableTermPrinter;
-import cora.rwinduction.parser.ExtendedTermParser;
+import cora.rwinduction.parser.EquationParser;
 import cora.rwinduction.engine.*;
 
-class ClauseSimplifyTest {
+class DeductionSimplifyTest {
   private TRS setupTRS() {
     return CoraInputReader.readTrsFromString(
       "sum1 :: Int -> Int\n" +
@@ -56,8 +55,8 @@ class ClauseSimplifyTest {
 
   public PartialProof setupProof(String eqdesc) {
     TRS trs = setupTRS();
-    Equation eq = ExtendedTermParser.parseEquation(eqdesc, trs, 17);
-    return new PartialProof(trs, FixedList.of(eq), new TermPrinter(Set.of()));
+    return new PartialProof(trs, EquationParser.parseEquationList(eqdesc, trs),
+                            new TermPrinter(Set.of()));
   }
 
   private class MySmtSolver implements SmtSolver {
@@ -81,15 +80,31 @@ class ClauseSimplifyTest {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
-    ClauseSimplify ds = new ClauseSimplify(pp, module);
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
-    DeductionStep step = ds.createStep("O2", pos, TermFactory.createEmptySubstitution());
+    DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2", pos,
+                                                 TermFactory.createEmptySubstitution()).get();
     ParseableTermPrinter ptp = new ParseableTermPrinter(Set.of());
     assertTrue(step.commandDescription(ptp).equals("simplify O2 L1 with [x := z]"));
     step.explain(module);
-    assertTrue(module.toString().equals("We apply SIMPLIFICATION to E17 with rule O2 and " +
+    assertTrue(module.toString().equals("We apply SIMPLIFICATION to E1 with rule O2 and " +
       "substitution [x := z].\n\n"));
     assertTrue(solver._question == null); // it doesn't get called when just creating the step
+  }
+
+  @Test
+  public void testStepImmutable() {
+    PartialProof pp = setupProof("sum1(z) = iter(z, 0, 0) | z >= 0");
+    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    Substitution empty = TermFactory.createEmptySubstitution();
+    DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O4",
+                                                          EquationPosition.TOPRIGHT, empty).get();
+    empty.extend(TermFactory.createVar("u", CoraInputReader.readType("Int")),
+                 TheoryFactory.createValue(5));
+    ParseableTermPrinter ptp = new ParseableTermPrinter(Set.of());
+    assertTrue(step.commandDescription(ptp).equals("simplify O4 R with [x := z, i := 0, z := 0]"));
+    step.explain(module);
+    assertTrue(module.toString().equals("We apply SIMPLIFICATION to E1 with rule O4 and " +
+      "substitution [i := 0, x := z, z := 0].\n\n"));
   }
 
   @Test
@@ -97,12 +112,13 @@ class ClauseSimplifyTest {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0");
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     MySmtSolver solver = new MySmtSolver(true);
-    ClauseSimplify ds = new ClauseSimplify(pp, module);
-    assertTrue(ds.apply("O3", EquationPosition.TOPRIGHT));
+    DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O3",
+                       EquationPosition.TOPRIGHT, TermFactory.createEmptySubstitution()).get();
+    assertTrue(step.verify(Optional.of(module)));
+    assertTrue(step.execute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
-      "18: sum1(x) ≈ iter(x, 0, 0) | x > 0"));
-    assertTrue(pp.getProofState().getTopEquation().getIndex() == 18);
-    assertTrue(pp.getCommandHistory().get(0).equals("simplify O3 R with [x := x]"));
+      "E2: (• , sum1(x) ≈ iter(x, 0, 0) | x > 0 , •)"));
+    assertTrue(pp.getDeductionHistory().get(0) == step);
     assertTrue(solver._question == null); // it doesn't get called for unconstrained rules
     assertTrue(module.toString().equals(""));
   }
@@ -113,11 +129,12 @@ class ClauseSimplifyTest {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
-    ClauseSimplify ds = new ClauseSimplify(pp, module);
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
-    assertTrue(ds.apply("O2", pos));
+    DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2", pos,
+                                                 TermFactory.createEmptySubstitution()).get();
+    assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
-      "18: z + sum1(z - 1) + 0 ≈ iter(z, 0, 0) | z > 0"));
+      "E2: (• , z + sum1(z - 1) + 0 ≈ iter(z, 0, 0) | z > 0 , •)"));
     assertTrue(solver._question.equals("(0 >= i1) or (i1 >= 1)\n"));
     assertTrue(module.toString().equals(""));
   }
@@ -127,14 +144,18 @@ class ClauseSimplifyTest {
     PartialProof pp = setupProof("input = 7");
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     Settings.smtSolver = new MySimpleSolver();
-    ClauseSimplify ds = new ClauseSimplify(pp, module);
+
     Substitution subst = TermFactory.createEmptySubstitution();
-    Variable x = pp.getRenaming("O6").getVariable("x");
-    Variable y = pp.getRenaming("O6").getVariable("y");
+    Variable x = pp.getContext().getRenaming("O6").getVariable("x");
+    Variable y = pp.getContext().getRenaming("O6").getVariable("y");
     subst.extend(x, TheoryFactory.createValue(-1));
     subst.extend(y, TheoryFactory.createValue(8));
-    assertTrue(ds.apply("O6", EquationPosition.TOPLEFT, subst));
-    assertTrue(pp.getProofState().getTopEquation().toString().equals("18: -1 ≈ 7 | true"));
+
+    DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O6",
+                                                          EquationPosition.TOPLEFT, subst).get();
+    assertTrue(step.verify(Optional.of(module)));
+    assertTrue(step.execute(pp, Optional.of(module)));
+    assertTrue(pp.getProofState().getTopEquation().toString().equals("E2: (• , -1 ≈ 7 | true , •)"));
     assertTrue(pp.getCommandHistory().get(0).equals("simplify O6 L with [x := -1, y := 8]"));
     assertTrue(module.toString().equals(""));
   }
@@ -144,16 +165,21 @@ class ClauseSimplifyTest {
     PartialProof pp = setupProof("input = 7 | z = 7");
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     Settings.smtSolver = new MySimpleSolver();
-    ClauseSimplify ds = new ClauseSimplify(pp, module);
+    Renaming rulenaming = pp.getContext().getRenaming("O6");
+    Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
+
     Substitution subst = TermFactory.createEmptySubstitution();
-    Variable x = pp.getRenaming("O6").getVariable("x");
-    Variable y = pp.getRenaming("O6").getVariable("y");
-    Equation equation = pp.getProofState().getTopEquation();
-    subst.extend(x, equation.getRenaming().getVariable("z"));
+    Variable x = rulenaming.getVariable("x");
+    Variable y = rulenaming.getVariable("y");
+    subst.extend(x, eqnaming.getVariable("z"));
     subst.extend(y, TheoryFactory.createValue(1));
-    assertTrue(ds.apply("O6", EquationPosition.TOPLEFT, subst));
-    assertTrue(pp.getProofState().getTopEquation().toString().equals("18: z ≈ 7 | z = 7"));
-    assertTrue(pp.getCommandHistory().get(0).equals("simplify O6 L with [x := z, y := 1]"));
+
+    DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O6",
+                                                          EquationPosition.TOPLEFT, subst).get();
+    assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
+    assertTrue(pp.getProofState().getTopEquation().toString().equals("E2: (• , z ≈ 7 | z = 7 , •)"));
+    ParseableTermPrinter ptp = new ParseableTermPrinter(Set.of());
+    assertTrue(step.commandDescription(ptp).equals("simplify O6 L with [x := z, y := 1]"));
   }
 
   @Test
@@ -162,16 +188,10 @@ class ClauseSimplifyTest {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
-    ClauseSimplify ds = new ClauseSimplify(pp, module);
-    assertTrue(ds.createStep("O3", EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution())
-      == null);
+    assertTrue(DeductionSimplify.createStep(pp, Optional.of(module), "O3", EquationPosition.TOPLEFT,
+                                            TermFactory.createEmptySubstitution()).isEmpty());
     assertTrue(module.toString().equals(
       "The rule does not apply: constant sum2 is not instantiated by sum1.\n\n"));
-    module.clear();
-    assertFalse(ds.apply("O3", EquationPosition.TOPLEFT));
-    assertTrue(module.toString().equals(
-      "The rule does not apply: constant sum2 is not instantiated by sum1.\n\n"));
-    assertTrue(solver._question == null);
   }
 
   @Test
@@ -180,9 +200,9 @@ class ClauseSimplifyTest {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
-    ClauseSimplify ds = new ClauseSimplify(pp, module);
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1.2"));
-    assertTrue(ds.createStep("O3", pos, TermFactory.createEmptySubstitution()) == null);
+    Substitution empty = TermFactory.createEmptySubstitution();
+    assertTrue(DeductionSimplify.createStep(pp, Optional.of(module), "O3", pos, empty).isEmpty());
     assertTrue(module.toString().equals("No such position: L1.2.\n\n"));
   }
 
@@ -192,14 +212,13 @@ class ClauseSimplifyTest {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
-    ClauseSimplify ds = new ClauseSimplify(pp, module);
-    assertFalse(ds.apply("O6", EquationPosition.TOPLEFT));
+    DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O6",
+                  EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).get();
+    assertFalse(step.verify(Optional.of(module)));
     assertTrue(module.toString().equals(
       "Not enough information given: " +
       "I could not determine the substitution to be used for x, y.\n\n"));
     assertTrue(solver._question == null);
-    Substitution empty = TermFactory.createEmptySubstitution();
-    assertTrue(ds.createStep("O6", EquationPosition.TOPLEFT, empty) != null);
   }
 
   @Test
@@ -208,12 +227,17 @@ class ClauseSimplifyTest {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
-    ClauseSimplify ds = new ClauseSimplify(pp, module);
-    assertFalse(ds.apply("O2", EquationPosition.TOPLEFT));
+    DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2",
+                  EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).get();
+    assertFalse(step.verify(Optional.of(module)));
     assertTrue(module.toString().equals("The rule does not apply: " +
       "constraint variable x is instantiated by z + 1, which is not a value, " +
       "nor a variable in the constraint of the equation.\n\n"));
     assertTrue(solver._question == null);
+    // we CAN execute it even if we shouldn't, though!
+    assertTrue(step.execute(pp, Optional.of(module)));
+    assertTrue(pp.getProofState().getTopEquation().toString().equals(
+      "E2: (• , z + 1 + sum1(z + 1 - 1) ≈ iter(z + 1, 0, 0) | z ≥ 0 , •)"));
   }
 
   @Test
@@ -221,10 +245,12 @@ class ClauseSimplifyTest {
     PartialProof pp = setupProof("sum1(z) = iter(z, 0, 0) | z >= 0");
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     Settings.smtSolver = new MySimpleSolver();
-    ClauseSimplify ds = new ClauseSimplify(pp, module);
-    assertFalse(ds.apply("O2", EquationPosition.TOPLEFT));
+    DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2",
+      EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).get();
+    assertFalse(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(module.toString().equals(
       "The rule does not apply: I could not prove that z ≥ 0 ⊨ z > 0.\n\n"));
+    assertTrue(pp.getProofState() == step.getOriginalState());
   }
 
   @Test
@@ -233,30 +259,12 @@ class ClauseSimplifyTest {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     MySmtSolver solver = new MySmtSolver(false);
     Settings.smtSolver = solver;
-    ClauseSimplify ds = new ClauseSimplify(pp, module);
-    assertTrue(ds.apply("O7", EquationPosition.TOPRIGHT));
-    Equation equation = pp.getProofState().getTopEquation();
-    assertTrue(equation.toString().equals("18: 0 ≈ 0 | x < 0"));
-    assertTrue(equation.getRenaming().getReplaceable("z") == null);
-  }
-
-  @Test
-  public void testStep() {
-    PartialProof pp = setupProof("sum1(z) = iter(z, 0, 0) | z >= 0");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
-    Settings.smtSolver = new MySimpleSolver();
-    ClauseSimplify ds = new ClauseSimplify(pp, module);
-    Substitution empty = TermFactory.createEmptySubstitution();
-    DeductionStep step = ds.createStep("O4", EquationPosition.TOPRIGHT, empty);
-    // ensure that adapting the substitution afterwards doesn't affect the step
-    empty.extend(TermFactory.createVar("u", CoraInputReader.readType("Int")),
-                 TheoryFactory.createValue(5));
-    ParseableTermPrinter ptp = new ParseableTermPrinter(Set.of());
-    assertTrue(step.commandDescription(ptp).equals("simplify O4 R with [x := z, i := 0, z := 0]"));
-    assertTrue(module.toString().equals(""));
-    step.explain(module);
-    assertTrue(module.toString().equals("We apply SIMPLIFICATION to E17 with rule O4 and " +
-      "substitution [i := 0, x := z, z := 0].\n\n"));
+    DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O7",
+      EquationPosition.TOPRIGHT, TermFactory.createEmptySubstitution()).get();
+    assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
+    EquationContext ec = pp.getProofState().getTopEquation();
+    assertTrue(ec.toString().equals("E2: (• , 0 ≈ 0 | x < 0 , •)"));
+    assertTrue(ec.getRenaming().getReplaceable("z") == null);
   }
 }
 
