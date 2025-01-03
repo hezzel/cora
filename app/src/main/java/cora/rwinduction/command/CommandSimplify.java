@@ -18,18 +18,13 @@ package cora.rwinduction.command;
 import java.util.Optional;
 
 import charlie.exceptions.CustomParserException;
-import charlie.exceptions.ParseException;
 import charlie.util.FixedList;
-import charlie.parser.lib.Token;
-import charlie.parser.lib.ParsingStatus;
-import charlie.parser.CoraTokenData;
 import charlie.terms.Renaming;
 import charlie.terms.Substitution;
 import charlie.terms.TermFactory;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.deduction.DeductionSimplify;
-import cora.rwinduction.parser.EquationPositionParser;
-import cora.rwinduction.parser.SubstitutionParser;
+import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command simplify. */
 public class CommandSimplify extends Command {
@@ -55,84 +50,92 @@ public class CommandSimplify extends Command {
            "command instead.";
   }
 
-  /** Main functionality of run, separated out for the sake of unit testing. */
-  Optional<DeductionSimplify> createStep(ParsingStatus status) {
-    // get ruleName (which is a valid rule)
-    String ruleName = readRuleName(status);
-    if (ruleName == null) return Optional.empty();
-
-    // get position (a valid equation position)
-    EquationPosition pos = readEquationPos(status);
-    if (pos == null) return Optional.empty();
-
-    // get substitution
-    Substitution subst = readSubstitution(status, ruleName);
-    if (subst == null) return Optional.empty();
-
-    return DeductionSimplify.createStep(_proof, Optional.of(_module), ruleName, pos, subst);
-  }
-
-  protected boolean run(ParsingStatus status) {
-    Optional<DeductionSimplify> step = createStep(status);
+  protected boolean run(CommandParsingStatus input) {
+    Optional<DeductionSimplify> step = createStep(input);
     if (step.isEmpty()) return false;
     return step.get().verifyAndExecute(_proof, Optional.of(_module));
   }
 
+  /** Main functionality of run, separated out for the sake of unit testing. */
+  Optional<DeductionSimplify> createStep(CommandParsingStatus input) {
+    // get ruleName (which is a valid rule)
+    String ruleName = readRuleName(input);
+    if (ruleName == null) return Optional.empty();
+
+    // get position (a valid equation position)
+    String arg = input.nextWord();
+    EquationPosition pos = readEquationPos(arg);
+    if (pos == null) return Optional.empty();
+
+    // get substitution
+    Substitution subst;
+    if (arg != null && !arg.equals("with")) arg = input.nextWord();
+    if (arg == null) subst = TermFactory.createEmptySubstitution();
+    else if (!arg.equals("with")) {
+      _module.println("Unexpected argument at position %a: expected \"with\" or end of command, " +
+        "but got %a.", input.previousPosition(), arg);
+      return Optional.empty();
+    }
+    else {
+      subst = readSubstitution(input, ruleName);
+      if (subst == null) return Optional.empty();
+    }
+
+    // we should end after this
+    if (!input.commandEnded()) {
+      _module.println("Unexpected argument at position %a: expected end of command.",
+        input.currentPosition());
+      return Optional.empty();
+    }
+
+    return DeductionSimplify.createStep(_proof, Optional.of(_module), ruleName, pos, subst);
+  }
+
   /**
-   * Helper function for run: this reads an identifier from the parsing status, checks that it's a
-   * valid rule, and if so, returns it.  If not, either a ParseException is thrown or an error
-   * message printed and null returned.
+   * Helper function for run / createStep: this reads an identifier from the input, checks that
+   * it's a valid rule, and if so, returns it.  If not, an error message is printed and null is
+   * returned.
    */
-  private String readRuleName(ParsingStatus status) {
-    Token tok = status.expect(CoraTokenData.IDENTIFIER, "a rule name");
-    if (tok == null) return null;
-    String txt = tok.getText();
-    if (_proof.getContext().hasRule(txt)) return txt;
-    _module.println("Nu such rule: " + txt);
+  private String readRuleName(CommandParsingStatus input) {
+    String txt = input.nextWord();
+    if (txt != null && _proof.getContext().hasRule(txt)) return txt;
+    if (txt == null) _module.println("Simplify should be invoked with at least 1 argument.");
+    else _module.println("No such rule: " + txt);
     return null;
   }
 
   /**
-   * Helper function for run: this reads an equation position from the given parsing status, parses
-   * it into an EquationPosition type, and returns the result.  If reading fails, then null is
-   * returned and an appropriate error message given (or: a ParseException).
-   * If no position is given, then the default position (TOPLEFT) is returned.
+   * Helper function for run / createStep: this parses the given string as an equation position --
+   * provided it is not "with" -- and returns the result.  If reading fails, then null is returned
+   * and an appropriate error message printed.
+   * If input is null or "with", then the default position (TOPLEFT) is returned.
    */
-  private EquationPosition readEquationPos(ParsingStatus status) {
-    if (status.peekNext().getText().equals("with") || commandEnds(status)) {
-      return EquationPosition.TOPLEFT;
-    }
+  private EquationPosition readEquationPos(String input) {
+    if (input == null || input.equals("with")) return EquationPosition.TOPLEFT;
     try {
-      EquationPosition ret = EquationPositionParser.readPosition(status);
-      if (ret == null) {
-        status.storeError("Unexpected argument: expected a valid position (or \"with\").",
-                          status.peekNext());
-      }
-      return ret;
+      EquationPosition ret = EquationPosition.parse(input);
+      if (ret != null) return ret;
+      _module.println("Unexpected argument %a: I expected a valid position " +
+        "(or \"with\").\n\n", input);
     }
     catch (CustomParserException e) {
-      _module.println("%a", e);
-      return null;
+      _module.println("Illegal position %a: %a", input, e);
     }
+    return null;
   }
 
-  private Substitution readSubstitution(ParsingStatus status, String ruleName) {
-    if (commandEnds(status)) return TermFactory.createEmptySubstitution();
-    Token tok = status.expect(CoraTokenData.IDENTIFIER, "\"with\" or end of command");
-    if (tok == null) return null;
-    if (!tok.getText().equals("with")) {
-      status.storeError("Expected \"with\" or end of command, but got \"" + tok.getText() +
-        "\"", tok);
-      return null;
-    }
+  /**
+   * Given that CommandParsingStatus *should* point to the start of a substitution, parses and
+   * returns the substitution, or prints an error message and returns null.
+   */
+  private Substitution readSubstitution(CommandParsingStatus input, String ruleName) {
     if (_proof.getProofState().isFinalState()) {
       _module.println("The proof state is empty; there is nothing to simplify.");
       return null;
     }
     Renaming keyNames = _proof.getContext().getRenaming(ruleName);
     Renaming valueNames = _proof.getProofState().getTopEquation().getRenaming();
-    return SubstitutionParser.parseSubstitution(status, _proof.getContext().getTRS(),
-                                                keyNames, valueNames);
+    return input.readSubstitution(_proof.getContext().getTRS(), keyNames, valueNames, _module);
   }
 }
 

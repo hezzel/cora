@@ -22,14 +22,13 @@ import java.util.Set;
 import charlie.util.FixedList;
 import charlie.terms.TheoryFactory;
 import charlie.parser.lib.ParsingStatus;
-import charlie.parser.CoraParser;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
 import cora.rwinduction.engine.EquationContext;
 import cora.rwinduction.engine.PartialProof;
-import cora.rwinduction.parser.RWParser;
+import cora.rwinduction.parser.CommandParsingStatus;
 import cora.rwinduction.parser.EquationParser;
 
 class CommandRulesTest {
@@ -56,9 +55,8 @@ class CommandRulesTest {
     EquationContext ec = EquationParser.parseEquationData("sum1(x) = sum2(x) | x ≥ 0", trs, 1);
     PartialProof proof = new PartialProof(trs, FixedList.of(ec), module.queryTermPrinter());
     cmd.storeContext(proof, module);
-    ParsingStatus status = RWParser.createStatus(str);
-    status.nextToken(); // :
-    status.nextToken(); // rules
+    CommandParsingStatus status = new CommandParsingStatus(str);
+    status.nextWord(); // :rules
     return cmd.execute(status);
   }
 
@@ -111,19 +109,28 @@ class CommandRulesTest {
   }
 
   @Test
+  public void testPrintCalculationSymbolWithoutBrackets() {
+    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    assertTrue(runCommand(module, ":rules +"));
+    assertTrue(module.toString().equals(
+      "There are no rules with [+] as root symbol.\n\n" +
+      "The calculation rule for this symbol is: x1 + x2 → z | z = x1 + x2 .\n\n"));
+  }
+
+  @Test
   public void testParseTwoArguments() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     assertFalse(runCommand(module, ":rules sum1 +"));
     assertTrue(module.toString().equals(
-      "Parse error at 1:13: Too many arguments: :rules takes 0 or 1.\n\n"));
+      "Unexpected argument at position 13: :rules takes at most 1 argument.\n\n"));
   }
 
   @Test
   public void testParseUnknownArgument() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     assertFalse(runCommand(module, ":rules sum3"));
-    assertTrue(module.toString().equals("Parse error at 1:8: Undeclared symbol: sum3.  " +
-      "Type cannot easily be deduced from context.\n\n"));
+    assertTrue(module.toString().equals("Parsing error at position 8: " +
+      "Undeclared symbol: sum3.  Type cannot easily be deduced from context.\n\n"));
   }
 
   @Test
@@ -131,7 +138,7 @@ class CommandRulesTest {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     assertFalse(runCommand(module, ":rules [and]"));
     assertTrue(module.toString().equals(
-      "Parse error at 1:9: Expected infix symbol but got IDENTIFIER (and)\n\n"));
+      "Parsing error at position 9: Expected infix symbol but got IDENTIFIER (and)\n\n"));
   }
 }
 

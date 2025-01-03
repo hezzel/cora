@@ -16,7 +16,7 @@
 package cora.rwinduction.command;
 
 import charlie.util.FixedList;
-import charlie.parser.lib.ParsingStatus;
+import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The environment command :quit, which allows the user to end the interactive process. */
 public class CommandQuit extends Command {
@@ -37,8 +37,8 @@ public class CommandQuit extends Command {
   }
 
   @Override
-  protected boolean run(ParsingStatus status) {
-    if (!commandEnds(status)) return failure(":quit should be invoked without arguments");
+  protected boolean run(CommandParsingStatus status) {
+    if (!status.commandEnded()) return failure(":quit should be invoked without arguments");
     _proof.abort();
     return true;
   }

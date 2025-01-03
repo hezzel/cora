@@ -76,6 +76,24 @@ public class Token {
     return _text;
   }
 
+  /** Returns the file from which this token was read. */
+  public String getFile() {
+    return _position.getFile();
+  }
+
+  /** Returns the line from which this token was read. */
+  public int getLine() {
+    return _position.getLine();
+  }
+
+  /**
+   * Returns the column (x position in the line) at which the first character of this token
+   * occurred.
+   */
+  public int getColumn() {
+    return _position.getPosition();
+  }
+
   /** Returns a copy of this token, but with getText() updated to return the given text. */
   public Token updateText(String newtext) {
     return new Token(_position, _name, newtext);

@@ -22,8 +22,6 @@ import java.util.Set;
 
 import charlie.util.FixedList;
 import charlie.terms.TheoryFactory;
-import charlie.parser.lib.ParsingStatus;
-import charlie.parser.CoraParser;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
@@ -31,8 +29,8 @@ import cora.io.DefaultOutputModule;
 import cora.rwinduction.engine.EquationContext;
 import cora.rwinduction.engine.PartialProof;
 import cora.rwinduction.engine.deduction.DeductionSimplify;
-import cora.rwinduction.parser.RWParser;
 import cora.rwinduction.parser.EquationParser;
+import cora.rwinduction.parser.CommandParsingStatus;
 
 class CommandSimplifyTest {
   private TRS setupTRS() {
@@ -59,8 +57,8 @@ class CommandSimplifyTest {
       EquationParser.parseEquationData("sum1(z) = add(y,sum2(z)) | z ≥ 0 ∧ y < 0", trs, 1);
     PartialProof proof = new PartialProof(trs, FixedList.of(ec), module.queryTermPrinter());
     cmd.storeContext(proof, module);
-    ParsingStatus status = RWParser.createStatus(str);
-    status.nextToken(); // simplify
+    CommandParsingStatus status = new CommandParsingStatus(str);
+    status.nextWord(); // simplify
     return cmd.createStep(status);
   }
 
@@ -71,8 +69,8 @@ class CommandSimplifyTest {
       EquationParser.parseEquationData("sum1(z) = add(y,sum2(z)) | z ≥ 0 ∧ y < 0", trs, 1);
     PartialProof proof = new PartialProof(trs, FixedList.of(ec), module.queryTermPrinter());
     cmd.storeContext(proof, module);
-    ParsingStatus status = RWParser.createStatus(str);
-    status.nextToken(); // simplify
+    CommandParsingStatus status = new CommandParsingStatus(str);
+    status.nextWord(); // simplify
     return cmd.execute(status);
   }
 
@@ -94,12 +92,11 @@ class CommandSimplifyTest {
   public void testNonExistingRule() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     assertTrue(createStep(module, "simplify R19 R.2").isEmpty());
-    assertTrue(module.toString().equals("Nu such rule: R19\n\n"));
+    assertTrue(module.toString().equals("No such rule: R19\n\n"));
 
     module.clear();
     assertFalse(execute(module, "simplify 5 R.2"));
-    assertTrue(module.toString().equals("Parse error at 1:10: Expected a " +
-      "rule name but got INTEGER (5).\n\n"));
+    assertTrue(module.toString().equals("No such rule: 5\n\n"));
   }
 
   @Test
@@ -121,8 +118,16 @@ class CommandSimplifyTest {
   public void testOmitWith() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     assertFalse(execute(module, "simplify O5 R.2 [x:=z]"));
-    assertTrue(module.toString().equals("Parse error at 1:17: Expected \"with\" or end of " +
-      "command but got METAOPEN ([).\n\n"));
+    assertTrue(module.toString().equals("Unexpected argument at position 17: expected \"with\" " +
+      "or end of command, but got [x:=z].\n\n"));
+  }
+
+  @Test
+  public void testTextAfterSubstitution() {
+    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    assertTrue(createStep(module, "simplify O1 with [x:=z] o").isEmpty());
+    assertTrue(module.toString().equals("Unexpected argument at position 25: " +
+      "expected end of command.\n\n"));
   }
 }
 

@@ -17,13 +17,10 @@ package cora.rwinduction.command;
 
 import java.util.Optional;
 
-import charlie.exceptions.ParseException;
-import charlie.util.Pair;
 import charlie.util.FixedList;
-import charlie.parser.lib.ParsingStatus;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.PartialProof;
-import cora.rwinduction.parser.RWParser;
+import cora.rwinduction.parser.CommandParsingStatus;
 
 /**
  * A Command is an action that the user can call within the interactive prover.
@@ -72,46 +69,34 @@ public abstract class Command {
   public abstract String helpDescriptor();
 
   /**
-   * Given that status represents the parsing status of reading a command AFTER having read the
-   * command name that corresponds to the current command, this continues parsing the input.  If
-   * the input indeed describes a correct invocation of the current Command, it executes the
-   * Command.  If it does not, the underlying OutputModule is updated with a description why the
-   * command failed, both if it's a syntax failure or if the command defines a deduction rule that
-   * is not applicable.  The return value indicates whether the invocation was succesful or not.
+   * Given that input represents the input given by the user, with reader head pointed just after
+   * the command name (which must necessarily correspond to the current command), this continues
+   * parsing the input.  If the input indeed describes a correct invocation of the current Command,
+   * it executes the Command.  If it does not, the underlying OutputModule is updated with a
+   * description why the command failed, both if it's a syntax failure or if the command defines a
+   * deduction rule that is not applicable.  The return value indicates whether the invocation was
+   * succesful or not.
    *
    * Note: the context (PartialProof and OutputModule) MUST be set before calling execute; otherwise
    * a RuntimeException will be thrown.
    *
-   * Note: when the user invokes <command> <args>, this function should be called with status
-   * pointing at the <args> parts.
+   * Usage note: when the user invokes <command> <args>, this function should be called with
+   * input a command status representing the full string, but reader head pointed at the <args>
+   * part.
    */
-  public final boolean execute(ParsingStatus status) {
+  public final boolean execute(CommandParsingStatus input) {
     if (_proof == null || _module == null) {
       throw new RuntimeException("Command " + queryName() + " was called without the context " +
         "being set!");
     }
-    try { return run(status); }
-    catch (ParseException e) {
-      _module.println("Parse error at %a", e.getMessage().trim());
-      return false;
-    }
+    return run(input);
   }
 
   /**
    * All inheriting classes should implement this.  This method implements the execute function,
-   * and may assume that _proof and _module have already been set.  It is perfectly okay for run
-   * to ignore ParseExceptions; these will be caught and printed by execute.
+   * and may assume that _proof and _module have already been set.
    */
-  protected abstract boolean run(ParsingStatus status);
-
-  /**
-   * Helper function for inheriting classes: this returns whether the status is currently pointing
-   * to the end of a command (i.e., the next token is EOF).
-   */
-  protected final boolean commandEnds(ParsingStatus status) {
-    return status.peekNext().isEof() ||
-           status.peekNext().getName().equals(RWParser.SEPARATOR);
-  }
+  protected abstract boolean run(CommandParsingStatus input);
 
   /**
    * Helper function for inheriting classes: prints the given message to the underlying output
