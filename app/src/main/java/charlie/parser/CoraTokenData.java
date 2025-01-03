@@ -18,6 +18,7 @@ package charlie.parser;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.function.Function;
 import charlie.parser.lib.*;
 
 /**
@@ -211,14 +212,19 @@ public class CoraTokenData {
   /**
    * Returns a TokenQueue for the given string, which accepts both the constrained tokens and the
    * given list of additional tokens.  These are considered a top priority in the token list.
+   * Moreover, the given function is applied to the resulting base lexer to allow it to make
+   * potential changes.
    */
-  public static TokenQueue getUpdatedConstrainedStringLexer(String text, String ... extraTokens) {
+  public static TokenQueue getUpdatedConstrainedStringLexer(String text,
+                                                            Function<Lexer,Lexer> lexerChanger,
+                                                            String ... extraTokens) {
     ArrayList<String> tmp = new ArrayList<String>();
     Collections.addAll(tmp, extraTokens);
     Collections.addAll(tmp, shared);
     Collections.addAll(tmp, ctokens);
     String[] toks = tmp.toArray(new String[tmp.size()]);
-    return setupLexer(LexerFactory.createStringLexer(toks, text), true);
+    Lexer lexer = LexerFactory.createStringLexer(toks, text);
+    return setupLexer(lexerChanger.apply(lexer), true);
   }
 
   /**
