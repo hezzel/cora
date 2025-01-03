@@ -15,8 +15,7 @@
 
 package cora.rwinduction.parser;
 
-import charlie.parser.lib.TokenQueue;
-import charlie.parser.lib.ParsingStatus;
+import charlie.parser.lib.*;
 import charlie.parser.Parser.*;
 import charlie.parser.CoraTokenData;
 import charlie.trs.TRS;
@@ -53,18 +52,37 @@ public class RIParser {
    * To this end, we set up special tokens, and a parser that does not tolerate any errors.
    */
   public static ParsingStatus createStatus(String str) {
-    str = str.replace("≈", " ≈ ")
-             .replace(";", " ; ");
-
     String positionItem = "((-|!)?[0-9]+)";
 
     TokenQueue queue = CoraTokenData.getUpdatedConstrainedStringLexer(str,
+        lexer -> new SplitApproxAndSeparatorLexer(lexer),
         "≈",    APPROX,
         "-><-", APPROX,
         ":=",   ASSIGN,
         ";",    SEPARATOR
       );
     return new ParsingStatus(queue, 1);
+  }
+
+  private static class SplitApproxAndSeparatorLexer extends TokenEditLexer {
+    SplitApproxAndSeparatorLexer(Lexer lexer) { super(lexer, CoraTokenData.IDENTIFIER); }
+    protected void modifyToken(Token token) throws LexerException {
+      String txt = token.getText();
+      int start = 0;
+      while (start < txt.length()) {
+        int best = txt.length();
+        String bestKind = null;
+        int a = txt.indexOf('≈', start);
+        int b = txt.indexOf(';', start);
+        if (a != -1) { best = a; bestKind = APPROX; }
+        if (b != -1 && b < best) { best = b; bestKind = SEPARATOR; }
+        if (best > start || bestKind == null) {
+          storeToken(token, start, CoraTokenData.IDENTIFIER, txt.substring(start, best));
+        }
+        if (bestKind != null) storeToken(token, best, bestKind, txt.substring(best, best+1));
+        start = best + 1;
+      }
+    }
   }
 }
 
