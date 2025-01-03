@@ -19,15 +19,13 @@ import charlie.util.Pair;
 import charlie.util.FixedList;
 import charlie.types.Type;
 import charlie.types.Arrow;
-import charlie.parser.lib.ParsingStatus;
-import charlie.parser.CoraParser;
-import charlie.parser.Parser.ParserTerm;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.rwinduction.engine.ProofContext;
 import cora.rwinduction.engine.PartialProof;
+import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The environment command :rules, which prints all or a specific subset of rules to the user. */
 public class CommandRules extends Command {
@@ -48,24 +46,22 @@ public class CommandRules extends Command {
   }
 
   @Override
-  protected boolean run(ParsingStatus status) {
-    if (commandEnds(status)) {  // syntax: :rules
+  protected boolean run(CommandParsingStatus input) {
+    // syntax: :rules
+    if (input.commandEnded()) {
       printAllMatchingRules(null);
       return true;
     }
     // remaining syntax option: :rules <function symbol>
-    ParserTerm pterm = CoraParser.readSingleSymbol(status);
-    Renaming renaming = new Renaming(_proof.getContext().getTRS().queryFunctionSymbolNames());
-    Term fterm = CoraInputReader.readTerm(pterm, renaming, false, _proof.getContext().getTRS());
-    if (!fterm.isConstant()) {
-      return failure("Argument to :rules should be a single function symbol");
-    }
-    if (!commandEnds(status)) {
-      status.storeError("Too many arguments: :rules takes 0 or 1.", status.nextToken());
+    FunctionSymbol f = input.readSymbol(_proof.getContext().getTRS(), _module);
+    if (f == null) return false;  // an error has already been printed
+    if (!input.commandEnded()) {
+      _module.println("Unexpected argument at position %a: :rules takes at most 1 argument.",
+        input.currentPosition());
       return false;
     }
-    printAllMatchingRules(fterm.queryRoot());
-    printCalculationRule(fterm.queryRoot());
+    printAllMatchingRules(f);
+    printCalculationRule(f);
     return true;
   }
 

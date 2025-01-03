@@ -16,8 +16,7 @@
 package cora.rwinduction.command;
 
 import charlie.util.FixedList;
-import charlie.parser.lib.ParsingStatus;
-import cora.rwinduction.parser.CommandParser;
+import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The environment command :syntax, which provides invocation information for a given command. */
 public class CommandSyntax extends Command {
@@ -44,10 +43,13 @@ public class CommandSyntax extends Command {
   }
 
   @Override
-  protected boolean run(ParsingStatus status) {
-    String cmdname = CommandParser.parseCommand(status);
-    if (!commandEnds(status)) return failure("Too many arguments: :syntax takes only a command.");
-    Command cmd = cmdname.equals("") ? this : _clist.queryCommand(cmdname);
+  protected boolean run(CommandParsingStatus input) {
+    String cmdname = input.nextWord();
+    if (!input.commandEnded()) {
+      _module.println("Unexpected argument at position %a: :syntax takes at most 1 argument.",
+                      input.currentPosition());
+    }
+    Command cmd = cmdname == null ? this : _clist.queryCommand(cmdname);
     if (cmd == null) return failure("Unknown command: " + cmdname);
     _module.println("Syntax for the command %a:", cmd.queryName());
     _module.startTable();

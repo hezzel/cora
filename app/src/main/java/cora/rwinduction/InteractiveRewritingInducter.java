@@ -17,20 +17,16 @@ package cora.rwinduction;
 
 import java.util.List;
 
-import charlie.exceptions.ParseException;
 import charlie.util.FixedList;
-import charlie.parser.lib.Token;
-import charlie.parser.lib.ParsingStatus;
-import charlie.parser.CoraTokenData;
 import charlie.trs.TRS;
 import charlie.trs.TrsProperties.*;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.rwinduction.engine.EquationContext;
 import cora.rwinduction.engine.PartialProof;
-import cora.rwinduction.parser.RWParser;
+import cora.rwinduction.parser.RIParser;
 import cora.rwinduction.parser.EquationParser;
-import cora.rwinduction.parser.CommandParser;
+import cora.rwinduction.parser.CommandParsingStatus;
 import cora.rwinduction.command.*;
 import cora.rwinduction.tui.*;
 
@@ -120,35 +116,30 @@ public class InteractiveRewritingInducter {
       return "The TRS does not satisfy the requirements to apply rewriting induction: " +
         "(a simply-typed LCSTRS with left-hand sides being functional terms).";
     }
-    return RWParser.checkTrs(trs);
+    return RIParser.checkTrs(trs);
   }
 
   private ProofObject proveEquivalence() {
     while (!_proof.isDone()) {
       _output.println("Top equation: %a", _proof.getProofState().getTopEquation());
       _output.flush();
-      ParsingStatus status = RWParser.createStatus(_input.readLine());
-      try {
-        while (!status.peekNext().isEof()) {
-          String cmdname = CommandParser.parseCommand(status);
-          if (cmdname.equals("")) {
-            while (status.readNextIf(RWParser.SEPARATOR) != null);
-            continue;
-          }
-          Command cmd = _cmdList.queryCommand(cmdname);
-          if (cmd == null) {
-            _output.println("Unknown command: %a.  Use \":help commands\" to list available " +
-            "commands.", cmdname);
-            break;
-          }
-          else if (!cmd.execute(status)) break;
-          if (status.readNextIf(RWParser.SEPARATOR) == null) {
-            status.expect(Token.EOF, "Semi-colon or end of line");
-          }
+      CommandParsingStatus status = new CommandParsingStatus(_input.readLine());
+      while (!status.done()) {
+        while (status.skipSeparator());   // read past ; if there is one
+        String cmdname = status.nextWord();
+        Command cmd = _cmdList.queryCommand(cmdname);
+        if (cmd == null) {
+          _output.println("Unknown command: %a.  Use \":help commands\" to list available " +
+          "commands.", cmdname);
+          break;
         }
-      }
-      catch (ParseException e) {
-        _output.println("%a", e.getMessage());
+        else if (!cmd.execute(status)) break;
+        if (!status.commandEnded()) {
+          int pos = status.currentPosition();
+          _output.println("Unexpected token %a at position %a: expected a semi-colon or the " +
+            "end of the line.", status.nextWord(), pos);
+          break;
+        }
       }
     }
     return new RewritingInductionProof(_proof);

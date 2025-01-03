@@ -20,13 +20,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
 import charlie.util.FixedList;
-import charlie.parser.lib.ParsingStatus;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
 import cora.rwinduction.engine.PartialProof;
-import cora.rwinduction.parser.RWParser;
+import cora.rwinduction.parser.CommandParsingStatus;
 import cora.rwinduction.parser.EquationParser;
 
 class CommandHelpTest {
@@ -52,11 +51,10 @@ class CommandHelpTest {
     CommandHelp cmd = new CommandHelp(makeCmdList());
     PartialProof pp = createPP(module);
     cmd.storeContext(pp, module);
-    ParsingStatus status = RWParser.createStatus(str);
-    status.nextToken(); // :
-    status.nextToken(); // help
+    CommandParsingStatus status = new CommandParsingStatus(str);
+    status.nextWord();  // skip past :help
     boolean ret = cmd.execute(status);
-    assertTrue(status.nextToken().isEof());
+    assertTrue(status.commandEnded());
     return ret;
   }
 
@@ -73,7 +71,7 @@ class CommandHelpTest {
   @Test
   public void testHelpCommands() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    runCommand(module, ": help   commands");
+    runCommand(module, ":help   commands");
     assertTrue(module.toString().equals(
       "You can use the following commands to interact with the prover:\n\n" +
       "  Prover commands: :help :quit :rules \n" +
@@ -83,7 +81,7 @@ class CommandHelpTest {
   @Test
   public void testHelpSingle() {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
-    runCommand(module, ":help : help");
+    runCommand(module, ":help :help");
     assertTrue(module.toString().equals(
       ":help: Prints a short description to explain how the prover works.\n\n" +
       "  :help\n" +
@@ -94,16 +92,14 @@ class CommandHelpTest {
   @Test
   public void testBadInvocation() {
     Command cmd = new CommandHelp(makeCmdList());
-    assertThrows(RuntimeException.class, () ->
-      cmd.execute(RWParser.createStatus(":help")));
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     cmd.storeContext(createPP(module), module);
-    assertFalse(cmd.execute(RWParser.createStatus("quit")));
+    assertFalse(cmd.execute(new CommandParsingStatus("quit")));
     assertTrue(module.toString().equals("Unknown command: quit\n\n"));
     module.clear();
-    assertFalse(cmd.execute(RWParser.createStatus(":quit :help")));
+    assertFalse(cmd.execute(new CommandParsingStatus(":quit :help")));
     assertTrue(module.toString().equals(
-      "Parse error at 1:7: Unexpected argument: :help takes at most 1.\n\n"));
+      "Unexpected argument at position 7: :help takes at most 1 argument.\n\n"));
   }
 }
 

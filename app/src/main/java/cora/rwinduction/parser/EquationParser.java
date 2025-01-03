@@ -32,7 +32,7 @@ import cora.rwinduction.engine.Equation;
 import cora.rwinduction.engine.EquationContext;
 
 /**
- * The EquationParser uses the RWParser to parse (and read) Equations.
+ * The EquationParser uses the RIParser to parse (and read) Equations.
  */
 public class EquationParser {
   /**
@@ -42,7 +42,7 @@ public class EquationParser {
    * @throws charlie.exceptions.ParseException
    */
   public static Pair<Equation,Renaming> parseEquation(String str, TRS trs) {
-    ParsingStatus status = RWParser.createStatus(str);
+    ParsingStatus status = RIParser.createStatus(str);
     Pair<Equation,Renaming> ret = parseEquation(status, trs);
     status.expect(Token.EOF, "end of input");
     return ret;
@@ -55,7 +55,7 @@ public class EquationParser {
    * @throws charlie.exceptions.ParseException
    */
   public static EquationContext parseEquationData(String str, TRS trs, int index) {
-    ParsingStatus status = RWParser.createStatus(str);
+    ParsingStatus status = RIParser.createStatus(str);
     Pair<Equation,Renaming> pair = parseEquation(status, trs);
     EquationContext ret = new EquationContext(pair.fst(), index, pair.snd());
     status.expect(Token.EOF, "end of input");
@@ -71,12 +71,12 @@ public class EquationParser {
    * @throws charlie.exceptions.ParseException
    */
   public static FixedList<EquationContext> parseEquationList(String str, TRS trs) {
-    ParsingStatus status = RWParser.createStatus(str);
+    ParsingStatus status = RIParser.createStatus(str);
     FixedList.Builder<EquationContext> ret = new FixedList.Builder<EquationContext>();
     for (int index = 1; ; index++) {
       Pair<Equation,Renaming> pair = parseEquation(status, trs);
       ret.add(new EquationContext(pair.fst(), index, pair.snd()));
-      if (status.readNextIf(RWParser.SEPARATOR) == null) {
+      if (status.readNextIf(RIParser.SEPARATOR) == null) {
         status.expect(Token.EOF, "semi-colon or end of input");
       }
       if (status.peekNext().isEof()) return ret.build();
@@ -92,7 +92,7 @@ public class EquationParser {
   public static Pair<Equation,Renaming> parseEquation(ParsingStatus status, TRS trs) {
     ParserTerm left, right = null, constr = null;
     left = CoraParser.readTerm(status);
-    if (status.readNextIf(RWParser.APPROX) != null) right = CoraParser.readTerm(status);
+    if (status.readNextIf(RIParser.APPROX) != null) right = CoraParser.readTerm(status);
     else if (left instanceof Application(Token tok1, ParserTerm head,
                                          ImmutableList<ParserTerm> args) &&
              head instanceof CalcSymbol(Token tok2, String name) &&

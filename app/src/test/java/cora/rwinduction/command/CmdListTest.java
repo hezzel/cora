@@ -20,11 +20,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
 import charlie.util.FixedList;
-import charlie.parser.lib.ParsingStatus;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.PartialProof;
+import cora.rwinduction.parser.CommandParsingStatus;
 
 class CmdListTest {
   private PartialProof _proof = null;
@@ -50,7 +50,7 @@ class CmdListTest {
     public String queryName() { return _name; }
     public FixedList<String> callDescriptor() { return FixedList.of(_name); }
     public String helpDescriptor() { return ""; }
-    protected boolean run(ParsingStatus status) { return false; }
+    protected boolean run(CommandParsingStatus status) { return false; }
   }
 
   private MyCommand mcmd(String name) { return new MyCommand(_proof, _module, name); }

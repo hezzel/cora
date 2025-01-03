@@ -18,8 +18,8 @@ package cora.rwinduction.command;
 import java.util.Optional;
 
 import charlie.util.FixedList;
-import charlie.parser.lib.ParsingStatus;
 import cora.rwinduction.engine.deduction.DeductionDelete;
+import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command delete. */
 public class CommandDelete extends Command {
@@ -40,8 +40,8 @@ public class CommandDelete extends Command {
   }
   
   @Override
-  protected boolean run(ParsingStatus status) {
-    if (!commandEnds(status)) return failure("Delete should be invoked without arguments.");
+  protected boolean run(CommandParsingStatus input) {
+    if (!input.commandEnded()) return failure("Delete should be invoked without arguments.");
     Optional<DeductionDelete> step = DeductionDelete.createStep(_proof, optionalModule());
     if (step.isEmpty()) return false;
     return step.get().verifyAndExecute(_proof, optionalModule());

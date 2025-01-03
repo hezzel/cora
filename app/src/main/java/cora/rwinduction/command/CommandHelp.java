@@ -17,10 +17,7 @@ package cora.rwinduction.command;
 
 import java.util.TreeSet;
 import charlie.util.FixedList;
-import charlie.parser.lib.Token;
-import charlie.parser.lib.ParsingStatus;
-import charlie.parser.CoraTokenData;
-import cora.rwinduction.parser.CommandParser;
+import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The environment command :help, which provides general of command-specific help. */
 public class CommandHelp extends Command {
@@ -46,25 +43,21 @@ public class CommandHelp extends Command {
     return "Prints a short description to explain how the prover works.";
   }
 
-  protected boolean run(ParsingStatus status) {
+  protected boolean run(CommandParsingStatus input) {
     // syntax: :help
-    if (commandEnds(status)) return printGeneralHelp();
-    // syntax: :help commands
-    if (status.peekNext().getName().equals(CoraTokenData.IDENTIFIER) &&
-        status.peekNext().getText().equals("commands")) {
-      status.nextToken();
-      if (!commandEnds(status)) {
-        status.storeError("Too many arguments to :help commands.", status.peekNext());
-      }
-      return printCommandList();
+    if (input.commandEnded()) return printGeneralHelp();
+    // if not 0 arguments, we must have exactly 1!
+    String txt = input.nextWord();
+    if (!input.commandEnded()) {
+      _module.println("Unexpected argument at position %a: :help takes at most 1 argument.",
+                      input.currentPosition());
+      return false;
     }
+    // syntax: :help commands
+    if (txt.equals("commands")) return printCommandList();
     // syntax: :help command
-    String txt = CommandParser.parseCommand(status);
     Command cmd = _clist.queryCommand(txt);
     if (cmd == null) return failure("Unknown command: " + txt);
-    if (!commandEnds(status)) {
-      status.storeError("Unexpected argument: :help takes at most 1.", status.peekNext());
-    }
     return printCommandHelp(cmd);
   }
 
