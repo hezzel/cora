@@ -191,5 +191,14 @@ public class TheoryFactory {
   public static final CalculationSymbol stringDistinctSymbol = new CalculationConstant("≠",
     binaryStringComparisonType, Kind.NEQ, Associativity.ASSOC_NONE,
     CalculationSymbol.INFIX_COMPARISON);
+
+  /** The value for truth */
+  public static final Value trueValue = new BooleanValue(true);
+  /** The value for falsehood */
+  public static final Value falseValue = new BooleanValue(false);
+  /** The value for 0 */
+  public static final Value zeroValue = new IntegerValue(0);
+  /** The value for the empty string */
+  public static final Value emptyStringValue = new StringValue("");
 }
 

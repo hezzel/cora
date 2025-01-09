@@ -133,12 +133,12 @@ public final class DeductionSimplify extends DeductionStep {
    * equation.  The rule naming is used to print an error if this is not the case.
    */
   private boolean checkConstraintVariables(Optional<OutputModule> module) {
-    Term constraint = _state.getTopEquation().getEquation().getConstraint();
+    Term constraint = _equ.getEquation().getConstraint();
     for (Variable x : _rule.queryConstraint().vars()) {
       Term t = _substitution.getReplacement(x);
       if (t.isValue()) continue;
       if (!t.isVariable() || !constraint.freeReplaceables().contains(t.queryVariable())) {
-        Renaming eqnaming = _state.getTopEquation().getRenaming();
+        Renaming eqnaming = _equ.getRenaming();
         println(module, "The rule does not apply: constraint variable %a is instantiated by %a, " +
           "which is not a value, nor a variable in the constraint of the equation.",
           _ruleRenaming.getName(x), new Pair<Term,Renaming>(t, eqnaming));
@@ -153,12 +153,12 @@ public final class DeductionSimplify extends DeductionStep {
    */
   private boolean checkImplication(Optional<OutputModule> module) {
     if (!_rule.isConstrained()) return true; // no implication to prove if the rule is unconstrained
-    Term psi = _state.getTopEquation().getEquation().getConstraint();
+    Term psi = _equ.getEquation().getConstraint();
     Term phidelta = _rule.queryConstraint().substitute(_substitution);
     TermSmtTranslator translator = new TermSmtTranslator();
     translator.requireImplication(psi, phidelta);
     if (Settings.smtSolver.checkValidity(translator.queryProblem())) return true;
-    Renaming renaming = _state.getTopEquation().getRenaming();
+    Renaming renaming = _equ.getRenaming();
     println(module, "The rule does not apply: I could not prove that %a %{Vdash} %a.",
       new Pair<Term,Renaming>(psi, renaming), new Pair<Term,Renaming>(phidelta, renaming));
     return false;
@@ -167,17 +167,15 @@ public final class DeductionSimplify extends DeductionStep {
   @Override
   protected ProofState tryApply(Optional<OutputModule> module) {
     Term substituted = _rule.queryRightSide().substitute(_substitution);
-    EquationContext context = _state.getTopEquation();
-    Equation equation =
-      _state.getTopEquation().getEquation().replaceSubterm(_position, substituted);
-    return _state.replaceTopEquation(context.replace(equation, _state.getLastUsedIndex() + 1));
+    Equation equation = _equ.getEquation().replaceSubterm(_position, substituted);
+    return _state.replaceTopEquation(_equ.replace(equation, _state.getLastUsedIndex() + 1));
   }
 
   @Override
   public String commandDescription(ParseableTermPrinter printer) {
     StringBuilder substitutionString = new StringBuilder("[");
     TreeSet<Replaceable> keys = new TreeSet<Replaceable>(_substitution.domain());
-    Renaming equationNaming = _state.getTopEquation().getRenaming();
+    Renaming equationNaming = _equ.getRenaming();
     boolean first = true;
     for (Replaceable x : keys) {
       if (first) first = false;
@@ -193,13 +191,12 @@ public final class DeductionSimplify extends DeductionStep {
 
   @Override
   public void explain(OutputModule module) {
-    EquationContext econ = _state.getTopEquation();
     Pair<Renaming,Renaming> renamings =
-      new Pair<Renaming,Renaming>(_ruleRenaming, econ.getRenaming());
+      new Pair<Renaming,Renaming>(_ruleRenaming, _equ.getRenaming());
     Pair<Substitution,Pair<Renaming,Renaming>> substitutionInfo =
       new Pair<Substitution,Pair<Renaming,Renaming>>(_substitution, renamings);
     module.println("We apply SIMPLIFICATION to %a with rule %a and substitution %a.",
-      econ.getName(), _ruleName, substitutionInfo);
+      _equ.getName(), _ruleName, substitutionInfo);
   }
 }
 

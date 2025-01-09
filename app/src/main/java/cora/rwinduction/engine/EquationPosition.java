@@ -84,7 +84,7 @@ public class EquationPosition {
     if (desc.equals("R")) return TOPRIGHT;
     Side side = Side.Left;
     if (desc.charAt(0) == 'L') desc = desc.substring(1);
-    if (desc.charAt(0) == 'R') { desc = desc.substring(1); side = Side.Right; }
+    else if (desc.charAt(0) == 'R') { desc = desc.substring(1); side = Side.Right; }
     Position pos = Position.parse(desc);
     return new EquationPosition(side, pos);
   }
