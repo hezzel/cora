@@ -56,7 +56,7 @@ public final class DeductionDelete extends DeductionStep {
   @Override
   public boolean verify(Optional<OutputModule> module) {
     if (_bothSidesEqual) return true; // nothing to check
-    Term constraint = _state.getTopEquation().getEquation().getConstraint();
+    Term constraint = _equ.getEquation().getConstraint();
     switch (TermAnalyser.satisfy(constraint, Settings.smtSolver)) {
       case TermAnalyser.Result.MAYBE(String reason):
         println(module, "The DELETE rule is not obviously applicable: the left- and right-hand " +
@@ -65,7 +65,7 @@ public final class DeductionDelete extends DeductionStep {
       case TermAnalyser.Result.YES(Substitution val):
         println(module, "The DELETE rule is not applicable: the left- and right-hand side are " +
           "not the same, and the constraint is satisfiable using substitution %a.",
-          new Pair<Substitution,Renaming>(val, _state.getTopEquation().getRenaming()));
+          new Pair<Substitution,Renaming>(val, _equ.getRenaming()));
     return false;
       case TermAnalyser.Result.NO(): return true;
     }
@@ -85,8 +85,7 @@ public final class DeductionDelete extends DeductionStep {
   @Override
   public void explain(OutputModule module) {
     module.println("We apply DELETION to %a because %a.  " +
-      "Thus, we may remove this equation from the proof state.",
-      _state.getTopEquation().getName(),
+      "Thus, we may remove this equation from the proof state.", _equ.getName(),
       _bothSidesEqual ? "both sides are equal" : "the constraint is unsatisfiable");
   }
 }

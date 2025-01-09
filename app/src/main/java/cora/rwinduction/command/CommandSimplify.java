@@ -119,7 +119,7 @@ public class CommandSimplify extends Command {
         "(or \"with\").\n\n", input);
     }
     catch (CustomParserException e) {
-      _module.println("Illegal position %a: %a", input, e);
+      _module.println("Illegal position %a: %a", input, e.getMessage());
     }
     return null;
   }

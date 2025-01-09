@@ -30,15 +30,18 @@ import cora.io.ParseableTermPrinter;
  */
 public abstract class DeductionStep {
   protected final ProofState _state;        // the proof state on which this step is applied
+  protected final EquationContext _equ;     // the top equation equation context in _state
   protected final ProofContext _pcontext;   // the proof context in which this step is applied
 
   /**
    * Inheriting classes should call this constructor to set up the proof state and proof
-   * context on which the deduction step will be applied.
+   * context on which the deduction step will be applied.  Note that the proof state must be
+   * non-empty.
    */
   protected DeductionStep(ProofState state, ProofContext context) {
     _state = state;
     _pcontext = context;
+    _equ = state.getTopEquation();
   }
 
   /**

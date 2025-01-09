@@ -186,6 +186,14 @@ public class EquationContext {
     return new EquationContext(_leftGeq, eq, _rightGeq, index, _varNaming.copy());
   }
 
+  /**
+   * Returns the EquationContext with the same "greater" restrictions on the left and right, but
+   * with the given new Renaming, equation and index.
+   */
+  public EquationContext replace(Equation eq, Renaming naming, int index) {
+    return new EquationContext(_leftGeq, eq, _rightGeq, index, naming.copy());
+  }
+
   /** Returns an object that can be conveniently printed to an OutputModule. */
   public Pair<String,Object[]> getPrintableObject() {
     Object l = _leftGeq.isEmpty() ? new Pair<String,Object[]>("%{bullet}", new Object [] {})
