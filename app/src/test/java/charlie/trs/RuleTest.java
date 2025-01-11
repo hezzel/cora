@@ -17,6 +17,7 @@ package charlie.trs;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.Set;
 
 import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.NullStorageException;
@@ -261,6 +262,33 @@ public class RuleTest {
     assertTrue(tvar.contains(y));
     assertFalse(tvar.contains(z));
     assertThrows(java.lang.UnsupportedOperationException.class, () -> tvar.add(z));
+  }
+
+  @Test
+  public void testAllReplaceables() {
+    // f(x,a) -> f(y,G[b]) | x > z ∧ z > y
+    Term f = TermFactory.createConstant("f", type("Int → Int → Int"));
+    Variable x = TermFactory.createVar("x", type("Int"));
+    Variable y = TermFactory.createVar("y", type("Int"));
+    Variable z = TermFactory.createVar("y", type("Int"));
+    Variable a = TermFactory.createVar("a", type("Int"));
+    Variable b = TermFactory.createVar("b", type("Int"));
+    MetaVariable g = TermFactory.createMetaVar("G", type("Int"), type("Int"));
+    Term gb = TermFactory.createMeta(g, b);
+    Term l = f.apply(x).apply(a);
+    Term r = f.apply(y).apply(gb);
+    Term xz = TheoryFactory.greaterSymbol.apply(x).apply(z);
+    Term zy = TheoryFactory.greaterSymbol.apply(z).apply(y);
+    Term c = TheoryFactory.createConjunction(xz, zy);
+    Rule rule = new Rule(l, r, c);
+    Set<Replaceable> set = rule.queryAllReplaceables();
+    assertTrue(set.size() == 6);
+    assertTrue(set.contains(x));
+    assertTrue(set.contains(y));
+    assertTrue(set.contains(z));
+    assertTrue(set.contains(a));
+    assertTrue(set.contains(b));
+    assertTrue(set.contains(g));
   }
 
   @Test

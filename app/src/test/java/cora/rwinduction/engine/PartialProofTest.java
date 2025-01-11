@@ -27,10 +27,10 @@ import charlie.terms.TermPrinter;
 import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
+import charlie.printer.ParseableTermPrinter;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
-import cora.io.ParseableTermPrinter;
 import cora.rwinduction.parser.EquationParser;
 
 class PartialProofTest {

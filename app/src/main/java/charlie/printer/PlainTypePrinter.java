@@ -13,13 +13,13 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package cora.io;
+package charlie.printer;
 
-import charlie.terms.position.PositionPrinter;
+import charlie.types.TypePrinter;
 
-/** The PlainPositionPrinter adapts the standard PositionPrinter to avoid unicode symbols. */
-public class PlainPositionPrinter extends PositionPrinter {
-  protected String queryEmptyPositionSymbol() { return "e"; }
-  protected String queryChopSymbol() { return "*"; }
+/** The PlainTypePrinter adapts the standard TypePrinter to avoid unicode symbols. */
+public class PlainTypePrinter extends TypePrinter {
+  protected String queryArrowSymbol() { return "->"; }
+  protected String queryTimesSymbol() { return "*"; }
 }
 

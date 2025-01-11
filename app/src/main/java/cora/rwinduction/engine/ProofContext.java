@@ -24,9 +24,9 @@ import charlie.terms.Renaming;
 import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
+import charlie.printer.ParseableTermPrinter;
 import charlie.util.Pair;
 import cora.io.OutputModule;
-import cora.io.ParseableTermPrinter;
 
 /**
  * A ProofContext object keeps track of the fixed data in a proof, such as the underlying TRS and
