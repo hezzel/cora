@@ -24,9 +24,9 @@ import java.util.Stack;
 import charlie.exceptions.IndexingException;
 import charlie.util.Pair;
 import charlie.terms.*;
+import charlie.printer.ParseableTermPrinter;
 import charlie.theorytranslation.TermAnalyser;
 import cora.io.OutputModule;
-import cora.io.ParseableTermPrinter;
 import cora.rwinduction.engine.*;
 
 public final class DeductionCalc extends DeductionStep {

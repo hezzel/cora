@@ -20,10 +20,10 @@ import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.terms.*;
 import charlie.trs.Rule;
+import charlie.printer.ParseableTermPrinter;
 import charlie.theorytranslation.TermSmtTranslator;
 import cora.config.Settings;
 import cora.io.OutputModule;
-import cora.io.ParseableTermPrinter;
 import cora.rwinduction.engine.*;
 
 /** The deduction command for simplifying an equation with a Rule */

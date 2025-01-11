@@ -27,6 +27,7 @@ import charlie.terms.TermPrinter;
 import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
+import charlie.printer.ParseableTermPrinter;
 import charlie.reader.CoraInputReader;
 import charlie.smt.Valuation;
 import charlie.smt.SmtProblem;
@@ -34,7 +35,6 @@ import charlie.smt.SmtSolver;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
-import cora.io.ParseableTermPrinter;
 import cora.rwinduction.parser.EquationParser;
 import cora.rwinduction.engine.*;
 

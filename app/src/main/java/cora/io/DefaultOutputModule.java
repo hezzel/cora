@@ -26,6 +26,9 @@ import charlie.terms.position.PositionPrinter;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
+import charlie.printer.PlainTypePrinter;
+import charlie.printer.PlainTermPrinter;
+import charlie.printer.PlainPositionPrinter;
 
 public class DefaultOutputModule implements OutputModule {
   private TypePrinter _typePrinter;

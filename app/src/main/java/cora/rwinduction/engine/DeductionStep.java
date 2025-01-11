@@ -17,8 +17,8 @@ package cora.rwinduction.engine;
 
 import java.util.Optional;
 import java.util.Set;
+import charlie.printer.ParseableTermPrinter;
 import cora.io.OutputModule;
-import cora.io.ParseableTermPrinter;
 
 /**
  * A DeductionStep carries all the information to execute a specific deduction step on a fixed

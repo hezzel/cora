@@ -20,13 +20,13 @@ import java.util.HashMap;
 import java.util.Stack;
 import charlie.exceptions.NullStorageException;
 import charlie.util.FixedList;
+import charlie.util.Pair;
 import charlie.terms.Renaming;
 import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
-import charlie.util.Pair;
+import charlie.printer.ParseableTermPrinter;
 import cora.io.OutputModule;
-import cora.io.ParseableTermPrinter;
 
 /**
  * A PartialProof keeps track of the current proof state, the proof context, and the history.

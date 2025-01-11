@@ -112,6 +112,20 @@ public class Rule {
     return _tvars;
   }
 
+  /**
+   * Returns a set with all replaceables occurring in the current rule.  This is a modifiable set;
+   * changing it will not affect the Rule.
+   */
+  public Set<Replaceable> queryAllReplaceables() {
+    Set<Replaceable> ret = new TreeSet<Replaceable>();
+    for (Replaceable x : _left.freeReplaceables()) ret.add(x);
+    for (Replaceable x : _constraint.freeReplaceables()) ret.add(x);
+    if (_properties.rightReplaceablePolicy() == TrsProperties.FreshRight.ANY) {
+      for (Replaceable x : _right.freeReplaceables()) ret.add(x);
+    }
+    return ret;
+  }
+
   /** Only for internal use within the trs package. */
   RuleRestrictions queryProperties() {
     return _properties;

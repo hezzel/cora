@@ -21,10 +21,10 @@ import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.Renaming;
 import charlie.terms.Substitution;
+import charlie.printer.ParseableTermPrinter;
 import charlie.theorytranslation.TermAnalyser;
 import cora.config.Settings;
 import cora.io.OutputModule;
-import cora.io.ParseableTermPrinter;
 import cora.rwinduction.engine.*;
 
 public final class DeductionDelete extends DeductionStep {
