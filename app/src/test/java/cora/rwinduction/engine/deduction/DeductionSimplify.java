@@ -25,7 +25,6 @@ import charlie.exceptions.CustomParserException;
 import charlie.terms.position.Position;
 import charlie.terms.*;
 import charlie.trs.TRS;
-import charlie.printer.ParseableTermPrinter;
 import charlie.reader.CoraInputReader;
 import charlie.smt.Truth;
 import charlie.smt.SmtProblem;
@@ -83,8 +82,7 @@ class DeductionSimplifyTest {
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2", pos,
                                                  TermFactory.createEmptySubstitution()).get();
-    ParseableTermPrinter ptp = new ParseableTermPrinter(Set.of());
-    assertTrue(step.commandDescription(ptp).equals("simplify O2 L1 with [x := z]"));
+    assertTrue(step.commandDescription().equals("simplify O2 L1 with [x := z]"));
     step.explain(module);
     assertTrue(module.toString().equals("We apply SIMPLIFICATION to E1 with rule O2 and " +
       "substitution [x := z].\n\n"));
@@ -100,8 +98,7 @@ class DeductionSimplifyTest {
                                                           EquationPosition.TOPRIGHT, empty).get();
     empty.extend(TermFactory.createVar("u", CoraInputReader.readType("Int")),
                  TheoryFactory.createValue(5));
-    ParseableTermPrinter ptp = new ParseableTermPrinter(Set.of());
-    assertTrue(step.commandDescription(ptp).equals("simplify O4 R with [x := z, i := 0, z := 0]"));
+    assertTrue(step.commandDescription().equals("simplify O4 R with [i := 0, x := z, z := 0]"));
     step.explain(module);
     assertTrue(module.toString().equals("We apply SIMPLIFICATION to E1 with rule O4 and " +
       "substitution [i := 0, x := z, z := 0].\n\n"));
@@ -178,8 +175,7 @@ class DeductionSimplifyTest {
                                                           EquationPosition.TOPLEFT, subst).get();
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getTopEquation().toString().equals("E2: (• , z ≈ 7 | z = 7 , •)"));
-    ParseableTermPrinter ptp = new ParseableTermPrinter(Set.of());
-    assertTrue(step.commandDescription(ptp).equals("simplify O6 L with [x := z, y := 1]"));
+    assertTrue(step.commandDescription().equals("simplify O6 L with [x := z, y := 1]"));
   }
 
   @Test

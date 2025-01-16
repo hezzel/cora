@@ -27,7 +27,6 @@ import charlie.terms.TermPrinter;
 import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
-import charlie.printer.ParseableTermPrinter;
 import charlie.reader.CoraInputReader;
 import charlie.smt.Valuation;
 import charlie.smt.SmtProblem;
@@ -173,8 +172,7 @@ class DeductionDeleteTest {
     OutputModule module = DefaultOutputModule.createUnicodeModule();
     Optional<OutputModule> o = Optional.of(module);
     DeductionDelete step = DeductionDelete.createStep(pp, o).get();
-    ParseableTermPrinter ptp = new ParseableTermPrinter(Set.of());
-    assertTrue(step.commandDescription(ptp).equals("delete"));
+    assertTrue(step.commandDescription().equals("delete"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
     assertTrue(solver._storage == null);

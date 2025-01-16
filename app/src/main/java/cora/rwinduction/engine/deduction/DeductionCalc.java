@@ -24,7 +24,8 @@ import java.util.Stack;
 import charlie.exceptions.IndexingException;
 import charlie.util.Pair;
 import charlie.terms.*;
-import charlie.printer.ParseableTermPrinter;
+import charlie.printer.Printer;
+import charlie.printer.PrinterFactory;
 import charlie.theorytranslation.TermAnalyser;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
@@ -102,10 +103,11 @@ public final class DeductionCalc extends DeductionStep {
   }
 
   @Override
-  public String commandDescription(ParseableTermPrinter printer) {
-    StringBuilder ret = new StringBuilder("calc ");
-    for (EquationPosition pos : _position) ret.append(pos.toString() + " ");
-    return ret.toString().trim();
+  public String commandDescription() {
+    Printer printer = PrinterFactory.createParseablePrinter(_pcontext.getTRS());
+    printer.add("calc ");
+    for (EquationPosition pos : _position) printer.add(pos, " ");
+    return printer.toString().trim();
   }
 
   /** Prints a human-readable explanation. */

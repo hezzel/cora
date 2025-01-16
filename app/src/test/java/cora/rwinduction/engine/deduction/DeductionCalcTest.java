@@ -56,7 +56,7 @@ class DeductionCalcTest {
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L1.2.ε");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
-    assertTrue(step.commandDescription(null).equals("calc L1.2"));
+    assertTrue(step.commandDescription().equals("calc L1.2"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
     assertTrue(module.toString().equals("We use CALC at position L1.2.\n\n"));
@@ -72,7 +72,7 @@ class DeductionCalcTest {
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("2.1");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
-    assertTrue(step.commandDescription(null).equals("calc L2.1"));
+    assertTrue(step.commandDescription().equals("calc L2.1"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
     assertTrue(module.toString().equals("We use CALC at position L2.1.\n\n"));
@@ -106,7 +106,7 @@ class DeductionCalcTest {
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L3");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
-    assertTrue(step.commandDescription(null).equals("calc L3"));
+    assertTrue(step.commandDescription().equals("calc L3"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
     assertTrue(module.toString().equals("We use ALTER to add i1 = x + y to the constraint, " +
@@ -124,7 +124,7 @@ class DeductionCalcTest {
     EquationPosition pos1 = EquationPosition.parse("L3");
     EquationPosition pos2 = EquationPosition.parse("R");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos1, pos2)).get();
-    assertTrue(step.commandDescription(null).equals("calc L3 R"));
+    assertTrue(step.commandDescription().equals("calc L3 R"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
     assertTrue(module.toString().equals("We use ALTER to add i1 = x + y to the constraint, " +
@@ -141,7 +141,7 @@ class DeductionCalcTest {
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L1");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
-    assertTrue(step.commandDescription(null).equals("calc L1"));
+    assertTrue(step.commandDescription().equals("calc L1"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
     assertTrue(module.toString().equals("We use CALC at position L1.\n\n"));

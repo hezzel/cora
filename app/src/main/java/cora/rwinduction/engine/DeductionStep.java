@@ -16,8 +16,6 @@
 package cora.rwinduction.engine;
 
 import java.util.Optional;
-import java.util.Set;
-import charlie.printer.ParseableTermPrinter;
 import cora.io.OutputModule;
 
 /**
@@ -117,17 +115,19 @@ public abstract class DeductionStep {
 
   /**
    * This function provides a command that the user can execute to lead to the current deduction
-   * step being executed (after doing the appropriate checks).  It uses the given
-   * ParseableTermPrinter to do so.
+   * step being executed (after doing the appropriate checks).
    */
-  public abstract String commandDescription(ParseableTermPrinter termPrinter);
+  public abstract String commandDescription();
 
   /**
    * This function prints an explanation of the deduction step to the given output module.
    */
   public abstract void explain(OutputModule module);
 
-  public final String toString() { return commandDescription(new ParseableTermPrinter(Set.of())); }
+  /** Returns the commandDescription as a representation of the step. */
+  public final String toString() {
+    return commandDescription();
+  }
 
   /**
    * Helper function for the static createStep function: this returns either the top equation

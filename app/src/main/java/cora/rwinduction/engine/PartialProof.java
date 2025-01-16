@@ -25,7 +25,6 @@ import charlie.terms.Renaming;
 import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
-import charlie.printer.ParseableTermPrinter;
 import cora.io.OutputModule;
 
 /**
@@ -131,11 +130,9 @@ public class PartialProof {
    * Note that while this list is mutable, altering it will not affect the current PartialProof.
    */
   public ArrayList<String> getCommandHistory() {
-    ParseableTermPrinter printer =
-      new ParseableTermPrinter(_pcontext.getTRS().queryFunctionSymbolNames());
     ArrayList<String> ret = new ArrayList<String>(_previousCommands.size());
     for (DeductionStep step : _previousCommands) {
-      ret.add(step.commandDescription(printer));
+      ret.add(step.commandDescription());
     }
     return ret;
   }
