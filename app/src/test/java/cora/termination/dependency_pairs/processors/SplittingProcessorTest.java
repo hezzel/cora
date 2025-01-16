@@ -51,8 +51,8 @@ class SplittingProcessorTest {
     assertTrue(result.queryResults().size() == 1);
     assertTrue(result.queryResults().get(0).toString(true).equals(
       "DPs:\n" +
-      "  f#(x, y) => f#(x, y - 1) | x > y { }\n" +
-      "  f#(x, y) => f#(x, y - 1) | x < y { }\n" +
+      "  f#(x, y) ➡ f#(x, y - 1) | x > y\n" +
+      "  f#(x, y) ➡ f#(x, y - 1) | x < y\n" +
       "Rules:\n" +
       "  f(x, y) → f(x, y - 1) | x ≠ y\n" +
       "Evaluation is arbitrary.\n"+
@@ -71,9 +71,9 @@ class SplittingProcessorTest {
     assertTrue(result.queryResults().size() == 1);
     assertTrue(result.queryResults().get(0).toString(true).equals(
       "DPs:\n" +
-      "  f#(x, y) => f#(x, y - 1) | x = 1 { }\n" +
-      "  f#(x, y) => f#(x, y - 1) | x = 3 { }\n" +
-      "  f#(x, y) => f#(x, y - 1) | x = 10 { }\n" +
+      "  f#(x, y) ➡ f#(x, y - 1) | x = 1\n" +
+      "  f#(x, y) ➡ f#(x, y - 1) | x = 3\n" +
+      "  f#(x, y) ➡ f#(x, y - 1) | x = 10\n" +
       "Rules:\n" +
       "  f(x, y) → f(x, y - 1) | x = 1 ∨ x = 3 ∨ x = 10\n" +
       "Evaluation is innermost.\n" +
@@ -92,8 +92,8 @@ class SplittingProcessorTest {
     assertTrue(result.queryResults().size() == 1);
     assertTrue(result.queryResults().get(0).toString(true).equals(
       "DPs:\n" +
-      "  f#(x, y) => f#(x, y - 1) | x > y ∧ x ≤ y { }\n" +
-      "  f#(x, y) => f#(x, y - 1) | x < y ∧ x ≤ y { }\n" +
+      "  f#(x, y) ➡ f#(x, y - 1) | x > y ∧ x ≤ y\n" +
+      "  f#(x, y) ➡ f#(x, y - 1) | x < y ∧ x ≤ y\n" +
       "Rules:\n" +
       "  f(x, y) → f(x, y - 1) | x ≠ y ∧ x ≤ y\n" +
       "  ... and an unknown number of additional rules\n" +
@@ -116,9 +116,9 @@ class SplittingProcessorTest {
     assertTrue(result.queryResults().size() == 1);
     assertTrue(result.queryResults().get(0).toString(true).equals(
       "DPs:\n" +
-      "  f#(x) => f#(x + 1) | 3 = 4 ∧ x < 0 { }\n" +
-      "  f#(x) => f#(x + 1) | 3 = 4 ∧ x > 10 { }\n" +
-      "  g#(x) => f#(x) | x ≤ 0 { }\n" +
+      "  f#(x) ➡ f#(x + 1) | 3 = 4 ∧ x < 0\n" +
+      "  f#(x) ➡ f#(x + 1) | 3 = 4 ∧ x > 10\n" +
+      "  g#(x) ➡ f#(x) | x ≤ 0\n" +
       "Rules:\n" +
       "  f(x) → f(x + 1) | 3 = 4 ∧ (x < 0 ∨ x > 10)\n" +
       "  g(x) → f(x) | x ≤ 0\n" +

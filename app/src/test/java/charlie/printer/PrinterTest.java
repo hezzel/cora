@@ -57,6 +57,13 @@ public class PrinterTest {
       "This is a type: Int → Int → IntThis is a term: f(a(3), y).\n" +
       "This is a position: 0.!3.☆1.\n" +
       "No problem with integers (17) either!\n"));
+    assertFalse(printer.isEmpty());
+    printer.clear();
+    assertTrue(printer.isEmpty());
+    assertTrue(printer.toString().equals(""));
+    printer.add(trs.lookupSymbol("f").queryType());
+    assertTrue(printer.toString().equals("Int → Int → Int"));
+    assertFalse(printer.isEmpty());
   }
 
   @Test
@@ -67,7 +74,7 @@ public class PrinterTest {
     assertTrue(upr.toString().equals("→λ•∀"));
     Printer apr = PrinterFactory.createPlainPrinter(trs);
     apr.add(apr.symbRuleArrow(), apr.symbLambda(), apr.symbBullet(), apr.symbForall());
-    assertTrue(apr.toString().equals("->lambda#FORALL "));
+    assertTrue(apr.toString().equals("->\\*FORALL "));
   }
 
   @Test

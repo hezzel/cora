@@ -21,17 +21,21 @@ import java.util.Set;
 import charlie.exceptions.IndexingException;
 import charlie.util.Pair;
 import charlie.terms.*;
+import charlie.printer.Printer;
+import charlie.printer.PrintableObject;
+import charlie.printer.PrinterFactory;
 
 /**
  * An EquationContext couples an Equation with up to 2 meta-terms that keep track of the equation's
  * history, for the sake of future commands.  Moreover, since users need to be able to refer to
  * specific variables in the interactive prover, we also store a naming for the variables inside the
- * equation, so they are always printed in the same way.  Finally, we keep track of a unique index
+ * equation, so they are always printed in the same way (and an EquationContext implements the
+ * PrintableObject class to control its own printing).  Finally, we keep track of a unique index
  * that will refer to this equation within the proof (and corresponding name)
  *
  * An EquationContext is an immutable structure.
  */
-public class EquationContext {
+public class EquationContext implements PrintableObject {
   private Equation _equation;
   private Optional<Term> _leftGeq;
   private Optional<Term> _rightGeq;
@@ -195,6 +199,7 @@ public class EquationContext {
   }
 
   /** Returns an object that can be conveniently printed to an OutputModule. */
+  // TODO: remove
   public Pair<String,Object[]> getPrintableObject() {
     Object l = _leftGeq.isEmpty() ? new Pair<String,Object[]>("%{bullet}", new Object [] {})
                                   : new Pair<Term,Renaming>(_leftGeq.get(), _varNaming);
@@ -204,23 +209,28 @@ public class EquationContext {
     return new Pair<String,Object[]>("(%a , %a , %a)", new Object[] { l, eq, r });
   }
 
+  /** Prints the equation context to the given printer. */
+  @Override
+  public void print(Printer p) {
+    p.add(getName(),
+          ": (",
+          _leftGeq.isEmpty() ? p.symbBullet() : p.makePrintable(_leftGeq.get(), _varNaming),
+          " , ",
+          _equation.makePrintableWith(_varNaming),
+          " , ",
+          _rightGeq.isEmpty() ? p.symbBullet() : p.makePrintable(_rightGeq.get(), _varNaming),
+          ")");
+  }
+
   /**
    * Only for debugging or testing purposes!
-   * Use cora.rwinduction.tui.Outputter to properly print an Equation.
+   * Use a Printer or OutputModule to properly print an Equation.
    */
+  @Override
   public String toString() {
-    StringBuilder builder = new StringBuilder();
-    TermPrinter printer = new TermPrinter(Set.of());
-    builder.append(getName() + ": (");
-    if (_leftGeq.isEmpty()) builder.append("•");
-    else printer.print(_leftGeq.get(), _varNaming, builder);
-    builder.append(" , ");
-    builder.append(_equation.toString(_varNaming));
-    builder.append(" , ");
-    if (_rightGeq.isEmpty()) builder.append("•");
-    else printer.print(_rightGeq.get(), _varNaming, builder);
-    builder.append(")");
-    return builder.toString();
+    Printer printer = PrinterFactory.createPrinterNotForUserOutput();
+    printer.add(this);
+    return printer.toString();
   }
 }
 

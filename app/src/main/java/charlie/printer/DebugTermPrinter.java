@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.printer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -21,6 +21,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
 import java.util.function.Predicate;
+import charlie.terms.Replaceable;
 import charlie.exceptions.UnexpectedPatternException;
 
 /**
@@ -28,7 +29,7 @@ import charlie.exceptions.UnexpectedPatternException;
  * This makes it much easier to see when two variables are different, though it makes it harder to
  * predict what the variables will be called!
  */
-public class DebugTermPrinter extends TermPrinter {
+public class DebugTermPrinter extends ParseableTermPrinter {
   public DebugTermPrinter() {
     super(Set.of());
   }

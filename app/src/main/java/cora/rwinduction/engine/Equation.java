@@ -21,6 +21,9 @@ import charlie.terms.Term;
 import charlie.terms.Renaming;
 import charlie.terms.TermPrinter;
 import charlie.terms.TheoryFactory;
+import charlie.printer.Printer;
+import charlie.printer.PrintableObject;
+import charlie.printer.PrinterFactory;
 import java.util.Set;
 
 /**
@@ -91,6 +94,7 @@ public final class Equation {
   }
 
   /** Returns an object that can be conveniently printed to an OutputModule. */
+  // TODO: remove (and remove the pair import too)
   public Pair<String,Object[]> getPrintableObject(Renaming renaming) {
     Pair<Term,Renaming> l = new Pair<Term,Renaming>(_lhs, renaming);
     Pair<Term,Renaming> r = new Pair<Term,Renaming>(_rhs, renaming);
@@ -101,30 +105,42 @@ public final class Equation {
     else return new Pair<String,Object[]>("%a %{approx} %a", new Object[] { l, r });
   }
 
-  /*
-   * Only for debugging or testing purposes!
-   * Use cora.rwinduction.tui.Outputter to properly print an Equation.  (And note that they should
-   * typically be printed with the same Renaming, as given by the EquationContext in which the
-   * Equation lives.)
+  /**
+   * This function prints the current equation to the given printer, using the given Renaming for
+   * its variables (and meta-variables).  This is used by the print function in EquationContext
+   * and Hypothesis, and also by makePrintableWith.
    */
-  public String toString() {
-    TermPrinter printer = new TermPrinter(Set.of());
-    return toString(printer.generateUniqueNaming(_lhs, _rhs, _constraint));
+  void printWithRenaming(Printer printer, Renaming renaming) {
+    printer.add(printer.makePrintable(_lhs, renaming),
+                " ",
+                printer.symbApprox(),
+                " ",
+                printer.makePrintable(_rhs, renaming));
+    if (isConstrained()) printer.add(" | ", printer.makePrintable(_constraint, renaming));
   }
 
   /**
-   * Slightly cleverer version of toString that takes an existing renaming into account, but for
-   * printing to the user you really should still be using the Outputter and getPrintableObject
-   * instead!
+   * An Equation cannot be directly printed to a Printer or OutputModule, because Equations should
+   * always be coupled with a specific variable naming.  If such a Renaming is given, then
+   * equation.makePrintableObject(renaming) *can* be printed as usual.
    */
-  public String toString(Renaming renaming) {
-    StringBuilder builder = new StringBuilder();
-    TermPrinter printer = new TermPrinter(Set.of());
-    printer.print(_lhs, renaming, builder);
-    builder.append(" ≈ ");
-    printer.print(_rhs, renaming, builder);
-    builder.append(" | ");
-    printer.print(_constraint, renaming, builder);
-    return builder.toString();
+  public PrintableObject makePrintableWith(Renaming renaming) {
+    return new PrintableObject() {
+      public void print(Printer printer) {
+        printWithRenaming(printer, renaming);
+      }
+    };
+  }
+
+  /*
+   * Only for debugging or testing purposes!
+   * To properly print an Equation, add makePrintableWith(renaming) to a Printer or OutputModuel,
+   * where renaming is an appropriate renaming.  (Note that equations should typically be printed
+   * with the same Renaming throughout the proof process).
+   */
+  public String toString() {
+    Printer printer = PrinterFactory.createPrinterNotForUserOutput();
+    printer.add(_lhs, " ", printer.symbApprox(), " ", _rhs, " | ", _constraint);
+    return printer.toString();
   }
 }

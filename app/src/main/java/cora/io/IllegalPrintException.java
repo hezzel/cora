@@ -16,11 +16,11 @@
 package cora.io;
 
 /**
- * An IllegalPrintError is thrown when a function is called on the OutputModule in a way that it
- * shouldn't be (for example, closing a table when no table is open).
+ * An IllegalPrintException is thrown when a function is called on the OutputModule in a way that
+ * it shouldn't be (for example, closing a table when no table is open).
  */
-public class IllegalPrintError extends Error {
-  public IllegalPrintError(String reason) {
+public class IllegalPrintException extends RuntimeException {
+  public IllegalPrintException(String reason) {
     super("Illegal call to output: " + reason);
   }
 }

@@ -82,9 +82,9 @@ public class ProblemTest {
     assertFalse(problem.isEmpty());
     assertTrue(problem.toString(true).equals(
       "DPs:\n" +
-      "  eval#(x, y) => eval#(x - 1, y) | x > y { }\n" +
-      "  add#(suc(x), y) => add#(x, y) | true { } (private)\n" +
-      "  mul#(suc(x), y) => add#(x, mul(x, y)) | true { }\n" +
+      "  eval#(x, y) ➡ eval#(x - 1, y) | x > y\n" +
+      "  add#(suc(x), y) ➡ add#(x, y) | true (private)\n" +
+      "  mul#(suc(x), y) ➡ add#(x, mul(x, y)) | true\n" +
       "Rules:\n" +
       "  mul(zero, x) → x\n" +
       "  mul(suc(x), y) → add(y, mul(x, y))\n" +

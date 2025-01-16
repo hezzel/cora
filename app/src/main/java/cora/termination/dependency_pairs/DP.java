@@ -15,7 +15,12 @@
 
 package cora.termination.dependency_pairs;
 
+import charlie.types.TypePrinter;
+import charlie.terms.position.PositionPrinter;
 import charlie.terms.*;
+import charlie.printer.Printer;
+import charlie.printer.PrintableObject;
+import charlie.printer.PrinterFactory;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -36,7 +41,8 @@ import java.util.Set;
  * @param lvars those variables of the DP that must be instantiated with
  *             theory terms; must contain all variables of constraint
  */
-public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars) {
+public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars)
+                                                                       implements PrintableObject {
   /** This verifies that all variables in the constraint are in the list */
   private static boolean initialVarSetCondition(Term constraint, Set<Variable> set) {
     return set.containsAll(constraint.vars().toSet());
@@ -105,46 +111,73 @@ public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars) {
     return new DP(newLhs, newRhs, newConstraint, newTheoryVars);
   }
 
+  /** This function properly prints a DP to a Printer (which is also used by OutputModule). */
+  @Override
+  public void print(Printer printer) {
+    Renaming renaming = printer.generateUniqueNaming(this.lhs, this.rhs, this.constraint);
+    printWithRenaming(printer, renaming);
+  }
+
+  /**
+   * This function creates a printable object for printing the DP under a specific Renaming.
+   * Note that the Renaming is expected to contain all the variables in left, right and constraint,
+   * and only those.  Variables that occur in lvars but not in the terms should not be included, as
+   * it would only be confusing to print them.
+   */
+  public PrintableObject makePrintableWith(Renaming renaming) {
+    return new PrintableObject() {
+      public void print(Printer printer) {
+        printWithRenaming(printer, renaming);
+      }
+    };
+  }
+
+  /** This function prints the DP using the given Renaming. */
+  private void printWithRenaming(Printer printer, Renaming naming) {
+    // left ⇒ right
+    printer.add(printer.makePrintable(this.lhs, naming), " ",
+                printer.symbThickArrow(), " ",
+                printer.makePrintable(this.rhs, naming));
+    // | constraint
+    if (!this.constraint.isValue() || this.constraint.toValue().getBool()) {
+      printer.add(" | ", printer.makePrintable(this.constraint, naming));
+    }
+    // { x1, ..., xn }
+    boolean anynew = false;
+    for (Variable x : this.lvars) {
+      if (!this.constraint.freeReplaceables().contains(x)) anynew = true;
+    }
+    if (!anynew) return;
+    boolean first = true;
+    for (Variable x : this.lvars) {
+      if (naming.getName(x) == null) continue;
+      if (constraint.vars().contains(x)) continue;
+      if (first) printer.add(" { ");
+      else printer.add(", ");
+      first = false;
+      printer.add(naming.getName(x));
+    }
+    if (!first) printer.add(" }");
+  }
+
   /**
    * Default toString() functionality; deliberately ugly because printing to the user should always
-   * be done through an output module.
+   * be done through an output module / printer.
    */
   @Override
   public String toString() {
-    return toString(null);
+    Printer printer = PrinterFactory.createDebugPrinter();
+    Renaming renaming = printer.generateUniqueNaming(lhs, rhs, constraint);
+    printWithRenaming(printer, renaming);
+    return printer.toString();
   }
 
   /** Returns a string representation for unit testing (so without nasty variable indexes). */
   public String ustr() {
-    TermPrinter printer = new TermPrinter(Set.of());
+    Printer printer = PrinterFactory.createPrinterNotForUserOutput();
     Renaming renaming = printer.generateUniqueNaming(lhs, rhs, constraint);
-    return toString(renaming);
-  }
-
-  /** Full toString() functionality for a given Renaming */
-  public String toString(Renaming renaming) {
-    StringBuilder builder = new StringBuilder();
-    TermPrinter printer;
-    if (renaming == null) {
-      printer = new DebugTermPrinter();
-      renaming = printer.generateUniqueNaming(lhs, rhs, constraint);
-    }
-    else printer = new TermPrinter(Set.of());
-    printer.print(lhs, renaming, builder);
-    builder.append(" => ");
-    printer.print(rhs, renaming, builder);
-    builder.append(" | ");
-    printer.print(constraint, renaming, builder);
-    builder.append(" {");
-    boolean first = true;
-    for (Variable x : lvars) {
-      if (constraint.vars().contains(x)) continue;
-      if (first) { first = false; builder.append(" "); }
-      else builder.append(", ");
-      printer.print(x, renaming, builder);
-    }
-    builder.append(" }");
-    return builder.toString();
+    printWithRenaming(printer, renaming);
+    return printer.toString();
   }
 }
 

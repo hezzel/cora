@@ -100,6 +100,27 @@ public abstract class Printer {
     return _termPrinter.generateUniqueNaming(terms);
   }
 
+  /**
+   * Returns false if anything has been printed to the Printer (since creation or since the last
+   * clear).
+   */
+  public final boolean isEmpty() {
+    return _builder.length() == 0;
+  }
+
+  /** This sets the current contents of the current printer to "". */
+  public final void clear() {
+    _builder.setLength(0);
+  }
+
+  /**
+   * Returns the string that we have built so far.  It is still possible to continue printing after
+   * using toString().
+   */
+  public final String toString() {
+    return _builder.toString();
+  }
+
   public abstract String symbRuleArrow();
   public abstract String symbTypeArrow();
   public abstract String symbMapsto();
@@ -329,10 +350,6 @@ public abstract class Printer {
   protected void printSingleUnknownObject(Object ob) {
     if (ob instanceof Pair p) throw new PrintingUnknownObjectException(p.fst(), p.snd());
     else throw new PrintingUnknownObjectException(ob);
-  }
-
-  public final String toString() {
-    return _builder.toString();
   }
 
   /**
