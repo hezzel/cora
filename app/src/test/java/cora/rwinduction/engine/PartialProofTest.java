@@ -27,7 +27,6 @@ import charlie.terms.TermPrinter;
 import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
-import charlie.printer.ParseableTermPrinter;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.io.DefaultOutputModule;
@@ -52,7 +51,7 @@ class PartialProofTest {
       super(p.getProofState(), p.getContext()); _txt = txt; }
     public boolean verify(Optional<OutputModule> m) { return true; }
     protected ProofState tryApply(Optional<OutputModule> m) { return null; }
-    public String commandDescription(ParseableTermPrinter termPrinter) { return _txt; }
+    public String commandDescription() { return _txt; }
     public void explain(OutputModule module) { module.println("Explanation: %a", _txt); }
   }
 

@@ -38,7 +38,7 @@ public class Outputter extends OutputModuleAdapter {
 
   protected Object alterObject(Object ob) {
     if (ob instanceof EquationContext context) return context.getPrintableObject();
-    if (ob instanceof EquationPosition pos) return pos.toString(queryPositionPrinter());
+    if (ob instanceof EquationPosition pos) return pos.toString();
     return null;
   }
 

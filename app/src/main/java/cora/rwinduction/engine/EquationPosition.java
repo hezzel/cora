@@ -17,10 +17,12 @@ package cora.rwinduction.engine;
 
 import charlie.exceptions.CustomParserException;
 import charlie.terms.position.Position;
-import charlie.terms.position.PositionPrinter;
+import charlie.printer.Printer;
+import charlie.printer.PrinterFactory;
+import charlie.printer.PrintableObject;
 
 /** A position in an equation is just the combination of a side (left/right) and a position. */
-public class EquationPosition {
+public class EquationPosition implements PrintableObject {
   public enum Side { Left, Right };
 
   public static EquationPosition TOPLEFT = new EquationPosition(Side.Left, Position.empty);
@@ -47,21 +49,23 @@ public class EquationPosition {
     return _position;
   }
 
-  /**
-   * A variant of the toString function that takes into account how positions should be printed.
-   */
-  public String toString(PositionPrinter printer) {
+  @Override
+  public void print(Printer printer) {
     String s = switch (_side) { case Left -> "L"; case Right -> "R"; };
-    if (_position.isEmpty()) return s;
-    else if (_position.isFinal()) return s + "." + printer.print(_position);
-    return s + printer.print(_position);
+    if (_position.isEmpty()) printer.add(s);
+    else if (_position.isFinal()) printer.add(s, ".", _position);
+    else printer.add(s, _position);
   }
 
   /**
-   * Default implementation for debugging; however, proper printing should use the Outputter, or
-   * the other toString() function.
+   * Default implementation for debugging; however, proper printing should use an Outputter or
+   * Printer.
    */
-  public String toString() { return toString(new PositionPrinter()); }
+  public String toString() {
+    Printer printer = PrinterFactory.createPrinterNotForUserOutput();
+    print(printer);
+    return printer.toString();
+  }
 
   /** Checks if both the side and the position are the same as other. */
   public boolean equals(EquationPosition other) {

@@ -20,7 +20,8 @@ import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.terms.*;
 import charlie.trs.Rule;
-import charlie.printer.ParseableTermPrinter;
+import charlie.printer.Printer;
+import charlie.printer.PrinterFactory;
 import charlie.theorytranslation.TermSmtTranslator;
 import cora.config.Settings;
 import cora.io.OutputModule;
@@ -172,21 +173,11 @@ public final class DeductionSimplify extends DeductionStep {
   }
 
   @Override
-  public String commandDescription(ParseableTermPrinter printer) {
-    StringBuilder substitutionString = new StringBuilder("[");
-    TreeSet<Replaceable> keys = new TreeSet<Replaceable>(_substitution.domain());
-    Renaming equationNaming = _equ.getRenaming();
-    boolean first = true;
-    for (Replaceable x : keys) {
-      if (first) first = false;
-      else substitutionString.append(", ");
-      substitutionString.append(_ruleRenaming.getName(x));
-      substitutionString.append(" := ");
-      printer.print(_substitution.get(x), equationNaming, substitutionString);
-    }
-    substitutionString.append("]");
-    return "simplify " + _ruleName + " " + _position.toString() +
-      " with " + substitutionString.toString();
+  public String commandDescription() {
+    Printer printer = PrinterFactory.createParseablePrinter(_pcontext.getTRS());
+    printer.add("simplify ", _ruleName, " ", _position, " with ",
+      printer.makePrintable(_substitution, _ruleRenaming, _equ.getRenaming()));
+    return printer.toString();
   }
 
   @Override
