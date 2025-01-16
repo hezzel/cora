@@ -15,6 +15,7 @@
 
 package charlie.printer;
 
+import java.util.Set;
 import charlie.types.TypePrinter;
 import charlie.terms.position.PositionPrinter;
 import charlie.terms.TermPrinter;
@@ -43,6 +44,27 @@ public class PrinterFactory {
     PositionPrinter po = new PlainPositionPrinter();
     TermPrinter te = new ParseableTermPrinter(trs.queryFunctionSymbolNames());
     return new ParseablePrinter(ty, po, te);
+  }
+
+  /**
+   * This creates a printer with Unicode style, and without taking any forbidden symbols into
+   * account for the TermPrinter.  This is not meant for user output (where the TermPrinter really
+   * should avoid naming variables the same as function symbols), but is useful for unit testing and
+   * toString() functions whose output may be used for instance by the IDE, but is not meant for
+   * showing to the user.
+   */
+  public static Printer createPrinterNotForUserOutput() {
+    return new UnicodePrinter(new TypePrinter(), new PositionPrinter(), new TermPrinter(Set.of()));
+  }
+
+  /**
+   * This creates a plain Printer, where term printing by default shows variable indexes rather
+   * than a more prettified naming.  (A given varnaming is still respected, but any Renaming
+   * generated using this printer will show indexes.)
+   */
+  public static Printer createDebugPrinter() {
+    return new AsciiPrinter(new PlainTypePrinter(), new PlainPositionPrinter(),
+                            new DebugTermPrinter());
   }
 }
 

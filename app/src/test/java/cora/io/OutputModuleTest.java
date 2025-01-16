@@ -28,7 +28,7 @@ import charlie.terms.*;
 import charlie.trs.*;
 import charlie.reader.CoraInputReader;
 
-public class DefaultOutputModuleTest {
+public class OutputModuleTest {
   private TRS exampleTrs() {
     return CoraInputReader.readTrsFromString("f :: Int -> Int -> Int\na::Int -> Int\n" +
                                              "f(x,y) -> f(y,x) | x> y\n" +
@@ -37,7 +37,7 @@ public class DefaultOutputModuleTest {
 
   @Test
   public void testPrintTwoParagraphs() {
-    OutputModule o = DefaultOutputModule.createPlainModule(exampleTrs());
+    OutputModuleX o = OutputModuleX.createUnicodeModule(exampleTrs());
     o.print("Hello ");
     o.println("world!");
     o.print("Test.");
@@ -47,7 +47,7 @@ public class DefaultOutputModuleTest {
 
   @Test
   public void testPrintEmptyParagraph() {
-    OutputModule o = DefaultOutputModule.createPlainModule(exampleTrs());
+    OutputModuleX o = OutputModuleX.createPlainModule(exampleTrs());
     o.println();
     o.println("Beep!");
     o.println();
@@ -57,7 +57,7 @@ public class DefaultOutputModuleTest {
 
   @Test
   public void testPrintSimpleTable() {
-    OutputModule o = DefaultOutputModule.createPlainModule(exampleTrs());
+    OutputModuleX o = OutputModuleX.createPlainModule(exampleTrs());
     o.startTable();
     o.print("A");
     o.nextColumn();
@@ -71,7 +71,7 @@ public class DefaultOutputModuleTest {
 
   @Test
   public void testPadding() {
-    OutputModule o = DefaultOutputModule.createPlainModule(exampleTrs());
+    OutputModuleX o = OutputModuleX.createPlainModule(exampleTrs());
     o.startTable();
     o.nextColumn("Hello");
     o.nextColumn("a");
@@ -85,7 +85,7 @@ public class DefaultOutputModuleTest {
 
   @Test
   public void testEmptyTable() {
-    OutputModule o = DefaultOutputModule.createPlainModule(exampleTrs());
+    OutputModuleX o = OutputModuleX.createPlainModule(exampleTrs());
     o.startTable();
     o.endTable();
     assertTrue(o.toString().equals("\n"));
@@ -93,7 +93,7 @@ public class DefaultOutputModuleTest {
 
   @Test
   public void testAlmostEmptyTable() {
-    OutputModule o = DefaultOutputModule.createPlainModule(exampleTrs());
+    OutputModuleX o = OutputModuleX.createPlainModule(exampleTrs());
     o.startTable();
     o.println();
     o.endTable();
@@ -102,20 +102,20 @@ public class DefaultOutputModuleTest {
 
   @Test
   public void testTableAndParagraph() {
-    OutputModule o = DefaultOutputModule.createPlainModule(exampleTrs());
+    OutputModuleX o = OutputModuleX.createPlainModule(exampleTrs());
     o.startTable();
     o.nextColumn("ABCD");
     o.println("x");
     o.println();
     o.println("E");
     o.endTable();
-    o.print("Some more testing");
-    assertTrue(o.toString().equals("  ABCD x\n  \n  E\n\nSome more testing"));
+    o.println("Some more testing");
+    assertTrue(o.toString().equals("  ABCD x\n  \n  E\n\nSome more testing\n\n"));
   }
 
   @Test
   public void testParagraphAndTable() {
-    OutputModule o = DefaultOutputModule.createPlainModule(exampleTrs());
+    OutputModuleX o = OutputModuleX.createPlainModule(exampleTrs());
     o.println("Hello");
     o.startTable();
     o.println("bing");
@@ -126,43 +126,45 @@ public class DefaultOutputModuleTest {
 
   @Test
   public void testCodes() {
-    OutputModule p = DefaultOutputModule.createPlainModule(exampleTrs());
+    OutputModuleX p = OutputModuleX.createPlainModule(exampleTrs());
     p.println("%{ruleArrow}, %{typeArrow}, %{lambda}, %{vdash}");
     assertTrue(p.toString().equals("->, ->, \\, |-\n\n"));
-    OutputModule u = DefaultOutputModule.createUnicodeModule(exampleTrs());
+    OutputModuleX u = OutputModuleX.createUnicodeModule(exampleTrs());
     u.println("%{ruleArrow}, %{typeArrow}, %{lambda}, %{vdash}");
     assertTrue(u.toString().equals("→, →, λ, ⊢\n\n"));
   }
 
   @Test
   public void testTermWithStringCodes() {
-    OutputModule o = DefaultOutputModule.createPlainModule(exampleTrs());
-    o.println("a %a bing%s %{lambda} %% %a gg!", "hel%alo", "test?");
-    assertTrue(o.toString().equals("a hel%alo bing%s \\ %% test? gg!\n\n"));
+    OutputModuleX o = OutputModuleX.createPlainModule(exampleTrs());
+    assertThrows(IllegalPrintException.class, () ->
+      o.println("a %a bing%s %{lambda} %% %a gg!", "hel%alo", "test?"));
+    o.println("a %a bing%a %{lambda} %% %a gg!", "hel%alo", "s", "test?");
+    assertTrue(o.toString().equals("a hel%alo bings \\ % test? gg!\n\n"));
   }
 
   @Test
   public void testPrintTermsWithDistinctVariablesWithoutRenaming() {
     TRS trs = exampleTrs();
-    OutputModule o = DefaultOutputModule.createPlainModule(trs);
+    OutputModuleX o = OutputModuleX.createPlainModule(trs);
     Term a = CoraInputReader.readTerm("f(x, 3)", trs);
     Term b = CoraInputReader.readTerm("f(0, x + y)", trs);
     o.println("First attempt: terms are %a and %a.", a, b);
     o.print("Second attempt: terms are %a", a);
-    o.print(" and %a.", b);
+    o.println(" and %a.", b);
     assertTrue(o.toString().equals(
       "First attempt: terms are f(x__1, 3) and f(0, x__2 + y).\n\n" +
-      "Second attempt: terms are f(x, 3) and f(0, x + y)."));
+      "Second attempt: terms are f(x, 3) and f(0, x + y).\n\n"));
   }
 
   @Test
   public void testPrintTermsWithRenaming() {
     TRS trs = exampleTrs();
-    OutputModule o = DefaultOutputModule.createPlainModule(trs);
+    OutputModuleX o = OutputModuleX.createPlainModule(trs);
     Term extra = CoraInputReader.readTerm("f(x, 3)", trs);
     Term a = CoraInputReader.readTerm("f(x, y)", trs);
     Term b = CoraInputReader.readTerm("f(x, y)", trs);
-    Renaming renaming = o.queryTermPrinter().generateUniqueNaming(extra, a);
+    Renaming renaming = o.generateUniqueNaming(extra, a);
     o.println("First attempt: %a, %a.", a, b);
     o.println("Second attempt: %a, %a.", new Pair<Term,Renaming>(a,renaming), b);
     assertTrue(o.toString().equals("First attempt: f(x__1, y__1), f(x__2, y__2).\n\n" +
@@ -173,8 +175,8 @@ public class DefaultOutputModuleTest {
   public void testPrintType() {
     TRS trs = exampleTrs();
     Type t = CoraInputReader.readType("(a -> b) -> (c -> d)");
-    OutputModule p = DefaultOutputModule.createPlainModule(trs);
-    OutputModule u = DefaultOutputModule.createUnicodeModule(trs);
+    OutputModuleX p = OutputModuleX.createPlainModule(trs);
+    OutputModuleX u = OutputModuleX.createUnicodeModule(trs);
     p.println("%a", t);
     u.println("%a", t);
     assertTrue(p.toString().equals("(a -> b) -> c -> d\n\n"));
@@ -183,8 +185,8 @@ public class DefaultOutputModuleTest {
 
   @Test
   public void testPrintPosition() throws charlie.exceptions.CustomParserException {
-    OutputModule p = DefaultOutputModule.createPlainModule();
-    OutputModule u = DefaultOutputModule.createUnicodeModule();
+    OutputModuleX p = OutputModuleX.createPlainModule(exampleTrs());
+    OutputModuleX u = OutputModuleX.createUnicodeModule(exampleTrs());
     Position pos = Position.parse("1.2.☆3");
     p.println("%a", pos);
     u.println("%a", pos);
@@ -195,7 +197,7 @@ public class DefaultOutputModuleTest {
   @Test
   public void testPrintRule() {
     TRS trs = exampleTrs();
-    OutputModule o = DefaultOutputModule.createPlainModule(trs);
+    OutputModuleX o = OutputModuleX.createPlainModule(trs);
     Rule r1 = trs.queryRule(0);
     Rule r2 = trs.queryRule(1);
     o.println("Rule %a, rule %a, lhs %a, lhs %a.", r1, r2, r1.queryLeftSide(), r2.queryLeftSide());
@@ -204,22 +206,9 @@ public class DefaultOutputModuleTest {
   }
 
   @Test
-  public void testObjectPair() {
-    Term x = TermFactory.createVar("x");
-    Term y = TermFactory.createVar("x");
-    Term z = TermFactory.createVar("x");
-    Object first = new Pair<String,Object[]>("(%a,%a)", new Object[] {y, x});
-    Object second = new Pair<String,Object[]>("we have: %a and %a.", new Object[] {z, first});
-    TRS trs = exampleTrs();
-    OutputModule o = DefaultOutputModule.createPlainModule(trs);
-    o.println("[%a]", second);
-    assertTrue(o.toString().equals("[we have: x and (x__2,x__1).]\n\n"));
-  }
-
-  @Test
   public void testErrorsWhenNotInATable() {
     TRS trs = exampleTrs();
-    OutputModule o = DefaultOutputModule.createPlainModule(trs);
+    OutputModuleX o = OutputModuleX.createPlainModule(trs);
     o.print("Hello");
     assertThrows(IllegalPrintException.class, () -> o.endTable());
     assertThrows(IllegalPrintException.class, () -> o.nextColumn());
@@ -234,16 +223,15 @@ public class DefaultOutputModuleTest {
   @Test
   public void testIncorrectNumberOfArguments() {
     TRS trs = exampleTrs();
-    OutputModule o = DefaultOutputModule.createPlainModule(trs);
-    o.println("Test 1: %a, %a, %a", "a", "b");
-    assertTrue(o.toString().equals("Test 1: a, b, %a\n\n"));
+    OutputModuleX o = OutputModuleX.createPlainModule(trs);
+    assertThrows(IllegalPrintException.class, () -> o.println("Test 1: %a, %a, %a", "a", "b"));
     assertThrows(IllegalPrintException.class, () -> o.print("Test 2: %a, %a", "a", "b", "c"));
   }
 
   @Test
   public void testPrintTrs() {
     TRS trs = exampleTrs();
-    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    OutputModuleX o = OutputModuleX.createUnicodeModule(trs);
     o.printTrs(trs);
     assertTrue(o.toString().equals(
       "Cora-TRS with rule schemes Beta and Calc:\n\n" +
@@ -256,95 +244,12 @@ public class DefaultOutputModuleTest {
   @Test
   public void testPrintEmptyTrs() {
     TRS trs = TrsFactory.createTrs(new Alphabet(List.of()), List.of(), TrsFactory.AMS);
-    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    OutputModuleX o = OutputModuleX.createUnicodeModule(trs);
     o.printTrs(trs);
     assertTrue(o.toString().equals(
       "AMS with only rule scheme Beta:\n\n" +
       "  Signature: (empty)\n\n" +
       "  Rules: (empty)\n\n"));
-  }
-
-  @Test
-  public void testPrintSubstitutionWithOneRenaming() {
-    Type itype = CoraInputReader.readType("Int");
-    Variable x = TermFactory.createVar("x", itype);
-    Variable y = TermFactory.createVar("x", itype);
-    Variable z = TermFactory.createBinder("x", itype);
-    MetaVariable zz = TermFactory.createMetaVar("Z", CoraInputReader.readType("Int -> Int"), 1);
-    Term zz0 = TermFactory.createMeta(zz, TheoryFactory.createValue(0));
-    TRS trs = exampleTrs();
-    Term faxy = trs.lookupSymbol("f").apply(trs.lookupSymbol("a").apply(x)).apply(y);
-    Term lfzx = TermFactory.createAbstraction(z, trs.lookupSymbol("f").apply(z).apply(x));
-    Renaming renaming = (new TermPrinter(Set.of())).generateUniqueNaming(faxy, lfzx, zz0);
-
-    // []
-    Substitution gamma = TermFactory.createEmptySubstitution();
-    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
-    o.println("%a", new Pair<Substitution,Renaming>(gamma, renaming));
-    assertTrue(o.toString().equals("[]\n\n"));
-
-    // [x := f(a(x),y)]
-    gamma.extend(x, faxy);
-    o.println("%a", new Pair<Substitution,Renaming>(gamma, renaming));
-
-    // [x := f(a(x), y); Z := λz.f(z,x)]
-    gamma.extend(zz, lfzx);
-    o.println("%a", new Pair<Substitution,Renaming>(gamma, renaming));
-
-    assertTrue(o.toString().equals("[]\n\n" +
-      "[x__1 := f(a(x__1), x__2)]\n\n" +
-      "[x__1 := f(a(x__1), x__2), Z := λx1.f(x1, x__1)]\n\n"));
-  }
-
-  @Test
-  public void testPrintSubstitutionWithTwoRenamings() {
-    Type itype = CoraInputReader.readType("Int");
-    Variable x = TermFactory.createVar("x", itype);
-    Variable y = TermFactory.createVar("x", itype);
-    Variable z = TermFactory.createBinder("z", itype);
-    MetaVariable zz = TermFactory.createMetaVar("Z", CoraInputReader.readType("Int -> Int"), 1);
-    Term zz0 = TermFactory.createMeta(zz, TheoryFactory.createValue(0));
-    TRS trs = exampleTrs();
-    Term faxy = trs.lookupSymbol("f").apply(trs.lookupSymbol("a").apply(x)).apply(y);
-    Term lfzx = TermFactory.createAbstraction(z, trs.lookupSymbol("f").apply(z).apply(x));
-
-    TermPrinter tmp = new TermPrinter(Set.of());
-    Renaming keys = tmp.generateUniqueNaming(x, zz0);
-    Renaming values = tmp.generateUniqueNaming(faxy, lfzx);
-
-    Substitution gamma = TermFactory.createEmptySubstitution();
-    Pair<Substitution,Pair<Renaming,Renaming>> p =  new Pair<Substitution,Pair<Renaming,Renaming>>(
-      gamma,new Pair<Renaming,Renaming>(keys, values));
-
-    // []
-    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
-    o.println("%a", p);
-    assertTrue(o.toString().equals("[]\n\n"));
-
-    // [x := f(a(x),y)]
-    gamma.extend(x, faxy);
-    o.println("%a", p);
-
-    // [x := f(a(x), y); Z := λz.f(z,x)]
-    gamma.extend(zz, lfzx);
-    o.println("%a", p);
-
-    assertTrue(o.toString().equals("[]\n\n" +
-        "[x := f(a(x__1), x__2)]\n\n" +
-        "[x := f(a(x__1), x__2), Z := λz.f(z, x__1)]\n\n"));
-  }
-
-  @Test
-  public void testMissingKeyInSubstitutionPrint() {
-    Substitution gamma = TermFactory.createEmptySubstitution();
-    TRS trs = exampleTrs();
-    Term fx3 = CoraInputReader.readTerm("f(x, 3)", trs);
-    Substitution subst = TermFactory.createEmptySubstitution();
-    subst.extend(TermFactory.createVar("x", CoraInputReader.readType("Int")), fx3);
-    Renaming renaming = (new TermPrinter(Set.of())).generateUniqueNaming(fx3);
-    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
-    assertThrows(IllegalArgumentException.class, () ->
-      o.println("%a", new Pair<Substitution,Renaming>(subst, renaming)));
   }
 }
 

@@ -155,7 +155,7 @@ class DeductionSimplifyTest {
                                                           EquationPosition.TOPLEFT, subst).get();
     assertTrue(step.verify(Optional.of(module)));
     assertTrue(step.execute(pp, Optional.of(module)));
-    assertTrue(pp.getProofState().getTopEquation().toString().equals("E2: (• , -1 ≈ 7 | true , •)"));
+    assertTrue(pp.getProofState().getTopEquation().toString().equals("E2: (• , -1 ≈ 7 , •)"));
     assertTrue(pp.getCommandHistory().get(0).equals("simplify O6 L with [x := -1, y := 8]"));
     assertTrue(module.toString().equals(""));
   }

@@ -61,7 +61,7 @@ public class AsciiPrinter extends Printer{
   public String symbApprox()          { return "[=]"; }
 
   public String symbSharp()           { return "#"; }
-  public String symbBullet()          { return "#"; }
+  public String symbBullet()          { return "*"; }
   public String symbStar()            { return "*"; }
 
   public String symbAlpha()           { return "alpha"; }
@@ -74,7 +74,7 @@ public class AsciiPrinter extends Printer{
   public String symbTheta()           { return "theta"; }
   public String symbIota()            { return "iota"; }
   public String symbKappa()           { return "kappa"; }
-  public String symbLambda()          { return "lambda"; }
+  public String symbLambda()          { return "\\"; }
   public String symbMu()              { return "mu"; }
   public String symbNu()              { return "nu"; }
   public String symbXi()              { return "xi"; }

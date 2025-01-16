@@ -44,7 +44,7 @@ class DPGeneratorTest {
     assertTrue(trs.lookupSymbol("eval#") == null);
     assertTrue(prob.getDPList().size() == 1);
     assertTrue(prob.getDPList().get(0).ustr().equals(
-      "eval#(x, y) => eval#(x - 1, y) | x > y { }"));
+      "eval#(x, y) ➡ eval#(x - 1, y) | x > y"));
   }
 
   @Test
@@ -60,7 +60,7 @@ class DPGeneratorTest {
     assertFalse(prob.hasExtraRules());
     assertTrue(prob.getDPList().size() == 1);
     assertTrue(prob.getDPList().get(0).ustr().equals(
-      "append#(cons(x, y), z) => append#(y, z) | true { }"));
+      "append#(cons(x, y), z) ➡ append#(y, z) | true"));
   }
 
   @Test
@@ -79,9 +79,9 @@ class DPGeneratorTest {
       "Int → Int → dpsort"));
     assertTrue(prob.getDPList().size() == 2);
     assertTrue(prob.getDPList().get(0).ustr().equals(
-      "f#(x, arg2) => f#(x - 1, fresh1) | x > 0 { }"));
+      "f#(x, arg2) ➡ f#(x - 1, fresh1) | x > 0"));
     assertTrue(prob.getDPList().get(1).ustr().equals(
-      "f#(x, arg2) => g#(f(x - 1), arg2) | x > 0 { }"));
+      "f#(x, arg2) ➡ g#(f(x - 1), arg2) | x > 0"));
   }
 
   @Test
@@ -105,10 +105,8 @@ class DPGeneratorTest {
       "(Int → Int) → list → dpsort"));
     assertTrue(prob.isPrivate(0));
     assertFalse(prob.isPrivate(1));
-    assertTrue(prob.getDPList().get(0).ustr().equals(
-      "map#(F, cons(x, y)) => map#(F, y) | true { }"));
-    assertTrue(prob.getDPList().get(1).ustr().equals(
-      "start#(arg1) => map#([+](2), arg1) | true { }"));
+    assertTrue(prob.getDPList().get(0).ustr().equals("map#(F, cons(x, y)) ➡ map#(F, y) | true"));
+    assertTrue(prob.getDPList().get(1).ustr().equals("start#(arg1) ➡ map#([+](2), arg1) | true"));
   }
 
   @Test

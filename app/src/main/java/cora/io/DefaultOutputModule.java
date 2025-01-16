@@ -244,7 +244,7 @@ public class DefaultOutputModule implements OutputModule {
   @Override
   public void nextColumn() {
     if (_currentTable == null) {
-      throw new IllegalPrintError("Called endTable when no table was started!");
+      throw new IllegalPrintException("Called endTable when no table was started!");
     }
     ArrayList<String> myrow = _currentTable.get(_currentTable.size()-1);
     if (myrow.size() == 0) myrow.add("");
@@ -278,7 +278,7 @@ public class DefaultOutputModule implements OutputModule {
   @Override
   public void endTable() {
     if (_currentTable == null) {
-      throw new IllegalPrintError("Called endTable when no table was started!");
+      throw new IllegalPrintException("Called endTable when no table was started!");
     }
     // if there's an empty line at the end of the table, we remove it
     if (_currentTable.size() > 0 && _currentTable.get(_currentTable.size()-1).size() == 0) {
@@ -356,8 +356,8 @@ public class DefaultOutputModule implements OutputModule {
     for (int i = 0; i < objects.length; i++) {
       int pos = text.indexOf("%a", searchfrom);
       if (pos < 0) {
-        throw new IllegalPrintError("Illegal print; arguments " + text + " with " + objects.length +
-                                    " arguments");
+        throw new IllegalPrintException("Illegal print; arguments " + text + " with " +
+                                        objects.length + " arguments");
       }
       ret.append(text.substring(searchfrom, pos));
       ret.append(printObject(objects[i]));

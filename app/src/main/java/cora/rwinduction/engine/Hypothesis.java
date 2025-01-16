@@ -17,12 +17,15 @@ package cora.rwinduction.engine;
 
 import charlie.util.Pair;
 import charlie.terms.Renaming;
+import charlie.printer.Printer;
+import charlie.printer.PrintableObject;
+import charlie.printer.PrinterFactory;
 
 /**
  * A Hypothesis couples an Equation with a Renaming and an index.
  * All hypotheses are immutable.
  */
-public class Hypothesis {
+public class Hypothesis implements PrintableObject {
   private Equation _equation;
   private Renaming _varNaming;
   private int _index;
@@ -53,7 +56,14 @@ public class Hypothesis {
     return _varNaming.copy();
   }
 
+  /** Adds the current hypothesis to the given printer. */
+  public void print(Printer printer) {
+    printer.add(getName(), ": ");
+    _equation.printWithRenaming(printer, _varNaming);
+  }
+
   /** Returns an object that can be conveniently printed to an OutputModule. */
+  // TODO: remove
   public Pair<String,Object[]> getPrintableObject() {
     return new Pair<String,Object[]>("%a: %a", new Object[] {
       getName(), _equation.getPrintableObject(_varNaming)});
@@ -61,10 +71,12 @@ public class Hypothesis {
 
   /**
    * Only for debugging or testing purposes!
-   * Use cora.rwinduction.tui.Outputter to properly print a Hypothesis.
+   * Use a Printer or OutputModule to properly print a Hypothesis.
    */
   public String toString() {
-    return getName() + ": " + _equation.toString(_varNaming);
+    Printer printer = PrinterFactory.createPrinterNotForUserOutput();
+    print(printer);
+    return printer.toString();
   }
 }
 
