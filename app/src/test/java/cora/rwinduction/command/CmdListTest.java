@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -35,10 +35,10 @@ class CmdListTest {
     TRS trs = CoraInputReader.readTrsFromString(
       "add :: Int -> Int -> Int\n" +
       "add(x,y) -> x + y\n");
-    _module = cora.io.DefaultOutputModule.createUnicodeModule();
+    _module = cora.io.OutputModule.createUnicodeModule(trs);
     PartialProof proof = new PartialProof(trs,
       cora.rwinduction.parser.EquationParser.parseEquationList("add(x,y) = x + y", trs),
-      _module.queryTermPrinter());
+      lst -> _module.generateUniqueNaming(lst));
   }
 
   private class MyCommand extends Command {

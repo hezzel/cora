@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -31,7 +31,6 @@ import charlie.smt.SmtProblem;
 import charlie.smt.SmtSolver;
 import cora.config.Settings;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 import cora.rwinduction.parser.EquationParser;
 import cora.rwinduction.engine.*;
 
@@ -54,8 +53,9 @@ class DeductionSimplifyTest {
 
   public PartialProof setupProof(String eqdesc) {
     TRS trs = setupTRS();
+    TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
     return new PartialProof(trs, EquationParser.parseEquationList(eqdesc, trs),
-                            new TermPrinter(Set.of()));
+                            lst -> printer.generateUniqueNaming(lst));
   }
 
   private class MySmtSolver implements SmtSolver {
@@ -76,7 +76,7 @@ class DeductionSimplifyTest {
   @Test
   public void testCreateStep() throws CustomParserException {
     PartialProof pp = setupProof("sum1(z) + 0 = iter(z, 0, 0) | z < 0");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
@@ -92,7 +92,7 @@ class DeductionSimplifyTest {
   @Test
   public void testStepImmutable() {
     PartialProof pp = setupProof("sum1(z) = iter(z, 0, 0) | z >= 0");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     Substitution empty = TermFactory.createEmptySubstitution();
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O4",
                                                           EquationPosition.TOPRIGHT, empty).get();
@@ -107,7 +107,7 @@ class DeductionSimplifyTest {
   @Test
   public void testSimplifyUnconstrained() {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(true);
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O3",
                        EquationPosition.TOPRIGHT, TermFactory.createEmptySubstitution()).get();
@@ -123,7 +123,7 @@ class DeductionSimplifyTest {
   @Test
   public void testSimplifyConstrained() throws CustomParserException {
     PartialProof pp = setupProof("sum1(z) + 0 = iter(z, 0, 0) | z > 0");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
@@ -139,7 +139,7 @@ class DeductionSimplifyTest {
   @Test
   public void testSimplifyWithSubstitution() {
     PartialProof pp = setupProof("input = 7");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     Settings.smtSolver = new MySimpleSolver();
 
     Substitution subst = TermFactory.createEmptySubstitution();
@@ -160,7 +160,7 @@ class DeductionSimplifyTest {
   @Test
   public void testSimplifyWithSubstitutionMappingToConstraintVar() {
     PartialProof pp = setupProof("input = 7 | z = 7");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     Settings.smtSolver = new MySimpleSolver();
     Renaming rulenaming = pp.getContext().getRenaming("O6");
     Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
@@ -181,7 +181,7 @@ class DeductionSimplifyTest {
   @Test
   public void testSimplifyNoMatch() {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
     assertTrue(DeductionSimplify.createStep(pp, Optional.of(module), "O3", EquationPosition.TOPLEFT,
@@ -193,7 +193,7 @@ class DeductionSimplifyTest {
   @Test
   public void testSimplifyBadPosition() throws CustomParserException {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1.2"));
@@ -205,7 +205,7 @@ class DeductionSimplifyTest {
   @Test
   public void testMissingVariablesFromSubstitution() {
     PartialProof pp = setupProof("input = 7");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O6",
@@ -220,7 +220,7 @@ class DeductionSimplifyTest {
   @Test
   public void testSimplifyConstraintVariableNotAValue() {
     PartialProof pp = setupProof("sum1(z + 1) = iter(z + 1, 0, 0) | z ≥ 0");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2",
@@ -239,7 +239,7 @@ class DeductionSimplifyTest {
   @Test
   public void testSimplifyConstraintNotImplied() {
     PartialProof pp = setupProof("sum1(z) = iter(z, 0, 0) | z >= 0");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     Settings.smtSolver = new MySimpleSolver();
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2",
       EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).get();
@@ -252,7 +252,7 @@ class DeductionSimplifyTest {
   @Test
   public void testOnlyNeededVariablesAfterSimplify() {
     PartialProof pp = setupProof("0 = tmp(z) | x < 0");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(false);
     Settings.smtSolver = solver;
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O7",

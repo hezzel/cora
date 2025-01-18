@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -23,19 +23,19 @@ import charlie.util.FixedList;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 import cora.rwinduction.engine.PartialProof;
 import cora.rwinduction.parser.CommandParsingStatus;
 import cora.rwinduction.parser.EquationParser;
 
 class CommandHelpTest {
+  TRS trs = CoraInputReader.readTrsFromString(
+    "sum1 :: Int -> result\n" +
+    "sum2 :: Int -> result\n");
+
   private PartialProof createPP(OutputModule module) {
-    TRS trs = CoraInputReader.readTrsFromString(
-        "sum1 :: Int -> result\n" +
-        "sum2 :: Int -> result\n");
     return new PartialProof(trs,
       EquationParser.parseEquationList("sum1(x) = sum2(x) | x ≥ 0", trs),
-      module.queryTermPrinter());
+      lst -> module.generateUniqueNaming(lst));
   }
 
   private CmdList makeCmdList() {
@@ -60,7 +60,7 @@ class CommandHelpTest {
 
   @Test
   public void testHelpPlain() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     runCommand(module, ":help");
     assertTrue(module.toString().equals(
     "Welcome to the interactive equivalence prover!\n\n" +
@@ -70,7 +70,7 @@ class CommandHelpTest {
 
   @Test
   public void testHelpCommands() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     runCommand(module, ":help   commands");
     assertTrue(module.toString().equals(
       "You can use the following commands to interact with the prover:\n\n" +
@@ -80,7 +80,7 @@ class CommandHelpTest {
 
   @Test
   public void testHelpSingle() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     runCommand(module, ":help :help");
     assertTrue(module.toString().equals(
       ":help: Prints a short description to explain how the prover works.\n\n" +
@@ -92,13 +92,13 @@ class CommandHelpTest {
   @Test
   public void testBadInvocation() {
     Command cmd = new CommandHelp(makeCmdList());
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     cmd.storeContext(createPP(module), module);
     assertFalse(cmd.execute(new CommandParsingStatus("quit")));
     assertTrue(module.toString().equals("Unknown command: quit\n\n"));
-    module.clear();
     assertFalse(cmd.execute(new CommandParsingStatus(":quit :help")));
     assertTrue(module.toString().equals(
+      "Unknown command: quit\n\n" +
       "Unexpected argument at position 7: :help takes at most 1 argument.\n\n"));
   }
 }

@@ -95,7 +95,7 @@ class SubtermCriterionProof extends ProcessorProofObject {
       }
       Term left = dp.lhs().queryArgument(_proj.get(f));
       Term right = dp.rhs().queryArgument(_proj.get(g));
-      Renaming renaming = module.queryTermPrinter().generateUniqueNaming(left, right);
+      Renaming renaming = module.generateUniqueNaming(left, right);
       boolean oriented = _oriented.contains(index);
       module.nextColumn("(" + (index+1) + ")");
       module.nextColumn("%a", new Pair<Term,Renaming>(left, renaming));

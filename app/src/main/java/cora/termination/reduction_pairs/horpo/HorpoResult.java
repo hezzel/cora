@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -147,10 +147,10 @@ class HorpoResult extends ReductionPairProofObject {
   private void printOrderings(OutputModule o) {
     o.println("* Well-founded theory orderings:");
     o.startTable();
-    o.nextColumn("%{sqsupset}_{Bool}");
+    o.nextColumn("%{sqSupset}_{Bool}");
     o.nextColumn("=");
     o.println("{(true,false)}");
-    o.nextColumn("%{sqsupset}_{Int}");
+    o.nextColumn("%{sqSupset}_{Int}");
     o.nextColumn("=");
     printIntegerOrdering(o);
     o.println();

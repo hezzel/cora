@@ -104,8 +104,7 @@ class IntegerMappingProof extends ProcessorProofObject {
       DP dp = originalDPs.get(index);
       Term left = instantiateCandidate(_intp.get(dp.lhs().queryRoot()), dp.lhs());
       Term right = instantiateCandidate(_intp.get(dp.rhs().queryRoot()), dp.rhs());
-      Renaming renaming =
-        module.queryTermPrinter().generateUniqueNaming(left, right, dp.constraint());
+      Renaming renaming = module.generateUniqueNaming(left, right, dp.constraint());
       boolean oriented = _oriented.contains(index);
       module.nextColumn("(" + (index+1) + ")");
       module.nextColumn("%a", new Pair<Term,Renaming>(dp.constraint(), renaming));

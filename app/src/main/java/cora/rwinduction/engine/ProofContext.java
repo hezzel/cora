@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,17 +16,17 @@
 package cora.rwinduction.engine;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 import java.util.HashMap;
 import java.util.Stack;
 import charlie.exceptions.NullStorageException;
 import charlie.util.FixedList;
+import charlie.terms.Term;
 import charlie.terms.Renaming;
-import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
-import charlie.printer.ParseableTermPrinter;
 import charlie.util.Pair;
-import cora.io.OutputModule;
 
 /**
  * A ProofContext object keeps track of the fixed data in a proof, such as the underlying TRS and
@@ -42,14 +42,14 @@ public class ProofContext {
    * Constructor: sets up a ProofContext with rules taken from the given TRS.
    * The TermPrinter is used for generating Renamings.
    */
-  public ProofContext(TRS initialSystem, TermPrinter tp) {
+  public ProofContext(TRS initialSystem, Function<List<Term>,Renaming> renamingMaker) {
     if (initialSystem == null) throw new NullStorageException("ProofContext", "initial TRS");
     _trs = initialSystem;
     int n = initialSystem.queryRuleCount();
     for (int i = 0; i < initialSystem.queryRuleCount(); i++) {
       Rule rule = initialSystem.queryRule(i);
-      Renaming renaming =
-        tp.generateUniqueNaming(rule.queryLeftSide(), rule.queryRightSide(), rule.queryConstraint());
+      Renaming renaming = renamingMaker.apply(List.of(
+        rule.queryLeftSide(), rule.queryRightSide(), rule.queryConstraint()));
       String name = "O" + (i+1);
       _ruleNames.add(name);
       _nameToRule.put(name, i);

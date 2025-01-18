@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -69,25 +69,25 @@ class ParametersTest {
   @Test
   public void testRequestPlainStyle() {
     Parameters param = new Parameters(new String[] { "--print", "test", "-y", "plain" });
-    OutputModule m = param.queryOutputModule();
-    m.print("%{alpha}");
-    assertTrue(m.toString().equals("alpha"));
+    OutputModule m = param.queryOutputModule(CoraInputReader.readTrsFromString(""));
+    m.println("%{alpha}");
+    assertTrue(m.toString().equals("alpha\n\n"));
   }
 
   @Test
   public void testRequestUnicodeStyle() {
     Parameters param = new Parameters(new String[] { "--print", "test", "-y", "UNICODE" });
     OutputModule m = param.queryOutputModule(CoraInputReader.readTrsFromString(""));
-    m.print("%{alpha}");
-    assertTrue(m.toString().equals("α"));
+    m.println("%{alpha}");
+    assertTrue(m.toString().equals("α\n\n"));
   }
 
   @Test
   public void testRequestNoStyle() {
-    Parameters param = new Parameters(new String[] { "--print", "test", "-y", "UNICODE" });
-    OutputModule m = param.queryOutputModule();
-    m.print("%{alpha}");
-    assertTrue(m.toString().equals("α"));
+    Parameters param = new Parameters(new String[] { "--print", "test" });
+    OutputModule m = param.queryOutputModule(CoraInputReader.readTrsFromString(""));
+    m.println("%{alpha}");
+    assertTrue(m.toString().equals("α\n\n"));
   }
 
   @Test

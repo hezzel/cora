@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -22,7 +22,6 @@ import charlie.trs.TRS;
 import charlie.trs.TrsFactory;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
 import cora.termination.dependency_pairs.DP;
@@ -36,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UsableRulesTest {
   private String getMessage(TRS trs, ProcessorProofObject po) {
-    OutputModule module = DefaultOutputModule.createUnicodeModule(trs);
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     po.justify(module);
     return module.toString();
   }

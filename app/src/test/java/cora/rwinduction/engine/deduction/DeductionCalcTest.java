@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -23,36 +23,32 @@ import java.util.Optional;
 
 import charlie.exceptions.CustomParserException;
 import charlie.util.FixedList;
-import charlie.terms.TermPrinter;
+import charlie.terms.Renaming;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 import cora.rwinduction.parser.EquationParser;
 import cora.rwinduction.engine.*;
 
 class DeductionCalcTest {
-  private TRS setupTRS() {
-    return CoraInputReader.readTrsFromString(
-      "iter :: Int -> Int -> Int -> Int\n" +
-      "iter(x, i, z) -> z | i > x\n" +
-      "iter(x, i, z) -> iter(x, i+1, z+i) | i <= x\n");
-  }
+  private TRS trs = CoraInputReader.readTrsFromString(
+    "iter :: Int -> Int -> Int -> Int\n" +
+    "iter(x, i, z) -> z | i > x\n" +
+    "iter(x, i, z) -> iter(x, i+1, z+i) | i <= x\n");
 
   public PartialProof setupProof() {
-    TRS trs = setupTRS();
     return new PartialProof(trs,
       EquationParser.parseEquationList(
         "iter(x + y, x * 2, x / y) -><- iter(- y, u + 12, 17) | a = x + y ∧ x / y = u ∧ -y = z ; " +
         "iter(1 + (2 + 3), x * y + z, x + y) -><- x + y| x ≥ 0 ∧ u = x * y ;"
         , trs),
-      new TermPrinter(Set.of()));
+      lst -> new Renaming(trs.queryFunctionSymbolNames()));
   }
 
   @Test
   public void testImmediateStep() throws CustomParserException {
     PartialProof pp = setupProof();
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L1.2.ε");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
@@ -68,7 +64,7 @@ class DeductionCalcTest {
   @Test
   public void testKnownCalculation() throws CustomParserException {
     PartialProof pp = setupProof();
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("2.1");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
@@ -84,7 +80,7 @@ class DeductionCalcTest {
   @Test
   public void testMultipleKnownCalculations() throws CustomParserException {
     PartialProof pp = setupProof();
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     // skip to E1
     pp.addProofStep(pp.getProofState().deleteTopEquation(), DeductionDelete.createStep(pp,o).get());
@@ -102,7 +98,7 @@ class DeductionCalcTest {
   @Test
   public void testUnknownCalculation() throws CustomParserException {
     PartialProof pp = setupProof();
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L3");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
@@ -119,7 +115,7 @@ class DeductionCalcTest {
   @Test
   public void testMultipleUnknownCalculation() throws CustomParserException {
     PartialProof pp = setupProof();
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos1 = EquationPosition.parse("L3");
     EquationPosition pos2 = EquationPosition.parse("R");
@@ -137,7 +133,7 @@ class DeductionCalcTest {
   @Test
   public void testBiggerKnownCalculation() throws CustomParserException {
     PartialProof pp = setupProof();
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L1");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
@@ -153,7 +149,7 @@ class DeductionCalcTest {
   @Test
   public void testBiggerUnknownCalculation() throws CustomParserException {
     PartialProof pp = setupProof();
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L2");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
@@ -168,7 +164,7 @@ class DeductionCalcTest {
   @Test
   public void testMultiStepRightOrder() throws CustomParserException {
     PartialProof pp = setupProof();
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L2");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(
@@ -185,7 +181,7 @@ class DeductionCalcTest {
   @Test
   public void testMultistepWrongOrder() throws CustomParserException {
     PartialProof pp = setupProof();
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L2");
     assertTrue(DeductionCalc.createStep(pp, o, List.of(EquationPosition.parse("L1"),

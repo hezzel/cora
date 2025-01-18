@@ -15,18 +15,18 @@
 
 package cora.termination.reduction_pairs;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Collections;
 
-import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.Variable;
-import charlie.terms.Renaming;
 import charlie.trs.Rule;
-import cora.io.OutputModule;
+import charlie.printer.Printer;
+import charlie.printer.PrintableObject;
 
 /**
  * An OrderingRequirement is a constrained requirement left R right [constraint], where R is either
@@ -35,7 +35,7 @@ import cora.io.OutputModule;
  * The set tvar is unmodifiable.
  */
 public record OrderingRequirement(Term left, Term right, Term constraint, Relation rel,
-                                  Set<Variable> tvar) {
+                                  Set<Variable> tvar) implements PrintableObject {
   public enum Relation { Strict, Weak }
 
   /**
@@ -55,41 +55,46 @@ public record OrderingRequirement(Term left, Term right, Term constraint, Relati
          Collections.unmodifiableSet(new TreeSet<Variable>(rho.queryLVars())));
   }
 
-  /**
-   * Prints the current requirement to the given module (within the current paragraph or column;
-   * no structural commands are used, so this can safely be added in the middle of a sentence).
-   */
-  public void printTo(OutputModule module) {
-    Renaming naming = module.queryTermPrinter().generateUniqueNaming(left, right, constraint);
-    String relation = switch (rel) {
-      case Strict -> "%{succ}";
-      case Weak -> "%{succeq}";
-    };
-    Pair<Term,Renaming> l = new Pair<Term,Renaming>(left, naming);
-    Pair<Term,Renaming> r = new Pair<Term,Renaming>(right, naming);
-    Pair<Term,Renaming> c = new Pair<Term,Renaming>(constraint, naming);
-    module.print("%a " + relation + " %a", l, r);
-    if (!constraint.isValue() || !constraint.toValue().getBool()) module.print(" | %a", c);
-    // print the extra variables only if necessary
-    boolean allvarsinconstraint = true;
-    for (Variable x : tvar) {
-      if (!constraint.vars().contains(x)) {
-        if (left.vars().contains(x) || right.vars().contains(x)) {
-          allvarsinconstraint = false;
-          break;
-        }
-      }
+  /** Prints the current requirement to the given printer. */
+  public void print(Printer printer) {
+    ArrayList<Object> components = new ArrayList<Object>();
+    components.add(left);
+    components.add(" ");
+    components.add(switch(rel) {
+      case Strict -> printer.symbSucc();
+      case Weak -> printer.symbSucceq();
+    });
+    components.add(" ");
+    components.add(right);
+    if (!constraint.isValue() || !constraint.toValue().getBool()) {
+      components.add(" | ");
+      components.add(constraint);
     }
-    if (!allvarsinconstraint) {
-      module.print(" { ");
+    if (!allVarsInConstraint()) {
+      components.add(" { ");
       for (Variable x : tvar) {
         // only show the variables that actually occur
         if (!left.vars().contains(x) && !right.vars().contains(x) &&
             !constraint.vars().contains(x)) continue;
-        module.print("%a ", new Pair<Term,Renaming>(x, naming));
+        components.add(x);
+        components.add(" ");
       }
-      module.print("}");
+      components.add("}");
     }
+    printer.add(components);
+  }
+
+  /**
+   * Helper function for print: this returns whether or not all variables in tvar also occur in the
+   * constraint.
+   */
+  private boolean allVarsInConstraint() {
+    for (Variable x : tvar) {
+      if (!constraint.vars().contains(x)) {
+        if (left.vars().contains(x) || right.vars().contains(x)) return false;
+      }
+    }
+    return true;
   }
   
   /** Should only be used for debug output (and is deliberately ugly to make that clear) */

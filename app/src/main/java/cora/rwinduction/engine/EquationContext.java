@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 import charlie.exceptions.IndexingException;
-import charlie.util.Pair;
 import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
@@ -196,17 +195,6 @@ public class EquationContext implements PrintableObject {
    */
   public EquationContext replace(Equation eq, Renaming naming, int index) {
     return new EquationContext(_leftGeq, eq, _rightGeq, index, naming.copy());
-  }
-
-  /** Returns an object that can be conveniently printed to an OutputModule. */
-  // TODO: remove
-  public Pair<String,Object[]> getPrintableObject() {
-    Object l = _leftGeq.isEmpty() ? new Pair<String,Object[]>("%{bullet}", new Object [] {})
-                                  : new Pair<Term,Renaming>(_leftGeq.get(), _varNaming);
-    Object r = _rightGeq.isEmpty() ? new Pair<String,Object[]>("%{bullet}", new Object [] {})
-                                   : new Pair<Term,Renaming>(_rightGeq.get(), _varNaming);
-    Object eq = _equation.getPrintableObject(_varNaming);
-    return new Pair<String,Object[]>("(%a , %a , %a)", new Object[] { l, eq, r });
   }
 
   /** Prints the equation context to the given printer. */

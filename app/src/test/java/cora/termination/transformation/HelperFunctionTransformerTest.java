@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -250,7 +250,7 @@ public class HelperFunctionTransformerTest {
     HelperFunctionTransformer transformer = new HelperFunctionTransformer(trs);
     HelperFunctionTransformer.TransformerProofObject tpo = transformer.transform();
     assertTrue(tpo.queryAnswer() == ProofObject.Answer.NO);
-    OutputModule module = DefaultOutputModule.createPlainModule(trs);
+    OutputModule module = OutputModule.createPlainModule(trs);
     tpo.justify(module);
     assertTrue(module.toString().equals("The TRS does not satisfy the conditions to " +
       "apply the helper function transformation.\n\n"));
@@ -271,7 +271,7 @@ public class HelperFunctionTransformerTest {
     HelperFunctionTransformer transformer = new HelperFunctionTransformer(trs);
     HelperFunctionTransformer.TransformerProofObject tpo = transformer.transform();
     assertTrue(tpo.queryAnswer() == ProofObject.Answer.MAYBE);
-    OutputModule module = DefaultOutputModule.createPlainModule(trs);
+    OutputModule module = OutputModule.createPlainModule(trs);
     tpo.justify(module);
     assertTrue(module.toString().equals("The helper function transformation was not applied: " +
       "I could not find any candidate positions to replace.\n\n"));
@@ -304,7 +304,7 @@ public class HelperFunctionTransformerTest {
       "  g(f'(arg.1.1)) → f(arg.1.1, b)\n" +
       "}\n" +
       "We also include the following rule schemes: Calc\n"));
-    OutputModule module = DefaultOutputModule.createPlainModule(trs);
+    OutputModule module = OutputModule.createPlainModule(trs);
     tpo.justify(module);
     assertTrue(module.toString().equals(
       "We observe that the TRS can be modified, without affecting termination, in the following way:"

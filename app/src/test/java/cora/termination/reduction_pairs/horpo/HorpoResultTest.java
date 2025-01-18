@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -47,7 +47,7 @@ public class HorpoResultTest {
     assertTrue(result.queryAnswer() == ProofObject.Answer.MAYBE);
     assertFalse(result.isStrictlyOriented(0));
     assertFalse(result.isStrictlyOriented(42));
-    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    OutputModule o = OutputModule.createUnicodeModule(trs);
     result.justify(o);
     assertTrue(o.toString().equals("Could not find a proof.\n\n"));
     FunctionSymbol f = trs.lookupSymbol("f");
@@ -113,7 +113,7 @@ public class HorpoResultTest {
     assertTrue(result.regards(g, 1));
     assertTrue(result.regards(h, 2));
     assertTrue(result.stronglyMonotonic());
-    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    OutputModule o = OutputModule.createUnicodeModule(trs);
     result.justify(o);
     assertTrue(o.toString().equals(
       "Constrained HORPO yields:\n\n" +
@@ -176,7 +176,7 @@ public class HorpoResultTest {
     assertFalse(result.regards(h, 1));
     assertTrue(result.regards(h, 2));
     assertFalse(result.stronglyMonotonic());
-    OutputModule o = DefaultOutputModule.createUnicodeModule(trs);
+    OutputModule o = OutputModule.createUnicodeModule(trs);
     result.justify(o);
     assertTrue(o.toString().equals(
       "Constrained HORPO yields:\n\n" +

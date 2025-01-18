@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -33,7 +33,6 @@ import charlie.smt.SmtProblem;
 import charlie.smt.SmtSolver;
 import cora.config.Settings;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 import cora.rwinduction.parser.EquationParser;
 import cora.rwinduction.engine.*;
 
@@ -52,14 +51,15 @@ class DeductionDeleteTest {
 
   public PartialProof setupProof(String eqdesc) {
     TRS trs = setupTRS();
+    TermPrinter printer = new TermPrinter(Set.of());
     return new PartialProof(trs,
       EquationParser.parseEquationList("sum1(x) = sum2(x) | x ≥ 0 ; " + eqdesc, trs),
-      new TermPrinter(Set.of()));
+      lst -> printer.generateUniqueNaming(lst));
   }
 
   private void testDeleteEquation(String eqdesc) {
     PartialProof pp = setupProof(eqdesc);
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     DeductionDelete step = DeductionDelete.createStep(pp, o).get();
     assertTrue(step.verifyAndExecute(pp, o));
@@ -73,7 +73,7 @@ class DeductionDeleteTest {
 
   private String testFailToDeleteEquation(String eqdesc) {
     PartialProof pp = setupProof(eqdesc);
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     Optional<DeductionDelete> dd = DeductionDelete.createStep(pp, o);
     if (dd.isEmpty()) return module.toString();
@@ -122,11 +122,12 @@ class DeductionDeleteTest {
     MySmtSolver solver = new MySmtSolver(new SmtSolver.Answer.NO());
     Settings.smtSolver = solver;
     TRS trs = setupTRS();
+    TermPrinter printer = new TermPrinter(Set.of());
     PartialProof pp = new PartialProof(trs,
       EquationParser.parseEquationList("sum1(x) = sum2(x) | x ≥ 0 ; " +
                                        "sum1(x) = sum1(x) | x > 0 ; " +
                                        "sum1(x) = sum2(x) | x > x", trs),
-      new TermPrinter(Set.of()));
+      lst -> printer.generateUniqueNaming(lst));
     Optional<OutputModule> oo = Optional.empty();
     DeductionDelete step = DeductionDelete.createStep(pp, oo).get();
     assertTrue(step.verifyAndExecute(pp, oo));
@@ -169,7 +170,7 @@ class DeductionDeleteTest {
   public void testHistory() {
     MySmtSolver solver = new MySmtSolver(new SmtSolver.Answer.NO());
     PartialProof pp = setupProof("sum1(x) -><- sum2(x) | x > 0 ∧ x < 0");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     DeductionDelete step = DeductionDelete.createStep(pp, o).get();
     assertTrue(step.commandDescription().equals("delete"));

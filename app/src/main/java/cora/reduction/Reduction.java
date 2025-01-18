@@ -51,7 +51,7 @@ class Reduction implements ProofObject {
 
   /** The main functionality of any proof object is to print itself to an OutputModule. */
   public void justify(OutputModule out) {
-    Renaming naming = out.queryTermPrinter().generateUniqueNaming(_steps);
+    Renaming naming = out.generateUniqueNaming(_steps);
     out.startTable();
     boolean first = true;
     for (Term t : _steps) {

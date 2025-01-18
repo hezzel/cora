@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -29,7 +29,6 @@ import charlie.terms.TermFactory;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
 
@@ -67,7 +66,7 @@ class IntegerMappingProofTest {
     assertTrue(ifp.queryResults().size() == 0);
     assertTrue(ifp.queryProcessorName().equals("Integer Function"));
 
-    OutputModule module = DefaultOutputModule.createPlainModule(trs);
+    OutputModule module = OutputModule.createPlainModule(trs);
     ifp.justify(module);
     assertTrue(module.toString().equals(
       "We use the following integer mapping:\n\n" +
@@ -111,7 +110,7 @@ class IntegerMappingProofTest {
     assertFalse(ifp.queryResults().get(0).hasExtraRules());
     assertTrue(ifp.queryResults().get(0).isInnermost());
 
-    OutputModule module = DefaultOutputModule.createUnicodeModule(trs);
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     ifp.justify(module);
     assertTrue(module.toString().equals(
       "We use the following integer mapping:\n\n" +

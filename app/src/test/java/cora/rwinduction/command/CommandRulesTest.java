@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -25,7 +25,6 @@ import charlie.parser.lib.ParsingStatus;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 import cora.rwinduction.engine.EquationContext;
 import cora.rwinduction.engine.PartialProof;
 import cora.rwinduction.parser.CommandParsingStatus;
@@ -53,7 +52,8 @@ class CommandRulesTest {
     CommandRules cmd = new CommandRules();
     TRS trs = setupTRS();
     EquationContext ec = EquationParser.parseEquationData("sum1(x) = sum2(x) | x ≥ 0", trs, 1);
-    PartialProof proof = new PartialProof(trs, FixedList.of(ec), module.queryTermPrinter());
+    PartialProof proof = new PartialProof(trs, FixedList.of(ec),
+                                          lst -> module.generateUniqueNaming(lst));
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus(str);
     status.nextWord(); // :rules
@@ -62,7 +62,7 @@ class CommandRulesTest {
 
   @Test
   public void testPrintAll() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(runCommand(module, ":rules"));
     assertTrue(module.toString().equals(
       "  O1: sum1(x) → return(0) | x ≤ 0\n" +
@@ -76,14 +76,14 @@ class CommandRulesTest {
 
   @Test
   public void testPrintConstructorSymbol() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(runCommand(module, ":rules return"));
     assertTrue(module.toString().equals("There are no rules with return as root symbol.\n\n"));
   }
 
   @Test
   public void testPrintDefinedSymbol() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(runCommand(module, ":rules iter"));
     assertTrue(module.toString().equals(
       "  O6: iter(x, i, z) → return(z) | i > x\n" +
@@ -92,7 +92,7 @@ class CommandRulesTest {
 
   @Test
   public void testPrintCalculationSymbol() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(runCommand(module, ":rules [=_Bool]"));
     assertTrue(module.toString().equals(
       "There are no rules with [⇔] as root symbol.\n\n" +
@@ -101,7 +101,7 @@ class CommandRulesTest {
 
   @Test
   public void testPrintCalculationSymbolWithSpaces() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(runCommand(module, ":rules [ + ]"));
     assertTrue(module.toString().equals(
       "There are no rules with [+] as root symbol.\n\n" +
@@ -110,7 +110,7 @@ class CommandRulesTest {
 
   @Test
   public void testPrintCalculationSymbolWithoutBrackets() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(runCommand(module, ":rules +"));
     assertTrue(module.toString().equals(
       "There are no rules with [+] as root symbol.\n\n" +
@@ -119,7 +119,7 @@ class CommandRulesTest {
 
   @Test
   public void testParseTwoArguments() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     assertFalse(runCommand(module, ":rules sum1 +"));
     assertTrue(module.toString().equals(
       "Unexpected argument at position 13: :rules takes at most 1 argument.\n\n"));
@@ -127,7 +127,7 @@ class CommandRulesTest {
 
   @Test
   public void testParseUnknownArgument() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     assertFalse(runCommand(module, ":rules sum3"));
     assertTrue(module.toString().equals("Parsing error at position 8: " +
       "Undeclared symbol: sum3.  Type cannot easily be deduced from context.\n\n"));
@@ -135,7 +135,7 @@ class CommandRulesTest {
 
   @Test
   public void testParseUnknownCalculation() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnitTestModule();
     assertFalse(runCommand(module, ":rules [and]"));
     assertTrue(module.toString().equals(
       "Parsing error at position 9: Expected infix symbol but got IDENTIFIER (and)\n\n"));
