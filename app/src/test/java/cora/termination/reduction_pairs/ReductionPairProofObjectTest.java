@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -31,7 +31,6 @@ import charlie.smt.BVar;
 import charlie.smt.SmtProblem;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 import cora.io.ProofObject;
 import cora.termination.reduction_pairs.OrderingRequirement.Relation;
 
@@ -105,7 +104,7 @@ public class ReductionPairProofObjectTest {
     TRS trs = makeTrs("sum :: Int -> Int sum(0) -> 0 sum(x) -> x + sum(x-1) | x != 0");
     ReductionPairProofObject rppo = new MyClass(createProblem(trs), Set.of(-19), Set.of(0),
       (f,k) -> false);
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     rppo.justify(module);
     assertTrue(module.toString().equals(
       "RPPO for the problem:\n\n" +

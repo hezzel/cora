@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.rwinduction.engine.*;
-import cora.rwinduction.tui.Outputter;
 
 public class RewritingInductionProof implements ProofObject {
   private ArrayList<DeductionStep> _steps;
@@ -36,7 +35,6 @@ public class RewritingInductionProof implements ProofObject {
   }
 
   public void justify(OutputModule module) {
-    module = new Outputter(module);
     ProofState start = _steps.size() == 0 ? _finalState : _steps.get(0).getOriginalState();
     module.println("We start the process with the following equations:");
     printEquations(module, start.getEquations());
@@ -80,7 +78,7 @@ public class RewritingInductionProof implements ProofObject {
     module.startTable();
     for (EquationContext eq : eqs) {
       module.nextColumn("%a:", eq.getName());
-      module.println("%a", eq.getPrintableObject());
+      module.println("%a", eq);
     }
     module.endTable();
   }

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -22,7 +22,6 @@ import charlie.terms.*;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 
 class CommandParsingStatusTest {
   // ==============================================================================================
@@ -111,7 +110,7 @@ class CommandParsingStatusTest {
   @Test
   public void testReadSymbol() {
     CommandParsingStatus status = new CommandParsingStatus("a sum - b");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     assertTrue(status.readSymbol(trs, module) == null);
     assertTrue(status.readSymbol(trs, module).toString().equals("sum"));
     assertTrue(status.readSymbol(trs, module).toString().equals("[-]"));
@@ -138,7 +137,7 @@ class CommandParsingStatusTest {
     Term t2 = CoraInputReader.readTermAndUpdateNaming("sum(3)", values, trs);
     CommandParsingStatus status = new CommandParsingStatus(" X [x := x + sum(y), z := sum(3)] Y");
     status.nextWord();  // skip past "X"
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     Substitution subst = status.readSubstitution(trs, keys, values, module);
     assertTrue(subst != null);
     assertTrue(subst.get(x).equals(t1));
@@ -149,7 +148,7 @@ class CommandParsingStatusTest {
   @Test
   public void testParseEmptySubstitution() {
     CommandParsingStatus status = new CommandParsingStatus(" [] ");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     Renaming keys = new Renaming(trs.queryFunctionSymbolNames());
     Renaming values = new Renaming(trs.queryFunctionSymbolNames());
     Substitution subst = status.readSubstitution(trs, keys, values, module);
@@ -164,7 +163,7 @@ class CommandParsingStatusTest {
     Renaming values = new Renaming(trs.queryFunctionSymbolNames());
     Term t1 = CoraInputReader.readTermAndUpdateNaming("x + sum(y)", values, trs);
     CommandParsingStatus status = new CommandParsingStatus("[x := x + sum(y), z := sum(3)] Z");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     assertTrue(status.readSubstitution(trs, keys, values, module) == null);
     assertTrue(status.nextWord().equals("Z"));
     assertTrue(module.toString().equals("Parsing error at position 2: No such variable: x\n\n"));
@@ -179,7 +178,7 @@ class CommandParsingStatusTest {
     keys.setName(z, "z");
     Renaming values = new Renaming(trs.queryFunctionSymbolNames());
     CommandParsingStatus status = new CommandParsingStatus("[x := x + sum(y), z := sum(3)]");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     Substitution subst = status.readSubstitution(trs, keys, values, module);
     assertTrue(subst.get(x).toString().equals("x + sum(y)"));
     assertTrue(subst.get(z).toString().equals("sum(3)"));
@@ -198,7 +197,7 @@ class CommandParsingStatusTest {
     keys.setName(z, "z");
     Renaming values = new Renaming(trs.queryFunctionSymbolNames());
     CommandParsingStatus status = new CommandParsingStatus("[x := x + sum(y), z := sum(3)]");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     assertTrue(status.readSubstitution(trs, keys, values, module) == null);
     assertTrue(status.commandEnded());
     assertTrue(module.toString().equals("Ill-typed substitution: z has type Bool but is mapped " +

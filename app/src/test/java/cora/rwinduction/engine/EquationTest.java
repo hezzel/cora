@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -26,7 +26,6 @@ import charlie.terms.Renaming;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 
 class EquationTest {
   @Test
@@ -87,8 +86,8 @@ class EquationTest {
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > 0 ∧ y = 0", renaming, trs);
     Equation equation = new Equation(left, right, constraint);
     renaming.setName(renaming.getVariable("x"), "z");
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
-    module.println("%a", equation.getPrintableObject(renaming));
+    OutputModule module = OutputModule.createUnicodeModule(trs);
+    module.println("%a", equation.makePrintableWith(renaming));
     assertTrue(module.toString().equals("f(f(z)) ≈ g(z, y) | z > 0 ∧ y = 0\n\n"));
   }
 }

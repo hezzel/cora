@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -25,7 +25,6 @@ import charlie.terms.Variable;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 
 class EquationContextTest {
   @Test
@@ -128,10 +127,10 @@ class EquationContextTest {
     Equation equation = new Equation(left, right, constraint);
     renaming.setName(renaming.getVariable("x"), "z");
     EquationContext context = new EquationContext(left, equation, right, 103, renaming);
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
-    module.println("%a", context.getPrintableObject());
+    OutputModule module = OutputModule.createUnicodeModule(trs);
+    module.println("%a", context);
     assertTrue(module.toString().equals(
-      "(f(f(z)) , f(f(z)) ≈ g(z, y) | z > 0 ∧ y = 0 , g(z, y))\n\n"));
+      "E103: (f(f(z)) , f(f(z)) ≈ g(z, y) | z > 0 ∧ y = 0 , g(z, y))\n\n"));
   }
 
   @Test

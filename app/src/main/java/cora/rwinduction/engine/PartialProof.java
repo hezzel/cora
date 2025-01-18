@@ -17,15 +17,17 @@ package cora.rwinduction.engine;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Stack;
+import java.util.function.Function;
 import charlie.exceptions.NullStorageException;
 import charlie.util.FixedList;
 import charlie.util.Pair;
+import charlie.terms.Term;
 import charlie.terms.Renaming;
 import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
-import cora.io.OutputModule;
 
 /**
  * A PartialProof keeps track of the current proof state, the proof context, and the history.
@@ -50,9 +52,9 @@ public class PartialProof {
    * printer.
    */
   public PartialProof(TRS initialSystem, FixedList<EquationContext> initialEquations,
-                      TermPrinter tp) {
+                      Function<List<Term>,Renaming> renamingMaker) {
     if (initialEquations == null) throw new NullStorageException("PartialProof", "initial eqs");
-    _pcontext = new ProofContext(initialSystem, tp);
+    _pcontext = new ProofContext(initialSystem, renamingMaker);
     _currentState = new ProofState(initialEquations);
     _aborted = false;
   }

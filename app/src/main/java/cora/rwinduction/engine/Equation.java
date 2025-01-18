@@ -16,7 +16,6 @@
 package cora.rwinduction.engine;
 
 import charlie.exceptions.IndexingException;
-import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.Renaming;
 import charlie.terms.TermPrinter;
@@ -91,18 +90,6 @@ public final class Equation {
         yield new Equation(_lhs, r, _constraint);
       }
     };
-  }
-
-  /** Returns an object that can be conveniently printed to an OutputModule. */
-  // TODO: remove (and remove the pair import too)
-  public Pair<String,Object[]> getPrintableObject(Renaming renaming) {
-    Pair<Term,Renaming> l = new Pair<Term,Renaming>(_lhs, renaming);
-    Pair<Term,Renaming> r = new Pair<Term,Renaming>(_rhs, renaming);
-    if (isConstrained()) {
-      Pair<Term,Renaming> c = new Pair<Term,Renaming>(_constraint, renaming);
-      return new Pair<String,Object[]>("%a %{approx} %a | %a", new Object[] { l, r, c});
-    }
-    else return new Pair<String,Object[]>("%a %{approx} %a", new Object[] { l, r });
   }
 
   /**

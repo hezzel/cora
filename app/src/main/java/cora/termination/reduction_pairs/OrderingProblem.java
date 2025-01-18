@@ -23,7 +23,6 @@ import charlie.util.Pair;
 import charlie.trs.TRS;
 import charlie.smt.Constraint;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 import cora.termination.reduction_pairs.OrderingRequirement.Relation;
 
 /**

@@ -113,10 +113,7 @@ public abstract class ReductionPairProofObject implements ProofObject {
    */
   protected void printOrderingProblem(OutputModule module) {
     module.startTable();
-    for (OrderingRequirement req : _reqs) {
-      req.printTo(module);
-      module.println();
-    }
+    for (OrderingRequirement req : _reqs) module.println("%a", req);
     module.endTable();
   }
 

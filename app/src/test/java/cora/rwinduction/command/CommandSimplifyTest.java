@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -25,7 +25,6 @@ import charlie.terms.TheoryFactory;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 import cora.rwinduction.engine.EquationContext;
 import cora.rwinduction.engine.PartialProof;
 import cora.rwinduction.engine.deduction.DeductionSimplify;
@@ -50,12 +49,14 @@ class CommandSimplifyTest {
       "iter(x, i, z) -> iter(x, i+1, z+i) | i <= x\n");
   }
 
+  private TRS trs = setupTRS();
+
   private Optional<DeductionSimplify> createStep(OutputModule module, String str) {
     CommandSimplify cmd = new CommandSimplify();
-    TRS trs = setupTRS();
     EquationContext ec =
       EquationParser.parseEquationData("sum1(z) = add(y,sum2(z)) | z ≥ 0 ∧ y < 0", trs, 1);
-    PartialProof proof = new PartialProof(trs, FixedList.of(ec), module.queryTermPrinter());
+    PartialProof proof = new PartialProof(trs, FixedList.of(ec),
+                                          lst -> module.generateUniqueNaming(lst));
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus(str);
     status.nextWord(); // simplify
@@ -64,10 +65,10 @@ class CommandSimplifyTest {
 
   private boolean execute(OutputModule module, String str) {
     CommandSimplify cmd = new CommandSimplify();
-    TRS trs = setupTRS();
     EquationContext ec =
       EquationParser.parseEquationData("sum1(z) = add(y,sum2(z)) | z ≥ 0 ∧ y < 0", trs, 1);
-    PartialProof proof = new PartialProof(trs, FixedList.of(ec), module.queryTermPrinter());
+    PartialProof proof = new PartialProof(trs, FixedList.of(ec),
+                                          lst -> module.generateUniqueNaming(lst));
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus(str);
     status.nextWord(); // simplify
@@ -76,39 +77,39 @@ class CommandSimplifyTest {
 
   @Test
   public void testGoodStepWithoutSubstitution() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     DeductionSimplify step = createStep(module, "simplify O5 R.2").get();
     assertTrue(step.toString().equals("simplify O5 R2 with [x := z]"));
   }
 
   @Test
   public void testGoodStepWithSubstitution() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     DeductionSimplify step = createStep(module, "simplify O1 with [x:=z]").get();
     assertTrue(step.toString().equals("simplify O1 L with [x := z]"));
   }
 
   @Test
   public void testNonExistingRule() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     assertTrue(createStep(module, "simplify R19 R.2").isEmpty());
     assertTrue(module.toString().equals("No such rule: R19\n\n"));
 
-    module.clear();
+    module = OutputModule.createUnicodeModule(trs);
     assertFalse(execute(module, "simplify 5 R.2"));
     assertTrue(module.toString().equals("No such rule: 5\n\n"));
   }
 
   @Test
   public void testBadPosition() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     assertTrue(createStep(module, "simplify O5 L1.2.3.2 with [x:=1]").isEmpty());
     assertTrue(module.toString().equals("No such position: L1.2.3.2.\n\n"));
   }
 
   @Test
   public void testBadSubstitution() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     assertTrue(createStep(module, "simplify O5 R.2 with [x:=1]").isEmpty());
     assertTrue(module.toString().equals(
       "The rule does not apply: Variable x mapped both to 1 and to z.\n\n"));
@@ -116,7 +117,7 @@ class CommandSimplifyTest {
 
   @Test
   public void testOmitWith() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     assertFalse(execute(module, "simplify O5 R.2 [x:=z]"));
     assertTrue(module.toString().equals("Unexpected argument at position 17: expected \"with\" " +
       "or end of command, but got [x:=z].\n\n"));
@@ -124,7 +125,7 @@ class CommandSimplifyTest {
 
   @Test
   public void testTextAfterSubstitution() {
-    OutputModule module = DefaultOutputModule.createUnicodeModule();
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     assertTrue(createStep(module, "simplify O1 with [x:=z] o").isEmpty());
     assertTrue(module.toString().equals("Unexpected argument at position 25: " +
       "expected end of command.\n\n"));

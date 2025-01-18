@@ -15,7 +15,6 @@
 
 package cora.rwinduction.engine;
 
-import charlie.util.Pair;
 import charlie.terms.Renaming;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
@@ -60,13 +59,6 @@ public class Hypothesis implements PrintableObject {
   public void print(Printer printer) {
     printer.add(getName(), ": ");
     _equation.printWithRenaming(printer, _varNaming);
-  }
-
-  /** Returns an object that can be conveniently printed to an OutputModule. */
-  // TODO: remove
-  public Pair<String,Object[]> getPrintableObject() {
-    return new Pair<String,Object[]>("%a: %a", new Object[] {
-      getName(), _equation.getPrintableObject(_varNaming)});
   }
 
   /**

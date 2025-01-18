@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -29,7 +29,6 @@ import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 import cora.rwinduction.parser.EquationParser;
 
 class PartialProofTest {
@@ -59,8 +58,9 @@ class PartialProofTest {
   public void testAddUndoRedo() {
     TRS trs = setupTRS();
     EquationContext eq = EquationParser.parseEquationData("sum1(x) = sum2(x) | x ≥ 0", trs, 11);
+    TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
     PartialProof proof =
-      new PartialProof(trs, FixedList.of(eq), new TermPrinter(trs.queryFunctionSymbolNames()));
+      new PartialProof(trs, FixedList.of(eq), lst -> printer.generateUniqueNaming(lst));
     ProofState state1 = proof.getProofState();
     assertTrue(state1.getEquations().size() == 1);
     assertTrue(state1.getTopEquation() == eq);
@@ -94,8 +94,9 @@ class PartialProofTest {
   public void testCommandHistory() {
     TRS trs = setupTRS();
     EquationContext eq = EquationParser.parseEquationData("sum1(x) = sum2(x) | x ≥ 0", trs, 3);
+    TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
     PartialProof proof =
-      new PartialProof(trs, FixedList.of(eq), new TermPrinter(trs.queryFunctionSymbolNames()));
+      new PartialProof(trs, FixedList.of(eq), lst -> printer.generateUniqueNaming(lst));
     ProofState state1 = proof.getProofState();
     assertTrue(state1.getEquations().size() == 1);
     assertTrue(state1.getTopEquation() == eq);

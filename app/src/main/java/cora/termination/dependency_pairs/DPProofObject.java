@@ -22,7 +22,6 @@ import charlie.terms.Variable;
 import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import cora.io.OutputModule;
-import cora.io.OutputModuleAdapter;
 import cora.io.ProofObject;
 import cora.termination.dependency_pairs.processors.ProcessorProofObject;
 
@@ -115,7 +114,6 @@ class DPProofObject implements ProofObject {
 
   /** This prints the full proof to output. */
   public void justify(OutputModule module) {
-    module = new OutputModuleWithDependencyPairs(module);
     _accessibilityCheck.justify(module);
     if (_initialProblem == null) return;
 
@@ -197,7 +195,7 @@ class DPProofObject implements ProofObject {
       module.nextColumn(counter == 0 ? name + "." : "");
       counter++;
       module.nextColumn("(%a)", counter);
-      module.nextColumn("%a", makeDPObject(dp, module));
+      module.nextColumn("%a", dp);
       if (problem.isPrivate(i)) module.nextColumn("(private)");
       module.println();
     }
@@ -313,67 +311,6 @@ class DPProofObject implements ProofObject {
     else module.println();
     if (dpnew) printDPs(module, problem, pnames.get(problem.getDPList()));
     if (rnew) printRules(module, problem, rnames.get(problem.getRuleList()));
-  }
-
-  /**
-   * This function handles the printing of a DP with a previously-fixed renaming for all its
-   * components, by translating it into a single Pair that the OutputModule knows how to print.
-   */
-  private Pair<String,Object[]> makeDPObject(DP dp, Renaming naming) {
-    StringBuilder ret = new StringBuilder("%a %{thickArrow} %a");
-    ArrayList<Object> args = new ArrayList<Object>(4);
-    args.add(new Pair<Term,Renaming>(dp.lhs(), naming));
-    args.add(new Pair<Term,Renaming>(dp.rhs(), naming));
-
-    if (!dp.constraint().isValue() || !dp.constraint().toValue().getBool()) {
-      ret.append(" | %a");
-      args.add(new Pair<Term,Renaming>(dp.constraint(), naming));
-    }
-
-    boolean anynew = false;
-    for (Variable x : dp.lvars()) {
-      if (!dp.constraint().freeReplaceables().contains(x)) anynew = true;
-    }
-    if (anynew) {
-      ret.append(" { ");
-      boolean first = true;
-      for (Variable x : dp.lvars()) {
-        if (naming.getName(x) == null) continue;  // if it doesn't occur in the terms
-                                                  // it's only confusing if we list it here
-        if (!first) ret.append(", ");
-        first = false;
-        ret.append("%a");
-        args.add(new Pair<Term,Renaming>(x, naming));
-      }
-      ret.append(" }");
-    }
-
-    return new Pair<String,Object[]>(ret.toString(), args.toArray());
-  }
-
-  /**
-   * This function handles the printing of a DP, by translating it into a Pair that the OutputModule
-   * knows how to print (but with good use of variables, and cleverly printing only those
-   * constraints and variables that we have to).
-   */
-  private Pair<String,Object[]> makeDPObject(DP dp, OutputModule module) {
-    Renaming naming =
-      module.queryTermPrinter().generateUniqueNaming(dp.lhs(), dp.rhs(), dp.constraint());
-    return makeDPObject(dp, naming);
-  }
-
-  /** We use this adapted OutputModule for printing, so we can naturally handle dependency pairs. */
-  private class OutputModuleWithDependencyPairs extends OutputModuleAdapter {
-    public OutputModuleWithDependencyPairs(OutputModule m) { super(m); }
-    protected Object alterObject(Object ob) {
-      if (ob instanceof DP dp) return makeDPObject(dp, _module);
-      if (ob instanceof Pair p) {
-        if (p.fst() instanceof DP dp && p.snd() instanceof Renaming r) {
-          return makeDPObject(dp, r);
-        }
-      }
-      return null;
-    }
   }
 }
 

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -28,7 +28,6 @@ import charlie.terms.FunctionSymbol;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
-import cora.io.DefaultOutputModule;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
 
@@ -60,7 +59,7 @@ class SubtermCriterionProofTest {
     assertTrue(scp.applicable());
     assertTrue(scp.queryOutput().getDPList().size() == 1);;
     assertTrue(scp.queryResults().size() == 1);
-    OutputModule module = DefaultOutputModule.createPlainModule(trs);
+    OutputModule module = OutputModule.createPlainModule(trs);
     scp.justify(module);
     assertTrue(module.toString().equals(
       "We use the following projection function:\n\n" +
@@ -93,7 +92,7 @@ class SubtermCriterionProofTest {
     assertTrue(scp.queryResults().size() == 1);
     assertTrue(scp.queryProcessorName().equals("Subterm Criterion"));
 
-    OutputModule module = DefaultOutputModule.createUnicodeModule(trs);
+    OutputModule module = OutputModule.createUnicodeModule(trs);
     scp.justify(module);
     assertTrue(module.toString().equals(
       "We use the following projection function:\n\n" +
@@ -123,7 +122,7 @@ class SubtermCriterionProofTest {
     assertTrue(scp.queryOutput().getDPList().size() == 0);
     assertTrue(scp.queryResults().size() == 0);
 
-    OutputModule module = DefaultOutputModule.createPlainModule(trs);
+    OutputModule module = OutputModule.createPlainModule(trs);
     scp.justify(module);
     assertTrue(module.toString().equals(
       "We use the following projection function:\n\n" +

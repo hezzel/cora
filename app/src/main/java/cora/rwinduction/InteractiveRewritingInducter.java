@@ -32,11 +32,11 @@ import cora.rwinduction.tui.*;
 
 public class InteractiveRewritingInducter {
   private Inputter _input;
-  private Outputter _output;
+  private OutputModule _output;
   private CmdList _cmdList;
   private PartialProof _proof;
 
-  InteractiveRewritingInducter(Inputter input, Outputter output,
+  InteractiveRewritingInducter(Inputter input, OutputModule output,
                                CmdList lst, PartialProof pp) {
     _input = input;
     _output = output;
@@ -73,11 +73,11 @@ public class InteractiveRewritingInducter {
     return clst;
   }
 
-  public static ProofObject run(TRS trs, List<String> inputs, OutputModule output) {
+  public static ProofObject run(TRS trs, List<String> inputs, OutputModule.Style style) {
     // set up Inputter, outputter and command list
     //Inputter inputter = new ReplInputter();
     Inputter inputter = new BasicInputter(); // use BasicInputter if ReplInputter doesn't compile
-    Outputter outputter = new Outputter(output);
+    OutputModule outputter = new OutputModule(trs, new OutputPage(), style);
     if (!inputs.isEmpty()) inputter = new CacheInputter(inputs, inputter);
     CmdList clst = createCmdList(trs);
     
@@ -89,7 +89,6 @@ public class InteractiveRewritingInducter {
     };
 
     outputter.printTrs(trs);
-    outputter.flush();
 
     // get initial equations and set up
     FixedList<EquationContext> eqs = readEquations(inputter, trs);
@@ -97,7 +96,7 @@ public class InteractiveRewritingInducter {
       public Answer queryAnswer() { return Answer.MAYBE; }
       public void justify(OutputModule module) { module.println("No valid equations gives."); }
     };
-    PartialProof proof = new PartialProof(trs, eqs, outputter.queryTermPrinter());
+    PartialProof proof = new PartialProof(trs, eqs, lst -> outputter.generateUniqueNaming(lst));
     clst.storeContext(proof, outputter);
 
     // set up the inducter that will do all the work, and run it
@@ -123,7 +122,6 @@ public class InteractiveRewritingInducter {
   private ProofObject proveEquivalence() {
     while (!_proof.isDone()) {
       _output.println("Top equation: %a", _proof.getProofState().getTopEquation());
-      _output.flush();
       CommandParsingStatus status = new CommandParsingStatus(_input.readLine());
       while (!status.done()) {
         while (status.skipSeparator());   // read past ; if there is one

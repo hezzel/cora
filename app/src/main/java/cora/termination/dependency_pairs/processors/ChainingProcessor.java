@@ -260,10 +260,12 @@ public class ChainingProcessor implements Processor {
      * Gets a Renaming that allows the given 3 DPs to be printed at the same time (so with
      * their variables consistently named).
      */
-    private Renaming getRenaming(TermPrinter printer, DP dp1, DP dp2, DP dp3) {
-      LinkedList<Term> vars = new LinkedList<Term>();
-      for (Variable x : dp1.getAllVariables()) vars.add(x);
-      Renaming ret = printer.generateUniqueNaming(vars);
+    private Renaming getRenaming(OutputModule module, DP dp1, DP dp2, DP dp3) {
+      Set<Variable> allvars = dp1.getAllVariables();
+      Term[] vars = new Term[allvars.size()];
+      int i = 0;
+      for (Variable x : dp1.getAllVariables()) vars[i++] = x;
+      Renaming ret = module.generateUniqueNaming(vars);
       for (Variable x : dp2.getAllVariables()) extend(ret, x);
       for (Variable x : dp3.getAllVariables()) extend(ret, x);
       return ret;
@@ -283,13 +285,12 @@ public class ChainingProcessor implements Processor {
         module.println("No suitable chaining could be found.");
         return;
       }
-      TermPrinter printer = module.queryTermPrinter();
       module.println("We chain DPs according to the following mapping:");
       module.println();
       module.startTable();
       _chainedToOriginalDPs.forEach(
         (c, p) -> {
-          Renaming renaming = getRenaming(printer, c, p.fst(), p.snd());
+          Renaming renaming = getRenaming(module, c, p.fst(), p.snd());
           module.nextColumn("%a", new Pair<DP,Renaming>(c, renaming));
           module.nextColumn(" is obtained by chaining ");
           module.nextColumn("%a", new Pair<DP,Renaming>(p.fst(), renaming));
