@@ -17,7 +17,6 @@ package cora.rwinduction.engine.deduction;
 
 import java.util.Optional;
 import java.util.TreeSet;
-import charlie.util.Pair;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.printer.Printer;
@@ -142,7 +141,7 @@ public final class DeductionSimplify extends DeductionStep {
         Renaming eqnaming = _equ.getRenaming();
         println(module, "The rule does not apply: constraint variable %a is instantiated by %a, " +
           "which is not a value, nor a variable in the constraint of the equation.",
-          _ruleRenaming.getName(x), new Pair<Term,Renaming>(t, eqnaming));
+          _ruleRenaming.getName(x), Printer.makePrintable(t, eqnaming));
         return false;
       }
     }
@@ -161,7 +160,7 @@ public final class DeductionSimplify extends DeductionStep {
     if (Settings.smtSolver.checkValidity(translator.queryProblem())) return true;
     Renaming renaming = _equ.getRenaming();
     println(module, "The rule does not apply: I could not prove that %a %{Vdash} %a.",
-      new Pair<Term,Renaming>(psi, renaming), new Pair<Term,Renaming>(phidelta, renaming));
+      Printer.makePrintable(psi, renaming), Printer.makePrintable(phidelta, renaming));
     return false;
   }
 
@@ -182,12 +181,9 @@ public final class DeductionSimplify extends DeductionStep {
 
   @Override
   public void explain(OutputModule module) {
-    Pair<Renaming,Renaming> renamings =
-      new Pair<Renaming,Renaming>(_ruleRenaming, _equ.getRenaming());
-    Pair<Substitution,Pair<Renaming,Renaming>> substitutionInfo =
-      new Pair<Substitution,Pair<Renaming,Renaming>>(_substitution, renamings);
     module.println("We apply SIMPLIFICATION to %a with rule %a and substitution %a.",
-      _equ.getName(), _ruleName, substitutionInfo);
+      _equ.getName(), _ruleName,
+      Printer.makePrintable(_substitution, _ruleRenaming, _equ.getRenaming()));
   }
 }
 

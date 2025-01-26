@@ -123,6 +123,45 @@ class CommandParsingStatusTest {
   }
 
   // ==============================================================================================
+  // reading terms
+
+  @Test
+  public void testReadTerm() {
+    CommandParsingStatus status = new CommandParsingStatus("test x+  sum(3) y");
+    OutputModule module = OutputModule.createUnicodeModule(trs);
+    status.nextWord();
+    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
+    Term t = status.readTerm(trs, renaming, module);
+    assertTrue(module.toString().equals(""));
+    assertTrue(t.toString().equals("x + sum(3)"));
+    assertTrue(renaming.domain().size() == 0);
+    assertTrue(status.previousPosition() == 6);
+    assertTrue(status.nextWord().equals("y"));
+  }
+
+  @Test
+  public void testReadVariable() {
+    CommandParsingStatus status = new CommandParsingStatus("myvar");
+    OutputModule module = OutputModule.createUnicodeModule(trs);
+    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
+    renaming.setName(TermFactory.createVar(CoraInputReader.readType("A")), "myvar");
+    Term t = status.readTerm(trs, renaming, module);
+    assertTrue(module.toString().equals(""));
+    assertTrue(t.isVariable());
+    assertTrue(t.queryType().toString().equals("A"));
+    assertTrue(renaming.getVariable("myvar") == t);
+  }
+
+  @Test
+  public void testReadFreshVariable() {
+    CommandParsingStatus status = new CommandParsingStatus("  myvar");
+    OutputModule module = OutputModule.createUnicodeModule(trs);
+    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
+    assertTrue(status.readTerm(trs, renaming, module) == null);
+    assertTrue(module.toString().equals("Unknown variable: myvar\n\n"));
+  }
+
+  // ==============================================================================================
   // reading substitutions
 
   @Test

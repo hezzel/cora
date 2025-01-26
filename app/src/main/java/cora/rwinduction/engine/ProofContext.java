@@ -15,14 +15,13 @@
 
 package cora.rwinduction.engine;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
-import java.util.HashMap;
-import java.util.Stack;
 import charlie.exceptions.NullStorageException;
 import charlie.util.FixedList;
+import charlie.types.Type;
 import charlie.terms.Term;
+import charlie.terms.FunctionSymbol;
 import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
@@ -37,6 +36,9 @@ public class ProofContext {
   private final ArrayList<String> _ruleNames = new ArrayList<String>();
   private final ArrayList<Renaming> _ruleRenamings = new ArrayList<Renaming>();
   private final HashMap<String,Integer> _nameToRule = new HashMap<String,Integer>();
+  private final HashMap<Type,Set<FunctionSymbol>> _constructors =
+    new HashMap<Type,Set<FunctionSymbol>>();
+  private VariableNamer _namer = new VariableNamer();
 
   /**
    * Constructor: sets up a ProofContext with rules taken from the given TRS.
@@ -46,14 +48,41 @@ public class ProofContext {
     if (initialSystem == null) throw new NullStorageException("ProofContext", "initial TRS");
     _trs = initialSystem;
     int n = initialSystem.queryRuleCount();
-    for (int i = 0; i < initialSystem.queryRuleCount(); i++) {
-      Rule rule = initialSystem.queryRule(i);
+    createRuleInfo(renamingMaker);
+    createConstructorInfo();
+  }
+
+  /**
+   * Helper function for the constructor: this names all the rules in the TRS, and generates a
+   * Renaming for each of them.
+   */
+  private void createRuleInfo(Function<List<Term>,Renaming> renamingMaker) {
+    for (int i = 0; i < _trs.queryRuleCount(); i++) {
+      Rule rule = _trs.queryRule(i);
       Renaming renaming = renamingMaker.apply(List.of(
         rule.queryLeftSide(), rule.queryRightSide(), rule.queryConstraint()));
       String name = "O" + (i+1);
       _ruleNames.add(name);
       _nameToRule.put(name, i);
       _ruleRenamings.add(renaming);
+    }
+  }
+
+  /** Helper function for the constructor: this groups constructor symbols by their output type. */
+  private void createConstructorInfo() {
+    for (FunctionSymbol f : _trs.queryAlphabet().getSymbols()) {
+      if (_trs.isDefined(f)) continue;
+      if (f.isTheorySymbol()) continue;
+      Type t = f.queryType().queryOutputType();
+      Set<FunctionSymbol> set = _constructors.get(t);
+      if (set == null) {
+        set = new TreeSet<FunctionSymbol>();
+        _constructors.put(t, set);
+      }
+      set.add(f);
+    }
+    for (Type t : _constructors.keySet()) {
+      _constructors.put(t, Collections.unmodifiableSet(_constructors.get(t)));
     }
   }
 
@@ -79,6 +108,23 @@ public class ProofContext {
     Integer i = _nameToRule.get(ruleName);
     if (i == null) return null;
     return _ruleRenamings.get(i);
+  }
+
+  /**
+   * This returns the constructors with the give type as output type.  Note that this is the
+   * FINAL output type, so if type is an arrow type, the empty set will be returned.
+   *
+   * Note also that the set is unmodifiable.
+   */
+  public Set<FunctionSymbol> getConstructors(Type type) {
+    Set<FunctionSymbol> ret = _constructors.get(type);
+    if (ret == null) return Set.of();
+    return ret;
+  }
+
+  /** This returns a class for deduction rules to consistently name their variables. */
+  public VariableNamer getVariableNamer() {
+    return _namer;
   }
 }
 
