@@ -92,8 +92,7 @@ class DeductionCaseTest {
     assertTrue(eqs.get(1).toString().equals(
       "E3: (• , iter(x, i, z) ≈ iter(x + 1, i - 1, z * i) | i > 0 ∧ ¬(i > x) , •)"));
     step.explain(module);
-    assertTrue(module.toString().equals("We apply CASE on the constraint i > x, which " +
-      "yields 2 new cases.\n\n"));
+    assertTrue(module.toString().equals("We apply CASE on the constraint i > x.\n\n"));
   }
 
   @Test
@@ -120,8 +119,7 @@ class DeductionCaseTest {
       "E8: (iter(x, i, z) , iter(x, i1, z1) ≈ iter(x - 1, i1 + 1, z1 * i) | i > 0 ∧ " +
         "i1 = i + 1 ∧ z1 = z + i ∧ i1 - z < 0 , iter(x, z, i))"));
     step.explain(module);
-    assertTrue(module.toString().equals("We apply CASE on the value of i1 - z, which " +
-      "yields 3 new cases.\n\n"));
+    assertTrue(module.toString().equals("We apply CASE on the value of i1 - z.\n\n"));
   }
 
   @Test

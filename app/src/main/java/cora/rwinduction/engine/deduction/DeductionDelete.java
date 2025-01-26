@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,11 +16,11 @@
 package cora.rwinduction.engine.deduction;
 
 import java.util.Optional;
-import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.Renaming;
 import charlie.terms.Substitution;
+import charlie.printer.Printer;
 import charlie.theorytranslation.TermAnalyser;
 import cora.config.Settings;
 import cora.io.OutputModule;
@@ -64,7 +64,7 @@ public final class DeductionDelete extends DeductionStep {
       case TermAnalyser.Result.YES(Substitution val):
         println(module, "The DELETE rule is not applicable: the left- and right-hand side are " +
           "not the same, and the constraint is satisfiable using substitution %a.",
-          new Pair<Substitution,Renaming>(val, _equ.getRenaming()));
+          Printer.makePrintable(val, _equ.getRenaming(), _equ.getRenaming()));
     return false;
       case TermAnalyser.Result.NO(): return true;
     }
