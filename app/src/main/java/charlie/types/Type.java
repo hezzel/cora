@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -66,7 +66,7 @@ public sealed interface Type permits
 
   /**
    * Returns the number of immediate subtypes.
-   * For an arrow tpye, this is 2.  For a product tpye A_1 x ... x A_n, this is n.
+   * For an arrow tpye, this is 2.  For a product type A_1 x ... x A_n, this is n.
    * For a base type, this is 0.
    */
   int numberSubtypes();

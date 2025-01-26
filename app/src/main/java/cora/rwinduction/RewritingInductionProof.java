@@ -44,10 +44,8 @@ public class RewritingInductionProof implements ProofObject {
       ProofState next = i + 1 < _steps.size() ? _steps.get(i+1).getOriginalState()
                                               : _finalState;
       ArrayList<EquationContext> neweqs = getNewEquations(next, curr.getLastUsedIndex());
-      if (neweqs.size() == 1) {
-        module.println("This yields %a: %a", neweqs.get(0).getName(), neweqs.get(0));
-      }
-      else {
+      if (neweqs.size() == 1) module.println("This yields %a", neweqs.get(0));
+      else if (neweqs.size() > 0) {
         module.println("This yields the following new equations:");
         printEquations(module, neweqs);
       }
@@ -76,10 +74,7 @@ public class RewritingInductionProof implements ProofObject {
   /** Helper function for explain: prints the equations given by the given iterable. */
   private void printEquations(OutputModule module, Iterable<EquationContext> eqs) {
     module.startTable();
-    for (EquationContext eq : eqs) {
-      module.nextColumn("%a:", eq.getName());
-      module.println("%a", eq);
-    }
+    for (EquationContext eq : eqs) module.println("%a", eq);
     module.endTable();
   }
 }

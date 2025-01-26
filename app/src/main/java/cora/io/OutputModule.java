@@ -173,9 +173,9 @@ public class OutputModule {
       start = nextCodeStart + code.length();
       if (code.equals("%a")) {
         if (objectIndex >= objects.length) {
-          throw new IllegalPrintException("Encountered at least " + objectIndex + " occurrences " +
-            "of %a in a print, while only " + objects.length + " objects were given! (Text is " +
-            text + ")");
+          throw new IllegalPrintException("Encountered at least " + (objectIndex+1) +
+            " occurrences of %a in a print, while only " + objects.length +
+            " objects were given! (Text is " + text + ")");
         }
         else parts.add(objects[objectIndex++]);
       }

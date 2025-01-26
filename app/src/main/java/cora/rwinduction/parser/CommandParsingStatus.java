@@ -20,6 +20,7 @@ import charlie.exceptions.ParseException;
 import charlie.parser.lib.Token;
 import charlie.parser.lib.ParsingStatus;
 import charlie.parser.Parser.ParserTerm;
+import charlie.parser.Parser.Identifier;
 import charlie.parser.CoraTokenData;
 import charlie.parser.CoraParser;
 import charlie.terms.*;
@@ -164,6 +165,28 @@ public class CommandParsingStatus {
       return null;
     }
     return fterm.queryRoot();
+  }
+
+  /**
+   * This method reads a term from the underlying string at the current parsing position, and
+   * returns the result.  If this fails, it instead prints an error message to the given
+   * OutputModule and returns null.  Depending on the kind and position of the failure, the parsing
+   * status may or may not be advanced.
+   */
+  public Term readTerm(TRS trs, Renaming varnames, OutputModule module) {
+    ParsingStatus status = makeStatus();
+    String vname = null;
+    try {
+      ParserTerm pterm = CoraParser.readTerm(status);
+      if (pterm instanceof Identifier(Token tok, String name)) vname = name;
+      recoverPosition(status);
+      return CoraInputReader.readTerm(pterm, varnames, false, trs);
+    }
+    catch (ParseException e) {
+      if (vname != null) module.println("Unknown variable: " + vname);
+      else printErrorText(module, e);
+      return null;
+    }
   }
 
   /**

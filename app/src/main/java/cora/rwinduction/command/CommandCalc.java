@@ -45,6 +45,7 @@ public class CommandCalc extends Command {
            "fresh variable that will be added to the constraint.";
   }
 
+  @Override
   protected boolean run(CommandParsingStatus input) {
     Optional<DeductionCalc> step = createStep(input);
     if (step.isEmpty()) return false;

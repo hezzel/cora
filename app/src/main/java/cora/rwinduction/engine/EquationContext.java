@@ -77,10 +77,29 @@ public class EquationContext implements PrintableObject {
   }
 
   /**
+   * Creates the eqatation context (leftgr, equation, rightgr) with the given renaming and index,
+   * where leftgr and rightgr may be empty, which represents bullet.
+   * The same warnings apply as for the other two (public) constructors.
+   */
+  public EquationContext(Optional<Term> leftgr, Equation equation, Optional<Term> rightgr,
+                         int index, Renaming naming) {
+    _equation = equation;
+    _leftGeq = leftgr;
+    _rightGeq = rightgr;
+    _index = index;
+    _varNaming = naming.copy();
+    _varNaming.limitDomain(leftgr.isEmpty() ? TheoryFactory.trueValue : leftgr.get(),
+                           _equation.getLhs(), _equation.getRhs(), _equation.getConstraint(),
+                           rightgr.isEmpty() ? TheoryFactory.trueValue : rightgr.get());
+    checkReplaceableNaming();
+    checkIndex();
+  }
+
+  /**
    * Private constructor, only called by our own methods.  This does not copy the Renaming,
    * but does limit its domain and check that it satisfies the requirements.
    */
-  private EquationContext(Optional<Term> leftgr, Equation equation, Optional<Term> rightgr,
+  private EquationContext(Optional<Term> leftgr, Optional<Term> rightgr, Equation equation,
                           int index, Renaming naming) {
     _equation = equation;
     _leftGeq = leftgr;
@@ -186,7 +205,7 @@ public class EquationContext implements PrintableObject {
    * will cause an IllegalArgumentException to be thrown.
    */
   public EquationContext replace(Equation eq, int index) {
-    return new EquationContext(_leftGeq, eq, _rightGeq, index, _varNaming.copy());
+    return new EquationContext(_leftGeq, _rightGeq, eq, index, _varNaming.copy());
   }
 
   /**
@@ -194,7 +213,7 @@ public class EquationContext implements PrintableObject {
    * with the given new Renaming, equation and index.
    */
   public EquationContext replace(Equation eq, Renaming naming, int index) {
-    return new EquationContext(_leftGeq, eq, _rightGeq, index, naming.copy());
+    return new EquationContext(_leftGeq, _rightGeq, eq, index, naming.copy());
   }
 
   /** Prints the equation context to the given printer. */
