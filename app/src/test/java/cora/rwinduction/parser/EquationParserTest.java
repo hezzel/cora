@@ -101,8 +101,8 @@ class EquationParserTest {
       "sum(x) ≈ sum(y) | x = y ; sum(y) -><- sum(x+y) ; sum(1) = sum(2)", trs);
     assertTrue(lst.size() == 3);
     assertTrue(lst.get(0).toString().equals("E1: (• , sum(x) ≈ sum(y) | x = y , •)"));
-    assertTrue(lst.get(1).toString().equals("E2: (• , sum(y) ≈ sum(x + y) | true , •)"));
-    assertTrue(lst.get(2).toString().equals("E3: (• , sum(1) ≈ sum(2) | true , •)"));
+    assertTrue(lst.get(1).toString().equals("E2: (• , sum(y) ≈ sum(x + y) , •)"));
+    assertTrue(lst.get(2).toString().equals("E3: (• , sum(1) ≈ sum(2) , •)"));
     assertTrue(lst.get(0).getIndex() == 1);
     assertTrue(lst.get(1).getIndex() == 2);
     assertTrue(lst.get(2).getIndex() == 3);
