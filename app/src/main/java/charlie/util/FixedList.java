@@ -99,6 +99,11 @@ public class FixedList<T> implements Iterable<T> {
     arr.addAll(other);
     return new FixedList<T>(arr);
   }
+   public FixedList<T> append(T other) {
+    ArrayList<T> arr = new ArrayList<T>(_mylist);
+    arr.add(other);
+    return new FixedList<T>(arr);
+  }
   
   private class ImmutableIterator<T> implements Iterator<T> {
     Iterator<T> _mine;
