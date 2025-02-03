@@ -17,25 +17,65 @@ package cora.rwinduction.engine;
 
 import charlie.util.Pair;
 import charlie.terms.Term;
+import charlie.terms.Renaming;
+import charlie.terms.TheoryFactory;
+import charlie.printer.Printer;
+import charlie.printer.PrintableObject;
+import charlie.printer.PrinterFactory;
 
 /**
- * A requirement that left ≻ right under some condition.
- * This really is stub code, to design ProofState as it will eventually be needed.  Expand (and do
- * proper testing / renamings) when ordering requirements are added!
+ * A requirement that left ≻ right or left ≽ right under some condition.  Within the rewriting
+ * induction process, ordering requirements are tracked to pass into a termination process.
+ *
+ * For the purpose of consistent printing this is coupled with a Renaming, but the user cannot
+ * access it since the ordering is only meant to _exist_, not to be changed (only added to).
  */
-public class OrdReq {
+public class OrdReq implements PrintableObject {
   private Term _lhs;
   private Term _rhs;
   private Term _constraint;
+  private boolean _strict;
+  private Renaming _renaming;
 
-  public OrdReq(Term left, Term right, Term constraint) {
+  /** Creates a strict requirement */
+  public OrdReq(Term left, Term right, Term constraint, Renaming renaming) {
     _lhs = left;
     _rhs = right;
     _constraint = constraint;
+    _strict = true;
+    _renaming = renaming.copy();
   }
 
+  /** Creates a strict or non-strict requirement. */
+  public OrdReq(Term left, Term right, Term constraint, Renaming renaming,
+                boolean strict) {
+    _lhs = left;
+    _rhs = right;
+    _constraint = constraint;
+    _strict = strict;
+    _renaming = renaming.copy();
+  }
+
+  /** Adds the current hypothesis to the given printer. */
+  public void print(Printer printer) {
+    printer.add(printer.makePrintable(_lhs, _renaming),
+                " ",
+                _strict ? printer.symbSucc() : printer.symbSucceq(),
+                " ",
+                printer.makePrintable(_rhs, _renaming));
+    if (!_constraint.equals(TheoryFactory.trueValue)) {
+      printer.add(" | ", printer.makePrintable(_constraint, _renaming));
+    }
+  }
+
+  /**
+   * Only for debugging or testing purposes!
+   * Use a Printer or OutputModule to properly print a Hypothesis.
+   */
   public String toString() {
-    return _lhs.toString() + " ≻ " + _rhs.toString() + " | " + _constraint.toString();
+    Printer printer = PrinterFactory.createPrinterNotForUserOutput();
+    print(printer);
+    return printer.toString();
   }
 }
 
