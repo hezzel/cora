@@ -18,24 +18,31 @@ package charlie.unification;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.terms.Renaming;
-import charlie.reader.CoraInputReader;
 import java.util.Set;
+import charlie.terms.Renaming;
+import charlie.terms.Term;
+import charlie.terms.TermFactory;
+import charlie.trs.TRS;
+import charlie.reader.CoraInputReader;
 
 class MguFinderTest {
+  private Term read(String desc, Renaming renaming, TRS trs) {
+    return CoraInputReader.readTermAndUpdateNaming(desc, renaming, trs);
+  }
+
   @Test
   public void testTypeMismatch() {
     var renaming = new Renaming(Set.of());
     var trs = CoraInputReader.readTrsFromString(
-      "f :: Int -> Int\n" +
-      "g :: o -> Int\n");
+      "f :: Int -> Int\n");
 
-    var fx = CoraInputReader.readTermAndUpdateNaming("f(x)", renaming, trs);
-    var f = CoraInputReader.readTermAndUpdateNaming("f", renaming, trs);
-    var x = CoraInputReader.readTermAndUpdateNaming("x", renaming, trs);
+    renaming.setName(TermFactory.createVar("G", CoraInputReader.readType("Int -> Int")), "G");
+    var fx = read("f(x)", renaming, trs);
+    var f = read("f", renaming, trs);
+    var x = read("x", renaming, trs);
     assertNull(MguFinder.mgu(f, x));
 
-    var gy = CoraInputReader.readTermAndUpdateNaming("g(y)", renaming, trs);
+    var gy = read("G(y)", renaming, trs);
     assertNull(MguFinder.mgu(fx, gy));
   }
 
@@ -45,8 +52,8 @@ class MguFinderTest {
     var trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n");
 
-    var fx = CoraInputReader.readTermAndUpdateNaming("f(x)", renaming, trs);
-    var x = CoraInputReader.readTermAndUpdateNaming("x", renaming, trs);
+    var fx = read("f(x)", renaming, trs);
+    var x = read("x", renaming, trs);
     assertNull(MguFinder.mgu(x, fx));
   }
 
@@ -56,13 +63,13 @@ class MguFinderTest {
     var trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n");
 
-    CoraInputReader.readTermAndUpdateNaming("f(x)", renaming, trs);
-    var x1 = CoraInputReader.readTermAndUpdateNaming("x", renaming, trs);
-    var x2 = CoraInputReader.readTermAndUpdateNaming("x", renaming, trs);
+    read("f(x)", renaming, trs);
+    var x1 = read("x", renaming, trs);
+    var x2 = read("x", renaming, trs);
     assertTrue(MguFinder.mgu(x1, x2).domain().isEmpty());
 
-    CoraInputReader.readTermAndUpdateNaming("f(y)", renaming, trs);
-    var y = CoraInputReader.readTermAndUpdateNaming("y", renaming, trs);
+    read("f(y)", renaming, trs);
+    var y = read("y", renaming, trs);
     var sub = MguFinder.mgu(x1, y);
     assertEquals(sub.domain().size(), 1);
     assertEquals(x1.substitute(sub), y.substitute(sub));
@@ -75,11 +82,11 @@ class MguFinderTest {
       "f :: Int -> Int\n" +
       "g :: Int -> Int\n");
 
-    var f1 = CoraInputReader.readTermAndUpdateNaming("f", renaming, trs);
-    var f2 = CoraInputReader.readTermAndUpdateNaming("f", renaming, trs);
+    var f1 = read("f", renaming, trs);
+    var f2 = read("f", renaming, trs);
     assertTrue(MguFinder.mgu(f1, f2).domain().isEmpty());
 
-    var g = CoraInputReader.readTermAndUpdateNaming("g", renaming, trs);
+    var g = read("g", renaming, trs);
     assertNull(MguFinder.mgu(f1, g));
   }
 
@@ -90,14 +97,14 @@ class MguFinderTest {
       "f :: Int -> Int -> Int\n" +
       "a :: Int\n");
 
-    var fxa = CoraInputReader.readTermAndUpdateNaming("f(x, a)", renaming, trs);
-    var fay = CoraInputReader.readTermAndUpdateNaming("f(a, y)", renaming, trs);
+    var fxa = read("f(x, a)", renaming, trs);
+    var fay = read("f(a, y)", renaming, trs);
     var sub = MguFinder.mgu(fxa, fay);
     assertEquals(sub.domain().size(), 2);
 
-    var x = CoraInputReader.readTermAndUpdateNaming("x", renaming, trs);
-    var y = CoraInputReader.readTermAndUpdateNaming("y", renaming, trs);
-    var a = CoraInputReader.readTermAndUpdateNaming("a", renaming, trs);
+    var x = read("x", renaming, trs);
+    var y = read("y", renaming, trs);
+    var a = read("a", renaming, trs);
     assertEquals(x.substitute(sub), a);
     assertEquals(y.substitute(sub), a);
   }
@@ -112,18 +119,18 @@ class MguFinderTest {
       "a :: o\n" +
       "b :: o\n");
 
-    CoraInputReader.readTermAndUpdateNaming("h(F)", renaming, trs);
-    var Fxfa = CoraInputReader.readTermAndUpdateNaming("F(x, f(a))", renaming, trs);
-    var gaby = CoraInputReader.readTermAndUpdateNaming("g(a, b, y)", renaming, trs);
+    read("h(F)", renaming, trs);
+    var Fxfa = read("F(x, f(a))", renaming, trs);
+    var gaby = read("g(a, b, y)", renaming, trs);
     var sub = MguFinder.mgu(Fxfa, gaby);
     assertEquals(sub.domain().size(), 3);
 
-    var F = CoraInputReader.readTermAndUpdateNaming("F", renaming, trs);
-    var ga = CoraInputReader.readTermAndUpdateNaming("g(a)", renaming, trs);
-    var x = CoraInputReader.readTermAndUpdateNaming("x", renaming, trs);
-    var b = CoraInputReader.readTermAndUpdateNaming("b", renaming, trs);
-    var y = CoraInputReader.readTermAndUpdateNaming("y", renaming, trs);
-    var fa = CoraInputReader.readTermAndUpdateNaming("f(a)", renaming, trs);
+    var F = read("F", renaming, trs);
+    var ga = read("g(a)", renaming, trs);
+    var x = read("x", renaming, trs);
+    var b = read("b", renaming, trs);
+    var y = read("y", renaming, trs);
+    var fa = read("f(a)", renaming, trs);
     assertEquals(F.substitute(sub), ga);
     assertEquals(x.substitute(sub), b);
     assertEquals(y.substitute(sub), fa);
@@ -136,14 +143,14 @@ class MguFinderTest {
       "f :: o -> o -> o\n" +
       "g :: o -> o\n");
 
-    var fxz = CoraInputReader.readTermAndUpdateNaming("f(x, z)", renaming, trs);
-    var fygx = CoraInputReader.readTermAndUpdateNaming("f(y, g(x))", renaming, trs);
+    var fxz = read("f(x, z)", renaming, trs);
+    var fygx = read("f(y, g(x))", renaming, trs);
     var sub = MguFinder.mgu(fxz, fygx);
     assertEquals(sub.domain().size(), 2);
     assertEquals(fxz.substitute(sub), fygx.substitute(sub));
 
-    var z = CoraInputReader.readTermAndUpdateNaming("z", renaming, trs);
-    var g = CoraInputReader.readTermAndUpdateNaming("g", renaming, trs);
+    var z = read("z", renaming, trs);
+    var g = read("g", renaming, trs);
     assertEquals(z.substitute(sub).queryHead(), g);
     assertEquals(z.substitute(sub).numberArguments(), 1);
     assertTrue(z.substitute(sub).queryArgument(1).isVariable());
@@ -157,8 +164,8 @@ class MguFinderTest {
       "a :: o\n" +
       "b :: o\n");
 
-    var fxb = CoraInputReader.readTermAndUpdateNaming("f(x, b)", renaming, trs);
-    var fax = CoraInputReader.readTermAndUpdateNaming("f(a, x)", renaming, trs);
+    var fxb = read("f(x, b)", renaming, trs);
+    var fax = read("f(a, x)", renaming, trs);
     assertNull(MguFinder.mgu(fxb, fax));
   }
 }
