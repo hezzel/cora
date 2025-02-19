@@ -36,7 +36,7 @@ class MguFinderTest {
     var trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n");
 
-    renaming.setName(TermFactory.createVar("G", CoraInputReader.readType("Int -> Int")), "G");
+    renaming.setName(TermFactory.createVar("G", CoraInputReader.readType("o -> Int")), "G");
     var fx = read("f(x)", renaming, trs);
     var f = read("f", renaming, trs);
     var x = read("x", renaming, trs);
