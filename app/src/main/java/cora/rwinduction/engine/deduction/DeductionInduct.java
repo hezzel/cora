@@ -62,9 +62,10 @@ public final class DeductionInduct extends DeductionStep {
   @Override
   public ProofState tryApply(Optional<OutputModule> module) {
     Hypothesis hypothesis = new Hypothesis(_equ.getEquation(), _equ.getIndex(), _equ.getRenaming());
-    if (_requirements.size() == 0 && (!_equ.getLeftGreaterTerm().isEmpty() ||
-                                      !_equ.getRightGreaterTerm().isEmpty())) {
-      // in this case, the equation stays the same
+    // special case: the equation context was already (s, s = t | φ, t); in this case the ec stays
+    // the same, and there are no requirements, but the hypothesis *is* added
+    if (_requirements.size() == 0 && !_equ.getLeftGreaterTerm().isEmpty() &&
+                                     !_equ.getRightGreaterTerm().isEmpty()) {
       return _state.addHypothesis(hypothesis);
     }
 
@@ -80,8 +81,7 @@ public final class DeductionInduct extends DeductionStep {
     }
 
     FixedList<EquationContext> newEquations = ecbuilder.build();
-    FixedList<Hypothesis> newHypotheses = _requirements.size() == 0 ? _state.getHypotheses() 
-                                                 : _state.getHypotheses().append(hypothesis);
+    FixedList<Hypothesis> newHypotheses = _state.getHypotheses().append(hypothesis);
     FixedList<OrdReq> newReqs = _state.getOrderingRequirements().append(_requirements);
 
     return new ProofState(newEquations, newHypotheses, newReqs, index);
