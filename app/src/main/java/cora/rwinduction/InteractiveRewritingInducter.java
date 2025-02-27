@@ -64,12 +64,14 @@ public class InteractiveRewritingInducter {
     clst.registerCommand(new CommandSyntax(clst));
     clst.registerCommand(new CommandHelp(clst));
     clst.registerCommand(new CommandRules());
+    clst.registerCommand(new CommandEquations());
 
     // deduction commands
     clst.registerCommand(new CommandDelete());
     clst.registerCommand(new CommandSimplify());
     clst.registerCommand(new CommandCalc());
     clst.registerCommand(new CommandCase());
+    clst.registerCommand(new CommandInduct());
     
     return clst;
   }

@@ -46,7 +46,7 @@ public final class DeductionInduct extends DeductionStep {
                           context.getRenaming(), false));
     }
     Optional<Term> rterm = context.getRightGreaterTerm();
-    if (!rterm.isEmpty() && !rterm.get().equals(eq.getLhs())) {
+    if (!rterm.isEmpty() && !rterm.get().equals(eq.getRhs())) {
       reqs.add(new OrdReq(rterm.get(), eq.getRhs(), eq.getConstraint(),
                           context.getRenaming(), false));
     }
@@ -95,7 +95,7 @@ public final class DeductionInduct extends DeductionStep {
   @Override
   public void explain(OutputModule module) {
     if (_requirements.size() == 0) {
-      module.println("We apply INDUCT to %a, which does not ipmose any new ordering requirements " +
+      module.println("We apply INDUCT to %a, which does not impose any new ordering requirements " +
         "but simply adds %a to the set H of induction hypotheses.", _equ,
         _equ.getEquation().makePrintableWith(_equ.getRenaming()));
     }
