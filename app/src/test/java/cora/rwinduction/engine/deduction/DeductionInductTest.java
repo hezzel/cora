@@ -98,7 +98,7 @@ class DeductionInductTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     DeductionInduct step = DeductionInduct.createStep(pp, o).get();
-    assertTrue(step.execute(pp, o));
+    assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().getIndex() == 11);
     assertTrue(pp.getProofState().getHypotheses().size() == 1);
@@ -116,12 +116,12 @@ class DeductionInductTest {
   }
 
   @Test
-  public void testInductWithDifferentLeftAndRight() {
+  public void testInductWithDifferentLeftAndRightTwice() {
     PartialProof pp = setupProof("sum1(x+1)", "sum1(x)", "iter(x, 1, 0)", "x >= 0", "iter(x, 0, 0)");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     DeductionInduct step = DeductionInduct.createStep(pp, o).get();
-    assertTrue(step.execute(pp, o));
+    assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E12: (sum1(x) , sum1(x) ≈ iter(x, 1, 0) | x ≥ 0 , iter(x, 1, 0))"));
@@ -137,10 +137,17 @@ class DeductionInductTest {
     assertTrue(pp.getCommandHistory().get(0).equals("induct"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
-    assertTrue(module.toString().equals(
+    String txt =
       "We apply INDUCT to E11: (sum1(x + 1) , sum1(x) ≈ iter(x, 1, 0) | x ≥ 0 , iter(x, 0, 0)), " +
       "which adds the equation into H, and imposes the ordering requirements " +
-      "sum1(x + 1) ≽ sum1(x) | x ≥ 0 and iter(x, 0, 0) ≽ iter(x, 1, 0) | x ≥ 0.\n\n"));
+      "sum1(x + 1) ≽ sum1(x) | x ≥ 0 and iter(x, 0, 0) ≽ iter(x, 1, 0) | x ≥ 0.\n\n";
+    assertTrue(module.toString().equals(txt));
+
+    step = DeductionInduct.createStep(pp, o).get();
+    assertFalse(step.verifyAndExecute(pp, o));
+    assertTrue(module.toString().equals(txt +
+      "You already have this induction hypothesis (H11), so there is no benefit to using INDUCT " +
+      "again on this equation.\n\n"));
   }
 
   @Test
@@ -149,7 +156,7 @@ class DeductionInductTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     DeductionInduct step = DeductionInduct.createStep(pp, o).get();
-    assertTrue(step.execute(pp, o));
+    assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E12: (sum1(x) , sum1(x) ≈ iter(x, 0, 0) | x ≥ 0 , iter(x, 0, 0))"));

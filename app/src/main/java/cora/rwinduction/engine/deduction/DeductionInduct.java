@@ -55,6 +55,14 @@ public final class DeductionInduct extends DeductionStep {
 
   @Override
   public boolean verify(Optional<OutputModule> module) {
+    // check that we don't already have this induction hypothesis!
+    for (Hypothesis hypo : _state.getHypotheses()) {
+      if (hypo.getEquation() == _equ.getEquation()) {
+        module.ifPresent(o -> o.println("You already have this induction hypothesis (%a), so " +
+          "there is no benefit to using INDUCT again on this equation.", hypo.getName()));
+        return false;
+      }
+    }
     // in the future we may want to do an actual termination check already at this point
     return true;
   }
@@ -71,8 +79,7 @@ public final class DeductionInduct extends DeductionStep {
 
     int index = _state.getLastUsedIndex() + 1;
     Equation equation = _equ.getEquation();
-    EquationContext newequ = new EquationContext(equation.getLhs(),
-      new Equation(equation.getLhs(), equation.getRhs(), equation.getConstraint()),
+    EquationContext newequ = new EquationContext(equation.getLhs(), equation,
       equation.getRhs(), index, _equ.getRenaming());
     FixedList.Builder<EquationContext> ecbuilder = new FixedList.Builder<EquationContext>();
     for (EquationContext ec : _state.getEquations()) {
