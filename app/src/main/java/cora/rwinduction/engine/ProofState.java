@@ -96,6 +96,14 @@ public class ProofState {
     if (_equations.isEmpty()) throw new IndexingException("ProofState", "getTopEquation", 0);
     return _equations.get(_equations.size()-1);
   }
+
+  /** This returns the hypothesis with the given name if there is one, otherwise null. */
+  public Hypothesis getHypothesisByName(String name) {
+    for (Hypothesis h : _hypotheses) {
+      if (h.getName().equals(name)) return h;
+    }
+    return null;
+  }
   
   /**
    * Given a proof state and an equation context {@code context}, this method returns a new proof
