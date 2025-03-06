@@ -74,6 +74,7 @@ public class InteractiveRewritingInducter {
     clst.registerCommand(new CommandCalc());
     clst.registerCommand(new CommandCase());
     clst.registerCommand(new CommandInduct());
+    clst.registerCommand(new CommandHypothesis());
     
     return clst;
   }
