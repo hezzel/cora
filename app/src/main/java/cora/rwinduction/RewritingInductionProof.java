@@ -57,6 +57,13 @@ public class RewritingInductionProof implements ProofObject {
     else {
       module.println("The proof attempt was aborted before a proof could be found.");
     }
+
+    module.println("Steps:");
+    module.startTable();
+    for (int i = 0; i < _steps.size(); i++) {
+      module.println("%a", _steps.get(i).commandDescription());
+    }
+    module.endTable();
   }
   
   /**

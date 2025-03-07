@@ -75,6 +75,7 @@ public class InteractiveRewritingInducter {
     clst.registerCommand(new CommandCase());
     clst.registerCommand(new CommandInduct());
     clst.registerCommand(new CommandHypothesis());
+    clst.registerCommand(new CommandEqdelete());
 
     // other commands
     clst.registerCommand(new CommandUndo());
@@ -85,8 +86,8 @@ public class InteractiveRewritingInducter {
 
   public static ProofObject run(TRS trs, List<String> inputs, OutputModule.Style style) {
     // set up Inputter, outputter and command list
-    //Inputter inputter = new ReplInputter();
-    Inputter inputter = new BasicInputter(); // use BasicInputter if ReplInputter doesn't compile
+    Inputter inputter = new ReplInputter();
+    //Inputter inputter = new BasicInputter(); // use BasicInputter if ReplInputter doesn't compile
     OutputModule outputter = new OutputModule(trs, new OutputPage(), style);
     if (!inputs.isEmpty()) inputter = new CacheInputter(inputs, inputter);
     CmdList clst = createCmdList(trs);
