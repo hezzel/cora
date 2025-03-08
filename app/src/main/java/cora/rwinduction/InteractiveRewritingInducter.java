@@ -132,7 +132,9 @@ public class InteractiveRewritingInducter {
 
   private ProofObject proveEquivalence() {
     while (!_proof.isDone()) {
-      _output.println("Top equation: %a", _proof.getProofState().getTopEquation());
+      _output.print("%aGoal:%a ", "\033[1;34m", "\033[0m");
+      _proof.getProofState().getTopEquation().prettyPrint(_output, true);
+      _output.println();
       CommandParsingStatus status = new CommandParsingStatus(_input.readLine());
       while (!status.done()) {
         while (status.skipSeparator());   // read past ; if there is one

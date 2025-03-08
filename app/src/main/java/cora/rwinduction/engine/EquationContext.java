@@ -23,6 +23,7 @@ import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
 import charlie.printer.PrinterFactory;
+import cora.io.OutputModule;
 
 /**
  * An EquationContext couples an Equation with up to 2 meta-terms that keep track of the equation's
@@ -227,6 +228,27 @@ public class EquationContext implements PrintableObject {
           " , ",
           _rightGeq.isEmpty() ? p.symbBullet() : p.makePrintable(_rightGeq.get(), _varNaming),
           ")");
+  }
+
+  /**
+   * This prints a description to the given output module, potentially using colours, and obscuring
+   * the context by only indicating whether the left- and right-hand side of the equation are equal
+   * to the corresponding greater terms.
+   */
+  public void prettyPrint(OutputModule module, boolean useColour) {
+    String yellow = useColour ? "\033[1;33m" : "";
+    String red = useColour ? "\033[1;31m" : "";
+    String reset = useColour ? "\033[0m" : "";
+    String l = "", r = "";
+    if (_leftGeq.isPresent() && _leftGeq.get().equals(_equation.getLhs())) l = red+" ⦾"+reset;
+    if (_rightGeq.isPresent() && _rightGeq.get().equals(_equation.getRhs())) r = red+" ⦾"+reset;
+    module.print("%a%a %a%{approx}%a %a%a",
+      Printer.makePrintable(_equation.getLhs(), _varNaming), l, yellow, reset,
+      Printer.makePrintable(_equation.getRhs(), _varNaming), r);
+    if (_equation.isConstrained()) {
+      module.print(" %a|%a %a", yellow, reset,
+                   Printer.makePrintable(_equation.getConstraint(), _varNaming));
+    }
   }
 
   /**

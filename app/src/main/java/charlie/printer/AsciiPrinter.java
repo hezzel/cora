@@ -20,7 +20,7 @@ import charlie.terms.TermPrinter;
 import charlie.terms.position.PositionPrinter;
 
 /** The AsciiPrinter prints with only standard characters */
-public class AsciiPrinter extends Printer{
+public class AsciiPrinter extends Printer {
   public AsciiPrinter(TypePrinter ty, PositionPrinter po, TermPrinter te) {
     super(ty, te, po);
   }
