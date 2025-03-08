@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,29 +18,20 @@ package cora.rwinduction.command;
 import java.util.Optional;
 
 import charlie.exceptions.CustomParserException;
+import charlie.util.Pair;
 import charlie.util.FixedList;
 import charlie.terms.Renaming;
 import charlie.terms.Substitution;
-import charlie.terms.TermFactory;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.deduction.DeductionSimplify;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command simplify. */
-public class CommandSimplify extends Command {
-  @Override
-  public String queryName() {
-    return "simplify";
+public class CommandSimplify extends ReductionCommandInherit {
+  public CommandSimplify() {
+    super("simplify", "<rule>");
   }
-  
-  @Override
-  public FixedList<String> callDescriptor() {
-    return FixedList.of("simplify <rule>",
-                        "simplify <rule> <position>",
-                        "simplify <rule> with <substitution>",
-                        "simplify <rule> <position> with <substitution>");
-  }
-  
+
   @Override
   public String helpDescriptor() {
     return "Use this deduction rule to rewrite the current equation with one of the known rules, " +
@@ -62,33 +53,14 @@ public class CommandSimplify extends Command {
     String ruleName = readRuleName(input);
     if (ruleName == null) return Optional.empty();
 
-    // get position (a valid equation position)
-    String arg = input.nextWord();
-    EquationPosition pos = readEquationPos(arg);
-    if (pos == null) return Optional.empty();
+    // get EquationPosition and Substitution
+    Renaming ruleRenaming = _proof.getContext().getRenaming(ruleName);
+    Pair<EquationPosition,Substitution> pair = readCommandRemainder(ruleRenaming, input);
+    if (pair == null) return Optional.empty();
 
-    // get substitution
-    Substitution subst;
-    if (arg != null && !arg.equals("with")) arg = input.nextWord();
-    if (arg == null) subst = TermFactory.createEmptySubstitution();
-    else if (!arg.equals("with")) {
-      _module.println("Unexpected argument at position %a: expected \"with\" or end of command, " +
-        "but got %a.", input.previousPosition(), arg);
-      return Optional.empty();
-    }
-    else {
-      subst = readSubstitution(input, ruleName);
-      if (subst == null) return Optional.empty();
-    }
-
-    // we should end after this
-    if (!input.commandEnded()) {
-      _module.println("Unexpected argument at position %a: expected end of command.",
-        input.currentPosition());
-      return Optional.empty();
-    }
-
-    return DeductionSimplify.createStep(_proof, Optional.of(_module), ruleName, pos, subst);
+    // create step
+    return DeductionSimplify.createStep(_proof, Optional.of(_module), ruleName,
+                                        pair.fst(), pair.snd());
   }
 
   /**
@@ -102,40 +74,6 @@ public class CommandSimplify extends Command {
     if (txt == null) _module.println("Simplify should be invoked with at least 1 argument.");
     else _module.println("No such rule: " + txt);
     return null;
-  }
-
-  /**
-   * Helper function for run / createStep: this parses the given string as an equation position --
-   * provided it is not "with" -- and returns the result.  If reading fails, then null is returned
-   * and an appropriate error message printed.
-   * If input is null or "with", then the default position (TOPLEFT) is returned.
-   */
-  private EquationPosition readEquationPos(String input) {
-    if (input == null || input.equals("with")) return EquationPosition.TOPLEFT;
-    try {
-      EquationPosition ret = EquationPosition.parse(input);
-      if (ret != null) return ret;
-      _module.println("Unexpected argument %a: I expected a valid position " +
-        "(or \"with\").\n\n", input);
-    }
-    catch (CustomParserException e) {
-      _module.println("Illegal position %a: %a", input, e.getMessage());
-    }
-    return null;
-  }
-
-  /**
-   * Given that CommandParsingStatus *should* point to the start of a substitution, parses and
-   * returns the substitution, or prints an error message and returns null.
-   */
-  private Substitution readSubstitution(CommandParsingStatus input, String ruleName) {
-    if (_proof.getProofState().isFinalState()) {
-      _module.println("The proof state is empty; there is nothing to simplify.");
-      return null;
-    }
-    Renaming keyNames = _proof.getContext().getRenaming(ruleName);
-    Renaming valueNames = _proof.getProofState().getTopEquation().getRenaming();
-    return input.readSubstitution(_proof.getContext().getTRS(), keyNames, valueNames, _module);
   }
 }
 

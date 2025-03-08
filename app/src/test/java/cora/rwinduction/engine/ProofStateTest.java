@@ -122,5 +122,17 @@ class ProofStateTest {
     assertThrows(charlie.exceptions.IndexingException.class,
       () -> state7.replaceTopEquation(eq2));
   }
+
+  @Test
+  public void testFindHypothesis() {
+    TRS trs = setupTRS();
+    ProofState state = setupProofState(trs);
+    Pair<Equation,Renaming> hypo = EquationParser.parseEquation("sum1(x+y) = y * sum1(x)", trs);
+    state = state.addHypothesis(new Hypothesis(hypo.fst(), 2, hypo.snd()));
+    hypo = EquationParser.parseEquation("sum1(x) = iter(x, 0, 0) | x > 0", trs);
+    state = state.addHypothesis(new Hypothesis(hypo.fst(), 17, hypo.snd()));
+    assertTrue(state.getHypothesisByName("H2").toString().equals("H2: sum1(x + y) ≈ y * sum1(x)"));
+    assertTrue(state.getHypothesisByName("H9") == null);
+  }
 }
 

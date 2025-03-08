@@ -64,20 +64,30 @@ public class InteractiveRewritingInducter {
     clst.registerCommand(new CommandSyntax(clst));
     clst.registerCommand(new CommandHelp(clst));
     clst.registerCommand(new CommandRules());
+    clst.registerCommand(new CommandEquations());
+    clst.registerCommand(new CommandHypotheses());
+    clst.registerCommand(new CommandOrdering());
 
     // deduction commands
     clst.registerCommand(new CommandDelete());
     clst.registerCommand(new CommandSimplify());
     clst.registerCommand(new CommandCalc());
     clst.registerCommand(new CommandCase());
+    clst.registerCommand(new CommandInduct());
+    clst.registerCommand(new CommandHypothesis());
+    clst.registerCommand(new CommandEqdelete());
+
+    // other commands
+    clst.registerCommand(new CommandUndo());
+    clst.registerCommand(new CommandRedo());
     
     return clst;
   }
 
   public static ProofObject run(TRS trs, List<String> inputs, OutputModule.Style style) {
     // set up Inputter, outputter and command list
-    //Inputter inputter = new ReplInputter();
-    Inputter inputter = new BasicInputter(); // use BasicInputter if ReplInputter doesn't compile
+    Inputter inputter = new ReplInputter();
+    //Inputter inputter = new BasicInputter(); // use BasicInputter if ReplInputter doesn't compile
     OutputModule outputter = new OutputModule(trs, new OutputPage(), style);
     if (!inputs.isEmpty()) inputter = new CacheInputter(inputs, inputter);
     CmdList clst = createCmdList(trs);
@@ -122,7 +132,9 @@ public class InteractiveRewritingInducter {
 
   private ProofObject proveEquivalence() {
     while (!_proof.isDone()) {
-      _output.println("Top equation: %a", _proof.getProofState().getTopEquation());
+      _output.print("%aGoal:%a ", "\033[1;34m", "\033[0m");
+      _proof.getProofState().getTopEquation().prettyPrint(_output, true);
+      _output.println();
       CommandParsingStatus status = new CommandParsingStatus(_input.readLine());
       while (!status.done()) {
         while (status.skipSeparator());   // read past ; if there is one

@@ -107,6 +107,17 @@ public abstract class Command {
     return false;
   }
 
+  /**
+   * Helper function for inheriting classes: if the command on input has ended this simply returns
+   * true, otherwise it prints an error message and returns false.
+   */
+  protected final boolean verifyEnded(CommandParsingStatus input) {
+    if (input.commandEnded()) return true;
+    _module.println("Unexpected argument at position %a: expected end of command.",
+      input.currentPosition());
+    return false;
+  }
+
   /** Returns _module wrapped in an Optional, as deduction steps often need. */
   protected final Optional<OutputModule> optionalModule() {
     return Optional.of(_module);

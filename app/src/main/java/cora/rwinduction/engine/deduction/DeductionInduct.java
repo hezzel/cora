@@ -46,7 +46,7 @@ public final class DeductionInduct extends DeductionStep {
                           context.getRenaming(), false));
     }
     Optional<Term> rterm = context.getRightGreaterTerm();
-    if (!rterm.isEmpty() && !rterm.get().equals(eq.getLhs())) {
+    if (!rterm.isEmpty() && !rterm.get().equals(eq.getRhs())) {
       reqs.add(new OrdReq(rterm.get(), eq.getRhs(), eq.getConstraint(),
                           context.getRenaming(), false));
     }
@@ -55,6 +55,14 @@ public final class DeductionInduct extends DeductionStep {
 
   @Override
   public boolean verify(Optional<OutputModule> module) {
+    // check that we don't already have this induction hypothesis!
+    for (Hypothesis hypo : _state.getHypotheses()) {
+      if (hypo.getEquation() == _equ.getEquation()) {
+        module.ifPresent(o -> o.println("You already have this induction hypothesis (%a), so " +
+          "there is no benefit to using INDUCT again on this equation.", hypo.getName()));
+        return false;
+      }
+    }
     // in the future we may want to do an actual termination check already at this point
     return true;
   }
@@ -62,16 +70,16 @@ public final class DeductionInduct extends DeductionStep {
   @Override
   public ProofState tryApply(Optional<OutputModule> module) {
     Hypothesis hypothesis = new Hypothesis(_equ.getEquation(), _equ.getIndex(), _equ.getRenaming());
-    if (_requirements.size() == 0 && (!_equ.getLeftGreaterTerm().isEmpty() ||
-                                      !_equ.getRightGreaterTerm().isEmpty())) {
-      // in this case, the equation stays the same
+    // special case: the equation context was already (s, s = t | φ, t); in this case the ec stays
+    // the same, and there are no requirements, but the hypothesis *is* added
+    if (_requirements.size() == 0 && !_equ.getLeftGreaterTerm().isEmpty() &&
+                                     !_equ.getRightGreaterTerm().isEmpty()) {
       return _state.addHypothesis(hypothesis);
     }
 
     int index = _state.getLastUsedIndex() + 1;
     Equation equation = _equ.getEquation();
-    EquationContext newequ = new EquationContext(equation.getLhs(),
-      new Equation(equation.getLhs(), equation.getRhs(), equation.getConstraint()),
+    EquationContext newequ = new EquationContext(equation.getLhs(), equation,
       equation.getRhs(), index, _equ.getRenaming());
     FixedList.Builder<EquationContext> ecbuilder = new FixedList.Builder<EquationContext>();
     for (EquationContext ec : _state.getEquations()) {
@@ -80,8 +88,7 @@ public final class DeductionInduct extends DeductionStep {
     }
 
     FixedList<EquationContext> newEquations = ecbuilder.build();
-    FixedList<Hypothesis> newHypotheses = _requirements.size() == 0 ? _state.getHypotheses() 
-                                                 : _state.getHypotheses().append(hypothesis);
+    FixedList<Hypothesis> newHypotheses = _state.getHypotheses().append(hypothesis);
     FixedList<OrdReq> newReqs = _state.getOrderingRequirements().append(_requirements);
 
     return new ProofState(newEquations, newHypotheses, newReqs, index);
@@ -95,7 +102,7 @@ public final class DeductionInduct extends DeductionStep {
   @Override
   public void explain(OutputModule module) {
     if (_requirements.size() == 0) {
-      module.println("We apply INDUCT to %a, which does not ipmose any new ordering requirements " +
+      module.println("We apply INDUCT to %a, which does not impose any new ordering requirements " +
         "but simply adds %a to the set H of induction hypotheses.", _equ,
         _equ.getEquation().makePrintableWith(_equ.getRenaming()));
     }
