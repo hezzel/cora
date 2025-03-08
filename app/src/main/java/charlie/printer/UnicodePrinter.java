@@ -20,7 +20,7 @@ import charlie.terms.TermPrinter;
 import charlie.terms.position.PositionPrinter;
 
 /** The UnicodePrinter prints using unicode symbols -- which is actually the default way. */
-public class UnicodePrinter extends Printer{
+public class UnicodePrinter extends Printer {
   public UnicodePrinter(TypePrinter ty, PositionPrinter po, TermPrinter te) {
     super(ty, te, po);
   }

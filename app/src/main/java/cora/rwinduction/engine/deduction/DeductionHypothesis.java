@@ -71,6 +71,11 @@ public final class DeductionHypothesis extends DeductionStep {
 
     int id = proof.getProofState().getLastUsedIndex() + 1;
     EquationContext result = generateResultEquationContext(original, pos, neweq, id, requirements);
+    if (result == null) {
+      m.ifPresent(o -> o.println("The hypothesis cannot be applied, as it would cause an " +
+        "obviously unsatisfiable ordering requirement to be imposed."));
+      return Optional.empty();
+    }
     return Optional.of(new DeductionHypothesis(proof.getProofState(), proof.getContext(),
                                                hypo.getName() + (inverse ? "^{-1}" : ""), inverse,
                                                helper, result, requirements));
@@ -91,14 +96,7 @@ public final class DeductionHypothesis extends DeductionStep {
       return new EquationContext(neweq, index, original.getRenaming());
     }
 
-    // Otherwise, suppose we are rewriting (s', C[lγ] -><- t | φ, t'); the case for a reduction in
-    // the right-hand side is symmetric.  We will continue with (s', C[rγ] -><- t | φ, t') except
-    // in two special cases, which also change the ordering requirements imposed:
-    // A: s' = lγ
-    // B: C[rγ] = t and t' != rγ
-    // we require s' ≻ lγ except in CASE A; there, we require t' ≻ lγ instead
-    // we require s' ≻ rγ except in CASE A or CASE B; there, we require t' ≻ rγ instead
-    // if CASE A or CASE B applies, we instead continue with (t', C[rγ] -><- t | φ, t')
+    // otherwise, let's write the equation as (s', C[lγ] -><- t | φ, t') or (t', t -> C[lγ] | φ, s')
     Term lgamma = original.getEquation().querySubterm(pos);
     Term rgamma = neweq.querySubterm(pos);
     Term phi = neweq.getConstraint();
@@ -112,19 +110,36 @@ public final class DeductionHypothesis extends DeductionStep {
       sprime = original.getRightGreaterTerm().get();
       tprime = original.getLeftGreaterTerm().get();
     }
-    boolean caseA = sprime.equals(lgamma);
-    boolean caseB = neweq.getLhs().equals(neweq.getRhs()) && !tprime.equals(rgamma);
-    if (caseA) reqs.add(new OrdReq(tprime, lgamma, phi, ren));
-    else reqs.add(new OrdReq(sprime, lgamma, phi, ren));
-    if (caseA || caseB) sprime = tprime;
-    reqs.add(new OrdReq(sprime, rgamma, phi, ren));
-    EquationContext result;
-    if (pos.querySide() == EquationPosition.Side.Left) {
-      return new EquationContext(sprime, neweq, tprime, index, ren);
+    
+    // if s' = lγ, then clearly we do not have s' ≻ lγ, so we need t' ≻ lγ = s', and hence can
+    // safely continue with greater terms {t',t'}
+    if (sprime.equals(lgamma)) {
+      if (tprime.equals(lgamma) || tprime.equals(rgamma)) return null;
+      reqs.add(new OrdReq(tprime, lgamma, phi, ren));
+      reqs.add(new OrdReq(tprime, rgamma, phi, ren));
+      return new EquationContext(tprime, neweq, tprime, index, ren);
     }
+
+    // in all other cases, we impose the requirement that s' ≻ lγ
+    reqs.add(new OrdReq(sprime, lgamma, phi, ren));
+
+    // The only remaining question is whether s' ≻ rγ or t' ≻ rγ.  For this, we impose the
+    // following heuristic: of course if one of them is equal to rγ we choose the other, and if
+    // C[rγ] = t we in principle choose t' ≻ rγ; otherwise we let s' ≻ rγ (since the proof of the
+    // equation is not yet almost-finished, and we will continue with (s',t'))
+    if (neweq.getLhs().equals(neweq.getRhs())) {
+      if (!tprime.equals(rgamma)) reqs.add(new OrdReq(tprime, rgamma, phi, ren));
+      else if (sprime.equals(rgamma)) return null;
+      else reqs.add(new OrdReq(sprime, rgamma, phi, ren));
+    }
+
     else {
-      return new EquationContext(tprime, neweq, sprime, index, ren);
+      if (!sprime.equals(rgamma)) reqs.add(new OrdReq(sprime, rgamma, phi, ren));
+      else if (tprime.equals(rgamma)) return null;
+      else reqs.add(new OrdReq(tprime, rgamma, phi, ren));
     }
+
+    return original.replace(neweq, ren, index);
   }
 
   /**

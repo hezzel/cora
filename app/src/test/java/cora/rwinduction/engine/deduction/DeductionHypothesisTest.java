@@ -273,6 +273,19 @@ class DeductionHypothesisTest {
   }
 
   @Test
+  public void testNoSuitableInductionHypothesis() {
+    PartialProof pp = setupProof("sum1(x)", "sum1(x)", "sum2(x)", "x > 0", "sum2(x)",
+      "sum1(x) = sum2(x) | x ≥ 0");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    Substitution subst = TermFactory.createEmptySubstitution();
+    assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
+                                              EquationPosition.TOPLEFT, subst).isEmpty());
+    assertTrue(module.toString().equals("The hypothesis cannot be applied, as it would cause an " +
+      "obviously unsatisfiable ordering requirement to be imposed.\n\n"));
+  }
+
+  @Test
   public void testHypothesisDoesNotMatch() {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0", "sum1(sum1(x)) = sum2(z)| z ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
