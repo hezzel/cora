@@ -15,6 +15,7 @@
 
 package cora.rwinduction.command;
 
+import java.util.List;
 import java.util.Optional;
 
 import charlie.util.FixedList;
@@ -67,6 +68,27 @@ public abstract class Command {
 
   /** Returns a description for the help command. */
   public abstract String helpDescriptor();
+
+  public record TabSuggestion(String text, String category) {}
+
+  /**
+   * Given a string describing the arguments to the command that we have so far, this method should
+   * return a list of suggestions for tab cmpletion.  Each entry in the list could be:
+   * - a string with a category
+   * - null with a category that isn't used by anything else in the list, to indicate that this is
+   *   something the user should type and cannot select just by tabbing
+   * An empty list means that no suggestions will be given, and typically implies that there is
+   * a problem with the command.
+   */
+  public abstract List<TabSuggestion> suggestNext(String txt);
+
+  /**
+   * Helper function for implementations of suggestNext: this gives the suggestion for "end the
+   * command here".
+   */
+  protected final TabSuggestion endOfCommandSuggestion() {
+    return new TabSuggestion(null, "end of command");
+  }
 
   /**
    * Given that input represents the input given by the user, with reader head pointed just after

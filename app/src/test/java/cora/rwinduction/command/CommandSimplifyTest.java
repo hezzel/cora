@@ -17,6 +17,7 @@ package cora.rwinduction.command;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 
@@ -129,6 +130,70 @@ class CommandSimplifyTest {
     assertTrue(createStep(module, "simplify O1 with [x:=z] o").isEmpty());
     assertTrue(module.toString().equals("Unexpected argument at position 25: " +
       "expected end of command.\n\n"));
+  }
+
+  private ArrayList<Command.TabSuggestion> getSuggestions(String args) {
+    CommandSimplify cmd = new CommandSimplify();
+    EquationContext ec =
+      EquationParser.parseEquationData("sum1(z) = add(y,sum2(z+1)) | z ≥ 0 ∧ y < 0", trs, 1);
+    OutputModule module = OutputModule.createUnicodeModule(trs);
+    PartialProof proof = new PartialProof(trs, FixedList.of(ec),
+                                          lst -> module.generateUniqueNaming(lst));
+    cmd.storeContext(proof, module);
+    return cmd.suggestNext(args);
+  }
+
+  @Test
+  public void testSuggestionEmpty() {
+    ArrayList<Command.TabSuggestion> suggestions = getSuggestions("");
+    assertTrue(suggestions.size() == 5);  // the rules for add, sum1, sum2
+    suggestions = getSuggestions("     ");
+    assertTrue(suggestions.size() == 5);
+  }
+
+  @Test
+  public void testSuggestionsGivenRule() {
+    ArrayList<Command.TabSuggestion> suggestions = getSuggestions("O2");
+    assertTrue(suggestions.size() == 1);
+    assertTrue(suggestions.get(0).text().equals("L"));
+    suggestions = getSuggestions("O5");
+    assertTrue(suggestions.size() == 1);
+    assertTrue(suggestions.get(0).text().equals("R2"));
+    assertTrue(getSuggestions("O6").size() == 0); // different root symbol
+    assertTrue(getSuggestions("O3").size() == 0); // same root symbol, but no match
+  }
+
+  @Test
+  public void testSuggestionsGivenRuleAndWith() {
+    ArrayList<Command.TabSuggestion> suggestions = getSuggestions("O2 with");
+    assertTrue(suggestions.size() == 1);
+    assertTrue(suggestions.get(0).text() == null);
+    assertTrue(suggestions.get(0).category().equals("substitution"));
+    suggestions = getSuggestions("O2 with [aa");
+    assertTrue(suggestions.size() == 1);
+    assertTrue(suggestions.get(0).text() == null);
+    assertTrue(suggestions.get(0).category().equals("substitution"));
+    suggestions = getSuggestions("O2 R12.34 with [aa");
+    assertTrue(suggestions.size() == 1);
+    assertTrue(suggestions.get(0).text() == null);
+    assertTrue(suggestions.get(0).category().equals("substitution"));
+    suggestions = getSuggestions("O2 R12.34 with");
+    assertTrue(suggestions.size() == 1);
+    assertTrue(suggestions.get(0).category().equals("substitution"));
+  }
+
+  @Test
+  public void testSuggetionsGivenSubstitution() {
+    ArrayList<Command.TabSuggestion> suggestions;
+    suggestions = getSuggestions("O2 R12.34 with [aa]");
+    assertTrue(suggestions.size() == 1);
+    assertTrue(suggestions.get(0).text() == null);
+    assertTrue(suggestions.get(0).category().equals("end of command"));
+    suggestions = getSuggestions("O2 R12.34 [aa]");
+    assertTrue(suggestions.size() == 0);
+    suggestions = getSuggestions("O2 with [aa]");
+    assertTrue(suggestions.size() == 1);
+    assertTrue(suggestions.get(0).category().equals("end of command"));
   }
 }
 

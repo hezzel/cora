@@ -20,15 +20,10 @@ import charlie.util.FixedList;
 import cora.rwinduction.engine.deduction.DeductionInduct;
 import cora.rwinduction.parser.CommandParsingStatus;
 
-public class CommandInduct extends Command {
+public class CommandInduct extends SingularCommandInherit {
   @Override
   public String queryName() {
     return "induct";
-  }
-  
-  @Override
-  public FixedList<String> callDescriptor() {
-    return FixedList.of("induct");
   }
   
   @Override
@@ -40,12 +35,7 @@ public class CommandInduct extends Command {
   }
 
   @Override
-  protected boolean run(CommandParsingStatus input) {
-    if (!input.commandEnded()) {
-      _module.println("Unexpected argument at position %a: induct does not take arguments.",
-        input.currentPosition());
-      return false;
-    }
+  protected boolean run() {
     Optional<DeductionInduct> step = DeductionInduct.createStep(_proof, Optional.of(_module));
     if (step.isEmpty()) return false;
     return step.get().verifyAndExecute(_proof, Optional.of(_module));

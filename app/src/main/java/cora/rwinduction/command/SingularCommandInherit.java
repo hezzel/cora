@@ -15,31 +15,31 @@
 
 package cora.rwinduction.command;
 
-import java.util.Optional;
-
+import java.util.List;
 import charlie.util.FixedList;
-import cora.rwinduction.engine.deduction.DeductionEqdelete;
 import cora.rwinduction.parser.CommandParsingStatus;
 
-/** The syntax for the deduction command eq-delete. */
-public class CommandEqdelete extends SingularCommandInherit {
+/** A base inherit for commands that do not take any arguments, providing shared functionality. */
+abstract class SingularCommandInherit extends Command {
   @Override
-  public String queryName() {
-    return "eq-delete";
+  public final FixedList<String> callDescriptor() {
+    return FixedList.of(queryName());
   }
-  
+
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to delete the current equation, if the left-hand side has " +
-           "the form C[s1,...,sn], the right-hand side C[t1,...,tn], and the constraint implies " +
-           "that each si = ti.";
+  public final List<TabSuggestion> suggestNext(String args) {
+    return List.of(endOfCommandSuggestion());
   }
-  
+
   @Override
-  protected boolean run() {
-    Optional<DeductionEqdelete> step = DeductionEqdelete.createStep(_proof, optionalModule());
-    if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, optionalModule());
+  protected final boolean run(CommandParsingStatus status) {
+    if (!status.commandEnded()) {
+      return failure("Command " + queryName() + " should be invoked without any arguments.");
+    }
+    return run();
   }
+
+  /** This is called when run is correctly invoked without any arguments. */
+  protected abstract boolean run();
 }
 

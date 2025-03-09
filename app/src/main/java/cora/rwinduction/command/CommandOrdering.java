@@ -21,15 +21,10 @@ import cora.rwinduction.engine.ProofState;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The environment command :ordering, which prints all the current ordering requirements. */
-public class CommandOrdering extends Command {
+public class CommandOrdering extends SingularCommandInherit {
   @Override
   public String queryName() {
     return ":ordering";
-  }
-
-  @Override
-  public FixedList<String> callDescriptor() {
-    return FixedList.of(":ordering");
   }
 
   @Override
@@ -38,12 +33,7 @@ public class CommandOrdering extends Command {
   }
 
   @Override
-  protected boolean run(CommandParsingStatus input) {
-    if (!input.commandEnded()) {
-      _module.println("Unexpected argument at position %a: :ordering does not take any " +
-        "arguments.", input.currentPosition());
-        return false;
-    }
+  protected boolean run() {
     ProofState state = _proof.getProofState();
     if (state.getOrderingRequirements().size() == 0) {
       _module.println("No ordering requirements have been imposed so far.");
