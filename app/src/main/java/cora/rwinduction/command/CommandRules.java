@@ -15,6 +15,8 @@
 
 package cora.rwinduction.command;
 
+import java.util.ArrayList;
+
 import charlie.util.Pair;
 import charlie.util.FixedList;
 import charlie.types.Type;
@@ -43,6 +45,17 @@ public class CommandRules extends Command {
   public String helpDescriptor() {
     return "List all the rules available in the original TRS.  " +
            "You can also list only the rules with a specific root symbol.";
+  }
+
+  @Override
+  public ArrayList<TabSuggestion> suggestNext(String args) {
+    ArrayList<TabSuggestion> ret = new ArrayList<TabSuggestion>();
+    ret.add(endOfCommandSuggestion());
+    if (!args.equals("")) return ret;// they already gave one argument; we don't need another
+    for (FunctionSymbol f : _proof.getContext().getTRS().definedSymbols()) {
+      ret.add(new TabSuggestion(f.queryName(), "defined symbol"));
+    }
+    return ret;
   }
 
   @Override

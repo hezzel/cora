@@ -15,19 +15,15 @@
 
 package cora.rwinduction.command;
 
+import java.util.List;
 import charlie.util.FixedList;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the undo command. */
-public class CommandUndo extends Command {
+public class CommandUndo extends SingularCommandInherit {
   @Override
   public String queryName() {
     return "undo";
-  }
-  
-  @Override
-  public FixedList<String> callDescriptor() {
-    return FixedList.of("undo");
   }
   
   @Override
@@ -35,10 +31,9 @@ public class CommandUndo extends Command {
     return "Use this deduction rule to undo the last deduction step.  If you go too far, you " +
            "can still use \"redo\" to get back to the current state.";
   }
-  
+
   @Override
-  protected boolean run(CommandParsingStatus input) {
-    if (!input.commandEnded()) return failure("Command undo should be invoked without arguments.");
+  protected boolean run() {
     if (!_proof.undoProofStep()) return failure("Nothing to undo.");
     return true;
   }

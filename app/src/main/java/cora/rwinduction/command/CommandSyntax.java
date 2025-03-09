@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,6 +15,7 @@
 
 package cora.rwinduction.command;
 
+import java.util.ArrayList;
 import charlie.util.FixedList;
 import cora.rwinduction.parser.CommandParsingStatus;
 
@@ -40,6 +41,17 @@ public class CommandSyntax extends Command {
   @Override
   public String helpDescriptor() {
     return "Query the ways to invoke a given command.";
+  }
+
+  @Override
+  public ArrayList<TabSuggestion> suggestNext(String args) {
+    ArrayList<TabSuggestion> ret = new ArrayList<TabSuggestion>();
+    // if they already supplied an argument, we don't need to suggest another
+    if (!args.equals("")) ret.add(endOfCommandSuggestion());
+    else {
+      for (String name : _clist.queryCommands()) ret.add(new TabSuggestion(name, "command"));
+    }
+    return ret;
   }
 
   @Override

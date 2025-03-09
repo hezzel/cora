@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -22,15 +22,10 @@ import cora.rwinduction.engine.deduction.DeductionDelete;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command delete. */
-public class CommandDelete extends Command {
+public class CommandDelete extends SingularCommandInherit {
   @Override
   public String queryName() {
     return "delete";
-  }
-  
-  @Override
-  public FixedList<String> callDescriptor() {
-    return FixedList.of("delete");
   }
   
   @Override
@@ -40,8 +35,7 @@ public class CommandDelete extends Command {
   }
   
   @Override
-  protected boolean run(CommandParsingStatus input) {
-    if (!input.commandEnded()) return failure("Delete should be invoked without arguments.");
+  protected boolean run() {
     Optional<DeductionDelete> step = DeductionDelete.createStep(_proof, optionalModule());
     if (step.isEmpty()) return false;
     return step.get().verifyAndExecute(_proof, optionalModule());

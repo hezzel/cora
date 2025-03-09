@@ -85,12 +85,12 @@ public class InteractiveRewritingInducter {
   }
 
   public static ProofObject run(TRS trs, List<String> inputs, OutputModule.Style style) {
+    CmdList clst = createCmdList(trs);
     // set up Inputter, outputter and command list
-    Inputter inputter = new ReplInputter();
+    Inputter inputter = new ReplInputter(clst);
     //Inputter inputter = new BasicInputter(); // use BasicInputter if ReplInputter doesn't compile
     OutputModule outputter = new OutputModule(trs, new OutputPage(), style);
     if (!inputs.isEmpty()) inputter = new CacheInputter(inputs, inputter);
-    CmdList clst = createCmdList(trs);
     
     // verify that the TRS is legal
     String problem = checkLegalTrs(trs);

@@ -19,15 +19,10 @@ import charlie.util.FixedList;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the redo command. */
-public class CommandRedo extends Command {
+public class CommandRedo extends SingularCommandInherit {
   @Override
   public String queryName() {
     return "redo";
-  }
-  
-  @Override
-  public FixedList<String> callDescriptor() {
-    return FixedList.of("redo");
   }
   
   @Override
@@ -37,10 +32,9 @@ public class CommandRedo extends Command {
            "redo will cause the \"future\" states to be forgotten, at which point you cannot " +
            "redo these steps anymore.";
   }
-  
+
   @Override
-  protected boolean run(CommandParsingStatus input) {
-    if (!input.commandEnded()) return failure("Command undo should be invoked without arguments.");
+  protected boolean run() {
     if (!_proof.redoProofStep()) return failure("Nothing to redo.");
     return true;
   }

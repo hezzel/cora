@@ -17,6 +17,7 @@ package cora.rwinduction.command;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
 import java.util.Set;
 
 import charlie.util.FixedList;
@@ -50,6 +51,7 @@ class CmdListTest {
     public String queryName() { return _name; }
     public FixedList<String> callDescriptor() { return FixedList.of(_name); }
     public String helpDescriptor() { return ""; }
+    public List<TabSuggestion> suggestNext(String str) { return List.of(); }
     protected boolean run(CommandParsingStatus status) { return false; }
   }
 

@@ -15,13 +15,18 @@
 
 package cora.rwinduction.command;
 
+import java.util.ArrayList;
 import java.util.Optional;
+import java.util.TreeSet;
 
 import charlie.exceptions.CustomParserException;
 import charlie.util.Pair;
 import charlie.util.FixedList;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.Term;
 import charlie.terms.Renaming;
 import charlie.terms.Substitution;
+import charlie.trs.Rule;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.deduction.DeductionSimplify;
 import cora.rwinduction.parser.CommandParsingStatus;
@@ -41,6 +46,25 @@ public class CommandSimplify extends ReductionCommandInherit {
            "command instead.";
   }
 
+  @Override
+  protected final void addTabSuggestionsForKind(TreeSet<FunctionSymbol> symbols,
+                                                ArrayList<TabSuggestion> suggestions) {
+    for (int i = 0; i < _proof.getContext().getTRS().queryRuleCount(); i++) {
+      Rule rule = _proof.getContext().getTRS().queryRule(i);
+      if (rule.queryLeftSide().isFunctionalTerm() &&
+          !symbols.contains(rule.queryLeftSide().queryRoot())) continue;
+      suggestions.add(new TabSuggestion(_proof.getContext().getRuleName(i), "rule"));
+    }
+  }
+
+  @Override
+  protected final Term getLeftFor(String ruleName) {
+    Rule rule = _proof.getContext().getRule(ruleName);
+    if (rule == null) return null;
+    return rule.queryLeftSide();
+  }
+
+  @Override
   protected boolean run(CommandParsingStatus input) {
     Optional<DeductionSimplify> step = createStep(input);
     if (step.isEmpty()) return false;

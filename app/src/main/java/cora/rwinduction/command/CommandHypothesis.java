@@ -15,15 +15,20 @@
 
 package cora.rwinduction.command;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.TreeSet;
 
 import charlie.exceptions.CustomParserException;
 import charlie.util.Pair;
 import charlie.util.FixedList;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.Term;
 import charlie.terms.Renaming;
 import charlie.terms.Substitution;
 import charlie.terms.TermFactory;
+import cora.rwinduction.engine.Equation;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.Hypothesis;
 import cora.rwinduction.engine.deduction.DeductionHypothesis;
@@ -46,6 +51,30 @@ public class CommandHypothesis extends ReductionCommandInherit {
            "H5-inverse.";
   }
 
+  @Override
+  protected final void addTabSuggestionsForKind(TreeSet<FunctionSymbol> symbols,
+                                                ArrayList<TabSuggestion> suggestions) {
+    for (Hypothesis hypo : _proof.getProofState().getHypotheses()) {
+      Equation eq = hypo.getEquation();
+      if (!eq.getLhs().isFunctionalTerm() || symbols.contains(eq.getLhs().queryRoot())) {
+        suggestions.add(new TabSuggestion(hypo.getName(), "hypothesis"));
+      }
+      if (!eq.getRhs().isFunctionalTerm() || symbols.contains(eq.getRhs().queryRoot())) {
+        suggestions.add(new TabSuggestion(hypo.getName() + "-inverse", "hypothesis"));
+      }
+    }
+  }
+
+  @Override
+  protected final Term getLeftFor(String hypoDesc) {
+    Pair<String,Boolean> pair = splitHypothesisName(hypoDesc);
+    Hypothesis hypothesis = _proof.getProofState().getHypothesisByName(pair.fst());
+    if (hypothesis == null) return null;
+    if (pair.snd()) return hypothesis.getEquation().getRhs();
+    else return hypothesis.getEquation().getLhs();
+  }
+
+  @Override
   protected boolean run(CommandParsingStatus input) {
     Optional<DeductionHypothesis> step = createStep(input);
     if (step.isEmpty()) return false;
@@ -77,23 +106,26 @@ public class CommandHypothesis extends ReductionCommandInherit {
       _module.println("Command hypothesis should be invoked with at least 1 argument.");
       return null;
     }
-    String name = txt;
-    boolean inverse = false;
-    int len = txt.length();
-    for (String str : List.of("^{-1}", "-inverse")) {
-      int strlen = str.length();
-      if (len > strlen && txt.substring(len - strlen).equals(str)) {
-        name = txt.substring(0, len - strlen);
-        inverse = true;
-        break;
-      }
-    }
+    Pair<String,Boolean> pair = splitHypothesisName(txt);
+    String name = pair.fst();
+    boolean inverse = pair.snd();
     Hypothesis hypo = _proof.getProofState().getHypothesisByName(name);
     if (hypo == null) {
       _module.println("No such induction hypothesis: %a.", name);
       return null;
     }
     return new Pair<Hypothesis,Boolean>(hypo, inverse);
+  }
+
+  private Pair<String,Boolean> splitHypothesisName(String txt) {
+    int len = txt.length();
+    for (String str : List.of("^{-1}", "-inverse")) {
+      int strlen = str.length();
+      if (len > strlen && txt.substring(len - strlen).equals(str)) {
+        return new Pair<String,Boolean>(txt.substring(0, len - strlen), true);
+      }
+    }
+    return new Pair<String,Boolean>(txt, false);
   }
 }
 

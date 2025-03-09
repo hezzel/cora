@@ -17,6 +17,7 @@ package cora.rwinduction.command;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 
@@ -107,6 +108,44 @@ class CommandHypothesisTest {
     assertTrue(createStep(module, "hypothesis H29 with [y:=x]").isEmpty());
     assertTrue(module.toString().equals("The induction hypothesis does not apply: " +
       "Variable x has a different type from sum1(x).\n\n"));
+  }
+
+  private ArrayList<Command.TabSuggestion> getSuggestions(String args) {
+    OutputModule module = OutputModule.createUnicodeModule(_trs);
+    PartialProof proof = new PartialProof(_trs, EquationParser.parseEquationList(
+      "add(0, sum2(x)) = sum2(x + 0) | x > 0", _trs), lst -> module.generateUniqueNaming(lst));
+    Pair<Equation,Renaming> hypo = EquationParser.parseEquation("sum1(x) = sum2(x) | x != y", _trs);
+    ProofState state =
+      proof.getProofState().addHypothesis(new Hypothesis(hypo.fst(), 12, hypo.snd()));
+    hypo = EquationParser.parseEquation("add(0, x) = error", _trs);
+    state = state.addHypothesis(new Hypothesis(hypo.fst(), 29, hypo.snd()));
+    proof.addProofStep(state, DeductionInduct.createStep(proof, Optional.empty()).get());
+    CommandHypothesis cmd = new CommandHypothesis();
+    cmd.storeContext(proof, module);
+    return cmd.suggestNext(args);
+  }
+
+  @Test
+  public void testSuggestionEmpty() {
+    ArrayList<Command.TabSuggestion> suggestions = getSuggestions("");
+    assertTrue(suggestions.size() == 2);
+    suggestions = getSuggestions("     ");
+    assertTrue(suggestions.size() == 2);
+    assertTrue(suggestions.get(0).text().equals("H12-inverse"));
+    assertTrue(suggestions.get(1).text().equals("H29"));
+  }
+
+  @Test
+  public void testSuggestionsGivenHypothesis() {
+    ArrayList<Command.TabSuggestion> suggestions = getSuggestions("H12-inverse");
+    assertTrue(suggestions.size() == 2);
+    assertTrue(suggestions.get(0).text().equals("L2"));
+    assertTrue(suggestions.get(1).text().equals("R"));
+    suggestions = getSuggestions("H29");
+    assertTrue(suggestions.size() == 1);
+    assertTrue(suggestions.get(0).text().equals("L"));
+    assertTrue(getSuggestions("H29-inverse").size() == 0);
+    assertTrue(getSuggestions("H17").size() == 0);
   }
 }
 
