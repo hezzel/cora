@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,6 +15,7 @@
 
 package cora.rwinduction.command;
 
+import java.util.ArrayList;
 import java.util.TreeSet;
 import charlie.util.FixedList;
 import cora.rwinduction.parser.CommandParsingStatus;
@@ -43,6 +44,18 @@ public class CommandHelp extends Command {
     return "Prints a short description to explain how the prover works.";
   }
 
+  @Override
+  public ArrayList<TabSuggestion> suggestNext(String args) {
+    ArrayList<TabSuggestion> ret = new ArrayList<TabSuggestion>();
+    ret.add(endOfCommandSuggestion());
+    // if they already supplied an argument, we don't need to suggest another
+    if (!args.equals("")) return ret;
+    ret.add(new TabSuggestion("commands", "keyword"));
+    for (String name : _clist.queryCommands()) ret.add(new TabSuggestion(name, "command"));
+    return ret;
+  }
+
+  @Override
   protected boolean run(CommandParsingStatus input) {
     // syntax: :help
     if (input.commandEnded()) return printGeneralHelp();

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -20,7 +20,11 @@ import java.util.Optional;
 
 import charlie.exceptions.CustomParserException;
 import charlie.util.FixedList;
+import charlie.terms.Term;
+import charlie.printer.Printer;
+import charlie.printer.PrinterFactory;
 import cora.rwinduction.engine.EquationPosition;
+import cora.rwinduction.engine.Equation;
 import cora.rwinduction.engine.deduction.DeductionCalc;
 import cora.rwinduction.parser.CommandParsingStatus;
 
@@ -73,6 +77,35 @@ public class CommandCalc extends Command {
     }
     
     return DeductionCalc.createStep(_proof, Optional.of(_module), posses);
+  }
+
+  /** Tab suggestions for this command are just the positions available to the user. */
+  @Override
+  public ArrayList<TabSuggestion> suggestNext(String args) {
+    Equation equation = _proof.getProofState().getTopEquation().getEquation();
+    ArrayList<TabSuggestion> ret = new ArrayList<TabSuggestion>();
+    addCalculatablePositions(equation.getLhs(), EquationPosition.Side.Left, ret);
+    addCalculatablePositions(equation.getRhs(), EquationPosition.Side.Right, ret);
+    if (!args.equals("")) ret.add(endOfCommandSuggestion());
+    return ret;
+  }
+
+  /**
+   * Helper function for suggestNext: this goes through all the positions in the given term, and
+   * adds <side><pos> to the given suggestion list if the subterm of term at that position is
+   * something that may be calculated.
+   */
+  private void addCalculatablePositions(Term term, EquationPosition.Side side,
+                                        ArrayList<TabSuggestion> suggestions) {
+    Printer printer = PrinterFactory.createParseablePrinter(_proof.getContext().getTRS());
+    term.visitSubterms( (s,p) -> {
+      if (s.isApplication() && s.isTheoryTerm() && s.isFirstOrder()) {
+        EquationPosition pos = new EquationPosition(side, p);
+        pos.print(printer);
+        suggestions.add(new TabSuggestion(printer.toString(), "position"));
+        printer.clear();
+      }
+    });
   }
 }
 

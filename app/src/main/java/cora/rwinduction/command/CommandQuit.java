@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -19,15 +19,10 @@ import charlie.util.FixedList;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The environment command :quit, which allows the user to end the interactive process. */
-public class CommandQuit extends Command {
+public class CommandQuit extends SingularCommandInherit {
   @Override
   public String queryName() {
     return ":quit";
-  }
-  
-  @Override
-  public FixedList<String> callDescriptor() {
-    return FixedList.of(":quit");
   }
   
   @Override
@@ -37,8 +32,7 @@ public class CommandQuit extends Command {
   }
 
   @Override
-  protected boolean run(CommandParsingStatus status) {
-    if (!status.commandEnded()) return failure(":quit should be invoked without arguments");
+  protected boolean run() {
     _proof.abort();
     return true;
   }

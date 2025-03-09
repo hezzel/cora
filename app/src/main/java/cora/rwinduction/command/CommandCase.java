@@ -15,6 +15,7 @@
 
 package cora.rwinduction.command;
 
+import java.util.List;
 import java.util.Optional;
 
 import charlie.util.FixedList;
@@ -72,6 +73,11 @@ public class CommandCase extends Command {
       return Optional.empty();
     }
     return DeductionCase.createStep(_proof, Optional.of(_module), term);
+  }
+
+  @Override
+  public List<TabSuggestion> suggestNext(String args) {
+    return List.of(new TabSuggestion(null, "constraint, integer expression or variable"));
   }
 }
 

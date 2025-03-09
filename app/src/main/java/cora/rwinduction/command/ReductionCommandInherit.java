@@ -15,14 +15,18 @@
 
 package cora.rwinduction.command;
 
+import java.util.ArrayList;
 import java.util.Optional;
+import java.util.TreeSet;
 
 import charlie.exceptions.CustomParserException;
 import charlie.util.Pair;
 import charlie.util.FixedList;
-import charlie.terms.Renaming;
-import charlie.terms.Substitution;
-import charlie.terms.TermFactory;
+import charlie.terms.*;
+import charlie.trs.Rule;
+import charlie.printer.Printer;
+import charlie.printer.PrinterFactory;
+import cora.rwinduction.engine.Equation;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.parser.CommandParsingStatus;
 
@@ -50,6 +54,90 @@ abstract class ReductionCommandInherit extends Command {
                         _commandName + " " + _reducibleKind + " <position>",
                         _commandName + " " + _reducibleKind + " with <substitution>",
                         _commandName + " " + _reducibleKind + " <position> with <substitution>");
+  }
+
+  @Override
+  public ArrayList<TabSuggestion> suggestNext(String args) {
+    ArrayList<TabSuggestion> ret = new ArrayList<TabSuggestion>();
+    TreeSet<FunctionSymbol> symbols = existingSymbols();
+    String[] parts = args.split("\\s+");
+
+    // no arguments => they haven't yet given the kind
+    if (parts.length == 0 || parts[0].equals("")) {
+      addTabSuggestionsForKind(symbols, ret);
+      return ret;
+    }
+
+    Term left = getLeftFor(parts[0]);
+    if (left == null) return ret;
+
+    // just one argument: suggest a position, since omitting it just means the position L
+    if (parts.length == 1) {
+      storePositionSuggestions(left, ret, EquationPosition.Side.Left,
+                               _proof.getProofState().getTopEquation().getEquation().getLhs());
+      storePositionSuggestions(left, ret, EquationPosition.Side.Right,
+                               _proof.getProofState().getTopEquation().getEquation().getRhs());
+      return ret;
+    }
+
+    // 2 arguments! We suggest "with" if it's not already there, or suggest that they stop here.
+    if (parts.length == 2 && !parts[1].equals("with")) {
+      ret.add(new TabSuggestion("with", "keyword"));
+      ret.add(endOfCommandSuggestion());
+      return ret;
+    }
+
+    // if we've seen something other than with, it's buggy
+    if (parts.length >= 3 && !parts[1].equals("with") && !parts[2].equals("with")) return ret;
+
+    // there's a with! Anything after that is part of the substitution, unless we've just finished
+    // the substitution
+    String last = parts[parts.length-1];
+    if (!last.equals("") && last.charAt(last.length()-1) == ']') ret.add(endOfCommandSuggestion());
+    else ret.add(new TabSuggestion(null, "substitution"));
+
+    return ret;
+  }
+
+  /** Helper for suggestNext: returns the function symbols occurring in the top equation. */
+  private TreeSet<FunctionSymbol> existingSymbols() {
+    TreeSet<FunctionSymbol> ret = new TreeSet<FunctionSymbol>();
+    if (_proof.getProofState().isFinalState()) return ret;
+    Equation eq = _proof.getProofState().getTopEquation().getEquation();
+    eq.getLhs().storeFunctionSymbols(ret);
+    eq.getRhs().storeFunctionSymbols(ret);
+    return ret;
+  }
+
+  /**
+   * Helper function for suggestNext: this suggests the options for the first argument, provided
+   * that the only symbols occurring in the top equation are in occurringSymbols.
+   */
+  protected abstract void addTabSuggestionsForKind(TreeSet<FunctionSymbol> occuringSymbols,
+                                                   ArrayList<TabSuggestion> suggestions);
+  
+  /**
+   * Helper function for suggestNext: this provides the left-hand side of the rule, induction
+   * hypothesis or whatever that is defined by the given name.  If there is no such thing, then
+   * null is returned instead.
+   */
+  protected abstract Term getLeftFor(String kindName);
+
+  /**
+   * Helper function for suggestNext: this adds to suggestions the positions within term (combined
+   * with the given side) that may be reduced by a reducer whose left-hand side is leftOfReducer.
+   */
+  private void storePositionSuggestions(Term leftOfReducer, ArrayList<TabSuggestion> suggestions,
+                                        EquationPosition.Side side, Term term) {
+    Printer printer = PrinterFactory.createParseablePrinter(_proof.getContext().getTRS());
+    term.visitSubterms( (s,p) -> {
+      if (leftOfReducer.match(s) != null) {
+        EquationPosition pos = new EquationPosition(side, p);
+        pos.print(printer);
+        suggestions.add(new TabSuggestion(printer.toString(), "position"));
+        printer.clear();
+      }
+    });
   }
 
   /**

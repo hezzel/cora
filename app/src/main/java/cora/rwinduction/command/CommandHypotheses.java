@@ -21,15 +21,10 @@ import cora.rwinduction.engine.ProofState;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The environment command :hypotheses, which prints all the current induction hypotheses. */
-public class CommandHypotheses extends Command {
+public class CommandHypotheses extends SingularCommandInherit {
   @Override
   public String queryName() {
     return ":hypotheses";
-  }
-
-  @Override
-  public FixedList<String> callDescriptor() {
-    return FixedList.of(":hypotheses");
   }
 
   @Override
@@ -38,12 +33,7 @@ public class CommandHypotheses extends Command {
   }
 
   @Override
-  protected boolean run(CommandParsingStatus input) {
-    if (!input.commandEnded()) {
-      _module.println("Unexpected argument at position %a: :hypotheses does not take any " +
-        "arguments.", input.currentPosition());
-        return false;
-    }
+  protected boolean run() {
     ProofState state = _proof.getProofState();
     if (state.getHypotheses().size() == 0) {
       _module.println("There are currently no induction hypotheses.");

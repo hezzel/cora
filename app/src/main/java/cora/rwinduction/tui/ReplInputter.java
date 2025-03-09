@@ -16,13 +16,21 @@
 package cora.rwinduction.tui;
 
 import java.io.IOException;
+import java.util.Set;
+import java.util.List;
+import org.jline.reader.Candidate;
+import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.ParsedLine;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
-import org.jline.utils.InfoCmp;
 
+import charlie.util.Pair;
 import charlie.util.ExceptionLogger;
+import cora.rwinduction.parser.CommandParsingStatus;
+import cora.rwinduction.command.Command;
+import cora.rwinduction.command.CmdList;
 
 /**
  * This class reads from console, but uses jline to support additional functionality, such as
@@ -33,16 +41,11 @@ public class ReplInputter implements Inputter {
   private LineReader _lineReader;
   private BasicInputter _backup;
 
-  public ReplInputter() {
+  public ReplInputter(CmdList cmds) {
     try {
       _terminal = TerminalBuilder.terminal();
-      _terminal.puts(InfoCmp.Capability.clear_screen);
       _lineReader = LineReaderBuilder.builder().terminal(_terminal)
-        /*
-        .completer(testCompleter)
-        .highlighter(new DefaultHighlighter())
-        .parser(new DefaultParser())
-        */
+        .completer(new ParameterCompleter(cmds))
         .build();
       _backup = null;
     }
@@ -65,6 +68,56 @@ public class ReplInputter implements Inputter {
       ExceptionLogger.log("Could not close interactive terminal.", e);
     }
     _terminal = null;
+  }
+}
+
+class ParameterCompleter implements Completer {
+  private CmdList _commands;
+
+  ParameterCompleter(CmdList cmds) { _commands = cmds; }
+
+  /**
+   * Helper function for complete: this takes the parsed line, and splits it up into the first word
+   * and the arguments that are already completed, NOT including the last word that the user is
+   * still typing (since the given suggestions should give the full word, and not consider what has
+   * been typed).
+   */
+  private Pair<String,String> split(ParsedLine p) {
+    String sofar = p.line();
+    int index = sofar.lastIndexOf(' ');
+    if (index == -1) return new Pair<String,String>("", "");
+    sofar = sofar.substring(0, index).trim();
+    index = sofar.indexOf(' ');
+    if (index == -1) return new Pair<String,String>(sofar, "");
+    String cmd = sofar.substring(0, index);
+    String args = sofar.substring(index + 1).trim();
+    return new Pair<String,String>(cmd, args);
+  }
+  
+  public void complete(LineReader r, ParsedLine p, List<Candidate> candidates) {
+    Pair<String,String> parts = split(p);
+
+    // first word: command name
+    if (parts.fst().equals("")) {
+      for (String cmd : _commands.queryCommands()) {
+        candidates.add(new Candidate(cmd, cmd, "", null, "", cmd, true));
+      }
+      return;
+    }
+
+    // remainder: arguments
+    Command cmd = _commands.queryCommand(parts.fst());
+    if (cmd == null) return;
+    List<Command.TabSuggestion> suggestions = cmd.suggestNext(parts.snd());
+    for (Command.TabSuggestion option : suggestions) {
+      String txt = option.text();
+      String category = option.category();
+      if (txt != null) candidates.add(new Candidate(txt, txt, category, null, "", txt, true));
+      else if (suggestions.size() > 1) {
+        candidates.add(new Candidate("", "", category, "<" + category + ">", "", category, true));
+      }
+      else candidates.add(new Candidate("", "", null, "<" + category + ">", "", category, true));
+    }
   }
 }
 
