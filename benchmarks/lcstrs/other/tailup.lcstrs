@@ -1,0 +1,7 @@
+tailup :: (Int → Int → Int) → Int → Int → Int → Int
+tailup(F, k, n, a) -> a | k > n
+tailup(F, k, n, a) -> tailup(F, k + 1, n, F(k, a)) | k ≤ n
+recdown :: (Int → Int → Int) → Int → Int → Int → Int
+recdown(F, k, n, a) -> a | k > n
+recdown(F, k, n, a) -> F(n, recdown(F, k, n - 1, a)) | k ≤ n
+

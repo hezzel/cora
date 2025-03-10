@@ -1,0 +1,16 @@
+nil :: list
+cons :: A -> list -> list
+
+skip :: Int -> list -> list
+skip(k, nil) -> nil
+skip(k, ys) -> ys | k <= 0
+skip(k, cons(x, ys)) -> skip(k-1, ys) | k > 0
+
+skipfold :: (A -> B -> B) -> B -> Int -> list -> B
+skipfold(F, n, k, nil) -> n
+skipfold(F, n, k, cons(x, ys)) -> skipfold(F, F(x, n), k, skip(k, ys))
+
+zip :: list -> list -> list
+zip(nil, ys) -> ys
+zip(cons(x, xs), ys) -> cons(x, zip(ys, xs))
+

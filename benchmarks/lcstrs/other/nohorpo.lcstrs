@@ -1,0 +1,7 @@
+nil :: list
+cons :: Int -> list -> list
+f :: Int -> Int -> list -> list
+
+f(x, y, z) -> f(y - 2, x + 1, cons(0, z)) | y > 0
+f(x, y, z) -> z | y <= 0
+
