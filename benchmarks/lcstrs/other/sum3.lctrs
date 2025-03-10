@@ -1,0 +1,20 @@
+return :: Int -> Result
+error :: String -> Result
+
+sum1 :: Int -> Result
+sum1(x) -> error("Negative")    | x < 0
+sum1(x) -> return(0)            | x = 0
+sum1(x) -> add(x, sum1(x - 1))  | x > 0
+
+add :: Int -> Result -> Result
+add(x, error(s)) -> error(s)
+add(x, return(y)) -> return(x + y)
+
+sum2 :: Int -> Result
+sum2(x) -> error("Negative")    | x < 0
+sum2(x) -> iter(x, 0, 0)        | x ≥ 0
+
+iter :: Int -> Int -> Int -> Result
+iter(x, i, z) -> return(z)          | i > x
+iter(x, i, z) -> iter(x, i+1, z+i)  | i ≤ x
+

@@ -1,0 +1,7 @@
+f :: Int -> A
+f(x) -> f(x - 1) | x >= 0
+g :: Int -> A
+g(y) -> h(y)
+h :: Int -> A
+h(y) -> g(y+1) | y <= 0
+
