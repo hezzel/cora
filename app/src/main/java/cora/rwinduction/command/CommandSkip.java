@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024-2025 Cynthia Kop
+ Copyright 2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,24 +16,25 @@
 package cora.rwinduction.command;
 
 import java.util.Optional;
-import cora.rwinduction.engine.deduction.DeductionDelete;
+import cora.rwinduction.engine.deduction.DeductionSkip;
 
-/** The syntax for the deduction command delete. */
-public class CommandDelete extends SingularCommandInherit {
+/** The syntax for the semi-deduction command skip. */
+public class CommandSkip extends SingularCommandInherit {
   @Override
   public String queryName() {
-    return "delete";
+    return "skip";
   }
   
   @Override
   public String helpDescriptor() {
-    return "Use this deduction rule to delete the current equation, if either the left- and " +
-           "right-hand side are equal, or if the constraint is unsatisfiable.";
+    return "Use this deduction rule to move on to the next equation in the current equation " +
+           "list.  The current goal stays in the list and will still need to be proved, but is " +
+           "postponed until later.";
   }
   
   @Override
   protected boolean run() {
-    Optional<DeductionDelete> step = DeductionDelete.createStep(_proof, optionalModule());
+    Optional<DeductionSkip> step = DeductionSkip.createStep(_proof, optionalModule());
     if (step.isEmpty()) return false;
     return step.get().verifyAndExecute(_proof, optionalModule());
   }
