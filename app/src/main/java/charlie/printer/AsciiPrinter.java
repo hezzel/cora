@@ -86,5 +86,8 @@ public class AsciiPrinter extends Printer {
   public String symbChi()             { return "chi"; }
   public String symbPsi()             { return "psi"; }
   public String symbOmega()           { return "omega"; }
+
+  public String symbLangle()          { return "<"; }
+  public String symbRangle()          { return ">"; }
 }
 
