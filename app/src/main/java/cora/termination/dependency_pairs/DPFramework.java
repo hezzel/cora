@@ -74,7 +74,8 @@ public abstract class DPFramework {
           o.println("(Note: extensions matter! If you are using an input file that describes for " +
             "instance a first-order or applicative TRS, but use the extension of a format that " +
             "allows for the inclusion of abstractions or product types, then these constructions " +
-            "are implicitly allowed to occur in terms, and hence the framework is not applicable.");
+            "are implicitly allowed to occur in terms, and hence the framework is not " +
+            "applicable.)");
         }
       };
     }
