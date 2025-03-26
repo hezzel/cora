@@ -180,7 +180,7 @@ class ConstrainedReductionHelper {
     translator.requireImplication(equationConstraint, substitutedconstr);
     if (solver.checkValidity(translator.queryProblem())) return true;
     module.ifPresent(o -> o.println("The " + _kind + " does not apply: I could not prove that " +
-      "%a %{Vdash} %a.", Printer.makePrintable(equationConstraint, _renaming),
+      "%a %{Vdash} %a.", Printer.makePrintable(equationConstraint, eqrenaming),
       Printer.makePrintable(substitutedconstr, eqrenaming)));
     return false;
   }
