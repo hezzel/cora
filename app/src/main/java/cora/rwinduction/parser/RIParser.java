@@ -77,7 +77,13 @@ public class RIParser {
         if (a != -1) { best = a; bestKind = APPROX; }
         if (b != -1 && b < best) { best = b; bestKind = SEPARATOR; }
         if (best > start || bestKind == null) {
-          storeToken(token, start, CoraTokenData.IDENTIFIER, txt.substring(start, best));
+          String sub = txt.substring(start, best);
+          Lexer sublexer = CoraTokenData.getConstrainedStringLexer(sub);
+          while (true) {
+            Token tok = sublexer.nextToken();
+            if (tok.isEof()) break;
+            storeToken(token, start + tok.getColumn() - 1, tok.getName(), tok.getText());
+          }
         }
         if (bestKind != null) storeToken(token, best, bestKind, txt.substring(best, best+1));
         start = best + 1;

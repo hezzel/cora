@@ -34,7 +34,7 @@ class RIParserTest {
   @Test
   public void testTokensInsideIdentifiers() {
     ParsingStatus status = RIParser.createStatus(
-      "aa-><-:=bb a≈b ≈a b≈ a;c ;a a; a;b≈c a≈b;c");
+      "aa-><-:=bb a≈b ≈a b≈ a;c ;1 a; a;b≈c 43≈b;c");
     assertTrue(status.nextToken().toString().equals("1:1: aa (IDENTIFIER)"));
     assertTrue(status.nextToken().toString().equals("1:3: -><- (APPROX)"));
     assertTrue(status.nextToken().toString().equals("1:7: := (ASSIGN)"));
@@ -50,7 +50,7 @@ class RIParserTest {
     assertTrue(status.nextToken().toString().equals("1:23: ; (SEPARATOR)"));
     assertTrue(status.nextToken().toString().equals("1:24: c (IDENTIFIER)"));
     assertTrue(status.nextToken().toString().equals("1:26: ; (SEPARATOR)"));
-    assertTrue(status.nextToken().toString().equals("1:27: a (IDENTIFIER)"));
+    assertTrue(status.nextToken().toString().equals("1:27: 1 (INTEGER)"));
     assertTrue(status.nextToken().toString().equals("1:29: a (IDENTIFIER)"));
     assertTrue(status.nextToken().toString().equals("1:30: ; (SEPARATOR)"));
     assertTrue(status.nextToken().toString().equals("1:32: a (IDENTIFIER)"));
@@ -58,11 +58,11 @@ class RIParserTest {
     assertTrue(status.nextToken().toString().equals("1:34: b (IDENTIFIER)"));
     assertTrue(status.nextToken().toString().equals("1:35: ≈ (APPROX)"));
     assertTrue(status.nextToken().toString().equals("1:36: c (IDENTIFIER)"));
-    assertTrue(status.nextToken().toString().equals("1:38: a (IDENTIFIER)"));
-    assertTrue(status.nextToken().toString().equals("1:39: ≈ (APPROX)"));
-    assertTrue(status.nextToken().toString().equals("1:40: b (IDENTIFIER)"));
-    assertTrue(status.nextToken().toString().equals("1:41: ; (SEPARATOR)"));
-    assertTrue(status.nextToken().toString().equals("1:42: c (IDENTIFIER)"));
+    assertTrue(status.nextToken().toString().equals("1:38: 43 (INTEGER)"));
+    assertTrue(status.nextToken().toString().equals("1:40: ≈ (APPROX)"));
+    assertTrue(status.nextToken().toString().equals("1:41: b (IDENTIFIER)"));
+    assertTrue(status.nextToken().toString().equals("1:42: ; (SEPARATOR)"));
+    assertTrue(status.nextToken().toString().equals("1:43: c (IDENTIFIER)"));
     assertTrue(status.nextToken().isEof());
   }
 }
