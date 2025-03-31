@@ -100,6 +100,53 @@ class DeductionReduceTest {
   }
 
   @Test
+  public void testExtendWithDefinitionsFromEquationConstraint() {
+    PartialProof pp = setupProof(
+      "iter(x, y, 0) = iter(y, z, a) | x > 0 ∧ a = z + 1 ∧ y != -3 ∧ z = x - y ∧ y != -3");
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    EquationPosition pos = EquationPosition.TOPLEFT;
+    Substitution subst = TermFactory.createEmptySubstitution();
+    Renaming renaming = new Renaming(_trs.queryFunctionSymbolNames());
+    Term left = CoraInputReader.readTermAndUpdateNaming("iter(a, b, c)", renaming, _trs);
+    Term right = CoraInputReader.readTermAndUpdateNaming("iter(a, d, e)", renaming, _trs);
+    Term constraint = CoraInputReader.readTermAndUpdateNaming(
+      "a > 1 ∧ d = a - b ∧ b != 0 ∧ d + 1 = e", renaming, _trs);
+    ConstrainedReductionHelper crh =
+      new ConstrainedReductionHelper(left, right, constraint, renaming, pos, subst, "XX");
+    assertTrue(crh.extendSubstitution(pp.getProofState().getTopEquation().getEquation(), o));
+    Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
+    Substitution gamma = crh.querySubstitution();
+    assertTrue(gamma.get(renaming.getReplaceable("a")) == eqnaming.getReplaceable("x"));
+    assertTrue(gamma.get(renaming.getReplaceable("b")) == eqnaming.getReplaceable("y"));
+    assertTrue(gamma.get(renaming.getReplaceable("c")).isValue());
+    assertTrue(gamma.get(renaming.getReplaceable("d")) == eqnaming.getReplaceable("z"));
+    assertTrue(gamma.get(renaming.getReplaceable("e")) == eqnaming.getReplaceable("a"));
+  }
+
+  @Test
+  public void testExtendWithCalculatedDefinitions() {
+    PartialProof pp = setupProof("iter(x, 1, sum2(0)) = 0 | x != 0");
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    EquationPosition pos = EquationPosition.TOPLEFT;
+    Substitution subst = TermFactory.createEmptySubstitution();
+    Renaming renaming = new Renaming(_trs.queryFunctionSymbolNames());
+    Term left = CoraInputReader.readTermAndUpdateNaming("iter(a, b, q)", renaming, _trs);
+    Term right = CoraInputReader.readTermAndUpdateNaming("c + d", renaming, _trs);
+    Term constraint = CoraInputReader.readTermAndUpdateNaming(
+      "c = 0 ∧ d = b * 2 + c ∧ e = q + 2", renaming, _trs);
+    ConstrainedReductionHelper crh =
+      new ConstrainedReductionHelper(left, right, constraint, renaming, pos, subst, "XX");
+    assertTrue(crh.extendSubstitution(pp.getProofState().getTopEquation().getEquation(), o));
+    Substitution gamma = crh.querySubstitution();
+    assertTrue(gamma.get(renaming.getReplaceable("b")).toValue().getInt() == 1);
+    assertTrue(gamma.get(renaming.getReplaceable("c")).toValue().getInt() == 0);
+    assertTrue(gamma.get(renaming.getReplaceable("d")).toValue().getInt() == 2);
+    assertTrue(gamma.get(renaming.getReplaceable("e")) == null);
+  }
+
+  @Test
   public void testReduce() throws CustomParserException {
     PartialProof pp = setupProof("iter(z, 0, 0) = 9 + sum1(z) | z = -3");
     OutputModule module = OutputModule.createUnitTestModule();
