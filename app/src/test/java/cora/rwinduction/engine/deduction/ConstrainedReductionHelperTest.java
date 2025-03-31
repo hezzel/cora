@@ -35,7 +35,7 @@ import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
 import cora.rwinduction.engine.*;
 
-class DeductionReduceTest {
+class ConstrainedReductionHelperTest {
   private TRS _trs;
 
   private TRS setupTRS() {
