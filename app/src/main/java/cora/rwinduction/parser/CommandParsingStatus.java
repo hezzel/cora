@@ -190,6 +190,22 @@ public class CommandParsingStatus {
   }
 
   /**
+   * This method reads past a term in the input, not caring if the term type-checks but only if it
+   * appears to be well-formed.
+   */
+  public boolean skipTerm() {
+    ParsingStatus status = makeStatus();
+    try {
+      ParserTerm pterm = CoraParser.readTerm(status);
+      recoverPosition(status);
+      return true;
+    }
+    catch (ParseException e) {
+      return false;
+    }
+  }
+
+  /**
    * This method reads a substitution from the underlying string at the current parsing position,
    * and returns the result.  If this fails, it instead prints an error message to the given
    * OutputModule and returns null.  Depending on the kind and position of the failure, the parsing

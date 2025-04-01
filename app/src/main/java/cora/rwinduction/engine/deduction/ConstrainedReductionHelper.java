@@ -15,8 +15,10 @@
 
 package cora.rwinduction.engine.deduction;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.TreeSet;
+import charlie.util.Pair;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.printer.Printer;
@@ -24,6 +26,7 @@ import charlie.printer.PrintableObject;
 import charlie.printer.PrinterFactory;
 import charlie.smt.SmtSolver;
 import charlie.theorytranslation.TermSmtTranslator;
+import charlie.theorytranslation.TermAnalyser;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 
@@ -35,6 +38,7 @@ class ConstrainedReductionHelper {
   private Term _left;
   private Term _right;
   private Term _constraint;
+  private ArrayList<Pair<Variable,Term>> _definitions;
   private Renaming _renaming;
   private EquationPosition _position;
   private Substitution _substitution;
@@ -42,28 +46,31 @@ class ConstrainedReductionHelper {
 
   /**
    * Sets up the class from reduction using a "rule" left → right | constraint, where renaming is
-   * used for printing (when necessary) and name to represent the name of this rule or hypothesis.
+   * used for printing (when necessary).
    * The reduction will be done at the given position, and with the given substitution or an
    * extension thereof.  The given substitution will not be altered, and will not become the
-   * property of this class; instead, it will only be copied,
+   * property of this class; instead, it will only be copied.  The renaming will not be copied,
+   * but will not be altered by this class either.
    *
-   * The "kind" should either be "rule" or 'induction hypothesis" or something similar, to bbe
+   * The "kind" should either be "rule" or 'induction hypothesis" or something similar, to be
    * used in error messages.
    */
   ConstrainedReductionHelper(Term left, Term right, Term constraint, Renaming renaming,
                              EquationPosition pos, Substitution subst, String kind) {
     _left = left;
     _right = right;
-    _constraint = constraint;
     _renaming = renaming;
     _position = pos;
     _substitution = subst.copy();
     _kind = kind;
+    _definitions = new ArrayList<Pair<Variable,Term>>();
+    _constraint = constraint;
+    addEqualities(constraint, _definitions);
   }
 
   /** This returns whether the constraint for the underlying rule is True. */
   boolean constraintIsTrue() {
-    return _constraint.isValue() && _constraint.toValue().getBool();
+    return _constraint.isValue() && _constraint.toValue().getBool() && _definitions.isEmpty();
   }
 
   /** This returns the EquationPosition that underlies the current object. */
@@ -87,7 +94,10 @@ class ConstrainedReductionHelper {
   /**
    * Writing C[s]_p ≈ t | ψ for eq, where p is the underlying position, this method extends the
    * underlying substitution γ to a substitution δ so that _left δ = s, if possible.  If this is
-   * not possible, then an appropriate error message is given on m and false is returned.
+   * not possible, then an appropriate error message is given on m and false is returned.  If it
+   * is possible, then in addition the rule's constraint is compared to the equation's constraint
+   * for any obvious cases to add to the substitution, as the substitution is required to cover all
+   * variables and meta-variables.
    */
   boolean extendSubstitution(Equation eq, Optional<OutputModule> m) {
     Term s = eq.querySubterm(_position);
@@ -101,8 +111,94 @@ class ConstrainedReductionHelper {
       m.ifPresent(o -> o.println("The " + _kind + " does not apply: %a", problem));
       return false;
     }
+
+    if (_definitions.size() != 0) extendSubstitutionWithConstraintDefinitions(eq);
     
     return true;
+  }
+
+  /**
+   * Helper function for extendSubstitution.  Given an equation C[s]_p ≈ t | ψ1 ∧...∧ ψn,
+   * this updates _substitution by going through _definitions, and for each definition x = t with
+   * x a variable that is not yet in the domain of _substitution: if all variables of t *are* in
+   * _substitution, then one of three things will happen:
+   * - if some ψj has the form y = t γ, then [x:=y] is added to the substitution
+   * - if t γ is variable-free, then its value is computed and [x:=v] is added to the substitution
+   * - if neither of those holds, nothing is done (in which case, checkEverythingSubstituted will
+   *   fail unless something is done to extend the substitution later)
+   *
+   * Note that variables in the "rule" are only mapped to variables that already occur in the
+   * equation.
+   */
+  private void extendSubstitutionWithConstraintDefinitions(Equation eq) {
+    ArrayList<Pair<Variable,Term>> equEqualities = new ArrayList<Pair<Variable,Term>>();
+    addEqualities(eq.getConstraint(), equEqualities);
+
+    for (Pair<Variable,Term> pair : _definitions) {
+      Variable x = pair.fst();
+      Term t = pair.snd();
+      if (_substitution.get(x) != null) continue;
+      boolean allSubstituted = true;
+      for (Variable y : t.vars()) {
+        if (_substitution.get(y) == null) { allSubstituted = false; break; }
+      }
+      if (!allSubstituted) continue;
+      Term tgamma = t.substitute(_substitution);
+
+      Term replacement = replaceByExistingClause(tgamma, equEqualities);
+      if (replacement == null) replacement = replaceByCalculation(tgamma);
+      if (replacement != null) _substitution.extend(x, replacement);
+    }
+  }
+
+  /**
+   * This helper function takes a constraint and adds all clauses that are equalities to the given
+   * equalities list.
+   */
+  private void addEqualities(Term constraint, ArrayList<Pair<Variable,Term>> eqs) {
+    if (!constraint.isFunctionalTerm()) return;
+    CalculationSymbol calc = constraint.queryRoot().toCalculationSymbol();
+    if (calc == null) return;
+    if (calc.queryKind() == CalculationSymbol.Kind.AND) {
+      for (int i = 1; i <= constraint.numberArguments(); i++) {
+        addEqualities(constraint.queryArgument(i), eqs);
+      }
+    }
+    else if (calc.queryKind() == CalculationSymbol.Kind.EQUALS ||
+             calc.queryKind() == CalculationSymbol.Kind.IFF) {
+      if (constraint.numberArguments() != 2) return;
+      Term a = constraint.queryArgument(1);
+      Term b = constraint.queryArgument(2);
+      if (a.isVariable() && !_left.vars().contains(a.queryVariable())) {
+        eqs.add(new Pair<Variable,Term>(a.queryVariable(), b));
+      }
+      else if (b.isVariable() && !_left.vars().contains(b.queryVariable())) {
+        eqs.add(new Pair<Variable,Term>(b.queryVariable(), a));
+      }
+    }
+  }
+
+  /**
+   * Helper function for extendSubstitutionWithConstraintDefinitions: if equEqualities contains an
+   * equality y = tgamma, this returns y.  Otherwise it returns null.
+   */
+  private Variable replaceByExistingClause(Term tgamma,
+                                           ArrayList<Pair<Variable,Term>> equEqualities) {
+    for (Pair<Variable,Term> pair : equEqualities) {
+      if (tgamma.equals(pair.snd())) return pair.fst();
+    }
+    return null;
+  }
+
+  /**
+   * Helper function for extendSubstitutionWithConstraintDefinitions: if tgamma is a ground theory
+   * term, this returns its value.  Otherwise it returns null.
+   */
+  private Value replaceByCalculation(Term tgamma) {
+    if (tgamma.isGround() && tgamma.isTheoryTerm() && tgamma.queryType().isBaseType()) {
+      return TermAnalyser.evaluate(tgamma);
+    }
+    return null;
   }
 
   /**
@@ -110,10 +206,9 @@ class ConstrainedReductionHelper {
    * all in the domain of the step's substitution.  If not, we return false and print a failure
    * message to the user.
    *
-   * Note that this is not technically _necessary_, but if these are not mapped, we have to choose
-   * what to map them to, and for now this choice has not been implemented: if the right-hand side
-   * or constraint contain (meta-)variables that do not occur on the left, the user has to supply
-   * their substituted value.
+   * Note that this should be done AFTER extendSubstitution, so that all (meta-)variables whose
+   * mapping we can automatically deduce have already been included in the domain of the
+   * substitution.
   */
   boolean checkEverythingSubstituted(Optional<OutputModule> module) {
     TreeSet<Replaceable> missing = new TreeSet<Replaceable>();
@@ -141,7 +236,7 @@ class ConstrainedReductionHelper {
    * substitution _substitution to the given equation, assuming that we already know that the
    * subterm of equation at position _position is exactly _left _substitution.  That is, writing
    * ψ for the equation's constraint, we check that:
-   * - all (meta-)vars in the rule's constraint (so: _constraint( are mapped to either values, or
+   * - all (meta-)vars in the rule's constraint (so: _constraint) are mapped to either values, or
    *   variables in Var(ψ)
    * - ψ ⇒ φδ is valid
    */
@@ -180,7 +275,7 @@ class ConstrainedReductionHelper {
     translator.requireImplication(equationConstraint, substitutedconstr);
     if (solver.checkValidity(translator.queryProblem())) return true;
     module.ifPresent(o -> o.println("The " + _kind + " does not apply: I could not prove that " +
-      "%a %{Vdash} %a.", Printer.makePrintable(equationConstraint, _renaming),
+      "%a %{Vdash} %a.", Printer.makePrintable(equationConstraint, eqrenaming),
       Printer.makePrintable(substitutedconstr, eqrenaming)));
     return false;
   }
