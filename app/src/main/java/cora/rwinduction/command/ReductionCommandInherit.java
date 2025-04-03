@@ -200,7 +200,7 @@ abstract class ReductionCommandInherit extends Command {
       _module.println("The proof state is empty; there is nothing to reduce.");
       return null;
     }
-    Renaming valueNames = _proof.getProofState().getTopEquation().getRenaming();
+    Renaming valueNames = _proof.getProofState().getTopEquation().getRenamingCopy();
     return input.readSubstitution(_proof.getContext().getTRS(), keyNames, valueNames, _module);
   }
 }

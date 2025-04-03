@@ -65,9 +65,9 @@ class EquationParserTest {
     assertTrue(c.toString().equals("true"));
     assertTrue(context.getIndex() == 15);
     assertFalse(context.hasExtraTerms());
-    assertTrue(l.queryArgument(1) == context.getRenaming().getVariable("y"));
-    assertTrue(r.queryArgument(1).queryArgument(1) == context.getRenaming().getVariable("x"));
-    assertTrue(r.queryArgument(1).queryArgument(2) == context.getRenaming().getVariable("y"));
+    assertTrue(l.queryArgument(1) == context.getRenamingCopy().getVariable("y"));
+    assertTrue(r.queryArgument(1).queryArgument(1) == context.getRenamingCopy().getVariable("x"));
+    assertTrue(r.queryArgument(1).queryArgument(2) == context.getRenamingCopy().getVariable("y"));
   }
 
   @Test
@@ -79,7 +79,7 @@ class EquationParserTest {
     assertTrue(l.toString().equals("sum(x)"));
     assertTrue(r.toString().equals("sum(y)"));
     assertTrue(c.toString().equals("x = y"));
-    assertTrue(context.getRenaming().domain().size() == 2);
+    assertTrue(context.getRenamingCopy().domain().size() == 2);
 
     Pair<Equation,Renaming> p = EquationParser.parseEquation("sum(y) = sum(y+y)", trs);
     assertTrue(p.fst().getLhs().toString().equals("sum(y)"));

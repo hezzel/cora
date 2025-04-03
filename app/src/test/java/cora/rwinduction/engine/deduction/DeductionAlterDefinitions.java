@@ -62,27 +62,28 @@ class DeductionAlterDefinitionsTest {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
-    ArrayList<Pair<Variable,Term>> defs = new ArrayList<Pair<Variable,Term>>();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    ArrayList<Pair<Pair<Variable,String>,Term>> defs =
+      new ArrayList<Pair<Pair<Variable,String>,Term>>();
     Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
     renaming.setName(y, "y1");
     Term yvalue = CoraInputReader.readTerm("x * 12 - 3", renaming, pp.getContext().getTRS());
     Variable z = TheoryFactory.createVar("z", TypeFactory.boolSort);
     Term zvalue = CoraInputReader.readTerm("y1 > 0", renaming, pp.getContext().getTRS());
-    defs.add(new Pair<Variable,Term>(y, yvalue));
-    defs.add(new Pair<Variable,Term>(z, zvalue));
+    defs.add(new Pair<Pair<Variable,String>,Term>(new Pair<Variable,String>(y, "y2"), yvalue));
+    defs.add(new Pair<Pair<Variable,String>,Term>(new Pair<Variable,String>(z, "z"), zvalue));
     DeductionAlterDefinitions step = DeductionAlterDefinitions.createStep(pp, o, defs).get();
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().getIndex() == 2);
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
-      "E2: (• , sum1(x) ≈ sum2(x) | x > 0 ∧ y = x * 12 - 3 ∧ (z ⇔ y > 0) , •)"));
+      "E2: (• , sum1(x) ≈ sum2(x) | x > 0 ∧ y2 = x * 12 - 3 ∧ (z ⇔ y2 > 0) , •)"));
     assertTrue(module.toString().equals(""));
     assertTrue(step.commandDescription().toString().equals(
-      "alter add y = x * 12 - 3, z = y > 0"));
+      "alter add y2 = x * 12 - 3, z = y2 > 0"));
     step.explain(module);
     assertTrue(module.toString().equals(
-      "We apply ALTER to add y = x * 12 - 3 ∧ (z ⇔ y > 0) to the constraint of E1.\n\n"));
+      "We apply ALTER to add y2 = x * 12 - 3 ∧ (z ⇔ y2 > 0) to the constraint of E1.\n\n"));
   }
 
   @Test
@@ -90,59 +91,63 @@ class DeductionAlterDefinitionsTest {
     PartialProof pp = setupProof("sum1(x) = f(F, u) | x > 0");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
-    ArrayList<Pair<Variable,Term>> defs = new ArrayList<Pair<Variable,Term>>();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    ArrayList<Pair<Pair<Variable,String>,Term>> defs =
+      new ArrayList<Pair<Pair<Variable,String>,Term>>();
 
     // no elements
     assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
 
     // variable already exists
     Variable x = renaming.getVariable("x");
-    defs.add(new Pair<Variable,Term>(x, TheoryFactory.createValue(0)));
+    Pair<Variable,String> xinfo = new Pair<Variable,String>(x, "x");
+    defs.add(new Pair<Pair<Variable,String>,Term>(xinfo, TheoryFactory.createValue(0)));
     assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
     defs.clear();
 
     // non-theory variable
     x = TermFactory.createVar("x", CoraInputReader.readType("unit"));
-    defs.add(new Pair<Variable,Term>(x, renaming.getVariable("u")));
+    xinfo = new Pair<Variable,String>(x, "x2");
+    defs.add(new Pair<Pair<Variable,String>,Term>(xinfo, renaming.getVariable("u")));
     assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
     defs.clear();
 
     // unknown variable in the value
     Variable y = TermFactory.createVar("y", CoraInputReader.readType("Int"));
-    defs.add(new Pair<Variable,Term>(y, CoraInputReader.readTerm("z + 1", renaming,
-                                                                 pp.getContext().getTRS())));
+    Pair<Variable,String> yinfo = new Pair<Variable,String>(y, "y3");
+    defs.add(new Pair<Pair<Variable,String>,Term>(yinfo, CoraInputReader.readTerm("z + 1", renaming,
+                                                                        pp.getContext().getTRS())));
     assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
     defs.clear();
 
     // y itself occurs in the value
     renaming.setName(y, "y");
-    defs.add(new Pair<Variable,Term>(y, CoraInputReader.readTerm("y + 1", renaming,
-                                                                 pp.getContext().getTRS())));
+    defs.add(new Pair<Pair<Variable,String>,Term>(yinfo, CoraInputReader.readTerm("y + 1", renaming,
+                                                                        pp.getContext().getTRS())));
     assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
     defs.clear();
 
     // value has a higher-order subterm
     Variable F = TermFactory.createVar("F", CoraInputReader.readType("Int -> Int"));
     renaming.setName(F, "F");
-    defs.add(new Pair<Variable,Term>(y, CoraInputReader.readTerm("F(1)", renaming,
-                                                                 pp.getContext().getTRS())));
+    defs.add(new Pair<Pair<Variable,String>,Term>(yinfo, CoraInputReader.readTerm("F(1)", renaming,
+                                                                       pp.getContext().getTRS())));
     assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
     defs.clear();
 
     // type mismatch
-    defs.add(new Pair<Variable,Term>(y, TheoryFactory.createValue(true)));
+    defs.add(new Pair<Pair<Variable,String>,Term>(yinfo, TheoryFactory.createValue(true)));
     assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
 
     assertTrue(module.toString().equals(
       "Cannot introduce an empty number of definitions.\n\n" +
       "Definition for variable [x] not allowed: this variable already occurs in the equation " +
         "context.\n\n" +
-      "Variable x has type unit, which is not a theory sort.\n\n" +
-      "Unknown variable z in definition of y.\n\n" +
-      "Unknown variable y in definition of y.\n\n" +
+      "Variable x2 has type unit, which is not a theory sort.\n\n" +
+      "Unknown variable z in definition of y3.\n\n" +
+      "Unknown variable y in definition of y3.\n\n" +
       "Value F(1) is not a (first-order) theory term, so does not belong in the constraint!\n\n" +
-      "Type error: variable y has type Int while true has type Bool.\n\n"));
+      "Type error: variable y3 has type Int while true has type Bool.\n\n"));
   }
 }
 

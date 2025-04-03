@@ -133,7 +133,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
-    subst.extend(pp.getProofState().getHypotheses().get(0).getRenaming().getVariable("y"),
+    subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("y"),
                  TheoryFactory.createValue(0));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
                             EquationPosition.parse("R2"), subst).get();
@@ -164,7 +164,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
-    subst.extend(pp.getProofState().getHypotheses().get(0).getRenaming().getVariable("a"),
+    subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("a"),
                  TheoryFactory.createValue(1));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
                             EquationPosition.TOPRIGHT, subst).get();
@@ -187,7 +187,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
-    subst.extend(pp.getProofState().getHypotheses().get(0).getRenaming().getVariable("z"),
+    subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("z"),
                  TheoryFactory.createValue(12));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
                             EquationPosition.parse("L1"), subst).get();
@@ -210,7 +210,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
-    subst.extend(pp.getProofState().getHypotheses().get(0).getRenaming().getVariable("z"),
+    subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("z"),
                  TheoryFactory.createValue(12));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
                             EquationPosition.parse("L1"), subst).get();
@@ -233,7 +233,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
-    subst.extend(pp.getProofState().getHypotheses().get(0).getRenaming().getVariable("z"),
+    subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("z"),
                  TheoryFactory.createValue(7));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
                             EquationPosition.parse("R1"), subst).get();
@@ -256,7 +256,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
-    subst.extend(pp.getProofState().getHypotheses().get(0).getRenaming().getVariable("z"),
+    subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("z"),
                  TheoryFactory.createValue(12));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
                             EquationPosition.parse("L1"), subst).get();

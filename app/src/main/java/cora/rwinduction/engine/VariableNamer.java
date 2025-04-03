@@ -29,23 +29,31 @@ public class VariableNamer {
   public record VariableInfo(String basename, int index) {}
 
   /**
+   * Given a user-suggested variable name [fullName], this splits it up into an appropriate base
+   * name and index.
+   */
+  public VariableInfo getVariableInfo(String fullName) {
+    int index = fullName.length();
+    while (index > 0 && Character.isDigit(fullName.charAt(index-1))) index--;
+    if (index == fullName.length()) return new VariableInfo(fullName, 0);
+    int num = Integer.parseInt(fullName.substring(index));
+    if (index == 0) return new VariableInfo("var", num);
+    return new VariableInfo(fullName.substring(0, index), num);
+  }
+
+  /**
    * Given a variable with name [baseName], that is called [fullName] in a renaming, this
    * interprets the variable as a combination of name and index.  This might just be
    * ([fullName],0), but especially if the variable was created by the VariableNamer, there could
    * be a clearer division.
    */
   public VariableInfo getVariableInfo(String baseName, String fullName) {
-    int index = fullName.length();
-    while (index > 0 && Character.isDigit(fullName.charAt(index-1))) index--;
-    int num = 0;
-    if (index != fullName.length()) {
-      num = Integer.parseInt(fullName.substring(index));
-      fullName = fullName.substring(0, index);
+    VariableInfo ret = getVariableInfo(fullName);
+    if (baseName.length() < ret.basename().length() &&
+        ret.basename().substring(0, baseName.length()).equals(baseName)) {
+      return new VariableInfo(baseName, ret.index());
     }
-    String base = fullName;
-    if (baseName.length() < fullName.length() &&
-        fullName.substring(0,baseName.length()).equals(baseName)) base = baseName;
-    return new VariableInfo(base, num);
+    return ret;
   }
 
   /**
@@ -72,6 +80,21 @@ public class VariableNamer {
   public Variable chooseDerivative(Variable x, Renaming renaming, Type type) {
     VariableInfo info = chooseDerivativeNaming(x, renaming);
     Variable newvar = TermFactory.createVar(info.basename(), type);
+    renaming.setName(newvar, info.basename() + info.index());
+    return newvar;
+  }
+
+  /**
+   * This function creates a new variable of the given type, whose name is chosen as either the
+   * same as x, if that is available, or otherwise as a derivative of x (as in chooseDerivative).
+   * The new variable will be immediately stored in the renaming.
+   */
+  public Variable chooseDerivativeOrSameNaming(Variable x, Renaming renaming, Type type) {
+    VariableInfo info = chooseDerivativeNaming(x, renaming);
+    Variable newvar = TermFactory.createVar(info.basename(), type);
+    if (renaming.getName(x) == null && renaming.getReplaceable(x.queryName()) == null) {
+      if (renaming.setName(newvar, x.queryName())) return newvar;
+    }
     renaming.setName(newvar, info.basename() + info.index());
     return newvar;
   }

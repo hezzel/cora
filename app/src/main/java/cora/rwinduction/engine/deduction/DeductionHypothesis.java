@@ -17,6 +17,7 @@ package cora.rwinduction.engine.deduction;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import charlie.util.Pair;
 import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
@@ -60,17 +61,21 @@ public final class DeductionHypothesis extends DeductionStep {
     Term right = inverse ? hequ.getLhs() : hequ.getRhs();
 
     ConstrainedReductionHelper helper =
-      new ConstrainedReductionHelper(left, right, hequ.getConstraint(), hypo.getRenaming(), pos,
-                                     subst, "induction hypothesis");
+      new ConstrainedReductionHelper(left, right, hequ.getConstraint(), hypo.getRenamingCopy(),
+                                     "induction hypothesis", proof, pos, subst);
     EquationContext original = proof.getProofState().getTopEquation();
-    if (!helper.extendSubstitution(original.getEquation(), m)) return Optional.empty();
+    if (!helper.extendSubstitution(m)) return Optional.empty();
+    helper.makePreAlter();
     if (!helper.checkEverythingSubstituted(m)) return Optional.empty();
 
-    Equation neweq = helper.reduce(original.getEquation(), m);
+    Pair<Equation,Renaming> neweqdata = helper.reduce();
+    Equation neweq = neweqdata.fst();
+    Renaming newrenaming = neweqdata.snd();
     ArrayList<OrdReq> requirements = new ArrayList<OrdReq>();
 
     int id = proof.getProofState().getLastUsedIndex() + 1;
-    EquationContext result = generateResultEquationContext(original, pos, neweq, id, requirements);
+    EquationContext result = generateResultEquationContext(original, pos, neweq, newrenaming,
+                                                           id, requirements);
     if (result == null) {
       m.ifPresent(o -> o.println("The hypothesis cannot be applied, as it would cause an " +
         "obviously unsatisfiable ordering requirement to be imposed."));
@@ -89,18 +94,18 @@ public final class DeductionHypothesis extends DeductionStep {
    */
   private static EquationContext generateResultEquationContext(EquationContext original,
                                                                EquationPosition pos, Equation neweq,
-                                                               int index, ArrayList<OrdReq> reqs) {
+                                                               Renaming newrenaming, int index,
+                                                               ArrayList<OrdReq> reqs) {
     // • is greater than anything, so if • occurs on any side, we can keep it as the only greater
     // term in the resulting equation
     if (original.getLeftGreaterTerm().isEmpty() || original.getRightGreaterTerm().isEmpty()) {
-      return new EquationContext(neweq, index, original.getRenaming());
+      return new EquationContext(neweq, index, newrenaming);
     }
 
     // otherwise, let's write the equation as (s', C[lγ] -><- t | φ, t') or (t', t -> C[lγ] | φ, s')
     Term lgamma = original.getEquation().querySubterm(pos);
     Term rgamma = neweq.querySubterm(pos);
     Term phi = neweq.getConstraint();
-    Renaming ren = original.getRenaming();
     Term sprime, tprime;
     if (pos.querySide() == EquationPosition.Side.Left) {
       sprime = original.getLeftGreaterTerm().get();
@@ -115,31 +120,31 @@ public final class DeductionHypothesis extends DeductionStep {
     // safely continue with greater terms {t',t'}
     if (sprime.equals(lgamma)) {
       if (tprime.equals(lgamma) || tprime.equals(rgamma)) return null;
-      reqs.add(new OrdReq(tprime, lgamma, phi, ren));
-      reqs.add(new OrdReq(tprime, rgamma, phi, ren));
-      return new EquationContext(tprime, neweq, tprime, index, ren);
+      reqs.add(new OrdReq(tprime, lgamma, phi, newrenaming));
+      reqs.add(new OrdReq(tprime, rgamma, phi, newrenaming));
+      return new EquationContext(tprime, neweq, tprime, index, newrenaming);
     }
 
     // in all other cases, we impose the requirement that s' ≻ lγ
-    reqs.add(new OrdReq(sprime, lgamma, phi, ren));
+    reqs.add(new OrdReq(sprime, lgamma, phi, newrenaming));
 
     // The only remaining question is whether s' ≻ rγ or t' ≻ rγ.  For this, we impose the
     // following heuristic: of course if one of them is equal to rγ we choose the other, and if
     // C[rγ] = t we in principle choose t' ≻ rγ; otherwise we let s' ≻ rγ (since the proof of the
     // equation is not yet almost-finished, and we will continue with (s',t'))
     if (neweq.getLhs().equals(neweq.getRhs())) {
-      if (!tprime.equals(rgamma)) reqs.add(new OrdReq(tprime, rgamma, phi, ren));
+      if (!tprime.equals(rgamma)) reqs.add(new OrdReq(tprime, rgamma, phi, newrenaming));
       else if (sprime.equals(rgamma)) return null;
-      else reqs.add(new OrdReq(sprime, rgamma, phi, ren));
+      else reqs.add(new OrdReq(sprime, rgamma, phi, newrenaming));
     }
 
     else {
-      if (!sprime.equals(rgamma)) reqs.add(new OrdReq(sprime, rgamma, phi, ren));
+      if (!sprime.equals(rgamma)) reqs.add(new OrdReq(sprime, rgamma, phi, newrenaming));
       else if (tprime.equals(rgamma)) return null;
-      else reqs.add(new OrdReq(tprime, rgamma, phi, ren));
+      else reqs.add(new OrdReq(tprime, rgamma, phi, newrenaming));
     }
 
-    return original.replace(neweq, ren, index);
+    return original.replace(neweq, newrenaming, index);
   }
 
   /**
@@ -153,10 +158,10 @@ public final class DeductionHypothesis extends DeductionStep {
   @Override
   public boolean verify(Optional<OutputModule> module) {
     if (_helper.constraintIsTrue()) return true;
+    DeductionAlterDefinitions dad = _helper.queryPreAlter();
+    if (dad != null && !dad.verify(module)) return false;
     Term constraint = _equ.getEquation().getConstraint();
-    return _helper.checkConstraintGoodForReduction(_equ.getEquation().getConstraint(),
-                                                   _equ.getRenaming(), module,
-                                                   Settings.smtSolver);
+    return _helper.checkConstraintGoodForReduction(module, Settings.smtSolver);
   }
 
   @Override
@@ -170,14 +175,14 @@ public final class DeductionHypothesis extends DeductionStep {
   public String commandDescription() {
     Printer printer = PrinterFactory.createParseablePrinter(_pcontext.getTRS());
     printer.add("hypothesis ", _hypothesisName, " ", _helper.queryPosition(), " with ",
-      _helper.substitutionPrintable(_equ.getRenaming()));
+      _helper.substitutionPrintable(_equ.getRenamingCopy()));
     return printer.toString();
   }
 
   @Override
   public void explain(OutputModule module) {
     module.print("We apply HYPOTHESIS to %a with induction hypothesis %a and substitution %a.  ",
-      _equ.getName(), _hypothesisName, _helper.substitutionPrintable(_equ.getRenaming()));
+      _equ.getName(), _hypothesisName, _helper.substitutionPrintable(_equ.getRenamingCopy()));
     if (_requirements.size() == 0) {
       module.println("This does not cause any new ordering requirements to be imposed.");
     }

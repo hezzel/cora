@@ -194,7 +194,7 @@ public class EquationContext implements PrintableObject {
    * in isolation).  It is allowed to modify this Renaming; doing so will not affect the
    * EquationContext, as a copy is returned.
    */
-  public Renaming getRenaming() {
+  public Renaming getRenamingCopy() {
     return _varNaming.copy();
   }
 

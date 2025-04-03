@@ -88,7 +88,7 @@ public class CommandHypothesis extends ReductionCommandInherit {
     if (hypopair == null) return Optional.empty();
 
     // get EquationPosition and Substitution
-    Renaming hypoRenaming = hypopair.fst().getRenaming();
+    Renaming hypoRenaming = hypopair.fst().getRenamingCopy();
     Pair<EquationPosition,Substitution> restpair = readCommandRemainder(hypoRenaming, input);
     if (restpair == null) return Optional.empty();
     return DeductionHypothesis.createStep(_proof, Optional.of(_module), hypopair.fst(),

@@ -33,8 +33,14 @@ import cora.rwinduction.engine.*;
 /**
  * This class provides functionality that is used both by the SIMPLIFICATION and HYPOTHESIS
  * commands.
+ *
+ * The ConstrainedReductionHelper has information on a rule / hypothesis / other reducible object,
+ * but also on the equation that it is applied on.  The ConstrainedReductionHelper is gradually
+ * changed as more information about the appropriate substitution is discovered.  Hence, it cannot
+ * be reused for another rule application, even with the same rule.
  */
 class ConstrainedReductionHelper {
+  private PartialProof _proof;
   private Term _left;
   private Term _right;
   private Term _constraint;
@@ -43,34 +49,39 @@ class ConstrainedReductionHelper {
   private EquationPosition _position;
   private Substitution _substitution;
   private String _kind;
+  private DeductionAlterDefinitions _preAlter;
 
   /**
    * Sets up the class from reduction using a "rule" left → right | constraint, where renaming is
-   * used for printing (when necessary).
-   * The reduction will be done at the given position, and with the given substitution or an
-   * extension thereof.  The given substitution will not be altered, and will not become the
-   * property of this class; instead, it will only be copied.  The renaming will not be copied,
-   * but will not be altered by this class either.
+   * used for printing the variables of the rule (when necessary).
+   * The reduction will be done on the top equation in the current state of the partial proof, at
+   * the given position, and with the given substitution or an extension thereof.  The given
+   * substitution will not be altered, and will not become the property of this class; instead, it
+   * will only be copied (and the copy may be changed by later calls on this object).  The renaming
+   * will not be copied, but will not be altered by this class either.  This is the renaming used
+   * to print the variables in left/right/constraint.
    *
    * The "kind" should either be "rule" or 'induction hypothesis" or something similar, to be
    * used in error messages.
    */
-  ConstrainedReductionHelper(Term left, Term right, Term constraint, Renaming renaming,
-                             EquationPosition pos, Substitution subst, String kind) {
+  ConstrainedReductionHelper(Term left, Term right, Term constraint, Renaming renaming, String kind,
+                             PartialProof proof, EquationPosition pos, Substitution subst) {
     _left = left;
     _right = right;
     _renaming = renaming;
+    _kind = kind;
+    _proof = proof;
     _position = pos;
     _substitution = subst.copy();
-    _kind = kind;
-    _definitions = new ArrayList<Pair<Variable,Term>>();
     _constraint = constraint;
+    _preAlter = null;
+    _definitions = new ArrayList<Pair<Variable,Term>>();
     addEqualities(constraint, _definitions);
   }
 
   /** This returns whether the constraint for the underlying rule is True. */
   boolean constraintIsTrue() {
-    return _constraint.isValue() && _constraint.toValue().getBool() && _definitions.isEmpty();
+    return _constraint.isValue() && _constraint.toValue().getBool();
   }
 
   /** This returns the EquationPosition that underlies the current object. */
@@ -79,11 +90,28 @@ class ConstrainedReductionHelper {
   }
 
   /**
-   * This returns the substitution that underlies the current object.  The caller should not change
-   * this substitution; it is the property of this class.
+   * This returns the renaming specific to the current constrained reduction helper (to be used for
+   * printing the (meta-)variables of the reducer object).  Outside objects should not change this
+   * renaming.
+   */
+  Renaming queryRenaming() {
+    return _renaming;
+  }
+
+  /**
+   * This returns the substitution that underlies the current object.  Outside objects should not
+   * change this substitution.
    */
   Substitution querySubstitution() {
     return _substitution;
+  }
+
+  /**
+   * If an Alter step should be done before the reduction (and this was determined by a call to
+   * makePreAlter), this returns the corresponding step; otherwise, it returns null.
+   */
+  DeductionAlterDefinitions queryPreAlter() {
+    return _preAlter;
   }
 
   /** This returns a printable object representing the underlying substitution. */
@@ -92,14 +120,16 @@ class ConstrainedReductionHelper {
   }
 
   /**
-   * Writing C[s]_p ≈ t | ψ for eq, where p is the underlying position, this method extends the
-   * underlying substitution γ to a substitution δ so that _left δ = s, if possible.  If this is
-   * not possible, then an appropriate error message is given on m and false is returned.  If it
-   * is possible, then in addition the rule's constraint is compared to the equation's constraint
-   * for any obvious cases to add to the substitution, as the substitution is required to cover all
-   * variables and meta-variables.
+   * Writing C[s]_p ≈ t | ψ for the top equation, where p is the underlying position, this method
+   * extends the underlying substitution γ to a substitution δ so that _left δ = s, if possible.
+   * If this is not possible, then an appropriate error message is given on m and false is
+   * returned.  If it is possible, then in addition the rule's constraint is compared to the
+   * equation's constraint for any obvious cases to add to the substitution, as the substitution
+   * is required to cover all variables and meta-variables.
    */
-  boolean extendSubstitution(Equation eq, Optional<OutputModule> m) {
+  boolean extendSubstitution(Optional<OutputModule> m) {
+    Equation eq = _proof.getProofState().getTopEquation().getEquation();
+    
     Term s = eq.querySubterm(_position);
     if (s == null) {
       m.ifPresent(o -> o.println("No such position: %a.", _position));
@@ -138,17 +168,21 @@ class ConstrainedReductionHelper {
       Variable x = pair.fst();
       Term t = pair.snd();
       if (_substitution.get(x) != null) continue;
-      boolean allSubstituted = true;
-      for (Variable y : t.vars()) {
-        if (_substitution.get(y) == null) { allSubstituted = false; break; }
-      }
-      if (!allSubstituted) continue;
+      if (!allSubstituted(t)) continue;
       Term tgamma = t.substitute(_substitution);
 
       Term replacement = replaceByExistingClause(tgamma, equEqualities);
-      if (replacement == null) replacement = replaceByCalculation(tgamma);
+      //if (replacement == null) replacement = replaceByCalculation(tgamma);
       if (replacement != null) _substitution.extend(x, replacement);
     }
+  }
+
+  /** This returns whether all variables occurring in t are substituted. */
+  private boolean allSubstituted(Term t) {
+    for (Variable y : t.vars()) {
+      if (_substitution.get(y) == null) return false;
+    }
+    return true;
   }
 
   /**
@@ -201,14 +235,54 @@ class ConstrainedReductionHelper {
     return null;
   }
 
+  /** 
+   * Following extendSubstitution, if some definitions are not yet substituted, this function
+   * creates a DeductionAlterDefinitions step that tries to add them to the substitution.  This
+   * will create a "pre-alter" step which is stored internally, since the simplification step
+   * should then be done on the result of the Alter step, rather than directly on an equation.
+   * If there are no definitions left to substitute, this function will return false.
+   */
+  public boolean makePreAlter() {
+    ArrayList<Pair<Pair<Variable,String>,Term>> adding =
+      new ArrayList<Pair<Pair<Variable,String>,Term>>();
+    Renaming renaming = _proof.getProofState().getTopEquation().getRenamingCopy();
+
+    ArrayList<Variable> defined = new ArrayList<Variable>();
+    for (Pair<Variable,Term> pair : _definitions) {
+      Variable x = pair.fst();
+      if (_substitution.get(x) != null) continue;
+      Term t = pair.snd();
+      if (!allSubstituted(t)) continue;
+      Term tgamma = t.substitute(_substitution);
+
+      Variable y =
+        _proof.getContext().getVariableNamer().chooseDerivativeOrSameNaming(x, renaming,
+                                                                            x.queryType());
+      Pair<Variable,String> ypair = new Pair<Variable,String>(y, renaming.getName(y));
+      adding.add(new Pair<Pair<Variable,String>,Term>(ypair, tgamma));
+      _substitution.extend(x, y);
+      defined.add(x);
+    }
+    
+    if (adding.isEmpty()) return false;
+    Optional<DeductionAlterDefinitions> ret = DeductionAlterDefinitions.createStep(_proof,
+                                                                 Optional.empty(), adding);
+    if (!ret.isPresent()) {
+      for (Variable x : defined) _substitution.delete(x);
+      return false;
+    }
+    _preAlter = ret.get();
+    return true;
+  }
+
   /**
    * This function goes over all meta-variables in _right and _constraint, and ensures that they're
    * all in the domain of the step's substitution.  If not, we return false and print a failure
    * message to the user.
    *
-   * Note that this should be done AFTER extendSubstitution, so that all (meta-)variables whose
-   * mapping we can automatically deduce have already been included in the domain of the
-   * substitution.
+   * Note that this should be done AFTER extendSubstitution and perhaps makePreAlter, so that all
+   * (meta-)variables whose mapping we can automatically deduce have already been included in the
+   * domain of the substitution.
   */
   boolean checkEverythingSubstituted(Optional<OutputModule> module) {
     TreeSet<Replaceable> missing = new TreeSet<Replaceable>();
@@ -233,17 +307,27 @@ class ConstrainedReductionHelper {
 
   /**
    * This function checks if we can indeed apply the rule _left → _right | _constraint with the
-   * substitution _substitution to the given equation, assuming that we already know that the
+   * substitution _substitution to the top equation, assuming that we already know that the
    * subterm of equation at position _position is exactly _left _substitution.  That is, writing
    * ψ for the equation's constraint, we check that:
    * - all (meta-)vars in the rule's constraint (so: _constraint) are mapped to either values, or
    *   variables in Var(ψ)
    * - ψ ⇒ φδ is valid
    */
-  boolean checkConstraintGoodForReduction(Term equationConstraint, Renaming eqrenaming,
-                                          Optional<OutputModule> module, SmtSolver solver) {
-    if (!checkConstraintVariables(equationConstraint, eqrenaming, module)) return false;
-    if (!checkImplication(equationConstraint, eqrenaming, module, solver)) return false;
+  boolean checkConstraintGoodForReduction(Optional<OutputModule> module, SmtSolver solver) {
+    Term equationConstraint;
+    Renaming equationRenaming;
+    if (_preAlter == null) {
+      EquationContext ec = _proof.getProofState().getTopEquation();
+      equationConstraint = ec.getEquation().getConstraint();
+      equationRenaming = ec.getRenamingCopy();
+    }
+    else {
+      equationConstraint = _preAlter.queryUpdatedConstraint();
+      equationRenaming = _preAlter.queryUpdatedRenaming();
+    }
+    if (!checkConstraintVariables(equationConstraint, equationRenaming, module)) return false;
+    if (!checkImplication(equationConstraint, equationRenaming, module, solver)) return false;
     return true;
   }
 
@@ -283,11 +367,20 @@ class ConstrainedReductionHelper {
   /**
    * Assuming that all prerequisites are satisfied to apply the "rule" _left → _right | _constraint
    * to equation at the underlying equation position, this returns the equation resulting from that
-   * reduction.
+   * reduction.  (If there is a pre-alter step, the equation is also updated with the corresponding
+   * constraint.)
    */
-  Equation reduce(Equation equation, Optional<OutputModule> module) {
+  Pair<Equation,Renaming> reduce() {
     Term substituted = _right.substitute(_substitution);
-    return equation.replaceSubterm(_position, substituted);
+    Equation equation = _proof.getProofState().getTopEquation().getEquation();
+    Equation ret = equation.replaceSubterm(_position, substituted);
+    Renaming renaming;
+    if (_preAlter == null) renaming = _proof.getProofState().getTopEquation().getRenamingCopy();
+    else {
+      ret = new Equation(ret.getLhs(), ret.getRhs(), _preAlter.queryUpdatedConstraint());
+      renaming = _preAlter.queryUpdatedRenaming();
+    }
+    return new Pair<Equation,Renaming>(ret, renaming);
   }
 }
 
