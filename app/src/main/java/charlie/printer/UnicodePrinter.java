@@ -86,5 +86,8 @@ public class UnicodePrinter extends Printer {
   public String symbChi()             { return "χ"; }
   public String symbPsi()             { return "ψ"; }
   public String symbOmega()           { return "ω"; }
+
+  public String symbLangle()          { return "⟨"; }
+  public String symbRangle()          { return "⟩"; }
 }
 

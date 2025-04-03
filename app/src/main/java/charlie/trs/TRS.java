@@ -15,12 +15,16 @@
 
 package charlie.trs;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import charlie.exceptions.IndexingException;
 import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.IllegalSymbolException;
@@ -88,6 +92,9 @@ public class TRS {
   private boolean _theoriesIncluded;
   private boolean _productsIncluded;
   private RuleRestrictions _rulesProperties;
+
+  private HashMap<FunctionSymbol, List<Rule>> _functionRules = null;
+  private final List<Rule> _variableRules = new LinkedList<>();
 
   /**
    * Create a TRS with the given settings.  Default because this should only be called by the
@@ -412,6 +419,43 @@ public class TRS {
     }
     ret.append("\n");
     return ret.toString();
+  }
+
+  /**
+   * Finds all the rules that are headed by the given function symbol,
+   * or by a variable which may be instantiated to a term headed by the symbol.
+   * @return a stream of such rules, including those headed by a variable if withVar is true.
+   */
+  public Stream<Rule> queryRulesForSymbol(FunctionSymbol func, boolean withVar) {
+    /* _functionRules and _variableRules cache results. */
+    if (_functionRules == null) {
+      _functionRules = new HashMap<>();
+      for (var rule : queryRules()) {
+        var lhs = rule.queryLeftSide();
+        if (lhs.isFunctionalTerm()) {
+          var f = lhs.queryRoot();
+          var l = _functionRules.getOrDefault(f, new LinkedList<>());
+          l.add(rule);
+          _functionRules.put(f, l);
+        }
+        else if (lhs.isVarTerm()) {
+          _variableRules.add(rule);
+        }
+      }
+    }
+    var funcRules = _functionRules.getOrDefault(func, new LinkedList<>());
+    /* isFuncReturn tests if the given type is a potential return type of func. */
+    Predicate<Type> isFuncReturn = t -> {
+      var tFunc = func.queryType();
+      var nArgs = tFunc.queryArity() - t.queryArity();
+      if (nArgs < 0) return false;
+      while (nArgs-- > 0) tFunc = tFunc.subtype(2);
+      return t.equals(tFunc);
+    };
+    return withVar ?
+      Stream.concat(funcRules.stream(), _variableRules.stream().filter(
+        r -> isFuncReturn.test(r.queryLeftSide().queryHead().queryType()))) :
+      funcRules.stream();
   }
 }
 

@@ -210,6 +210,11 @@ public class Rule {
     return builder.toString();
   }
 
+  /** Returns the right replaceable policy. */
+  public FreshRight queryRightReplaceablePolicy() {
+    return queryProperties().rightReplaceablePolicy();
+  }
+
   // ============================== correctness checking starts here ==============================
 
    /**
