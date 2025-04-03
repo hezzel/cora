@@ -43,12 +43,12 @@ public final class DeductionInduct extends DeductionStep {
     Optional<Term> lterm = context.getLeftGreaterTerm();
     if (!lterm.isEmpty() && !lterm.get().equals(eq.getLhs())) {
       reqs.add(new OrdReq(lterm.get(), eq.getLhs(), eq.getConstraint(),
-                          context.getRenaming(), false));
+                          context.getRenamingCopy(), false));
     }
     Optional<Term> rterm = context.getRightGreaterTerm();
     if (!rterm.isEmpty() && !rterm.get().equals(eq.getRhs())) {
       reqs.add(new OrdReq(rterm.get(), eq.getRhs(), eq.getConstraint(),
-                          context.getRenaming(), false));
+                          context.getRenamingCopy(), false));
     }
     return Optional.of(new DeductionInduct(state, proof.getContext(), reqs));
   }
@@ -69,7 +69,8 @@ public final class DeductionInduct extends DeductionStep {
 
   @Override
   public ProofState tryApply(Optional<OutputModule> module) {
-    Hypothesis hypothesis = new Hypothesis(_equ.getEquation(), _equ.getIndex(), _equ.getRenaming());
+    Hypothesis hypothesis = new Hypothesis(_equ.getEquation(), _equ.getIndex(),
+                                           _equ.getRenamingCopy());
     // special case: the equation context was already (s, s = t | φ, t); in this case the ec stays
     // the same, and there are no requirements, but the hypothesis *is* added
     if (_requirements.size() == 0 && !_equ.getLeftGreaterTerm().isEmpty() &&
@@ -80,7 +81,7 @@ public final class DeductionInduct extends DeductionStep {
     int index = _state.getLastUsedIndex() + 1;
     Equation equation = _equ.getEquation();
     EquationContext newequ = new EquationContext(equation.getLhs(), equation,
-      equation.getRhs(), index, _equ.getRenaming());
+      equation.getRhs(), index, _equ.getRenamingCopy());
     FixedList.Builder<EquationContext> ecbuilder = new FixedList.Builder<EquationContext>();
     for (EquationContext ec : _state.getEquations()) {
       if (ec == _equ) ecbuilder.add(newequ);
@@ -104,7 +105,7 @@ public final class DeductionInduct extends DeductionStep {
     if (_requirements.size() == 0) {
       module.println("We apply INDUCT to %a, which does not impose any new ordering requirements " +
         "but simply adds %a to the set H of induction hypotheses.", _equ,
-        _equ.getEquation().makePrintableWith(_equ.getRenaming()));
+        _equ.getEquation().makePrintableWith(_equ.getRenamingCopy()));
     }
     else {
       module.print("We apply INDUCT to %a, which adds the equation into H, and imposes the " +

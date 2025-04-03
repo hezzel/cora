@@ -48,7 +48,7 @@ public final class DeductionCase extends DeductionStep {
     ProofState state = proof.getProofState();
     Equation eq = DeductionStep.getTopEquation(state, module);
     if (eq == null) return Optional.empty();
-    Renaming renaming = state.getTopEquation().getRenaming();
+    Renaming renaming = state.getTopEquation().getRenamingCopy();
     ArrayList<ExtraInfo> ret = new ArrayList<ExtraInfo>();
 
     if (caseterm.queryType().equals(TypeFactory.boolSort)) {
@@ -188,7 +188,7 @@ public final class DeductionCase extends DeductionStep {
    */
   @Override
   public boolean verify(Optional<OutputModule> module) {
-    Renaming renaming = _state.getTopEquation().getRenaming();
+    Renaming renaming = _state.getTopEquation().getRenamingCopy();
     for (Replaceable x : _term.freeReplaceables()) {
       if (renaming.getName(x) == null) {
         if (x == _term) {
@@ -229,7 +229,7 @@ public final class DeductionCase extends DeductionStep {
 
   @Override
   public String commandDescription() {
-    Renaming renaming = _state.getTopEquation().getRenaming();
+    Renaming renaming = _state.getTopEquation().getRenamingCopy();
     Printer printer = PrinterFactory.createParseablePrinter(_pcontext.getTRS());
     printer.add("case ", printer.makePrintable(_term, renaming));
     return printer.toString();
@@ -238,7 +238,7 @@ public final class DeductionCase extends DeductionStep {
   @Override
   public void explain(OutputModule module) {
     String applyonwhat = "the instance of";
-    Renaming renaming = _state.getTopEquation().getRenaming();
+    Renaming renaming = _state.getTopEquation().getRenamingCopy();
     if (_term.queryType().equals(TypeFactory.boolSort)) applyonwhat = "the constraint";
     else if (_term.queryType().equals(TypeFactory.intSort)) applyonwhat = "the value of";
     module.println("We apply CASE on %a %a.", applyonwhat,

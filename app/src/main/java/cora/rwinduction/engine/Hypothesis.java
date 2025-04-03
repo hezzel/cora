@@ -51,7 +51,7 @@ public class Hypothesis implements PrintableObject {
   }
 
   /** Returns a copy of the Renaming that determines how to print the equation. */
-  public Renaming getRenaming() {
+  public Renaming getRenamingCopy() {
     return _varNaming.copy();
   }
 

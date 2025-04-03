@@ -69,13 +69,13 @@ class EquationContextTest {
     Term kk = CoraInputReader.readTermAndUpdateNaming("sum1(z)", renaming, trs);
     Equation eq = new Equation(left, right, constraint);
     EquationContext context = new EquationContext(eq, 8, renaming);
-    assertTrue(context.getRenaming().getReplaceable("z") == null);
+    assertTrue(context.getRenamingCopy().getReplaceable("z") == null);
     assertTrue(renaming.getReplaceable("z") != null);
     assertThrows(IllegalArgumentException.class, () -> new EquationContext(left, eq, kk,
-      7, context.getRenaming()));
+      7, context.getRenamingCopy()));
     Equation badeq = new Equation(kk, right);
     assertThrows(IllegalArgumentException.class, () -> new EquationContext(badeq, 10,
-      context.getRenaming()));
+      context.getRenamingCopy()));
   }
 
   @Test
@@ -91,7 +91,7 @@ class EquationContextTest {
     Equation eq = new Equation(left, right, constraint);
     EquationContext context = new EquationContext(eq, 8, renaming);
     Variable x = renaming.getVariable("x");
-    context.getRenaming().setName(x, "AAA");
+    context.getRenamingCopy().setName(x, "AAA");
     assertTrue(renaming.getName(x).equals("x"));
   }
 
@@ -153,8 +153,8 @@ class EquationContextTest {
     EquationContext c2 = c1.replace(equation2, 107);
 
     assertTrue(c2.toString().equals("E107: (f(f(x)) , f(f(x)) ≈ f(f(x)) | x > 0 , f(z))"));
-    assertTrue(c2.getRenaming().getReplaceable("y") == null);
-    assertTrue(c1.getRenaming().getReplaceable("y") != null);
+    assertTrue(c2.getRenamingCopy().getReplaceable("y") == null);
+    assertTrue(c1.getRenamingCopy().getReplaceable("y") != null);
   }
 }
 

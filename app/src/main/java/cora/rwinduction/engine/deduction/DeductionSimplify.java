@@ -17,6 +17,7 @@ package cora.rwinduction.engine.deduction;
 
 import java.util.Optional;
 import java.util.TreeSet;
+import charlie.util.Pair;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.printer.Printer;
@@ -56,11 +57,11 @@ public final class DeductionSimplify extends DeductionStep {
 
     ConstrainedReductionHelper helper =
       new ConstrainedReductionHelper(rule.queryLeftSide(), rule.queryRightSide(),
-        rule.queryConstraint(), proof.getContext().getRenaming(ruleName), pos, subst, "rule");
+        rule.queryConstraint(), proof.getContext().getRenaming(ruleName), "rule", proof, pos,
+        subst);
     
-    if (!helper.extendSubstitution(getTopEquation(proof.getProofState(), m), m)) {
-      return Optional.empty();
-    }
+    if (!helper.extendSubstitutionBasic(m)) return Optional.empty();
+    helper.makePreAlter();
 
     return Optional.of(new DeductionSimplify(proof.getProofState(), proof.getContext(), ruleName,
                                              helper));
@@ -77,31 +78,40 @@ public final class DeductionSimplify extends DeductionStep {
   @Override
   public boolean verify(Optional<OutputModule> module) {
     if (_helper.constraintIsTrue()) return true;
+    DeductionAlterDefinitions dad = _helper.queryPreAlter();
+    if (dad != null && !dad.verify(module)) return false;
     if (!_helper.checkEverythingSubstituted(module)) return false;
     Term constraint = _equ.getEquation().getConstraint();
-    return _helper.checkConstraintGoodForReduction(_equ.getEquation().getConstraint(),
-                                                   _equ.getRenaming(), module,
-                                                   Settings.smtSolver);
+    return _helper.checkConstraintGoodForReduction(module, Settings.smtSolver);
   }
 
   @Override
   protected ProofState tryApply(Optional<OutputModule> module) {
-    Equation equation = _helper.reduce(_equ.getEquation(), module);
-    return _state.replaceTopEquation(_equ.replace(equation, _state.getLastUsedIndex() + 1));
+    Pair<Equation,Renaming> pair = _helper.reduce();
+    EquationContext ec = _equ.replace(pair.fst(), pair.snd(), _state.getLastUsedIndex() + 1);
+    return _state.replaceTopEquation(ec);
   }
 
   @Override
   public String commandDescription() {
     Printer printer = PrinterFactory.createParseablePrinter(_pcontext.getTRS());
     printer.add("simplify ", _ruleName, " ", _helper.queryPosition(), " with ",
-      _helper.substitutionPrintable(_equ.getRenaming()));
+      _helper.substitutionPrintable(_equ.getRenamingCopy()));
     return printer.toString();
   }
 
   @Override
   public void explain(OutputModule module) {
-    module.println("We apply SIMPLIFICATION to %a with rule %a and substitution %a.",
-      _equ.getName(), _ruleName, _helper.substitutionPrintable(_equ.getRenaming()));
+    DeductionAlterDefinitions prestep = _helper.queryPreAlter();
+    if (prestep == null) module.print("We apply SIMPLIFICATION to %a", _equ.getName());
+    else {
+      module.print("We apply ALTER to add %a to the constraint of %a, and then we apply " +
+        "SIMPLIFICATION to the resulting equation",
+        Printer.makePrintable(prestep.queryAddedConstraint(), prestep.queryUpdatedRenaming()),
+        _equ.getName());
+    }
+    module.println(" with rule %a and substitution %a.",
+      _ruleName, _helper.substitutionPrintable(_equ.getRenamingCopy()));
   }
 }
 

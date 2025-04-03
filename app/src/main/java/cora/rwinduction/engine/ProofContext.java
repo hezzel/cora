@@ -104,6 +104,7 @@ public class ProofContext {
     return _trs.queryRule(i);
   }
 
+  /** This gives the actual renaming for the rule.  Do not modify! */
   public Renaming getRenaming(String ruleName) {
     Integer i = _nameToRule.get(ruleName);
     if (i == null) return null;
