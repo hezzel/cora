@@ -269,7 +269,7 @@ class ConstrainedReductionHelperTest {
     solver = new MySmtSolver(false);
     assertFalse(crh.checkConstraintGoodForReduction(o, solver));
     assertTrue(module.toString().equals(
-      "The XX does not apply: I could not prove that z < 0 ⊨ 7 > 0 ∧ z ≠ 0.\n\n"));
+      "The XX does not apply: I could not prove that z < 0 ⊨ 7 > 0 nor z < 0 ⊨ z ≠ 0.\n\n"));
   }
 
   @Test
