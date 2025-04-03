@@ -12,7 +12,7 @@ add(x, return(y)) -> return(x + y)
 
 sum2 :: Int -> Result
 sum2(x) -> error("Negative")    | x < 0
-sum2(x) -> iter(x, i, z)        | x ≥ 0 ∧ i = 0 ∧ z = 0
+sum2(x) -> iter(x, i0, z0)      | x ≥ 0 ∧ i0 = 0 ∧ z0 = 0
 
 iter :: Int -> Int -> Int -> Result
 iter(x, i, z) -> return(z)          | i > x

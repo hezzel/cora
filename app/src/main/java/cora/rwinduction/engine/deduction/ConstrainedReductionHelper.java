@@ -123,11 +123,11 @@ class ConstrainedReductionHelper {
    * Writing C[s]_p ≈ t | ψ for the top equation, where p is the underlying position, this method
    * extends the underlying substitution γ to a substitution δ so that _left δ = s, if possible.
    * If this is not possible, then an appropriate error message is given on m and false is
-   * returned.  If it is possible, then in addition the rule's constraint is compared to the
-   * equation's constraint for any obvious cases to add to the substitution, as the substitution
-   * is required to cover all variables and meta-variables.
+   * returned.  If it is possible, then only those variable mappings that are needed for the
+   * left-hand side are included in the substitution; to map additional variables from the
+   * constraint, extendSubstitutionWithConstraintDefinitions should still be used.
    */
-  boolean extendSubstitution(Optional<OutputModule> m) {
+  boolean extendSubstitutionBasic(Optional<OutputModule> m) {
     Equation eq = _proof.getProofState().getTopEquation().getEquation();
     
     Term s = eq.querySubterm(_position);
@@ -142,16 +142,15 @@ class ConstrainedReductionHelper {
       return false;
     }
 
-    if (_definitions.size() != 0) extendSubstitutionWithConstraintDefinitions(eq);
-    
     return true;
   }
 
   /**
-   * Helper function for extendSubstitution.  Given an equation C[s]_p ≈ t | ψ1 ∧...∧ ψn,
-   * this updates _substitution by going through _definitions, and for each definition x = t with
-   * x a variable that is not yet in the domain of _substitution: if all variables of t *are* in
-   * _substitution, then one of three things will happen:
+   * Call this only AFTER calling extendSubstitutionBasic (and perhaps makePreAlter). 
+   * Given an equation C[s]_p ≈ t | ψ1 ∧...∧ ψn, this updates _substitution by going through
+   * _definitions, and for each definition x = t with x a variable that is not yet in the domain
+   * of _substitution: if all variables of t *are* in _substitution, then one of three things will
+   * happen:
    * - if some ψj has the form y = t γ, then [x:=y] is added to the substitution
    * - if t γ is variable-free, then its value is computed and [x:=v] is added to the substitution
    * - if neither of those holds, nothing is done (in which case, checkEverythingSubstituted will
@@ -160,9 +159,12 @@ class ConstrainedReductionHelper {
    * Note that variables in the "rule" are only mapped to variables that already occur in the
    * equation.
    */
-  private void extendSubstitutionWithConstraintDefinitions(Equation eq) {
+  public boolean extendSubstitutionWithConstraintDefinitions() {
+    if (_definitions.size() == 0) return false;
+    Equation eq = _proof.getProofState().getTopEquation().getEquation();
     ArrayList<Pair<Variable,Term>> equEqualities = new ArrayList<Pair<Variable,Term>>();
     addEqualities(eq.getConstraint(), equEqualities);
+    boolean changedAnything = false;
 
     for (Pair<Variable,Term> pair : _definitions) {
       Variable x = pair.fst();
@@ -172,9 +174,13 @@ class ConstrainedReductionHelper {
       Term tgamma = t.substitute(_substitution);
 
       Term replacement = replaceByExistingClause(tgamma, equEqualities);
-      //if (replacement == null) replacement = replaceByCalculation(tgamma);
-      if (replacement != null) _substitution.extend(x, replacement);
+      if (replacement == null) replacement = replaceByCalculation(tgamma);
+      if (replacement != null) {
+        _substitution.extend(x, replacement);
+        changedAnything = true;
+      }
     }
+    return changedAnything;
   }
 
   /** This returns whether all variables occurring in t are substituted. */
