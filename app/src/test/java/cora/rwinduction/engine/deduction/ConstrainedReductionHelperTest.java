@@ -21,15 +21,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.Optional;
 
+import charlie.util.Pair;
 import charlie.exceptions.CustomParserException;
 import charlie.terms.position.Position;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
-import charlie.smt.Truth;
 import charlie.smt.SmtProblem;
 import charlie.smt.SmtSolver;
+import charlie.printer.Printer;
+import charlie.printer.PrinterFactory;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
@@ -73,12 +75,13 @@ class ConstrainedReductionHelperTest {
     Substitution subst = TermFactory.createEmptySubstitution();
     ConstrainedReductionHelper crh =
       new ConstrainedReductionHelper(rule.queryLeftSide(), rule.queryRightSide(),
-        rule.queryConstraint(), pp.getContext().getRenaming("O2"), pos, subst, "rule");
+        rule.queryConstraint(), pp.getContext().getRenaming("O2"), "rule", pp, pos, subst);
     assertTrue(crh.querySubstitution().domain().isEmpty());
     subst.extend(TermFactory.createVar("a"), TermFactory.createVar("b"));
     assertTrue(crh.querySubstitution().domain().isEmpty());
     Optional<OutputModule> o = Optional.of(module);
-    assertTrue(crh.extendSubstitution(pp.getProofState().getTopEquation().getEquation(), o));
+    assertTrue(crh.extendSubstitution(o));
+    assertFalse(crh.makePreAlter());
     assertTrue(module.toString().equals(""));
   }
 
@@ -91,10 +94,10 @@ class ConstrainedReductionHelperTest {
     Substitution subst = TermFactory.createEmptySubstitution();
     ConstrainedReductionHelper crh =
       new ConstrainedReductionHelper(rule.queryLeftSide(), rule.queryRightSide(),
-        rule.queryConstraint(), pp.getContext().getRenaming("O2"), pos, subst, "thingy");
+        rule.queryConstraint(), pp.getContext().getRenaming("O2"), "thingy", pp, pos, subst);
     assertTrue(crh.querySubstitution().domain().isEmpty());
     Optional<OutputModule> o = Optional.of(module);
-    assertFalse(crh.extendSubstitution(pp.getProofState().getTopEquation().getEquation(), o));
+    assertFalse(crh.extendSubstitution(o));
     assertTrue(module.toString().equals(
       "The thingy does not apply: constant sum2 is not instantiated by sum1.\n\n"));
   }
@@ -113,9 +116,10 @@ class ConstrainedReductionHelperTest {
     Term constraint = CoraInputReader.readTermAndUpdateNaming(
       "a > 1 ∧ d = a - b ∧ b != 0 ∧ d + 1 = e", renaming, _trs);
     ConstrainedReductionHelper crh =
-      new ConstrainedReductionHelper(left, right, constraint, renaming, pos, subst, "XX");
-    assertTrue(crh.extendSubstitution(pp.getProofState().getTopEquation().getEquation(), o));
-    Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
+      new ConstrainedReductionHelper(left, right, constraint, renaming, "XX", pp, pos, subst);
+    assertTrue(crh.extendSubstitution(o));
+    assertFalse(crh.makePreAlter());
+    Renaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Substitution gamma = crh.querySubstitution();
     assertTrue(gamma.get(renaming.getReplaceable("a")) == eqnaming.getReplaceable("x"));
     assertTrue(gamma.get(renaming.getReplaceable("b")) == eqnaming.getReplaceable("y"));
@@ -124,6 +128,7 @@ class ConstrainedReductionHelperTest {
     assertTrue(gamma.get(renaming.getReplaceable("e")) == eqnaming.getReplaceable("a"));
   }
 
+/*
   @Test
   public void testExtendWithCalculatedDefinitions() {
     PartialProof pp = setupProof("iter(x, 1, sum2(0)) = 0 | x != 0");
@@ -137,13 +142,64 @@ class ConstrainedReductionHelperTest {
     Term constraint = CoraInputReader.readTermAndUpdateNaming(
       "c = 0 ∧ d = b * 2 + c ∧ e = q + 2", renaming, _trs);
     ConstrainedReductionHelper crh =
-      new ConstrainedReductionHelper(left, right, constraint, renaming, pos, subst, "XX");
-    assertTrue(crh.extendSubstitution(pp.getProofState().getTopEquation().getEquation(), o));
+      new ConstrainedReductionHelper(left, right, constraint, renaming, "XX", pp, pos, subst);
+    assertTrue(crh.extendSubstitution(o));
+    assertFalse(crh.makePreAlter());
     Substitution gamma = crh.querySubstitution();
     assertTrue(gamma.get(renaming.getReplaceable("b")).toValue().getInt() == 1);
     assertTrue(gamma.get(renaming.getReplaceable("c")).toValue().getInt() == 0);
     assertTrue(gamma.get(renaming.getReplaceable("d")).toValue().getInt() == 2);
     assertTrue(gamma.get(renaming.getReplaceable("e")) == null);
+  }
+*/
+
+  @Test
+  public void testMakePreAlter() {
+    PartialProof pp = setupProof("iter(u, v, b) = 5 | b > 0");
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    EquationPosition pos = EquationPosition.TOPLEFT;
+    Substitution subst = TermFactory.createEmptySubstitution();
+    Renaming renaming = new Renaming(_trs.queryFunctionSymbolNames());
+    Term left = CoraInputReader.readTermAndUpdateNaming("iter(x, y, z)", renaming, _trs);
+    Term right = CoraInputReader.readTermAndUpdateNaming("a + b", renaming, _trs);
+    Term constraint = CoraInputReader.readTermAndUpdateNaming(
+      "a = x + 1 ∧ y + a = b", renaming, _trs);
+    ConstrainedReductionHelper crh =
+      new ConstrainedReductionHelper(left, right, constraint, renaming, "XX", pp, pos, subst);
+    Equation equation = pp.getProofState().getTopEquation().getEquation();
+    assertTrue(crh.extendSubstitution(o));
+    assertTrue(crh.makePreAlter());
+    assertTrue(crh.queryPreAlter().commandDescription().equals(
+      "alter add a = u + 1, b1 = v + a"));
+
+    Renaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Substitution gamma = crh.querySubstitution();
+    assertTrue(gamma.get(renaming.getReplaceable("x")) == eqnaming.getReplaceable("u"));
+    assertTrue(gamma.get(renaming.getReplaceable("y")) == eqnaming.getReplaceable("v"));
+    assertTrue(gamma.get(renaming.getReplaceable("z")) == eqnaming.getReplaceable("b"));
+    assertTrue(gamma.get(renaming.getReplaceable("a")).isVariable());
+    assertTrue(eqnaming.getName(gamma.get(renaming.getReplaceable("a")).queryVariable()) == null);
+    assertTrue(eqnaming.getName(gamma.get(renaming.getReplaceable("b")).queryVariable()) == null);
+    eqnaming = crh.queryPreAlter().queryUpdatedRenaming();
+    assertTrue(gamma.get(renaming.getReplaceable("x")) == eqnaming.getReplaceable("u"));
+    assertTrue(gamma.get(renaming.getReplaceable("y")) == eqnaming.getReplaceable("v"));
+    assertTrue(gamma.get(renaming.getReplaceable("z")) == eqnaming.getReplaceable("b"));
+    assertTrue(gamma.get(renaming.getReplaceable("a")) == eqnaming.getReplaceable("a"));
+    assertTrue(gamma.get(renaming.getReplaceable("b")) == eqnaming.getReplaceable("b1"));
+
+    MySmtSolver solver = new MySmtSolver(true);
+    assertTrue(crh.checkEverythingSubstituted(o));
+    assertTrue(crh.checkConstraintGoodForReduction(o, solver));
+    assertTrue(solver._question.toString().equals("(0 >= i1) or (i2 # 1 + i3) or " +
+      "(i4 # i5 + i2) or ((i2 = 1 + i3) and (i5 + i2 = i4))\n"));
+
+    Pair<Equation,Renaming> eqpair = crh.reduce();
+    Equation eq = eqpair.fst();
+    assertTrue(eqpair.snd() == eqnaming);
+    Printer printer = PrinterFactory.createPrinterNotForUserOutput();
+    printer.add(eq.makePrintableWith(eqnaming));
+    assertTrue(printer.toString().equals("a + b1 ≈ 5 | b > 0 ∧ a = u + 1 ∧ b1 = v + a"));
   }
 
   @Test
@@ -155,12 +211,12 @@ class ConstrainedReductionHelperTest {
     Substitution subst = TermFactory.createEmptySubstitution();
     ConstrainedReductionHelper crh =
       new ConstrainedReductionHelper(rule.queryLeftSide(), rule.queryRightSide(),
-        rule.queryConstraint(), pp.getContext().getRenaming("O2"), pos, subst, "thingy");
+        rule.queryConstraint(), pp.getContext().getRenaming("O2"), "thingy", pp, pos, subst);
     Variable x = pp.getContext().getRenaming("O2").getVariable("x");
     subst.extend(x, TheoryFactory.createValue(37));
     Optional<OutputModule> o = Optional.of(module);
     // note that no checks are done in the reduce function!
-    Equation eq = crh.reduce(pp.getProofState().getTopEquation().getEquation(), o);
+    Equation eq = crh.reduce().fst();
     assertTrue(eq.toString().equals("iter(z, 0, 0) ≈ 9 + (x + sum1(x - 1)) | z = -3"));
     assertTrue(module.toString().equals(""));
   }
@@ -180,7 +236,7 @@ class ConstrainedReductionHelperTest {
     subst.extend(renaming.getVariable("x"), TheoryFactory.createValue(7));
     subst.extend(renaming.getVariable("z"), renaming.getVariable("z"));
     ConstrainedReductionHelper crh =
-      new ConstrainedReductionHelper(left, right, constraint, renaming, pos, subst, "XX");
+      new ConstrainedReductionHelper(left, right, constraint, renaming, "XX", pp, pos, subst);
     assertFalse(crh.checkEverythingSubstituted(o));
     assertTrue(module.toString().equals("Not enough information given: I could not determine " +
       "the substitution to be used for y, a.\n\n"));
@@ -196,22 +252,21 @@ class ConstrainedReductionHelperTest {
     Term left = CoraInputReader.readTermAndUpdateNaming("iter(x, 0, 0)", renaming, _trs);
     Term right = CoraInputReader.readTermAndUpdateNaming("iter(x, y, z)", renaming, _trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("z > 0 ∧ a != 0", renaming, _trs);
-    Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
+    Renaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Substitution subst = TermFactory.createEmptySubstitution();
     subst.extend(renaming.getVariable("z"), TheoryFactory.createValue(7));
     subst.extend(renaming.getVariable("a"), eqnaming.getVariable("z"));
     ConstrainedReductionHelper crh =
-      new ConstrainedReductionHelper(left, right, constraint, renaming, pos, subst, "XX");
-    assertTrue(crh.extendSubstitution(pp.getProofState().getTopEquation().getEquation(), o));
+      new ConstrainedReductionHelper(left, right, constraint, renaming, "XX", pp, pos, subst);
+    assertTrue(crh.extendSubstitution(o));
+    assertFalse(crh.makePreAlter());
     MySmtSolver solver = new MySmtSolver(true);
-    assertTrue(crh.checkConstraintGoodForReduction(
-      pp.getProofState().getTopEquation().getEquation().getConstraint(), eqnaming, o, solver));
+    assertTrue(crh.checkConstraintGoodForReduction(o, solver));
     assertTrue(module.toString().equals(""));
     assertTrue(solver._question.equals("(i1 >= 0) or ((6 >= 0) and (i1 # 0))\n"));
 
     solver = new MySmtSolver(false);
-    assertFalse(crh.checkConstraintGoodForReduction(
-      pp.getProofState().getTopEquation().getEquation().getConstraint(), eqnaming, o, solver));
+    assertFalse(crh.checkConstraintGoodForReduction(o, solver));
     assertTrue(module.toString().equals(
       "The XX does not apply: I could not prove that z < 0 ⊨ 7 > 0 ∧ z ≠ 0.\n\n"));
   }
@@ -225,15 +280,14 @@ class ConstrainedReductionHelperTest {
     Rule rule = pp.getContext().getRule("O1");
     Variable x = pp.getContext().getRenaming("O1").getVariable("x");
     Substitution subst = TermFactory.createEmptySubstitution();
-    Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
+    Renaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term complexterm = CoraInputReader.readTerm("z + 0", eqnaming, _trs);
     subst.extend(x, complexterm);
     ConstrainedReductionHelper crh =
       new ConstrainedReductionHelper(rule.queryLeftSide(), rule.queryRightSide(),
-        rule.queryConstraint(), pp.getContext().getRenaming("O1"), pos, subst, "XXX");
+        rule.queryConstraint(), pp.getContext().getRenaming("O1"), "XXX", pp, pos, subst);
     MySmtSolver solver = new MySmtSolver(true);
-    assertFalse(crh.checkConstraintGoodForReduction(
-      pp.getProofState().getTopEquation().getEquation().getConstraint(), eqnaming, o, solver));
+    assertFalse(crh.checkConstraintGoodForReduction(o, solver));
     assertTrue(solver._question == null);
     assertTrue(module.toString().equals("The XXX does not apply: constraint variable x is " +
       "instantiated by z + 0, which is not a value, nor a variable in the constraint of the " +

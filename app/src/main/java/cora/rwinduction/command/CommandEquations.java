@@ -72,7 +72,7 @@ public class CommandEquations extends Command {
       if (full) _module.println("%a", ec);
       else {
         _module.nextColumn("%a:", ec.getName());
-        _module.println("%a", ec.getEquation().makePrintableWith(ec.getRenaming()));
+        _module.println("%a", ec.getEquation().makePrintableWith(ec.getRenamingCopy()));
       }
     }
     _module.endTable();

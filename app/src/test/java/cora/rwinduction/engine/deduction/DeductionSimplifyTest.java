@@ -48,7 +48,9 @@ class DeductionSimplifyTest {
       "input :: Int\n" +
       "input -> x | y > 0\n" +
       "tmp :: Int -> Int\n" +
-      "tmp(x) -> 0\n");
+      "tmp(x) -> 0\n" +
+      "sum3 :: Int -> Int\n" +
+      "sum3(x) -> iter(x, i, z) | c0 = 0 ∧ c1 = 0 ∧ i = c0 ∧ z = c1\n");
   }
 
   public PartialProof setupProof(String eqdesc) {
@@ -163,7 +165,7 @@ class DeductionSimplifyTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Settings.smtSolver = new MySimpleSolver();
     Renaming rulenaming = pp.getContext().getRenaming("O6");
-    Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
+    Renaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
 
     Substitution subst = TermFactory.createEmptySubstitution();
     Variable x = rulenaming.getVariable("x");
@@ -260,7 +262,7 @@ class DeductionSimplifyTest {
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     EquationContext ec = pp.getProofState().getTopEquation();
     assertTrue(ec.toString().equals("E2: (• , 0 ≈ 0 | x < 0 , •)"));
-    assertTrue(ec.getRenaming().getReplaceable("z") == null);
+    assertTrue(ec.getRenamingCopy().getReplaceable("z") == null);
   }
 }
 

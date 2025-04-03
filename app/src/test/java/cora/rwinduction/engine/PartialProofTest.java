@@ -106,7 +106,7 @@ class PartialProofTest {
     ProofState state2 = state1.replaceTopEquation(List.of(eq2, eq3));
     proof.addProofStep(state2, new MyStep(proof, "action 1"));
     ProofState state3 =
-      state2.addHypothesis(new Hypothesis(eq.getEquation(), eq.getIndex(), eq.getRenaming()));
+      state2.addHypothesis(new Hypothesis(eq.getEquation(), eq.getIndex(), eq.getRenamingCopy()));
     proof.addProofStep(state3, new MyStep(proof, "action 2"));
     ProofState state4 = state3.deleteTopEquation();
     proof.addProofStep(state4, new MyStep(proof, "action 3"));

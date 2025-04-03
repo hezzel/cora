@@ -65,7 +65,7 @@ public class CommandCase extends Command {
       return Optional.empty();
     }
     Term term = input.readTerm(_proof.getContext().getTRS(),
-      _proof.getProofState().getTopEquation().getRenaming(), _module);
+      _proof.getProofState().getTopEquation().getRenamingCopy(), _module);
     if (term == null) return Optional.empty();
     if (!input.commandEnded()) {
       _module.println("Unexpected argument at position %a: expected end of command.",

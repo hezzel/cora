@@ -26,6 +26,7 @@ import charlie.terms.Variable;
 import charlie.terms.Renaming;
 import charlie.terms.TermFactory;
 import cora.rwinduction.engine.DeductionStep;
+import cora.rwinduction.engine.VariableNamer;
 import cora.rwinduction.engine.deduction.DeductionAlterDefinitions;
 import cora.rwinduction.parser.CommandParsingStatus;
 
@@ -56,6 +57,10 @@ public class CommandAlter extends Command {
   protected boolean run(CommandParsingStatus input) {
     String action = input.nextWord();
     DeductionStep step = null;
+    if (input.commandEnded()) {
+      _module.println("Alter should be invoked with at least two arguments.");
+      return false;
+    }
     if (action.equals("add")) {
       Optional<DeductionAlterDefinitions> ostep = createAddStep(input);
       if (!ostep.isEmpty()) step = ostep.get();
@@ -66,20 +71,24 @@ public class CommandAlter extends Command {
   
   /** Handle an alter add command */
   Optional<DeductionAlterDefinitions> createAddStep(CommandParsingStatus input) {
-    ArrayList<Pair<Variable,Term>> definitions = new ArrayList<Pair<Variable,Term>>();
-    Renaming renaming = _proof.getProofState().getTopEquation().getRenaming();
+    ArrayList<Pair<Pair<Variable,String>,Term>> definitions =
+      new ArrayList<Pair<Pair<Variable,String>,Term>>();
+    Renaming renaming = _proof.getProofState().getTopEquation().getRenamingCopy();
+    VariableNamer namer = _proof.getContext().getVariableNamer();
     while (true) {
       String varname = readFreshName(input, renaming);
       if (varname == null) return Optional.empty();
       if (!expect(input, "=")) return Optional.empty();
       Term term = input.readTerm(_proof.getContext().getTRS(), renaming, _module);
       if (term == null) return Optional.empty();
-      Variable x = TermFactory.createVar(varname, term.queryType());
+      VariableNamer.VariableInfo info = namer.getVariableInfo(varname);
+      Variable x = TermFactory.createVar(info.basename(), term.queryType());
       if (!renaming.setName(x, varname)) {
         _module.println("Name %a is not legal for (fresh) variables.", x.queryName());
         return Optional.empty();
       }
-      definitions.add(new Pair<Variable,Term>(x, term));
+      Pair<Variable,String> varinfo = new Pair<Variable,String>(x, varname);
+      definitions.add(new Pair<Pair<Variable,String>,Term>(varinfo, term));
       if (input.commandEnded()) break;
       if (!expect(input, ",")) return Optional.empty();
     }

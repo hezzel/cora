@@ -50,7 +50,7 @@ public final class DeductionCalc extends DeductionStep {
    * the resulting Equation.
    */
   private Renaming makeNewRenaming() {
-    Renaming renaming = _equ.getRenaming();
+    Renaming renaming = _equ.getRenamingCopy();
     for (String name : _newvars.keySet()) { renaming.setName(_newvars.get(name), name); }
     return renaming;
   }
@@ -168,7 +168,7 @@ public final class DeductionCalc extends DeductionStep {
                                                    List<EquationPosition> posses) {
     Equation eq = getTopEquation(proof.getProofState(), m);
     if (eq == null) return Optional.empty();
-    Renaming renaming = proof.getProofState().getTopEquation().getRenaming();
+    Renaming renaming = proof.getProofState().getTopEquation().getRenamingCopy();
     HashMap<Term,Variable> definedVars = breakupConstraint(eq.getConstraint());
     ChangeablePair pair = new ChangeablePair(eq.getLhs(), eq.getRhs());
     Term constraint = TheoryFactory.trueValue;
