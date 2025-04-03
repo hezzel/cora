@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024, 2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import charlie.exceptions.IndexingException;
@@ -92,9 +91,8 @@ public class TRS {
   private boolean _theoriesIncluded;
   private boolean _productsIncluded;
   private RuleRestrictions _rulesProperties;
-
-  private HashMap<FunctionSymbol, List<Rule>> _functionRules = null;
-  private final List<Rule> _variableRules = new LinkedList<>();
+  private HashMap<FunctionSymbol, List<Rule>> _functionRules;
+  private LinkedList<Rule> _variableRules;
 
   /**
    * Create a TRS with the given settings.  Default because this should only be called by the
@@ -160,6 +158,10 @@ public class TRS {
       String problem = restrictions.checkCoverage(_rulesProperties);
       if (problem != null) throw new IllegalRuleException(problem);
     }
+
+    // we will compute _functionRules and _variableRules only when we need them
+    _functionRules = null;
+    _variableRules = null;
   }
 
   /** This checks that the alphabet follows the properties stored for the TRS terms. */
@@ -422,40 +424,49 @@ public class TRS {
   }
 
   /**
-   * Finds all the rules that are headed by the given function symbol,
-   * or by a variable which may be instantiated to a term headed by the symbol.
+   * Finds all the rules that are headed by the given function symbol, or by a variable /
+   * meta-variable application which may be instantiated to a term headed by the symbol.
    * @return a stream of such rules, including those headed by a variable if withVar is true.
    */
   public Stream<Rule> queryRulesForSymbol(FunctionSymbol func, boolean withVar) {
-    /* _functionRules and _variableRules cache results. */
-    if (_functionRules == null) {
-      _functionRules = new HashMap<>();
-      for (var rule : queryRules()) {
-        var lhs = rule.queryLeftSide();
-        if (lhs.isFunctionalTerm()) {
-          var f = lhs.queryRoot();
-          var l = _functionRules.getOrDefault(f, new LinkedList<>());
-          l.add(rule);
-          _functionRules.put(f, l);
-        }
-        else if (lhs.isVarTerm()) {
-          _variableRules.add(rule);
-        }
+    if (_functionRules == null) computeRulesCache();
+    List<Rule> funcRules = _functionRules.getOrDefault(func, new LinkedList<>());
+    if (!withVar) return funcRules.stream();
+    Type functype = func.queryType();
+    return Stream.concat(funcRules.stream(), _variableRules.stream().filter(
+        r -> isPotentialOutputType(functype, r.queryLeftSide().queryHead().queryType())));
+  }
+
+  /** This fills the _functionRules and _variableRules storages.  */
+  private void computeRulesCache() {
+    _functionRules = new HashMap<FunctionSymbol,List<Rule>>();
+    _variableRules = new LinkedList<Rule>();
+    for (Rule rule : queryRules()) {
+      Term lhs = rule.queryLeftSide();
+      if (lhs.isFunctionalTerm()) {
+        FunctionSymbol f = lhs.queryRoot();
+        List<Rule> l = _functionRules.getOrDefault(f, new LinkedList<>());
+        l.add(rule);
+        _functionRules.put(f, l);
+      }
+      else if (lhs.queryHead().isMetaApplication()) {
+        _variableRules.add(rule);
       }
     }
-    var funcRules = _functionRules.getOrDefault(func, new LinkedList<>());
-    /* isFuncReturn tests if the given type is a potential return type of func. */
-    Predicate<Type> isFuncReturn = t -> {
-      var tFunc = func.queryType();
-      var nArgs = tFunc.queryArity() - t.queryArity();
-      if (nArgs < 0) return false;
-      while (nArgs-- > 0) tFunc = tFunc.subtype(2);
-      return t.equals(tFunc);
-    };
-    return withVar ?
-      Stream.concat(funcRules.stream(), _variableRules.stream().filter(
-        r -> isFuncReturn.test(r.queryLeftSide().queryHead().queryType()))) :
-      funcRules.stream();
+  }
+
+  /**
+   * This helper method for queryRulesForSymbol returns true if longtype has a shape
+   * A1 →...→ An → outputtype (with n ≥ 0).
+   */
+  boolean isPotentialOutputType(Type longtype, Type outputtype) {
+    int nArgs = longtype.queryArity() - outputtype.queryArity();
+    if (nArgs < 0) return false;
+    while (nArgs > 0 && longtype.isArrowType()) {
+      nArgs--;
+      longtype = longtype.subtype(2);
+    }
+    return longtype.equals(outputtype);
   }
 }
 
