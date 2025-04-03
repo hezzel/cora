@@ -23,6 +23,7 @@ import charlie.printer.PrinterFactory;
 /** Critical peaks for LCSTRSs. */
 public record CriticalPeak(Term top, Term lhs, Term rhs, Term constraint)
     implements PrintableObject {
+  
   /** Prints to the printer. */
   public void print(Printer printer) {
     var renaming = printer.generateUniqueNaming(top, lhs, rhs, constraint);
@@ -48,3 +49,4 @@ public record CriticalPeak(Term top, Term lhs, Term rhs, Term constraint)
     return printer.toString();
   }
 }
+

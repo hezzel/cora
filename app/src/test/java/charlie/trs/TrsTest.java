@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024, 2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -23,11 +23,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
-import charlie.types.Arrow;
-import charlie.types.Base;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
-import charlie.parser.CoraParser;
 import charlie.terms.*;
 import charlie.trs.TrsProperties.*;
 import charlie.trs.TRS.RuleScheme;
@@ -35,7 +32,7 @@ import charlie.reader.CoraInputReader;
 
 public class TrsTest {
   private Type type(String txt) {
-    try { return CoraParser.readType(txt); }
+    try { return CoraInputReader.readType(txt); }
     catch (Exception e) { System.out.println(e); return null; }
   }
 
@@ -307,45 +304,45 @@ public class TrsTest {
 
   @Test
   public void testQueryRulesForSymbolFact() {
-    var trs = CoraInputReader.readTrsFromString(
+    TRS trs = CoraInputReader.readTrsFromString(
       "fact :: Int -> (Int -> o) -> o\n" +
       "comp :: (Int -> o) -> (Int -> Int) -> Int -> o\n" +
       "fact(n, k) -> k(1) | n <= 0\n" +
       "fact(n, k) -> fact(n - 1, comp(k, [*](n))) | n > 0\n" +
       "comp(g, f, x) -> g(f(x))\n");
-    var fact = makeConstant("fact", "Int -> (Int -> o) -> o");
-    var factRules = trs.queryRulesForSymbol(fact, false).toList();
+    FunctionSymbol fact = makeConstant("fact", "Int -> (Int -> o) -> o");
+    List<Rule> factRules = trs.queryRulesForSymbol(fact, false).toList();
     assertEquals(2, factRules.size());
     assertTrue(factRules.stream().allMatch(r -> fact.equals(r.queryRoot())));
 
-    var comp = makeConstant("comp", "(Int -> o) -> (Int -> Int) -> Int -> o");
-    var compRules = trs.queryRulesForSymbol(comp, false).toList();
+    FunctionSymbol comp = makeConstant("comp", "(Int -> o) -> (Int -> Int) -> Int -> o");
+    List<Rule> compRules = trs.queryRulesForSymbol(comp, true).toList();
     assertEquals(1, compRules.size());
     assertTrue(compRules.stream().allMatch(r -> comp.equals(r.queryRoot())));
 
-    var udef = makeConstant("udef", "o");
+    FunctionSymbol udef = makeConstant("udef", "o");
     assertEquals(0, trs.queryRulesForSymbol(udef, false).count());
   }
 
   @Test
   public void testQueryRulesForSymbolVarHead() {
-    var trs = CoraInputReader.readTrsFromString(
+    TRS trs = CoraInputReader.readTrsFromString(
       "{ F :: a -> a } F(x) -> x\n" +
       "{ G :: b -> a -> a } G(x, y) -> y\n");
-    var f = makeConstant("f", "a -> a");
-    var fVarRules = trs.queryRulesForSymbol(f, true).toList();
+    FunctionSymbol f = makeConstant("f", "a -> a");
+    List<Rule> fVarRules = trs.queryRulesForSymbol(f, true).toList();
     assertEquals(1, fVarRules.size());
     assertTrue(fVarRules.stream().allMatch(
-      r -> r.queryLeftSide().queryHead().queryType().equals(
-        new Arrow(new Base("a"), new Base("a")))));
+      r -> r.queryLeftSide().queryHead().queryType().equals(type("a → a"))));
 
-    var fg = makeConstant("fg", "c -> b -> a -> a");
+    FunctionSymbol fg = makeConstant("fg", "c -> b -> a -> a");
     assertEquals(2, trs.queryRulesForSymbol(fg, true).count());
+    assertEquals(0, trs.queryRulesForSymbol(fg, false).count());
 
-    var h = makeConstant("h", "b -> a -> b");
+    FunctionSymbol h = makeConstant("h", "b -> a -> b");
     assertEquals(0, trs.queryRulesForSymbol(h, true).count());
 
-    var i = makeConstant("i", "a");
+    FunctionSymbol i = makeConstant("i", "a");
     assertEquals(0, trs.queryRulesForSymbol(i, true).count());
   }
 }

@@ -18,6 +18,8 @@ package cora.confluence;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Arrays;
+
 import charlie.reader.CoraInputReader;
 import charlie.smt.Valuation;
 import charlie.smt.SmtProblem;
@@ -25,8 +27,6 @@ import charlie.smt.SmtSolver;
 import charlie.trs.TRS;
 import static charlie.trs.TrsFactory.LCSTRS;
 import cora.config.Settings;
-
-import java.util.Arrays;
 
 class CriticalPeaksFinderTest {
   private static class DummySat implements SmtSolver {

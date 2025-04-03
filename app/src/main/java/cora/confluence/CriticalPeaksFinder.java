@@ -15,31 +15,147 @@
 
 package cora.confluence;
 
-import charlie.terms.Term;
-import charlie.terms.TermFactory;
-import charlie.terms.TheoryFactory;
+import java.util.Collection;
+import java.util.LinkedList;
+
+import charlie.terms.*;
 import charlie.terms.position.Position;
 import charlie.terms.position.FinalPos;
-import charlie.theorytranslation.TermAnalyser;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.trs.TrsFactory;
 import charlie.trs.TrsProperties;
+import charlie.theorytranslation.TermAnalyser;
 import charlie.unification.MguFinder;
 import cora.config.Settings;
-
-import java.util.Collection;
-import java.util.LinkedList;
 
 /** Finds the critical peaks of an LCSTRS. */
 public class CriticalPeaksFinder {
   /** Collects the critical peaks. */
   private final LinkedList<CriticalPeak> _cps = new LinkedList<>();
+  /** Keeps track of whether we should include non-trivial critical peaks. */
+  private boolean _nontrivial;
 
   /** The constructor is private and only accessible inside the class. */
-  private CriticalPeaksFinder() {}
+  private CriticalPeaksFinder(boolean includeNontrivial) {
+    _nontrivial = includeNontrivial;
+  }
 
-  /** Generates a renamed version of the given rule. */
+  /**
+   * Generates a critical peak (if possible) and stores it in _cps.
+   * @param subterm is at position in source's lhs.
+   * @param target is a rule with disjoint variables from source
+   * @param nontrivial indicates whether trivial critical peaks are excluded.
+   *
+   * For this function to be called, we require that the left-hand side of target has a form
+   * f l1 ... lk (this is part of the TRS restriction for applying this technique), and that
+   * subterm has a form f t1 ... tn with n ≥ k.
+   */
+  private void generateCpForDefinedSymbol(Term subterm, Position position,
+                                          Rule source, Rule target) {
+    // Find subst so that (f l1 ... lk) subst = (f t1 ... tk) subst
+    var taLhs = target.queryLeftSide();
+    var subst = MguFinder.mgu(taLhs, subterm.queryImmediateHeadSubterm(taLhs.numberArguments()));
+    if (subst == null) return;
+
+    // We require that all constraint-variables of both source and target are instantiated by
+    // values or variables.  (If some variable is not substituted, then it is mapped to itself,
+    // so a variable.)
+    for (var x : target.queryLVars()) {
+      var t = subst.getReplacement(x);
+      if (!t.isValue() && !t.isVariable()) return;
+    }
+    for (var x : source.queryLVars()) {
+      var t = subst.getReplacement(x);
+      if (!t.isValue() && !t.isVariable()) return;
+    }
+
+    // the combined constraint must be satisfiable for this to give a critical pair
+    var con = TheoryFactory.createConjunction(
+      target.queryConstraint().substitute(subst),
+      source.queryConstraint().substitute(subst));
+    var result = TermAnalyser.satisfy(con, Settings.smtSolver);
+    if (result instanceof TermAnalyser.Result.NO) return;
+
+    // all requirements are satisfied; compute the critical pair
+    var lhs = source.queryLeftSide().replaceSubterm(
+      position.append(new FinalPos(subterm.numberArguments() - taLhs.numberArguments())),
+      target.queryRightSide()).substitute(subst);
+    var rhs = source.queryRightSide().substitute(subst);
+    if (_nontrivial && lhs.equals(rhs)) return;
+
+    var top = source.queryLeftSide().substitute(subst);
+    _cps.add(new CriticalPeak(top, lhs, rhs, con));
+  }
+
+  /**
+   * Given that [subterm] is the subterm at position [position] of the left-hand side of rule, and
+   * that rule has been renamed to be disjoint from all other rules in [trs], this function stores
+   * all critical peaks caused by an overlap between [subterm] and the root of another (or the
+   * same) rule.
+   *
+   * To avoid duplicates, this function does not consider root overlaps other than overlaps with a
+   * calculation rule.
+   */
+  private void generateCriticalPairsForSubterm(Term subterm, Position pos, TRS trs, Rule rule) {
+    if (!subterm.isFunctionalTerm()) return;
+    FunctionSymbol root = subterm.queryRoot();
+    int nargs = subterm.numberArguments();
+
+    /* Here only nonempty positions are considered for defined symbols;
+     * empty ones are handled separately. */
+    if (!pos.isEmpty()) {
+      trs.queryRulesForSymbol(root, false).forEach(target -> {
+        if (nargs >= target.queryLeftSide().numberArguments()) {
+          generateCpForDefinedSymbol(subterm, pos, rule, target);
+        }
+      });
+    }
+
+    /* For calculation symbols, a critical pair is generated more "lightly". */
+    if (root.isTheorySymbol() && nargs > 0 && subterm.queryType().isBaseType() &&
+        subterm.queryArguments().stream().allMatch(t -> t.isValue() || t.isVariable())) {
+      /* The name _z is arbitrary and included for testing. */
+      var z = TermFactory.createVar("_z", subterm.queryType());
+      _cps.add(new CriticalPeak(
+        rule.queryLeftSide(),
+        rule.queryLeftSide().replaceSubterm(pos, z),
+        rule.queryRightSide(),
+        TheoryFactory.createConjunction(
+          TheoryFactory.createEquality(z, subterm),
+          rule.queryConstraint())));
+    }
+  }
+
+  /**
+   * This considers a rule overlap between a rule with (a renamed version of) itself, i.e., an
+   * overlap at the empty position.  Note that for this to give a critical pair, there must be a
+   * variable on the rhs that does not occur on the lhs.
+   */
+  private void generateCriticalPairsForSelfRootOverlap(Rule renamed, Rule original) {
+    if (original.queryRightReplaceablePolicy() == TrsProperties.FreshRight.NONE) return;
+    generateCpForDefinedSymbol(renamed.queryLeftSide(), new FinalPos(0), renamed, original);
+  }
+
+  /**
+   * Given that rule1 and rule2 are distinct rules, and also with distinct variables, this
+   * computes the critical pair between them generated by a root overlap, if any.
+   */
+  private void generateCriticalPairsForRootOverlap(Rule rule1, Rule rule2) {
+    /* Note that it is vital to check which rule's lhs has more arguments than the other's
+     * before calling generateCpForDefinedSymbol, due to possible partial application. */
+    if (rule1.queryLeftSide().numberArguments() >= rule2.queryLeftSide().numberArguments()) {
+      generateCpForDefinedSymbol(rule1.queryLeftSide(), new FinalPos(0), rule1, rule2);
+    }
+    else {
+      generateCpForDefinedSymbol(rule2.queryLeftSide(), new FinalPos(0), rule2, rule1);
+    }
+  }
+
+  /**
+   * Generates a renamed version of the given rule.  (Note that rules are limited to
+   * variables, not meta-variables.)
+   */
   private static Rule renameRule(Rule rule) {
     var subst = TermFactory.createEmptySubstitution();
     for (var x : rule.queryAllReplaceables()) {
@@ -52,43 +168,6 @@ public class CriticalPeaksFinder {
   }
 
   /**
-   * Generates a critical peak (if possible) and stores it in _cps.
-   * @param subterm is at position in source's lhs.
-   * @param target's lhs must not have more arguments than subterm does.
-   * @param nontrivial indicates whether trivial critical peaks are excluded.
-   */
-  private void generateCpForDefinedSymbol(Term subterm, Position position,
-                                          Rule source, Rule target, boolean nontrivial) {
-    var taLhs = target.queryLeftSide();
-    var subst = MguFinder.mgu(taLhs, subterm.queryImmediateHeadSubterm(taLhs.numberArguments()));
-    if (subst == null) return;
-
-    for (var x : target.queryLVars()) {
-      var t = subst.getReplacement(x);
-      if (!t.isValue() && !t.isVariable()) return;
-    }
-    for (var x : source.queryLVars()) {
-      var t = subst.getReplacement(x);
-      if (!t.isValue() && !t.isVariable()) return;
-    }
-
-    var con = TheoryFactory.createConjunction(
-      target.queryConstraint().substitute(subst),
-      source.queryConstraint().substitute(subst));
-    var result = TermAnalyser.satisfy(con, Settings.smtSolver);
-    if (result instanceof TermAnalyser.Result.NO) return;
-
-    var lhs = source.queryLeftSide().replaceSubterm(
-      position.append(new FinalPos(subterm.numberArguments() - taLhs.numberArguments())),
-      target.queryRightSide()).substitute(subst);
-    var rhs = source.queryRightSide().substitute(subst);
-    if (nontrivial && lhs.equals(rhs)) return;
-
-    var top = source.queryLeftSide().substitute(subst);
-    _cps.add(new CriticalPeak(top, lhs, rhs, con));
-  }
-
-  /**
    * The method for critical peaks, publicly accessible.
    * @return the critical peaks of trs, including trivial ones unless nontrivial is true.
    */
@@ -98,68 +177,25 @@ public class CriticalPeaksFinder {
                               TrsProperties.Root.THEORY, TrsProperties.FreshRight.CVARS)) {
       throw new IllegalArgumentException("Invalid input TRS.");
     }
-    var finder = new CriticalPeaksFinder();
+    
+    var finder = new CriticalPeaksFinder(nontrivial);
     var trsRul = trs.queryRules();
     var nRules = trsRul.size();
+
     for (int i = 0; i < nRules; i++) {
-      var renamed = renameRule(trsRul.get(i));
-      renamed.queryLeftSide().visitSubterms((s, p) -> {
-        if (s.isFunctionalTerm()) {
-          /* Here only nonempty positions are considered for defined symbols;
-           * empty ones are handled separately.
-           */
-          if (!p.isEmpty()) {
-            trs.queryRulesForSymbol(s.queryRoot(), false).forEach(target -> {
-              if (s.numberArguments() >= target.queryLeftSide().numberArguments()) {
-                finder.generateCpForDefinedSymbol(s, p, renamed, target, nontrivial);
-              }
-            });
-          }
-          /* For calculation symbols, a critical pair is generated more "lightly". */
-          if (s.queryRoot().isTheorySymbol() &&
-            s.numberArguments() > 0 &&
-            s.queryType().isBaseType() &&
-            s.queryArguments().stream().allMatch(
-              t -> t.isValue() || t.isVariable())) {
-            /* The name _z is arbitrary and included for testing. */
-            var z = TermFactory.createVar("_z", s.queryType());
-            finder._cps.add(new CriticalPeak(
-              renamed.queryLeftSide(),
-              renamed.queryLeftSide().replaceSubterm(p, z),
-              renamed.queryRightSide(),
-              TheoryFactory.createConjunction(
-                TheoryFactory.createEquality(z, s),
-                renamed.queryConstraint())));
-          }
-        }
-      });
-      /* The first case for defined symbols at the root, i.e., the empty position:
-       * (a renaming of) the same rule at the root,
-       * in which case there must be a variable on the rhs but not on the lhs.
-       */
-      if (trsRul.get(i).queryRightReplaceablePolicy() != TrsProperties.FreshRight.NONE) {
-        finder.generateCpForDefinedSymbol(
-          renamed.queryLeftSide(), new FinalPos(0),
-          renamed, trsRul.get(i), nontrivial);
-      }
-      /* The second case: a different rule.
-       * All _unordered_ pairs of distinct rules are considered to avoid duplicates modulo symmetry.
-       * Note that it is vital to check which rule's lhs has more arguments than the other's
-       * before calling generateCpForDefinedSymbol, due to possible partial application.
-       */
+      Rule renamed = renameRule(trsRul.get(i));
+
+      // All non-root overlaps, or root overlaps with a calculation rule.
+      renamed.queryLeftSide().visitSubterms((s, p) ->
+        finder.generateCriticalPairsForSubterm(s, p, trs, renamed));
+      
+      // Overlaps of a rule with itself at the root.
+      finder.generateCriticalPairsForSelfRootOverlap(renamed, trsRul.get(i));
+
+      // Overlaps of renamed with a different rule at the root.
+      // All _unordered_ pairs of distinct rules are considered to avoid duplicates modulo symmetry.
       for (int j = i + 1; j < nRules; j++) {
-        var target = trsRul.get(j);
-        if (renamed.queryLeftSide().numberArguments()
-          >= target.queryLeftSide().numberArguments()) {
-          finder.generateCpForDefinedSymbol(
-            renamed.queryLeftSide(), new FinalPos(0),
-            renamed, target, nontrivial);
-        }
-        else {
-          finder.generateCpForDefinedSymbol(
-            target.queryLeftSide(), new FinalPos(0),
-            target, renamed, nontrivial);
-        }
+        finder.generateCriticalPairsForRootOverlap(renamed, trsRul.get(j));
       }
     }
     return finder._cps;
