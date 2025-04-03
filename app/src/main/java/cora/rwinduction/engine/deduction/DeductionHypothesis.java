@@ -64,8 +64,8 @@ public final class DeductionHypothesis extends DeductionStep {
       new ConstrainedReductionHelper(left, right, hequ.getConstraint(), hypo.getRenamingCopy(),
                                      "induction hypothesis", proof, pos, subst);
     EquationContext original = proof.getProofState().getTopEquation();
-    if (!helper.extendSubstitution(m)) return Optional.empty();
-    helper.makePreAlter();
+    if (!helper.extendSubstitutionBasic(m)) return Optional.empty();
+    helper.extendSubstitutionWithConstraintDefinitions();
     if (!helper.checkEverythingSubstituted(m)) return Optional.empty();
 
     Pair<Equation,Renaming> neweqdata = helper.reduce();
@@ -158,8 +158,6 @@ public final class DeductionHypothesis extends DeductionStep {
   @Override
   public boolean verify(Optional<OutputModule> module) {
     if (_helper.constraintIsTrue()) return true;
-    DeductionAlterDefinitions dad = _helper.queryPreAlter();
-    if (dad != null && !dad.verify(module)) return false;
     Term constraint = _equ.getEquation().getConstraint();
     return _helper.checkConstraintGoodForReduction(module, Settings.smtSolver);
   }

@@ -80,7 +80,8 @@ class ConstrainedReductionHelperTest {
     subst.extend(TermFactory.createVar("a"), TermFactory.createVar("b"));
     assertTrue(crh.querySubstitution().domain().isEmpty());
     Optional<OutputModule> o = Optional.of(module);
-    assertTrue(crh.extendSubstitution(o));
+    assertTrue(crh.extendSubstitutionBasic(o));
+    assertFalse(crh.extendSubstitutionWithConstraintDefinitions());
     assertFalse(crh.makePreAlter());
     assertTrue(module.toString().equals(""));
   }
@@ -97,7 +98,7 @@ class ConstrainedReductionHelperTest {
         rule.queryConstraint(), pp.getContext().getRenaming("O2"), "thingy", pp, pos, subst);
     assertTrue(crh.querySubstitution().domain().isEmpty());
     Optional<OutputModule> o = Optional.of(module);
-    assertFalse(crh.extendSubstitution(o));
+    assertFalse(crh.extendSubstitutionBasic(o));
     assertTrue(module.toString().equals(
       "The thingy does not apply: constant sum2 is not instantiated by sum1.\n\n"));
   }
@@ -117,7 +118,8 @@ class ConstrainedReductionHelperTest {
       "a > 1 ∧ d = a - b ∧ b != 0 ∧ d + 1 = e", renaming, _trs);
     ConstrainedReductionHelper crh =
       new ConstrainedReductionHelper(left, right, constraint, renaming, "XX", pp, pos, subst);
-    assertTrue(crh.extendSubstitution(o));
+    assertTrue(crh.extendSubstitutionBasic(o));
+    assertTrue(crh.extendSubstitutionWithConstraintDefinitions());
     assertFalse(crh.makePreAlter());
     Renaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Substitution gamma = crh.querySubstitution();
@@ -128,7 +130,6 @@ class ConstrainedReductionHelperTest {
     assertTrue(gamma.get(renaming.getReplaceable("e")) == eqnaming.getReplaceable("a"));
   }
 
-/*
   @Test
   public void testExtendWithCalculatedDefinitions() {
     PartialProof pp = setupProof("iter(x, 1, sum2(0)) = 0 | x != 0");
@@ -143,15 +144,14 @@ class ConstrainedReductionHelperTest {
       "c = 0 ∧ d = b * 2 + c ∧ e = q + 2", renaming, _trs);
     ConstrainedReductionHelper crh =
       new ConstrainedReductionHelper(left, right, constraint, renaming, "XX", pp, pos, subst);
-    assertTrue(crh.extendSubstitution(o));
-    assertFalse(crh.makePreAlter());
+    assertTrue(crh.extendSubstitutionBasic(o));
+    assertTrue(crh.extendSubstitutionWithConstraintDefinitions());
     Substitution gamma = crh.querySubstitution();
     assertTrue(gamma.get(renaming.getReplaceable("b")).toValue().getInt() == 1);
     assertTrue(gamma.get(renaming.getReplaceable("c")).toValue().getInt() == 0);
     assertTrue(gamma.get(renaming.getReplaceable("d")).toValue().getInt() == 2);
     assertTrue(gamma.get(renaming.getReplaceable("e")) == null);
   }
-*/
 
   @Test
   public void testMakePreAlter() {
@@ -168,7 +168,7 @@ class ConstrainedReductionHelperTest {
     ConstrainedReductionHelper crh =
       new ConstrainedReductionHelper(left, right, constraint, renaming, "XX", pp, pos, subst);
     Equation equation = pp.getProofState().getTopEquation().getEquation();
-    assertTrue(crh.extendSubstitution(o));
+    assertTrue(crh.extendSubstitutionBasic(o));
     assertTrue(crh.makePreAlter());
     assertTrue(crh.queryPreAlter().commandDescription().equals(
       "alter add a = u + 1, b1 = v + a"));
@@ -258,7 +258,8 @@ class ConstrainedReductionHelperTest {
     subst.extend(renaming.getVariable("a"), eqnaming.getVariable("z"));
     ConstrainedReductionHelper crh =
       new ConstrainedReductionHelper(left, right, constraint, renaming, "XX", pp, pos, subst);
-    assertTrue(crh.extendSubstitution(o));
+    assertTrue(crh.extendSubstitutionBasic(o));
+    assertFalse(crh.extendSubstitutionWithConstraintDefinitions());
     assertFalse(crh.makePreAlter());
     MySmtSolver solver = new MySmtSolver(true);
     assertTrue(crh.checkConstraintGoodForReduction(o, solver));

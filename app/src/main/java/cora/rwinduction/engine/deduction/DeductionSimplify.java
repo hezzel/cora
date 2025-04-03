@@ -60,7 +60,7 @@ public final class DeductionSimplify extends DeductionStep {
         rule.queryConstraint(), proof.getContext().getRenaming(ruleName), "rule", proof, pos,
         subst);
     
-    if (!helper.extendSubstitution(m)) return Optional.empty();
+    if (!helper.extendSubstitutionBasic(m)) return Optional.empty();
     helper.makePreAlter();
 
     return Optional.of(new DeductionSimplify(proof.getProofState(), proof.getContext(), ruleName,
