@@ -364,10 +364,40 @@ class ConstrainedReductionHelper {
     TermSmtTranslator translator = new TermSmtTranslator();
     translator.requireImplication(equationConstraint, substitutedconstr);
     if (solver.checkValidity(translator.queryProblem())) return true;
-    module.ifPresent(o -> o.println("The " + _kind + " does not apply: I could not prove that " +
-      "%a %{Vdash} %a.", Printer.makePrintable(equationConstraint, eqrenaming),
-      Printer.makePrintable(substitutedconstr, eqrenaming)));
+    if (module.isPresent()) {
+      ArrayList<Term> badConstraints = new ArrayList<Term>();
+      storeUnsatisfiedConstraints(equationConstraint, substitutedconstr, badConstraints, solver);
+      OutputModule m = module.get();
+      m.print("The " + _kind + " does not apply: I could not prove that ");
+      for (int i = 0; i < badConstraints.size(); i++) {
+        if (i != 0) m.print(" nor ");        
+        m.print("%a %{Vdash} %a", Printer.makePrintable(equationConstraint, eqrenaming),
+          Printer.makePrintable(badConstraints.get(i), eqrenaming));
+      }
+      m.println(".");
+    }
     return false;
+  }
+
+  /**
+   * Helper function for checkImplication: given that conclusion = φ1 ∧...∧ φn, this stores those
+   * φi into storage for which premise ⇒ φi is not valid.
+   */
+  private void storeUnsatisfiedConstraints(Term premise, Term conclusion,
+                                           ArrayList<Term> storage, SmtSolver solver) {
+    if (conclusion.isFunctionalTerm()) {
+      CalculationSymbol calc = conclusion.queryRoot().toCalculationSymbol();
+      if (calc != null && calc.queryKind() == CalculationSymbol.Kind.AND) {
+        for (int i = 1; i <= conclusion.numberArguments(); i++) {
+          storeUnsatisfiedConstraints(premise, conclusion.queryArgument(i), storage, solver);
+        }
+        return;
+      }
+    }
+
+    TermSmtTranslator translator = new TermSmtTranslator();
+    translator.requireImplication(premise, conclusion);
+    if (!solver.checkValidity(translator.queryProblem())) storage.add(conclusion);
   }
 
   /**
