@@ -21,6 +21,7 @@ import java.util.Set;
 
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Renaming;
+import charlie.terms.TheoryFactory;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 
@@ -40,7 +41,10 @@ class ProofContextTest {
       "add :: (| nat , nat |) -> nat\n" +
       "add( (|x, o|) ) -> x\n" +
       "add( (|x, s(y) |) ) -> add( (| s(x),y |) )\n" +
-      "something :: Int -> Int -> (| Bool , Int |)\n");
+      "something :: Int -> Int -> (| Bool , Int |)\n" +
+      "partial :: Int -> Int -> Int\n" +
+      "partial(x) -> sum1\n"
+    );
   }
 
   @Test
@@ -56,6 +60,19 @@ class ProofContextTest {
     assertFalse(funcs.contains(trs.lookupSymbol("add")));
     funcs = context.getConstructors(CoraInputReader.readType("(|Bool,Int|)"));
     assertTrue(funcs.size() == 1);
+  }
+
+  @Test
+  public void testRuleArity() {
+    TRS trs = setupTRS();
+    ProofContext context = new ProofContext(trs, lst -> new Renaming(Set.of()));
+    assertTrue(context.queryRuleArity(trs.lookupSymbol("o")) == 1);
+    assertTrue(context.queryRuleArity(trs.lookupSymbol("something")) == 3);
+    assertTrue(context.queryRuleArity(trs.lookupSymbol("add")) == 1);
+    assertTrue(context.queryRuleArity(trs.lookupSymbol("iter")) == 3);
+    assertTrue(context.queryRuleArity(trs.lookupSymbol("partial")) == 1);
+    assertTrue(context.queryRuleArity(TheoryFactory.plusSymbol) == 2);
+    assertTrue(context.queryRuleArity(TheoryFactory.minusSymbol) == 1);
   }
 }
 

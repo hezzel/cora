@@ -100,7 +100,8 @@ class ConstrainedReductionHelperTest {
     Optional<OutputModule> o = Optional.of(module);
     assertFalse(crh.extendSubstitutionBasic(o));
     assertTrue(module.toString().equals(
-      "The thingy does not apply: constant sum2 is not instantiated by sum1.\n\n"));
+      "The thingy does not apply due to failed matching (matching debug info says " +
+      "constant sum2 is not instantiated by sum1.)\n\n"));
   }
 
   @Test

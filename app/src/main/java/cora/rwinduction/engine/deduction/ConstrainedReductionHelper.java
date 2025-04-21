@@ -138,7 +138,8 @@ class ConstrainedReductionHelper {
 
     String problem = _left.match(s, _substitution);
     if (problem != null) {
-      m.ifPresent(o -> o.println("The " + _kind + " does not apply: %a", problem));
+      m.ifPresent(o -> o.println("The " + _kind + " does not apply due to failed matching " +
+        "(matching debug info says %a)", problem));
       return false;
     }
 
