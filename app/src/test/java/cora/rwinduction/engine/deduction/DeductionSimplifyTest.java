@@ -189,7 +189,8 @@ class DeductionSimplifyTest {
     assertTrue(DeductionSimplify.createStep(pp, Optional.of(module), "O3", EquationPosition.TOPLEFT,
                                             TermFactory.createEmptySubstitution()).isEmpty());
     assertTrue(module.toString().equals(
-      "The rule does not apply: constant sum2 is not instantiated by sum1.\n\n"));
+      "The rule does not apply due to failed matching (matching debug info says constant sum2 " +
+      "is not instantiated by sum1.)\n\n"));
   }
 
   @Test

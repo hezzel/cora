@@ -38,6 +38,7 @@ public class ProofContext {
   private final HashMap<String,Integer> _nameToRule = new HashMap<String,Integer>();
   private final HashMap<Type,Set<FunctionSymbol>> _constructors =
     new HashMap<Type,Set<FunctionSymbol>>();
+  private final HashMap<FunctionSymbol,Integer> _arities = new HashMap<FunctionSymbol,Integer>();
   private VariableNamer _namer = new VariableNamer();
 
   /**
@@ -65,6 +66,10 @@ public class ProofContext {
       _ruleNames.add(name);
       _nameToRule.put(name, i);
       _ruleRenamings.add(renaming);
+      if (rule.queryLeftSide().isFunctionalTerm()) {
+        FunctionSymbol f = rule.queryLeftSide().queryRoot();
+        if (!_arities.containsKey(f)) _arities.put(f, rule.queryLeftSide().numberArguments());
+      }
     }
   }
 
@@ -121,6 +126,20 @@ public class ProofContext {
     Set<FunctionSymbol> ret = _constructors.get(type);
     if (ret == null) return Set.of();
     return ret;
+  }
+
+  /**
+   * This returns the arity of the given function symbol in the underlying TRS.  This assumes that
+   * the function symbol has a consistent arity; if not, any of the possible arities may be returned
+   * (but note that a consistent arity is a requirement for the application of rewriting induction).
+   *
+   * For constructors, we return 1 more than the constructor's arity.  For calculation symbols, we
+   * return the symbol's arity.
+   */
+  public int queryRuleArity(FunctionSymbol symbol) {
+    if (_arities.containsKey(symbol)) return _arities.get(symbol);
+    if (symbol.isTheorySymbol() && !symbol.isValue()) return symbol.queryArity();
+    return symbol.queryArity() + 1;
   }
 
   /** This returns a class for deduction rules to consistently name their variables. */

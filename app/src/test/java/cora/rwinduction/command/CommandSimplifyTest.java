@@ -113,7 +113,8 @@ class CommandSimplifyTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     assertTrue(createStep(module, "simplify O5 R.2 with [x:=1]").isEmpty());
     assertTrue(module.toString().equals(
-      "The rule does not apply: Variable x mapped both to 1 and to z.\n\n"));
+      "The rule does not apply due to failed matching (matching debug info says " +
+      "Variable x mapped both to 1 and to z.)\n\n"));
   }
 
   @Test

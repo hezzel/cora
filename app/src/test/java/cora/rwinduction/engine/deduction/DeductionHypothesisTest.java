@@ -292,8 +292,9 @@ class DeductionHypothesisTest {
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
                        EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).isEmpty());
-    assertTrue(module.toString().equals("The induction hypothesis does not apply: x does not " +
-      "instantiate sum1(x) (not an application).\n\n"));
+    assertTrue(module.toString().equals("The induction hypothesis does not apply due to failed " +
+      "matching (matching debug info says x does not instantiate sum1(x) (not an application).)" +
+      "\n\n"));
   }
 
   @Test
@@ -303,8 +304,8 @@ class DeductionHypothesisTest {
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
                        EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).isEmpty());
-    assertTrue(module.toString().equals("The induction hypothesis does not apply: constant sum2 " +
-      "is not instantiated by sum1.\n\n"));
+    assertTrue(module.toString().equals("The induction hypothesis does not apply due to failed " +
+      "matching (matching debug info says constant sum2 is not instantiated by sum1.)\n\n"));
   }
 
   @Test

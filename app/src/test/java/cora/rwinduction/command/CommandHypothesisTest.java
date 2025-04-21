@@ -106,8 +106,8 @@ class CommandHypothesisTest {
   public void testNotAMatch() {
     OutputModule module = OutputModule.createUnicodeModule(_trs);
     assertTrue(createStep(module, "hypothesis H29 with [y:=x]").isEmpty());
-    assertTrue(module.toString().equals("The induction hypothesis does not apply: " +
-      "Variable x has a different type from sum1(x).\n\n"));
+    assertTrue(module.toString().equals("The induction hypothesis does not apply due to failed " +
+      "matching (matching debug info says Variable x has a different type from sum1(x).)\n\n"));
   }
 
   private ArrayList<Command.TabSuggestion> getSuggestions(String args) {

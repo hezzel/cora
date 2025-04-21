@@ -28,8 +28,8 @@ import java.util.Optional;
 import java.util.Scanner;
 import charlie.exceptions.NullStorageException;
 import charlie.util.ExceptionLogger;
-import charlie.smt.*;
 import charlie.util.ProcessCaller;
+import charlie.smt.*;
 import static charlie.solvesmt.SMTLibString.Version.V26;
 import static charlie.solvesmt.ProcessSmtSolver.PhysicalSolver.Z3;
 
