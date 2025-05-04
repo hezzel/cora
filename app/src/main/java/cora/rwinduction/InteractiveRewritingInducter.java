@@ -79,6 +79,7 @@ public class InteractiveRewritingInducter {
     clst.registerCommand(new CommandHypothesis());
     clst.registerCommand(new CommandEqdelete());
     clst.registerCommand(new CommandAlter());
+    clst.registerCommand(new CommandPostulate());
 
     // other commands
     clst.registerCommand(new CommandUndo());
@@ -142,6 +143,7 @@ public class InteractiveRewritingInducter {
       while (!status.done()) {
         while (status.skipSeparator());   // read past ; if there is one
         String cmdname = status.nextWord();
+        if (cmdname == null) break;
         Command cmd = _cmdList.queryCommand(cmdname);
         if (cmd == null) {
           _output.println("Unknown command: %a.  Use \":help commands\" to list available " +

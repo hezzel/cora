@@ -17,6 +17,7 @@ package cora.rwinduction.parser;
 
 import java.util.Set;
 import charlie.exceptions.ParseException;
+import charlie.util.Pair;
 import charlie.parser.lib.Token;
 import charlie.parser.lib.ParsingStatus;
 import charlie.parser.Parser.ParserTerm;
@@ -27,6 +28,7 @@ import charlie.terms.*;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
+import cora.rwinduction.engine.Equation;
 
 /**
  * This class keeps track of a string and the progrss made while parsing through it.  This is
@@ -185,6 +187,24 @@ public class CommandParsingStatus {
     catch (ParseException e) {
       if (vname != null) module.println("Unknown variable: " + vname);
       else printErrorText(module, e);
+      return null;
+    }
+  }
+
+  /**
+   * This method reads an equation from the underlying string at the current parsing position, and
+   * returns the result.  If this fails, it instead prints an error message to the given
+   * OutputModule and returns null, and the status is not advanced.
+   */
+  public Pair<Equation,Renaming> readEquation(TRS trs, OutputModule module) {
+    ParsingStatus status = makeStatus();
+    try {
+      Pair<Equation,Renaming> ret = EquationParser.parseEquation(status, trs);
+      if (ret != null) recoverPosition(status);
+      return ret;
+    }
+    catch (ParseException e) {
+      printErrorText(module, e);
       return null;
     }
   }
