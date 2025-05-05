@@ -25,9 +25,11 @@ import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.Renaming;
 import charlie.terms.TermFactory;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.DeductionStep;
 import cora.rwinduction.engine.VariableNamer;
 import cora.rwinduction.engine.deduction.DeductionAlterDefinitions;
+import cora.rwinduction.engine.deduction.DeductionAlterRename;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command alter. */
@@ -39,7 +41,8 @@ public class CommandAlter extends Command {
   
   @Override
   public FixedList<String> callDescriptor() {
-    return FixedList.of("alter add <var> = <term> , ..., <var> = <term>");
+    return FixedList.of("alter add <var> = <term> , ..., <var> = <term>",
+                        "alter rename <name> := <newname> , ... , <name> := <newname>");
   }
   
   @Override
@@ -50,7 +53,7 @@ public class CommandAlter extends Command {
            "solver.  More interesting varieties of ALTER may be added in the future.  For " +
            "ALTER ADD, all variables that you introduce must be fresh, while the terms may use " +
            "only variables that already occur in the equation context, or that have been " +
-           "introduced by definition to the left. Note that spaces are required in this syntax.";
+           "introduced by definition to the left.";
   }
 
   @Override
@@ -65,6 +68,10 @@ public class CommandAlter extends Command {
       Optional<DeductionAlterDefinitions> ostep = createAddStep(input);
       if (!ostep.isEmpty()) step = ostep.get();
     }
+    if (action.equals("rename")) {
+      Optional<DeductionAlterRename> rstep = createRenameStep(input);
+      if (!rstep.isEmpty()) step = rstep.get();
+    }
     if (step == null) return false;
     return step.verifyAndExecute(_proof, Optional.of(_module));
   }
@@ -75,10 +82,11 @@ public class CommandAlter extends Command {
       new ArrayList<Pair<Pair<Variable,String>,Term>>();
     Renaming renaming = _proof.getProofState().getTopEquation().getRenamingCopy();
     VariableNamer namer = _proof.getContext().getVariableNamer();
+    Optional<OutputModule> om = Optional.of(_module);
     while (true) {
       String varname = readFreshName(input, renaming);
       if (varname == null) return Optional.empty();
-      if (!expect(input, "=")) return Optional.empty();
+      if (!input.expect("=", om)) return Optional.empty();
       Term term = input.readTerm(_proof.getContext().getTRS(), renaming, _module);
       if (term == null) return Optional.empty();
       VariableNamer.VariableInfo info = namer.getVariableInfo(varname);
@@ -90,10 +98,10 @@ public class CommandAlter extends Command {
       Pair<Variable,String> varinfo = new Pair<Variable,String>(x, varname);
       definitions.add(new Pair<Pair<Variable,String>,Term>(varinfo, term));
       if (input.commandEnded()) break;
-      if (!expect(input, ",")) return Optional.empty();
+      if (!input.expect(",", om)) return Optional.empty();
     }
 
-    return DeductionAlterDefinitions.createStep(_proof, Optional.of(_module), definitions);
+    return DeductionAlterDefinitions.createStep(_proof, om, definitions);
   }
 
   /**
@@ -102,16 +110,8 @@ public class CommandAlter extends Command {
    */
   private String readFreshName(CommandParsingStatus input, Renaming renaming) {
     int p = input.currentPosition();
-    String varname = input.nextWord();
-    if (varname == null || varname.equals("")) {
-      _module.println("Unexpected end of input at position %a; I expected a variable name.", p);
-      return null;
-    }
-    if (varname.indexOf('=') >= 0) {
-      _module.println("Unexpected input at position %a.  Please use spaces around the = " +
-        "in this command.", input.previousPosition());
-      return null;
-    }
+    String varname = input.readIdentifier(Optional.of(_module), "fresh variable name");
+    if (varname == null) return null;
     if (renaming.getReplaceable(varname) != null) {
       _module.println("Variable %a at position %a is already known in this equation " +
         "context.  Please choose a fresh name.", varname, input.previousPosition());
@@ -120,23 +120,21 @@ public class CommandAlter extends Command {
     return varname;
   }
 
-  /**
-   * Helper function for createAddStep: this reads exactly the given string from input, or throws
-   * an error if that's not what the next word is.
-   */
-  private boolean expect(CommandParsingStatus input, String text) {
-    if (input.commandEnded()) {
-      _module.println("Unexpected end of input following token at position %a; I expected %a.",
-        input.previousPosition(), text);
-      return false;
+  /** Handle an alter rename command */
+  Optional<DeductionAlterRename> createRenameStep(CommandParsingStatus input) {
+    ArrayList<Pair<String,String>> names = new ArrayList<Pair<String,String>>();
+    Optional<OutputModule> om = Optional.of(_module);
+    while (true) {
+      String origname = input.readIdentifier(om, "existing variable name");
+      if (origname == null) return Optional.empty();
+      if (!input.expect(":=", om)) return Optional.empty();
+      String newname = input.readIdentifier(om, "fresh variable name");
+      if (newname == null) return Optional.empty();
+      names.add(new Pair<String,String>(origname, newname));
+      if (input.commandEnded()) break;
+      if (!input.expect(",", om)) return Optional.empty();
     }
-    String word = input.nextWord();
-    if (!word.equals(text)) {
-      _module.println("Unexpected input at position %a; I expected %a but got %a.",
-        input.previousPosition(), text, word);
-      return false;
-    }
-    return true;
+    return DeductionAlterRename.createStep(_proof, om, names);
   }
 
   /** Tab suggestions for this command are either variables, =, or a term. */
@@ -144,28 +142,38 @@ public class CommandAlter extends Command {
   public ArrayList<TabSuggestion> suggestNext(String args) {
     ArrayList<TabSuggestion> ret = new ArrayList<TabSuggestion>();
     CommandParsingStatus status = new CommandParsingStatus(args);
-    if (status.commandEnded()) { ret.add(new TabSuggestion("add", "keyword")); return ret; }
-    status.nextWord();
+    if (status.commandEnded()) {
+      ret.add(new TabSuggestion("add", "keyword"));
+      ret.add(new TabSuggestion("rename", "keyword"));
+      return ret;
+    }
+    String w = status.nextWord();
+    if (w.equals("add")) addAddSuggestions(status, ret);
+    else if (w.equals("rename")) addRenameSuggestions(status, ret);
+    return ret;
+  }
+
+  /** Tab suggestions once "alter add" has been read. */
+  private void addAddSuggestions(CommandParsingStatus status, ArrayList<TabSuggestion> ret) {
     int kind = 1;
+    Optional<OutputModule> empty = Optional.empty();
     while (kind > 0 && !status.commandEnded()) {
       if (kind == 1) {
-        String name = status.nextWord();
-        if (name == null || name.equals("") || name.indexOf('=') >= 0) kind = -1;
+        String name = status.readIdentifier(empty, "identifier");
+        if (name == null || name.equals("")) kind = -1;
         else kind = 2;
       }
       else if (kind == 2) {
-        String txt = status.nextWord();
-        if (txt == null || !txt.equals("=")) kind = -1;
-        else kind = 3;
+        if (status.expect("=", empty)) kind = 3;
+        else kind = -1;
       }
       else if (kind == 3) {
         if (status.skipTerm()) kind = 4;
         else break;
       }
       else {
-        String txt = status.nextWord();
-        if (txt == null || !txt.equals(",")) kind = -1;
-        else kind = 1;
+        if (status.expect(",", empty)) kind = 1;
+        else { status.nextWord(); kind = -1; }
       }
     }
     if (kind == 1) ret.add(new TabSuggestion(null, "variable name"));
@@ -176,7 +184,43 @@ public class CommandAlter extends Command {
       ret.add(new TabSuggestion(",", "keyword"));
       ret.add(endOfCommandSuggestion());
     }
-    return ret;
+  }
+
+  /** Tab suggestions once "alter rename" has been read. */
+  private void addRenameSuggestions(CommandParsingStatus status, ArrayList<TabSuggestion> ret) {
+    int kind = 1;
+    Optional<OutputModule> empty = Optional.empty();
+    while (kind > 0 && !status.commandEnded()) {
+      if (kind == 1 || kind == 3) {
+        String name = status.readIdentifier(empty, "identifier");
+        if (name == null || name.equals("")) kind = -1;
+        else kind++;
+      }
+      else if (kind == 2) {
+        if (status.expect(":=", empty)) kind = 3;
+        else kind = -1;
+      }
+      else {
+        if (status.expect(",", empty)) kind = 1;
+        else { status.nextWord(); kind = -1; }
+      }
+    }
+    if (kind == 1) {
+      if (_proof.getProofState().getEquations().isEmpty()) {
+        ret.add(new TabSuggestion(null, "existing variable name"));
+      }
+      else {
+        for (String x : _proof.getProofState().getTopEquation().getRenamingCopy().range()) {
+          ret.add(new TabSuggestion(x, "existing variable name"));
+        }
+      }
+    }
+    if (kind == 2) ret.add(new TabSuggestion(":=", "keyword"));
+    if (kind == 3) ret.add(new TabSuggestion(null, "fresh variable name"));
+    if (kind == 4) {
+      ret.add(new TabSuggestion(",", "keyword"));
+      ret.add(endOfCommandSuggestion());
+    }
   }
 }
 
