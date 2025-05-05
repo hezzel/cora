@@ -17,6 +17,7 @@ package cora.rwinduction.parser;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.Optional;
 
 import charlie.terms.*;
 import charlie.trs.TRS;
@@ -98,6 +99,22 @@ class CommandParsingStatusTest {
     assertTrue(status.nextWord().equals("aa"));
   }
 
+  @Test
+  public void testExpect() {
+    CommandParsingStatus status = new CommandParsingStatus("ak:jfda   11 #1341∀Ê ; aa");
+    OutputModule module = OutputModule.createUnicodeModule(trs);
+    Optional<OutputModule> om = Optional.of(module);
+    assertTrue(status.expect("ak:", om));
+    assertTrue(status.expect("jfda ", om));
+    assertTrue(status.expect("11", om));
+    assertFalse(status.expect("#1341AE", om));
+    assertTrue(status.expect(";", om));
+    assertTrue(status.expect("a", om));
+    assertTrue(status.expect("a", om));
+    assertTrue(module.toString().equals(
+      "Unexpected input at position 14; I expected #1341AE but got #1341∀Ê.\n\n"));
+  }
+
   // ==============================================================================================
   // reading function symbols
 
@@ -120,6 +137,33 @@ class CommandParsingStatusTest {
       "Parsing error at position 1: Undeclared symbol: a.  Type cannot easily be deduced from context.\n\n" +
       "Parsing error at position 9: Undeclared symbol: b.  Type cannot easily be deduced from context.\n\n" +
       "Parsing error at position 10: Expected function symbol (or variable) name but got end of input.\n\n"));
+  }
+
+  // ==============================================================================================
+  // reading identifiers
+
+  @Test
+  public void testReadIdentifier() {
+    CommandParsingStatus status = new CommandParsingStatus("xx   aaa b sum 12 test - m:eh");
+    OutputModule o = OutputModule.createUnicodeModule(trs);
+    Optional<OutputModule> module = Optional.of(o);
+    assertTrue(status.readIdentifier(module, "test1").equals("xx"));
+    assertTrue(status.readIdentifier(module, "test2").equals("aaa"));
+    assertTrue(status.readIdentifier(module, "test3").equals("b"));
+    assertTrue(status.readIdentifier(module, "test4").equals("sum"));
+    assertTrue(status.readIdentifier(module, "test5") == null);
+    status.nextWord();
+    assertTrue(status.readIdentifier(module, "test6").equals("test"));
+    assertTrue(status.readIdentifier(module, "test7") == null);
+    status.nextWord();
+    assertTrue(status.readIdentifier(module, "test8").equals("m"));
+    assertTrue(status.readIdentifier(module, "test9") == null);
+    assertTrue(status.readIdentifier(module, "test10") == null);
+    assertTrue(o.toString().equals(
+      "Parsing error at position 16: Expected test5 but got INTEGER (12).\n\n" +
+      "Parsing error at position 24: Expected test7 but got MINUS (-).\n\n" +
+      "Parsing error at position 27: Expected test9 but got COLON (:).\n\n" +
+      "Parsing error at position 27: Expected test10 but got COLON (:).\n\n"));
   }
 
   // ==============================================================================================

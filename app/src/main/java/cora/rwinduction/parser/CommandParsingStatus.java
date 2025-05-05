@@ -15,6 +15,7 @@
 
 package cora.rwinduction.parser;
 
+import java.util.Optional;
 import java.util.Set;
 import charlie.exceptions.ParseException;
 import charlie.util.Pair;
@@ -101,6 +102,31 @@ public class CommandParsingStatus {
   }
 
   /**
+   * If the next part of _mystring is exactly text, this reads it and then skips any subsequent
+   * whitespace, before returning true.
+   * If not, then the next word is read, a failure message is printed, and false is returned.
+   */
+  public boolean expect(String text, Optional<OutputModule> module) {
+    if (_index + text.length() <= _mystring.length() &&
+        _mystring.substring(_index, _index + text.length()).equals(text)) {
+      _lastIndex = _index;
+      _index = _index + text.length();
+      while (_index < _mystring.length() &&
+             Character.isWhitespace(_mystring.charAt(_index))) _index++;
+      return true;
+    }
+    if (commandEnded()) {
+      module.ifPresent(o -> o.println("Unexpected end of input following token at position %a; " +
+        "I expected %a.", previousPosition(), text));
+      return false;
+    }
+    String word = nextWord();
+    module.ifPresent(o -> o.println("Unexpected input at position %a; I expected %a but got %a.",
+      previousPosition(), text, word));
+    return false;
+  }
+
+  /**
    * This returns the current position in the initial string.  If the string has been fully read,
    * this will return the string's length instead.
    */
@@ -141,6 +167,25 @@ public class CommandParsingStatus {
       module.println("Parsing error at position %a", str.substring(2));
     }
     else module.println("Parsing error: %a", str);
+  }
+
+  /**
+   * This reads a single identifier into a string and returns it, or prints an error message to the
+   * given OutputModule and returns null if the upcoming word is not an identifier.  In the latter
+   * case, the current position is not advanced.
+   */
+  public String readIdentifier(Optional<OutputModule> module, String desc) {
+    ParsingStatus status = makeStatus();
+    try {
+      Token tok = status.expect(CoraTokenData.IDENTIFIER, desc);
+      String ret = tok.getText();
+      recoverPosition(status);
+      return ret;
+    }
+    catch (ParseException e) {
+      module.ifPresent(o -> printErrorText(o, e));
+    }
+    return null;
   }
 
   /**
