@@ -31,11 +31,11 @@ import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /**
- * An base inherit for commands like Simplify and Hypothesis, which have a lot of shared
+ * A base inherit for commands like Simplify and Hypothesis, which have a lot of shared
  * functionality.
  */
 abstract class ReductionCommandInherit extends Command {
-  private String _commandName;
+  protected String _commandName;
   private String _reducibleKind;
 
   protected ReductionCommandInherit(String cmdName, String kind) {

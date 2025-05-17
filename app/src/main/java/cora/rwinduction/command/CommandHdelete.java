@@ -22,45 +22,39 @@ import charlie.terms.Renaming;
 import charlie.terms.Substitution;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.Hypothesis;
-import cora.rwinduction.engine.deduction.DeductionHypothesis;
+import cora.rwinduction.engine.deduction.DeductionHdelete;
 import cora.rwinduction.parser.CommandParsingStatus;
 
-/** The syntax for the deduction command hypothesis (simplification with an element of H). */
-public class CommandHypothesis extends HypothesisCommandInherit {
-  public CommandHypothesis() {
-    super("hypothesis");
+/** The syntax for the deduction command hdelete. */
+public class CommandHdelete extends HypothesisCommandInherit {
+  public CommandHdelete() {
+    super("hdelete");
   }
 
   @Override
   public String helpDescriptor() {
-    return "Use this deduction rule to rewrite the current equation with one of the current " +
-           "induction hypotheses in the proof state, which might apply to some subterm of the " +
-           "left- or right-hand side of the equation.  " +
+    return "Use this deduction rule to rewrite one side of the current equation to the other " +
+           "side, using one of the current induction hypotheses in the proof state.  " +
            "Note that induction hypotheses can be found using :hypotheses, and that positions " +
            "have the form L.<position> or R.<position>.  " +
            "To use the inverse of an induction hypothesis, use for instance H5^{-1} or " +
-           "H5-inverse.";
+           "H5-inverse.  (Or just apply the deduction rule on the other side!)";
   }
 
   @Override
   protected boolean run(CommandParsingStatus input) {
-    Optional<DeductionHypothesis> step = createStep(input);
-    if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, Optional.of(_module));
-  }
-
-  /** Main functionality of run, separated out for the sake of unit testing. */
-  Optional<DeductionHypothesis> createStep(CommandParsingStatus input) {
     // get induction hypothesis and inverse status
     Pair<Hypothesis,Boolean> hypopair = readHypothesis(input);
-    if (hypopair == null) return Optional.empty();
-
+    if (hypopair == null) return false;
     // get EquationPosition and Substitution
     Renaming hypoRenaming = hypopair.fst().getRenamingCopy();
     Pair<EquationPosition,Substitution> restpair = readCommandRemainder(hypoRenaming, input);
-    if (restpair == null) return Optional.empty();
-    return DeductionHypothesis.createStep(_proof, Optional.of(_module), hypopair.fst(),
-                                          hypopair.snd(), restpair.fst(), restpair.snd());
+    if (restpair == null) return false;
+    Optional<DeductionHdelete> step =
+      DeductionHdelete.createStep(_proof, Optional.of(_module), hypopair.fst(),
+                                  hypopair.snd(), restpair.fst(), restpair.snd());
+    if (step.isEmpty()) return false;
+    return step.get().verifyAndExecute(_proof, Optional.of(_module));
   }
 }
 

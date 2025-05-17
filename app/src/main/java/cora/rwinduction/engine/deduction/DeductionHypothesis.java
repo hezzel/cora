@@ -158,7 +158,6 @@ public final class DeductionHypothesis extends DeductionStep {
   @Override
   public boolean verify(Optional<OutputModule> module) {
     if (_helper.constraintIsTrue()) return true;
-    Term constraint = _equ.getEquation().getConstraint();
     return _helper.checkConstraintGoodForReduction(module, Settings.smtSolver);
   }
 

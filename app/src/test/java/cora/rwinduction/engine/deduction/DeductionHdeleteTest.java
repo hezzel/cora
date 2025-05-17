@@ -1,0 +1,318 @@
+/**************************************************************************************************
+ Copyright 2025 Cynthia Kop
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the License for the specific language governing permissions and limitations under the License.
+ *************************************************************************************************/
+
+package cora.rwinduction.engine.deduction;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
+import java.util.Set;
+import java.util.Optional;
+
+import charlie.exceptions.CustomParserException;
+import charlie.util.FixedList;
+import charlie.terms.position.Position;
+import charlie.terms.*;
+import charlie.trs.TRS;
+import charlie.reader.CoraInputReader;
+import charlie.smt.SmtProblem;
+import charlie.smt.SmtSolver;
+import cora.config.Settings;
+import cora.io.OutputModule;
+import cora.rwinduction.parser.EquationParser;
+import cora.rwinduction.engine.*;
+
+class DeductionHdeleteTest {
+  /* ========== SETUP ========== */
+
+  private TRS setupTRS() {
+    return CoraInputReader.readTrsFromString(
+      "sum1 :: Int -> Int\n" +
+      "sum1(x) -> 0 | x <= 0\n" +
+      "sum1(x) -> x + sum1(x-1) | x > 0\n" +
+      "sum2 :: Int -> Int\n" +
+      "sum2(x) -> iter(x, 0, 0)\n" +
+      "iter :: Int -> Int -> Int -> Int\n" +
+      "iter(x, i, z) -> z | i > x\n" +
+      "iter(x, i, z) -> iter(x, i+1, z+i) | i <= x\n" +
+      "toint :: Bool -> Int\n" +
+      "toint(false) -> 0\n" +
+      "toint(true) -> 1\n"
+    );
+  }
+
+  private EquationContext readEquationContext(TRS trs, String leftgr, String lhs, String rhs,
+                                              String constraint, String rightgr) {
+    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
+    Term lg = CoraInputReader.readTermAndUpdateNaming(leftgr, renaming, trs);
+    Term ls = CoraInputReader.readTermAndUpdateNaming(lhs, renaming, trs);
+    Term rs = CoraInputReader.readTermAndUpdateNaming(rhs, renaming, trs);
+    Term co = CoraInputReader.readTermAndUpdateNaming(constraint, renaming, trs);
+    Term rg = CoraInputReader.readTermAndUpdateNaming(rightgr, renaming, trs);
+    return new EquationContext(lg, new Equation(ls, rs, co), rg, 19, renaming);
+  }
+
+  private Renaming makeNaming(TRS trs, List<Term> lst) {
+    TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
+    return printer.generateUniqueNaming(lst);
+  }
+
+  private void addHypothesis(PartialProof proof, String hypodesc) {
+    TRS trs = proof.getContext().getTRS();
+    var pair = EquationParser.parseEquation(hypodesc, trs);
+    Hypothesis hypo = new Hypothesis(pair.fst(), 8, pair.snd());
+    ProofState state = proof.getProofState().addHypothesis(hypo);
+    proof.addProofStep(state, DeductionInduct.createStep(proof, Optional.empty()).get());
+  }
+
+  private PartialProof setupProof(String eqdesc, String hypodesc) {
+    TRS trs = setupTRS();
+    var pair = EquationParser.parseEquation(eqdesc, trs);
+    PartialProof pp = new PartialProof(trs, FixedList.of(new EquationContext(pair.fst(), 19,
+      pair.snd())), lst -> makeNaming(trs, lst));
+    addHypothesis(pp, hypodesc);
+    return pp;
+  }
+
+  private class MySmtSolver implements SmtSolver {
+    private boolean _answer;
+    String _question;
+    public MySmtSolver(boolean answer) { _answer = answer; _question = null; }
+    public Answer checkSatisfiability(SmtProblem problem) { assertTrue(false); return null; }
+    public boolean checkValidity(SmtProblem prob) { _question = prob.toString(); return _answer; }
+  }
+
+  private PartialProof setupProof(String leftgr, String lhs, String rhs, String constr,
+                                  String rightgr, String hypodesc) {
+    TRS trs = setupTRS();
+    PartialProof pp = new PartialProof(trs, FixedList.of(readEquationContext(trs, leftgr, lhs,
+      rhs, constr, rightgr)), lst -> makeNaming(trs, lst));
+    addHypothesis(pp, hypodesc);
+    return pp;
+  }
+
+  /* ========== TESTS ========== */
+
+  @Test
+  public void testSuccessfulStepAtRootWithTrivialSubstitution() {
+    PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0", "sum2(y) = sum1(y) | y > 1");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
+                            EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).get();
+    assertTrue(step.commandDescription().equals("hdelete H8^{-1} L with [y := x]"));
+    assertTrue(module.toString().equals(""));
+    MySmtSolver solver = new MySmtSolver(true);
+    Settings.smtSolver = solver;
+    assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
+    assertTrue(module.toString().equals(""));
+    assertTrue(pp.getProofState().isFinalState());
+    assertTrue(pp.getProofState().getHypotheses().size() == 1);
+    assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
+    assertTrue(solver._question.equals("(0 >= i1) or (i1 >= 2)\n")); // x > 0 => x > 1
+  }
+
+  @Test
+  public void testFailedStepAtRoot() {
+    PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0", "sum1(y) = iter(y, 1, 1) | y > 1");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
+               EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).isEmpty());
+    assertTrue(module.toString().equals(
+      "The induction hypothesis does not match the right-hand side of the equation.\n\n"));
+  }
+
+  @Test
+  public void testSuccessfulStepInContext() throws CustomParserException {
+    PartialProof pp = setupProof("sum1(x) + 13", "sum1(x) + 12", "sum2(y) + 12", "x = y",
+      "sum2(y) + 13", "sum1(a) = sum2(b) | b >= a");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
+                            EquationPosition.parse("L1"), TermFactory.createEmptySubstitution())
+                            .get();
+    assertTrue(step.commandDescription().equals("hdelete H8 L1 with [a := x, b := y]"));
+    assertTrue(module.toString().equals(""));
+    MySmtSolver solver = new MySmtSolver(true);
+    Settings.smtSolver = solver;
+    assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
+    assertTrue(module.toString().equals(""));
+    assertTrue(pp.getProofState().isFinalState());
+    assertTrue(pp.getProofState().getHypotheses().size() == 1);
+    assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
+  }
+
+  @Test
+  public void testFailedContextPositionDoesNotExist() throws CustomParserException {
+    PartialProof pp = setupProof("sum1(sum1(x))", "sum1(sum1(x))", "12 + sum2(y)", "x > y",
+      "sum2(y) + 13", "sum1(a) = sum2(b) | b >= a");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
+               EquationPosition.parse("R2"), TermFactory.createEmptySubstitution()).isEmpty());
+    assertTrue(module.toString().equals("The left-hand side of the equation does not have a " +
+      "position 2.\n\n"));
+  }
+
+  @Test
+  public void testFailedContextSubtermDoesNotMatch() throws CustomParserException {
+    PartialProof pp = setupProof("sum1(sum1(x))", "sum1(y) + 12", "12 + sum2(y)", "x > y",
+      "sum2(y) + 13", "sum1(a) = sum2(b) | b >= a");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
+               EquationPosition.parse("R2"), TermFactory.createEmptySubstitution()).isEmpty());
+    assertTrue(module.toString().equals("The induction hypothesis does not match the " +
+      "left-hand side of the equation.\n\n"));
+  }
+
+  @Test
+  public void testFailedContextDifferentContext() throws CustomParserException {
+    PartialProof pp = setupProof("sum1(sum1(x))", "13 + sum1(x)", "12 + sum2(y)", "x > y",
+      "sum2(y) + 13", "sum1(a) = sum2(b) | b >= a");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
+               EquationPosition.parse("R2"), TermFactory.createEmptySubstitution()).isEmpty());
+    assertTrue(module.toString().equals(
+      "The two sides have different contexts: 13 + [] versus 12 + [].\n\n"));
+  }
+
+  @Test
+  public void testFailedContextDifferentTypes() throws CustomParserException {
+    PartialProof pp = setupProof("toint(x) = sum2(sum1(y)) | x ∧ y = 1", "sum1(z) = z | z = 1");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
+               EquationPosition.parse("R1"), TermFactory.createEmptySubstitution()).isEmpty());
+    assertTrue(module.toString().equals("The induction hypothesis does not match the " +
+      "left-hand side of the equation.\n\n"));
+  }
+
+  @Test
+  public void testContextAtPartialPosition() throws CustomParserException {
+    PartialProof pp = setupProof("sum2(x)", "3 + sum1(x)", "3 + iter(0, 0, x)","x = 0",
+      "sum2(0)", "sum1 = iter(0,0)");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
+               EquationPosition.parse("L2*1"), TermFactory.createEmptySubstitution()).get();
+    assertTrue(step.commandDescription().equals("hdelete H8 L2.*1 with []"));
+    assertTrue(module.toString().equals(""));
+    MySmtSolver solver = new MySmtSolver(true);
+    Settings.smtSolver = solver;
+    assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
+    assertTrue(module.toString().equals(""));
+    assertTrue(pp.getProofState().isFinalState());
+    assertTrue(pp.getProofState().getHypotheses().size() == 1);
+    assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
+  }
+
+  @Test
+  public void testContextFailsInPartialPosition() throws CustomParserException {
+    PartialProof pp = setupProof("x + sum1(1) = x + iter(0, 0, 2) | x = 0", "sum1 = iter(0,0)");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
+               EquationPosition.parse("L2*1"), TermFactory.createEmptySubstitution()).isEmpty());
+    assertTrue(module.toString().equals(
+      "The two sides have different contexts: x + [](1) versus x + [](2).\n\n"));
+  }
+
+  @Test
+  public void testImpossibleOrderingRequirement() throws CustomParserException {
+    PartialProof pp = setupProof("sum1(x)", "sum1(x)", "sum2(x)", "x > 0", "sum2(x)",
+      "sum1(x) = sum2(x)");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
+               EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).isEmpty());
+    assertTrue(module.toString().equals(
+      "Cannot apply an induction hypothesis at position ε when both bounding terms are the same " +
+      "as the equation terms.\n\n"));
+  }
+
+  @Test
+  public void testPossibleOrderingRequirementDueToPartial() throws CustomParserException {
+    PartialProof pp = setupProof("sum1(x)", "sum1(x)", "sum2(x)", "x > 0", "sum2(x)",
+      "sum1 = sum2");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
+               EquationPosition.parse("*1"), TermFactory.createEmptySubstitution()).get();
+    assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
+    assertTrue(module.toString().equals(""));
+    assertTrue(pp.getProofState().isFinalState());
+    assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
+  }
+
+  @Test
+  public void testFigureOutFreshVariablesOnOtherSide() throws CustomParserException {
+    PartialProof pp = setupProof("iter(0, 0, sum1(x)) = iter(0, 0, sum2(y)) | x = z ∧ z = y",
+                                 "sum2(b) = sum1(a) | a = c ∧ c = b");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
+               EquationPosition.parse("L3"), TermFactory.createEmptySubstitution()).get();
+    assertTrue(step.commandDescription().equals(
+      "hdelete H8^{-1} L3 with [a := x, b := y, c := z]"));
+  }
+
+  @Test
+  public void testFreshVariablesDontQuiteMatch() throws CustomParserException {
+    PartialProof pp = setupProof("iter(0, 0, sum1(2+x)) = iter(0, 0, sum2(y+2))",
+                                 "sum1(z+a) = sum2(a+z) | z > 0");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
+               EquationPosition.parse("L3"), TermFactory.createEmptySubstitution()).isEmpty());
+    assertTrue(module.toString().equals(
+      "The induction hypothesis does not match the right-hand side of the equation.\n\n"));
+  }
+
+  @Test
+  public void testUnknowableVariablesInConstraint() throws CustomParserException {
+    PartialProof pp = setupProof("iter(0, 0, sum1(x)) = iter(0, 0, sum2(y)) | x = y",
+                                 "sum2(b) = sum1(a) | a ≥ c ∧ c ≥ b");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
+               EquationPosition.parse("L3"), TermFactory.createEmptySubstitution()).get();
+    assertFalse(step.verify(Optional.of(module)));
+    assertTrue(module.toString().equals("The induction hypothesis does not apply: " +
+      "constraint variable c is not mapped to anything.\n\n"));
+  }
+
+  @Test
+  public void testSupplySubstitution() throws CustomParserException {
+    PartialProof pp = setupProof("iter(0, 0, sum1(x)) = iter(0, 0, sum2(y)) | x = y",
+                                 "sum1(b) = sum2(a) | a ≥ c ∧ c ≥ b");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    Substitution subst = TermFactory.createEmptySubstitution();
+    subst.extend(h8.getRenamingCopy().getVariable("c"),
+                 pp.getProofState().getTopEquation().getRenamingCopy().getVariable("y"));
+    DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
+                                                        EquationPosition.parse("L3"), subst).get();
+    assertTrue(step.commandDescription().equals("hdelete H8 L3 with [a := y, b := x, c := y]"));
+    MySmtSolver solver = new MySmtSolver(true);
+    Settings.smtSolver = solver;
+    assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
+    assertTrue(module.toString().equals(""));
+    assertTrue(solver._question.equals("(i1 # i2) or ((i2 >= i2) and (i2 >= i1))\n"));
+  }
+}
+

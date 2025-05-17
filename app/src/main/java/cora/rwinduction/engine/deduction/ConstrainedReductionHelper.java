@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.TreeSet;
 import charlie.util.Pair;
+import charlie.terms.position.Position;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.printer.Printer;
@@ -182,6 +183,39 @@ class ConstrainedReductionHelper {
       }
     }
     return changedAnything;
+  }
+
+  /**
+   * Writing s ≈ C[t]_p | ψ for the top equation, where p is the underlying position (but
+   * transferred to the other side of the equation), this method extends the underlying substitution
+   * γ to a substitution δ so that _right δ = t, if possible.
+   * If this is not possible, then an appropriate error message is given on m and false is
+   * returned.  If it is possible, then only those variable mappings that are needed for the
+   * right-hand side are added to the substitution.
+   */
+  boolean extendSubstitutionRight(Optional<OutputModule> m) {
+    Equation eq = _proof.getProofState().getTopEquation().getEquation();
+    EquationPosition.Side side = switch(_position.querySide()) {
+      case EquationPosition.Side.Left -> EquationPosition.Side.Right;
+      case EquationPosition.Side.Right -> EquationPosition.Side.Left;
+    };
+    String sd = switch(side) {
+      case EquationPosition.Side.Left -> "left"; 
+      case EquationPosition.Side.Right -> "right";
+    };
+    Position pos = _position.queryPosition();
+    Term othersub = eq.querySubterm(new EquationPosition(side, pos));
+    if (othersub == null) {
+      m.ifPresent(o -> o.println("The %a-hand side of the equation does not have a position %a.",
+                                 sd, pos));
+      return false;
+    }
+    if (_right.match(othersub, _substitution) != null) {
+      m.ifPresent(o -> o.println("The induction hypothesis does not match the %a-hand side " +
+        "of the equation.", sd));
+      return false;
+    }
+    return true;
   }
 
   /** This returns whether all variables occurring in t are substituted. */
@@ -349,9 +383,15 @@ class ConstrainedReductionHelper {
       Term t = _substitution.getReplacement(x);
       if (t.isValue()) continue;
       if (!t.isVariable() || !equationConstraint.freeReplaceables().contains(t.queryVariable())) {
-        module.ifPresent(o -> o.println("The " + _kind + " does not apply: constraint variable " +
-          "%a is instantiated by %a, which is not a value, nor a variable in the constraint of " +
-          "the equation.", _renaming.getName(x), Printer.makePrintable(t, equationNaming)));
+        if (!_substitution.domain().contains(x)) {
+          module.ifPresent(o -> o.println("The " + _kind + " does not apply: constraint variable " +
+            "%a is not mapped to anything.", _renaming.getName(x)));
+        }
+        else {
+          module.ifPresent(o -> o.println("The " + _kind + " does not apply: constraint variable " +
+            "%a is instantiated by %a, which is not a value, nor a variable in the constraint of " +
+            "the equation.", _renaming.getName(x), Printer.makePrintable(t, equationNaming)));
+        }
         return false;
       }
     }
