@@ -50,7 +50,7 @@ public final class DeductionHypothesis extends DeductionStep {
    * is indeed a match but NOT that the constraint is satisfied.
    * The substitution will not be altered, and does not become the property of the step; it is
    * safe to change afterwards.
-   * For now, the step decides for itself which ordering requirement is imposed; the user cannot
+   * For now, the step decides for itself which ordering requirements are imposed; the user cannot
    * indicate this.  This may be changed in the future, though.
    */
   public static Optional<DeductionHypothesis> createStep(PartialProof proof, Optional<OutputModule> m,
@@ -73,14 +73,14 @@ public final class DeductionHypothesis extends DeductionStep {
     Renaming newrenaming = neweqdata.snd();
     ArrayList<OrdReq> requirements = new ArrayList<OrdReq>();
 
-    int id = proof.getProofState().getLastUsedIndex() + 1;
-    EquationContext result = generateResultEquationContext(original, pos, neweq, newrenaming,
-                                                           id, requirements);
-    if (result == null) {
+    if (!checkOrderingRequirements(original, pos, neweq, newrenaming, requirements)) {
       m.ifPresent(o -> o.println("The hypothesis cannot be applied, as it would cause an " +
         "obviously unsatisfiable ordering requirement to be imposed."));
       return Optional.empty();
     }
+    int id = proof.getProofState().getLastUsedIndex() + 1;
+    EquationContext result = new EquationContext(original.getLeftGreaterTerm(), neweq,
+                                                 original.getRightGreaterTerm(), id, newrenaming);
     return Optional.of(new DeductionHypothesis(proof.getProofState(), proof.getContext(),
                                                hypo.getName() + (inverse ? "^{-1}" : ""), inverse,
                                                helper, result, requirements));
@@ -88,63 +88,55 @@ public final class DeductionHypothesis extends DeductionStep {
 
   /**
    * Helper function for createStep: given that original is reduced at position pos, and this
-   * results in the equation neweq, this function determines the equation context for neweq (so in
-   * particular the two new greater terms), and adds the corresponding ordering requirements to
-   * the given list.
+   * results in the equation neweq, this function determines the ordering requirements, if any,
+   * that need to be imposed for this hypothesis step to be applied, and returns true if it is
+   * possible that they might be successful.  If they cannot be successful, false is returned.
    */
-  private static EquationContext generateResultEquationContext(EquationContext original,
-                                                               EquationPosition pos, Equation neweq,
-                                                               Renaming newrenaming, int index,
-                                                               ArrayList<OrdReq> reqs) {
-    // • is greater than anything, so if • occurs on any side, we can keep it as the only greater
-    // term in the resulting equation
-    if (original.getLeftGreaterTerm().isEmpty() || original.getRightGreaterTerm().isEmpty()) {
-      return new EquationContext(neweq, index, newrenaming);
+  private static boolean checkOrderingRequirements(EquationContext original,
+                                                   EquationPosition pos, Equation neweq,
+                                                   Renaming newrenaming, ArrayList<OrdReq> reqs) {
+    // • is greater than anything, so if • occurs on both sides, there's nothing to require
+    if (original.getLeftGreaterTerm().isEmpty() && original.getRightGreaterTerm().isEmpty()) {
+      return true;
     }
 
-    // otherwise, let's write the equation as (s', C[lγ] -><- t | φ, t') or (t', t -> C[lγ] | φ, s')
-    Term lgamma = original.getEquation().querySubterm(pos);
-    Term rgamma = neweq.querySubterm(pos);
-    Term phi = neweq.getConstraint();
-    Term sprime, tprime;
+    // to start, let's write the equation as (s', C[lγ] -><- t | φ, t') or (t', t -> C[lγ] | φ, s')
+    Term sprime = null, tprime = null, s, q, t;
     if (pos.querySide() == EquationPosition.Side.Left) {
-      sprime = original.getLeftGreaterTerm().get();
-      tprime = original.getRightGreaterTerm().get();
+      if (!original.getLeftGreaterTerm().isEmpty()) sprime = original.getLeftGreaterTerm().get();
+      if (!original.getRightGreaterTerm().isEmpty()) tprime = original.getRightGreaterTerm().get();
+      s = original.getEquation().getLhs();
+      q = neweq.getLhs();
+      t = original.getEquation().getRhs();
     }
     else {
-      sprime = original.getRightGreaterTerm().get();
-      tprime = original.getLeftGreaterTerm().get();
-    }
-    
-    // if s' = lγ, then clearly we do not have s' ≻ lγ, so we need t' ≻ lγ = s', and hence can
-    // safely continue with greater terms {t',t'}
-    if (sprime.equals(lgamma)) {
-      if (tprime.equals(lgamma) || tprime.equals(rgamma)) return null;
-      reqs.add(new OrdReq(tprime, lgamma, phi, newrenaming));
-      reqs.add(new OrdReq(tprime, rgamma, phi, newrenaming));
-      return new EquationContext(tprime, neweq, tprime, index, newrenaming);
+      if (!original.getRightGreaterTerm().isEmpty()) sprime = original.getRightGreaterTerm().get();
+      if (!original.getLeftGreaterTerm().isEmpty()) tprime = original.getLeftGreaterTerm().get();
+      s = original.getEquation().getRhs();
+      q = neweq.getRhs();
+      t = original.getEquation().getLhs();
     }
 
-    // in all other cases, we impose the requirement that s' ≻ lγ
-    reqs.add(new OrdReq(sprime, lgamma, phi, newrenaming));
-
-    // The only remaining question is whether s' ≻ rγ or t' ≻ rγ.  For this, we impose the
-    // following heuristic: of course if one of them is equal to rγ we choose the other, and if
-    // C[rγ] = t we in principle choose t' ≻ rγ; otherwise we let s' ≻ rγ (since the proof of the
-    // equation is not yet almost-finished, and we will continue with (s',t'))
-    if (neweq.getLhs().equals(neweq.getRhs())) {
-      if (!tprime.equals(rgamma)) reqs.add(new OrdReq(tprime, rgamma, phi, newrenaming));
-      else if (sprime.equals(rgamma)) return null;
-      else reqs.add(new OrdReq(sprime, rgamma, phi, newrenaming));
+    // given (s', C[lγ] -><- t | φ, t'), we require one of the following to ensure that
+    // {s',t'} ≻{mul} {l γ, r γ} and the result is still a bounded equation context:
+    // [A] s' ≻ l γ and s' ≻ r γ and s' ≽ q = C[rγ]
+    // [B] t' ≻ r γ and s' ≽ q = C[rγ]
+    if (sprime == null) return true; // case [A] clearly holds if s' = •
+    boolean sequalq = sprime.equals(q);
+    Term lgamma = original.getEquation().querySubterm(pos);
+    Term phi = neweq.getConstraint();
+    // in both cases, s' ≽ q must hold, and since we don't have s = q, let's require s ≻ q
+    if (!sequalq) reqs.add(new OrdReq(sprime, q, phi, newrenaming));
+    // if case [A] is possible, then go for that
+    if (!sprime.equals(lgamma)) { // since s' ≽ C[lγ] ≽ lγ, this implies s' ≻ lγ directly
+      if (!sequalq) return true;  // we have already required s' ≻ q ≽ rγ
+      if (!pos.queryPosition().isEmpty()) return true; // we have s' = C[rγ] ≻ rγ
     }
-
-    else {
-      if (!sprime.equals(rgamma)) reqs.add(new OrdReq(sprime, rgamma, phi, newrenaming));
-      else if (tprime.equals(rgamma)) return null;
-      else reqs.add(new OrdReq(tprime, rgamma, phi, newrenaming));
-    }
-
-    return original.replace(neweq, newrenaming, index);
+    // otherwise, go for case [B]; note that this can only occur if C is the empty context, so
+    // rγ = q
+    if (tprime.equals(q)) return false;
+    reqs.add(new OrdReq(tprime, q, phi, newrenaming));
+    return true;
   }
 
   /**
@@ -182,6 +174,9 @@ public final class DeductionHypothesis extends DeductionStep {
       _equ.getName(), _hypothesisName, _helper.substitutionPrintable(_equ.getRenamingCopy()));
     if (_requirements.size() == 0) {
       module.println("This does not cause any new ordering requirements to be imposed.");
+    }
+    else if (_requirements.size() == 1) {
+      module.println("To this end, we impose the requirement that %a.", _requirements.get(0));
     }
     else {
       module.print("To this end, we impose the requirements that ");

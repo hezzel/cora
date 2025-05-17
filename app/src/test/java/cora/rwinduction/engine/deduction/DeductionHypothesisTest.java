@@ -144,18 +144,15 @@ class DeductionHypothesisTest {
     assertTrue(module.toString().equals(""));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getHypotheses().size() == 1);
-    assertTrue(pp.getProofState().getOrderingRequirements().size() == 2);
+    assertTrue(pp.getProofState().getOrderingRequirements().size() == 1);
     assertTrue(pp.getProofState().getEquations().get(0).toString().equals(
       "E20: (sum2(y) , sum2(x) ≈ 0 + iter(x, 0, 0) | y = x + 1 ∧ x > 0 , sum1(y))"));
     assertTrue(pp.getProofState().getOrderingRequirements().get(0).toString().equals(
-      "sum1(y) ≻ sum1(x) | y = x + 1 ∧ x > 0"));
-    assertTrue(pp.getProofState().getOrderingRequirements().get(1).toString().equals(
-      "sum1(y) ≻ iter(x, 0, 0) | y = x + 1 ∧ x > 0"));
+      "sum1(y) ≻ 0 + iter(x, 0, 0) | y = x + 1 ∧ x > 0"));
     step.explain(module);
     assertTrue(module.toString().equals("We apply HYPOTHESIS to E19 with induction hypothesis H8 " +
-      "and substitution [y := 0, z := x].  To this end, we impose the requirements that " +
-      "sum1(y) ≻ sum1(x) | y = x + 1 ∧ x > 0 and " +
-      "sum1(y) ≻ iter(x, 0, 0) | y = x + 1 ∧ x > 0.\n\n"));
+      "and substitution [y := 0, z := x].  To this end, we impose the requirement that " +
+      "sum1(y) ≻ 0 + iter(x, 0, 0) | y = x + 1 ∧ x > 0.\n\n"));
   }
 
   @Test
@@ -194,41 +191,41 @@ class DeductionHypothesisTest {
     assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L1 with [y := x, z := 12]"));
     Settings.smtSolver = new MySmtSolver(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
-    assertTrue(pp.getProofState().getOrderingRequirements().size() == 2);
+    assertTrue(pp.getProofState().getOrderingRequirements().size() == 1);
     assertTrue(pp.getProofState().getEquations().get(0).toString().equals(
       "E20: (sum1(z) , sum1(iter(12, 0, x)) ≈ 0 + sum1(x) | x = x , sum1(y))"));
     step.explain(module);
     assertTrue(module.toString().equals("We apply HYPOTHESIS to E19 with induction hypothesis " +
-      "H8^{-1} and substitution [y := x, z := 12].  To this end, we impose the requirements that " +
-      "sum1(z) ≻ sum1(x) | x = x and sum1(z) ≻ iter(12, 0, x) | x = x.\n\n"));
+      "H8^{-1} and substitution [y := x, z := 12].  To this end, we impose the requirement that " +
+      "sum1(z) ≻ sum1(iter(12, 0, x)) | x = x.\n\n"));
   }
 
   @Test
   public void testSuccessfulStepWithEqualLeftGreaterTerm() throws CustomParserException {
-    PartialProof pp = setupProof("sum1(x)", "sum1(sum1(x))", "0 + sum1(x)", "x = x",
-      "sum1(y)", "iter(z, 0, y) = sum1(y) | z ≥ 0");
+    PartialProof pp = setupProof("sum1(x)", "sum1(x)", "0 + sum1(x)", "x < y", "sum1(y)",
+      "iter(z, 0, y) = sum1(y) | z ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
     subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("z"),
                  TheoryFactory.createValue(12));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                            EquationPosition.parse("L1"), subst).get();
-    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L1 with [y := x, z := 12]"));
+                            EquationPosition.parse("L"), subst).get();
+    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L with [y := x, z := 12]"));
     Settings.smtSolver = new MySmtSolver(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 2);
     assertTrue(pp.getProofState().getEquations().get(0).toString().equals(
-      "E20: (sum1(y) , sum1(iter(12, 0, x)) ≈ 0 + sum1(x) | x = x , sum1(y))"));
+      "E20: (sum1(x) , iter(12, 0, x) ≈ 0 + sum1(x) | x < y , sum1(y))"));
     step.explain(module);
     assertTrue(module.toString().equals("We apply HYPOTHESIS to E19 with induction hypothesis " +
       "H8^{-1} and substitution [y := x, z := 12].  To this end, we impose the requirements that " +
-      "sum1(y) ≻ sum1(x) | x = x and sum1(y) ≻ iter(12, 0, x) | x = x.\n\n"));
+      "sum1(x) ≻ iter(12, 0, x) | x < y and sum1(y) ≻ iter(12, 0, x) | x < y.\n\n"));
   }
 
   @Test
   public void testSuccessfulStepWithEqualRightGreaterTerm() throws CustomParserException {
-    PartialProof pp = setupProof("sum2(sum2(y))", "0 + sum1(x)", "sum1(sum1(x))", "x < y",
+    PartialProof pp = setupProof("sum2(sum2(y))", "0 + sum1(x)", "sum1(x)", "x < y",
       "sum1(x)", "sum1(y) = iter(z, 0, y) | z > 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
@@ -236,22 +233,22 @@ class DeductionHypothesisTest {
     subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("z"),
                  TheoryFactory.createValue(7));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                            EquationPosition.parse("R1"), subst).get();
-    assertTrue(step.commandDescription().equals("hypothesis H8 R1 with [y := x, z := 7]"));
+                            EquationPosition.parse("R"), subst).get();
+    assertTrue(step.commandDescription().equals("hypothesis H8 R with [y := x, z := 7]"));
     Settings.smtSolver = new MySmtSolver(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 2);
     assertTrue(pp.getProofState().getEquations().get(0).toString().equals(
-      "E20: (sum2(sum2(y)) , 0 + sum1(x) ≈ sum1(iter(7, 0, x)) | x < y , sum2(sum2(y)))"));
+      "E20: (sum2(sum2(y)) , 0 + sum1(x) ≈ iter(7, 0, x) | x < y , sum1(x))"));
     step.explain(module);
     assertTrue(module.toString().equals("We apply HYPOTHESIS to E19 with induction hypothesis " +
       "H8 and substitution [y := x, z := 7].  To this end, we impose the requirements that " +
-      "sum2(sum2(y)) ≻ sum1(x) | x < y and sum2(sum2(y)) ≻ iter(7, 0, x) | x < y.\n\n"));
+      "sum1(x) ≻ iter(7, 0, x) | x < y and sum2(sum2(y)) ≻ iter(7, 0, x) | x < y.\n\n"));
   }
 
   @Test
   public void testSuccessfulFinishingStep() throws CustomParserException {
-     PartialProof pp = setupProof("sum1(x)", "sum1(sum1(x))", "sum1(iter(12, 0, x))", "x = x",
+     PartialProof pp = setupProof("sum1(y)", "sum1(sum1(x))", "sum1(iter(12, 0, x))", "y > x",
       "sum2(y)", "iter(z, 0, y) = sum1(y) | z ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
@@ -262,14 +259,50 @@ class DeductionHypothesisTest {
                             EquationPosition.parse("L1"), subst).get();
     assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L1 with [y := x, z := 12]"));
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
-    assertTrue(pp.getProofState().getOrderingRequirements().size() == 2);
+    assertTrue(pp.getProofState().getOrderingRequirements().size() == 1);
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getEquations().get(0).toString().equals(
-      "E20: (sum2(y) , sum1(iter(12, 0, x)) ≈ sum1(iter(12, 0, x)) | x = x , sum2(y))"));
+      "E20: (sum1(y) , sum1(iter(12, 0, x)) ≈ sum1(iter(12, 0, x)) | y > x , sum2(y))"));
     step.explain(module);
     assertTrue(module.toString().equals("We apply HYPOTHESIS to E19 with induction hypothesis " +
-      "H8^{-1} and substitution [y := x, z := 12].  To this end, we impose the requirements that " +
-      "sum2(y) ≻ sum1(x) | x = x and sum2(y) ≻ iter(12, 0, x) | x = x.\n\n"));
+      "H8^{-1} and substitution [y := x, z := 12].  To this end, we impose the requirement that " +
+      "sum1(y) ≻ sum1(iter(12, 0, x)) | y > x.\n\n"));
+  }
+
+  @Test
+  public void testLeftGreaterEqualsRightGamma() throws CustomParserException {
+    PartialProof pp = setupProof("0 + sum1(x)", "sum2(x)", "sum1(x)", "true", "sum1(x + 3)",
+      "sum2(x) = 0 + sum1(x)");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    Substitution subst = TermFactory.createEmptySubstitution();
+    DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
+                                                       EquationPosition.parse("L"), subst).get();
+    assertTrue(step.commandDescription().equals("hypothesis H8 L with [x := x]"));
+    assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
+    assertTrue(pp.getProofState().getOrderingRequirements().size() == 1);
+    step.explain(module);
+    assertTrue(module.toString().equals("We apply HYPOTHESIS to E19 with induction hypothesis " +
+      "H8 and substitution [x := x].  To this end, we impose the requirement that " +
+      "sum1(x + 3) ≻ 0 + sum1(x).\n\n"));
+  }
+
+  @Test
+  public void testLeftGreaterEqualsContextOfRightGamma() throws CustomParserException {
+    PartialProof pp = setupProof("0 + sum1(x)", "0 + sum2(x)", "iter(x, 0, x)", "true",
+      "iter(x, x, 0)", "sum1(z) = sum2(z)");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    OutputModule module = OutputModule.createUnitTestModule();
+    Substitution subst = TermFactory.createEmptySubstitution();
+    DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
+                                                       EquationPosition.parse("L2"), subst).get();
+    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L2 with [z := x]"));
+    assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
+    assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
+    step.explain(module);
+    assertTrue(module.toString().equals("We apply HYPOTHESIS to E19 with induction hypothesis " +
+      "H8^{-1} and substitution [z := x].  This does not cause any new ordering requirements to " +
+      "be imposed.\n\n"));
   }
 
   @Test
