@@ -87,9 +87,8 @@ class DeductionInductTest {
     assertTrue(module.toString().equals(""));
     step.explain(module);
     assertTrue(module.toString().equals(
-      "We apply INDUCT to E11: (• , sum1(x) ≈ iter(x, 0, 0) | x ≥ 0 , •), which does not " +
-      "impose any new ordering requirements but simply adds sum1(x) ≈ iter(x, 0, 0) | x ≥ 0 " +
-      "to the set H of induction hypotheses.\n\n"));
+      "We apply INDUCT to E11, which causes sum1(x) ≈ iter(x, 0, 0) | x ≥ 0 to be added to " +
+      "the set H of induction hypotheses.\n\n"));
   }
 
   @Test
@@ -110,9 +109,8 @@ class DeductionInductTest {
     assertTrue(module.toString().equals(""));
     step.explain(module);
     assertTrue(module.toString().equals(
-      "We apply INDUCT to E11: (sum1(x) , sum1(x) ≈ iter(x, 0, 0) | x ≥ 0 , iter(x, 0, 0)), " +
-      "which does not impose any new ordering requirements but simply adds " +
-      "sum1(x) ≈ iter(x, 0, 0) | x ≥ 0 to the set H of induction hypotheses.\n\n"));
+      "We apply INDUCT to E11, which causes sum1(x) ≈ iter(x, 0, 0) | x ≥ 0 to be added to " +
+      "the set H of induction hypotheses.\n\n"));
   }
 
   @Test
@@ -128,19 +126,14 @@ class DeductionInductTest {
     assertTrue(pp.getProofState().getHypotheses().size() == 1);
     assertTrue(pp.getProofState().getHypotheses().get(0).toString().equals(
       "H11: sum1(x) ≈ iter(x, 1, 0) | x ≥ 0"));
-    assertTrue(pp.getProofState().getOrderingRequirements().size() == 2);
-    assertTrue(pp.getProofState().getOrderingRequirements().get(0).toString().equals(
-      "sum1(x + 1) ≽ sum1(x) | x ≥ 0"));
-    assertTrue(pp.getProofState().getOrderingRequirements().get(1).toString().equals(
-      "iter(x, 0, 0) ≽ iter(x, 1, 0) | x ≥ 0"));
+    assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
     assertTrue(pp.getCommandHistory().size() == 1);
     assertTrue(pp.getCommandHistory().get(0).equals("induct"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
     String txt =
-      "We apply INDUCT to E11: (sum1(x + 1) , sum1(x) ≈ iter(x, 1, 0) | x ≥ 0 , iter(x, 0, 0)), " +
-      "which adds the equation into H, and imposes the ordering requirements " +
-      "sum1(x + 1) ≽ sum1(x) | x ≥ 0 and iter(x, 0, 0) ≽ iter(x, 1, 0) | x ≥ 0.\n\n";
+      "We apply INDUCT to E11, which causes sum1(x) ≈ iter(x, 1, 0) | x ≥ 0 to be added to " +
+      "the set H of induction hypotheses.\n\n";
     assertTrue(module.toString().equals(txt));
 
     step = DeductionInduct.createStep(pp, o).get();
@@ -161,15 +154,12 @@ class DeductionInductTest {
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E12: (sum1(x) , sum1(x) ≈ iter(x, 0, 0) | x ≥ 0 , iter(x, 0, 0))"));
     assertTrue(pp.getProofState().getHypotheses().size() == 1);
-    assertTrue(pp.getProofState().getOrderingRequirements().size() == 1);
-    assertTrue(pp.getProofState().getOrderingRequirements().get(0).toString().equals(
-      "sum1(x + 1) ≽ sum1(x) | x ≥ 0"));
+    assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
     assertTrue(module.toString().equals(""));
     step.explain(module);
     assertTrue(module.toString().equals(
-      "We apply INDUCT to E11: (sum1(x + 1) , sum1(x) ≈ iter(x, 0, 0) | x ≥ 0 , iter(x, 0, 0)), " +
-      "which adds the equation into H, and imposes the ordering requirement " +
-      "sum1(x + 1) ≽ sum1(x) | x ≥ 0.\n\n"));
+      "We apply INDUCT to E11, which causes sum1(x) ≈ iter(x, 0, 0) | x ≥ 0 to be added to " +
+      "the set H of induction hypotheses.\n\n"));
   }
 }
 

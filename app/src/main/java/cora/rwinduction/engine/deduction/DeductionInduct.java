@@ -24,11 +24,8 @@ import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 
 public final class DeductionInduct extends DeductionStep {
-  private ArrayList<OrdReq> _requirements;
-
-  private DeductionInduct(ProofState state, ProofContext context, ArrayList<OrdReq> reqs) {
+  private DeductionInduct(ProofState state, ProofContext context) {
     super(state, context);
-    _requirements = reqs;
   }
 
   public static Optional<DeductionInduct> createStep(PartialProof proof, Optional<OutputModule> m) {
@@ -37,20 +34,7 @@ public final class DeductionInduct extends DeductionStep {
       m.ifPresent( o -> o.println("The proof is already complete.") );
       return Optional.empty();
     }
-    ArrayList<OrdReq> reqs = new ArrayList<OrdReq>();
-    EquationContext context = state.getTopEquation();
-    Equation eq = context.getEquation();
-    Optional<Term> lterm = context.getLeftGreaterTerm();
-    if (!lterm.isEmpty() && !lterm.get().equals(eq.getLhs())) {
-      reqs.add(new OrdReq(lterm.get(), eq.getLhs(), eq.getConstraint(),
-                          context.getRenamingCopy(), false));
-    }
-    Optional<Term> rterm = context.getRightGreaterTerm();
-    if (!rterm.isEmpty() && !rterm.get().equals(eq.getRhs())) {
-      reqs.add(new OrdReq(rterm.get(), eq.getRhs(), eq.getConstraint(),
-                          context.getRenamingCopy(), false));
-    }
-    return Optional.of(new DeductionInduct(state, proof.getContext(), reqs));
+    return Optional.of(new DeductionInduct(state, proof.getContext()));
   }
 
   @Override
@@ -63,7 +47,6 @@ public final class DeductionInduct extends DeductionStep {
         return false;
       }
     }
-    // in the future we may want to do an actual termination check already at this point
     return true;
   }
 
@@ -72,9 +55,10 @@ public final class DeductionInduct extends DeductionStep {
     Hypothesis hypothesis = new Hypothesis(_equ.getEquation(), _equ.getIndex(),
                                            _equ.getRenamingCopy());
     // special case: the equation context was already (s, s = t | φ, t); in this case the ec stays
-    // the same, and there are no requirements, but the hypothesis *is* added
-    if (_requirements.size() == 0 && !_equ.getLeftGreaterTerm().isEmpty() &&
-                                     !_equ.getRightGreaterTerm().isEmpty()) {
+    // the same, but the hypothesis *is* added
+    if (!_equ.getLeftGreaterTerm().isEmpty() && !_equ.getRightGreaterTerm().isEmpty() &&
+        _equ.getLeftGreaterTerm().get().equals(_equ.getEquation().getLhs()) &&
+        _equ.getRightGreaterTerm().get().equals(_equ.getEquation().getRhs())) {
       return _state.addHypothesis(hypothesis);
     }
 
@@ -90,9 +74,8 @@ public final class DeductionInduct extends DeductionStep {
 
     FixedList<EquationContext> newEquations = ecbuilder.build();
     FixedList<Hypothesis> newHypotheses = _state.getHypotheses().append(hypothesis);
-    FixedList<OrdReq> newReqs = _state.getOrderingRequirements().append(_requirements);
 
-    return new ProofState(newEquations, newHypotheses, newReqs, index);
+    return new ProofState(newEquations, newHypotheses, _state.getOrderingRequirements(), index);
   }
 
   @Override
@@ -102,17 +85,9 @@ public final class DeductionInduct extends DeductionStep {
 
   @Override
   public void explain(OutputModule module) {
-    if (_requirements.size() == 0) {
-      module.println("We apply INDUCT to %a, which does not impose any new ordering requirements " +
-        "but simply adds %a to the set H of induction hypotheses.", _equ,
-        _equ.getEquation().makePrintableWith(_equ.getRenamingCopy()));
-    }
-    else {
-      module.print("We apply INDUCT to %a, which adds the equation into H, and imposes the " +
-        "ordering requirement", _equ);
-      if (_requirements.size() == 1) module.println(" %a.", _requirements.get(0));
-      else module.println("s %a and %a.", _requirements.get(0), _requirements.get(1));
-    }
+    module.println("We apply INDUCT to %a, which causes %a to be added to the set H of induction " +
+      "hypotheses.", _equ.getName(),
+      _equ.getEquation().makePrintableWith(_equ.getRenamingCopy()));
   }
 }
 
