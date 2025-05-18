@@ -27,6 +27,8 @@ import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.Equation;
 import cora.rwinduction.engine.deduction.DeductionCalc;
+import cora.rwinduction.engine.deduction.DeductionCalcAll;
+import cora.rwinduction.engine.deduction.DeductionCalcAll.Side;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command calc. */
@@ -38,29 +40,47 @@ public class CommandCalc extends Command {
   
   @Override
   public FixedList<String> callDescriptor() {
-    return FixedList.of("calc <position_1> ... <position_n>");
+    return FixedList.of("calc", "calc left", "calc right", "calc <position_1> ... <position_n>");
   }
   
   @Override
   public void printHelp(OutputModule module) {
     module.println("Use this deduction rule to rewrite the current equation with one or more " +
       "applications of a calculation step, in some subterm of the left- or right-hand side of " +
-      "the equation.  You should supply at least one position, and at each position either a " +
-      "value will be computed, an existing variable in the right-hand side, or a fresh variable " +
-      "that will be added to the constraint.");
+      "the equation.");
+    module.println("Invoking this command without arguments causes all possible calculations to " +
+      "be performed immediately.  Specifying \"left\" or \"right\" does only calculations on the " +
+      "given side.  Alternatively, you can supply one or more positions.");
+    module.println("For each calculatable position, either a value will be computed, or an " +
+      "existing variable in the constraint, or a fresh variable that is then added to the " +
+      "constraint.  Note that, unless you specify positions, the calculations will always be " +
+      "done outermost-first; e.g., x + (y + z) will be replaced by a single variable (defined " +
+      "in the constraint to be x + (y + z)); there will not be variable a = x + b and b = y + z.");
   }
 
   @Override
   protected boolean run(CommandParsingStatus input) {
-    Optional<DeductionCalc> step = createStep(input);
-    if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, Optional.of(_module));
+    String word = input.nextWord();
+    Optional<OutputModule> o = Optional.of(_module);
+    Optional<DeductionCalcAll> calcall = null;
+    if (word == null) calcall = DeductionCalcAll.createStep(_proof, o, Side.Both);
+    else if (word.equals("left")) calcall = DeductionCalcAll.createStep(_proof, o, Side.Left);
+    else if (word.equals("right")) calcall = DeductionCalcAll.createStep(_proof, o, Side.Right);
+    if (calcall != null) {
+      if (calcall.isEmpty()) return false;
+      return calcall.get().verifyAndExecute(_proof, o);
+    }
+    Optional<DeductionCalc> calcpos = createPositionStep(input, word);
+    if (calcpos.isEmpty()) return false;
+    return calcpos.get().verifyAndExecute(_proof, o);
   }
 
-  /** Main functionality of run, separated out for the sake of unit testing. */
-  Optional<DeductionCalc> createStep(CommandParsingStatus input) {
+  /**
+   * If the user has supplied arguments other than left or right, they must be supplying positions!
+   * Parse the positions, and create a calc <positions> command.
+   */
+  Optional<DeductionCalc> createPositionStep(CommandParsingStatus input, String word) {
     ArrayList<EquationPosition> posses = new ArrayList<EquationPosition>();
-    String word = input.nextWord();
     try {
       while (word != null) {
         posses.add(EquationPosition.parse(word));
@@ -69,11 +89,6 @@ public class CommandCalc extends Command {
     }
     catch (CustomParserException e) {
       _module.println("Illegal position %a: %a", word, e.getMessage());
-      return Optional.empty();
-    }
-
-    if (posses.size() == 0) {
-      _module.println("Calc must be given at least one argument.");
       return Optional.empty();
     }
     
@@ -85,9 +100,13 @@ public class CommandCalc extends Command {
   public ArrayList<TabSuggestion> suggestNext(String args) {
     Equation equation = _proof.getProofState().getTopEquation().getEquation();
     ArrayList<TabSuggestion> ret = new ArrayList<TabSuggestion>();
+    if (args.equals("")) {
+      ret.add(new TabSuggestion("left", "keyword"));
+      ret.add(new TabSuggestion("right", "keyword"));
+    }
     addCalculatablePositions(equation.getLhs(), EquationPosition.Side.Left, ret);
     addCalculatablePositions(equation.getRhs(), EquationPosition.Side.Right, ret);
-    if (!args.equals("")) ret.add(endOfCommandSuggestion());
+    ret.add(endOfCommandSuggestion());
     return ret;
   }
 
