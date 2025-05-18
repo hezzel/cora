@@ -153,6 +153,8 @@ public abstract class Printer {
   public abstract String symbSmaller();
   public abstract String symbGeq();
   public abstract String symbLeq();
+  public abstract String symbLangle();
+  public abstract String symbRangle();
   public abstract String symbDistinct();
   public abstract String symbApprox();
 
@@ -182,9 +184,6 @@ public abstract class Printer {
   public abstract String symbChi();
   public abstract String symbPsi();
   public abstract String symbOmega();
-
-  public abstract String symbLangle();
-  public abstract String symbRangle();
 
   /**
    * The core method of the printer: add text to it.  The text is a list of objects, which are

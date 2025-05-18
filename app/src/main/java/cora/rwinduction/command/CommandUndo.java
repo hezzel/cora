@@ -17,6 +17,7 @@ package cora.rwinduction.command;
 
 import java.util.List;
 import charlie.util.FixedList;
+import cora.io.OutputModule;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the undo command. */
@@ -27,9 +28,9 @@ public class CommandUndo extends SingularCommandInherit {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to undo the last deduction step.  If you go too far, you " +
-           "can still use \"redo\" to get back to the current state.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to undo the last deduction step.  If you go too far, " +
+      "you can still use \"redo\" to get back to the current state.");
   }
 
   @Override

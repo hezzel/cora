@@ -17,6 +17,7 @@ package cora.rwinduction.command;
 
 import java.util.ArrayList;
 import charlie.util.FixedList;
+import cora.io.OutputModule;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The environment command :syntax, which provides invocation information for a given command. */
@@ -39,8 +40,8 @@ public class CommandSyntax extends Command {
   }
 
   @Override
-  public String helpDescriptor() {
-    return "Query the ways to invoke a given command.";
+  public void printHelp(OutputModule module) {
+    module.println("Query the ways to invoke a given command.");
   }
 
   @Override

@@ -20,6 +20,7 @@ import java.util.Optional;
 import charlie.util.Pair;
 import charlie.terms.Renaming;
 import charlie.terms.Substitution;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.Hypothesis;
 import cora.rwinduction.engine.deduction.DeductionHypothesis;
@@ -32,14 +33,14 @@ public class CommandHypothesis extends HypothesisCommandInherit {
   }
 
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to rewrite the current equation with one of the current " +
-           "induction hypotheses in the proof state, which might apply to some subterm of the " +
-           "left- or right-hand side of the equation.  " +
-           "Note that induction hypotheses can be found using :hypotheses, and that positions " +
-           "have the form L.<position> or R.<position>.  " +
-           "To use the inverse of an induction hypothesis, use for instance H5^{-1} or " +
-           "H5-inverse.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to rewrite the current equation with one of the " +
+      "current induction hypotheses in the proof state, which might apply to some subterm of " +
+      "the left- or right-hand side of the equation.");
+    module.println("Note that induction hypotheses can be found using :hypotheses, and that " +
+      "positions have the form L.<position> or R.<position>.");
+    module.println("To use the inverse of an induction hypothesis, use for instance H5^{-1} or " +
+      "H5-inverse.");
   }
 
   @Override

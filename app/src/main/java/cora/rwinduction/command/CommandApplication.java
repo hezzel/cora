@@ -16,6 +16,7 @@
 package cora.rwinduction.command;
 
 import java.util.Optional;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.deduction.DeductionContext;
 
 /** The syntax for the deduction command APPLICATION. */
@@ -26,10 +27,13 @@ public class CommandApplication extends SingularCommandInherit {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to split an equation f s1 ... sn = f t1 ... tn | constr into " +
-           "the n equations si = ti | constr, regardless of whether f is a function symbol or " +
-           "variable.  Note that doing this may well lose completeness.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to split an equation f s1 ... sn = f t1 ... tn | " +
+      "constr into the n equations si = ti | constr, regardless of whether f is a function " +
+      "symbol or variable.");
+    module.println("(Using this command typically loses completeness of the proof state.  In " +
+      "cases where completeness may be preserved, the semiconstructor command should be used " +
+      "instead.)");
   }
   
   @Override

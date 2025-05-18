@@ -25,6 +25,7 @@ import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.ProofContext;
 import cora.rwinduction.engine.PartialProof;
 import cora.rwinduction.parser.CommandParsingStatus;
@@ -42,9 +43,9 @@ public class CommandRules extends Command {
   }
 
   @Override
-  public String helpDescriptor() {
-    return "List all the rules available in the original TRS.  " +
-           "You can also list only the rules with a specific root symbol.";
+  public void printHelp(OutputModule module) {
+    module.println("List all the rules available in the original TRS.");
+    module.println("You can also list only the rules with a specific root symbol.");
   }
 
   @Override

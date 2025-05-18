@@ -16,6 +16,7 @@
 package cora.rwinduction.command;
 
 import charlie.util.FixedList;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.OrdReq;
 import cora.rwinduction.engine.ProofState;
 import cora.rwinduction.parser.CommandParsingStatus;
@@ -28,8 +29,8 @@ public class CommandOrdering extends SingularCommandInherit {
   }
 
   @Override
-  public String helpDescriptor() {
-    return "List all the ordering requirements that have so far been imposed.";
+  public void printHelp(OutputModule module) {
+    module.println("List all the ordering requirements that have so far been imposed.");
   }
 
   @Override

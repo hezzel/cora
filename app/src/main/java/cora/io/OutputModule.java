@@ -254,6 +254,8 @@ public class OutputModule {
       case "%{smaller}" -> _printer.symbSmaller();
       case "%{geq}" -> _printer.symbGeq();
       case "%{leq}" -> _printer.symbLeq();
+      case "%{langle}" -> _printer.symbLangle();
+      case "%{rangle}" -> _printer.symbRangle();
       case "%{distinct}" -> _printer.symbDistinct();
       case "%{approx}" -> _printer.symbApprox();
       case "%{sharp}" -> _printer.symbSharp();

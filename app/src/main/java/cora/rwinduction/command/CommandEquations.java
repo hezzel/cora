@@ -18,6 +18,7 @@ package cora.rwinduction.command;
 import java.util.List;
 
 import charlie.util.FixedList;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationContext;
 import cora.rwinduction.engine.ProofState;
 import cora.rwinduction.parser.CommandParsingStatus;
@@ -38,9 +39,9 @@ public class CommandEquations extends Command {
   }
 
   @Override
-  public String helpDescriptor() {
-    return "List all the currently open equations (goals that we still need to prove).  " +
-           "If you want to see the full equation context, use the \"full\" argument.";
+  public void printHelp(OutputModule module) {
+    module.println("List all the currently open equations (goals that we still need to prove).");
+    module.println("If you want to see the full equation context, use the \"full\" argument.");
   }
 
   @Override
