@@ -18,23 +18,23 @@ package cora.rwinduction.command;
 import java.util.Optional;
 import cora.rwinduction.engine.deduction.DeductionContext;
 
-/** The syntax for the deduction command SEMICONSTRUCTOR. */
-public class CommandSemiconstructor extends SingularCommandInherit {
+/** The syntax for the deduction command APPLICATION. */
+public class CommandApplication extends SingularCommandInherit {
   @Override
   public String queryName() {
-    return "semiconstructor";
+    return "application";
   }
   
   @Override
   public String helpDescriptor() {
     return "Use this deduction rule to split an equation f s1 ... sn = f t1 ... tn | constr into " +
-           "the n equations si = ti | constr, if f is a constructor, or its arity is greater " +
-           "than n.";
+           "the n equations si = ti | constr, regardless of whether f is a function symbol or " +
+           "variable.  Note that doing this may well lose completeness.";
   }
   
   @Override
   protected boolean run() {
-    Optional<DeductionContext> step = DeductionContext.createStep(_proof, optionalModule(), true);
+    Optional<DeductionContext> step = DeductionContext.createStep(_proof, optionalModule(), false);
     if (step.isEmpty()) return false;
     return step.get().verifyAndExecute(_proof, optionalModule());
   }

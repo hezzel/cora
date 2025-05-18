@@ -37,7 +37,7 @@ import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
 import cora.rwinduction.engine.*;
 
-class DeductionConstructorTest {
+class DeductionContextTest {
   private TRS setupTRS() {
     return CoraInputReader.readTrsFromString(
       "sum1 :: Int -> Int\n" +
@@ -70,7 +70,7 @@ class DeductionConstructorTest {
     PartialProof pp = setupProof("cons(sum1(x), nil) = cons(sum2(y), append(nil, nil)) | x = y");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    DeductionConstructor step = DeductionConstructor.createStep(pp, o).get();
+    DeductionContext step = DeductionContext.createStep(pp, o, true).get();
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 3);
     assertTrue(pp.getProofState().getEquations().get(1).toString().equals(
@@ -94,7 +94,7 @@ class DeductionConstructorTest {
     Optional<OutputModule> o = Optional.of(module);
     DeductionInduct induct = DeductionInduct.createStep(pp, o).get();
     induct.verifyAndExecute(pp, o);
-    DeductionConstructor step = DeductionConstructor.createStep(pp, o).get();
+    DeductionContext step = DeductionContext.createStep(pp, o, false).get();
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 2);
     assertTrue(pp.getProofState().getEquations().get(1).toString().equals(
@@ -107,14 +107,22 @@ class DeductionConstructorTest {
   }
 
   @Test
-  public void testCreateFailedStepWithFullApplication() {
+  public void testCreateStepWithFullApplication() {
     PartialProof pp = setupProof("append(x, nil) = append(nil, x)");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    DeductionConstructor step = DeductionConstructor.createStep(pp, o).get();
-    assertFalse(step.verifyAndExecute(pp, o));
-    assertTrue(module.toString().equals("The semiconstructor rule cannot be applied, because " +
-      "append is a defined symbol with enough arguments.\n\n"));
+    assertTrue(DeductionContext.createStep(pp, o, true).isEmpty());
+    assertTrue(module.toString().equals("The semiconstructor rule can only be applied if both " +
+      "sides of the equation have a form f s1 ... sn, with f a function symbol and n < ar(f).  " +
+      "(Use \"application\" for the more general form, which does, however, lose " +
+      "completeness.)\n\n"));
+    module = OutputModule.createUnitTestModule();
+    o = Optional.of(module);
+    DeductionContext step = DeductionContext.createStep(pp, o, false).get();
+    assertTrue(step.verifyAndExecute(pp, o));
+    step.explain(module);
+    assertTrue(module.toString().equals("We apply APPLICATION to E2, splitting the immediate " +
+      "arguments into separate equations.\n\n"));
   }
 
   @Test
@@ -125,10 +133,17 @@ class DeductionConstructorTest {
     DeductionSimplify simpl = DeductionSimplify.createStep(pp, o, "O8",
       EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).get();
     assertTrue(simpl.verifyAndExecute(pp, o));
-    assertTrue(DeductionConstructor.createStep(pp, o).isEmpty());
+    simpl = DeductionSimplify.createStep(pp, o, "O8",
+      EquationPosition.TOPRIGHT, TermFactory.createEmptySubstitution()).get();
+    assertTrue(simpl.verifyAndExecute(pp, o));
+    assertTrue(DeductionContext.createStep(pp, o, true).isEmpty());
     assertTrue(module.toString().equals("The semiconstructor rule can only be applied if both " +
-      "sides of the equation are functional terms.  (Use \"context\" for the more general case, " +
-      "which does, however, lose completeness.)\n\n"));
+      "sides of the equation have a form f s1 ... sn, with f a function symbol and n < ar(f).  " +
+      "(Use \"application\" for the more general form, which does, however, lose " +
+      "completeness.)\n\n"));
+    DeductionContext step = DeductionContext.createStep(pp, o, false).get();
+    assertTrue(step.verify(o));
+    assertTrue(step.commandDescription().equals("application"));
   }
 
   @Test
@@ -136,9 +151,12 @@ class DeductionConstructorTest {
     PartialProof pp = setupProof("cons(sum1(x)) = append(nil)");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    assertTrue(DeductionConstructor.createStep(pp, o).isEmpty());
-    assertTrue(module.toString().equals("The semiconstructor rule cannot be applied, because " +
-      "the two sides of the equation do not have the same root symbol.\n\n"));
+    assertTrue(DeductionContext.createStep(pp, o, true).isEmpty());
+    assertTrue(DeductionContext.createStep(pp, o, false).isEmpty());
+    assertTrue(module.toString().equals(
+      "The semiconstructor rule cannot be applied, because the two sides of the equation do not " +
+      "have the same head.\n\nThe application rule cannot be applied, because the two sides of " +
+      "the equation do not have the same head.\n\n"));
   }
 }
 
