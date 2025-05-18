@@ -16,6 +16,7 @@
 package cora.rwinduction.command;
 
 import charlie.util.FixedList;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.Hypothesis;
 import cora.rwinduction.engine.ProofState;
 import cora.rwinduction.parser.CommandParsingStatus;
@@ -28,8 +29,8 @@ public class CommandHypotheses extends SingularCommandInherit {
   }
 
   @Override
-  public String helpDescriptor() {
-    return "List all the currently available induction hypotheses.";
+  public void printHelp(OutputModule module) {
+    module.println("List all the currently available induction hypotheses.");
   }
 
   @Override

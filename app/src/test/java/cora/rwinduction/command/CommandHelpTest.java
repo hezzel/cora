@@ -83,7 +83,7 @@ class CommandHelpTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     runCommand(module, ":help :help");
     assertTrue(module.toString().equals(
-      ":help: Prints a short description to explain how the prover works.\n\n" +
+      "Prints a short description to explain how the prover works.\n\n" +
       "  :help\n" +
       "  :help commands\n" +
       "  :help <command>\n\n"));

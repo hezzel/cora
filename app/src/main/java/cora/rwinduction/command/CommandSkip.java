@@ -16,6 +16,7 @@
 package cora.rwinduction.command;
 
 import java.util.Optional;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.deduction.DeductionSkip;
 
 /** The syntax for the semi-deduction command skip. */
@@ -26,10 +27,10 @@ public class CommandSkip extends SingularCommandInherit {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to move on to the next equation in the current equation " +
-           "list.  The current goal stays in the list and will still need to be proved, but is " +
-           "postponed until later.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to move on to the next equation in the current " +
+      "equation list.  The current goal stays in the list and will still need to be proved, but " +
+      "is postponed until later.");
   }
   
   @Override

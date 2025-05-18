@@ -23,6 +23,7 @@ import charlie.util.FixedList;
 import charlie.terms.Term;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.Equation;
 import cora.rwinduction.engine.deduction.DeductionCalc;
@@ -41,12 +42,12 @@ public class CommandCalc extends Command {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to rewrite the current equation with one or more " +
-           "applications of a calculation step, in some subterm of the left- or right-hand " +
-           "side of the equation.  You should supply at least one position, and at each position " +
-           "either a value will be computed, an existing variable in the right-hand side, or a " +
-           "fresh variable that will be added to the constraint.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to rewrite the current equation with one or more " +
+      "applications of a calculation step, in some subterm of the left- or right-hand side of " +
+      "the equation.  You should supply at least one position, and at each position either a " +
+      "value will be computed, an existing variable in the right-hand side, or a fresh variable " +
+      "that will be added to the constraint.");
   }
 
   @Override

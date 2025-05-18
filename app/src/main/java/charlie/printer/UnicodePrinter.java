@@ -57,6 +57,8 @@ public class UnicodePrinter extends Printer {
   public String symbSmaller()         { return "<"; }
   public String symbGeq()             { return "≥"; }
   public String symbLeq()             { return "≤"; }
+  public String symbLangle()          { return "⟨"; }
+  public String symbRangle()          { return "⟩"; }
   public String symbDistinct()        { return "≠"; }
   public String symbApprox()          { return "≈"; }
 
@@ -86,8 +88,5 @@ public class UnicodePrinter extends Printer {
   public String symbChi()             { return "χ"; }
   public String symbPsi()             { return "ψ"; }
   public String symbOmega()           { return "ω"; }
-
-  public String symbLangle()          { return "⟨"; }
-  public String symbRangle()          { return "⟩"; }
 }
 

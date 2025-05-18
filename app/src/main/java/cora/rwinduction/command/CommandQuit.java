@@ -16,6 +16,7 @@
 package cora.rwinduction.command;
 
 import charlie.util.FixedList;
+import cora.io.OutputModule;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The environment command :quit, which allows the user to end the interactive process. */
@@ -26,9 +27,9 @@ public class CommandQuit extends SingularCommandInherit {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "Use this to abort the interactive prover process.  " +
-           "Note that your result will not be saved!";
+  public void printHelp(OutputModule module) {
+    module.println("Use this to abort the interactive prover process.");
+    module.println("WARNING: note that your result will not be saved!");
   }
 
   @Override

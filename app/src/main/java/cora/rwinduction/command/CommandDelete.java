@@ -16,6 +16,7 @@
 package cora.rwinduction.command;
 
 import java.util.Optional;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.deduction.DeductionDelete;
 
 /** The syntax for the deduction command delete. */
@@ -26,9 +27,9 @@ public class CommandDelete extends SingularCommandInherit {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to delete the current equation, if either the left- and " +
-           "right-hand side are equal, or if the constraint is unsatisfiable.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to delete the current equation, if either the left- " +
+      "and right-hand side are equal, or if the constraint is unsatisfiable.");
   }
   
   @Override

@@ -16,6 +16,7 @@
 package cora.rwinduction.command;
 
 import charlie.util.FixedList;
+import cora.io.OutputModule;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the redo command. */
@@ -26,11 +27,11 @@ public class CommandRedo extends SingularCommandInherit {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "If you have just applied the undo command, you can use this rule to get back to the " +
-           "previous proof state (before undoing).  Note that doing any step other than undo or " +
-           "redo will cause the \"future\" states to be forgotten, at which point you cannot " +
-           "redo these steps anymore.";
+  public void printHelp(OutputModule module) {
+    module.println("If you have just applied the undo command, you can use this rule to get " +
+      "back to the previous proof state (before undoing).");
+    module.println("Note that doing any step other than undo or redo will cause the \"future\" " +
+      "states to be forgotten, at which point you cannot redo these steps anymore.");
   }
 
   @Override

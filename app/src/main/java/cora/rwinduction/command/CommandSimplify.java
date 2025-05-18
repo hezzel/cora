@@ -27,6 +27,7 @@ import charlie.terms.Term;
 import charlie.terms.Renaming;
 import charlie.terms.Substitution;
 import charlie.trs.Rule;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.deduction.DeductionSimplify;
 import cora.rwinduction.parser.CommandParsingStatus;
@@ -38,12 +39,13 @@ public class CommandSimplify extends ReductionCommandInherit {
   }
 
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to rewrite the current equation with one of the known rules, " +
-           "which might apply to some subterm of the left- or right-hand side of the equation.  " +
-           "Note that rule names can be found using :rules, and positions have the form " +
-           "L.<position> or R.<position>.  To simplify with a calculation rule, use the calc " +
-           "command instead.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to rewrite the current equation with one of the " +
+      "known rules, which might apply to some subterm of the left- or right-hand side of the " +
+      "equation.");
+    module.println("Note that rule names can be found using :rules, and positions have the form " +
+      "L.<position> or R.<position>.");
+    module.println("To simplify with a calculation rule, use the calc command instead.");
   }
 
   @Override

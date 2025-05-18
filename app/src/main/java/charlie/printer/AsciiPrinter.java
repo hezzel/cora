@@ -57,6 +57,8 @@ public class AsciiPrinter extends Printer {
   public String symbSmaller()         { return "<"; }
   public String symbGeq()             { return ">="; }
   public String symbLeq()             { return "<="; }
+  public String symbLangle()          { return "<"; }
+  public String symbRangle()          { return ">"; }
   public String symbDistinct()        { return "!="; }
   public String symbApprox()          { return "[=]"; }
 
@@ -86,8 +88,5 @@ public class AsciiPrinter extends Printer {
   public String symbChi()             { return "chi"; }
   public String symbPsi()             { return "psi"; }
   public String symbOmega()           { return "omega"; }
-
-  public String symbLangle()          { return "<"; }
-  public String symbRangle()          { return ">"; }
 }
 

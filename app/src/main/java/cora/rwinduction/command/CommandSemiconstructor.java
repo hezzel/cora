@@ -16,6 +16,7 @@
 package cora.rwinduction.command;
 
 import java.util.Optional;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.deduction.DeductionContext;
 
 /** The syntax for the deduction command SEMICONSTRUCTOR. */
@@ -26,10 +27,10 @@ public class CommandSemiconstructor extends SingularCommandInherit {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to split an equation f s1 ... sn = f t1 ... tn | constr into " +
-           "the n equations si = ti | constr, if f is a constructor, or its arity is greater " +
-           "than n.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to split an equation f s1 ... sn %{approx} " +
+      "f t1 ... tn | constr into the n equations si %{approx} ti | constr, if f is a " +
+      "constructor, or its arity is greater than n.");
   }
   
   @Override

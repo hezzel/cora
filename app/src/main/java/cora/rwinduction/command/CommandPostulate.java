@@ -23,6 +23,7 @@ import charlie.util.FixedList;
 import charlie.util.Pair;
 import charlie.terms.Renaming;
 import charlie.trs.TRS;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.Equation;
 import cora.rwinduction.engine.deduction.DeductionPostulate;
 import cora.rwinduction.parser.CommandParsingStatus;
@@ -41,8 +42,9 @@ public class CommandPostulate extends Command {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to introduce a new equation into the set of goals.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to introduce a new equation into the set of goals.");
+    module.println("(Doing this causes completeness of the proof state to be lost.)");
   }
 
   @Override

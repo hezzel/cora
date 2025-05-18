@@ -18,6 +18,7 @@ package cora.rwinduction.command;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import charlie.util.FixedList;
+import cora.io.OutputModule;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The environment command :help, which provides general of command-specific help. */
@@ -40,8 +41,8 @@ public class CommandHelp extends Command {
   }
 
   @Override
-  public String helpDescriptor() {
-    return "Prints a short description to explain how the prover works.";
+  public void printHelp(OutputModule module) {
+    module.println("Prints a short description to explain how the prover works.");
   }
 
   @Override
@@ -102,7 +103,7 @@ public class CommandHelp extends Command {
 
   /** Prints a help description for the given command, and returns true */
   private boolean printCommandHelp(Command cmd) {
-    _module.println(cmd.queryName() + ": " + cmd.helpDescriptor());
+    cmd.printHelp(_module);
     _module.startTable();
     for (String str : cmd.callDescriptor()) _module.println("%a", str);
     _module.endTable();

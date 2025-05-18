@@ -66,8 +66,8 @@ public abstract class Command {
   /** Returns a FixedList of strings describing how to call the command. */
   public abstract FixedList<String> callDescriptor();
 
-  /** Returns a description for the help command. */
-  public abstract String helpDescriptor();
+  /** Prints a description for the help command. */
+  public abstract void printHelp(OutputModule module);
 
   public record TabSuggestion(String text, String category) {}
 

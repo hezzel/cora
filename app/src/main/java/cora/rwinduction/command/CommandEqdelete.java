@@ -18,6 +18,7 @@ package cora.rwinduction.command;
 import java.util.Optional;
 
 import charlie.util.FixedList;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.deduction.DeductionEqdelete;
 import cora.rwinduction.parser.CommandParsingStatus;
 
@@ -29,10 +30,10 @@ public class CommandEqdelete extends SingularCommandInherit {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to delete the current equation, if the left-hand side has " +
-           "the form C[s1,...,sn], the right-hand side C[t1,...,tn], and the constraint implies " +
-           "that each si = ti.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to delete the current equation, if the left-hand " +
+      "side has the form C[s1,...,sn], the right-hand side C[t1,...,tn], and the constraint " +
+      "implies that each si = ti.");
   }
   
   @Override

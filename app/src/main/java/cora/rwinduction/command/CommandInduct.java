@@ -17,6 +17,7 @@ package cora.rwinduction.command;
 
 import java.util.Optional;
 import charlie.util.FixedList;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.deduction.DeductionInduct;
 import cora.rwinduction.parser.CommandParsingStatus;
 
@@ -27,11 +28,9 @@ public class CommandInduct extends SingularCommandInherit {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to add the current equation as an induction hypothesis.  " +
-           "Doing this might impose ordering requirements, if the \"left greater\" and \"right " +
-           "greater\" terms in the context are defined, and not equal to the sides of the " +
-           "equation.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to store the current equation as an induction " +
+      "hypothesis..");
   }
 
   @Override

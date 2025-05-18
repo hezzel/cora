@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import charlie.util.FixedList;
 import charlie.terms.Term;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.deduction.DeductionCase;
 import cora.rwinduction.parser.CommandParsingStatus;
 
@@ -38,13 +39,20 @@ public class CommandCase extends Command {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to split the current equation into one or more cases.  " +
-           "If you provide a constraint as argument, two new equations are created: one where " +
-           "the constraint holds, one where it doesn't.  If you provide an integer expression, " +
-           "three equations are created: one with exp > 0, one with exp = 0 and one with " +
-           "exp < 0.  Finally, if you provide a variable of a non-theory base type, then an " +
-           "equation is created for all constructors that might instantiate this variable.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to split the current equation into one or more " +
+      "cases.");
+    module.startTable();
+    module.nextColumn("*");
+    module.println("If you provide a constraint as argument, two new equations are created: one " +
+      "where the constraint holds, and one where it doesn't.");
+    module.nextColumn("*");
+    module.println("If you provide an integer expression, three equations are created: one with " +
+      "exp > 0, one with exp = 0 and one with exp < 0.");
+    module.nextColumn("*");
+    module.println("Finally, if you provide a variable of a non-theory base type, then an " +
+      "equation is created for all constructors that might instantiate this variable.");
+    module.endTable();
   }
 
   @Override

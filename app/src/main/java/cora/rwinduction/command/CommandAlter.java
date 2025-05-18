@@ -46,14 +46,16 @@ public class CommandAlter extends Command {
   }
   
   @Override
-  public String helpDescriptor() {
-    return "Use this deduction rule to change an equation to an equivalent one.  For now, we " +
-           "restrict the ways to do this in only specific ways that we know lead to an " +
-           "equivalent constraint without needing to send higher-order constraints into the SMT " +
-           "solver.  More interesting varieties of ALTER may be added in the future.  For " +
-           "ALTER ADD, all variables that you introduce must be fresh, while the terms may use " +
-           "only variables that already occur in the equation context, or that have been " +
-           "introduced by definition to the left.";
+  public void printHelp(OutputModule module) {
+    module.println("Use this deduction rule to change an equation to an equivalent one.  " +
+      "For now, we restrict the ways to do this in only specific ways that we know lead to an " +
+      "equivalent constraint without needing to send higher-order constraints into the SMT " +
+      "solver.  More interesting varieties of ALTER may be added in the future.");
+    module.println("For ALTER ADD, all variables that you introduce must be fresh, while the " +
+      "terms may use only variables that already occur in the equation context, or that have " +
+      "been introduced by definition to the left.");
+    module.println("For ALTER RENAME, note that the new names you introduce should not occur " +
+      "in the bounding terms either!");
   }
 
   @Override
