@@ -23,49 +23,68 @@ import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 
-public final class DeductionConstructor extends DeductionStep {
-  private DeductionConstructor(ProofState state, ProofContext context) {
+/**
+ * This class handles both the SEMICONSTRUCTOR and APPLICATION commands, both of which cut up an
+ * equation f s1 ... sn = f t1 ... tn into (s1,t1), ..., (sn,tn), but differ in whether f should be
+ * a constructor or partially applied function symbol (SEMICONSTRUCTOR), or an arbitrary head,
+ * including variables and defined symbols (APPLICATION).  The former is a complete step; the latter
+ * is not.
+ */
+public final class DeductionContext extends DeductionStep {
+  private boolean _complete;
+
+  private DeductionContext(ProofState state, ProofContext context, boolean complete) {
     super(state, context);
+    _complete = complete;
   }
  
-  public static Optional<DeductionConstructor> createStep(PartialProof proof,
-                                                          Optional<OutputModule> module) {
+  public static Optional<DeductionContext> createStep(PartialProof proof,
+                                                      Optional<OutputModule> module,
+                                                      boolean shouldBeComplete) {
     ProofState state = proof.getProofState();
     Equation eq = DeductionStep.getTopEquation(state, module);
     if (eq == null) return Optional.empty();
-    if (!eq.getLhs().isFunctionalTerm() || !eq.getRhs().isFunctionalTerm()) {
-      module.ifPresent(o -> o.println("The semiconstructor rule can only be applied if both " +
-        "sides of the equation are functional terms.  (Use \"context\" for the more general " +
-        "case, which does, however, lose completeness.)"));
-      return Optional.empty();
-    }
-    if (!eq.getLhs().queryRoot().equals(eq.getRhs().queryRoot())) {
-      module.ifPresent(o -> o.println("The semiconstructor rule cannot be applied, because the " +
-        "two sides of the equation do not have the same root symbol."));
+
+    String name = shouldBeComplete ? "semiconstructor" : "application";
+
+    if (!eq.getLhs().queryHead().equals(eq.getRhs().queryHead())) {
+      module.ifPresent(o -> o.println("The " + name + " rule cannot be applied, because the " +
+        "two sides of the equation do not have the same head."));
       return Optional.empty();
     }
     if (eq.getLhs().numberArguments() != eq.getRhs().numberArguments()) {
-      module.ifPresent(o -> o.println("The semiconstructor rule cannot be applied, because the " +
+      module.ifPresent(o -> o.println("The " + name + " rule cannot be applied, because the " +
         "two sides of the equation do not have the same number of arguments."));
       return Optional.empty();
     }
-    return Optional.of(new DeductionConstructor(state, proof.getContext()));
+
+    boolean isComplete = checkCompleteness(eq, proof.getContext());
+    if (shouldBeComplete && !isComplete) {
+      module.ifPresent(o -> o.println("The semiconstructor rule can only be applied if both " +
+        "sides of the equation have a form f s1 ... sn, with f a function symbol and n < ar(f).  " +
+        "(Use \"application\" for the more general form, which does, however, lose " +
+        "completeness.)"));
+      return Optional.empty();
+    }
+
+    return Optional.of(new DeductionContext(state, proof.getContext(), isComplete));
   }
 
   /**
-   * This verifies that the root symbols on both sides of the top equation are in fact constructors
-   * or partially applied function symbols.
+   * Helper function for createStep: this checks if we really have an application of SEMICONSTRUCTOR
+   * or one of APPLICATION.
    */
+  private static boolean checkCompleteness(Equation equation, ProofContext pcontext) {
+    Term left = equation.getLhs();
+    if (!left.isFunctionalTerm()) return false;
+    FunctionSymbol f = left.queryRoot();
+    int n = left.numberArguments();
+    int k = pcontext.queryRuleArity(f);
+    return n < k;
+  }
+
   @Override
   public boolean verify(Optional<OutputModule> module) {
-    FunctionSymbol f = _equ.getEquation().getLhs().queryRoot();
-    int n = _equ.getEquation().getLhs().numberArguments();
-    int k = _pcontext.queryRuleArity(f);
-    if (n >= k) {
-      println(module, "The semiconstructor rule cannot be applied, because %a is a %a symbol " +
-        "with enough arguments.", f, f.isTheorySymbol() ? "calculation" : "defined");
-      return false;
-    }
     return true;
   }
 
@@ -87,11 +106,16 @@ public final class DeductionConstructor extends DeductionStep {
 
   @Override
   public String commandDescription() {
-    return "semiconstructor";
+    return _complete ? "semiconstructor" : "application";
   }
 
   @Override
   public void explain(OutputModule module) {
+    if (!_complete) {
+      module.println("We apply APPLICATION to %a, splitting the immediate arguments into " +
+        "separate equations.", _equ.getName());
+      return;
+    }
     FunctionSymbol f = _equ.getEquation().getLhs().queryRoot();
     if (_pcontext.getTRS().isDefined(f) || f.toCalculationSymbol() != null) {
       module.println("We apply SEMICONSTRUCTOR to %a, since the rule arity of %a is %a and only " +
