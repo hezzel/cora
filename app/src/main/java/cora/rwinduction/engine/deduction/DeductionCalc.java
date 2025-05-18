@@ -169,7 +169,7 @@ public final class DeductionCalc extends DeductionStep {
     Equation eq = getTopEquation(proof.getProofState(), m);
     if (eq == null) return Optional.empty();
     Renaming renaming = proof.getProofState().getTopEquation().getRenamingCopy();
-    HashMap<Term,Variable> definedVars = breakupConstraint(eq.getConstraint());
+    HashMap<Term,Variable> definedVars = CalcHelper.breakupConstraint(eq.getConstraint());
     ChangeablePair pair = new ChangeablePair(eq.getLhs(), eq.getRhs());
     Term constraint = TheoryFactory.trueValue;
     HashMap<String,Variable> newvars = new HashMap<String,Variable>();
@@ -221,7 +221,7 @@ public final class DeductionCalc extends DeductionStep {
       return null;
     }
 
-    if (!calculatable(sub)) {
+    if (!CalcHelper.calculatable(sub)) {
       m.ifPresent(o -> o.println("The subterm %a at position %a is not calculatable: " +
         "it should be a first-order theory term.", sub, pos));
       return null;
@@ -246,61 +246,12 @@ public final class DeductionCalc extends DeductionStep {
   }
 
   /**
-   * This function checks if the given term satisfies the prerequisites of the calc rule: it is a
-   * first-order theory term, so any value instantiation can be reduced using the calculation step
-   * to a value.
-   */
-  private static boolean calculatable(Term term) {
-    return term.isFunctionalTerm() &&
-           term.isApplication() &&
-           term.isTheoryTerm() &&
-           term.isFirstOrder();
-  }
-
-  private static HashMap<Term,Variable> breakupConstraint(Term constraint) {
-    HashMap<Term,Variable> ret = new HashMap<Term,Variable>();
-    Stack<Term> todo = new Stack<Term>();
-    todo.push(constraint);
-    while (!todo.isEmpty()) {
-      Term term = todo.pop();
-      while (term.isFunctionalTerm() && term.queryRoot().equals(TheoryFactory.andSymbol) &&
-             term.numberArguments() == 2) {
-        todo.push(term.queryArgument(2));
-        term = term.queryArgument(1);
-      }
-      if (!term.isFunctionalTerm() || term.numberArguments() != 2) continue;
-      CalculationSymbol f = term.queryRoot().toCalculationSymbol();
-      if (f == null) continue;
-      if (f.queryKind() != CalculationSymbol.Kind.EQUALS &&
-          f.queryKind() != CalculationSymbol.Kind.IFF) continue;
-      if (term.queryArgument(1).isVariable() && !term.queryArgument(2).isVariable()) {
-        ret.put(term.queryArgument(2), term.queryArgument(1).queryVariable());
-      }
-      if (term.queryArgument(2).isVariable() && !term.queryArgument(1).isVariable()) {
-        ret.put(term.queryArgument(1), term.queryArgument(2).queryVariable());
-      }
-    }
-    return ret;
-  }
-
-  /**
-   * This function chooses a base name for a variable that is meant to replace the given term.
-   * The real name (that will be added to the naming) will have the form <base><index>.
-   */
-  private static String chooseBaseName(Term term) {
-    if (term.freeReplaceables().size() == 1) {
-      for (Replaceable x : term.freeReplaceables()) return x.queryName();
-    }
-    return term.queryType().toString().substring(0,1).toLowerCase();
-  }
-
-  /**
    * This function chooses a fresh variable name for a Variable that is meant to replace the given
    * term, creates the variable, and adds the name both to newvars and to naming.
    */
   private static Variable createNewVariable(Term term, Renaming naming,
                                             HashMap<String,Variable> newvars) {
-    String base = chooseBaseName(term);
+    String base = CalcHelper.chooseBaseName(term);
     Variable ret = TermFactory.createVar(base, term.queryType());
     for (int i = 1; ; i++) {
       String attempt = base + i;

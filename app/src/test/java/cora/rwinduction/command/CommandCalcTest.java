@@ -44,7 +44,7 @@ class CommandCalcTest {
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus(str);
     status.nextWord(); // :rules
-    return cmd.createStep(status);
+    return cmd.createPositionStep(status, status.nextWord());
   }
 
   @Test
@@ -59,11 +59,9 @@ class CommandCalcTest {
   @Test
   public void testBadInvocation() {
     OutputModule module = OutputModule.createUnitTestModule();
-    assertTrue(createStep(module, "calc").isEmpty());
     assertTrue(createStep(module, "calc L1 LR R1").isEmpty());
-    assertTrue(module.toString().equals("Calc must be given at least one argument.\n\n" +
-      "Illegal position LR: 1:0: Parser exception on input [R]: position index should be an " +
-      "integer\n\n"));
+    assertTrue(module.toString().equals("Illegal position LR: 1:0: Parser exception on input " +
+      "[R]: position index should be an integer\n\n"));
   }
 
   @Test
