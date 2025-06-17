@@ -146,6 +146,8 @@ public class AdditionTest {
     assertFalse(a.isSimplified());
     a = new Addition(List.of(x));
     assertFalse(a.isSimplified());
+    a = new Addition(List.of(new IValue(0), x));
+    assertFalse(a.isSimplified());
   }
 
   @Test
@@ -180,5 +182,8 @@ public class AdditionTest {
 
     a = new Addition(List.of(x, new CMult(3, new Addition(x, one)), new IValue(-4)));
     assertTrue(a.simplify().equals(new Addition(new IValue(-1), new CMult(4, x))));
+
+    a = new Addition(new IValue(0), x);
+    assertTrue(a.simplify() == x);
   }
 }
