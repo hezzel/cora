@@ -146,6 +146,7 @@ public final class Addition extends IntegerExpression {
     for (int i = 0; i < _children.size(); i++) {
       IntegerExpression child = _children.get(i);
       if (!child.isSimplified()) return;
+      if (child instanceof IValue k && k.queryValue() == 0) return;
       if (i == 0) continue;
       IntegerExpression childmain = switch(child) {
         case IValue k -> new IValue(1);
