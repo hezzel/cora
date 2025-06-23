@@ -48,6 +48,7 @@ public class TermSmtTranslator {
   private TreeMap<Variable,IVar> _ivars;
   private TreeMap<Variable,SVar> _svars;
   private TreeMap<Variable,BVar> _bvars;
+  private TreeMap<IVar,Variable> _varOfIVar;
 
   /**
    * Create a translator for transforming terms into SMT expressions.  The given SmtProblem is used
@@ -58,6 +59,7 @@ public class TermSmtTranslator {
     _ivars = new TreeMap<Variable,IVar>();
     _svars = new TreeMap<Variable,SVar>();
     _bvars = new TreeMap<Variable,BVar>();
+    _varOfIVar = new TreeMap<IVar,Variable>();
   }
 
   /**
@@ -69,6 +71,7 @@ public class TermSmtTranslator {
     _ivars = new TreeMap<Variable,IVar>();
     _svars = new TreeMap<Variable,SVar>();
     _bvars = new TreeMap<Variable,BVar>();
+    _varOfIVar = new TreeMap<IVar,Variable>();
   }
 
   /** Returns the SmtProblem associated to this translator (and used for translating variables). */
@@ -99,7 +102,11 @@ public class TermSmtTranslator {
    * generates a new IVar and both stores and returns it.
    */
   private IVar getIntegerVariableFor(Variable x) {
-    if (!_ivars.containsKey(x)) _ivars.put(x, _problem.createIntegerVariable());
+    if (!_ivars.containsKey(x)) {
+      IVar ivar = _problem.createIntegerVariable();
+      _ivars.put(x, ivar);
+      _varOfIVar.put(ivar, x);
+    }
     return _ivars.get(x);
   }
 
@@ -143,6 +150,14 @@ public class TermSmtTranslator {
    */
   public BVar getBVar(Variable x) {
     return _bvars.get(x);
+  }
+
+  /**
+   * This is the inverse of getIVar(), i.e., it returns the user Variable that corresponds to the
+   * given integer variable.
+   */
+  public Variable getVarOfIVar(IVar ivar) {
+    return _varOfIVar.get(ivar);
   }
 
   /**
