@@ -90,6 +90,18 @@ class CommandParsingStatusTest {
   }
 
   @Test
+  public void testReadRest() {
+    CommandParsingStatus status = new CommandParsingStatus("hello there sweet world; a e ;next ");
+    assertTrue(status.nextWord().equals("hello"));
+    assertTrue(status.readRest().equals("there sweet world"));
+    assertTrue(status.skipSeparator());
+    assertTrue(status.readRest().equals("a e "));
+    assertTrue(status.skipSeparator());
+    assertTrue(status.readRest().equals("next "));
+    assertTrue(status.done());
+  }
+
+  @Test
   public void testUnicode() {
     CommandParsingStatus status = new CommandParsingStatus("ak:jfda 11 #1341∀Ê ; aa");
     assertTrue(status.nextWord().equals("ak:jfda"));
