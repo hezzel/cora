@@ -102,6 +102,16 @@ public class CommandParsingStatus {
   }
 
   /**
+   * This returns the remainder of the input, until either the end of the input string or the next
+   * semi-colon.
+   */
+  public String readRest() {
+    _lastIndex = _index;
+    while (_index < _mystring.length() && _mystring.charAt(_index) != ';') _index++;
+    return _mystring.substring(_lastIndex, _index);
+  }
+
+  /**
    * If the next part of _mystring is exactly text, this reads it and then skips any subsequent
    * whitespace, before returning true.
    * If not, then the next word is read, a failure message is printed, and false is returned.
