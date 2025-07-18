@@ -35,9 +35,10 @@ public class CommandInduct extends SingularCommandInherit {
 
   @Override
   protected boolean run() {
-    Optional<DeductionInduct> step = DeductionInduct.createStep(_proof, Optional.of(_module));
+    Optional<OutputModule> o = Optional.of(_module);
+    Optional<DeductionInduct> step = DeductionInduct.createStep(_proof, o);
     if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, Optional.of(_module));
+    return step.get().verifyAndExecute(_proof, o);
   }
 }
 

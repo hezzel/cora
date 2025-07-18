@@ -47,7 +47,7 @@ public class CommandHypothesis extends HypothesisCommandInherit {
   protected boolean run(CommandParsingStatus input) {
     Optional<DeductionHypothesis> step = createStep(input);
     if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, Optional.of(_module));
+    return step.get().verifyAndExecute(_proof, optionalModule());
   }
 
   /** Main functionality of run, separated out for the sake of unit testing. */

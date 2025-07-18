@@ -21,6 +21,7 @@ import java.util.Optional;
 import charlie.util.FixedList;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.PartialProof;
+import cora.rwinduction.engine.DeductionStep;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /**
