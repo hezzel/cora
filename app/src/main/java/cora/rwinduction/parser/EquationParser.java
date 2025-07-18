@@ -16,6 +16,7 @@
 package cora.rwinduction.parser;
 
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 
 import charlie.exceptions.ParseException;
 import charlie.util.Pair;
@@ -46,6 +47,16 @@ public class EquationParser {
     Pair<Equation,Renaming> ret = parseEquation(status, trs);
     status.expect(Token.EOF, "end of input");
     return ret;
+  }
+
+  /**
+   * This reads an equation context of the form (d, a ≈ b | c, e) from the given string.
+   * The string is expected to end after that.
+   * @throws charlie.exceptions.ParseException
+   */
+  public static EquationContext parseEquationContext(String str, int index, TRS trs) {
+    ParsingStatus status = RIParser.createStatus(str);
+    return parseEquationContext(status, index, trs);
   }
 
   /**
@@ -84,12 +95,53 @@ public class EquationParser {
   }
 
   /**
+   * This reads an equation context of the form (d, a ≈ b | c, e) from the given string.
+   * The ParsingStatus is advanced until after the equation.
+   * If there is any error, an error will be stored in the status; hence, if the status is set up
+   * not to store multiple errors, then a ParseException will be thrown.
+   * @throws charlie.exceptions.ParseException
+   */
+  public static EquationContext parseEquationContext(ParsingStatus status, int index, TRS trs) {
+    if (status.expect(CoraTokenData.BRACKETOPEN, "opening bracket") == null) return null;
+    ParserTerm leftgr = null, rightgr = null;
+    Token tok = status.peekNext();
+    if (tok.getText().equals("•") || tok.getText().equals("*")) status.nextToken();
+    else leftgr = CoraParser.readTerm(status);
+    status.expect(CoraTokenData.COMMA, "comma");
+    Pair<Equation,Renaming> pair = parseEquation(status, trs);
+    status.expect(CoraTokenData.COMMA, "comma");
+    tok = status.peekNext();
+    if (tok.getText().equals("•") || tok.getText().equals("*")) status.nextToken();
+    else rightgr = CoraParser.readTerm(status);
+    status.expect(CoraTokenData.BRACKETCLOSE, "closing bracket");
+    Optional<Term> lg, rg;
+    if (leftgr == null) lg = Optional.empty();
+    else lg = Optional.of(CoraInputReader.readTerm(leftgr, pair.snd(), true, trs));
+    if (rightgr == null) rg = Optional.empty();
+    else rg = Optional.of(CoraInputReader.readTerm(rightgr, pair.snd(), true, trs));
+    return new EquationContext(lg, pair.fst(), rg, index, pair.snd());
+  }
+
+  /**
    * This reads an Equation of the form a ≈ b | c from the given string, and returns both it and
    * the corresponding Renaming.  The ParsingStatus is advanced until after the equation.
    * If there is any error, a ParseException will be thrown.
    * @throws charlie.exceptions.ParseException
    */
   public static Pair<Equation,Renaming> parseEquation(ParsingStatus status, TRS trs) {
+    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
+    return new Pair<Equation,Renaming>(parseEquation(status, renaming, trs), renaming);
+  }
+
+  /**
+   * This reads an Equation of the form a ≈ b | c from the given string, using the given Renaming
+   * for the variables (this Renaming may be expanded if additional variables occur in
+   * equation).  The ParsingStatus is advanced until after the equation.
+   * If there is any error, a ParseException will be thrown (we assume that the ParsingStatus is
+   * set up to tolerate 0 errors).
+   * @throws charlie.exceptions.ParseException
+   */
+  public static Equation parseEquation(ParsingStatus status, Renaming renaming, TRS trs) {
     ParserTerm left, right = null, constr = null;
     left = CoraParser.readTerm(status);
     if (status.readNextIf(RIParser.APPROX) != null) right = CoraParser.readTerm(status);
@@ -105,13 +157,12 @@ public class EquationParser {
         "\"a -><- b (| c)?\" but only found " + left + ".");
     }
     if (status.readNextIf(CoraTokenData.MID) != null) constr = CoraParser.readTerm(status);
-    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
     Term l = CoraInputReader.readTerm(left, renaming, true, trs);
     Term r = CoraInputReader.readTerm(right, renaming, true, trs);
     Term constraint = constr == null ? TheoryFactory.createValue(true)
                                      : CoraInputReader.readTerm(constr, renaming, true, trs);
     checkEquation(l, r, constraint);
-    return new Pair<Equation,Renaming>(new Equation(l, r, constraint), renaming);
+    return new Equation(l, r, constraint);
   }
 
   /** This checks if the given equation is legal one, and throws a ParseException if not. */

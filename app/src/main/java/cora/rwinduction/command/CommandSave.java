@@ -20,7 +20,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import charlie.util.FixedList;
+import charlie.printer.Printer;
+import charlie.printer.PrinterFactory;
 import cora.io.OutputModule;
+import cora.rwinduction.engine.EquationContext;
+import cora.rwinduction.engine.ProofState;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /**
@@ -63,20 +67,49 @@ public class CommandSave extends Command {
       _module.println("Cannot save to an empty file.");
       return false;
     }
-    ArrayList<String> commands = _proof.getCommandHistory();
+    String history = storeHistory();
     try {
       FileWriter filewriter = new FileWriter(filename, false);
-      for (String cmd : commands) {
-        filewriter.write(cmd);
-        filewriter.write(System.lineSeparator());
-      }
+      filewriter.write(history);
       filewriter.close();
-      _module.println("%a commands written to %a.", commands.size(), filename);
+      _module.println("Original equations and command history have been written to %a.", filename);
     }
     catch (IOException e) {
-      _module.println("Could not write to " + filename + ": %a.", e.getMessage());
+      _module.println("Could not write to %a: %a.", filename, e.getMessage());
     }
     return true;
+  }
+
+  /**
+   * Does the main work for run, printing the history to the given string.
+   * Default rather than private for the sake of unit testing.
+   */
+  String storeHistory() {
+    Printer pp = PrinterFactory.createParseablePrinter(_proof.getContext().getTRS());
+    printGoals(pp);
+    printCommands(pp);
+    return pp.toString();
+  }
+
+  private void printGoals(Printer printer) {
+    ProofState firstState;
+    if (_proof.getDeductionHistory().size() > 0) {
+      firstState = _proof.getDeductionHistory().get(0).getOriginalState();
+    }
+    else firstState = _proof.getProofState();
+    for (EquationContext ec : firstState.getEquations()) {
+      printer.add("GOAL ");
+      ec.print(printer);
+      printer.add(System.lineSeparator());
+    }
+  }
+
+  private void printCommands(Printer printer) {
+    ArrayList<String> commands = _proof.getCommandHistory();
+    for (String cmd : commands) {
+      printer.add(cmd);
+      printer.add(System.lineSeparator());
+    }
   }
 }
 

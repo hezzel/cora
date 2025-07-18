@@ -58,6 +58,7 @@ public class RIParser {
         lexer -> new SplitApproxAndSeparatorLexer(lexer),
         "≈",    APPROX,
         "-><-", APPROX,
+        "\\[=\\]", APPROX,
         ":=",   ASSIGN,
         ";",    SEPARATOR
       );

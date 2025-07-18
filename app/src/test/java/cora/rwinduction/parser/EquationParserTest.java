@@ -110,4 +110,13 @@ class EquationParserTest {
     assertTrue(lst.size() == 1);
     assertTrue(lst.get(0).toString().equals("E1: (• , sum(x) ≈ sum(y) | x = y , •)"));
   }
+
+  @Test
+  public void testReadEquationContext() {
+    EquationContext ec =
+      EquationParser.parseEquationContext("(*, sum(x) [=] sum(y),sum(y) )", 3, trs);
+    assertTrue(ec.toString().equals("E3: (• , sum(x) ≈ sum(y) , sum(y))"));
+    ec = EquationParser.parseEquationContext("(sum(x+y) , sum(x) = sum(y) | x >= y,•)", 7, trs);
+    assertTrue(ec.toString().equals("E7: (sum(x + y) , sum(x) ≈ sum(y) | x ≥ y , •)"));
+  }
 }

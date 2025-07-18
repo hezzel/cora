@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,9 +15,15 @@
 
 package cora.rwinduction;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
+import charlie.util.Either;
 import charlie.util.FixedList;
+import charlie.exceptions.ParseException;
 import charlie.trs.TRS;
 import charlie.trs.TrsProperties.*;
 import cora.io.OutputModule;
@@ -44,15 +50,32 @@ public class InteractiveRewritingInducter {
     _proof = pp;
   }
 
-  private static FixedList<EquationContext> readEquations(Inputter inputter, TRS trs) {
+  /**
+   * This reads from input until the user either supplies an existing file, or a number of
+   * equations, or :quit, or an empty line.
+   * - in case a file is read, its name is returned
+   * - in case equations are given, the corresponding list is returned
+   * - in case :quit or no equations are given, null is returned
+   * - in case something invalid is given, we just ask the user again!
+   */
+  private static Either<String,FixedList<EquationContext>> readEquationsOrFile(Inputter inputter,
+                                                                               TRS trs) {
+    FixedList<EquationContext> eqs = null;
     try {
-      String firstInput = inputter.readLine("Please input one or more equations: ");
+      String firstInput = inputter.readLine("Please input one or more equations, or a file: ");
       if (firstInput.equals(":quit") || firstInput.equals("")) return null;
-      return EquationParser.parseEquationList(firstInput, trs);
+      File f = new File(firstInput);
+      if (f.exists() && !f.isDirectory()) {
+        return new Either.Left<String,FixedList<EquationContext>>(firstInput);
+      }
+      else {
+        return new Either.Right<String,FixedList<EquationContext>>(
+          EquationParser.parseEquationList(firstInput, trs));
+      }
     }
     catch (Exception e) {
       System.out.println("Invalid input: " + e.getMessage());
-      return readEquations(inputter, trs);
+      return readEquationsOrFile(inputter, trs);
     }
   }
 
@@ -109,18 +132,111 @@ public class InteractiveRewritingInducter {
     outputter.printTrs(trs);
 
     // get initial equations and set up
-    FixedList<EquationContext> eqs = readEquations(inputter, trs);
-    if (eqs == null) return new ProofObject() {
+    Either<String,FixedList<EquationContext>> e = readEquationsOrFile(inputter, trs);
+    PartialProof proof = null;
+    if (e != null) switch (e) {
+      case Either.Left(String s):
+        SaveFile savefile = new SaveFile(s, trs, clst, outputter);
+        proof = savefile.restore();
+        break;
+      case Either.Right(FixedList<EquationContext> eqs):
+        proof = new PartialProof(trs, eqs, lst -> outputter.generateUniqueNaming(lst));
+        clst.storeContext(proof, outputter);
+        break;
+    }
+    if (proof == null) return new ProofObject() {
       public Answer queryAnswer() { return Answer.MAYBE; }
       public void justify(OutputModule module) { module.println("No valid equations gives."); }
     };
-    PartialProof proof = new PartialProof(trs, eqs, lst -> outputter.generateUniqueNaming(lst));
-    clst.storeContext(proof, outputter);
 
     // set up the inducter that will do all the work, and run it
     InteractiveRewritingInducter inducter =
       new InteractiveRewritingInducter(inputter, outputter, clst, proof);
     return inducter.proveEquivalence();
+  }
+
+  private boolean runCommands(List<String> commands, PartialProof proof, CmdList clst, OutputModule outputter) {
+    for (String txt : commands) {
+      CommandParsingStatus status = new CommandParsingStatus(txt);
+      while (!status.done()) {
+        while (status.skipSeparator());   // read past ; if there is one
+        String cmdname = status.nextWord();
+        if (cmdname == null) { outputter.println("Illegal input: %a", cmdname); return false; }
+        Command cmd = _cmdList.queryCommand(cmdname);
+        if (cmd == null) { outputter.println("Unknown command: %a.", cmdname); return false; }
+        else if (!cmd.execute(status)) return false;
+        if (!status.commandEnded()) {
+          int pos = status.currentPosition();
+          outputter.println("Unexpected token %a at position %a: expected a semi-colon or the " +
+            "end of the line.", status.nextWord(), pos);
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * This reads the given file, which firsts lists a number of equation contexts (marked GOAL),
+   * followed by a number of commands.  The equation contexts are parsed and returned; the commands
+   * are stored into the list commands.  If there are problems reading the file, or any of the
+   * equation contexts are not valid, an appropriate error message is printed to the outputter and
+   * null returned.
+   */
+  private static FixedList<EquationContext> readEquationsFromFile(String filename, TRS trs,
+                                        OutputModule outputter, ArrayList<String> commands) {
+    FixedList.Builder<EquationContext> builder = new FixedList.Builder<EquationContext>();
+    boolean readAny = false;
+    try {
+      Scanner s = new Scanner(new File(filename));
+      while (s.hasNextLine()) {
+        String line = s.nextLine();
+        if (line.length() > 6 && line.substring(0,6).equals("GOAL E")) {
+          EquationContext goal = readGoal(line, trs, outputter);
+          if (goal == null) return null;
+          builder.add(goal);
+          readAny = true;
+        }
+        else commands.add(line);
+      }
+      s.close();
+    }   
+    catch (IOException e) {
+      outputter.println("Could not read from file: %a.", e.getMessage());
+      return null;
+    }
+    if (!readAny) {
+      outputter.println("No goals are given in input file %a.", filename);
+      return null;
+    }
+    return builder.build();
+  }
+
+  /**
+   * Reads a goal of the form: GOAL E<index>: <equation context>.  If any parsing issues arise, an
+   * error message is printed to the outputter and null returned instead.
+   */
+  private static EquationContext readGoal(String line, TRS trs, OutputModule outputter) {
+    int k = line.indexOf(':');
+    if (k == -1) {
+      outputter.println("Illegal input line (not of the form GOAL E<number>: <rest>): %a", line);
+      return null;
+    }
+    int id = -1; 
+    try { id = Integer.parseInt(line.substring(6, k)); }
+    catch (NumberFormatException e) {
+      outputter.println("Illegal input line (E is not followed by <integer><colon>): %a", line);
+      return null;
+    }   
+    try {
+      EquationContext ec = EquationParser.parseEquationContext(line.substring(k+1), id, trs);
+      if (ec != null) return ec;
+      outputter.println("Invalid equation context: %a", line);
+    }   
+    catch (ParseException e) {
+      outputter.println("Illegal input line [%a]: %a", line, e.getMessage());
+    }   
+    return null;
   }
 
   /**
