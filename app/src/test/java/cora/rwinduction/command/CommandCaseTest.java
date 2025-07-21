@@ -49,7 +49,7 @@ class CommandCaseTest {
 
   private TRS trs = setupTRS();
 
-  private Optional<DeductionCase> createStep(OutputModule module, String str) {
+  private DeductionCase createStep(OutputModule module, String str) {
     CommandCase cmd = new CommandCase();
     PartialProof proof = new PartialProof(trs, EquationParser.parseEquationList(
       "iter(x, i, z) = add(x, y) | x > 0", trs), lst -> module.generateUniqueNaming(lst));
@@ -62,39 +62,39 @@ class CommandCaseTest {
   @Test
   public void testGoodStepWithTerm() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Optional<DeductionCase> step = createStep(module, "case i - x");
-    assertTrue(step.get().toString().equals("case i - x"));
+    DeductionCase step = createStep(module, "case i - x");
+    assertTrue(step.toString().equals("case i - x"));
   }
 
   @Test
   public void testGoodStepWithVariable() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Optional<DeductionCase> step = createStep(module, "case y");
-    assertTrue(step.get().toString().equals("case y"));
+    DeductionCase step = createStep(module, "case y");
+    assertTrue(step.toString().equals("case y"));
   }
 
   @Test
   public void testStepContainingFreshVariable() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Optional<DeductionCase> step = createStep(module, "case i - u > 0");
-    assertTrue(step.get().toString().equals("case i - u > 0"));
-    assertFalse(step.get().verify(Optional.of(module)));
+    DeductionCase step = createStep(module, "case i - u > 0");
+    assertTrue(step.toString().equals("case i - u > 0"));
+    assertFalse(step.verify(Optional.of(module)));
     assertTrue(module.toString().equals("Unknown variable in case term: \"i - u > 0\".\n\n"));
   }
 
   @Test
   public void testStepWithFreshVariable() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Optional<DeductionCase> step = createStep(module, "case u");
-    assertTrue(step.isEmpty());
+    DeductionCase step = createStep(module, "case u");
+    assertTrue(step == null);
     assertTrue(module.toString().equals("Unknown variable: u\n\n"));
   }
 
   @Test
   public void testStepContainingTypeError() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Optional<DeductionCase> step = createStep(module, "case i - y > 0");
-    assertTrue(step.isEmpty());
+    DeductionCase step = createStep(module, "case i - y > 0");
+    assertTrue(step == null);
     assertTrue(module.toString().equals("Parsing error at position 10: Expected term " +
       "of type Int, but got variable y which has type result.\n\n"));
   }
@@ -102,16 +102,16 @@ class CommandCaseTest {
   @Test
   public void testStepWithoutArguments() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Optional<DeductionCase> step = createStep(module, "case");
-    assertTrue(step.isEmpty());
+    DeductionCase step = createStep(module, "case");
+    assertTrue(step == null);
     assertTrue(module.toString().equals("Case should be invoked with at least one argument.\n\n"));
   }
 
   @Test
   public void testStepMultipleTerms() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Optional<DeductionCase> step = createStep(module, "case x  i > 0");
-    assertTrue(step.isEmpty());
+    DeductionCase step = createStep(module, "case x  i > 0");
+    assertTrue(step == null);
     assertTrue(module.toString().equals(
       "Unexpected argument at position 9: expected end of command.\n\n"));
   }

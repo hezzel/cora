@@ -25,7 +25,7 @@ import cora.rwinduction.engine.deduction.DeductionCase;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command case. */
-public class CommandCase extends Command {
+public class CommandCase extends DeductionCommand {
   @Override
   public String queryName() {
     return "case";
@@ -56,29 +56,22 @@ public class CommandCase extends Command {
   }
 
   @Override
-  protected boolean run(CommandParsingStatus input) {
-    Optional<DeductionCase> step = createStep(input);
-    if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, Optional.of(_module));
-  }
-
-  /** Main functionality of run, separated out for the sake of unit testing. */
-  Optional<DeductionCase> createStep(CommandParsingStatus input) {
+  protected DeductionCase createStep(CommandParsingStatus input) {
     if (_proof.getProofState().isFinalState()) {
       _module.println("There is no equation to do a case analysis on.");
-      return Optional.empty();
+      return null;
     }
     if (input.commandEnded()) {
       _module.println("Case should be invoked with at least one argument.");
-      return Optional.empty();
+      return null;
     }
     Term term = input.readTerm(_proof.getContext().getTRS(),
       _proof.getProofState().getTopEquation().getRenamingCopy(), _module);
-    if (term == null) return Optional.empty();
+    if (term == null) return null;
     if (!input.commandEnded()) {
       _module.println("Unexpected argument at position %a: expected end of command.",
         input.currentPosition());
-      return Optional.empty();
+      return null;
     }
     return DeductionCase.createStep(_proof, Optional.of(_module), term);
   }

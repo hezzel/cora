@@ -46,13 +46,13 @@ public final class DeductionSimplify extends DeductionStep {
    * The substitution will not be altered, and does not become the property of the step; it is
    * safe to change afterwards.
    */
-  public static Optional<DeductionSimplify> createStep(PartialProof proof, Optional<OutputModule> m,
-                                                       String ruleName, EquationPosition pos,
-                                                       Substitution subst) {
+  public static DeductionSimplify createStep(PartialProof proof, Optional<OutputModule> m,
+                                             String ruleName, EquationPosition pos,
+                                             Substitution subst) {
     Rule rule = proof.getContext().getRule(ruleName);
     if (rule == null) {
       m.ifPresent(o -> o.println("No such rule: %a.", ruleName));
-      return Optional.empty();
+      return null;
     }
 
     ConstrainedReductionHelper helper =
@@ -60,11 +60,10 @@ public final class DeductionSimplify extends DeductionStep {
         rule.queryConstraint(), proof.getContext().getRenaming(ruleName), "rule", proof, pos,
         subst);
     
-    if (!helper.extendSubstitutionBasic(m)) return Optional.empty();
+    if (!helper.extendSubstitutionBasic(m)) return null;
     helper.makePreAlter();
 
-    return Optional.of(new DeductionSimplify(proof.getProofState(), proof.getContext(), ruleName,
-                                             helper));
+    return new DeductionSimplify(proof.getProofState(), proof.getContext(), ruleName, helper);
   }
 
   /**

@@ -24,6 +24,7 @@ import charlie.util.FixedList;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
+import cora.rwinduction.engine.DeductionStep;
 import cora.rwinduction.engine.PartialProof;
 import cora.rwinduction.parser.CommandParsingStatus;
 
@@ -42,7 +43,7 @@ class CmdListTest {
       lst -> _module.generateUniqueNaming(lst));
   }
 
-  private class MyCommand extends Command {
+  private class MyCommand extends DeductionCommand {
     private String _name;
     public MyCommand(PartialProof p, OutputModule m, String name) {
       super(p, m);
@@ -52,7 +53,7 @@ class CmdListTest {
     public FixedList<String> callDescriptor() { return FixedList.of(_name); }
     public void printHelp(OutputModule module) { }
     public List<TabSuggestion> suggestNext(String str) { return List.of(); }
-    protected boolean run(CommandParsingStatus status) { return false; }
+    protected DeductionStep createStep(CommandParsingStatus status) { return null; }
   }
 
   private MyCommand mcmd(String name) { return new MyCommand(_proof, _module, name); }
@@ -61,25 +62,28 @@ class CmdListTest {
   public void testRegistrationAndAliases() {
     CmdList lst = new CmdList();
     setup();
-    lst.registerCommand(mcmd("simplify"));
+    lst.registerDeductionCommand(mcmd("simplify"));
     lst.registerAlias("simplification", "simplify");
     lst.registerAlias("simp", "simplify");
-    lst.registerCommand(mcmd("delete"));
+    lst.registerEnvironmentCommand(mcmd("delete"));
     assertTrue(lst.queryCommand("simplify").queryName().equals("simplify"));
     assertTrue(lst.queryCommand("simplification").queryName().equals("simplify"));
-    assertTrue(lst.queryCommand("simp").queryName().equals("simplify"));
+    assertTrue(lst.queryDeductionCommand("simp").queryName().equals("simplify"));
     assertTrue(lst.queryCommand("delete").queryName().equals("delete"));
     assertTrue(lst.queryCommands().size() == 2);
     assertTrue(lst.queryCommands().contains("simplify"));
     assertTrue(lst.queryCommands().contains("delete"));
     assertFalse(lst.queryCommands().contains("simplification"));
+    lst.registerAlias("del", "delete");
+    assertTrue(lst.queryCommand("del") == lst.queryCommand("delete"));
+    assertTrue(lst.queryDeductionCommand("del") == null);
   }
 
   @Test
   public void testNonExisting() {
     CmdList lst = new CmdList();
     setup();
-    lst.registerCommand(mcmd("simplify"));
+    lst.registerEnvironmentCommand(mcmd("simplify"));
     // command does not exist
     assertTrue(lst.queryCommand("simplification") == null);
     // wrong direction
@@ -91,12 +95,13 @@ class CmdListTest {
   public void testIllegalOverride() {
     CmdList lst = new CmdList();
     setup();
-    lst.registerCommand(mcmd("simplify"));
-    lst.registerCommand(mcmd("delete"));
+    lst.registerDeductionCommand(mcmd("simplify"));
+    lst.registerDeductionCommand(mcmd("delete"));
     lst.registerAlias("simp", "simplify");
-    assertThrows(IllegalArgumentException.class, () -> lst.registerCommand(mcmd("simplify")));
+    assertThrows(IllegalArgumentException.class, () ->
+      lst.registerDeductionCommand(mcmd("simplify")));
     assertThrows(IllegalArgumentException.class, () -> lst.registerAlias("delete", "simplify"));
-    assertThrows(IllegalArgumentException.class, () -> lst.registerCommand(mcmd("simp")));
+    assertThrows(IllegalArgumentException.class, () -> lst.registerDeductionCommand(mcmd("simp")));
     assertThrows(IllegalArgumentException.class, () -> lst.registerAlias("simp", "delete"));
   }
 }

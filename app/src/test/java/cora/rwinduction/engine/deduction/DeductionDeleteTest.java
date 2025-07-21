@@ -61,7 +61,7 @@ class DeductionDeleteTest {
     PartialProof pp = setupProof(eqdesc);
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    DeductionDelete step = DeductionDelete.createStep(pp, o).get();
+    DeductionDelete step = DeductionDelete.createStep(pp, o);
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().getIndex() == 1);
@@ -75,13 +75,12 @@ class DeductionDeleteTest {
     PartialProof pp = setupProof(eqdesc);
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    Optional<DeductionDelete> dd = DeductionDelete.createStep(pp, o);
-    if (dd.isEmpty()) return module.toString();
-    DeductionDelete step = dd.get();
+    DeductionDelete step = DeductionDelete.createStep(pp, o);
+    if (step == null) return module.toString();
     assertFalse(step.verify(o));
     // it also works without an output module!
     o = Optional.empty();
-    step = DeductionDelete.createStep(pp, o).get();
+    step = DeductionDelete.createStep(pp, o);
     assertFalse(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 2);
     assertTrue(pp.getProofState().getTopEquation().getIndex() == 2);
@@ -129,13 +128,13 @@ class DeductionDeleteTest {
                                        "sum1(x) = sum2(x) | x > x", trs),
       lst -> printer.generateUniqueNaming(lst));
     Optional<OutputModule> oo = Optional.empty();
-    DeductionDelete step = DeductionDelete.createStep(pp, oo).get();
+    DeductionDelete step = DeductionDelete.createStep(pp, oo);
     assertTrue(step.verifyAndExecute(pp, oo));
-    step = DeductionDelete.createStep(pp, oo).get();
+    step = DeductionDelete.createStep(pp, oo);
     assertTrue(step.verifyAndExecute(pp, oo));
     solver = new MySmtSolver(new SmtSolver.Answer.MAYBE("something"));
     Settings.smtSolver = solver;
-    step = DeductionDelete.createStep(pp, oo).get();
+    step = DeductionDelete.createStep(pp, oo);
     assertFalse(step.verify(oo));
     assertTrue(step.execute(pp, oo));
     assertTrue(pp.isDone());
@@ -172,7 +171,7 @@ class DeductionDeleteTest {
     PartialProof pp = setupProof("sum1(x) -><- sum2(x) | x > 0 ∧ x < 0");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    DeductionDelete step = DeductionDelete.createStep(pp, o).get();
+    DeductionDelete step = DeductionDelete.createStep(pp, o);
     assertTrue(step.commandDescription().equals("delete"));
     assertTrue(module.toString().equals(""));
     step.explain(module);

@@ -20,7 +20,7 @@ import cora.io.OutputModule;
 import cora.rwinduction.engine.deduction.DeductionContext;
 
 /** The syntax for the deduction command SEMICONSTRUCTOR. */
-public class CommandSemiconstructor extends SingularCommandInherit {
+public class CommandSemiconstructor extends SingularDeductionCommandInherit {
   @Override
   public String queryName() {
     return "semiconstructor";
@@ -34,10 +34,8 @@ public class CommandSemiconstructor extends SingularCommandInherit {
   }
   
   @Override
-  protected boolean run() {
-    Optional<DeductionContext> step = DeductionContext.createStep(_proof, optionalModule(), true);
-    if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, optionalModule());
+  protected DeductionContext createStep() {
+    return DeductionContext.createStep(_proof, optionalModule(), true);
   }
 }
 

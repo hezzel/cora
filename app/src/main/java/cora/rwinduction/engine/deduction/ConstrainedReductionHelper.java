@@ -306,13 +306,13 @@ class ConstrainedReductionHelper {
     }
     
     if (adding.isEmpty()) return false;
-    Optional<DeductionAlterDefinitions> ret = DeductionAlterDefinitions.createStep(_proof,
-                                                                 Optional.empty(), adding);
-    if (!ret.isPresent()) {
+    DeductionAlterDefinitions ret =
+      DeductionAlterDefinitions.createStep(_proof, Optional.empty(), adding);
+    if (ret == null) {
       for (Variable x : defined) _substitution.delete(x);
       return false;
     }
-    _preAlter = ret.get();
+    _preAlter = ret;
     return true;
   }
 

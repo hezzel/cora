@@ -72,7 +72,7 @@ class DeductionAlterDefinitionsTest {
     Term zvalue = CoraInputReader.readTerm("y1 > 0", renaming, pp.getContext().getTRS());
     defs.add(new Pair<Pair<Variable,String>,Term>(new Pair<Variable,String>(y, "y2"), yvalue));
     defs.add(new Pair<Pair<Variable,String>,Term>(new Pair<Variable,String>(z, "z"), zvalue));
-    DeductionAlterDefinitions step = DeductionAlterDefinitions.createStep(pp, o, defs).get();
+    DeductionAlterDefinitions step = DeductionAlterDefinitions.createStep(pp, o, defs);
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().getIndex() == 2);
@@ -96,20 +96,20 @@ class DeductionAlterDefinitionsTest {
       new ArrayList<Pair<Pair<Variable,String>,Term>>();
 
     // no elements
-    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
+    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs) == null);
 
     // variable already exists
     Variable x = renaming.getVariable("x");
     Pair<Variable,String> xinfo = new Pair<Variable,String>(x, "x");
     defs.add(new Pair<Pair<Variable,String>,Term>(xinfo, TheoryFactory.createValue(0)));
-    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
+    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs) == null);
     defs.clear();
 
     // non-theory variable
     x = TermFactory.createVar("x", CoraInputReader.readType("unit"));
     xinfo = new Pair<Variable,String>(x, "x2");
     defs.add(new Pair<Pair<Variable,String>,Term>(xinfo, renaming.getVariable("u")));
-    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
+    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs) == null);
     defs.clear();
 
     // unknown variable in the value
@@ -117,14 +117,14 @@ class DeductionAlterDefinitionsTest {
     Pair<Variable,String> yinfo = new Pair<Variable,String>(y, "y3");
     defs.add(new Pair<Pair<Variable,String>,Term>(yinfo, CoraInputReader.readTerm("z + 1", renaming,
                                                                         pp.getContext().getTRS())));
-    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
+    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs) == null);
     defs.clear();
 
     // y itself occurs in the value
     renaming.setName(y, "y");
     defs.add(new Pair<Pair<Variable,String>,Term>(yinfo, CoraInputReader.readTerm("y + 1", renaming,
                                                                         pp.getContext().getTRS())));
-    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
+    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs) == null);
     defs.clear();
 
     // value has a higher-order subterm
@@ -132,12 +132,12 @@ class DeductionAlterDefinitionsTest {
     renaming.setName(F, "F");
     defs.add(new Pair<Pair<Variable,String>,Term>(yinfo, CoraInputReader.readTerm("F(1)", renaming,
                                                                        pp.getContext().getTRS())));
-    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
+    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs) == null);
     defs.clear();
 
     // type mismatch
     defs.add(new Pair<Pair<Variable,String>,Term>(yinfo, TheoryFactory.createValue(true)));
-    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs).isEmpty());
+    assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs) == null);
 
     assertTrue(module.toString().equals(
       "Cannot introduce an empty number of definitions.\n\n" +

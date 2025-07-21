@@ -67,7 +67,7 @@ class DeductionAlterRenameTest {
     names.add(new Pair<String,String>("y", "x"));
     names.add(new Pair<String,String>("z", "m"));
     names.add(new Pair<String,String>("u", "k"));
-    DeductionAlterRename step = DeductionAlterRename.createStep(pp, o, names).get();
+    DeductionAlterRename step = DeductionAlterRename.createStep(pp, o, names);
     assertTrue(module.toString().equals(""));
     assertTrue(step.commandDescription().equals("alter rename x := n, y := x, z := m, u := k"));
     step.explain(module);
@@ -92,7 +92,7 @@ class DeductionAlterRenameTest {
     names.add(new Pair<String,String>("a", "tmp"));
     names.add(new Pair<String,String>("z", "a"));
     names.add(new Pair<String,String>("tmp", "z"));
-    DeductionAlterRename step = DeductionAlterRename.createStep(pp, o, names).get();
+    DeductionAlterRename step = DeductionAlterRename.createStep(pp, o, names);
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E2: (• , iter(a, x, y) ≈ iter(z, y, a) , •)"));
@@ -106,24 +106,24 @@ class DeductionAlterRenameTest {
     ArrayList<Pair<String,String>> names = new ArrayList<Pair<String,String>>();
 
     names.add(new Pair<String,String>("a", "b"));
-    assertTrue(DeductionAlterRename.createStep(pp, o, names).isEmpty());
+    assertTrue(DeductionAlterRename.createStep(pp, o, names) == null);
 
     names.clear();
     names.add(new Pair<String,String>("y", "y"));
-    assertTrue(DeductionAlterRename.createStep(pp, o, names).isEmpty());
+    assertTrue(DeductionAlterRename.createStep(pp, o, names) == null);
 
     names.clear();
     names.add(new Pair<String,String>("y", "z"));
-    assertTrue(DeductionAlterRename.createStep(pp, o, names).isEmpty());
+    assertTrue(DeductionAlterRename.createStep(pp, o, names) == null);
 
     names.clear();
     names.add(new Pair<String,String>("y", "a"));
     names.add(new Pair<String,String>("z", "a"));
-    assertTrue(DeductionAlterRename.createStep(pp, o, names).isEmpty());
+    assertTrue(DeductionAlterRename.createStep(pp, o, names) == null);
 
     names.clear();
     names.add(new Pair<String,String>("y", "f"));
-    assertTrue(DeductionAlterRename.createStep(pp, o, names).isEmpty());
+    assertTrue(DeductionAlterRename.createStep(pp, o, names) == null);
 
     assertTrue(module.toString().equals(
       "Unknown variable name: a.\n\n" +

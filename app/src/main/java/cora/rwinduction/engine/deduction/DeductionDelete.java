@@ -34,17 +34,16 @@ public final class DeductionDelete extends DeductionStep {
     _bothSidesEqual = equalsides;
   }
  
-  public static Optional<DeductionDelete> createStep(PartialProof proof,
-                                                     Optional<OutputModule> module) {
+  public static DeductionDelete createStep(PartialProof proof, Optional<OutputModule> module) {
     ProofState state = proof.getProofState();
     Equation eq = DeductionStep.getTopEquation(state, module);
-    if (eq == null) return Optional.empty();
+    if (eq == null) return null;
     // option 1: both sides are equal
     if (eq.getLhs().equals(eq.getRhs())) {
-      return Optional.of(new DeductionDelete(state, proof.getContext(), true));
+      return new DeductionDelete(state, proof.getContext(), true);
     }
     // option 2: we will have to check the constraint
-    return Optional.of(new DeductionDelete(state, proof.getContext(), false));
+    return new DeductionDelete(state, proof.getContext(), false);
   }
 
   /**

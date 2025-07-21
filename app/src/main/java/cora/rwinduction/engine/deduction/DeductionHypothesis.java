@@ -53,9 +53,9 @@ public final class DeductionHypothesis extends DeductionStep {
    * For now, the step decides for itself which ordering requirements are imposed; the user cannot
    * indicate this.  This may be changed in the future, though.
    */
-  public static Optional<DeductionHypothesis> createStep(PartialProof proof, Optional<OutputModule> m,
-                                                         Hypothesis hypo, boolean inverse,
-                                                         EquationPosition pos, Substitution subst) {
+  public static DeductionHypothesis createStep(PartialProof proof, Optional<OutputModule> m,
+                                               Hypothesis hypo, boolean inverse,
+                                               EquationPosition pos, Substitution subst) {
     Equation hequ = hypo.getEquation();
     Term left = inverse ? hequ.getRhs() : hequ.getLhs();
     Term right = inverse ? hequ.getLhs() : hequ.getRhs();
@@ -64,9 +64,9 @@ public final class DeductionHypothesis extends DeductionStep {
       new ConstrainedReductionHelper(left, right, hequ.getConstraint(), hypo.getRenamingCopy(),
                                      "induction hypothesis", proof, pos, subst);
     EquationContext original = proof.getProofState().getTopEquation();
-    if (!helper.extendSubstitutionBasic(m)) return Optional.empty();
+    if (!helper.extendSubstitutionBasic(m)) return null;
     helper.extendSubstitutionWithConstraintDefinitions();
-    if (!helper.checkEverythingSubstituted(m)) return Optional.empty();
+    if (!helper.checkEverythingSubstituted(m)) return null;
 
     Pair<Equation,Renaming> neweqdata = helper.reduce();
     Equation neweq = neweqdata.fst();
@@ -76,14 +76,14 @@ public final class DeductionHypothesis extends DeductionStep {
     if (!checkOrderingRequirements(original, pos, neweq, newrenaming, requirements)) {
       m.ifPresent(o -> o.println("The hypothesis cannot be applied, as it would cause an " +
         "obviously unsatisfiable ordering requirement to be imposed."));
-      return Optional.empty();
+      return null;
     }
     int id = proof.getProofState().getLastUsedIndex() + 1;
     EquationContext result = new EquationContext(original.getLeftGreaterTerm(), neweq,
                                                  original.getRightGreaterTerm(), id, newrenaming);
-    return Optional.of(new DeductionHypothesis(proof.getProofState(), proof.getContext(),
-                                               hypo.getName() + (inverse ? "^{-1}" : ""), inverse,
-                                               helper, result, requirements));
+    return new DeductionHypothesis(proof.getProofState(), proof.getContext(),
+                                   hypo.getName() + (inverse ? "^{-1}" : ""),
+                                   inverse, helper, result, requirements);
   }
 
   /**

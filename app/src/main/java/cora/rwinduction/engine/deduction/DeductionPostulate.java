@@ -37,11 +37,10 @@ public final class DeductionPostulate extends DeductionStep {
    * Returns an Optional to be in line with other deduction steps, even though there is (at this
    * time) no way for the step creation to fail.
    */
-  public static Optional<DeductionPostulate> createStep(PartialProof proof,
-                                                        Optional<OutputModule> module,
-                                                        Equation equ, Renaming ren) {
+  public static DeductionPostulate createStep(PartialProof proof, Optional<OutputModule> module,
+                                              Equation equ, Renaming ren) {
     ProofState state = proof.getProofState();
-    return Optional.of(new DeductionPostulate(proof.getProofState(), proof.getContext(), equ, ren));
+    return new DeductionPostulate(proof.getProofState(), proof.getContext(), equ, ren);
   }
 
   @Override

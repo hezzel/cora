@@ -23,7 +23,7 @@ import cora.rwinduction.engine.deduction.DeductionEqdelete;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command eq-delete. */
-public class CommandEqdelete extends SingularCommandInherit {
+public class CommandEqdelete extends SingularDeductionCommandInherit {
   @Override
   public String queryName() {
     return "eq-delete";
@@ -37,10 +37,8 @@ public class CommandEqdelete extends SingularCommandInherit {
   }
   
   @Override
-  protected boolean run() {
-    Optional<DeductionEqdelete> step = DeductionEqdelete.createStep(_proof, optionalModule());
-    if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, optionalModule());
+  protected DeductionEqdelete createStep() {
+    return DeductionEqdelete.createStep(_proof, optionalModule());
   }
 }
 

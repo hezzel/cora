@@ -34,7 +34,7 @@ import cora.rwinduction.parser.CommandParsingStatus;
  * A base inherit for commands like Simplify and Hypothesis, which have a lot of shared
  * functionality.
  */
-abstract class ReductionCommandInherit extends Command {
+abstract class ReductionCommandInherit extends DeductionCommand {
   protected String _commandName;
   private String _reducibleKind;
 

@@ -20,7 +20,7 @@ import cora.io.OutputModule;
 import cora.rwinduction.engine.deduction.DeductionDelete;
 
 /** The syntax for the deduction command delete. */
-public class CommandDelete extends SingularCommandInherit {
+public class CommandDelete extends SingularDeductionCommandInherit {
   @Override
   public String queryName() {
     return "delete";
@@ -33,10 +33,8 @@ public class CommandDelete extends SingularCommandInherit {
   }
   
   @Override
-  protected boolean run() {
-    Optional<DeductionDelete> step = DeductionDelete.createStep(_proof, optionalModule());
-    if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, optionalModule());
+  protected DeductionDelete createStep() {
+    return DeductionDelete.createStep(_proof, optionalModule());
   }
 }
 
