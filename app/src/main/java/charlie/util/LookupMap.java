@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,7 +18,6 @@ package charlie.util;
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeMap;
-import charlie.exceptions.NullStorageException;
 
 /**
  * This class provides a read-only mapping from strings to a given type, with no null entries.
@@ -38,7 +37,7 @@ public class LookupMap<T> {
   public String toString() { return _mymap.toString(); }
 
   /** Private constructor, because we should only be created through the builder. */
-  LookupMap(TreeMap<String,T> map) {
+  private LookupMap(TreeMap<String,T> map) {
     _mymap = map;
   }
 

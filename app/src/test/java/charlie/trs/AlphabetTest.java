@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import charlie.exceptions.NullStorageException;
 import charlie.exceptions.TypingException;
 import charlie.util.LookupMap;
+import charlie.util.NullStorageException;
 import charlie.types.*;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TermFactory;

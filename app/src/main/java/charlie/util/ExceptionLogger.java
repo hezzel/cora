@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,10 +16,10 @@
 package charlie.util;
 
 /**
- * When some process in Cora runs into an Exception, they may pass it on to the caller, or they may
- * wish to handle it on the spot.  However ,the latter option runs the risk of hiding that an error
- * took place.  This handler can be used to log the error to ensure that errors are noticed during
- * testing.
+ * When some Cora runs into an Exception, they may pass it on to the caller, show it to the user in
+ * a situation-appropriate way, or work around it.  However, this last option runs the risk of
+ * hiding that an error took place.  This handler can be used to log the error to ensure that
+ * errors are noticed during testing.
  */
 public class ExceptionLogger {
   private static boolean _enabled = true;
@@ -30,8 +30,12 @@ public class ExceptionLogger {
   /** If enabled, errors will be handled as usual again.  (Only needed after disable().) */
   public static void enable() { _enabled = true; }
 
-  /** Prints the given message to stderr, followed by a stack trace of the Exception. */
+  /**
+   * Prints the given message to stderr, followed by a stack trace of the Exception.
+   * If the logger is disabled, nothing happens.
+   */
   public static void log(String message, Exception e) {
+    if (!_enabled) return;
     System.err.println(message);
     e.printStackTrace();
   }

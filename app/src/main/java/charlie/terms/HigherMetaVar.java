@@ -17,7 +17,7 @@ package charlie.terms;
 
 import com.google.common.collect.ImmutableList;
 import charlie.exceptions.IndexingException;
-import charlie.exceptions.NullStorageException;
+import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 

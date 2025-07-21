@@ -16,9 +16,9 @@
 package charlie.trs;
 
 import java.util.Collection;
-import charlie.exceptions.NullStorageException;
 import charlie.exceptions.TypingException;
 import charlie.util.LookupMap;
+import charlie.util.NullStorageException;
 import charlie.terms.FunctionSymbol;
 
 /** A finite, immutable set of user-defined symbols, with no duplicate names. */

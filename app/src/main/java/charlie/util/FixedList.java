@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -14,8 +14,6 @@
  *************************************************************************************************/
 
 package charlie.util;
-
-import charlie.exceptions.NullStorageException;
 
 import java.lang.Iterable;
 import java.util.ArrayList;
@@ -38,7 +36,7 @@ public class FixedList<T> implements Iterable<T> {
    * Private constructor, because we should only be created through the builder or the
    * dedicated static construction functions.
    */
-  FixedList(ArrayList<T> lst) {
+  private FixedList(ArrayList<T> lst) {
     _mylist = lst;
   }
 
@@ -53,23 +51,33 @@ public class FixedList<T> implements Iterable<T> {
     return new FixedList<T>(result);
   }
 
+  /** Create an empty FixedList */
   public static <T> FixedList<T>of() {
     return new FixedList<T>(new ArrayList<T>(0));
   }
+
+  /** Create a singleton FixedList */
   public static <T> FixedList<T> of(T arg1) {
     final ArrayList<T> result = new ArrayList<T>(1);
     if (arg1 == null) throw new NullStorageException("FixedList", "element in unary constructor");
     result.add(arg1);
     return new FixedList<T>(result);
   }
+
+  /** Create a binary FixedList */
   public static <T> FixedList<T> of(T arg1, T arg2) {
     final ArrayList<T> result = new ArrayList<T>(2);
-    if (arg1 == null) throw new NullStorageException("FixedList", "element 1 in biary constructor");
-    if (arg2 == null) throw new NullStorageException("FixedList", "element 2 in biary constructor");
+    if (arg1 == null) {
+      throw new NullStorageException("FixedList", "element 1 in binary constructor");
+    }
+    if (arg2 == null) {
+      throw new NullStorageException("FixedList", "element 2 in binary constructor");
+    }
     result.add(arg1);
     result.add(arg2);
     return new FixedList<T>(result);
   }
+  
   /** Create the list of a given (fixed) series of arguments */
   @SafeVarargs
   public static <T> FixedList<T>of(T ...args) {
@@ -87,8 +95,8 @@ public class FixedList<T> implements Iterable<T> {
   public int hashCode() { return _mylist.hashCode(); }
   public boolean isEmpty() { return _mylist.isEmpty(); }
   public boolean contains(T elem) { return _mylist.contains(elem); }
-  public Stream<T> parallelStream() { return _mylist.parallelStream(); }
   public int size() { return _mylist.size(); }
+  public Stream<T> parallelStream() { return _mylist.parallelStream(); }
   public Stream<T> stream() { return _mylist.stream(); }
   public FixedList<T> append(FixedList<T> other) { return append(other._mylist); }
   public HashSet<T> toSet() { return new HashSet<T>(_mylist); }
@@ -120,7 +128,7 @@ public class FixedList<T> implements Iterable<T> {
     public Builder() { _internal = new ArrayList<T>(); }
     public Builder(int expectedSize) { _internal = new ArrayList<T>(expectedSize); }
     public void add(T element) {
-      if (_internal == null) { throw new RuntimeException("Using builder that was already built!"); }
+      if (_internal == null) throw new RuntimeException("Using builder that was already built!");
       if (element == null) throw new NullStorageException("FixedList", "element in builder");
       _internal.add(element);
     }

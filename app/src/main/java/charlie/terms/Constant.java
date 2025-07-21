@@ -17,7 +17,7 @@ package charlie.terms;
 
 import java.util.Map;
 import charlie.exceptions.InappropriatePatternDataException;
-import charlie.exceptions.NullStorageException;
+import charlie.util.NullStorageException;
 import charlie.types.Type;
 
 /**

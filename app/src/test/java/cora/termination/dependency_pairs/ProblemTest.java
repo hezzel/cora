@@ -15,8 +15,8 @@
 
 package cora.termination.dependency_pairs;
 
-import charlie.exceptions.NullStorageException;
 import charlie.util.FixedList;
+import charlie.util.NullStorageException;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
 import charlie.trs.*;

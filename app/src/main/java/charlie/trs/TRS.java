@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 import charlie.exceptions.IndexingException;
 import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.IllegalSymbolException;
-import charlie.exceptions.NullStorageException;
+import charlie.util.NullStorageException;
 import charlie.util.Pair;
 import charlie.util.FixedList;
 import charlie.types.Type;
