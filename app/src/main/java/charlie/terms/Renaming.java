@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,8 +18,8 @@ package charlie.terms;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
-import charlie.exceptions.NullStorageException;
 import charlie.util.Pair;
+import charlie.util.NullStorageException;
 
 /**
  * Renamings are used by TermPrinters to give each (meta-)variable in a given term or set of terms

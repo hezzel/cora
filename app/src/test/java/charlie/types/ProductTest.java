@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 
-import charlie.exceptions.NullStorageException;
+import charlie.util.NullStorageException;
 
 class ProductTest {
   @Test

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -14,8 +14,6 @@
  *************************************************************************************************/
 
 package charlie.util;
-
-import charlie.exceptions.NullStorageException;
 
 import java.lang.Iterable;
 import java.util.HashSet;
@@ -37,7 +35,7 @@ public class FixedSet<T> implements Iterable<T> {
    * Private constructor, because we should only be created through the builder or the
    * dedicated static construction functions.
    */
-  FixedSet(Set<T> set) {
+  private FixedSet(Set<T> set) {
     _myset = set;
   }
 

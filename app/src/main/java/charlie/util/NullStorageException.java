@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,12 +13,15 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.exceptions;
+package charlie.util;
 
 /**
  * A NullStorageException is thrown when either we try to create an object with a null argument, or
  * an existing object is updated with a null argument.  Either way, a null object would be stored
  * where null is not expected, which could cause problems later in the program.
+ *
+ * Note: a NullStorageException is NOT a UserException, because this really is always a mistake by
+ * the programmer.  Hence, the message is also very programmer-focused.
  */
 public class NullStorageException extends RuntimeException {
   public NullStorageException(String classname, String message) {

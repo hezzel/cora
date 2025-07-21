@@ -18,8 +18,8 @@ package cora.rwinduction.engine;
 import java.util.List;
 
 import charlie.exceptions.IndexingException;
-import charlie.exceptions.NullStorageException;
 import charlie.util.FixedList;
+import charlie.util.NullStorageException;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 

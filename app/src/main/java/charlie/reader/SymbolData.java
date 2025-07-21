@@ -17,7 +17,7 @@ package charlie.reader;
 
 import java.util.TreeMap;
 import java.util.TreeSet;
-import charlie.exceptions.NullStorageException;
+import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Variable;

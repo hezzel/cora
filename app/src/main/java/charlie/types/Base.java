@@ -16,7 +16,7 @@
 package charlie.types;
 
 import charlie.exceptions.IndexingException;
-import charlie.exceptions.NullStorageException;
+import charlie.util.NullStorageException;
 
 public record Base(String name) implements Type {
   public Base {

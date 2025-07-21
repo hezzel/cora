@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -17,7 +17,7 @@ package charlie.terms;
 
 import java.util.Map;
 import charlie.exceptions.IndexingException;
-import charlie.exceptions.NullStorageException;
+import charlie.util.NullStorageException;
 import charlie.types.Type;
 
 /**

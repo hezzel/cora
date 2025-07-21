@@ -17,7 +17,7 @@ package charlie.smt;
 
 import java.util.Arrays;
 import java.util.List;
-import charlie.exceptions.NullStorageException;
+import charlie.util.NullStorageException;
 
 /**
  * The SmtFactory is used to create Constraints and IntegerExpressions.

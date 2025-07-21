@@ -17,8 +17,8 @@ package cora.rwinduction.engine;
 
 import java.util.*;
 import java.util.function.Function;
-import charlie.exceptions.NullStorageException;
 import charlie.util.FixedList;
+import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;

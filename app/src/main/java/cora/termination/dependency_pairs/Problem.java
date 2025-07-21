@@ -16,8 +16,8 @@
 package cora.termination.dependency_pairs;
 
 import charlie.exceptions.IndexingException;
-import charlie.exceptions.NullStorageException;
 import charlie.util.FixedList;
+import charlie.util.NullStorageException;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.terms.FunctionSymbol;

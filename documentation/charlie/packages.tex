@@ -22,25 +22,23 @@ on B if there is a path from B to A following the arrow directions.  For example
 \begin{tikzpicture}[->]
 \tikzstyle{veld} = [draw, fill=white, minimum height=0em, minimum width=0em, rounded corners]
 
-\node [veld] (exceptions) {exceptions};
-\node [veld] (util) [below of=exceptions, node distance=10mm] {util};
-\draw (exceptions) -- (util);
+\node [veld] (util) {util};
 
-\node [veld] (types) [below of=util, node distance=10mm] {types};
+\node [veld] (types) [below of=util, node distance=15mm] {types};
 \draw (util) -- (types);
 
 \node [veld] (parserlib) [left of=types, node distance=15mm, anchor=east] {parser.lib};
-\draw (exceptions) -- (parserlib);
+\draw (util) -- (parserlib);
 
 \node [veld] (parser) [below of=parserlib, node distance=10mm] {parser};
 \draw (parserlib) -- (parser);
 \draw (types) -- (parser);
 
 \node [veld] (termspos) [right of=types, node distance=10mm, anchor=west] {terms.position};
-\draw (exceptions) -- (termspos);
+\draw (util) -- (termspos);
 
 \node [veld] (smt) [right of=termspos, node distance=17mm, anchor=west] {smt};
-\draw (exceptions) -- (smt);
+\draw (util) -- (smt);
 
 \node [veld] (terms) [below of=types, node distance=10mm] {terms};
 \draw (types) -- (terms);
@@ -60,9 +58,33 @@ on B if there is a path from B to A following the arrow directions.  For example
 \node [veld] (theory) [below of=smt, node distance=30mm] {theorytranslation};
 \draw (trs) -- (theory);
 \draw (smt) -- (theory);
-
 \end{tikzpicture}
 \end{center}
+
+\newpage
+\section{Util}
+
+The util package has no dependencies, and contains general utility classes -- arguably, classes
+that could be in the Java library rather than a term rewriting library.
+
+\begin{itemize}
+\item \texttt{Either} -- to represent a value that can have one of two possible types
+\item \texttt{Pair} -- to represent a value consisting of two underlying values \\\ 
+
+\item \texttt{NullStorageException} -- an exception to be thrown when the user tries to store
+  structures in a structure that should not have null elements
+\item \texttt{UserException} -- an exception that may need to be shown to the user at some point,
+  rather than merely to the programmer
+\item \texttt{ExceptionLogger} --- a tool to log exceptions that we don't want to throw, nor
+  \emph{necessarily} show to the user \\\ 
+
+\item \texttt{FixedList} -- an immutable list
+\item \texttt{FixedSet} -- an immutable set
+\item \texttt{LookupMap} -- an immutable map with strings as keys \\\ 
+
+\item \texttt{SystemUtils} -- a class to check information about the current OS
+\item \texttt{ProcessCaller} -- a class to call external processes (such as an SMT solver)
+\end{itemize}
 
 \end{document}
 

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,9 +15,6 @@
 
 package charlie.solvesmt;
 
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -26,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
-import charlie.exceptions.NullStorageException;
 import charlie.util.ExceptionLogger;
+import charlie.util.NullStorageException;
 import charlie.util.ProcessCaller;
 import charlie.smt.*;
 import static charlie.solvesmt.SMTLibString.Version.V26;
@@ -53,8 +50,7 @@ public class ProcessSmtSolver implements SmtSolver {
       };
     }
 
-    @Contract(pure = true)
-    public @NotNull String getCommandName() {
+    public String getCommandName() {
       return switch (this) {
         case Z3: yield  "z3";
         case CVC5: yield  "cvc";
@@ -79,7 +75,7 @@ public class ProcessSmtSolver implements SmtSolver {
     _physicalSolver = Z3;
   }
 
-  public ProcessSmtSolver(@NotNull PhysicalSolver physicalSolver) {
+  public ProcessSmtSolver(PhysicalSolver physicalSolver) {
     if (physicalSolver == null) throw new NullStorageException(
       "ProcessSmtSolver",
       "Cannot initialise a null Physical Solver"
