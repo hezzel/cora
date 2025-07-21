@@ -23,23 +23,36 @@ import cora.rwinduction.engine.PartialProof;
 /** A class to keep track of all commands by name, along with aliases. */
 public final class CmdList {
   private TreeSet<String> _originals;
-  private HashMap<String,Command> _commands;
+  private HashMap<String,Command> _commands;  // also contains all deduction commands
+  private HashMap<String,DeductionCommand> _deductionCommands;
   private PartialProof _proof;
   private OutputModule _module;
 
   public CmdList() {
     _originals = new TreeSet<String>();
     _commands = new HashMap<String,Command>();
+    _deductionCommands = new HashMap<String,DeductionCommand>();
     _proof = null;
     _module = null;
   }
 
-  public void registerCommand(Command cmd) {
+  public void registerEnvironmentCommand(Command cmd) {
     String name = cmd.queryName();
     if (_commands.containsKey(name)) {
       throw new IllegalArgumentException("Double registration of command " + name + ".");
     }
     _commands.put(cmd.queryName(), cmd);
+    _originals.add(cmd.queryName());
+    if (_proof != null && _module != null) cmd.storeContext(_proof, _module);
+  }
+
+  public void registerDeductionCommand(DeductionCommand cmd) {
+    String name = cmd.queryName();
+    if (_commands.containsKey(name)) {
+      throw new IllegalArgumentException("Double registration of command " + name + ".");
+    }
+    _commands.put(cmd.queryName(), cmd);
+    _deductionCommands.put(cmd.queryName(), cmd);
     _originals.add(cmd.queryName());
     if (_proof != null && _module != null) cmd.storeContext(_proof, _module);
   }
@@ -58,6 +71,9 @@ public final class CmdList {
         " (as alias).");
     }
     _commands.put(alias, _commands.get(original));
+    if (_deductionCommands.containsKey(original)) {
+      _deductionCommands.put(alias, _deductionCommands.get(original));
+    }
   }
 
   /**
@@ -71,6 +87,14 @@ public final class CmdList {
   /** Returns the Command with the given name, or null if the name is unknown. */
   public Command queryCommand(String name) {
     return _commands.get(name);
+  }
+
+  /**
+   * Returns the DeductionCommand with the given name, or null if the name is not registered
+   * as a deduction command (or alias thereof).
+   */
+  public DeductionCommand queryDeductionCommand(String name) {
+    return _deductionCommands.get(name);
   }
 
   /**

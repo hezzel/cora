@@ -38,24 +38,24 @@ public final class DeductionContext extends DeductionStep {
     _complete = complete;
   }
  
-  public static Optional<DeductionContext> createStep(PartialProof proof,
-                                                      Optional<OutputModule> module,
-                                                      boolean shouldBeComplete) {
+  public static DeductionContext createStep(PartialProof proof,
+                                            Optional<OutputModule> module,
+                                            boolean shouldBeComplete) {
     ProofState state = proof.getProofState();
     Equation eq = DeductionStep.getTopEquation(state, module);
-    if (eq == null) return Optional.empty();
+    if (eq == null) return null;
 
     String name = shouldBeComplete ? "semiconstructor" : "application";
 
     if (!eq.getLhs().queryHead().equals(eq.getRhs().queryHead())) {
       module.ifPresent(o -> o.println("The " + name + " rule cannot be applied, because the " +
         "two sides of the equation do not have the same head."));
-      return Optional.empty();
+      return null;
     }
     if (eq.getLhs().numberArguments() != eq.getRhs().numberArguments()) {
       module.ifPresent(o -> o.println("The " + name + " rule cannot be applied, because the " +
         "two sides of the equation do not have the same number of arguments."));
-      return Optional.empty();
+      return null;
     }
 
     boolean isComplete = checkCompleteness(eq, proof.getContext());
@@ -64,10 +64,10 @@ public final class DeductionContext extends DeductionStep {
         "sides of the equation have a form f s1 ... sn, with f a function symbol and n < ar(f).  " +
         "(Use \"application\" for the more general form, which does, however, lose " +
         "completeness.)"));
-      return Optional.empty();
+      return null;
     }
 
-    return Optional.of(new DeductionContext(state, proof.getContext(), isComplete));
+    return new DeductionContext(state, proof.getContext(), isComplete);
   }
 
   /**

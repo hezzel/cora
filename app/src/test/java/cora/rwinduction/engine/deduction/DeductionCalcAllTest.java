@@ -46,7 +46,7 @@ class DeductionCalcAllTest {
     PartialProof pp = setupProof("iter(1 + (2 + 3), 5, 17 - 5) = iter(1, 2 + 3, x)");
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
-    DeductionCalcAll step = DeductionCalcAll.createStep(pp, o, Side.Both).get();
+    DeductionCalcAll step = DeductionCalcAll.createStep(pp, o, Side.Both);
     assertTrue(step.commandDescription().equals("calc"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
@@ -63,7 +63,7 @@ class DeductionCalcAllTest {
       "a = x + y ∧ x / y = u ∧ -y = z");
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
-    DeductionCalcAll step = DeductionCalcAll.createStep(pp, o, Side.Left).get();
+    DeductionCalcAll step = DeductionCalcAll.createStep(pp, o, Side.Left);
     assertTrue(step.commandDescription().equals("calc left"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
@@ -79,7 +79,7 @@ class DeductionCalcAllTest {
     PartialProof pp = setupProof("iter(1 + 2, x, y) -><- iter(- y, u + 12, x / y) | y > 0");
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
-    DeductionCalcAll step = DeductionCalcAll.createStep(pp, o, Side.Right).get();
+    DeductionCalcAll step = DeductionCalcAll.createStep(pp, o, Side.Right);
     assertTrue(step.commandDescription().equals("calc right"));
     step.explain(module);
     assertTrue(module.toString().equals("We use CALC at all 3 positions in the right-hand side " +
@@ -96,7 +96,7 @@ class DeductionCalcAllTest {
       "iter(17, - y, 9 + u + 12) | a = x + y ∧ x / y = u ∧ -y = z");
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
-    DeductionCalcAll step = DeductionCalcAll.createStep(pp, o, Side.Both).get();
+    DeductionCalcAll step = DeductionCalcAll.createStep(pp, o, Side.Both);
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E2: (• , iter(a, x1, u) ≈ iter(17, z, u1) | a = x + y ∧ x / y = u ∧ -y = z ∧ " +
@@ -108,7 +108,7 @@ class DeductionCalcAllTest {
     PartialProof pp = setupProof("iter(1 + 2, x, y) -><- iter(- y, u + 12, x / y) | y > 0");
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
-    DeductionCalcAll step = DeductionCalcAll.createStep(pp, o, Side.Left).get();
+    DeductionCalcAll step = DeductionCalcAll.createStep(pp, o, Side.Left);
     assertTrue(step.commandDescription().equals("calc left"));
     step.explain(module);
     assertTrue(module.toString().equals("We use CALC at the only position in the left-hand side " +
@@ -120,7 +120,7 @@ class DeductionCalcAllTest {
     PartialProof pp = setupProof("iter(1, x, y) -><- iter(-2, u, iter(x, y, z)) | y > 0");
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
-    assertTrue(DeductionCalcAll.createStep(pp, o, Side.Left).isEmpty());
+    assertTrue(DeductionCalcAll.createStep(pp, o, Side.Left) == null);
     assertTrue(module.toString().equals("There are no calculatable subterms.\n\n"));
   }
 }

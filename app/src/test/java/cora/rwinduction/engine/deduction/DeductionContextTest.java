@@ -70,7 +70,7 @@ class DeductionContextTest {
     PartialProof pp = setupProof("cons(sum1(x), nil) = cons(sum2(y), append(nil, nil)) | x = y");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    DeductionContext step = DeductionContext.createStep(pp, o, true).get();
+    DeductionContext step = DeductionContext.createStep(pp, o, true);
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 3);
     assertTrue(pp.getProofState().getEquations().get(1).toString().equals(
@@ -92,9 +92,9 @@ class DeductionContextTest {
     PartialProof pp = setupProof("[+](sum1(x)) = [+](sum2(y + 1)) | x = y + 1");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    DeductionInduct induct = DeductionInduct.createStep(pp, o).get();
+    DeductionInduct induct = DeductionInduct.createStep(pp, o);
     induct.verifyAndExecute(pp, o);
-    DeductionContext step = DeductionContext.createStep(pp, o, false).get();
+    DeductionContext step = DeductionContext.createStep(pp, o, false);
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 2);
     assertTrue(pp.getProofState().getEquations().get(1).toString().equals(
@@ -111,14 +111,14 @@ class DeductionContextTest {
     PartialProof pp = setupProof("append(x, nil) = append(nil, x)");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    assertTrue(DeductionContext.createStep(pp, o, true).isEmpty());
+    assertTrue(DeductionContext.createStep(pp, o, true) == null);
     assertTrue(module.toString().equals("The semiconstructor rule can only be applied if both " +
       "sides of the equation have a form f s1 ... sn, with f a function symbol and n < ar(f).  " +
       "(Use \"application\" for the more general form, which does, however, lose " +
       "completeness.)\n\n"));
     module = OutputModule.createUnitTestModule();
     o = Optional.of(module);
-    DeductionContext step = DeductionContext.createStep(pp, o, false).get();
+    DeductionContext step = DeductionContext.createStep(pp, o, false);
     assertTrue(step.verifyAndExecute(pp, o));
     step.explain(module);
     assertTrue(module.toString().equals("We apply APPLICATION to E2, splitting the immediate " +
@@ -131,17 +131,17 @@ class DeductionContextTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     DeductionSimplify simpl = DeductionSimplify.createStep(pp, o, "O8",
-      EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).get();
+      EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution());
     assertTrue(simpl.verifyAndExecute(pp, o));
     simpl = DeductionSimplify.createStep(pp, o, "O8",
-      EquationPosition.TOPRIGHT, TermFactory.createEmptySubstitution()).get();
+      EquationPosition.TOPRIGHT, TermFactory.createEmptySubstitution());
     assertTrue(simpl.verifyAndExecute(pp, o));
-    assertTrue(DeductionContext.createStep(pp, o, true).isEmpty());
+    assertTrue(DeductionContext.createStep(pp, o, true) == null);
     assertTrue(module.toString().equals("The semiconstructor rule can only be applied if both " +
       "sides of the equation have a form f s1 ... sn, with f a function symbol and n < ar(f).  " +
       "(Use \"application\" for the more general form, which does, however, lose " +
       "completeness.)\n\n"));
-    DeductionContext step = DeductionContext.createStep(pp, o, false).get();
+    DeductionContext step = DeductionContext.createStep(pp, o, false);
     assertTrue(step.verify(o));
     assertTrue(step.commandDescription().equals("application"));
   }
@@ -151,8 +151,8 @@ class DeductionContextTest {
     PartialProof pp = setupProof("cons(sum1(x)) = append(nil)");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    assertTrue(DeductionContext.createStep(pp, o, true).isEmpty());
-    assertTrue(DeductionContext.createStep(pp, o, false).isEmpty());
+    assertTrue(DeductionContext.createStep(pp, o, true) == null);
+    assertTrue(DeductionContext.createStep(pp, o, false) == null);
     assertTrue(module.toString().equals(
       "The semiconstructor rule cannot be applied, because the two sides of the equation do not " +
       "have the same head.\n\nThe application rule cannot be applied, because the two sides of " +

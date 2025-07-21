@@ -30,7 +30,7 @@ import cora.rwinduction.parser.CommandParsingStatus;
 import cora.rwinduction.parser.EquationParser;
 
 /** The syntax for the deduction command postulate. */
-public class CommandPostulate extends Command {
+public class CommandPostulate extends DeductionCommand {
   @Override
   public String queryName() {
     return "postulate";
@@ -48,14 +48,11 @@ public class CommandPostulate extends Command {
   }
 
   @Override
-  protected boolean run(CommandParsingStatus input) {
+  protected DeductionPostulate createStep(CommandParsingStatus input) {
     TRS trs = _proof.getContext().getTRS();
     Pair<Equation,Renaming> pair = input.readEquation(trs, _module);
-    if (pair == null) return false;
-    Optional<DeductionPostulate> ostep =
-      DeductionPostulate.createStep(_proof, Optional.of(_module), pair.fst(), pair.snd());
-    if (ostep.isEmpty()) return false;
-    return ostep.get().verifyAndExecute(_proof, Optional.of(_module));
+    if (pair == null) return null;
+    return DeductionPostulate.createStep(_proof, Optional.of(_module), pair.fst(), pair.snd());
   }
 
   @Override

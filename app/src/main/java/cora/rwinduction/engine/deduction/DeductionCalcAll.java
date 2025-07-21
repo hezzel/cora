@@ -104,10 +104,10 @@ public final class DeductionCalcAll extends DeductionStep {
     }
   }
 
-  public static Optional<DeductionCalcAll> createStep(PartialProof proof, Optional<OutputModule> m,
-                                                      Side side) {
+  public static DeductionCalcAll createStep(PartialProof proof, Optional<OutputModule> m,
+                                            Side side) {
     Equation eq = getTopEquation(proof.getProofState(), m);
-    if (eq == null) return Optional.empty();
+    if (eq == null) return null;
     Renaming renaming = proof.getProofState().getTopEquation().getRenamingCopy();
     HashMap<Term,Variable> definedVars = CalcHelper.breakupConstraint(eq.getConstraint());
 
@@ -122,13 +122,13 @@ public final class DeductionCalcAll extends DeductionStep {
     }
     if (info.count == 0) {
       m.ifPresent(o -> o.println("There are no calculatable subterms."));
-      return Optional.empty();
+      return null;
     }
 
     Term constraint = buildConstraint(eq.getConstraint(), info);
     Equation neweq = new Equation(left, right, constraint);
-    return Optional.of(new DeductionCalcAll(proof.getProofState(), proof.getContext(),
-                                            neweq, renaming, info.count, side));
+    return new DeductionCalcAll(proof.getProofState(), proof.getContext(),
+                                neweq, renaming, info.count, side);
   }
 
   /**

@@ -15,27 +15,36 @@
 
 package cora.rwinduction.command;
 
-import java.util.Optional;
+import java.util.List;
 import charlie.util.FixedList;
-import cora.io.OutputModule;
-import cora.rwinduction.engine.deduction.DeductionInduct;
+import cora.rwinduction.engine.DeductionStep;
 import cora.rwinduction.parser.CommandParsingStatus;
 
-public class CommandInduct extends SingularDeductionCommandInherit {
+/**
+ * A base inherit deduction for commands that do not take any arguments, providing shared
+ * functionality.
+ */
+abstract class SingularDeductionCommandInherit extends DeductionCommand {
   @Override
-  public String queryName() {
-    return "induct";
-  }
-  
-  @Override
-  public void printHelp(OutputModule module) {
-    module.println("Use this deduction rule to store the current equation as an induction " +
-      "hypothesis..");
+  public final FixedList<String> callDescriptor() {
+    return FixedList.of(queryName());
   }
 
   @Override
-  protected DeductionInduct createStep() {
-    return DeductionInduct.createStep(_proof, optionalModule());
+  public final List<TabSuggestion> suggestNext(String args) {
+    return List.of(endOfCommandSuggestion());
   }
+
+  @Override
+  protected final DeductionStep createStep(CommandParsingStatus status) {
+    if (!status.commandEnded()) {
+      _module.println("Command %a should be invoked without any arguments.", queryName());
+      return null;
+    }
+    return createStep();
+  }
+
+  /** This is called when run is correctly invoked without any user-given arguments. */
+  protected abstract DeductionStep createStep();
 }
 

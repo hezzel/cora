@@ -20,7 +20,7 @@ import cora.io.OutputModule;
 import cora.rwinduction.engine.deduction.DeductionContext;
 
 /** The syntax for the deduction command APPLICATION. */
-public class CommandApplication extends SingularCommandInherit {
+public class CommandApplication extends SingularDeductionCommandInherit {
   @Override
   public String queryName() {
     return "application";
@@ -37,10 +37,8 @@ public class CommandApplication extends SingularCommandInherit {
   }
   
   @Override
-  protected boolean run() {
-    Optional<DeductionContext> step = DeductionContext.createStep(_proof, optionalModule(), false);
-    if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, optionalModule());
+  protected DeductionContext createStep() {
+    return DeductionContext.createStep(_proof, optionalModule(), false);
   }
 }
 

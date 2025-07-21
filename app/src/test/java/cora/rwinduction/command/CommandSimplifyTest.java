@@ -52,7 +52,7 @@ class CommandSimplifyTest {
 
   private TRS trs = setupTRS();
 
-  private Optional<DeductionSimplify> createStep(OutputModule module, String str) {
+  private DeductionSimplify createStep(OutputModule module, String str) {
     CommandSimplify cmd = new CommandSimplify();
     EquationContext ec =
       EquationParser.parseEquationData("sum1(z) = add(y,sum2(z)) | z ≥ 0 ∧ y < 0", trs, 1);
@@ -79,21 +79,21 @@ class CommandSimplifyTest {
   @Test
   public void testGoodStepWithoutSubstitution() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    DeductionSimplify step = createStep(module, "simplify O5 R.2").get();
+    DeductionSimplify step = createStep(module, "simplify O5 R.2");
     assertTrue(step.toString().equals("simplify O5 R2 with [x := z]"));
   }
 
   @Test
   public void testGoodStepWithSubstitution() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    DeductionSimplify step = createStep(module, "simplify O1 with [x:=z]").get();
+    DeductionSimplify step = createStep(module, "simplify O1 with [x:=z]");
     assertTrue(step.toString().equals("simplify O1 L with [x := z]"));
   }
 
   @Test
   public void testNonExistingRule() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createStep(module, "simplify R19 R.2").isEmpty());
+    assertTrue(createStep(module, "simplify R19 R.2") == null);
     assertTrue(module.toString().equals("No such rule: R19\n\n"));
 
     module = OutputModule.createUnicodeModule(trs);
@@ -104,14 +104,14 @@ class CommandSimplifyTest {
   @Test
   public void testBadPosition() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createStep(module, "simplify O5 L1.2.3.2 with [x:=1]").isEmpty());
+    assertTrue(createStep(module, "simplify O5 L1.2.3.2 with [x:=1]") == null);
     assertTrue(module.toString().equals("No such position: L1.2.3.2.\n\n"));
   }
 
   @Test
   public void testBadSubstitution() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createStep(module, "simplify O5 R.2 with [x:=1]").isEmpty());
+    assertTrue(createStep(module, "simplify O5 R.2 with [x:=1]") == null);
     assertTrue(module.toString().equals(
       "The rule does not apply due to failed matching (matching debug info says " +
       "Variable x mapped both to 1 and to z.)\n\n"));
@@ -128,7 +128,7 @@ class CommandSimplifyTest {
   @Test
   public void testTextAfterSubstitution() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createStep(module, "simplify O1 with [x:=z] o").isEmpty());
+    assertTrue(createStep(module, "simplify O1 with [x:=z] o") == null);
     assertTrue(module.toString().equals("Unexpected argument at position 25: " +
       "expected end of command.\n\n"));
   }

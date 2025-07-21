@@ -51,7 +51,7 @@ class DeductionCalcTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L1.2.ε");
-    DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
+    DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos));
     assertTrue(step.commandDescription().equals("calc L1.2"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
@@ -67,7 +67,7 @@ class DeductionCalcTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("2.1");
-    DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
+    DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos));
     assertTrue(step.commandDescription().equals("calc L2.1"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
@@ -83,11 +83,11 @@ class DeductionCalcTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     // skip to E1
-    pp.addProofStep(pp.getProofState().deleteTopEquation(), DeductionDelete.createStep(pp,o).get());
+    pp.addProofStep(pp.getProofState().deleteTopEquation(), DeductionDelete.createStep(pp,o));
     DeductionCalc step = DeductionCalc.createStep(pp,o,List.of(
       EquationPosition.parse("L1"),
       EquationPosition.parse("L3"),
-      EquationPosition.parse("R1"))).get();
+      EquationPosition.parse("R1")));
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E3: (• , iter(a, x * 2, u) ≈ iter(z, u + 12, 17) | a = x + y ∧ x / y = u ∧ -y = z , •)"));
@@ -101,7 +101,7 @@ class DeductionCalcTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L3");
-    DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
+    DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos));
     assertTrue(step.commandDescription().equals("calc L3"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
@@ -119,7 +119,7 @@ class DeductionCalcTest {
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos1 = EquationPosition.parse("L3");
     EquationPosition pos2 = EquationPosition.parse("R");
-    DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos1, pos2)).get();
+    DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos1, pos2));
     assertTrue(step.commandDescription().equals("calc L3 R"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
@@ -136,7 +136,7 @@ class DeductionCalcTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L1");
-    DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
+    DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos));
     assertTrue(step.commandDescription().equals("calc L1"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
@@ -152,7 +152,7 @@ class DeductionCalcTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L2");
-    DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos)).get();
+    DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos));
     step.explain(module);
     assertTrue(module.toString().equals("We use ALTER to add i1 = x * y + z to the constraint, " +
       "and then use CALC at position L2.\n\n"));
@@ -169,7 +169,7 @@ class DeductionCalcTest {
     EquationPosition pos = EquationPosition.parse("L2");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(
       EquationPosition.parse("L1.2"), EquationPosition.parse("L2.1"),
-      EquationPosition.parse("L2"), EquationPosition.parse("L1"))).get();
+      EquationPosition.parse("L2"), EquationPosition.parse("L1")));
     step.explain(module);
     assertTrue(module.toString().equals("We use ALTER to add i1 = u + z to the constraint, and " +
       "then use CALC at positions L1.2, L2.1, L2 and L1.\n\n"));
@@ -185,7 +185,7 @@ class DeductionCalcTest {
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.parse("L2");
     assertTrue(DeductionCalc.createStep(pp, o, List.of(EquationPosition.parse("L1"),
-      EquationPosition.parse("L1.2"))).isEmpty());
+      EquationPosition.parse("L1.2"))) == null);
     assertTrue(module.toString().equals(
       "Subterm at position L1.2 has already been calculated away!\n\n"));
   }

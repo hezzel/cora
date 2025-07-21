@@ -28,13 +28,13 @@ public final class DeductionInduct extends DeductionStep {
     super(state, context);
   }
 
-  public static Optional<DeductionInduct> createStep(PartialProof proof, Optional<OutputModule> m) {
+  public static DeductionInduct createStep(PartialProof proof, Optional<OutputModule> m) {
     ProofState state = proof.getProofState();
     if (state.isFinalState()) {
       m.ifPresent( o -> o.println("The proof is already complete.") );
-      return Optional.empty();
+      return null;
     }
-    return Optional.of(new DeductionInduct(state, proof.getContext()));
+    return new DeductionInduct(state, proof.getContext());
   }
 
   @Override

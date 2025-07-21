@@ -24,6 +24,7 @@ import charlie.terms.Term;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
 import cora.io.OutputModule;
+import cora.rwinduction.engine.DeductionStep;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.Equation;
 import cora.rwinduction.engine.deduction.DeductionCalc;
@@ -32,7 +33,7 @@ import cora.rwinduction.engine.deduction.DeductionCalcAll.Side;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command calc. */
-public class CommandCalc extends Command {
+public class CommandCalc extends DeductionCommand {
   @Override
   public String queryName() {
     return "calc";
@@ -59,27 +60,20 @@ public class CommandCalc extends Command {
   }
 
   @Override
-  protected boolean run(CommandParsingStatus input) {
+  protected DeductionStep createStep(CommandParsingStatus input) {
     String word = input.nextWord();
-    Optional<OutputModule> o = Optional.of(_module);
-    Optional<DeductionCalcAll> calcall = null;
-    if (word == null) calcall = DeductionCalcAll.createStep(_proof, o, Side.Both);
-    else if (word.equals("left")) calcall = DeductionCalcAll.createStep(_proof, o, Side.Left);
-    else if (word.equals("right")) calcall = DeductionCalcAll.createStep(_proof, o, Side.Right);
-    if (calcall != null) {
-      if (calcall.isEmpty()) return false;
-      return calcall.get().verifyAndExecute(_proof, o);
-    }
-    Optional<DeductionCalc> calcpos = createPositionStep(input, word);
-    if (calcpos.isEmpty()) return false;
-    return calcpos.get().verifyAndExecute(_proof, o);
+    Optional<OutputModule> o = optionalModule();
+    if (word == null) return DeductionCalcAll.createStep(_proof, o, Side.Both);
+    if (word.equals("left")) return DeductionCalcAll.createStep(_proof, o, Side.Left);
+    if (word.equals("right")) return DeductionCalcAll.createStep(_proof, o, Side.Right);
+    return createPositionStep(input, word);
   }
 
   /**
    * If the user has supplied arguments other than left or right, they must be supplying positions!
    * Parse the positions, and create a calc <positions> command.
    */
-  Optional<DeductionCalc> createPositionStep(CommandParsingStatus input, String word) {
+  private DeductionCalc createPositionStep(CommandParsingStatus input, String word) {
     ArrayList<EquationPosition> posses = new ArrayList<EquationPosition>();
     try {
       while (word != null) {
@@ -89,7 +83,7 @@ public class CommandCalc extends Command {
     }
     catch (CustomParserException e) {
       _module.println("Illegal position %a: %a", word, e.getMessage());
-      return Optional.empty();
+      return null;
     }
     
     return DeductionCalc.createStep(_proof, Optional.of(_module), posses);

@@ -56,8 +56,9 @@ public final class DeductionAlterDefinitions extends DeductionStep {
    * This will only work if each variable is fresh, and each term uses only variables that either
    * already occur in the equation (and have a theory sort), of that occur previously in the
    * definition list.
+   * (If it fails, null is returned.)
    */
-  public static Optional<DeductionAlterDefinitions> createStep(PartialProof proof,
+  public static DeductionAlterDefinitions createStep(PartialProof proof,
                                                 Optional<OutputModule> module,
                                                 ArrayList<Pair<Pair<Variable,String>,Term>> defs) {
     ProofState state = proof.getProofState();
@@ -67,20 +68,20 @@ public final class DeductionAlterDefinitions extends DeductionStep {
     ArrayList<Term> d = new ArrayList<Term>();
     if (defs.size() == 0) {
       module.ifPresent(o -> o.println("Cannot introduce an empty number of definitions."));
-      return Optional.empty();
+      return null;
     }
     for (var tuple : defs) {
       Variable x = tuple.fst().fst();
       String name = tuple.fst().snd();
       Term value = tuple.snd();
-      if (!checkMapping(x, name, value, renaming, module)) return Optional.empty();
+      if (!checkMapping(x, name, value, renaming, module)) return null;
       if (!renaming.setName(x, name)) {
         module.ifPresent(o -> o.println("Invalid variable name: " + name));
       }
       d.add(TheoryFactory.createEquality(x, value));
     }
 
-    return Optional.of(new DeductionAlterDefinitions(state, proof.getContext(), d, renaming));
+    return new DeductionAlterDefinitions(state, proof.getContext(), d, renaming);
   }
 
   /**

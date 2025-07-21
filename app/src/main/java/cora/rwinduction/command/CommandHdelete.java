@@ -43,19 +43,16 @@ public class CommandHdelete extends HypothesisCommandInherit {
   }
 
   @Override
-  protected boolean run(CommandParsingStatus input) {
+  protected DeductionHdelete createStep(CommandParsingStatus input) {
     // get induction hypothesis and inverse status
     Pair<Hypothesis,Boolean> hypopair = readHypothesis(input);
-    if (hypopair == null) return false;
+    if (hypopair == null) return null;
     // get EquationPosition and Substitution
     Renaming hypoRenaming = hypopair.fst().getRenamingCopy();
     Pair<EquationPosition,Substitution> restpair = readCommandRemainder(hypoRenaming, input);
-    if (restpair == null) return false;
-    Optional<DeductionHdelete> step =
-      DeductionHdelete.createStep(_proof, Optional.of(_module), hypopair.fst(),
-                                  hypopair.snd(), restpair.fst(), restpair.snd());
-    if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, Optional.of(_module));
+    if (restpair == null) return null;
+    return DeductionHdelete.createStep(_proof, Optional.of(_module), hypopair.fst(),
+                                       hypopair.snd(), restpair.fst(), restpair.snd());
   }
 }
 

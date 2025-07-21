@@ -39,15 +39,15 @@ public final class DeductionAlterRename extends DeductionStep {
   }
 
   /**
-   * Creates a step to do the given renamings.
-   * This will only work if the given names actually occur in the top equation's renaming, and the
-   * new names do not.  The reassignments are parsed from start to finish, though: given an
+   * Creates a step to do the given renamings, or returns null if that fails.
+   *
+   * This will only succeed if the given names actually occur in the top equation's renaming, and
+   * the new names do not.  The reassignments are parsed from start to finish, though: given an
    * equation that contains the variables x and z, the renaming x = y, z = x *is* allowed because
    * x is renamed before z.
    */
-  public static Optional<DeductionAlterRename> createStep(PartialProof proof,
-                                                          Optional<OutputModule> module,
-                                                          ArrayList<Pair<String,String>> mapping) {
+  public static DeductionAlterRename createStep(PartialProof proof, Optional<OutputModule> module,
+                                                ArrayList<Pair<String,String>> mapping) {
     ProofState state = proof.getProofState();
     Renaming renaming = state.getTopEquation().getRenamingCopy();
     for (Pair<String,String> pair : mapping) {
@@ -57,31 +57,31 @@ public final class DeductionAlterRename extends DeductionStep {
       Replaceable x = renaming.getReplaceable(original);
       if (x == null) {
         module.ifPresent(o -> o.println("Unknown variable name: %a.", original));
-        return Optional.empty();
+        return null;
       }
 
       if (original.equals(newname)) {
         module.ifPresent(o -> o.println("Cannot rename variable %a to itself.", original));
-        return Optional.empty();
+        return null;
       }
 
       if (renaming.getReplaceable(newname) != null) {
         module.ifPresent(o -> o.println("The name %a is already in use.", newname));
-        return Optional.empty();
+        return null;
       }
 
       if (!renaming.setName(x, newname)) {
         module.ifPresent(o -> o.println("The name %a is not available.", newname));
-        return Optional.empty();
+        return null;
       }
     }
 
     if (mapping.isEmpty()) {
       module.ifPresent(o -> o.println("Nothing given to rename."));
-      return Optional.empty();
+      return null;
     }
 
-    return Optional.of(new DeductionAlterRename(state, proof.getContext(), mapping, renaming));
+    return new DeductionAlterRename(state, proof.getContext(), mapping, renaming);
   }
 
   /** There's nothing heavy to check: if we can create this step, we can execute it. */

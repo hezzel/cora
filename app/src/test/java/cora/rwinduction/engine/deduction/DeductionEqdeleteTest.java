@@ -73,21 +73,21 @@ class DeductionEqdeleteTest {
     PartialProof pp = setupProof(eqdesc);
     _module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(_module);
-    Optional<DeductionEqdelete> step = DeductionEqdelete.createStep(pp, o);
-    if (step.isEmpty()) {
+    DeductionEqdelete step = DeductionEqdelete.createStep(pp, o);
+    if (step == null) {
       System.out.println(_module.toString());
       assertTrue(false, "Step is unsuccessful when it shouldn't be.");
     }
     _solver = new MySmtSolver(true);
     Settings.smtSolver = _solver;
-    assertTrue(step.get().verifyAndExecute(pp, o));
+    assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().getIndex() == 1);
     assertTrue(pp.getProofState().getHypotheses().size() == 0);
     assertTrue(pp.getCommandHistory().size() == 1);
     assertTrue(pp.getCommandHistory().get(0).equals("eq-delete"));
     assertTrue(_module.toString().equals(""));
-    step.get().explain(_module);
+    step.explain(_module);
   }
 
   @Test
@@ -110,8 +110,7 @@ class DeductionEqdeleteTest {
     PartialProof pp = setupProof(eqdesc);
     _module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(_module);
-    Optional<DeductionEqdelete> step = DeductionEqdelete.createStep(pp, o);
-    assertTrue(step.isEmpty());
+    assertTrue(DeductionEqdelete.createStep(pp, o) == null);
   }
 
   @Test
@@ -189,7 +188,7 @@ class DeductionEqdeleteTest {
     PartialProof pp = setupProof("f(x) = f(3) | x > 2");
     _module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(_module);
-    DeductionEqdelete step = DeductionEqdelete.createStep(pp, o).get();
+    DeductionEqdelete step = DeductionEqdelete.createStep(pp, o);
     _solver = new MySmtSolver(false);
     Settings.smtSolver = _solver;
     assertFalse(step.verifyAndExecute(pp, o));

@@ -40,10 +40,10 @@ class CommandHelpTest {
 
   private CmdList makeCmdList() {
     CmdList lst = new CmdList();
-    lst.registerCommand(new CommandQuit());
-    lst.registerCommand(new CommandRules());
-    lst.registerCommand(new CommandDelete());
-    lst.registerCommand(new CommandHelp(lst));
+    lst.registerEnvironmentCommand(new CommandQuit());
+    lst.registerEnvironmentCommand(new CommandRules());
+    lst.registerDeductionCommand(new CommandDelete());
+    lst.registerEnvironmentCommand(new CommandHelp(lst));
     return lst;
   }
 

@@ -44,22 +44,15 @@ public class CommandHypothesis extends HypothesisCommandInherit {
   }
 
   @Override
-  protected boolean run(CommandParsingStatus input) {
-    Optional<DeductionHypothesis> step = createStep(input);
-    if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, optionalModule());
-  }
-
-  /** Main functionality of run, separated out for the sake of unit testing. */
-  Optional<DeductionHypothesis> createStep(CommandParsingStatus input) {
+  protected DeductionHypothesis createStep(CommandParsingStatus input) {
     // get induction hypothesis and inverse status
     Pair<Hypothesis,Boolean> hypopair = readHypothesis(input);
-    if (hypopair == null) return Optional.empty();
+    if (hypopair == null) return null;
 
     // get EquationPosition and Substitution
     Renaming hypoRenaming = hypopair.fst().getRenamingCopy();
     Pair<EquationPosition,Substitution> restpair = readCommandRemainder(hypoRenaming, input);
-    if (restpair == null) return Optional.empty();
+    if (restpair == null) return null;
     return DeductionHypothesis.createStep(_proof, Optional.of(_module), hypopair.fst(),
                                           hypopair.snd(), restpair.fst(), restpair.snd());
   }

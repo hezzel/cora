@@ -67,22 +67,15 @@ public class CommandSimplify extends ReductionCommandInherit {
   }
 
   @Override
-  protected boolean run(CommandParsingStatus input) {
-    Optional<DeductionSimplify> step = createStep(input);
-    if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, Optional.of(_module));
-  }
-
-  /** Main functionality of run, separated out for the sake of unit testing. */
-  Optional<DeductionSimplify> createStep(CommandParsingStatus input) {
+  protected DeductionSimplify createStep(CommandParsingStatus input) {
     // get ruleName (which is a valid rule)
     String ruleName = readRuleName(input);
-    if (ruleName == null) return Optional.empty();
+    if (ruleName == null) return null;
 
     // get EquationPosition and Substitution
     Renaming ruleRenaming = _proof.getContext().getRenaming(ruleName);
     Pair<EquationPosition,Substitution> pair = readCommandRemainder(ruleRenaming, input);
-    if (pair == null) return Optional.empty();
+    if (pair == null) return null;
 
     // create step
     return DeductionSimplify.createStep(_proof, Optional.of(_module), ruleName,

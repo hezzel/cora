@@ -46,16 +46,15 @@ public final class DeductionEqdelete extends DeductionStep {
     }
   }
  
-  public static Optional<DeductionEqdelete> createStep(PartialProof proof,
-                                                       Optional<OutputModule> module) {
+  public static DeductionEqdelete createStep(PartialProof proof, Optional<OutputModule> module) {
     ProofState state = proof.getProofState();
     Equation eq = DeductionStep.getTopEquation(state, module);
-    if (eq == null) return Optional.empty();
+    if (eq == null) return null;
 
     ArrayList<Pair<Term,Position>> posLeft = getSubtermInfo(eq.getLhs());
     ArrayList<Pair<Term,Position>> posRight = getSubtermInfo(eq.getRhs());
 
-    if (!checkSamePositions(posLeft, posRight, module)) return Optional.empty();
+    if (!checkSamePositions(posLeft, posRight, module)) return null;
 
     Renaming renaming = state.getTopEquation().getRenamingCopy();
     ArrayList<Pair<Term,Term>> parts = new ArrayList<Pair<Term,Term>>();
@@ -68,15 +67,15 @@ public final class DeductionEqdelete extends DeductionStep {
         ok = checkDifferencesAreTheory(a, b, parts, renaming, module);
       }
       else ok = checkSameShape(a, b, renaming, module);
-      if (!ok) return Optional.empty();
+      if (!ok) return null;
     }
 
     if (parts.size() == 0) {
       module.ifPresent(o -> o.println("No subterms to be equated; use DELETION instead!"));
-      return Optional.empty();
+      return null;
     }
 
-    return Optional.of(new DeductionEqdelete(state, proof.getContext(), parts));
+    return new DeductionEqdelete(state, proof.getContext(), parts);
   }
 
   /**

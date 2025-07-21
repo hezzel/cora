@@ -58,24 +58,23 @@ public final class DeductionHdelete extends DeductionStep {
    * context is applied, unless either this side would yield an unsolvable requirement, or choosing
    * the other side would yield no requirement at all.
    */
-  public static Optional<DeductionHdelete> createStep(PartialProof proof, Optional<OutputModule> m,
-                                                      Hypothesis hypo, boolean inverse,
-                                                      EquationPosition pos, Substitution subst) {
+  public static DeductionHdelete createStep(PartialProof proof, Optional<OutputModule> m,
+                                            Hypothesis hypo, boolean inverse,
+                                            EquationPosition pos, Substitution subst) {
     ConstrainedReductionHelper helper = setupHelper(hypo, inverse, proof, pos, subst);
     EquationContext original = proof.getProofState().getTopEquation();
-    if (!helper.extendSubstitutionBasic(m)) return Optional.empty();
-    if (!helper.extendSubstitutionRight(m)) return Optional.empty();
+    if (!helper.extendSubstitutionBasic(m)) return null;
+    if (!helper.extendSubstitutionRight(m)) return null;
     helper.extendSubstitutionWithConstraintDefinitions();
     Position p = pos.queryPosition();
     if (!sameContexts(original.getEquation(), p)) {
       m.ifPresent(o -> printBadContextError(original, p, o));
-      return Optional.empty();
+      return null;
     }
-    if (!resultingOrderingRequirementOK(original, p, m)) return Optional.empty();
+    if (!resultingOrderingRequirementOK(original, p, m)) return null;
 
-    return Optional.of(new DeductionHdelete(proof.getProofState(), proof.getContext(),
-                                            hypo.getName() + (inverse ? "^{-1}" : ""), inverse,
-                                            helper));
+    return new DeductionHdelete(proof.getProofState(), proof.getContext(),
+                                hypo.getName() + (inverse ? "^{-1}" : ""), inverse, helper);
   }
 
   /**

@@ -70,7 +70,7 @@ class DeductionHypothesisTest {
     var pair = EquationParser.parseEquation(hypodesc, trs);
     Hypothesis hypo = new Hypothesis(pair.fst(), 8, pair.snd());
     ProofState state = proof.getProofState().addHypothesis(hypo);
-    proof.addProofStep(state, DeductionInduct.createStep(proof, Optional.empty()).get());
+    proof.addProofStep(state, DeductionInduct.createStep(proof, Optional.empty()));
   }
 
   private PartialProof setupProof(String eqdesc, String hypodesc) {
@@ -107,7 +107,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                            EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).get();
+                            EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution());
     assertTrue(step.commandDescription().equals("hypothesis H8 L with [z := x]"));
     assertTrue(module.toString().equals(""));
     MySmtSolver solver = new MySmtSolver(true);
@@ -136,7 +136,7 @@ class DeductionHypothesisTest {
     subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("y"),
                  TheoryFactory.createValue(0));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                            EquationPosition.parse("R2"), subst).get();
+                            EquationPosition.parse("R2"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8 R2 with [y := 0, z := x]"));
     assertTrue(module.toString().equals(""));
     Settings.smtSolver = new MySmtSolver(true);
@@ -164,7 +164,7 @@ class DeductionHypothesisTest {
     subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("a"),
                  TheoryFactory.createValue(1));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                            EquationPosition.TOPRIGHT, subst).get();
+                            EquationPosition.TOPRIGHT, subst);
     assertTrue(step.commandDescription().equals("hypothesis H8^{-1} R with [a := 1, z := x]"));
     Settings.smtSolver = new MySmtSolver(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
@@ -187,7 +187,7 @@ class DeductionHypothesisTest {
     subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("z"),
                  TheoryFactory.createValue(12));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                            EquationPosition.parse("L1"), subst).get();
+                            EquationPosition.parse("L1"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L1 with [y := x, z := 12]"));
     Settings.smtSolver = new MySmtSolver(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
@@ -210,7 +210,7 @@ class DeductionHypothesisTest {
     subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("z"),
                  TheoryFactory.createValue(12));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                            EquationPosition.parse("L"), subst).get();
+                            EquationPosition.parse("L"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L with [y := x, z := 12]"));
     Settings.smtSolver = new MySmtSolver(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
@@ -233,7 +233,7 @@ class DeductionHypothesisTest {
     subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("z"),
                  TheoryFactory.createValue(7));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                            EquationPosition.parse("R"), subst).get();
+                            EquationPosition.parse("R"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8 R with [y := x, z := 7]"));
     Settings.smtSolver = new MySmtSolver(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
@@ -256,7 +256,7 @@ class DeductionHypothesisTest {
     subst.extend(pp.getProofState().getHypotheses().get(0).getRenamingCopy().getVariable("z"),
                  TheoryFactory.createValue(12));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                            EquationPosition.parse("L1"), subst).get();
+                            EquationPosition.parse("L1"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L1 with [y := x, z := 12]"));
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 1);
@@ -277,7 +277,7 @@ class DeductionHypothesisTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                                                       EquationPosition.parse("L"), subst).get();
+                                                       EquationPosition.parse("L"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8 L with [x := x]"));
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 1);
@@ -295,7 +295,7 @@ class DeductionHypothesisTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                                                       EquationPosition.parse("L2"), subst).get();
+                                                       EquationPosition.parse("L2"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L2 with [z := x]"));
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
@@ -313,7 +313,7 @@ class DeductionHypothesisTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
     assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                                              EquationPosition.TOPLEFT, subst).isEmpty());
+                                              EquationPosition.TOPLEFT, subst) == null);
     assertTrue(module.toString().equals("The hypothesis cannot be applied, as it would cause an " +
       "obviously unsatisfiable ordering requirement to be imposed.\n\n"));
   }
@@ -324,7 +324,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                       EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).isEmpty());
+                       EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()) == null);
     assertTrue(module.toString().equals("The induction hypothesis does not apply due to failed " +
       "matching (matching debug info says x does not instantiate sum1(x) (not an application).)" +
       "\n\n"));
@@ -336,7 +336,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                       EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()).isEmpty());
+                       EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution()) == null);
     assertTrue(module.toString().equals("The induction hypothesis does not apply due to failed " +
       "matching (matching debug info says constant sum2 is not instantiated by sum1.)\n\n"));
   }
@@ -347,7 +347,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                           EquationPosition.TOPRIGHT, TermFactory.createEmptySubstitution()).get();
+                           EquationPosition.TOPRIGHT, TermFactory.createEmptySubstitution());
     assertTrue(module.toString().equals(""));
     Settings.smtSolver = new MySmtSolver(false);
     assertFalse(step.verifyAndExecute(pp, Optional.of(module)));
@@ -363,7 +363,7 @@ class DeductionHypothesisTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
     assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                            EquationPosition.parse("R2"), subst).isEmpty());
+                            EquationPosition.parse("R2"), subst) == null);
     assertTrue(subst.domain().size() == 0);
     assertTrue(module.toString().equals("Not enough information given: I could not determine " +
       "the substitution to be used for y, a.\n\n"));

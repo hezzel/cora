@@ -72,7 +72,7 @@ class DeductionInductTest {
     PartialProof pp = setupProof(null, "sum1(x)", "iter(x, 0, 0)", "x >= 0", null);
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    DeductionInduct step = DeductionInduct.createStep(pp, o).get();
+    DeductionInduct step = DeductionInduct.createStep(pp, o);
     assertTrue(step.execute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().getIndex() == 12);
@@ -96,7 +96,7 @@ class DeductionInductTest {
     PartialProof pp = setupProof("sum1(x)", "sum1(x)", "iter(x, 0, 0)", "x >= 0", "iter(x, 0, 0)");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    DeductionInduct step = DeductionInduct.createStep(pp, o).get();
+    DeductionInduct step = DeductionInduct.createStep(pp, o);
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().getIndex() == 11);
@@ -118,7 +118,7 @@ class DeductionInductTest {
     PartialProof pp = setupProof("sum1(x+1)", "sum1(x)", "iter(x, 1, 0)", "x >= 0", "iter(x, 0, 0)");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    DeductionInduct step = DeductionInduct.createStep(pp, o).get();
+    DeductionInduct step = DeductionInduct.createStep(pp, o);
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
@@ -136,7 +136,7 @@ class DeductionInductTest {
       "the set H of induction hypotheses.\n\n";
     assertTrue(module.toString().equals(txt));
 
-    step = DeductionInduct.createStep(pp, o).get();
+    step = DeductionInduct.createStep(pp, o);
     assertFalse(step.verifyAndExecute(pp, o));
     assertTrue(module.toString().equals(txt +
       "You already have this induction hypothesis (H11), so there is no benefit to using INDUCT " +
@@ -148,7 +148,7 @@ class DeductionInductTest {
     PartialProof pp = setupProof("sum1(x+1)", "sum1(x)", "iter(x,0,0)", "x >= 0", "iter(x,0,0)");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    DeductionInduct step = DeductionInduct.createStep(pp, o).get();
+    DeductionInduct step = DeductionInduct.createStep(pp, o);
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().toString().equals(

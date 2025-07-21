@@ -28,8 +28,7 @@ import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationContext;
 import cora.rwinduction.engine.PartialProof;
-import cora.rwinduction.engine.deduction.DeductionAlterDefinitions;
-import cora.rwinduction.engine.deduction.DeductionAlterRename;
+import cora.rwinduction.engine.DeductionStep;
 import cora.rwinduction.parser.EquationParser;
 import cora.rwinduction.parser.CommandParsingStatus;
 
@@ -53,48 +52,51 @@ class CommandAlterTest {
 
   private TRS trs = setupTRS();
 
-  private Optional<DeductionAlterDefinitions> createAddStep(OutputModule module, String str) {
+  private CommandAlter setupCmd(OutputModule module) {
     CommandAlter cmd = new CommandAlter();
     EquationContext ec =
       EquationParser.parseEquationData("sum1(x) = add(y,sum2(z)) | z ≥ y", trs, 3);
     PartialProof proof = new PartialProof(trs, FixedList.of(ec),
                                           lst -> module.generateUniqueNaming(lst));
     cmd.storeContext(proof, module);
+    return cmd;
+  }
+
+  private DeductionStep createStep(OutputModule module, String str) {
+    CommandAlter cmd = setupCmd(module);
     CommandParsingStatus status = new CommandParsingStatus(str);
     status.nextWord(); // alter
-    status.nextWord(); // add
-    return cmd.createAddStep(status);
+    return cmd.createStep(status);
   }
 
   @Test
   public void testSingleStep() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    DeductionAlterDefinitions step = createAddStep(module, "alter add a = x + y").get();
+    DeductionStep step = createStep(module, "alter add a = x + y");
     assertTrue(step.toString().equals("alter add a = x + y"));
   }
 
   @Test
   public void testMultiStep() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    DeductionAlterDefinitions step =
-      createAddStep(module, "alter add a = x + y, b = 0  , c = a + -b").get();
+    DeductionStep step = createStep(module, "alter add a = x + y, b = 0  , c = a + -b");
     assertTrue(step.toString().equals("alter add a = x + y, b = 0, c = a - b"));
   }
 
   @Test
   public void testMissingName() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createAddStep(module, "alter add ").isEmpty());
-    assertTrue(createAddStep(module, "alter add a = x + y , ").isEmpty());
+    assertTrue(createStep(module, "alter add ") == null);
+    assertTrue(createStep(module, "alter add a = x + y , ") == null);
     assertTrue(module.toString().equals(
-      "Parsing error at position 11: Expected fresh variable name but got end of input.\n\n" +
+      "Alter should be invoked with at least two arguments.\n\n" +
       "Parsing error at position 23: Expected fresh variable name but got end of input.\n\n"));
   }
 
   @Test
   public void testMissingEquals() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createAddStep(module, "alter add a").isEmpty());
+    assertTrue(createStep(module, "alter add a") == null);
     assertTrue(module.toString().equals(
       "Unexpected end of input following token at position 11; I expected =.\n\n"));
   }
@@ -102,7 +104,7 @@ class CommandAlterTest {
   @Test
   public void testMissingValue() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createAddStep(module, "alter add a =").isEmpty());
+    assertTrue(createStep(module, "alter add a =") == null);
     assertTrue(module.toString().equals(
       "Parsing error at position 14: Expected term, started by an identifier, λ, string or " +
       "(, but got end of input.\n\n"));
@@ -111,7 +113,7 @@ class CommandAlterTest {
   @Test
   public void testMissingComma() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createAddStep(module, "alter add a = x + y b = a + 1").isEmpty());
+    assertTrue(createStep(module, "alter add a = x + y b = a + 1") == null);
     assertTrue(module.toString().equals(
       "Unexpected input at position 21; I expected , but got b.\n\n"));
   }
@@ -119,7 +121,7 @@ class CommandAlterTest {
   @Test
   public void testVariableAlreadyExists() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createAddStep(module, "alter add x  =  y + 1").isEmpty());
+    assertTrue(createStep(module, "alter add x  =  y + 1") == null);
     assertTrue(module.toString().equals(
       "Variable x at position 11 is already known in this equation context.  " +
       "Please choose a fresh name.\n\n"));
@@ -128,50 +130,36 @@ class CommandAlterTest {
   @Test
   public void testUnknownVariableOnRight() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createAddStep(module, "alter add a=b + 1").isEmpty());
+    assertTrue(createStep(module, "alter add a=b + 1") == null);
     assertTrue(module.toString().equals(
       "Unknown variable b in definition of a.\n\n"));
-  }
-
-  private Optional<DeductionAlterRename> createRenameStep(OutputModule module, String str) {
-    CommandAlter cmd = new CommandAlter();
-    EquationContext ec =
-      EquationParser.parseEquationData("sum1(x) = add(y,sum2(z)) | z ≥ y", trs, 3);
-    PartialProof proof = new PartialProof(trs, FixedList.of(ec),
-                                          lst -> module.generateUniqueNaming(lst));
-    cmd.storeContext(proof, module);
-    CommandParsingStatus status = new CommandParsingStatus(str);
-    status.nextWord(); // alter
-    status.nextWord(); // rename
-    return cmd.createRenameStep(status);
   }
 
   @Test
   public void testRename() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    DeductionAlterRename step =
-      createRenameStep(module, "alter rename x := a , y:=b, z := c").get();
+    DeductionStep step = createStep(module, "alter rename x := a , y:=b, z := c");
     assertTrue(step.toString().equals("alter rename x := a, y := b, z := c"));
   }
 
   @Test
   public void testRenameWithDoubleVariable() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createRenameStep(module, "alter rename x := a, y := a").isEmpty());
+    assertTrue(createStep(module, "alter rename x := a, y := a") == null);
     assertTrue(module.toString().equals("The name a is already in use.\n\n"));
   }
 
   @Test
   public void testRenameWithMissingOriginal() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createRenameStep(module, "alter rename x := a, b := c").isEmpty());
+    assertTrue(createStep(module, "alter rename x := a, b := c") == null);
     assertTrue(module.toString().equals("Unknown variable name: b.\n\n"));
   }
 
   @Test
   public void testRenameWithNonIdentifier() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createRenameStep(module, "alter rename x := a, y := 15").isEmpty());
+    assertTrue(createStep(module, "alter rename x := a, y := 15") == null);
     assertTrue(module.toString().equals(
       "Parsing error at position 27: Expected fresh variable name but got INTEGER (15).\n\n"));
   }
@@ -179,7 +167,7 @@ class CommandAlterTest {
   @Test
   public void testRenameWithMissingColon() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createRenameStep(module, "alter rename x := a, y = b, z := c").isEmpty());
+    assertTrue(createStep(module, "alter rename x := a, y = b, z := c") == null);
     assertTrue(module.toString().equals(
       "Unexpected input at position 24; I expected := but got =.\n\n"));
   }
@@ -187,7 +175,7 @@ class CommandAlterTest {
   @Test
   public void testRenameWithMissingComma() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createRenameStep(module, "alter rename x := a y := b").isEmpty());
+    assertTrue(createStep(module, "alter rename x := a y := b") == null);
     assertTrue(module.toString().equals(
       "Unexpected input at position 21; I expected , but got y.\n\n"));
   }
@@ -195,7 +183,7 @@ class CommandAlterTest {
   @Test
   public void testRenameEndingInComma() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createRenameStep(module, "alter rename x:=a ,").isEmpty());
+    assertTrue(createStep(module, "alter rename x:=a ,") == null);
     assertTrue(module.toString().equals("Parsing error at position 20: Expected existing " +
       "variable name but got end of input.\n\n"));
   }
@@ -203,7 +191,7 @@ class CommandAlterTest {
   @Test
   public void testRenameEndingInAssign() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createRenameStep(module, "alter rename x:=").isEmpty());
+    assertTrue(createStep(module, "alter rename x:=") == null);
     assertTrue(module.toString().equals("Parsing error at position 17: Expected fresh variable " +
       "name but got end of input.\n\n"));
   }

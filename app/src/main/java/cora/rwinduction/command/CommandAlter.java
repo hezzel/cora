@@ -33,7 +33,7 @@ import cora.rwinduction.engine.deduction.DeductionAlterRename;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command alter. */
-public class CommandAlter extends Command {
+public class CommandAlter extends DeductionCommand {
   @Override
   public String queryName() {
     return "alter";
@@ -59,48 +59,41 @@ public class CommandAlter extends Command {
   }
 
   @Override
-  protected boolean run(CommandParsingStatus input) {
+  protected DeductionStep createStep(CommandParsingStatus input) {
     String action = input.nextWord();
-    DeductionStep step = null;
     if (input.commandEnded()) {
       _module.println("Alter should be invoked with at least two arguments.");
-      return false;
+      return null;
     }
-    if (action.equals("add")) {
-      Optional<DeductionAlterDefinitions> ostep = createAddStep(input);
-      if (!ostep.isEmpty()) step = ostep.get();
-    }
-    if (action.equals("rename")) {
-      Optional<DeductionAlterRename> rstep = createRenameStep(input);
-      if (!rstep.isEmpty()) step = rstep.get();
-    }
-    if (step == null) return false;
-    return step.verifyAndExecute(_proof, Optional.of(_module));
+    if (action.equals("add")) return createAddStep(input);
+    if (action.equals("rename")) return createRenameStep(input);
+    _module.println("Unknown action for alter: %a.", action);
+    return null;
   }
   
-  /** Handle an alter add command */
-  Optional<DeductionAlterDefinitions> createAddStep(CommandParsingStatus input) {
+  /** Creates the deduction step for an alter add command */
+  DeductionAlterDefinitions createAddStep(CommandParsingStatus input) {
     ArrayList<Pair<Pair<Variable,String>,Term>> definitions =
       new ArrayList<Pair<Pair<Variable,String>,Term>>();
     Renaming renaming = _proof.getProofState().getTopEquation().getRenamingCopy();
     VariableNamer namer = _proof.getContext().getVariableNamer();
-    Optional<OutputModule> om = Optional.of(_module);
+    Optional<OutputModule> om = optionalModule();
     while (true) {
       String varname = readFreshName(input, renaming);
-      if (varname == null) return Optional.empty();
-      if (!input.expect("=", om)) return Optional.empty();
+      if (varname == null) return null;
+      if (!input.expect("=", om)) return null;
       Term term = input.readTerm(_proof.getContext().getTRS(), renaming, _module);
-      if (term == null) return Optional.empty();
+      if (term == null) return null;
       VariableNamer.VariableInfo info = namer.getVariableInfo(varname);
       Variable x = TermFactory.createVar(info.basename(), term.queryType());
       if (!renaming.setName(x, varname)) {
         _module.println("Name %a is not legal for (fresh) variables.", x.queryName());
-        return Optional.empty();
+        return null;
       }
       Pair<Variable,String> varinfo = new Pair<Variable,String>(x, varname);
       definitions.add(new Pair<Pair<Variable,String>,Term>(varinfo, term));
       if (input.commandEnded()) break;
-      if (!input.expect(",", om)) return Optional.empty();
+      if (!input.expect(",", om)) return null;
     }
 
     return DeductionAlterDefinitions.createStep(_proof, om, definitions);
@@ -123,18 +116,18 @@ public class CommandAlter extends Command {
   }
 
   /** Handle an alter rename command */
-  Optional<DeductionAlterRename> createRenameStep(CommandParsingStatus input) {
+  DeductionAlterRename createRenameStep(CommandParsingStatus input) {
     ArrayList<Pair<String,String>> names = new ArrayList<Pair<String,String>>();
-    Optional<OutputModule> om = Optional.of(_module);
+    Optional<OutputModule> om = optionalModule();
     while (true) {
       String origname = input.readIdentifier(om, "existing variable name");
-      if (origname == null) return Optional.empty();
-      if (!input.expect(":=", om)) return Optional.empty();
+      if (origname == null) return null;
+      if (!input.expect(":=", om)) return null;
       String newname = input.readIdentifier(om, "fresh variable name");
-      if (newname == null) return Optional.empty();
+      if (newname == null) return null;
       names.add(new Pair<String,String>(origname, newname));
       if (input.commandEnded()) break;
-      if (!input.expect(",", om)) return Optional.empty();
+      if (!input.expect(",", om)) return null;
     }
     return DeductionAlterRename.createStep(_proof, om, names);
   }

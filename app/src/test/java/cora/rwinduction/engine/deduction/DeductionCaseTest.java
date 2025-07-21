@@ -81,7 +81,7 @@ class DeductionCaseTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term t = CoraInputReader.readTerm("i > x", renaming, trs);
-    DeductionCase step = DeductionCase.createStep(pp, o, t).get();
+    DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertTrue(step.commandDescription().equals("case i > x"));
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(module.toString().equals(""));
@@ -103,7 +103,7 @@ class DeductionCaseTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term t = CoraInputReader.readTerm("i1 - z", renaming, trs);
-    DeductionCase step = DeductionCase.createStep(pp, o, t).get();
+    DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertTrue(step.commandDescription().equals("case i1 - z"));
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(module.toString().equals(""));
@@ -130,7 +130,7 @@ class DeductionCaseTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term t = renaming.getVariable("xs");
-    DeductionCase step = DeductionCase.createStep(pp, o, t).get();
+    DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertTrue(step.commandDescription().equals("case xs"));
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(module.toString().equals(""));
@@ -149,7 +149,7 @@ class DeductionCaseTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term t = renaming.getVariable("x");
-    DeductionCase step = DeductionCase.createStep(pp, o, t).get();
+    DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertTrue(step.commandDescription().equals("case x"));
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(module.toString().equals(""));
@@ -165,7 +165,7 @@ class DeductionCaseTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term t = renaming.getVariable("x");
-    DeductionCase step = DeductionCase.createStep(pp, o, t).get();
+    DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertTrue(step.commandDescription().equals("case x"));
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(module.toString().equals(""));
@@ -184,7 +184,7 @@ class DeductionCaseTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term t = CoraInputReader.readTerm("isempty(x)", renaming, trs);
-    assertTrue(DeductionCase.createStep(pp, o, t).isEmpty());
+    assertTrue(DeductionCase.createStep(pp, o, t) == null);
     assertTrue(module.toString().equals("Cannot do case analysis on isempty(x): this is a " +
       "boolean term, but not a first-order theory term, so it cannot be added to the " +
       "constraint.\n\n"));
@@ -197,7 +197,7 @@ class DeductionCaseTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term t = CoraInputReader.readTerm("size(x) + 2", renaming, trs);
-    assertTrue(DeductionCase.createStep(pp, o, t).isEmpty());
+    assertTrue(DeductionCase.createStep(pp, o, t) == null);
     assertTrue(module.toString().equals("Cannot do case analysis on size(x) + 2: this is an " +
       "integer term, but not a first-order theory term, so it cannot be included in the " +
       "constraint.\n\n"));
@@ -209,7 +209,7 @@ class DeductionCaseTest {
     PartialProof pp = setupProof("append(x) = append(y)", module);
     Optional<OutputModule> o = Optional.of(module);
     Term t = TermFactory.createVar("mybool", CoraInputReader.readType("Bool"));
-    DeductionCase step = DeductionCase.createStep(pp, o, t).get();
+    DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertFalse(step.verify(o));
     assertTrue(module.toString().equals("Cannot do a case analysis on a variable that does not " +
       "occur in the equation.\n\n"));
@@ -222,7 +222,7 @@ class DeductionCaseTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term t = CoraInputReader.readTerm("i - xx", renaming, trs);
-    DeductionCase step = DeductionCase.createStep(pp, o, t).get();
+    DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertTrue(step.commandDescription().equals("case i - xx"));
     assertFalse(step.verify(o));
     assertTrue(module.toString().equals("Unknown variable in case term: \"i - xx\".\n\n"));
@@ -235,7 +235,7 @@ class DeductionCaseTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term t = renaming.getVariable("x");
-    assertTrue(DeductionCase.createStep(pp, o, t).isEmpty());
+    assertTrue(DeductionCase.createStep(pp, o, t) == null);
     assertTrue(module.toString().equals(
       "Cannot do a case analysis on a variable of type String.\n\n"));
   }
@@ -247,7 +247,7 @@ class DeductionCaseTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term t = renaming.getVariable("F");
-    assertTrue(DeductionCase.createStep(pp, o, t).isEmpty());
+    assertTrue(DeductionCase.createStep(pp, o, t) == null);
     assertTrue(module.toString().equals(
       "Cannot do a case analysis on a variable of type Int → Int.\n\n"));
   }
@@ -259,7 +259,7 @@ class DeductionCaseTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term t = CoraInputReader.readTerm("append(x, y)", renaming, trs);
-    assertTrue(DeductionCase.createStep(pp, o, t).isEmpty());
+    assertTrue(DeductionCase.createStep(pp, o, t) == null);
     assertTrue(module.toString().equals(
       "Cannot do a case analysis on append(x, y): this term is not a constraint or integer " +
       "theory term, nor a variable (it has type list).\n\n"));

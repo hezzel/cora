@@ -43,28 +43,28 @@ public final class DeductionCase extends DeductionStep {
     _cases = cases;
   }
  
-  public static Optional<DeductionCase> createStep(PartialProof proof,
-                                                   Optional<OutputModule> module, Term caseterm) {
+  public static DeductionCase createStep(PartialProof proof,
+                                         Optional<OutputModule> module, Term caseterm) {
     ProofState state = proof.getProofState();
     Equation eq = DeductionStep.getTopEquation(state, module);
-    if (eq == null) return Optional.empty();
+    if (eq == null) return null;
     Renaming renaming = state.getTopEquation().getRenamingCopy();
     ArrayList<ExtraInfo> ret = new ArrayList<ExtraInfo>();
 
     if (caseterm.queryType().equals(TypeFactory.boolSort)) {
-      if (!createBooleanCases(caseterm, renaming, module, ret)) return Optional.empty();
+      if (!createBooleanCases(caseterm, renaming, module, ret)) return null;
     }
     else if (caseterm.queryType().equals(TypeFactory.intSort)) {
-      if (!createIntegerCases(caseterm, renaming, module, ret)) return Optional.empty();
+      if (!createIntegerCases(caseterm, renaming, module, ret)) return null;
     }
-    else if (!nonTheoryCasesApplicable(caseterm, renaming, module)) return Optional.empty();
+    else if (!nonTheoryCasesApplicable(caseterm, renaming, module)) return null;
     else {
       createConstructorCases(caseterm.queryVariable(), renaming, proof.getContext(), ret);
       if (caseterm.queryType().isProductType()) {
         createTupleCase(caseterm.queryVariable(), renaming, proof.getContext(), ret);
       }
     }
-    return Optional.of(new DeductionCase(state, proof.getContext(), caseterm, ret));
+    return new DeductionCase(state, proof.getContext(), caseterm, ret);
   }
 
   /**

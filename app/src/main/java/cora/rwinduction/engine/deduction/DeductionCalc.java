@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -162,12 +162,13 @@ public final class DeductionCalc extends DeductionStep {
 
   /**
    * Creates a step that can execute simplifcation with a calculation rule at the given positions.
-   * This will only succeed if ALL the given positions are calculatable, in the given order
+   * This will only succeed if ALL the given positions are calculatable, in the given order;
+   * otherwise, null is returned.
    */
-  public static Optional<DeductionCalc> createStep(PartialProof proof, Optional<OutputModule> m,
-                                                   List<EquationPosition> posses) {
+  public static DeductionCalc createStep(PartialProof proof, Optional<OutputModule> m,
+                                         List<EquationPosition> posses) {
     Equation eq = getTopEquation(proof.getProofState(), m);
-    if (eq == null) return Optional.empty();
+    if (eq == null) return null;
     Renaming renaming = proof.getProofState().getTopEquation().getRenamingCopy();
     HashMap<Term,Variable> definedVars = CalcHelper.breakupConstraint(eq.getConstraint());
     ChangeablePair pair = new ChangeablePair(eq.getLhs(), eq.getRhs());
@@ -177,14 +178,14 @@ public final class DeductionCalc extends DeductionStep {
     List<Term> replacements = new ArrayList<Term>();
     for (EquationPosition pos : posses) {
       Term newconstr = tryComputing(pos, pair, definedVars, newvars, replacements, renaming, eq, m);
-      if (newconstr == null) return Optional.empty(); // error message has already been printed
+      if (newconstr == null) return null; // error message has already been printed
       constraint = TheoryFactory.createConjunction(constraint, newconstr);
     }
 
     if (constraint.isValue()) constraint = null;
 
-    return Optional.of(new DeductionCalc(proof.getProofState(), proof.getContext(), posses,
-                                         replacements, constraint, newvars));
+    return new DeductionCalc(proof.getProofState(), proof.getContext(), posses,
+                             replacements, constraint, newvars);
   }
 
   /**

@@ -82,35 +82,32 @@ public class InteractiveRewritingInducter {
   private static CmdList createCmdList(TRS trs) {
     CmdList clst = new CmdList();
 
-    // environment commands
-    clst.registerCommand(new CommandQuit());
-    clst.registerCommand(new CommandSyntax(clst));
-    clst.registerCommand(new CommandHelp(clst));
-    clst.registerCommand(new CommandRules());
-    clst.registerCommand(new CommandEquations());
-    clst.registerCommand(new CommandHypotheses());
-    clst.registerCommand(new CommandOrdering());
-    clst.registerCommand(new CommandSkip());
-    clst.registerCommand(new CommandSave());
+    clst.registerEnvironmentCommand(new CommandQuit());
+    clst.registerEnvironmentCommand(new CommandSyntax(clst));
+    clst.registerEnvironmentCommand(new CommandHelp(clst));
+    clst.registerEnvironmentCommand(new CommandRules());
+    clst.registerEnvironmentCommand(new CommandEquations());
+    clst.registerEnvironmentCommand(new CommandHypotheses());
+    clst.registerEnvironmentCommand(new CommandOrdering());
+    clst.registerEnvironmentCommand(new CommandSkip());
+    clst.registerEnvironmentCommand(new CommandSave());
 
-    // deduction commands
-    clst.registerCommand(new CommandDelete());
-    clst.registerCommand(new CommandSimplify());
-    clst.registerCommand(new CommandCalc());
-    clst.registerCommand(new CommandCase());
-    clst.registerCommand(new CommandSemiconstructor());
-    clst.registerCommand(new CommandApplication());
-    clst.registerCommand(new CommandInduct());
-    clst.registerCommand(new CommandHypothesis());
-    clst.registerCommand(new CommandEqdelete());
-    clst.registerCommand(new CommandHdelete());
-    clst.registerCommand(new CommandAlter());
-    clst.registerCommand(new CommandPostulate());
+    clst.registerEnvironmentCommand(new CommandUndo());
+    clst.registerEnvironmentCommand(new CommandRedo());
 
-    // other commands
-    clst.registerCommand(new CommandUndo());
-    clst.registerCommand(new CommandRedo());
-    
+    clst.registerDeductionCommand(new CommandDelete());
+    clst.registerDeductionCommand(new CommandSimplify());
+    clst.registerDeductionCommand(new CommandCalc());
+    clst.registerDeductionCommand(new CommandCase());
+    clst.registerDeductionCommand(new CommandSemiconstructor());
+    clst.registerDeductionCommand(new CommandApplication());
+    clst.registerDeductionCommand(new CommandInduct());
+    clst.registerDeductionCommand(new CommandHypothesis());
+    clst.registerDeductionCommand(new CommandEqdelete());
+    clst.registerDeductionCommand(new CommandHdelete());
+    clst.registerDeductionCommand(new CommandAlter());
+    clst.registerDeductionCommand(new CommandPostulate());
+
     return clst;
   }
 

@@ -53,7 +53,7 @@ class CommandHypothesisTest {
 
   private TRS _trs = setupTRS();
 
-  private Optional<DeductionHypothesis> createStep(OutputModule module, String str) {
+  private DeductionHypothesis createStep(OutputModule module, String str) {
     // set up a proof state with one equation and two hypotheses
     PartialProof proof = new PartialProof(_trs, EquationParser.parseEquationList(
       "add(0, sum1(x)) = sum2(x + 0) | x > 0", _trs), lst -> module.generateUniqueNaming(lst));
@@ -62,7 +62,7 @@ class CommandHypothesisTest {
       proof.getProofState().addHypothesis(new Hypothesis(hypo.fst(), 12, hypo.snd()));
     hypo = EquationParser.parseEquation("sum2(x) = sum1(x) | x != y", _trs);
     state = state.addHypothesis(new Hypothesis(hypo.fst(), 29, hypo.snd()));
-    proof.addProofStep(state, DeductionInduct.createStep(proof, Optional.empty()).get());
+    proof.addProofStep(state, DeductionInduct.createStep(proof, Optional.empty()));
 
     // set up the command
     CommandHypothesis cmd = new CommandHypothesis();
@@ -77,35 +77,35 @@ class CommandHypothesisTest {
   @Test
   public void testGoodStepWithoutSubstitution() {
     OutputModule module = OutputModule.createUnicodeModule(_trs);
-    DeductionHypothesis step = createStep(module, "hypothesis H12 L.2").get();
+    DeductionHypothesis step = createStep(module, "hypothesis H12 L.2");
     assertTrue(step.toString().equals("hypothesis H12 L2 with [x := x]"));
   }
 
   @Test
   public void testGoodInverseStepOnOtherSide() {
     OutputModule module = OutputModule.createUnicodeModule(_trs);
-    DeductionHypothesis step = createStep(module, "hypothesis H12-inverse R").get();
+    DeductionHypothesis step = createStep(module, "hypothesis H12-inverse R");
     assertTrue(step.toString().equals("hypothesis H12^{-1} R with [x := x + 0]"));
   }
 
   @Test
   public void testGoodInverseStepWithSubstitution() {
     OutputModule module = OutputModule.createUnicodeModule(_trs);
-    DeductionHypothesis step = createStep(module, "hypothesis H29^{-1} L.2 with [y := 17]").get();
+    DeductionHypothesis step = createStep(module, "hypothesis H29^{-1} L.2 with [y := 17]");
     assertTrue(step.toString().equals("hypothesis H29^{-1} L2 with [x := x, y := 17]"));
   }
 
   @Test
   public void testNonExistingHypothesis() {
     OutputModule module = OutputModule.createUnicodeModule(_trs);
-    assertTrue(createStep(module, "hypothesis H19 R.2").isEmpty());
+    assertTrue(createStep(module, "hypothesis H19 R.2") == null);
     assertTrue(module.toString().equals("No such induction hypothesis: H19.\n\n"));
   }
 
   @Test
   public void testNotAMatch() {
     OutputModule module = OutputModule.createUnicodeModule(_trs);
-    assertTrue(createStep(module, "hypothesis H29 with [y:=x]").isEmpty());
+    assertTrue(createStep(module, "hypothesis H29 with [y:=x]") == null);
     assertTrue(module.toString().equals("The induction hypothesis does not apply due to failed " +
       "matching (matching debug info says Variable x has a different type from sum1(x).)\n\n"));
   }
@@ -119,7 +119,7 @@ class CommandHypothesisTest {
       proof.getProofState().addHypothesis(new Hypothesis(hypo.fst(), 12, hypo.snd()));
     hypo = EquationParser.parseEquation("add(0, x) = error", _trs);
     state = state.addHypothesis(new Hypothesis(hypo.fst(), 29, hypo.snd()));
-    proof.addProofStep(state, DeductionInduct.createStep(proof, Optional.empty()).get());
+    proof.addProofStep(state, DeductionInduct.createStep(proof, Optional.empty()));
     CommandHypothesis cmd = new CommandHypothesis();
     cmd.storeContext(proof, module);
     return cmd.suggestNext(args);
