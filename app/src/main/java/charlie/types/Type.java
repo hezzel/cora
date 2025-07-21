@@ -39,9 +39,8 @@ public sealed interface Type permits
   default boolean isProductType() { return false; }
 
   /**
-   * Returns true if the only base types sorts occurring in this type are theory sorts --
-   * that is, the sorts specifically created as theory sorts, accessible from the type
-   * factory.
+   * Returns true if the only base types occurring in this type are theory sorts -- that is, the
+   * sorts specifically created as theory sorts, accessible from the type factory.
    */
   boolean isTheoryType();
 
@@ -51,10 +50,10 @@ public sealed interface Type permits
   /** Returns whether the given Type is equal to us. */
   boolean equals(Type type);
 
-  /** For σ1 → ,,, → σm → τ, returns m. */
+  /** For σ1 → ,,, → σm → τ with τ not an arrow type, returns m. */
   default int queryArity() { return 0; }
 
-  /** For σ1 → ,,, → σm → τ, returns τ */
+  /** For σ1 → ,,, → σm → τ with τ not an arrow type, returns τ */
   Type queryOutputType();
 
   /**
@@ -73,7 +72,8 @@ public sealed interface Type permits
 
   /**
    * If i is between 1 and numberSubtypes(), this returns the corresponding subtype (from left to
-   * right) of the type.  Otherwise, an IndexingException is thrown.
+   * right) of the type.  Otherwise, an IndexOutOfBoundsException is thrown.
    */
   Type subtype(int i);
 }
+

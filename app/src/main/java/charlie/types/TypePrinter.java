@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,7 +15,7 @@
 
 package charlie.types;
 
-import com.google.common.collect.ImmutableList;
+import charlie.util.FixedList;
 
 /**
  * TypePrinters are used in the overall output process of the tool.  This class provides a default
@@ -39,14 +39,14 @@ public class TypePrinter {
    * 
    * To define your own TypePrinter, you can either override this method directly -- in which
    * case there is no need to override any of the other methods in the class -- or override (some
-   * of) the functions it calls, which are printBaseType, printArrowType and printProductType
+   * of) the functions it calls, which are printBaseType, printArrowType and printProductType,
    * directly.
    */
   public void print(Type t, StringBuilder builder) {
     switch (t) {
       case Base(String name): printBaseType(name, builder); break;
       case Arrow(Type left, Type right): printArrowType(left, right, builder); break;
-      case Product(ImmutableList<Type> elems): printProductType(elems, builder); break;
+      case Product(FixedList<Type> elems): printProductType(elems, builder); break;
     }
   }
 
@@ -81,7 +81,7 @@ public class TypePrinter {
    * If you only want to change the brackets, override the functions queryTupleOpenBracket() and
    * queryTupleCloseBracket() instead.
    */
-  protected void printProductType(ImmutableList<Type> elems, StringBuilder builder) {
+  protected void printProductType(FixedList<Type> elems, StringBuilder builder) {
     builder.append(queryTupleOpenBracket() + " ");
     for (int i = 0; i < elems.size(); i++) {
       if (i > 0) builder.append(", ");

@@ -17,9 +17,9 @@ package charlie.types;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 
+import charlie.util.FixedList;
 import charlie.util.NullStorageException;
 
 class ProductTest {
@@ -29,30 +29,28 @@ class ProductTest {
     args.add(new Base("x"));
     args.add(new Base("y"));
     args.add(null);
-    ImmutableList<Type> lst = null;
+    FixedList<Type> lst = null;
 
     assertThrows(NullStorageException.class, () -> new Product(lst));
-    // NullPointerException instead of NullStorageException due to ImmutableList
-    // blocking null elements
-    assertThrows(java.lang.NullPointerException.class,
+    assertThrows(charlie.util.NullStorageException.class,
       () -> TypeFactory.createProduct(args));
-    assertThrows(java.lang.NullPointerException.class,
-      () -> new Product(ImmutableList.copyOf(args)));
-    assertThrows(java.lang.NullPointerException.class,
-      () -> TypeFactory.createProduct(ImmutableList.copyOf(args)));
-    assertThrows(java.lang.NullPointerException.class,
+    assertThrows(charlie.util.NullStorageException.class,
+      () -> new Product(FixedList.copy(args)));
+    assertThrows(charlie.util.NullStorageException.class,
+      () -> TypeFactory.createProduct(FixedList.copy(args)));
+    assertThrows(charlie.util.NullStorageException.class,
       () -> TypeFactory.createProduct(null, new Base("z")));
-    assertThrows(java.lang.NullPointerException.class,
+    assertThrows(charlie.util.NullStorageException.class,
       () -> TypeFactory.createProduct(new Base("z"), new Base("q"), null));
   }
 
   @Test
   public void testConstructedTooShort() {
-    ImmutableList.Builder<Type> builder = ImmutableList.<Type>builder();
-    ImmutableList<Type> l0 = builder.build();
-    builder = ImmutableList.<Type>builder();
+    FixedList.Builder<Type> builder = new FixedList.Builder<Type>();
+    FixedList<Type> l0 = builder.build();
+    builder = new FixedList.Builder<Type>();
     builder.add(new Arrow(new Base("a"), new Base("b")));
-    ImmutableList<Type> l1 = builder.build();
+    FixedList<Type> l1 = builder.build();
     assertThrows(IllegalArgumentException.class, () -> new Product(l0));
     assertThrows(IllegalArgumentException.class, () -> new Product(l1));
   }
