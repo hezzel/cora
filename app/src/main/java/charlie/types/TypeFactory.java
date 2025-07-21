@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2022--2024 Cynthia Kop
+ Copyright 2022--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,8 +15,8 @@
 
 package charlie.types;
 
-import com.google.common.collect.ImmutableList;
 import java.util.List;
+import charlie.util.FixedList;
 
 /**
  * This static class generates basic types, product types and arrow types, and can be used to
@@ -42,7 +42,7 @@ public class TypeFactory {
   public static Type createArrow(Type left, Type right) { return new Arrow(left, right); }
 
   /** Creates a product type from the given list. */
-  public static Type createProduct(ImmutableList<Type> types) {
+  public static Type createProduct(FixedList<Type> types) {
     if (types.size() == 1) return types.get(0);
     return new Product(types);
   }
@@ -50,12 +50,12 @@ public class TypeFactory {
   /** Creates a product type using a copy of the given list. */
   public static Type createProduct(List<Type> types) {
     if (types.size() == 1) return types.get(0);
-    return new Product(ImmutableList.copyOf(types));
+    return new Product(FixedList.copy(types));
   }
 
   /** Creates a product type arg1 x ... x argm */
   public static Type createProduct(Type ...args) {
-    return new Product(ImmutableList.copyOf(args));
+    return new Product(FixedList.of(args));
   }
 
   /** Creates a type of the form inp_1 →...→ inp_n → output */

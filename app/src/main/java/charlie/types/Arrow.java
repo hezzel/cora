@@ -15,9 +15,8 @@
 
 package charlie.types;
 
-import charlie.exceptions.IndexingException;
-import charlie.util.NullStorageException;
 import java.util.Objects;
+import charlie.util.NullStorageException;
 
 public record Arrow(Type left, Type right) implements Type {
   public Arrow(Type left, Type right) {
@@ -51,6 +50,11 @@ public record Arrow(Type left, Type right) implements Type {
   }
 
   @Override
+  public boolean equals(Object other) {
+    return other instanceof Type t && equals(t);
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(left, right);
   }
@@ -77,6 +81,7 @@ public record Arrow(Type left, Type right) implements Type {
   public Type subtype(int index) {
     if (index == 1) return this.left;
     if (index == 2) return this.right;
-    throw new IndexingException("Arrow", "subtype", index, 1, 2);
+    throw new IndexOutOfBoundsException("Arrow::subtype given " + index + " (expected 1-2).");
   }
 }
+

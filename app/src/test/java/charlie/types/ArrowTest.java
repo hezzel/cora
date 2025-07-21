@@ -17,9 +17,9 @@ package charlie.types;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import com.google.common.collect.ImmutableList;
 
 import charlie.util.NullStorageException;
+import charlie.util.FixedList;
 
 class ArrowTest {
   private Base intType() {
@@ -57,7 +57,7 @@ class ArrowTest {
   public void testHasProducts() {
     Type inttype = intType();
     Type booltype = boolType();
-    Type tuple = new Product(ImmutableList.of(inttype, inttype));
+    Type tuple = new Product(FixedList.of(inttype, inttype));
     Type t = new Arrow(booltype, booltype);
     assertFalse(t.hasProducts());
     t = new Arrow(new Arrow(tuple, booltype), inttype);

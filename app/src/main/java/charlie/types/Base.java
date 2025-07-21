@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,7 +15,6 @@
 
 package charlie.types;
 
-import charlie.exceptions.IndexingException;
 import charlie.util.NullStorageException;
 
 public record Base(String name) implements Type {
@@ -53,7 +52,7 @@ public record Base(String name) implements Type {
 
   @Override
   public Type subtype(int index) {
-    throw new IndexingException("Base", "subtype", index);
+    throw new IndexOutOfBoundsException("Base::subtype called (with index " + index + ")");
   }
 
   @Override
@@ -62,6 +61,11 @@ public record Base(String name) implements Type {
       case Base(String x) -> this.name.equals(x);
       default -> false;
     };
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    return other instanceof Type t && equals(t);
   }
 
   @Override
@@ -79,3 +83,4 @@ public record Base(String name) implements Type {
     return 0;
   }
 }
+

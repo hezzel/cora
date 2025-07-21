@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.ParseException;
 import charlie.exceptions.UnexpectedPatternException;
+import charlie.util.FixedList;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.Token;
@@ -164,7 +165,7 @@ public class OCocoUnsortedInputReader {
         return t.equals(TypeFactory.defaultSort);
       case Arrow(Type a, Type b):
         return isUnsorted(a) && isUnsorted(b);
-      case Product(ImmutableList<Type> args):
+      case Product(FixedList<Type> args):
         return false;
     }
   }
