@@ -51,14 +51,7 @@ public record Product(FixedList<Type> types) implements Type {
   @Override
   public boolean equals(Type type) {
     switch (type) {
-      case Product(FixedList<Type> componentTypes):
-        if (this.types.size() != componentTypes.size()) return false;
-        for (int i = 0; i < this.types.size(); i++) {
-          if (!this.types.get(i).equals(componentTypes.get(i))) return false;
-        }
-        System.out.println("Got past initial check.");
-        if (!this.types.equals(componentTypes)) System.out.println("Problem occurs for " + type);
-        return this.types.equals(componentTypes);
+      case Product(FixedList<Type> componentTypes): return this.types.equals(componentTypes);
       default: return false;
     }
   }

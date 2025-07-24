@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -14,8 +14,6 @@
  *************************************************************************************************/
 
 package charlie.parser.lib;
-
-import charlie.exceptions.ParseException;
 
 /**
  * A ParsingStatus object is used to keep track of progress and errors during parsing.  This is
@@ -50,18 +48,16 @@ public class ParsingStatus {
   }
 
   /**
-   * If at least one error has been encountered, this throws a ParseException indicating all the
+   * If at least one error has been encountered, this throws a ParsingException indicating all the
    * error messages that have been collected.
    * If not, nothing is done.
    */
   public void throwCollectedErrors() {
-    if (_errors.queryErrorCount() > 0) {
-      throw new ParseException(_errors.queryCollectedMessages());
-    }
+    if (_errors.queryErrorCount() > 0) throw _errors.generateException();
   }
 
   /**
-   * Once we have encountered too many errors, we immediately abort by throwing the ParseException.
+   * Once we have encountered too many errors, we immediately abort by throwing the ParsingException.
    */
   private void checkTooManyErrors() {
     if (_errors.queryFull()) throwCollectedErrors();
@@ -75,15 +71,25 @@ public class ParsingStatus {
    * the error is not in fact added.  This is to avoid multiple errors for the same location, which
    * is usually a duplicate.
    *
-   * If too many errors have already been stored, this will immediately throw a ParseException
+   * If too many errors have already been stored, this will immediately throw a ParsingException
    * indicating the collected problems.  If no error is thrown, then the parser should proceed with
    * error recovery and try to continue parsing.
    */
-  public void storeError(String message, Token token) {
-    if (token == null) _errors.addError(message);
-    else if (token == _lastErrorToken) return;
-    else _errors.addError(token.getPosition() + ": " + message);
+  public void storeError(Token token, String message) {
+    if (token != null && token == _lastErrorToken) return;
+    _errors.addError(new ParsingErrorMessage(token, message));
     _lastErrorToken = token;
+    checkTooManyErrors();
+  }
+
+  /**
+   * This stores the given error, which may be a more sophisticated combination of classes than
+   * merely a string message.
+   */
+  public void storeError(ParsingErrorMessage message) {
+    if (message.queryToken() != null && message.queryToken() == _lastErrorToken) return;
+    _errors.addError(message);
+    _lastErrorToken = message.queryToken();
     checkTooManyErrors();
   }
 
@@ -92,10 +98,9 @@ public class ParsingStatus {
    * queryErrorPosition().  That is, it stores a message to be printed *before* all the errors that
    * were added after the corresponding call to queryErrorPosition().
    * Note that this bypasses the "do not store duplicate errors on the same token" code, so this
-   * message will be printd whether or not the previous error stored was for the same token.
+   * message will be printed whether or not the previous error stored was for the same token.
    */
-  public void storeError(String message, Token token, int pos) {
-    if (token != null) message = token.getPosition() + ": " + message;
+  public void storeError(ParsingErrorMessage message, int pos) {
     _errors.addErrorBefore(pos, message);
     checkTooManyErrors();
   }
@@ -110,24 +115,24 @@ public class ParsingStatus {
 
   /**
    * This stores the given error message, marked to the position of the given token, and then
-   * throws a ParseException with all the collected error messages (including this one).
-   * If you do not want the message to include a position, provide a null argument for token/
+   * throws a ParsingException with all the collected error messages (including this one).
+   * If you do not want the message to include a position, provide a null argument for token.
    */
-  public void abort(String message, Token token) {
-    if (token == null) _errors.addError(message);
-    else _errors.addError(token.getPosition() + ": " + message);
-    throw new ParseException(_errors.queryCollectedMessages());
+  public void abort(Token token, String message) {
+    _errors.addError(new ParsingErrorMessage(token, message));
+    throw _errors.generateException();
   }
 
   /**
    * Reads the next token from the input.  If tokenising causes an exception, this quietly stores
-   * the exception, and only throws a ParseException once too many problems have been encountered.
+   * the exception and just returns the next token, and only throws a ParsingException once too
+   * many problems have been encountered.
    */
   public Token nextToken() {
     while (true) {
       try { return _tqueue.nextToken(); }
       catch (LexerException e) {
-        _errors.addError(e.getMessage());
+        _errors.addError(new ParsingErrorMessage(e.queryToken(), e.queryMainMessage()));
         checkTooManyErrors();
       }
     }
@@ -190,8 +195,8 @@ public class ParsingStatus {
     if (token.getName().equals(kind)) return token;
     _tqueue.push(token);
     if (description == null) description = kind;
-    storeError("Expected " + description + " but got " + (token.isEof() ? "end of input" :
-      token.getName() + " (" + token.getText() + ")") + ".", token);
+    storeError(token, "Expected " + description + " but got " + (token.isEof() ? "end of input" :
+      token.getName() + " (" + token.getText() + ")") + ".");
     return null;
   }
 

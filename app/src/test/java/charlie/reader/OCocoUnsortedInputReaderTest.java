@@ -18,7 +18,7 @@ package charlie.reader;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.ParseException;
+import charlie.parser.lib.ParsingException;
 import charlie.types.TypeFactory;
 import charlie.terms.Term;
 import charlie.terms.Variable;
@@ -73,7 +73,7 @@ public class OCocoUnsortedInputReaderTest {
   @Test
   public void testAbusedVariable() {
     try { OCocoUnsortedInputReader.readTerm("x(a)", "x"); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals("1:1: Variable x used as root of a functional term.\n"));
       return;
     }
@@ -83,7 +83,7 @@ public class OCocoUnsortedInputReaderTest {
   @Test
   public void testInconsistentArities() {
     try { OCocoUnsortedInputReader.readTerm("g(f(x, f(a)), a(y))", "x y"); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:8: Function symbol f was previously used with 2 arguments, but is here used with 1.\n" +
         "1:15: Function symbol a was previously used with 0 arguments, but is here used with 1.\n"
@@ -96,7 +96,7 @@ public class OCocoUnsortedInputReaderTest {
   @Test
   public void noTypingAttemptAfterParsingErrors() {
     try { OCocoUnsortedInputReader.readTerm("g(f(x y), f(x, y, z))", "x y z"); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:7: Expected a comma or closing bracket but got IDENTIFIER (y).\n"
       ));
@@ -154,7 +154,7 @@ public class OCocoUnsortedInputReaderTest {
                  "  append(cons(x, xs), ys) -> cons(x, append(xs, ys))\n" +
                  ")";
     try { OCocoUnsortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "Undeclared function symbol (not allowed when SIG is given): append\n"));
       return;
@@ -168,7 +168,7 @@ public class OCocoUnsortedInputReaderTest {
                  "(SIG (f 1) (g 2) (a 0))\n" +
                  "(RULES g(a) -> a)";
     try { OCocoUnsortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:8: Duplicate symbol: f occurs both as a variable and as a function symbol!\n"));
       // note that the arity error for g isn't even given anymore; this is so problematic that
@@ -182,7 +182,7 @@ public class OCocoUnsortedInputReaderTest {
   public void testWrongKindOfTrs() {
     String str = "(SIG (f a -> a) (g b -> b)) (RULES f(x) -> x g(x) -> x)";
     try { OCocoUnsortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:7: Many-sorted function symbol f cannot occur in an unsorted TRS.\n" +
         "1:18: Many-sorted function symbol g cannot occur in an unsorted TRS.\n"));
@@ -199,7 +199,7 @@ public class OCocoUnsortedInputReaderTest {
     // no errors are given about the right-hand side of the first-rule, but they are about the
     // second rule
     try { OCocoUnsortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:42: Expected a comma or closing bracket but got IDENTIFIER (y).\n" +
         "1:63: Function symbol f was previously used with 2 arguments, but is here used with 1.\n" +
@@ -214,7 +214,7 @@ public class OCocoUnsortedInputReaderTest {
   public void testReadRuleWhereRightHasStructureProblems() {
     String str = "(VAR x y) (RULES f(x) -> f(x, x) f(x, s(y)) -> f(g(x),,y))";
     try { OCocoUnsortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:55: Expected an identifier (variable or function name) but got COMMA (,).\n" +
         "1:26: Function symbol f was previously used with 1 arguments, but is here used with 2.\n" +
@@ -228,7 +228,7 @@ public class OCocoUnsortedInputReaderTest {
   public void testReadRuleWithLeftVariable() {
     String str = "(VAR x) (RULES x -> f(x, x))";
     try { OCocoUnsortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:18: The rule x → f(x, x) is not allowed to occur in MSTRSs: left-hand side should " +
         "have a non-theory function symbol as root, not anything else.\n"));

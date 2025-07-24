@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,8 +18,8 @@ package charlie.parser;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.ParseException;
 import charlie.util.LookupMap;
+import charlie.parser.lib.ParsingException;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
 
@@ -109,7 +109,7 @@ public class ITrsParserTest {
   public void testReadMissingCloseBracket() {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm term = ITrsParser.readTerm("f(a, b(x)", collector);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:10: Expected a comma or closing bracket but got end of input.\n"));
     assertTrue(term.hasErrors());
     assertTrue(term.toString().equals("ERR(@(f, [a, @(b, [x])]))"));
@@ -136,7 +136,7 @@ public class ITrsParserTest {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm term = ITrsParser.readTerm("f(a, a(, x), g(y, ), a(b)", collector);
     assertTrue(collector.queryErrorCount() == 3);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
         "1:8: Expected an identifier (variable or function name) but got COMMA (,).\n" +
         "1:19: Expected an identifier (variable or function name) but got BRACKETCLOSE ()).\n" +
         "1:26: Expected a comma or closing bracket but got end of input.\n"));
@@ -156,7 +156,7 @@ public class ITrsParserTest {
   public void testReadAmbiguousTerm() {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm term = ITrsParser.readTerm("x && y || z", collector);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:8: Ambiguous infix sequence: operators && (at position 1:3) and || " +
       "have the same precedence, but are not in the same group.  Please use " +
       "brackets to disambiguate.\n"));
@@ -211,7 +211,7 @@ public class ITrsParserTest {
   public void testMissingRules() {
     String str = "(VAR x y) (COMMENT an empty file)";
     try { ITrsParser.readProgramFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:11: Expected rules declaration but got COMMENTSTART ((COMMENT).\n"));
       return;

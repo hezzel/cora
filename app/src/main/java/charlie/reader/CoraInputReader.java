@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -24,6 +24,8 @@ import charlie.exceptions.*;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.Token;
+import charlie.parser.lib.ParsingErrorMessage;
+import charlie.parser.lib.ParsingException;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
 import charlie.parser.CoraParser;
@@ -65,8 +67,8 @@ public class CoraInputReader extends TermTyper {
     if (decl == null || decl.type() == null) return;
     String name = decl.name();
     if (_symbols.lookupFunctionSymbol(name) != null) {
-      storeError("Redeclaration of previously declared function symbol " + name + ".",
-                 decl.token());
+      storeError(decl.token(), "Redeclaration of previously declared function symbol " +
+                               name + ".");
     }
     else {
       FunctionSymbol symbol = TermFactory.createConstant(name, decl.type());
@@ -83,12 +85,12 @@ public class CoraInputReader extends TermTyper {
       String kind = arity == 0 ? "variable" : "meta-variable";
       Type type = decl.type();
       if (_symbols.lookupFunctionSymbol(name) != null) {
-        storeError("Name of " + kind + " " + name + " already occurs as a function symbol.",
-          decl.token());
+        storeError(decl.token(), "Name of " + kind + " " + name +
+                                 " already occurs as a function symbol.");
       }
       else if (_symbols.symbolDeclared(name)) {
-        storeError("Redeclaration of " + kind + " " + name + " in the same environment.",
-          decl.token());
+        storeError(decl.token(), "Redeclaration of " + kind + " " + name +
+                                 " in the same environment.");
       }
       else {
         if (arity == 0) _symbols.addVariable(TermFactory.createVar(name, type));
@@ -115,9 +117,9 @@ public class CoraInputReader extends TermTyper {
     for (Variable x : right.vars()) {
       if (left.freeReplaceables().contains(x)) continue;
       if (!x.queryType().isTheoryType() || !x.queryType().isBaseType()) {
-        storeError("right-hand side of rule has a fresh variable " + x.queryName() + " of type " +
-          x.queryType().toString() + " which does not occur on the left; only variables of " +
-          "theory sorts may occur fresh (and that only in some kinds of TRSs).", token);
+        storeError(token, "right-hand side of rule has a fresh variable " + x.queryName() +
+          " of type ", x.queryType(), " which does not occur on the left; only variables of " +
+          "theory sorts may occur fresh (and that only in some kinds of TRSs).");
         continue;
       }
       if (constr == null) constr = TheoryFactory.createEquality(x, x);
@@ -159,7 +161,7 @@ public class CoraInputReader extends TermTyper {
       else return TrsFactory.createRule(l, r, c, kind);
     }
     catch (IllegalRuleException e) {
-      storeError(e.queryProblem(), rule.token());
+      storeError(rule.token(), e.queryProblem());
       return null;
     }
   }
@@ -183,10 +185,10 @@ public class CoraInputReader extends TermTyper {
                                   _symbols.queryPrivateSymbols(), false, kind);
     }
     catch (IllegalRuleException e) {
-      _errors.addError(e.queryProblem());
+      storeError(null, e.queryProblem());
     }
     catch (IllegalSymbolException e) {
-      _errors.addError(e.queryProblem());
+      storeError(null, e.queryProblem());
     }
     return null;
   }
@@ -222,11 +224,9 @@ public class CoraInputReader extends TermTyper {
     return CoraParser.readType(str);
   }
 
-  /** Throws a ParseException if the given ErrorCollector has errors. */
+  /** Throws a ParsingException if the given ErrorCollector has errors. */
   private static void throwIfErrors(ErrorCollector collector) {
-    if (collector.queryErrorCount() > 0) {
-      throw new ParseException(collector.queryCollectedMessages());
-    }
+    if (collector.queryErrorCount() > 0) throw collector.generateException();
   }
 
   /**
@@ -278,8 +278,8 @@ public class CoraInputReader extends TermTyper {
     for (Replaceable r : t.freeReplaceables()) {
       if (naming.getName(r) == null) {
         if (!naming.setName(r, r.queryName())) {
-          collector.addError("(meta-)variable " + r.queryName() + " is not allowed " +
-            "for a variable in the given naming scheme");
+          collector.addError(new ParsingErrorMessage(null, "(meta-)variable " + r.queryName() +
+            " is not allowed for a variable in the given naming scheme"));
         }
       }
     }
@@ -398,8 +398,8 @@ public class CoraInputReader extends TermTyper {
     else if (extension.equals("cfs") || extension.equals("afs")) kind = TrsFactory.CFS;
     else if (extension.equals("ams") || extension.equals("afsm")) kind = TrsFactory.AMS;
     else if (!extension.equals("cora")) {
-      collector.addError("Unexpected file extension: " + extension + ".  For default format, " +
-        "use <filename>.cora");
+      collector.addError(new ParsingErrorMessage(null, "Unexpected file extension: " + extension +
+        ".  For default format, use <filename>.cora"));
     }
     boolean constrained = kind.theoriesIncluded();
     ParserProgram trs = CoraParser.readProgramFromFile(filename, constrained, collector);

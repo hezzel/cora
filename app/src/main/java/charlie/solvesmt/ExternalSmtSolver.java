@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,11 +18,10 @@ package charlie.solvesmt;
 import java.io.*;
 import java.util.List;
 import java.util.Scanner;
-import charlie.exceptions.ParseException;
 import charlie.util.ExceptionLogger;
+import charlie.parser.lib.ParsingException;
 import charlie.smt.*;
 import charlie.util.SystemUtils;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * An ExternalSmtSolver is a solver that operates by writing a file and calling an external
@@ -97,7 +96,7 @@ public class ExternalSmtSolver implements SmtSolver {
    * SMT solver on it, and reads the result file to obtain a suitable Valuation -- or concludes
    * that no proof can be found.
    */
-  public Answer checkSatisfiability(@NotNull SmtProblem problem) {
+  public Answer checkSatisfiability(SmtProblem problem) {
     Constraint combinedConstraints = problem.queryCombinedConstraint();
     try {
       createSmtFile(problem.numberBooleanVariables(), problem.numberIntegerVariables(),
@@ -128,7 +127,7 @@ public class ExternalSmtSolver implements SmtSolver {
       ExceptionLogger.log("Error reading SMT solver result file: " + e.getMessage(), e);
       return new Answer.MAYBE("Error reading result file: " + e.getMessage());
     }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       ExceptionLogger.log("Parsing error reading result file: " + e.getMessage(), e);
       return new Answer.MAYBE("Parsing error reading result file: " + e.getMessage());
     }

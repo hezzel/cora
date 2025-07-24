@@ -18,7 +18,7 @@ package charlie.reader;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.ParseException;
+import charlie.parser.lib.ParsingException;
 import charlie.types.TypeFactory;
 import charlie.terms.Term;
 import charlie.terms.Variable;
@@ -76,7 +76,7 @@ public class OCocoSortedInputReaderTest {
   @Test
   public void testVariableUsedAsFunction() {
     try { OCocoSortedInputReader.readTerm("f(x, x(a))", "(a 1) (f 2)"); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:6: Variable x used as a function symbol!\n" +
         "1:8: Illegal occurrence of unapplied function symbol a!\n"
@@ -89,7 +89,7 @@ public class OCocoSortedInputReaderTest {
   @Test
   public void testUndeclaredUsedAsFunction() {
     try { OCocoSortedInputReader.readTerm("f(y, x(a))", "(a 1) (f 2)"); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:6: Undeclared function symbol: x.\n" +
         "1:8: Illegal occurrence of unapplied function symbol a!\n"
@@ -103,7 +103,7 @@ public class OCocoSortedInputReaderTest {
   public void testReadTermWithSortErrors() {
     String sig = "(f A B -> C) (g A B -> A) (a -> B)";
     try { OCocoSortedInputReader.readTerm("f(g(x, y), g(a, g(a, x)))", sig); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:12: Expected term of type B, but got functional term g(...) of type A.\n" +
         "1:14: Expected term of type A, but got constant symbol a of type B.\n" +
@@ -118,7 +118,7 @@ public class OCocoSortedInputReaderTest {
   public void testReadTermWithArityErrors() {
     String sig = "(f A B -> C) (g A A -> A) (a -> B)";
     try { OCocoSortedInputReader.readTerm("f(g(x), z, g(x, a))", sig); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:1: Function symbol f was declared with 2 arguments, but is used here with 3.\n" +
         "1:3: Function symbol g was declared with 2 arguments, but is used here with 1.\n" +
@@ -131,7 +131,7 @@ public class OCocoSortedInputReaderTest {
   public void readSameUndeclaredSymbolTwice() {
     String sig = "(f A A -> B) (a -> A)";
     try { OCocoSortedInputReader.readTerm("f(g(a), g(x))", sig); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:3: Undeclared function symbol: g.\n" +
         "1:9: Undeclared function symbol: g.\n"
@@ -160,7 +160,7 @@ public class OCocoSortedInputReaderTest {
                  ")";
     TRS trs = OCocoUnsortedInputReader.readTrsFromString(str);
     try { OCocoSortedInputReader.readTerm("append(cons(x, nil), lst) xx", trs); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:27: Expected end of input but got IDENTIFIER (xx).\n"));
       return;
@@ -193,7 +193,7 @@ public class OCocoSortedInputReaderTest {
       "  f(x,0) -> g(x)" +
       ")";
     try { OCocoSortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
       "2:7: Undeclared function symbol: s.\n" +
       "2:18: Undeclared function symbol: s.\n" +
@@ -214,7 +214,7 @@ public class OCocoSortedInputReaderTest {
       "  f(x, s(y) -> f(g(x),y)\n" +
       "  f(x,0) -> g(x))";
     try { OCocoSortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "2:13: Expected a comma or closing bracket but got ARROW (->).\n" +
         "3:13: Undeclared function symbol: g.\n"));
@@ -229,7 +229,7 @@ public class OCocoSortedInputReaderTest {
       "  f(x, s(y)) -> f(g(x),,y)\n" +
       "  f(x) -> f(x, x))";
     try { OCocoSortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "2:24: Expected an identifier (variable or function name) but got COMMA (,).\n" +
         "2:8: Undeclared function symbol: s.\n" +
@@ -243,7 +243,7 @@ public class OCocoSortedInputReaderTest {
   public void testRuleWithInconsistentTermTyping() {
     String str = "(SIG (f int -> bool) (g int -> int)) (RULES f(x) -> g(x))";
     try { OCocoSortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:53: Expected term of type bool, but got functional term g(...) of type int.\n"));
       return;
@@ -255,7 +255,7 @@ public class OCocoSortedInputReaderTest {
   public void testRuleWithInconsistentVariableTyping() {
     String str = "(SIG (f Int -> Int) (g Bool -> Int)) (RULES f(x) -> g(x))";
     try { OCocoSortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:55: Expected term of type Bool, but got variable x that was previously used with " +
         "type Int.\n"));
@@ -268,7 +268,7 @@ public class OCocoSortedInputReaderTest {
   public void testRuleWithFreshVariableOnRightSide() {
     String str = "(SIG (f 2) ) (RULES f(x,y) -> f(y,z))";
     try { OCocoSortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:28: The rule f(x, y) → f(y, z) is not allowed to occur in MSTRSs: right-hand side " +
         "contains a variable that does not occur in the left-hand side.\n"));
@@ -281,7 +281,7 @@ public class OCocoSortedInputReaderTest {
   public void testRuleWithLeftVariable() {
     String str = "(SIG (f 2) ) (RULES x -> f(x,x))";
     try { OCocoSortedInputReader.readTrsFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:23: The left-hand side of a rule is not allowed to be a variable.\n"));
       return;

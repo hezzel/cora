@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -66,8 +66,8 @@ class LongTokenLexer implements ChangeableLexer {
       try { token = _mylexer.nextToken(); }
       catch (LexerException e) {
         _mylexer.changeTokenData(backup);
-        throw new LexerException(e.queryToken(), e.getMessage() + " (long token " + _resultName +
-          " started at " + ret.getPosition() + " not finished)");
+        throw new LexerException(e.queryToken(), e.queryMainMessage() + " (long token " +
+          _resultName + " started at " + ret.getPosition() + " not finished)");
       }
       txt.append(token.getText());
       if (token.getName().equals("LONGTOKENCLOSE")) break;

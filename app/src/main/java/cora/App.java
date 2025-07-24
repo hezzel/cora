@@ -15,7 +15,7 @@
 
 package cora;
 
-import charlie.exceptions.ParseException;
+import charlie.parser.lib.ParsingException;
 import charlie.terms.Term;
 import charlie.trs.TRS;
 import charlie.reader.*;
@@ -71,7 +71,7 @@ public class App {
       System.out.println(e.getMessage());
       System.exit(1);
     }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       System.out.println(e.getMessage());
       System.exit(1);
     }
@@ -122,7 +122,7 @@ public class App {
     String txt = moduleInput.get(0);
     Term start;
     try { start = CoraInputReader.readTerm(txt, trs); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       System.out.println("Exception reading input term " + txt + ":\n" + e.getMessage());
       return null;
     }

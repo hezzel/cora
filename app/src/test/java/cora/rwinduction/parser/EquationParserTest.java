@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Set;
 
-import charlie.exceptions.ParseException;
 import charlie.util.Pair;
 import charlie.util.FixedList;
+import charlie.parser.lib.ParsingException;
 import charlie.terms.*;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -89,9 +89,9 @@ class EquationParserTest {
 
   @Test
   public void testEquationDoesNotEndThere() {
-    assertThrows(charlie.exceptions.ParseException.class, () ->
+    assertThrows(charlie.parser.lib.ParsingException.class, () ->
       EquationParser.parseEquation("sum(x) = sum(y) | x = y sum(x)", trs));
-    assertThrows(charlie.exceptions.ParseException.class, () ->
+    assertThrows(charlie.parser.lib.ParsingException.class, () ->
       EquationParser.parseEquationData("sum(1) = sum(2) x = y", trs, 2));
   }
 

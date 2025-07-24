@@ -15,28 +15,34 @@
 
 package charlie.parser.lib;
 
+import java.util.List;
 import charlie.util.UserException;
 
 /**
- * A LexerException is an Exception that occurs while trying to tokenise a file or string.
- * Since this is information that will likely end up being shown to the user, we inherit
- * UserException so that it may be caught and handled as such, even though we only work with
- * strings (as lexer exceptions typically show only input that comes directly from the user).
+ * A ParsingException consists of one or more lines detailing errors encountered during
+ * lexing/parsing.
  */
-public class LexerException extends UserException {
-  private Token _token;
-
-  public LexerException(Token token, String message) {
-    super(token.getPosition(), ": ", message);
-    _token = token;
+public class ParsingException extends UserException {
+  public ParsingException(List<ParsingErrorMessage> parts) {
+    super(makeArray(parts));
   }
 
-  public Token queryToken() {
-    return _token;
+  public static ParsingException create(Token token, Object ...parts) {
+    return new ParsingException(List.of(new ParsingErrorMessage(token, parts)));
   }
 
-  public String queryMainMessage() {
-    return queryComponent(2).toString();
+  private static Object[] makeArray(List<ParsingErrorMessage> parts) {
+    int size = 0;
+    for (ParsingErrorMessage msg : parts) size += msg.numComponents() + 1;
+    Object[] ret = new Object[size];
+    int total = 0;
+    for (ParsingErrorMessage msg : parts) {
+      for (int i = 0; i < msg.numComponents(); i++) {
+        ret[total++] = msg.getComponent(i);
+      }
+      ret[total++] = "\n";
+    }
+    return ret;
   }
 }
 

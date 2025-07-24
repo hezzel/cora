@@ -18,7 +18,6 @@ package cora.rwinduction.command;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import charlie.exceptions.ParseException;
 import charlie.util.FixedList;
 import charlie.util.Pair;
 import charlie.terms.Renaming;

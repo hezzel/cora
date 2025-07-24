@@ -18,8 +18,8 @@ package charlie.parser;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.ParseException;
 import charlie.util.LookupMap;
+import charlie.parser.lib.ParsingException;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
 
@@ -43,7 +43,7 @@ public class OCocoParserTest {
   @Test
   public void testReadVarListWithIllegalTokens() {
     try { OCocoParser.readProgramFromString("(VAR x -> y ( 23) =="); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:8: Unexpected token: -> (ARROW); expected a variable name\n"));
     }
@@ -58,7 +58,7 @@ public class OCocoParserTest {
     assertTrue(vardecs.get("12") != null);
 
     assertTrue(col.queryErrorCount() == 2);
-    assertTrue(col.queryCollectedMessages().equals(
+    assertTrue(col.toString().equals(
       "1:10: Double declaration of variable x\n" +
       "1:15: Double declaration of variable y\n"));
   }
@@ -73,7 +73,7 @@ public class OCocoParserTest {
     assertTrue(result.rules().size() == 0);
 
     assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:3: Encountered end of input while reading varlist; no closing bracket given.\n" +
       "2:1: Expected rules declaration but got end of input.\n"));
   }
@@ -91,7 +91,7 @@ public class OCocoParserTest {
     assertTrue(vardecs.containsKey("12"));
 
     assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:15: Unexpected (RULES while reading varlist; did you forget a closing bracket?\n" +
       "1:29: Expected end of input but got BRACKETCLOSE ()).\n"));
   }
@@ -102,7 +102,7 @@ public class OCocoParserTest {
     try {
       OCocoParser.readProgramFromString("  (VAR x \ny x ( 12 -> y y (RULES ))", collector);
     }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "2:3: Double declaration of variable x\n" +
         "2:5: Unexpected token: ( (BRACKETOPEN); expected a variable name\n"));
@@ -163,7 +163,7 @@ public class OCocoParserTest {
     assertTrue(sig.get("hh").type().toString().equals("3 → 4"));
     
     assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:50: Expected end of input but got RULESDECSTART ((RULES).\n"));
   }
 
@@ -173,7 +173,7 @@ public class OCocoParserTest {
     ParserProgram result =
       OCocoParser.readProgramFromString("(SIG f 2) (RULES a -> a)", collector);
     assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:6: Expected an integer or sort declaration in brackets but got IDENTIFIER (f).\n"));
     // but recovery works!
     assertTrue(result.fundecs().get("f").type().toString().equals("o → o → o"));
@@ -186,7 +186,7 @@ public class OCocoParserTest {
     LookupMap<ParserDeclaration> sig =
       OCocoParser.readDeclarations("(SIG f x y -> z) toot", collector);
     assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:6: Expected an integer or sort declaration in brackets but got IDENTIFIER (f).\n" +
       "1:18: Expected end of input but got IDENTIFIER (toot).\n"));
     // but recovery works!
@@ -199,7 +199,7 @@ public class OCocoParserTest {
     LookupMap<ParserDeclaration> sig =
       OCocoParser.readDeclarations("(SIG f 0 g a b -> zz hh -> int)\n", collector);
     assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:6: Expected an integer or sort declaration in brackets but got IDENTIFIER (f).\n" +
       "1:22: Expected an integer or sort declaration in brackets but got IDENTIFIER (hh).\n"));
     // but recovery works!
@@ -213,7 +213,7 @@ public class OCocoParserTest {
     LookupMap<ParserDeclaration> sig =
       OCocoParser.readDeclarations("(SIG (true bool) (false bool) (> int int -> bool))", collector);
     assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:12: Unexpected identifier: bool.  Expected an integer (for the extended TRS format) or " +
         "a sort declaration (for the MSTRS format).  Did you forget ->?\n" +
       "1:25: Unexpected identifier: bool.  Expected an integer (for the extended TRS format) or " +
@@ -230,7 +230,7 @@ public class OCocoParserTest {
     LookupMap<ParserDeclaration> sig =
       OCocoParser.readDeclarations("(SIG (> int int bool) (f 1))", collector);
     assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:21: Expected IDENTIFIER (a sort) or the sort declaration arrow (->) but got " +
         "BRACKETCLOSE ()).\n"));
     assertTrue(sig.get(">").type().toString().equals("int → int → bool"));
@@ -243,7 +243,7 @@ public class OCocoParserTest {
     LookupMap<ParserDeclaration> sig =
       OCocoParser.readDeclarations("(SIG (f 0) (g 00) (h -1) (b 3))", collector);
     assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:22: Cannot set arity below 0.\n"));
     assertTrue(sig.get("f").type().toString().equals("o"));
     assertTrue(sig.get("g").type().toString().equals("o"));
@@ -257,7 +257,7 @@ public class OCocoParserTest {
     LookupMap<ParserDeclaration> sig =
       OCocoParser.readDeclarations("(SIG (f 0) (g 3) (f 1) (g 3))", collector);
     assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:19: Redeclaration of function symbol f.\n" +
       "1:25: Redeclaration of function symbol g.\n"));
     assertTrue(sig.get("f").type().toString().equals("o"));
@@ -268,7 +268,7 @@ public class OCocoParserTest {
   @Test
   public void testStupidDeclaration() {
     ErrorCollector collector = new ErrorCollector();
-    assertThrows(ParseException.class, () -> OCocoParser.readDeclarations("(SIG (f : (a -> b) -> c))"));
+    assertThrows(ParsingException.class, () -> OCocoParser.readDeclarations("(SIG (f : (a -> b) -> c))"));
     // this is stupid enough not to try recovery
   }
 
@@ -278,7 +278,7 @@ public class OCocoParserTest {
     LookupMap<ParserDeclaration> sig =
       OCocoParser.readDeclarations("(SIG (f 2) (a 0) (g 7)", collector);
     assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:23: Unexpected end of input while reading (SIG.\n"));
     assertTrue(sig.get("f").type().toString().equals("o → o → o"));
     assertTrue(sig.get("a").type().toString().equals("o"));
@@ -291,7 +291,7 @@ public class OCocoParserTest {
     ParserProgram result =
       OCocoParser.readProgramFromString("(SIG (f 2) (a 0) (g 7) (RULES 12 -> 11)", collector);
     assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:24: Unexpected (RULES; did you forget ) to close (SIG?\n"));
     assertTrue(result.fundecs().get("f").type().toString().equals("o → o → o"));
     assertTrue(result.fundecs().get("a").type().toString().equals("o"));
@@ -306,7 +306,7 @@ public class OCocoParserTest {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm term = OCocoParser.readTerm("a(", collector);
     assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
         "1:3: Expected an identifier (variable or function name) but got end of input.\n"));
     assertTrue(term.hasErrors());
     assertTrue(term.toString().equals("ERR(@(a, []))"));
@@ -316,7 +316,7 @@ public class OCocoParserTest {
   public void testReadMissingCloseBracket() {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm term = OCocoParser.readTerm("f(a, b(x)", collector);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:10: Expected a comma or closing bracket but got end of input.\n"));
     assertTrue(term.hasErrors());
     assertTrue(term.toString().equals("ERR(@(f, [a, @(b, [x])]))"));
@@ -326,7 +326,7 @@ public class OCocoParserTest {
   public void testReadArrowAfterComma() {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm term = OCocoParser.readTerm("f(a, b(x), -> c)", collector);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:12: Expected an identifier (variable or function name) but got ARROW (->).\n"));
     assertTrue(term.hasErrors());
     assertTrue(term.toString().equals("ERR(@(f, [a, @(b, [x])]))"));
@@ -361,7 +361,7 @@ public class OCocoParserTest {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm term = OCocoParser.readTerm("f(a, a(, x), g(y, ), a(b)", collector);
     assertTrue(collector.queryErrorCount() == 3);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
         "1:8: Expected an identifier (variable or function name) but got COMMA (,).\n" +
         "1:19: Expected an identifier (variable or function name) but got BRACKETCLOSE ()).\n" +
         "1:26: Expected a comma or closing bracket but got end of input.\n"));
@@ -378,7 +378,7 @@ public class OCocoParserTest {
   public void testWeirdnessInsideSubTerm() {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm term = OCocoParser.readTerm("f(a, g(b, ), g(x, y))", collector);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:11: Expected an identifier (variable or function name) but got BRACKETCLOSE ()).\n"));
     assertTrue(term.toString().equals("@(f, [a, ERR(@(g, [b])), @(g, [x, y])])"));
   }
@@ -396,7 +396,7 @@ public class OCocoParserTest {
   @Test
   public void testReadRuleWithoutArrow() {
     try {OCocoParser.readRule("a a", new ErrorCollector()); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals("1:3: Expected ARROW (->) but got IDENTIFIER (a).\n"));
       return;
     }
@@ -408,7 +408,7 @@ public class OCocoParserTest {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = OCocoParser.readRule("f(x y) -> f(x,y) rest", collector);
     assertTrue(rule.hasErrors());
-    assertTrue(collector.queryCollectedMessages().toString().equals(
+    assertTrue(collector.toString().toString().equals(
       "1:5: Expected a comma or closing bracket but got IDENTIFIER (y).\n" +
       "1:18: Expected end of input but got IDENTIFIER (rest).\n"));
   }
@@ -418,7 +418,7 @@ public class OCocoParserTest {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = OCocoParser.readRule("f(x,y) -> f(x y) rest", collector);
     assertTrue(rule.hasErrors());
-    assertTrue(collector.queryCollectedMessages().toString().equals(
+    assertTrue(collector.toString().toString().equals(
       "1:15: Expected a comma or closing bracket but got IDENTIFIER (y).\n" +
       "1:18: Expected end of input but got IDENTIFIER (rest).\n"));
   }
@@ -428,7 +428,7 @@ public class OCocoParserTest {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = OCocoParser.readRule("f(x y) -> f(x y) rest", collector);
     assertTrue(rule.hasErrors());
-    assertTrue(collector.queryCollectedMessages().toString().equals(
+    assertTrue(collector.toString().toString().equals(
       "1:5: Expected a comma or closing bracket but got IDENTIFIER (y).\n" +
       "1:15: Expected a comma or closing bracket but got IDENTIFIER (y).\n" +
       "1:18: Expected end of input but got IDENTIFIER (rest).\n"));
@@ -496,7 +496,7 @@ public class OCocoParserTest {
   public void testReadTrsWithMoreAfterEnding() {
     String str = "(VAR x y) (RULES f(x) -> y) uh oh!";
     try { OCocoParser.readProgramFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:29: Expected end of input but got IDENTIFIER (uh).\n"));
       return;
@@ -508,7 +508,7 @@ public class OCocoParserTest {
   public void testReadTrsWithMoreAfterComment() {
     String str = "(VAR x) (RULES f(x) -> g(x,)) (COMMENT extra comma ) there...) you see?";
     try { OCocoParser.readProgramFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:28: Expected an identifier (variable or function name) but got BRACKETCLOSE ()).\n" +
         "1:64: Unexpected token: you; expected end of input following comment.\n"));
@@ -521,7 +521,7 @@ public class OCocoParserTest {
   public void testTrsWithUnclosedComment() {
     String str = "(RULES a -> a) (COMMENT bing";
     try { OCocoParser.readProgramFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals("1:16: Unclosed comment.\n"));
       return;
     }
@@ -532,7 +532,7 @@ public class OCocoParserTest {
   public void testMixSigAndVar() {
     String str = "(SIG (f 2)) (VAR x) (RULES I can just type nonsense here";
     try { OCocoParser.readProgramFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:13: Expected rules declaration but got VARSDECSTART ((VAR).\n"));
       return;
@@ -544,7 +544,7 @@ public class OCocoParserTest {
   public void testMissingRules() {
     String str = "(SIG (f 2)) (COMMENT an empty file)";
     try { OCocoParser.readProgramFromString(str); }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "1:13: Expected rules declaration but got COMMENTSTART ((COMMENT).\n"));
       return;
@@ -560,7 +560,7 @@ public class OCocoParserTest {
       "0 -> 0)";
     ErrorCollector collector = new ErrorCollector();
     ParserProgram trs = OCocoParser.readProgramFromString(str, collector);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "3:1: Expected a comma or closing bracket but got IDENTIFIER (f).\n" +
       "3:8: Expected a comma or closing bracket but got ARROW (->).\n"));
     assertTrue(trs.rules().size() == 2);

@@ -17,9 +17,9 @@ package cora.rwinduction.parser;
 
 import java.util.Optional;
 import java.util.Set;
-import charlie.exceptions.ParseException;
 import charlie.util.Pair;
 import charlie.parser.lib.Token;
+import charlie.parser.lib.ParsingException;
 import charlie.parser.lib.ParsingStatus;
 import charlie.parser.Parser.ParserTerm;
 import charlie.parser.Parser.Identifier;
@@ -169,9 +169,9 @@ public class CommandParsingStatus {
   }
 
   /**
-   * Given a ParseException, this returns an appropriate error message to the given output module.
+   * Given a ParsingException, this returns an appropriate error message to the given output module.
    */
-  private void printErrorText(OutputModule module, ParseException e) {
+  private void printErrorText(OutputModule module, ParsingException e) {
     String str = e.getMessage().trim();
     if (str.length() > 2 && str.substring(0,2).equals("1:") && Character.isDigit(str.charAt(2))) {
       module.println("Parsing error at position %a", str.substring(2));
@@ -192,7 +192,7 @@ public class CommandParsingStatus {
       recoverPosition(status);
       return ret;
     }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       module.ifPresent(o -> printErrorText(o, e));
     }
     return null;
@@ -212,7 +212,7 @@ public class CommandParsingStatus {
       recoverPosition(status);
       fterm = CoraInputReader.readTerm(pterm, new Renaming(Set.of()), false, trs);
     }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       printErrorText(module, e);
       return null;
     }
@@ -239,7 +239,7 @@ public class CommandParsingStatus {
       recoverPosition(status);
       return CoraInputReader.readTerm(pterm, varnames, false, trs);
     }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       if (vname != null) module.println("Unknown variable: " + vname);
       else printErrorText(module, e);
       return null;
@@ -258,7 +258,7 @@ public class CommandParsingStatus {
       if (ret != null) recoverPosition(status);
       return ret;
     }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       printErrorText(module, e);
       return null;
     }
@@ -275,7 +275,7 @@ public class CommandParsingStatus {
       recoverPosition(status);
       return true;
     }
-    catch (ParseException e) {
+    catch (ParsingException e) {
       return false;
     }
   }
@@ -292,7 +292,7 @@ public class CommandParsingStatus {
     ParsingStatus status = makeStatus();
     Substitution ret = null;
     try { ret = parseSubstitution(status, trs, keyNames, valueNames, module); }
-    catch (ParseException e) { printErrorText(module, e); }
+    catch (ParsingException e) { printErrorText(module, e); }
 
     if (ret == null) {
       // read past the ]
@@ -323,7 +323,7 @@ public class CommandParsingStatus {
       ParserTerm pterm = CoraParser.readTerm(status);
       String varname = vartok.getText();
       Replaceable x = keyNames.getReplaceable(varname);
-      if (x == null) { status.storeError("No such variable: " + varname, vartok); return null; }
+      if (x == null) { status.storeError(vartok, "No such variable: " + varname); return null; }
       Term term = CoraInputReader.readTerm(pterm, valueNames, true, trs);
       if (!x.queryType().equals(term.queryType())) {
         module.println("Ill-typed substitution: %a has type %a but is mapped to a term %a of " +
