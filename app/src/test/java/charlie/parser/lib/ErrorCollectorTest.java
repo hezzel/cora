@@ -22,45 +22,47 @@ public class ErrorCollectorTest {
   @Test
   public void testBasics() {
     ErrorCollector collector = new ErrorCollector(3);
-    collector.addError("AAA");
-    collector.addError("BBB");
+    collector.addError(new ParsingErrorMessage(null, "AAA"));
+    collector.addError(new ParsingErrorMessage(null, "BBB"));
     assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals("AAA\nBBB\n"));
+    assertTrue(collector.toString().equals("AAA\nBBB\n"));
   }
 
   @Test
   public void testMaxMessages() {
     ErrorCollector collector = new ErrorCollector(2);
-    collector.addError("AAA");
-    collector.addError("BBB");
+    collector.addError(new ParsingErrorMessage(null, "AAA"));
+    collector.addError(new ParsingErrorMessage(null, "BBB"));
     assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals("AAA\nBBB\n"));
+    assertTrue(collector.toString().equals("AAA\nBBB\n"));
   }
 
   @Test
   public void testAddBefore() {
     ErrorCollector collector = new ErrorCollector(5);
-    collector.addError("AAA");
-    collector.addError("BBB");
-    collector.addErrorBefore(1, "CCC");
+    Token token = new Token(new ParsePosition(1, 3), "NAME", "x");
+    collector.addError(new ParsingErrorMessage(token, "AAA"));
+    collector.addError(new ParsingErrorMessage(null, "BBB"));
+    collector.addErrorBefore(1, new ParsingErrorMessage(null, "CCC"));
     assertTrue(collector.queryErrorCount() == 3);
-    collector.addErrorBefore(-1, "DDD");
-    collector.addErrorBefore(5, "EEE");
+    token = new Token(new ParsePosition(2, 7), "", "");
+    collector.addErrorBefore(-1, new ParsingErrorMessage(token, "DDD"));
+    collector.addErrorBefore(5, new ParsingErrorMessage(null, "EEE"));
     assertTrue(collector.queryErrorCount() == 5);
-    assertTrue(collector.queryCollectedMessages().equals("DDD\nAAA\nCCC\nBBB\nEEE\n"));
-    collector.addErrorBefore(2, "FFF");
+    assertTrue(collector.toString().equals("2:7: DDD\n1:3: AAA\nCCC\nBBB\nEEE\n"));
+    collector.addErrorBefore(2, new ParsingErrorMessage(null, "FFF"));
     assertTrue(collector.queryErrorCount() == 5);
-    assertTrue(collector.queryCollectedMessages().equals("DDD\nAAA\nCCC\nBBB\nEEE\n"));
+    assertTrue(collector.toString().equals("2:7: DDD\n1:3: AAA\nCCC\nBBB\nEEE\n"));
   }
 
   @Test
   public void testTooManyMessages() {
     ErrorCollector collector = new ErrorCollector(2);
-    collector.addError("AAA");
-    collector.addError("BBB");
-    collector.addError("CCC");
+    collector.addError(new ParsingErrorMessage(null, "AAA"));
+    collector.addError(new ParsingErrorMessage(null, "BBB"));
+    collector.addError(new ParsingErrorMessage(null, "CCC"));
     assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals("AAA\nBBB\n"));
+    assertTrue(collector.toString().equals("AAA\nBBB\n"));
   }
 }
 

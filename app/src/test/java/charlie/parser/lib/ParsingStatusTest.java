@@ -19,8 +19,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.LinkedList;
 
-import charlie.exceptions.ParseException;
-
 public class ParsingStatusTest {
   private class TestTokenQueue implements TokenQueue {
     LinkedList<Token> tokens;
@@ -63,7 +61,7 @@ public class ParsingStatusTest {
     assertTrue(ps.nextToken().getName().equals("BING"));  // no ERROR is passed on
     assertTrue(ps.nextToken().isEof());
     assertTrue(collector.queryErrorCount() == 1);
-    assertTrue(collector.queryCollectedMessages().equals("2: Encountered an error.\n"));
+    assertTrue(collector.toString().equals("2: Encountered an error.\n"));
   }
 
   @Test
@@ -74,11 +72,11 @@ public class ParsingStatusTest {
     ErrorCollector collector = new ErrorCollector(10);
     ParsingStatus ps = new ParsingStatus(tq, collector);
     Token tok = ps.peekNext();
-    ps.storeError("Meep!", tok);
-    ps.storeError("Flop.", tok);
-    ps.storeError("Blah.", null);
+    ps.storeError(tok, "Meep!");
+    ps.storeError(tok, "Flop.");
+    ps.storeError(null, "Blah.");
     assertTrue(collector.queryErrorCount() == 2);
-    assertTrue(collector.queryCollectedMessages().equals("2: Meep!\nBlah.\n"));
+    assertTrue(collector.toString().equals("2: Meep!\nBlah.\n"));
     ps.nextToken();
     assertTrue(collector.queryErrorCount() == 2);
     ps.nextToken();
@@ -94,13 +92,13 @@ public class ParsingStatusTest {
     ParsingStatus ps = new ParsingStatus(tq, collector);
     Token tok = ps.peekNext();
     int k1 = ps.queryErrorPosition();
-    ps.storeError("Meep!", tok);
+    ps.storeError(tok, "Meep!");
     int k2 = ps.queryErrorPosition();
-    ps.storeError("Flop.", tok);
-    ps.storeError("Flop2.", tok, k2);
-    ps.storeError("Blah.", null, k1);
+    ps.storeError(tok, "Flop.");
+    ps.storeError(new ParsingErrorMessage(tok, "Flop2."), k2);
+    ps.storeError(new ParsingErrorMessage(null, "Blah."), k1);
     assertTrue(collector.queryErrorCount() == 3);
-    assertTrue(collector.queryCollectedMessages().equals("Blah.\n2: Meep!\n2: Flop2.\n"));
+    assertTrue(collector.toString().equals("Blah.\n2: Meep!\n2: Flop2.\n"));
     ps.nextToken();
     assertTrue(collector.queryErrorCount() == 3);
     ps.nextToken();
@@ -114,9 +112,9 @@ public class ParsingStatusTest {
     tq.add("ERROR");
     ErrorCollector collector = new ErrorCollector(3);
     ParsingStatus ps = new ParsingStatus(tq, collector);
-    ps.storeError("Test.", null);
+    ps.storeError(null, "Test.");
     ps.nextToken();
-    assertThrows(ParseException.class, () -> ps.storeError("Bing",null));
+    assertThrows(ParsingException.class, () -> ps.storeError(null, "Bing"));
   }
 
   @Test

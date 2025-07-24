@@ -69,7 +69,7 @@ public class InfixManagerTest {
     manager.addGroup(manager.ASSOC_NONE, 10, "+");
     ParserTerm t = convert("x1 + x2 + x3 + x4", manager, collector);
     assertTrue(t.toString().equals("@(+, [ERR(@(+, [ERR(@(+, [x1, x2])), x3])), x4])"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:9: Illegal infix sequence: operator + is not associative, so " +
         "cannot be used after + (at position 1:4).\n" +
       "1:14: Illegal infix sequence: operator + is not associative, so " +
@@ -106,7 +106,7 @@ public class InfixManagerTest {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm t = convert("x1 & x2 & x3 | x4 | x5", manager, collector);
     assertTrue(t.toString().equals("@(|, [@(|, [ERR(@(&, [@(&, [x1, x2]), x3])), x4]), x5])"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:14: Ambiguous infix sequence: operators & (at position 1:9) and | have the same " +
       "precedence, but are not in the same group.  Please use brackets to disambiguate.\n"));
   }
@@ -120,7 +120,7 @@ public class InfixManagerTest {
     ParserTerm t = convert("x1 & x2 & x3 | x4 | x5", manager, collector);
     assertTrue(t.toString().equals(
       "@(|, [ERR(@(&, [x1, ERR(@(&, [x2, x3]))])), @(|, [x4, x5])])"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:14: Ambiguous infix sequence: operators & (at position 1:9) and | have the same " +
       "precedence, but are not in the same group.  Please use brackets to disambiguate.\n"));
   }
@@ -134,7 +134,7 @@ public class InfixManagerTest {
     ParserTerm t = convert("x1 & x2 & x3 | x4 | x5", manager, collector);
     assertTrue(t.toString().equals(
       "@(|, [ERR(@(&, [@(&, [x1, x2]), x3])), @(|, [x4, x5])])"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:14: Ambiguous infix sequence: operators & (at position 1:9) and | have the same " +
       "precedence, but are not in the same group.  Please use brackets to disambiguate.\n"));
   }
@@ -148,7 +148,7 @@ public class InfixManagerTest {
     ParserTerm t = convert("x1 & x2 & x3 | x4 | x5", manager, collector);
     assertTrue(t.toString().equals(
       "@(|, [@(|, [ERR(@(&, [x1, ERR(@(&, [x2, x3]))])), x4]), x5])"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:14: Ambiguous infix sequence: operators & (at position 1:9) and | have the same " +
       "precedence, but are not in the same group.  Please use brackets to disambiguate.\n"));
   }

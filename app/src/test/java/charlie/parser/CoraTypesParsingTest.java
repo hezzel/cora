@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,8 +18,8 @@ package charlie.parser;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.ParseException;
 import charlie.types.*;
+import charlie.parser.lib.ParsingException;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
 
@@ -158,13 +158,13 @@ public class CoraTypesParsingTest {
     ErrorCollector collector = new ErrorCollector();
     Type t = CoraParser.readType("a -> b -> -> c", false, collector);
     assertTrue(t.toString().equals("a → b → c"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:11: Expected a type (started by a sort identifier or bracket) but got ARROW (->).\n"));
   }
 
   @Test
   public void testArrowTypeWithNonExistingArrowIsRequested() {
-    assertThrows(ParseException.class, () -> CoraParser.readType("xx => yy"));
+    assertThrows(ParsingException.class, () -> CoraParser.readType("xx => yy"));
   }
 
   @Test
@@ -172,7 +172,7 @@ public class CoraTypesParsingTest {
     ErrorCollector collector = new ErrorCollector();
     Type t = CoraParser.readType("a b", true, collector);
     assertTrue(t.toString().equals("a"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:3: Expected end of input but got IDENTIFIER (b).\n"));
   }
 
@@ -182,7 +182,7 @@ public class CoraTypesParsingTest {
     Type t = CoraParser.readType("-> Int", true, collector);
     assertTrue(t.toString().equals("Int"));
     assertTrue(t.isTheoryType());
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:1: Expected a type (started by a sort identifier or bracket) but got ARROW (->).\n"));
   }
 
@@ -191,7 +191,7 @@ public class CoraTypesParsingTest {
     ErrorCollector collector = new ErrorCollector();
     Type t = CoraParser.readType("() →  b -> c", false, collector);
     assertTrue(t.toString().equals("b → c"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:2: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n"));
   }
 
@@ -200,7 +200,7 @@ public class CoraTypesParsingTest {
     ErrorCollector collector = new ErrorCollector();
     Type t = CoraParser.readType("b -> c →", true, collector);
     assertTrue(t.toString().equals("b → c"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:9: Expected a type (started by a sort identifier or bracket) but got end of input.\n"));
   }
 
@@ -209,7 +209,7 @@ public class CoraTypesParsingTest {
     ErrorCollector collector = new ErrorCollector();
     Type t = CoraParser.readType("(| b , c ) -> d", true, collector);
     assertTrue(t.toString().equals("⦇ b, c ⦈ → d"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:10: Expected tuple closing bracket but got BRACKETCLOSE ()).\n"));
   }
 
@@ -220,7 +220,7 @@ public class CoraTypesParsingTest {
     assertTrue(t.toString().equals("String"));
     assertTrue(t.isBaseType());
     assertFalse(t.isTheoryType());
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:12: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n"));
   }
 
@@ -229,7 +229,7 @@ public class CoraTypesParsingTest {
     ErrorCollector collector = new ErrorCollector();
     Type t = CoraParser.readType("a -> (b → c \"", true, collector);
     assertTrue(t.toString().equals("a → b → c"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:13: Incomplete string constant (ended by end of line).\n" +
       "1:13: Expected closing bracket but got STRING (\"\").\n"));
   }
@@ -239,7 +239,7 @@ public class CoraTypesParsingTest {
     ErrorCollector collector = new ErrorCollector(10);
     Type t = CoraParser.readType("x -> ((a -> b c) ×) ->", false, collector);
     assertTrue(t.toString().equals("x → a → b"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:15: Expected closing bracket but got IDENTIFIER (c).\n"));
   }
 }

@@ -54,8 +54,8 @@ class StringEditLexer extends TokenEditLexer implements Lexer {
         if (txt.charAt(i) == _escapeChar) {
           if (txt.charAt(i+1) == _escapeChar) i++;
           else {
-            error = "Unexpected escape sequence " + txt.substring(i, i+2) + " at position " +
-              (i+1) + " of " + txt + ".";
+            error = "Unexpected escape sequence [" + txt.substring(i, i+2) + "] at position " +
+              (i+1) + " of [" + txt + "].";
             break;
           }
         }

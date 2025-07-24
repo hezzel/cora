@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import charlie.util.FixedList;
-import charlie.exceptions.ParseException;
+import charlie.parser.lib.ParsingException;
 import charlie.trs.TRS;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
@@ -113,7 +113,7 @@ public class SaveFile {
       if (ec != null) return ec;
       _output.println("Invalid equation context: %a", line);
     }   
-    catch (ParseException e) {
+    catch (ParsingException e) {
       _output.println("Illegal input line [%a]: %a", line, e.getMessage());
     }   
     return null;

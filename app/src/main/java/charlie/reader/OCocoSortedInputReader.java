@@ -20,12 +20,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import charlie.exceptions.IllegalRuleException;
-import charlie.exceptions.ParseException;
 import charlie.exceptions.UnexpectedPatternException;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.Token;
+import charlie.parser.lib.ParsingErrorMessage;
 import charlie.parser.lib.ErrorCollector;
+import charlie.parser.lib.ParsingException;
 import charlie.parser.Parser;
 import charlie.parser.Parser.*;
 import charlie.parser.OCocoParser;
@@ -59,8 +60,14 @@ public class OCocoSortedInputReader {
     _errors = collector;
   }
 
-  private void storeError(String message, Token token) {
-    _errors.addError(token.getPosition() + ": " + message);
+  /**
+   * Stores an error at the given location.  The token is allowed to be null, but the message
+   * should have at least one component.  The message could consist of strings, but also for
+   * instance terms or types, which the managing classes can print using the relevant Printer
+   * classes (in accordance with user settings).
+   */
+  protected void storeError(Token token, Object ...message) {
+    _errors.addError(new ParsingErrorMessage(token, message));
   }
 
   // =============================== READING PARSERTERMS INTO TERMS ===============================
@@ -74,8 +81,8 @@ public class OCocoSortedInputReader {
    * If function symbols are used with arity different from their declared arity, or types do not
    * match the declaration, then an appropriate error message is stored in the parser status.
    *
-   * Regardless of errors, this is guaranteed to either throw a ParseException, or return a term of
-   * the expected type (if any).  If the expected type is not given (null), then a type will be
+   * Regardless of errors, this is guaranteed to either throw a ParsingException, or return a term
+   * of the expected type (if any).  If the expected type is not given (null), then a type will be
    * guessed. but it will not be recorded since this is likely an error situation.
    */
   private Term makeTerm(ParserTerm pterm, Type expected) {
@@ -98,14 +105,14 @@ public class OCocoSortedInputReader {
 
         // error handling
         if (x != null) {  // variable of the wrong type
-          storeError("Expected term of type " + expected.toString() + ", but got variable " + name +
-            " that was previously used with type " + x.queryType() + ".", token);
+          storeError(token, "Expected term of type " + expected, ", but got variable " + name +
+            " that was previously used with type ", x.queryType(), ".");
         }
         else if (f.queryArity() == 0) {  // constant function symbol of the wrong type
-          storeError("Expected term of type " + expected.toString() + ", but got constant symbol " +
-            name + " of type " + f.queryType().toString() + ".", token);
+          storeError(token, "Expected term of type ", expected, ", but got constant symbol " +
+            name + " of type ", f.queryType(), ".");
         }
-        else storeError("Illegal occurrence of unapplied function symbol " + name + "!", token);
+        else storeError(token, "Illegal occurrence of unapplied function symbol " + name + "!");
         return TermFactory.createConstant(name, texp);
 
       // main case: a functional term f(s1,...,sn)
@@ -125,16 +132,16 @@ public class OCocoSortedInputReader {
 
         // error handling
         if (_symbols.lookupVariable(name) != null) {
-          storeError("Variable " + name + " used as a function symbol!", token);
+          storeError(token, "Variable " + name + " used as a function symbol!");
         }
-        else if (f == null) storeError("Undeclared function symbol: " + name + ".", token);
+        else if (f == null) storeError(token, "Undeclared function symbol: " + name + ".");
         else if (f.queryArity() != args.size()) {
-          storeError("Function symbol " + name + " was declared with " + f.queryArity() +
-            " arguments, but is used here with " + args.size() + ".", token);
+          storeError(token, "Function symbol " + name + " was declared with " + f.queryArity() +
+            " arguments, but is used here with " + args.size() + ".");
         }
         else {
-          storeError("Expected term of type " + expected.toString() + ", but got functional term " +
-            name + "(...) of type " + f.queryType().queryOutputType().toString() + ".", token);
+          storeError(token, "Expected term of type ", expected, ", but got functional term " +
+            name + "(...) of type ", f.queryType().queryOutputType(), ".");
           // parse the arguments with knowledge of what types they should have
           Type t = f.queryType();
           for (int i = 0; t instanceof Arrow(Type inp, Type out); i++) {
@@ -173,7 +180,7 @@ public class OCocoSortedInputReader {
     if (left.hasErrors()) return null;
     Term l = makeTerm(left, null);
     if (l.isVariable()) {
-      storeError("The left-hand side of a rule is not allowed to be a variable.", rule.token());
+      storeError(rule.token(), "The left-hand side of a rule is not allowed to be a variable.");
       if (!right.hasErrors()) makeTerm(right, null);    // for additional error messages
       return null;
     }
@@ -185,7 +192,7 @@ public class OCocoSortedInputReader {
 
     try { return TrsFactory.createRule(l, r, TrsFactory.MSTRS); }
     catch (IllegalRuleException e) {
-      storeError(e.queryProblem(), rule.token());
+      storeError(rule.token(), e.queryProblem());
       return null;
     }
   }
@@ -216,9 +223,7 @@ public class OCocoSortedInputReader {
     ParserTerm pterm = OCocoParser.readTerm(str, collector);
     Term ret = null;
     if (collector.queryErrorCount() == 0) ret = rd.makeTerm(pterm, expectedSort);
-    if (collector.queryErrorCount() > 0) {
-      throw new ParseException(collector.queryCollectedMessages());
-    }
+    if (collector.queryErrorCount() > 0) throw collector.generateException();
     return ret;
   }
 
@@ -249,7 +254,7 @@ public class OCocoSortedInputReader {
   /**
    * Reads the given term from string, given that all the function symbols in it are declared in
    * the alphabet of the given TRS.  This term should not be a variable, since then it will not be
-   * possible to derive the type, and a ParseException will be thrown.
+   * possible to derive the type, and a ParsingException will be thrown.
    */
   public static Term readTerm(String str, TRS trs) {
     return readTerm(str, new SymbolData(trs), null);
@@ -263,15 +268,13 @@ public class OCocoSortedInputReader {
   static TRS readParserProgram(ParserProgram trs, ErrorCollector collector) {
     OCocoSortedInputReader rd = new OCocoSortedInputReader(new SymbolData(), collector);
     TRS ret = rd.makeTRS(trs);
-    if (collector.queryErrorCount() > 0) {
-      throw new ParseException(collector.queryCollectedMessages());
-    }
+    if (collector.queryErrorCount() > 0) throw collector.generateException();
     return ret;
   }
 
   /**
    * Parses the given program, and returns the (sorted or unsorted) TRS that it defines.
-   * If the string is not correctly formed, this may throw a ParseException.
+   * If the string is not correctly formed, this may throw a ParsingException.
    */
   public static TRS readTrsFromString(String str) {
     ErrorCollector collector = new ErrorCollector();
@@ -281,7 +284,7 @@ public class OCocoSortedInputReader {
 
   /**
    * Parses the given file, which should be a .trs or .mstrs file, into a many-sorted TRS.
-   * This may throw a ParseException, or an IOException if something goes wrong with the file
+   * This may throw a ParsingException, or an IOException if something goes wrong with the file
    * reading.
    */
   public static TRS readTrsFromFile(String filename) throws IOException {

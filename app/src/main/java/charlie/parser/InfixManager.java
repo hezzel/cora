@@ -104,17 +104,17 @@ class InfixManager {
             if (_groups.get(mygroup).associativity() == ASSOC_RIGHT) break;
             if (_groups.get(mygroup).associativity() == ASSOC_NONE) {
               err = true;
-              status.storeError("Illegal infix sequence: operator " + oi.token.getText() +
-                " is not associative, so cannot be used after " + last.token.getText() +
-                " (at position " +  last.token.getPosition() + ").", oi.token());
+              status.storeError(oi.token(), "Illegal infix sequence: operator " +
+                oi.token.getText() + " is not associative, so cannot be used after " +
+                last.token.getText() + " (at position " +  last.token.getPosition() + ").");
             }
           }
           else {
             err = true;
-            status.storeError("Ambiguous infix sequence: operators " + last.token.getText() +
-              " (at position " + last.token.getPosition() + ") and " + oi.token.getText() +
-              " have the same precedence, but are not in the same group.  Please use brackets " +
-              "to disambiguate.",  oi.token());
+            status.storeError(oi.token(), "Ambiguous infix sequence: operators " +
+              last.token.getText() + " (at position " + last.token.getPosition() + ") and " +
+              oi.token.getText() + " have the same precedence, but are not in the same group.  " +
+              "Please use brackets to disambiguate.");
           }
         }
         applyTop(tstack, ostack);

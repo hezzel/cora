@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,8 +18,8 @@ package charlie.parser;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.ParseException;
 import charlie.util.LookupMap;
+import charlie.parser.lib.ParsingException;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
 
@@ -28,7 +28,7 @@ public class AriParserTest {
   public void testIncorrectFormat() {
     ErrorCollector collector = new ErrorCollector();
     try { AriParser.readProgramFromString("(format CTRS) (fun true 0)", collector); }
-    catch ( ParseException e ) {
+    catch ( ParsingException e ) {
       assertTrue(e.getMessage().equals("1:9: Format is not currently supported: CTRS\n"));
       return;
     }
@@ -48,7 +48,7 @@ public class AriParserTest {
     ParserProgram prog = AriParser.readProgramFromString(
       "(format higher-order) (fun f a)", collector);
     assertTrue(prog.fundecs().get("f").type().toString().equals("a"));
-    assertTrue(collector.queryCollectedMessages().equals("1:30: Undeclared sort: a\n"));
+    assertTrue(collector.toString().equals("1:30: Undeclared sort: a\n"));
   }
 
   @Test
@@ -64,7 +64,7 @@ public class AriParserTest {
     ParserProgram prog = AriParser.readProgramFromString(
       "(format higher-order) (sort b) (fun f (-> b a b))", collector);
     assertTrue(prog.fundecs().get("f").type().toString().equals("b → a → b"));
-    assertTrue(collector.queryCollectedMessages().equals("1:45: Undeclared sort: a\n"));
+    assertTrue(collector.toString().equals("1:45: Undeclared sort: a\n"));
   }
 
   @Test
@@ -74,7 +74,7 @@ public class AriParserTest {
       "(format higher-order) (sort b) (fun f (a b)) (fun g b)", collector);
     assertTrue(prog.fundecs().get("f").type().toString().equals("a → b"));
     assertTrue(prog.fundecs().get("g").type().toString().equals("b"));
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:40: Expected -> (arrow) but got IDENTIFIER (a).\n"));
   }
 
@@ -84,7 +84,7 @@ public class AriParserTest {
     ParserProgram prog = AriParser.readProgramFromString(
       "(format higher-order) (sort b) (fun f ()) (fun g b)", collector);
     assertTrue(prog.fundecs().get("f") == null);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "1:40: Expected -> (arrow) but got BRACKETCLOSE ()).\n"));
   }
 
@@ -96,7 +96,7 @@ public class AriParserTest {
       "(sort o)\n" +
       "(fun f (-> o o))\n" +
       "(fun f (-> o o o))", collector);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "4:6: Duplicate definition of function symbol f\n"));
   }
 
@@ -162,7 +162,7 @@ public class AriParserTest {
       "(sort a)\n" +
       "(rule b (lambda () b))\n",
       collector);
-    assertTrue(collector.queryCollectedMessages().equals(
+    assertTrue(collector.toString().equals(
       "3:10: Lambda should have at least one variable.\n"));
   }
 }

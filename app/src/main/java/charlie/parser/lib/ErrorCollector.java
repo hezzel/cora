@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -22,24 +22,24 @@ import java.util.ArrayList;
  * continue after a failure and print them all at once.
  */
 public class ErrorCollector {
-  private ArrayList<String> _messages;
+  private ArrayList<ParsingErrorMessage> _messages;
   private int _maxErrorCount;
 
   /** Set up an ErrorCollector which keeps track of at most [max] messages. */
   public ErrorCollector(int max) {
-    _messages = new ArrayList<String>();
+    _messages = new ArrayList<ParsingErrorMessage>();
     if (max < 1) max = 1;
     _maxErrorCount = max;
   }
 
   /** Set up an ErrorCollector which keeps track of at most 10 messages. */
   public ErrorCollector() {
-    _messages = new ArrayList<String>();
+    _messages = new ArrayList<ParsingErrorMessage>();
     _maxErrorCount = 10;
   }
 
   /** Adds an Error to be stored in the ErrorCollector. */
-  public void addError(String message) {
+  public void addError(ParsingErrorMessage message) {
     if (_messages.size() < _maxErrorCount) _messages.add(message);
   }
 
@@ -47,7 +47,7 @@ public class ErrorCollector {
    * Adds an Error to be stored in the ErrorCollector, at the given index.
    * If the index is too high, it will simply be stored at the end.
    */
-  public void addErrorBefore(int pos, String message) {
+  public void addErrorBefore(int pos, ParsingErrorMessage message) {
     if (_messages.size() < _maxErrorCount) {
       if (pos < 0) pos = 0;
       if (pos > _messages.size()) pos = _messages.size();
@@ -65,10 +65,18 @@ public class ErrorCollector {
     return _messages.size() >= _maxErrorCount;
   }
 
-  /** Returns a string representing the errors we have encounterd, separated by newlines. */
-  public String queryCollectedMessages() {
+  /** Returns a ParsingException which represents the collected messages. */
+  public ParsingException generateException() {
+    return new ParsingException(_messages);
+  }
+
+  /**
+   * Returns a string representing the errors we have encounterd, separated by newlines.
+   * Only to be used for debugging and testing purposes!
+   */
+  public String toString() {
     StringBuilder ret = new StringBuilder();
-    for (int i = 0; i < _messages.size(); i++) ret.append(_messages.get(i) + "\n");
+    for (int i = 0; i < _messages.size(); i++) ret.append(_messages.get(i).toString() + "\n");
     return ret.toString();
   }
 }

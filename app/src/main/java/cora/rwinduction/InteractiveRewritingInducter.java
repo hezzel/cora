@@ -23,7 +23,7 @@ import java.util.Scanner;
 
 import charlie.util.Either;
 import charlie.util.FixedList;
-import charlie.exceptions.ParseException;
+import charlie.parser.lib.ParsingException;
 import charlie.trs.TRS;
 import charlie.trs.TrsProperties.*;
 import cora.io.OutputModule;
@@ -230,7 +230,7 @@ public class InteractiveRewritingInducter {
       if (ec != null) return ec;
       outputter.println("Invalid equation context: %a", line);
     }   
-    catch (ParseException e) {
+    catch (ParsingException e) {
       outputter.println("Illegal input line [%a]: %a", line, e.getMessage());
     }   
     return null;

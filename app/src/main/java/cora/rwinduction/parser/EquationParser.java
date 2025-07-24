@@ -18,7 +18,6 @@ package cora.rwinduction.parser;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
-import charlie.exceptions.ParseException;
 import charlie.util.Pair;
 import charlie.util.FixedList;
 import charlie.types.TypeFactory;
@@ -28,6 +27,7 @@ import charlie.parser.CoraTokenData;
 import charlie.parser.CoraParser;
 import charlie.terms.*;
 import charlie.trs.TRS;
+import charlie.printer.Printer;
 import charlie.reader.CoraInputReader;
 import cora.rwinduction.engine.Equation;
 import cora.rwinduction.engine.EquationContext;
@@ -39,8 +39,8 @@ public class EquationParser {
   /**
    * This reads an equation of the form a ≈ b | c from the given string.
    * The string is expected to end after that.
-   * If there is any error with the input, a ParseException will be thrown.
-   * @throws charlie.exceptions.ParseException
+   * If there is any error with the input, a ParsingException will be thrown.
+   * @throws charlie.parser.lib.ParsingException
    */
   public static Pair<Equation,Renaming> parseEquation(String str, TRS trs) {
     ParsingStatus status = RIParser.createStatus(str);
@@ -52,7 +52,7 @@ public class EquationParser {
   /**
    * This reads an equation context of the form (d, a ≈ b | c, e) from the given string.
    * The string is expected to end after that.
-   * @throws charlie.exceptions.ParseException
+   * @throws charlie.parser.lib.ParsingException
    */
   public static EquationContext parseEquationContext(String str, int index, TRS trs) {
     ParsingStatus status = RIParser.createStatus(str);
@@ -62,8 +62,8 @@ public class EquationParser {
   /**
    * This reads an equation of the form a ≈ b | c from the given string, and returns the
    * EquationContext (•, a ≈ b | c, •), with the given index and an appropriate Renaming.
-   * If there is any error with the input, a ParseException will be thrown.
-   * @throws charlie.exceptions.ParseException
+   * If there is any error with the input, a ParsingException will be thrown.
+   * @throws charlie.parser.lib.ParsingException
    */
   public static EquationContext parseEquationData(String str, TRS trs, int index) {
     ParsingStatus status = RIParser.createStatus(str);
@@ -77,9 +77,9 @@ public class EquationParser {
    * This reads a non-empty list of equations of the form a ≈ b | c, separated by semi-colons,
    * from the given string, and stores them as EquationContexts (•, a ≈ b | c, •).  The string
    * is expected to end after the list.
-   * If there is any error with the input, a ParseException will be thrown.
+   * If there is any error with the input, a ParsingException will be thrown.
    * The equations are assigned indexes 1..N, where N is the number of equations given.
-   * @throws charlie.exceptions.ParseException
+   * @throws charlie.parsing.lib.ParsingException
    */
   public static FixedList<EquationContext> parseEquationList(String str, TRS trs) {
     ParsingStatus status = RIParser.createStatus(str);
@@ -98,8 +98,8 @@ public class EquationParser {
    * This reads an equation context of the form (d, a ≈ b | c, e) from the given string.
    * The ParsingStatus is advanced until after the equation.
    * If there is any error, an error will be stored in the status; hence, if the status is set up
-   * not to store multiple errors, then a ParseException will be thrown.
-   * @throws charlie.exceptions.ParseException
+   * not to store multiple errors, then a ParsingException will be thrown.
+   * @throws charlie.parser.lib.ParsingException
    */
   public static EquationContext parseEquationContext(ParsingStatus status, int index, TRS trs) {
     if (status.expect(CoraTokenData.BRACKETOPEN, "opening bracket") == null) return null;
@@ -125,8 +125,8 @@ public class EquationParser {
   /**
    * This reads an Equation of the form a ≈ b | c from the given string, and returns both it and
    * the corresponding Renaming.  The ParsingStatus is advanced until after the equation.
-   * If there is any error, a ParseException will be thrown.
-   * @throws charlie.exceptions.ParseException
+   * If there is any error, a ParsingException will be thrown.
+   * @throws charlie.parser.lib.ParsingException
    */
   public static Pair<Equation,Renaming> parseEquation(ParsingStatus status, TRS trs) {
     Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
@@ -137,11 +137,12 @@ public class EquationParser {
    * This reads an Equation of the form a ≈ b | c from the given string, using the given Renaming
    * for the variables (this Renaming may be expanded if additional variables occur in
    * equation).  The ParsingStatus is advanced until after the equation.
-   * If there is any error, a ParseException will be thrown (we assume that the ParsingStatus is
+   * If there is any error, a ParsingException will be thrown (we assume that the ParsingStatus is
    * set up to tolerate 0 errors).
-   * @throws charlie.exceptions.ParseException
+   * @throws charlie.parser.lib.ParsingException
    */
   public static Equation parseEquation(ParsingStatus status, Renaming renaming, TRS trs) {
+    Token tok = status.peekNext();
     ParserTerm left, right = null, constr = null;
     left = CoraParser.readTerm(status);
     if (status.readNextIf(RIParser.APPROX) != null) right = CoraParser.readTerm(status);
@@ -152,29 +153,33 @@ public class EquationParser {
       left = args.get(0);
       right = args.get(1);
     }
+    Term l = CoraInputReader.readTerm(left, renaming, true, trs);
     if (right == null) {
-      throw new charlie.exceptions.ParseException("Unexpected equation: I expected a form " +
-        "\"a -><- b (| c)?\" but only found " + left + ".");
+      throw ParsingException.create(tok, "Unexpected equation: I expected a form " +
+        "\"a -><- b (| c)?\" but only found one term: ",
+        Printer.makePrintable(l, renaming), ".");
     }
     if (status.readNextIf(CoraTokenData.MID) != null) constr = CoraParser.readTerm(status);
-    Term l = CoraInputReader.readTerm(left, renaming, true, trs);
     Term r = CoraInputReader.readTerm(right, renaming, true, trs);
     Term constraint = constr == null ? TheoryFactory.createValue(true)
                                      : CoraInputReader.readTerm(constr, renaming, true, trs);
-    checkEquation(l, r, constraint);
+    checkEquation(tok, l, r, constraint, renaming);
     return new Equation(l, r, constraint);
   }
 
-  /** This checks if the given equation is legal one, and throws a ParseException if not. */
-  private static void checkEquation(Term left, Term right, Term constraint) {
+  /** This checks if the given equation is legal one, and throws a ParsingException if not. */
+  private static void checkEquation(Token token, Term left, Term right, Term constraint,
+                                    Renaming renaming) {
     if (!left.queryType().equals(right.queryType())) {
-      throw new ParseException("Left-hand side of equation (" + left.toString() + ") has type " + 
-        right.queryType().toString() + " while right-hand side (" + right.toString() + ") has " +
-        "type " + right.queryType().toString() + "!");
+      throw ParsingException.create(token, "Left-hand side of equation (",
+        Printer.makePrintable(left, renaming), ") has type ", left.queryType(),
+        " while right-hand side (", Printer.makePrintable(right, renaming), ") has type ",
+        right.queryType(), "!");
     }
     if (!constraint.queryType().equals(TypeFactory.boolSort)) {
-      throw new ParseException("Constraint " + constraint.toString() + " has type " +
-        constraint.toString() + " (should be Bool)");
+      throw ParsingException.create(token, "Constraint ",
+        Printer.makePrintable(constraint, renaming), " has type ", constraint.queryType(),
+        " (should be Bool)");
     }
   }
 }

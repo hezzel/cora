@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -145,27 +145,27 @@ abstract class FirstOrderParser implements Parser {
       if (next.getName().equals(IDENTIFIER)) {
         String name = next.getText();
         if (ret.containsKey(name)) {
-          _status.storeError("Double declaration of variable " + name, next);
+          _status.storeError(next, "Double declaration of variable " + name);
         }
         else ret.put(name, new ParserDeclaration(next, name, TypeFactory.defaultSort));
       }
       else {
         // error handling for incorrect tokens
         if (next.isEof()) {
-          _status.storeError("Encountered end of input while reading varlist; no closing bracket " +
-                             "given.", start);
+          _status.storeError(start, "Encountered end of input while reading varlist; no closing " +
+                                    "bracket given.");
           return ret.build();
         }
         if (isSectionStart(next)) {
-          _status.storeError("Unexpected " + next.getText() + " while reading varlist; did you " +
-            "forget a closing bracket?", next);
+          _status.storeError(next, "Unexpected " + next.getText() + " while reading varlist; " +
+            "did you forget a closing bracket?");
           _status.pushBack(next);
           return ret.build();
         }
         // if we encounter something else, it's unclear what the programmer did, so let's just
         // abort the parsing process
-        _status.abort("Unexpected token: " + next.getText() + " (" + next.getName() +
-          "); expected a variable name", next);
+        _status.abort(next, "Unexpected token: " + next.getText() + " (" + next.getName() +
+          "); expected a variable name");
       }
     }
   }
@@ -188,9 +188,9 @@ abstract class FirstOrderParser implements Parser {
       }
       token = _status.nextToken();
     }
-    if (lastFollow == null) _status.storeError("Unclosed comment.", start);
-    else _status.storeError("Unexpected token: " + lastFollow.getText() + "; expected end of " +
-      "input following comment.", lastFollow);
+    if (lastFollow == null) _status.storeError(start, "Unclosed comment.");
+    else _status.storeError(lastFollow, "Unexpected token: " + lastFollow.getText() +
+      "; expected end of input following comment.");
     return true;
   }
 }

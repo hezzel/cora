@@ -45,8 +45,8 @@ public class TermTyperTest {
     Type exp = expected == null ? null : type(expected);
     if (data == null) data = generateSignature();
     Term ret = TermTyper.readTerm(txt, constrained, data, exp, collector);
-    if (!collector.queryCollectedMessages().equals(message)) {
-      System.out.println(collector.queryCollectedMessages());
+    if (!collector.toString().equals(message)) {
+      System.out.println(collector.toString());
       System.out.println("ret = " + ret);
       assertTrue(false);
     }   

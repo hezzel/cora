@@ -18,7 +18,7 @@ package charlie.reader;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.ParseException;
+import charlie.parser.lib.ParsingException;
 import charlie.trs.TRS;
 
 public class AriInputReaderTest {
@@ -129,7 +129,7 @@ public class AriInputReaderTest {
       "(rule (f (lambda ((v (-> o o))) (v I)) (lambda ((y o) (z o)) (v y z)) x) (v x))\n" +
       "(rule (g (lambda ((x o)) (Z x)) Z) I)\n";
     try { AriInputReader.readTrsFromString(str); }
-    catch ( ParseException e ) {
+    catch ( ParsingException e ) {
       assertTrue(e.getMessage().equals(
         "6:75: Meta-variable v was previously used (or declared) with arity 2, but is here " +
           "used with 1 arguments.\n" +

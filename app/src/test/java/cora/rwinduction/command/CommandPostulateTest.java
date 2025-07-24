@@ -100,8 +100,8 @@ class CommandPostulateTest {
       "postulate iter(x, y, z) ->< iter(z, yy, x) | x + z = y ∧ yy = y + 1 ; delete");
     status.nextWord();
     assertFalse(cmd.run(status));
-    assertTrue(module.toString().equals("Parsing error: Unexpected equation: I expected a form " +
-      "\"a -><- b (| c)?\" but only found @(iter, [x, y, z]).\n\n"));
+    assertTrue(module.toString().equals("Parsing error at position 11: Unexpected equation: I " +
+      "expected a form \"a -><- b (| c)?\" but only found one term: iter(x, y, z).\n\n"));
     assertTrue(status.currentPosition() == 11);
     Renaming renaming = new Renaming(java.util.Set.of());
     assertTrue(status.readTerm(trs, renaming, module) != null);
@@ -117,8 +117,8 @@ class CommandPostulateTest {
     CommandParsingStatus status = new CommandParsingStatus("postulate sum1(x) -><- x + 12 | x > 0");
     status.nextWord();
     assertFalse(cmd.run(status));
-    assertTrue(module.toString().equals("Parsing error: Left-hand side of equation (sum1(x)) has " +
-      "type Int while right-hand side (x + 12) has type Int!\n\n"));
+    assertTrue(module.toString().equals("Parsing error at position 11: Left-hand side of " +
+      "equation (sum1(x)) has type result while right-hand side (x + 12) has type Int!\n\n"));
     assertTrue(status.currentPosition() == 11);
   }
 }

@@ -148,7 +148,7 @@ public class ITrsParser extends FirstOrderParser implements Parser {
     int x = 0;
     try { x = Integer.parseInt(token.getText()); }
     catch (NumberFormatException ex) {
-      _status.storeError("Illegal integer: " + token.getText(), token);
+      _status.storeError(token, "Illegal integer: " + token.getText());
     }
     return new IntVal(token, x);
   }
@@ -216,7 +216,7 @@ public class ITrsParser extends FirstOrderParser implements Parser {
    * If this returns null, reading the rule failed, but at least one character (the arrow) has been
    * read, and error recovery may still be doable; with the right approach it might still be
    * possible to read the next rule.
-   * Otherwise, it will either throw a ParseException or return an actual rule.  (If a rule is
+   * Otherwise, it will either throw a ParsingException or return an actual rule.  (If a rule is
    * returned it is not guaranteed that parsing was entirely successful, however; it is possible
    * that some errors have been stored in the status.)
    */
@@ -266,7 +266,7 @@ public class ITrsParser extends FirstOrderParser implements Parser {
 
   /**
    * Reads a term from the given string.
-   * @throws charlie.exceptions.ParseException
+   * @throws ParsingException
    */
   public static ParserTerm readTerm(String str, ErrorCollector collector) {
     ParsingStatus status = makeStatus(str, collector);
@@ -279,7 +279,7 @@ public class ITrsParser extends FirstOrderParser implements Parser {
 
   /**
    * Reads a rule from the given string.
-   * @throws charlie.exceptions.ParseException
+   * @throws ParsingException
    */
   public static ParserRule readRule(String str, ErrorCollector collector) {
     ParsingStatus status = makeStatus(str, collector);
@@ -292,7 +292,7 @@ public class ITrsParser extends FirstOrderParser implements Parser {
 
   /**
    * Reads a set of variable declaration from the given string
-   * @throws charlie.exceptions.ParseException
+   * @throws ParsingException
    */
   public static LookupMap<ParserDeclaration> readDeclarations(String str, ErrorCollector collect) {
     ParsingStatus status = makeStatus(str, collect);
@@ -321,7 +321,7 @@ public class ITrsParser extends FirstOrderParser implements Parser {
 
   /**
    * Reads a full TRS, in the expected format for the current paser, from the given file.
-   * @throws charlie.exceptions.ParseException
+   * @throws ParsingException
    */
   public static ParserProgram readProgramFromFile(String filename,
                                                   ErrorCollector collector) throws IOException {

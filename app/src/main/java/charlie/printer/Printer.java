@@ -19,8 +19,10 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import charlie.util.Pair;
+import charlie.util.UserException;
 import charlie.types.Type;
 import charlie.types.TypePrinter;
 import charlie.terms.position.Position;
@@ -198,7 +200,9 @@ public abstract class Printer {
    *   the left-hand side, right-hand side and constraint, and they are printed using the
    *   underlying Term Printer with this Renaming
    * - any object that implements PrintableObject is asked to print itself
-   * - for any Object[] or List, the print function is called recursively
+   * - for any Object[] or List, the add function is called recursively
+   * - for a UserException, the add function is called recursively (representing the underlying
+   *   components as an Object[])
    * - for an object Pair<Term,Renaming>, we print the term using the underlying TermPrinter with
    *   the given Renaming
    * - for an object Pair<Rule,Renaming>, we print the rule using the underlying TermPrinter with
@@ -257,6 +261,7 @@ public abstract class Printer {
     switch (ob) {
       case Object[] o: add(o); break;
       case List a: add(a.toArray()); break;
+      case UserException e: add(e.makeArray()); break;
       case String s: _builder.append(s); break;
       case Integer i: _builder.append(i.toString()); break;
       case Type y: _typePrinter.print(y, _builder); break;
@@ -400,6 +405,9 @@ public abstract class Printer {
     return new PrintableObject() {
       public void print(Printer p) {
         p._termPrinter.print(term, renaming, p._builder);
+      }
+      public String toString() {
+        return (new TermPrinter(Set.of())).print(term, renaming);
       }
     };
   }

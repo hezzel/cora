@@ -34,8 +34,8 @@ public class CoraTermsParsingTest {
   private ParserTerm readTerm(String txt, boolean constrained, String message) {
     ErrorCollector collector = new ErrorCollector();
     ParserTerm ret = CoraParser.readTerm(txt, constrained, collector);
-    if (!collector.queryCollectedMessages().equals(message)) {
-      System.out.println(collector.queryCollectedMessages());
+    if (!collector.toString().equals(message)) {
+      System.out.println(collector.toString());
       System.out.println("ret = " + ret);
       assertTrue(false);
     }
@@ -619,8 +619,8 @@ public class CoraTermsParsingTest {
     ParsingStatus status =
       new ParsingStatus(CoraTokenData.getConstrainedStringLexer(str), collector);
     ParserTerm ret = CoraParser.readSingleSymbol(status);
-    if (!collector.queryCollectedMessages().equals(errmess)) {
-      System.out.println("Errors: " + collector.queryCollectedMessages());
+    if (!collector.toString().equals(errmess)) {
+      System.out.println("Errors: " + collector.toString());
       assertTrue(false);
     }
     if (!ret.toString().equals(result)) {

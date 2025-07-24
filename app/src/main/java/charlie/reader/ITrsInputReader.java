@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -27,6 +27,8 @@ import charlie.exceptions.*;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.Token;
+import charlie.parser.lib.ParsingErrorMessage;
+import charlie.parser.lib.ParsingException;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser;
 import charlie.parser.Parser.*;
@@ -66,7 +68,7 @@ public class ITrsInputReader {
   }
 
   private void storeError(String message, Token token) {
-    _errors.addError(token.getPosition() + ": " + message);
+    _errors.addError(new ParsingErrorMessage(token, message));
   }
 
   // ====================================== CHECKING ARITIES ======================================
@@ -297,8 +299,8 @@ public class ITrsInputReader {
     TreeSet<String> intNodes = floodfill(intNode());
     TreeSet<String> boolNodes = floodfill(boolNode());
     if (intNodes.contains(boolNode())) {
-      _errors.addError("I could not derive a valid typing (Int and Bool positions are not " +
-        "consistentnly used).");
+      _errors.addError(new ParsingErrorMessage(null, "I could not derive a valid typing " +
+        "(Int and Bool positions are not consistentnly used)."));
       return;
     }
     _symbols = new SymbolData();
@@ -430,17 +432,17 @@ public class ITrsInputReader {
     Alphabet alphabet = _symbols.queryCurrentAlphabet();
     try { return TrsFactory.createTrs(alphabet, rules, TrsFactory.LCTRS); }
     catch (IllegalRuleException e) {
-      _errors.addError(e.getMessage());
+      _errors.addError(new ParsingErrorMessage(null, e.getMessage()));
       return null;
     }
   }
 
   // ==================================== PUBLIC FUNCTIONALITY ====================================
 
-  /** Throws a ParseException if there are any errors stored in the given error collector */
+  /** Throws a ParsingException if there are any errors stored in the given error collector */
   private static void throwIfAnyErrors(ErrorCollector collector) {
     if (collector.queryErrorCount() > 0) {
-      throw new ParseException(collector.queryCollectedMessages());
+      throw collector.generateException();
     }
   }
 
@@ -461,7 +463,7 @@ public class ITrsInputReader {
   /**
    * Parses the given program, and returns the integer TRS that it defines.
    * If the string is not correctly formed, or the system cannot be unambiguously typed as an
-   * LCTRS, this may throw a ParseException.
+   * LCTRS, this may throw a ParsingException.
    */
   public static TRS readTrsFromString(String str) {
     ErrorCollector collector = new ErrorCollector();
@@ -471,7 +473,7 @@ public class ITrsInputReader {
 
   /**
    * Parses the given file, which should be a .itrs file, into an LCTRS.
-   * This may throw a ParseException, or an IOException if something goes wrong with the file
+   * This may throw a ParsingException, or an IOException if something goes wrong with the file
    * reading.
    */
   public static TRS readTrsFromFile(String filename) throws IOException {

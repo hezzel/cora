@@ -51,5 +51,9 @@ public class UserException extends RuntimeException {
   public Object queryComponent(int i) {
     return _components[i];
   }
+
+  public Object[] makeArray() {
+    return _components.clone();
+  }
 }
 
