@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,8 +15,7 @@
 
 package charlie.parser;
 
-import com.google.common.collect.ImmutableList;
-
+import charlie.util.FixedList;
 import charlie.util.LookupMap;
 import charlie.types.Type;
 import charlie.parser.lib.Token;
@@ -46,7 +45,7 @@ public interface Parser {
    */
   public sealed interface ParserTerm permits Identifier, Lambda, Meta, Application, Tup,
                                              BoolVal, IntVal, StringVal, CalcSymbol, PErr {
-    /** Indicates whether any errors occurred while parser this term (e.g., missing commas) */
+    /** Indicates whether any errors occurred while parsing this term (e.g., missing commas) */
     boolean hasErrors();
     Token token();
   }
@@ -56,28 +55,28 @@ public interface Parser {
   }
   public record Lambda(Token token, String vname, Type type, ParserTerm arg) implements ParserTerm {
     public String toString() {
-      return "λ" + vname + (type == null ? "" : "::" + type.toString()) + "." + arg.toString();
+      return "LAMBDA "+ vname + (type == null ? "" : "::" + type.toString()) + "." + arg.toString();
     }
     public boolean hasErrors() { return arg.hasErrors(); }
   }
   public record Meta(Token token, String name,
-                     ImmutableList<ParserTerm> args) implements ParserTerm {
-    public String toString() { return name.toString() + "⟨" + args.toString() + "⟩"; }
+                     FixedList<ParserTerm> args) implements ParserTerm {
+    public String toString() { return name.toString() + "[" + args.toString() + "]"; }
     public boolean hasErrors() { return args.stream().anyMatch(ParserTerm::hasErrors); }
   }
   public record Application(Token token, ParserTerm head,
-                            ImmutableList<ParserTerm> args) implements ParserTerm {
+                            FixedList<ParserTerm> args) implements ParserTerm {
     public String toString() { return "@(" + head.toString() + ", " + args.toString() + ")"; }
     public boolean hasErrors() {
       return head.hasErrors() || args.stream().anyMatch(ParserTerm::hasErrors);
     }
   }
-  public record Tup(Token token, ImmutableList<ParserTerm> args) implements ParserTerm {
-    public String toString() { return "⦇" + args.toString() + "⦈"; }
+  public record Tup(Token token, FixedList<ParserTerm> args) implements ParserTerm {
+    public String toString() { return "(|" + args.toString() + "|)"; }
     public boolean hasErrors() { return args.stream().anyMatch(ParserTerm::hasErrors); }
   }
   public record BoolVal(Token token, boolean istrue) implements ParserTerm {
-    public String toString() { return istrue ? "⊤" : "⊥"; }
+    public String toString() { return istrue ? "TRUE" : "FALSE"; }
     public boolean hasErrors() { return false; }
   }
   public record IntVal(Token token, int value) implements ParserTerm {
@@ -85,7 +84,7 @@ public interface Parser {
     public boolean hasErrors() { return false; }
   }
   public record StringVal(Token token, String escapedvalue) implements ParserTerm {
-    public String toString() { return "" + escapedvalue; }
+    public String toString() { return escapedvalue; }
     public boolean hasErrors() { return false; }
   }
   public record CalcSymbol(Token token, String name) implements ParserTerm {
@@ -129,17 +128,17 @@ public interface Parser {
       return left.hasErrors() || right.hasErrors() || (constraint != null && constraint.hasErrors());
     }
     public String toString() {
-      return "{ " + vars.keySet().toString() + " } " + left.toString() + " → " + right.toString() +
+      return "{ " + vars.keySet().toString() + " } " + left.toString() + " -> " + right.toString() +
         (constraint == null ? "" : " | " + constraint.toString());
     }
   }
 
   /**
-   * A "program" essentially defines TRS, except it is not yet typed.  It consists of a number of
+   * A "program" essentially defines a TRS, except it is not yet typed.  It consists of a number of
    * function symbol declarations, a number of rules, and a set of "private" symbols (all others
    * are public).
    */
   public record ParserProgram(LookupMap<ParserDeclaration> fundecs,
-                              ImmutableList<ParserRule> rules) {}
+                              FixedList<ParserRule> rules) {}
 }
 

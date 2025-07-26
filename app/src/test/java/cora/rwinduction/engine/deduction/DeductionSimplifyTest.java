@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Optional;
 
-import charlie.exceptions.CustomParserException;
+import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
 import charlie.terms.*;
 import charlie.trs.TRS;
@@ -76,7 +76,7 @@ class DeductionSimplifyTest {
   }
 
   @Test
-  public void testCreateStep() throws CustomParserException {
+  public void testCreateStep() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(z) + 0 = iter(z, 0, 0) | z < 0");
     OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(true);
@@ -123,7 +123,7 @@ class DeductionSimplifyTest {
   }
 
   @Test
-  public void testSimplifyConstrained() throws CustomParserException {
+  public void testSimplifyConstrained() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(z) + 0 = iter(z, 0, 0) | z > 0");
     OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(true);
@@ -194,7 +194,7 @@ class DeductionSimplifyTest {
   }
 
   @Test
-  public void testSimplifyBadPosition() throws CustomParserException {
+  public void testSimplifyBadPosition() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0");
     OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(true);

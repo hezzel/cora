@@ -887,7 +887,7 @@ public class TermTyperTest {
   public void testDoublePlus() {
     SymbolData data = generateSignature();
     Term t = readTerm("1 ++2", null, true, data,
-      "1:4: Expected term, started by an identifier, λ, string or (, but got PLUS (+).\n");
+      "1:4: Expected term, started by an identifier, LAMBDA, string or (, but got PLUS (+).\n");
     assertTrue(t == null);
   }
 

@@ -15,9 +15,9 @@
 
 package charlie.parser;
 
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 
+import charlie.util.FixedList;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.Token;
@@ -75,10 +75,10 @@ abstract class FirstOrderParser implements Parser {
     if (_status.readNextIf(BRACKETOPEN) == null) return head;
     // if we follow the BRACKETOPEN with a BRACKETCLOSE, then that's enough
     if (_status.readNextIf(BRACKETCLOSE) != null) {
-      return new Application(start, head, ImmutableList.of());
+      return new Application(start, head, FixedList.of());
     }
     // otherwise, start reading recursively
-    ImmutableList.Builder<ParserTerm> builder = ImmutableList.<ParserTerm>builder();
+    FixedList.Builder<ParserTerm> builder = new FixedList.Builder<ParserTerm>();
     ArrayList<ParserTerm> args = new ArrayList<ParserTerm>();
     boolean errored = false;
     while (true) {
@@ -114,8 +114,8 @@ abstract class FirstOrderParser implements Parser {
    * If any variables have already been declared, these are passed in the argument list, to be
    * stored as part of the rule.  (This map is allowed to be empty, but not null.)
    */
-  protected ImmutableList<ParserRule> readRules(LookupMap<ParserDeclaration> declaredVars) {
-    ImmutableList.Builder<ParserRule> ret = ImmutableList.<ParserRule>builder();
+  protected FixedList<ParserRule> readRules(LookupMap<ParserDeclaration> declaredVars) {
+    FixedList.Builder<ParserRule> ret = new FixedList.Builder<ParserRule>();
     if (_status.expect(RULESDECSTART, "rules declaration") == null) {
       return ret.build();
     }

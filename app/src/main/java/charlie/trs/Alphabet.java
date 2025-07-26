@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,10 +16,10 @@
 package charlie.trs;
 
 import java.util.Collection;
-import charlie.exceptions.TypingException;
 import charlie.util.LookupMap;
 import charlie.util.NullStorageException;
 import charlie.terms.FunctionSymbol;
+import charlie.terms.TypingException;
 
 /** A finite, immutable set of user-defined symbols, with no duplicate names. */
 public class Alphabet {
@@ -44,8 +44,8 @@ public class Alphabet {
       if (builder.containsKey(f.queryName())) {
         FunctionSymbol g = builder.get(f.queryName());
         if (!g.equals(f)) {
-          throw new TypingException("Alphabet", "add", "duplicate occurrence of " +
-            f.queryName(), g.queryType().toString(), f.queryType().toString());
+          throw new TypingException("Duplicate occurrence of ", f, " in alphabet with different " +
+            "types: ", f.queryType(), " and ", g.queryType(), ".");
         }
       }
       else builder.put(f.queryName(), f);
@@ -62,8 +62,9 @@ public class Alphabet {
       if (builder.containsKey(f.queryName())) {
         FunctionSymbol g = builder.get(f.queryName());
         if (!g.equals(f)) {
-          throw new TypingException("Alphabet", "add", "duplicate occurrence of " +
-            f.queryName(), g.queryType().toString(), f.queryType().toString());
+          throw new TypingException("Duplicate occurrence of ", f, " in alphabet with different " +
+            "types: first occurrence has type ", g.queryType(), " while new occurrence has type ",
+            f.queryType(), ".");
         }
       }
       else builder.put(f.queryName(), f);

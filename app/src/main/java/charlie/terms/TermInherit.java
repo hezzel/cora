@@ -252,9 +252,8 @@ abstract class TermInherit implements Term {
       case FinalPos(int k):
         if (k == 0) {
           if (!queryType().equals(replacement.queryType())) {
-            throw new TypingException(queryMyClassName(), "replaceSubterm", "replacement term " +
-                        replacement.toString(), replacement.queryType().toString(),
-                        queryType().toString());
+            throw new TypingException("Typing error: cannot replace ", this, " (of type ",
+              queryType(), ") by ", replacement, " (of type ", replacement.queryType(), ").");
           }
           return replacement;
         }
@@ -357,21 +356,24 @@ abstract class TermInherit implements Term {
   public ImmutableList<Term> queryMetaArguments() { return ImmutableList.of(); }
   public Term queryHead() { return this; }
   public Term queryArgument(int i) {
-    throw new IndexingException(queryMyClassName(), "queryArgument", i);
+    throw new IndexOutOfBoundsException(queryMyClassName() + "::queryArgument(" + i + ") called.");
   }
   public Term queryMetaArgument(int i) {
-    throw new IndexingException(queryMyClassName(), "queryMetaArgument", i);
+    throw new IndexOutOfBoundsException(queryMyClassName() + "::queryMetaArgument(" + i +
+      ") called.");
   }
   public Term queryTupleArgument(int i) {
-    throw new IndexingException(queryMyClassName(), "queryTupleArgument", i);
-  }
-  public Term queryAbstractionSubterm() {
-    throw new InappropriatePatternDataException(queryMyClassName(), "queryAbstractionSubterm",
-                                               "lambda-abstractions");
+    throw new IndexOutOfBoundsException(queryMyClassName() + "::queryTupleArgument(" + i +
+      ") called.");
   }
   public Term queryImmediateHeadSubterm(int i) {
     if (i == 0) return this;
-    throw new IndexingException(queryMyClassName(), "queryImmediateHeadSubterm", i);
+    throw new IndexOutOfBoundsException(queryMyClassName() + "::queryImmediateHeadSubterm(" + i +
+      ") called.");
+  }
+  public Term queryAbstractionSubterm() {
+    throw new InappropriatePatternDataException(queryMyClassName(), "queryAbstractionSubterm",
+      "abstractions");
   }
   public FunctionSymbol queryRoot() {
     throw new InappropriatePatternDataException(queryMyClassName(),"queryRoot","functional terms");

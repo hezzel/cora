@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,7 +15,6 @@
 
 package charlie.reader;
 
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -78,15 +77,15 @@ public class OCocoUnsortedInputReader {
   private Term makeTerm(ParserTerm pterm) {
     Token token;
     String name;
-    ImmutableList<ParserTerm> args;
+    FixedList<ParserTerm> args;
 
     switch (pterm) {
       case Identifier(Token t, String n):
         token = t;
         name = n;
-        args = ImmutableList.of();
+        args = FixedList.of();
         break;
-      case Application(Token t1, Identifier(Token t2, String n), ImmutableList<ParserTerm> a):
+      case Application(Token t1, Identifier(Token t2, String n), FixedList<ParserTerm> a):
         token = t1;
         name = n;
         args = a;

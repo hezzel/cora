@@ -53,6 +53,10 @@ public record ArgumentPos(int index, Position tail) implements Position {
     return new ArgumentPos(this.index, this.tail.append(p));
   }
 
+  public int queryChopCount() {
+    return tail.queryChopCount();
+  }
+
   public int queryHead() {
     return index;
   }
@@ -61,3 +65,4 @@ public record ArgumentPos(int index, Position tail) implements Position {
     return tail;
   }
 }
+

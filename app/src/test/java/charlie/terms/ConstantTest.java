@@ -46,7 +46,7 @@ public class ConstantTest extends TermTestFoundation {
   @Test
   public void testBaseConstantApply() {
     FunctionSymbol c = new Constant("c", baseType("o"));
-    assertThrows(ArityException.class, () -> c.apply(new Constant("a", baseType("o"))));
+    assertThrows(TypingException.class, () -> c.apply(new Constant("a", baseType("o"))));
   }
 
   @Test
@@ -127,7 +127,8 @@ public class ConstantTest extends TermTestFoundation {
     Type b = baseType("b");
     Type combi = arrowType(a, b);
     Constant f = new Constant("f", combi);
-    assertThrows(IndexingException.class, () -> f.querySubterm(new ArgumentPos(1, Position.empty)));
+    assertThrows(InvalidPositionException.class, () ->
+      f.querySubterm(new ArgumentPos(1, Position.empty)));
   }
 
   @Test
@@ -136,7 +137,8 @@ public class ConstantTest extends TermTestFoundation {
     Type b = baseType("b");
     Type combi = arrowType(a, b);
     Constant f = new Constant("f", combi);
-    assertThrows(IndexingException.class, () -> f.querySubterm(new FinalPos(1)));
+    assertThrows(InvalidPositionException.class, () ->
+      f.querySubterm(new FinalPos(1)));
   }
 
   @Test
@@ -145,14 +147,14 @@ public class ConstantTest extends TermTestFoundation {
     Type b = baseType("b");
     Type combi = arrowType(a, b);
     Constant f = new Constant("f", combi);
-    assertThrows(IndexingException.class, () -> 
+    assertThrows(InvalidPositionException.class, () -> 
       f.replaceSubterm(new LambdaPos(Position.empty), new Constant("a", a)));
   }
 
   @Test
   public void testBadPartialPositionReplacement() {
     Constant f = new Constant("f", baseType("a"));
-    assertThrows(IndexingException.class, () -> 
+    assertThrows(InvalidPositionException.class, () -> 
       f.replaceSubterm(new FinalPos(1), new Constant("a", baseType("a"))));
   }
 

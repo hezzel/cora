@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -17,8 +17,8 @@ package charlie.parser;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import com.google.common.collect.ImmutableList;
 
+import charlie.util.FixedList;
 import charlie.types.*;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.lib.Token;
@@ -125,10 +125,10 @@ public class CoraTermsParsingTest {
   public void testReadBooleans() {
     ParserTerm term = readTerm("true", true, "");
     assertTrue(term instanceof BoolVal);
-    assertTrue(term.toString().equals("⊤"));
+    assertTrue(term.toString().equals("TRUE"));
     term = readTerm("false", true, "");
     assertTrue(term instanceof BoolVal);
-    assertTrue(term.toString().equals("⊥"));
+    assertTrue(term.toString().equals("FALSE"));
     term = readTerm("FALSE", true, "");
     assertTrue(term instanceof Identifier);
     assertTrue(term.toString().equals("FALSE"));
@@ -147,7 +147,7 @@ public class CoraTermsParsingTest {
   @Test
   public void testReadEmptyApplication() {
     ParserTerm t = readTerm("bb()", true, "");
-    if (t instanceof Application(Token token, ParserTerm head, ImmutableList args)) {
+    if (t instanceof Application(Token token, ParserTerm head, FixedList args)) {
       assertTrue(head instanceof Identifier);
       assertTrue(head.toString().equals("bb"));
       assertTrue(args.size() == 0);
@@ -158,7 +158,7 @@ public class CoraTermsParsingTest {
   @Test
   public void testReadFullApplication() {
     ParserTerm t = readTerm("f(aa,bb,cc)", false, "");
-    if (t instanceof Application(Token token, ParserTerm head, ImmutableList args)) {
+    if (t instanceof Application(Token token, ParserTerm head, FixedList args)) {
       assertTrue(head instanceof Identifier);
       assertTrue(head.toString().equals("f"));
       assertTrue(args.size() == 3);
@@ -181,7 +181,7 @@ public class CoraTermsParsingTest {
   @Test
   public void testTermWithValues() {
     ParserTerm t = readTerm("new(3,true,\"test\" \"ing\",aa)", true, "");
-    if (!(t instanceof Application(Token tok, ParserTerm head, ImmutableList<ParserTerm> args))) {
+    if (!(t instanceof Application(Token tok, ParserTerm head, FixedList<ParserTerm> args))) {
       assertTrue(false);
       return;
     }
@@ -192,7 +192,7 @@ public class CoraTermsParsingTest {
     assertTrue(args.get(1) instanceof BoolVal);
     assertTrue(args.get(2) instanceof StringVal);
     assertTrue(args.get(3) instanceof Identifier);
-    assertTrue(t.toString().equals("@(new, [3, ⊤, \"testing\", aa])"));
+    assertTrue(t.toString().equals("@(new, [3, TRUE, \"testing\", aa])"));
   }
 
   @Test
@@ -225,7 +225,8 @@ public class CoraTermsParsingTest {
   public void testOnlyCommas() {
     ParserTerm t = readTerm("f(,,,)", false,
       "1:3: Unexpected comma; expected term or closing bracket )\n" +
-      "1:6: Expected term, started by an identifier, λ, string or (, but got BRACKETCLOSE ()).\n");
+      "1:6: Expected term, started by an identifier, LAMBDA, string or (, but got " +
+        "BRACKETCLOSE ()).\n");
     assertTrue(t.toString().equals("ERR(f)"));
   }
 
@@ -239,37 +240,37 @@ public class CoraTermsParsingTest {
   @Test
   public void testReadBasicAbstractionWithType() {
     ParserTerm t = readTerm("λx :: a. f(x, bb, y)", false, "");
-    assertTrue(t.toString().equals("λx::a.@(f, [x, bb, y])"));
+    assertTrue(t.toString().equals("LAMBDA x::a.@(f, [x, bb, y])"));
   }
 
   @Test
   public void testReadBasicAbstractionWithoutType() {
     ParserTerm t = readTerm("λx. f(x, bb, y)", false, "");
-    assertTrue(t.toString().equals("λx.@(f, [x, bb, y])"));
+    assertTrue(t.toString().equals("LAMBDA x.@(f, [x, bb, y])"));
   }
 
   @Test
   public void testReadMultipleAbstractionWithBinderDeclarations() {
     ParserTerm t = readTerm("λx :: a, y ::c. f(x, bb, y)", true, "");
-    assertTrue(t.toString().equals("λx::a.λy::c.@(f, [x, bb, y])"));
+    assertTrue(t.toString().equals("LAMBDA x::a.LAMBDA y::c.@(f, [x, bb, y])"));
   }
 
   @Test
   public void testReadMultipleAbstractionWithoutBinderDeclaration() {
     ParserTerm t = readTerm("h(\\x,z.f(aa,bb,x))", true, "");
-    assertTrue(t.toString().equals("@(h, [λx.λz.@(f, [aa, bb, x])])"));
+    assertTrue(t.toString().equals("@(h, [LAMBDA x.LAMBDA z.@(f, [aa, bb, x])])"));
   }
 
   @Test
   public void testReadAbstractionWithDuplicateVariableName() {
     ParserTerm t = readTerm("λx::a, y, x.x", false, "");
-    assertTrue(t.toString().equals("λx::a.λy.λx.x"));
+    assertTrue(t.toString().equals("LAMBDA x::a.LAMBDA y.LAMBDA x.x"));
   }
 
   @Test
   public void testReadAbstractionAtHeadOfApplication() {
     ParserTerm t = readTerm("(λx :: a, y ::c. f(x,bb,y))(aa,cc)", false, "");
-    assertTrue(t.toString().equals("@(λx::a.λy::c.@(f, [x, bb, y]), [aa, cc])"));
+    assertTrue(t.toString().equals("@(LAMBDA x::a.LAMBDA y::c.@(f, [x, bb, y]), [aa, cc])"));
   }
 
   @Test
@@ -277,7 +278,7 @@ public class CoraTermsParsingTest {
     ParserTerm t = readTerm("λx :: a -> .x y", false,
       "1:12: Expected a type (started by a sort identifier or bracket) but got DOT (.).\n" +
       "1:15: Expected end of input but got IDENTIFIER (y).\n");
-    assertTrue(t.toString().equals("λx::a.x"));
+    assertTrue(t.toString().equals("LAMBDA x::a.x"));
   }
 
   @Test
@@ -285,14 +286,14 @@ public class CoraTermsParsingTest {
     ParserTerm t = readTerm("λx :: .x y", true,
       "1:7: Expected a type (started by a sort identifier or bracket) but got DOT (.).\n" +
       "1:10: Expected end of input but got IDENTIFIER (y).\n");
-    assertTrue(t.toString().equals("ERR(λx.x)"));
+    assertTrue(t.toString().equals("ERR(LAMBDA x.x)"));
   }
 
   @Test
   public void testReadMultipleAbstractionWithMissingComma() {
     ParserTerm t = readTerm("\\x :: a y.f(x,y,cc)", false,
       "1:9: Expected a comma or dot but got IDENTIFIER (y).\n");
-    assertTrue(t.toString().equals("λx::a.λy.@(f, [x, y, cc])"));
+    assertTrue(t.toString().equals("LAMBDA x::a.LAMBDA y.@(f, [x, y, cc])"));
   }
 
   @Test
@@ -300,27 +301,27 @@ public class CoraTermsParsingTest {
     ParserTerm t = readTerm("\\x \"test\".aa", true,
       "1:4: Expected a comma or dot but got STRING (\"test\").\n" +
       "1:10: Expected end of input but got DOT (.).\n");
-    assertTrue(t.toString().equals("ERR(λx.\"test\")"));
+    assertTrue(t.toString().equals("ERR(LAMBDA x.\"test\")"));
   }
 
   @Test
   public void testMissingBinderName() {
     ParserTerm t = readTerm("λ :: a, x :: b.x", true,
       "1:3: Expected an identifier (variable name) but got DECLARE (::).\n");
-    assertTrue(t.toString().equals("ERR(λx::b.x)"));
+    assertTrue(t.toString().equals("ERR(LAMBDA x::b.x)"));
   }
 
   @Test
   public void testExtraCommaInAbstractionBinders() {
     ParserTerm t = readTerm("λ x, .aa", true,
       "1:6: Expected an identifier (variable name) but got DOT (.).\n");
-    assertTrue(t.toString().equals("ERR(λx.aa)"));
+    assertTrue(t.toString().equals("ERR(LAMBDA x.aa)"));
   }
 
   @Test
   public void testMetaVariableWithEmptyArgumentsList() {
     ParserTerm t = readTerm("Z[]", false, "");
-    if (t instanceof Meta(Token token, String name, ImmutableList<ParserTerm> args)) {
+    if (t instanceof Meta(Token token, String name, FixedList<ParserTerm> args)) {
       assertTrue(name.equals("Z"));
       assertTrue(args.size() == 0);
     }
@@ -330,7 +331,7 @@ public class CoraTermsParsingTest {
   @Test
   public void testMetaApplicationWithOneArgument() {
     ParserTerm t = readTerm("Z⟨x⟩", false, "");
-    if (t instanceof Meta(Token token, String name, ImmutableList<ParserTerm> args)) {
+    if (t instanceof Meta(Token token, String name, FixedList<ParserTerm> args)) {
       assertTrue(name.equals("Z"));
       assertTrue(args.size() == 1);
       assertTrue(args.get(0) instanceof Identifier);
@@ -342,7 +343,7 @@ public class CoraTermsParsingTest {
   @Test
   public void testMetaApplicationWithMixedBrackets() {
     ParserTerm t = readTerm("Z⟨x,3]", true, "");
-    if (t instanceof Meta(Token token, String name, ImmutableList<ParserTerm> args)) {
+    if (t instanceof Meta(Token token, String name, FixedList<ParserTerm> args)) {
       assertTrue(name.equals("Z"));
       assertTrue(args.size() == 2);
       assertTrue(args.get(0) instanceof Identifier);
@@ -356,13 +357,13 @@ public class CoraTermsParsingTest {
   @Test
   public void testReadNestedMeta() {
     ParserTerm t = readTerm("Z⟨aa,Y[x⟩,cc]", false, "");
-    if (t instanceof Meta(Token token, String name, ImmutableList<ParserTerm> args)) {
+    if (t instanceof Meta(Token token, String name, FixedList<ParserTerm> args)) {
       assertTrue(name.equals("Z"));
       assertTrue(args.size() == 3);
       assertTrue(args.get(0) instanceof Identifier);
       assertTrue(args.get(1) instanceof Meta);
       assertTrue(args.get(2) instanceof Identifier);
-      assertTrue(args.get(1).toString().equals("Y⟨[x]⟩"));
+      assertTrue(args.get(1).toString().equals("Y[[x]]"));
     }
     else assertTrue(false);
   }
@@ -370,14 +371,14 @@ public class CoraTermsParsingTest {
   @Test
   public void testAppliedMetaApplication() {
     ParserTerm t = readTerm("Z⟨aa⟩(bb,cc)", true, "");
-    assertTrue(t.toString().equals("@(Z⟨[aa]⟩, [bb, cc])"));
+    assertTrue(t.toString().equals("@(Z[[aa]], [bb, cc])"));
   }
 
   @Test
   public void testMetaApplicationWithExtraComma() {
     ParserTerm t = readTerm("Z[aa,,bb]",  true,
       "1:6: Unexpected comma; expected term or meta-closing bracket ]\n");
-    assertTrue(t.toString().equals("Z⟨[aa, ERR(bb)]⟩"));
+    assertTrue(t.toString().equals("Z[[aa, ERR(bb)]]"));
   }
 
   @Test
@@ -385,21 +386,21 @@ public class CoraTermsParsingTest {
     ParserTerm t = readTerm("Z[aa bb cc]", false,
       "1:6: Expected a comma or meta-closing bracket ] but got IDENTIFIER (bb).\n" +
       "1:9: Expected a comma or meta-closing bracket ] but got IDENTIFIER (cc).\n");
-    assertTrue(t.toString().equals("Z⟨[aa, ERR(bb), ERR(cc)]⟩"));
+    assertTrue(t.toString().equals("Z[[aa, ERR(bb), ERR(cc)]]"));
   }
 
   @Test
   public void testMissingCloseBracket() {
     ParserTerm t = readTerm("Z⟨aa,x}", true,
       "1:7: Expected a comma or meta-closing bracket ⟩ but got BRACECLOSE (}).\n");
-    assertTrue(t.toString().equals("Z⟨[aa, ERR(x)]⟩"));
+    assertTrue(t.toString().equals("Z[[aa, ERR(x)]]"));
   }
 
   @Test
   public void testReadSimpleInfix() {
     ParserTerm t = readTerm("1+2", true, "");
     if (t instanceof Application(Token t1, CalcSymbol(Token t2, String name),
-                                 ImmutableList<ParserTerm> args)) {
+                                 FixedList<ParserTerm> args)) {
       assertTrue(name.equals("+"));
       assertTrue(args.size() == 2);
       assertTrue(args.get(0) instanceof IntVal);
@@ -425,7 +426,7 @@ public class CoraTermsParsingTest {
   public void testReadSimpleNot() {
     ParserTerm t = readTerm("¬x", true, "");
     if (t instanceof Application(Token t1, CalcSymbol(Token t2, String name),
-                                 ImmutableList<ParserTerm> args)) {
+                                 FixedList<ParserTerm> args)) {
       assertTrue(name.equals("¬"));
       assertTrue(args.size() == 1);
       assertTrue(args.get(0) instanceof Identifier);
@@ -437,7 +438,7 @@ public class CoraTermsParsingTest {
   @Test
   public void testMostlySimpleMinus() {
     ParserTerm t = readTerm("- (3+x)", true, "");
-    assertTrue(t instanceof Application(Token tok, CalcSymbol m, ImmutableList<ParserTerm> args));
+    assertTrue(t instanceof Application(Token tok, CalcSymbol m, FixedList<ParserTerm> args));
     assertTrue(t.toString().equals("@(-, [@(+, [3, x])])"));
   }
 
@@ -487,7 +488,7 @@ public class CoraTermsParsingTest {
   public void testMixedInfixPriorities() {
     ParserTerm t = readTerm("q(x) < y /\\ y / 2 =_Int Z[aa] + -13 * z +9", true, "");
     assertTrue(t.toString().equals("@(∧, [@(<, [@(q, [x]), y]), " +
-      "@(=_i, [@(/, [y, 2]), @(+, [@(+, [Z⟨[aa]⟩, @(*, [-13, z])]), 9])])])"));
+      "@(=_i, [@(/, [y, 2]), @(+, [@(+, [Z[[aa]], @(*, [-13, z])]), 9])])])"));
   }
 
   @Test
@@ -513,7 +514,7 @@ public class CoraTermsParsingTest {
   @Test
   public void testDoublePlus() {
     ParserTerm t = readTerm("1 ++2", true,
-      "1:4: Expected term, started by an identifier, λ, string or (, but got PLUS (+).\n");
+      "1:4: Expected term, started by an identifier, LAMBDA, string or (, but got PLUS (+).\n");
     assertTrue(t.toString().equals("ERR(1)"));
   }
 
@@ -524,7 +525,7 @@ public class CoraTermsParsingTest {
     assertTrue(t.toString().equals("-"));
     t = readTerm("⟨+⟩(2)", true, "");
     assertTrue(t instanceof Application(Token t1, CalcSymbol(Token t2, String name),
-                                        ImmutableList<ParserTerm> args));
+                                        FixedList<ParserTerm> args));
     assertTrue(t.toString().equals("@(+, [2])"));
     t = readTerm("⟨!=_String⟩(2, x, 9)", true, "");
     assertTrue(t.toString().equals("@(≠_s, [2, x, 9])"));
@@ -544,13 +545,13 @@ public class CoraTermsParsingTest {
   public void testReadGoodTuple() {
     ParserTerm t = readTerm("⦇ a, x, f(2) ⦈", false, "");
     assertTrue(t instanceof Tup);
-    assertTrue(t.toString().equals("⦇[a, x, @(f, [2])]⦈"));
+    assertTrue(t.toString().equals("(|[a, x, @(f, [2])]|)"));
   }
 
   @Test
   public void testReadEmptyTuple() {
     ParserTerm t = readTerm("⦇ ⦈", true, "1:1: Empty tuples are not allowed.\n");
-    assertTrue(t.toString().equals("ERR(⦇⦈)"));
+    assertTrue(t.toString().equals("ERR((| |))"));
   }
 
   @Test
@@ -563,16 +564,16 @@ public class CoraTermsParsingTest {
   @Test
   public void testReadTupleWithoutClosingBracket() {
     ParserTerm t = readTerm("⦇x, 1 { a, b } f -> f", true,
-      "1:7: Expected a comma or tuple closing bracket ⦈ but got BRACEOPEN ({).\n");
-    assertTrue(t.toString().equals("⦇[x, ERR(1)]⦈"));
+      "1:7: Expected a comma or tuple closing bracket |) but got BRACEOPEN ({).\n");
+    assertTrue(t.toString().equals("(|[x, ERR(1)]|)"));
   }
 
   @Test
   public void testMissingCommaInTuple() {
     ParserTerm t = readTerm("⦇x y⦈ -> x", false,
-      "1:4: Expected a comma or tuple closing bracket ⦈ but got IDENTIFIER (y).\n" +
+      "1:4: Expected a comma or tuple closing bracket |) but got IDENTIFIER (y).\n" +
       "1:7: Expected end of input but got ARROW (->).\n");
-    assertTrue(t.toString().equals("⦇[x, ERR(y)]⦈"));
+    assertTrue(t.toString().equals("(|[x, ERR(y)]|)"));
   }
 
   private ParserTerm readSymbol(String str, String next) {

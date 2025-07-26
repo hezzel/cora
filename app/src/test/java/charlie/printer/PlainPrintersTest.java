@@ -40,7 +40,7 @@ public class PlainPrintersTest {
   }
 
   @Test
-  public void testPrintPosition() throws charlie.exceptions.CustomParserException {
+  public void testPrintPosition() throws charlie.terms.position.PositionFormatException {
     PlainPositionPrinter p = new PlainPositionPrinter();
     Position pos = Position.parse("1.2.ε");
     assertTrue(p.print(pos).equals("1.2"));

@@ -19,7 +19,6 @@ import charlie.solvesmt.ProcessSmtSolver;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.UnsupportedTheoryException;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
 

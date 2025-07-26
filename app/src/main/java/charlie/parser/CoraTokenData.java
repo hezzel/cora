@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -43,7 +43,7 @@ public class CoraTokenData {
   public static final String ARROW          = "ARROW";
   public static final String PUBLIC         = "PUBLIC";
   public static final String PRIVATE        = "PRIVATE";
-  // The following are only used for constrained TRSs. */
+  /* The following are only used for constrained TRSs. */
   public static final String INTEGER        = "INTEGER";
   public static final String TRUE           = "TRUE";
   public static final String FALSE          = "FALSE";

@@ -18,7 +18,6 @@ package cora.rwinduction.engine;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
-import charlie.exceptions.IndexingException;
 import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;

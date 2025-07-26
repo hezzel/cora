@@ -18,8 +18,6 @@ package charlie.terms;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
-import charlie.exceptions.ArityException;
-import charlie.exceptions.TypingException;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
@@ -60,7 +58,7 @@ public class SubstitutionTest {
   public void testIncorrectArityInCreation() {
     MetaVariable x = TermFactory.createMetaVar("x", arrowType("o", "o"), 1);
     Term xterm = constantTerm("a", arrowType("o", "o"));
-    assertThrows(ArityException.class, () -> new Subst(x, xterm));
+    assertThrows(TypingException.class, () -> new Subst(x, xterm));
   }
  
   @Test
@@ -83,7 +81,7 @@ public class SubstitutionTest {
     Term zterm = constantTerm("a", arrowType("o", "o"));
     Substitution gamma = new Subst(z, zterm);
     MetaVariable y = TermFactory.createMetaVar("y", arrowType("o", "o"), 1);
-    assertThrows(ArityException.class, () -> gamma.extend(y, zterm));
+    assertThrows(TypingException.class, () -> gamma.extend(y, zterm));
   }
 
   @Test
@@ -126,7 +124,7 @@ public class SubstitutionTest {
     Variable x = TermFactory.createBinder("x", baseType("o"));
     Term zterm = TermFactory.createAbstraction(x, x);
     Substitution gamma = new Subst(z, zterm);
-    assertThrows(ArityException.class, () ->
+    assertThrows(TypingException.class, () ->
       gamma.replace(z, constantTerm("37", zterm.queryType())));
   }
 

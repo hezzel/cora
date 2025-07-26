@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -184,7 +184,7 @@ public class OutputModuleTest {
   }
 
   @Test
-  public void testPrintPosition() throws charlie.exceptions.CustomParserException {
+  public void testPrintPosition() throws charlie.terms.position.PositionFormatException {
     OutputModule p = OutputModule.createPlainModule(exampleTrs());
     OutputModule u = OutputModule.createUnicodeModule(exampleTrs());
     Position pos = Position.parse("1.2.☆3");

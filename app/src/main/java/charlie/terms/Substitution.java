@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -38,8 +38,8 @@ public interface Substitution {
    * Update the substitution with the given key/value pair.
    * If there is already a mapping for key, this will return false and have no effect.
    * If the key and value do not have the same type, a TypingException will be thrown instead.
-   * If the key has arity n, then the value should have a form λx1...xn.t; if not, an ArityException
-   * will be thrown.
+   * If the key has arity n, then the value should have a form λx1...xn.t; if this is not the case,
+   * also a TypingException will be thrown.
    */
   boolean extend(Replaceable key, Term value);
 
@@ -49,8 +49,8 @@ public interface Substitution {
    * was not, then this will return false and simply extend.  Either way the key/value pair becomes
    * part of the mapping!
    * If the key and value do not have the same type, a TypingException will be thrown instead.
-   * If the key has arity n, then the value should have a form λx1...xn.t; if not, an ArityException
-   * will be thrown.
+   * If the key has arity n, then the value should have a form λx1...xn.t; if not, also a
+   * TypingException will be thrown.
    */
   boolean replace(Replaceable key, Term value);
 

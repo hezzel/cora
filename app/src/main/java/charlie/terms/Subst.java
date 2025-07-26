@@ -17,8 +17,6 @@ package charlie.terms;
 
 import java.util.HashMap;
 import java.util.Set;
-import charlie.exceptions.ArityException;
-import charlie.exceptions.TypingException;
 import charlie.util.NullStorageException;
 
 /**
@@ -76,16 +74,18 @@ class Subst implements Substitution {
     if (key == null) throw new NullStorageException("Subst", "key");
     if (value == null) throw new NullStorageException("Subst", "value");
     if (!key.queryType().equals(value.queryType())) {
-      throw new TypingException("Subst", "extend", "value " + value.toString() + " assigned to " +
-        "key " + key.toString(), value.queryType().toString(), key.queryType().toString());
+      throw new TypingException("Cannot map key ", key, " (of type ", key.queryType(), ") to " +
+        "value ", value, " (of type ", value.queryType(), ") in substitution.");
     }
     int a = key.queryArity();
     if (a > 0) {
       Term tmp = value;
       while (a > 0) {
-        if (!tmp.isAbstraction()) throw new ArityException("Subst", "extend", "cannot add mapping " +
-          key.toString() + " := " + value.toString() + " since " + key.toString() + " has arity " +
-          a + ".");
+        if (!tmp.isAbstraction()) {
+          throw new TypingException("Cannot map meta-variable ", key, " (with arity " +
+            key.queryArity() + ") to value ", value, " in substitution: the value should be an " +
+            "abstraction with at least " + key.queryArity() + " abstracted variables.");
+        }
         a--;
         tmp = tmp.queryAbstractionSubterm();
       }

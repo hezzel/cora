@@ -59,13 +59,13 @@ class MetaApplicationTest extends TermTestFoundation {
     inputs.add(baseType("a"));
     MetaVariable z = TermFactory.createMetaVar("z", inputs, baseType("a"));
     Term s = constantTerm("s", baseType("a"));
-    assertThrows(ArityException.class, () -> TermFactory.createMeta(z, s, s));
+    assertThrows(TypingException.class, () -> TermFactory.createMeta(z, s, s));
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(constantTerm("a", baseType("a")));
     args.add(constantTerm("a", baseType("a")));
     args.add(constantTerm("a", baseType("a")));
     args.add(constantTerm("a", baseType("a")));
-    assertThrows(ArityException.class, () -> TermFactory.createMeta(z, args));
+    assertThrows(TypingException.class, () -> TermFactory.createMeta(z, args));
   }
 
   @Test
@@ -354,18 +354,18 @@ class MetaApplicationTest extends TermTestFoundation {
   public void testSubtermBad() {
     Term term = createTestTerm();
     Position pos = new ArgumentPos(1, Position.empty);
-    assertThrows(IndexingException.class, () -> term.querySubterm(pos));
+    assertThrows(InvalidPositionException.class, () -> term.querySubterm(pos));
   }
 
   @Test
   public void testHeadSubtermBad() {
     Term term = createTestTerm();
     Position pos = new FinalPos(1);
-    assertThrows(IndexingException.class, () -> term.querySubterm(pos));
+    assertThrows(InvalidPositionException.class, () -> term.querySubterm(pos));
   }
 
   @Test
-  public void testSubtermReplacementGood() throws CustomParserException {
+  public void testSubtermReplacementGood() throws PositionFormatException {
     Term term = createTestTerm();
     Position pos = Position.parse("!1.1");
     Term replacement = constantTerm("42", baseType("b"));
@@ -389,27 +389,27 @@ class MetaApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testSubtermReplacementBadPositionKind() throws CustomParserException {
+  public void testSubtermReplacementBadPositionKind() throws PositionFormatException {
     Term term = createTestTerm();
     Position pos = Position.parse("2");
     Term replacement = constantTerm("uu", baseType("b"));
-    assertThrows(IndexingException.class, () -> term.replaceSubterm(pos, replacement));
+    assertThrows(InvalidPositionException.class, () -> term.replaceSubterm(pos, replacement));
   }
 
   @Test
-  public void testSubtermReplacementBadPositionRange() throws CustomParserException {
+  public void testSubtermReplacementBadPositionRange() throws PositionFormatException {
     Term term = createTestTerm();
     Position pos = Position.parse("!3");
     Term replacement = constantTerm("uu", baseType("b"));
-    assertThrows(IndexingException.class, () -> term.replaceSubterm(pos, replacement));
+    assertThrows(InvalidPositionException.class, () -> term.replaceSubterm(pos, replacement));
   }
 
   @Test
-  public void testSubtermReplacementBadHeadPosition() throws CustomParserException {
+  public void testSubtermReplacementBadHeadPosition() throws PositionFormatException {
     Term term = createTestTerm();
     Position pos = Position.parse("☆1");
     Term replacement = constantTerm("uu", arrowType("a", "b"));
-    assertThrows(IndexingException.class, () -> term.replaceSubterm(pos, replacement));
+    assertThrows(InvalidPositionException.class, () -> term.replaceSubterm(pos, replacement));
   }
 
   @Test
@@ -423,8 +423,8 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testIllegalCalls() {
     Term t = makeSample();
-    assertThrows(IndexingException.class, () -> t.queryImmediateHeadSubterm(1));
-    assertThrows(IndexingException.class, () -> t.queryArgument(1));
+    assertThrows(IndexOutOfBoundsException.class, () -> t.queryImmediateHeadSubterm(1));
+    assertThrows(IndexOutOfBoundsException.class, () -> t.queryArgument(1));
     assertThrows(InappropriatePatternDataException.class, () -> t.queryRoot());
     assertThrows(InappropriatePatternDataException.class, () -> t.queryVariable());
   }

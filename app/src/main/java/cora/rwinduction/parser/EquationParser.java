@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,7 +15,6 @@
 
 package cora.rwinduction.parser;
 
-import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 import charlie.util.Pair;
@@ -147,7 +146,7 @@ public class EquationParser {
     left = CoraParser.readTerm(status);
     if (status.readNextIf(RIParser.APPROX) != null) right = CoraParser.readTerm(status);
     else if (left instanceof Application(Token tok1, ParserTerm head,
-                                         ImmutableList<ParserTerm> args) &&
+                                         FixedList<ParserTerm> args) &&
              head instanceof CalcSymbol(Token tok2, String name) &&
              args.size() == 2 && name.equals(CoraParser.EQUALS)) {
       left = args.get(0);

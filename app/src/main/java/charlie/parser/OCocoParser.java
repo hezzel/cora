@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,12 +15,14 @@
 
 package charlie.parser;
 
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import charlie.util.FixedList;
 import charlie.util.LookupMap;
-import charlie.types.*;
+import charlie.types.Type;
+import charlie.types.Base;
+import charlie.types.TypeFactory;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.lib.Token;
 import charlie.parser.lib.ParsingStatus;
@@ -222,7 +224,7 @@ public class OCocoParser extends FirstOrderParser implements Parser {
     if (vars == null) vars = LookupMap.<ParserDeclaration>empty();
     LookupMap<ParserDeclaration> funs = readSignature();
     if (funs == null) funs = LookupMap.<ParserDeclaration>empty();
-    ImmutableList<ParserRule> rules = readRules(vars);
+    FixedList<ParserRule> rules = readRules(vars);
     if (!readComment()) _status.expect(Token.EOF, "end of input");
     return new ParserProgram(funs, rules);
   }

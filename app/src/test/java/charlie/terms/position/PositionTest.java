@@ -15,10 +15,10 @@
 
 package charlie.terms.position;
 
-import charlie.exceptions.*;
-import charlie.util.NullStorageException;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+import charlie.util.NullStorageException;
 
 public class PositionTest {
   @Test
@@ -40,8 +40,8 @@ public class PositionTest {
     assertTrue(pos.isEmpty());
     assertTrue(pos.isFinal());
     assertTrue(pos.queryChopCount() == 0);
-    assertThrows(InappropriatePatternDataException.class, () -> pos.queryHead());
-    assertThrows(InappropriatePatternDataException.class, () -> pos.queryTail());
+    assertThrows(IndexOutOfBoundsException.class, () -> pos.queryHead());
+    assertThrows(IndexOutOfBoundsException.class, () -> pos.queryTail());
     
     boolean ok = false;
     switch (pos) {
@@ -67,8 +67,8 @@ public class PositionTest {
     assertFalse(pos.isEmpty());
     assertTrue(pos.isFinal());
     assertTrue(pos.queryChopCount() == 3);
-    assertThrows(InappropriatePatternDataException.class, () -> pos.queryHead());
-    assertThrows(InappropriatePatternDataException.class, () -> pos.queryTail());
+    assertThrows(IndexOutOfBoundsException.class, () -> pos.queryHead());
+    assertThrows(IndexOutOfBoundsException.class, () -> pos.queryTail());
     
     boolean ok = false;
     switch (pos) {
@@ -177,7 +177,7 @@ public class PositionTest {
   }
 
   @Test
-  public void testCorrectFullPositionParsing() throws CustomParserException {
+  public void testCorrectFullPositionParsing() throws PositionFormatException {
     Position pos = Position.parse("5.6.7");
     assertTrue(pos.toString().equals("5.6.7"));
     pos = Position.parse("19.!12");
@@ -193,7 +193,7 @@ public class PositionTest {
   }
 
   @Test
-  public void testCorrectPartialPositionParsing() throws CustomParserException {
+  public void testCorrectPartialPositionParsing() throws PositionFormatException {
     Position pos = Position.parse("1.254.3.*15");
     assertTrue(pos.toString().equals("1.254.3.☆15"));
     pos = Position.parse(("3.111.☆2"));
@@ -202,12 +202,12 @@ public class PositionTest {
 
   @Test
   public void testIncorrectParsing() {
-    assertThrows(CustomParserException.class, () -> Position.parse("1.254.*3.☆15"));
-    assertThrows(CustomParserException.class, () -> Position.parse("3.111.☆2ε"));
-    assertThrows(CustomParserException.class, () -> Position.parse("3.111.☆2.ε"));
-    assertThrows(CustomParserException.class, () -> Position.parse("1..254"));
-    assertThrows(CustomParserException.class, () -> Position.parse("5.1@.3"));
-    assertThrows(CustomParserException.class, () -> Position.parse("1.254.3.."));
+    assertThrows(PositionFormatException.class, () -> Position.parse("1.254.*3.☆15"));
+    assertThrows(PositionFormatException.class, () -> Position.parse("3.111.☆2ε"));
+    assertThrows(PositionFormatException.class, () -> Position.parse("3.111.☆2.ε"));
+    assertThrows(PositionFormatException.class, () -> Position.parse("1..254"));
+    assertThrows(PositionFormatException.class, () -> Position.parse("5.1@.3"));
+    assertThrows(PositionFormatException.class, () -> Position.parse("1.254.3.."));
   }
 }
 

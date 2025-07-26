@@ -22,7 +22,7 @@ import java.util.Set;
 import java.util.Optional;
 
 import charlie.util.Pair;
-import charlie.exceptions.CustomParserException;
+import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
 import charlie.terms.*;
 import charlie.trs.Rule;
@@ -67,7 +67,7 @@ class ConstrainedReductionHelperTest {
   }
 
   @Test
-  public void testExtendSubstitution() throws CustomParserException {
+  public void testExtendSubstitution() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(z) + 0 = iter(z, 0, 0) | z < 0");
     OutputModule module = OutputModule.createUnitTestModule();
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
@@ -87,7 +87,7 @@ class ConstrainedReductionHelperTest {
   }
 
   @Test
-  public void testFailToExtendSubstitution() throws CustomParserException {
+  public void testFailToExtendSubstitution() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(z) + 0 = iter(z, 0, 0) | z < 0");
     OutputModule module = OutputModule.createUnitTestModule();
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
@@ -204,7 +204,7 @@ class ConstrainedReductionHelperTest {
   }
 
   @Test
-  public void testReduce() throws CustomParserException {
+  public void testReduce() throws PositionFormatException {
     PartialProof pp = setupProof("iter(z, 0, 0) = 9 + sum1(z) | z = -3");
     OutputModule module = OutputModule.createUnitTestModule();
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Right, Position.parse("2"));

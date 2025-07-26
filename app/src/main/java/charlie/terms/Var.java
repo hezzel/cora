@@ -16,7 +16,6 @@
 package charlie.terms;
 
 import java.util.Map;
-import charlie.exceptions.IndexingException;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 
@@ -101,9 +100,9 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
     return queryType();
   }
 
-  /** @throws IndexingException, since there are no arguments */
+  /** @throws IndexOutOfBoundsException, since there are no arguments */
   public Type queryInputType(int index) {
-    throw new IndexingException("Var", "queryInputType", index);
+    throw new IndexOutOfBoundsException("Var::queryInputType(" + index + ") called");
   }
 
   /** @return this */

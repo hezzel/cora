@@ -61,12 +61,13 @@ abstract class LeafTermInherit extends TermInherit {
 
   /** Throws an error, since there are no non-empty positions in a leaf term */
   public Term querySubtermMain(Position pos) {
-    throw new IndexingException(queryMyClassName(), "querySubterm", toString(), pos.toString());
+    throw new InvalidPositionException(this, pos, "cannot query a strict subterm of a leaf term.");
   }
 
   /** Throws an error, since there are no non-empty positions in a leaf term */
   public Term replaceSubtermMain(Position pos, Term replacement) {
-    throw new IndexingException(queryMyClassName(), "replaceSubterm", toString(), pos.toString());
+    throw new InvalidPositionException(this, pos,
+      "cannot replace a strict subterm of a leaf term.");
   }
 }
 

@@ -52,10 +52,10 @@ public class ITrsParserTest {
   public void testReadBooleanValue() {
     ParserTerm term = ITrsParser.readTerm("TRUE");
     assertTrue(term instanceof BoolVal);
-    assertTrue(term.toString().equals("⊤"));
+    assertTrue(term.toString().equals("TRUE"));
     term = ITrsParser.readTerm("FALSE");
     assertTrue(term instanceof BoolVal);
-    assertTrue(term.toString().equals("⊥"));
+    assertTrue(term.toString().equals("FALSE"));
   }
 
   @Test
@@ -149,7 +149,7 @@ public class ITrsParserTest {
     ParserRule rule = ITrsParser.readRule("f(x,s(y)) -> f(s(x + 1), y)", collector);
     assertTrue(collector.queryErrorCount() == 0);
     assertTrue(rule.toString().equals(
-      "{ [] } @(f, [x, @(s, [y])]) → @(f, [@(s, [@(+, [x, 1])]), y])"));
+      "{ [] } @(f, [x, @(s, [y])]) -> @(f, [@(s, [@(+, [x, 1])]), y])"));
   }
 
   @Test
@@ -168,7 +168,7 @@ public class ITrsParserTest {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = ITrsParser.readRule("f(x,y) -> g(x / y) :|: y > 0", collector);
     assertTrue(collector.queryErrorCount() == 0);
-    assertTrue(rule.toString().equals("{ [] } @(f, [x, y]) → @(g, [@(/, [x, y])]) | @(>, [y, 0])"));
+    assertTrue(rule.toString().equals("{ [] } @(f, [x, y]) -> @(g, [@(/, [x, y])]) | @(>, [y, 0])"));
   }
 
   @Test
@@ -182,8 +182,8 @@ public class ITrsParserTest {
     assertTrue(trs.fundecs().size() == 0);
     assertTrue(trs.rules().size() == 2);
     assertTrue(trs.rules().get(0).vars().size() == 2);
-    assertTrue(trs.rules().get(0).toString().equals("{ [x, y] } @(f, [x, y, ⊤]) → " +
-      "@(f, [@(+, [y, x]), 12, ⊥])"));
+    assertTrue(trs.rules().get(0).toString().equals("{ [x, y] } @(f, [x, y, TRUE]) -> " +
+      "@(f, [@(+, [y, x]), 12, FALSE])"));
   }
 
   @Test
@@ -200,11 +200,11 @@ public class ITrsParserTest {
     assertTrue(trs.rules().size() == 3);
     assertTrue(trs.rules().get(0).vars().size() == 1);
     assertTrue(trs.rules().get(0).toString().equals(
-      "{ [x] } @(sum, [x]) → @(+, [x, @(sum, [@(-, [x, 1])])]) | @(>, [x, 0])"));
+      "{ [x] } @(sum, [x]) -> @(+, [x, @(sum, [@(-, [x, 1])])]) | @(>, [x, 0])"));
     assertTrue(trs.rules().get(1).toString().equals(
-      "{ [x] } @(sum, [0]) → 0"));
+      "{ [x] } @(sum, [0]) -> 0"));
     assertTrue(trs.rules().get(2).toString().equals(
-      "{ [x] } @(sum, [x]) → @(-, [1]) | @(<, [x, 0])"));
+      "{ [x] } @(sum, [x]) -> @(-, [1]) | @(<, [x, 0])"));
   }
 
   @Test

@@ -387,7 +387,7 @@ public class CoraInputReaderTest {
     }
     catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
-        "5:13: Expected term, started by an identifier, λ, string or (, but got ARROW (->).\n" +
+        "5:13: Expected term, started by an identifier, LAMBDA, string or (, but got ARROW (->).\n" +
         "3:9: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
         "5:1: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
         "5:11: Expected term of type o, but got function symbol a which has type 3.\n" +
@@ -414,9 +414,10 @@ public class CoraInputReaderTest {
     catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "2:17: Expected a comma or closing bracket ) but got MID (|).\n" +
-        "3:18: Expected term, started by an identifier, λ, string or (, but got " +
+        "3:18: Expected term, started by an identifier, LAMBDA, string or (, but got " +
           "BRACKETCLOSE ()).\n" +
-        "5:3: Expected term, started by an identifier, λ, string or (, but got DECLARE (::).\n" +
+        "5:3: Expected term, started by an identifier, LAMBDA, string or (, but got " +
+          "DECLARE (::).\n" +
         "7:4: Expected a closing bracket but got COMMA (,).\n"));
       return;
     }

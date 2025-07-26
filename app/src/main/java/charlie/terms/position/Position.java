@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,16 +15,13 @@
 
 package charlie.terms.position;
 
-import charlie.exceptions.CustomParserException;
-import charlie.exceptions.InappropriatePatternDataException;
-
 /**
  * Positions are a tool to refer to a specific location in a term.
  *
  * Inherently, a Position is nothing more than a sequence that has one of two forms:
  * <p><ul>
  *   <li> [item_1].[item_2]...[item_n].ε (called a full position)
- *   <li> [item_1].[item_2]...[item_n].☆k with k > 0 (called a partial position)
+ *   <li> [item_1].[item_2]...[item_n].☆k with k ≥ 1 (called a partial position)
  * </ul></p>
  * where each item [item_i] is an integer.  Negative integers are denoted !i instead of -i in
  * printing and parsing.
@@ -32,7 +29,7 @@ import charlie.exceptions.InappropriatePatternDataException;
  * Positions are implemented essentially as a list, meaning a Position has one of the following
  * shapes:
  * <p><ul>
- *  <li> ε or ☆k with k > 0 (final positions); we say that ε is the empty position
+ *  <li> ε or ☆k with k ≥ 1 (final positions); we say that ε is the empty position
  *  <li> i.p; we refer to i as the head and to p as the tail
  *  </ul></p>
  * <p>
@@ -71,22 +68,19 @@ public sealed interface Position permits
 
   /**
    * If the current Position is a partial position of the form ☆k, this returns k; if it is an
-   * empty position ε it returns 0.  If it is not a final position, this instead throws an
-   * InappropriatePatternDataException.
+   * empty position ε it returns 0.  Otherwise, it returns the chopcount of the tail.
    */
-  default int queryChopCount() {
-    throw new InappropriatePatternDataException("Position", "queryChopCount", "final positions");
-  }
+  int queryChopCount();
 
   /**
    * For a position x.tail, returns x (returning -i for a meta-position !i).
-   * For a final position, this throws an InappropriatePatternDataException.
+   * For a final position, this throws an IndexOutOfBoundsException.
    */
   int queryHead();
 
   /**
    * For a position x.tail, returns tail.
-   * For a final position, this throws an InappropriatePatternDataException.
+   * For a final position, this throws an IndexOutOfBoundsException.
    */
   Position queryTail();
 
@@ -96,10 +90,10 @@ public sealed interface Position permits
   /**
    * Access function: reads a position from string. 
    * Positions are strings of integers, separated by periods, and possibly ending in .ε (for a
-   * full position), or .☆k with k > 0 (for a partial position).  If omitted, the ending .ε is
-   * assumed.  Instead of supplying a negative number, also !i with i > 0 may be used.
+   * full position), or .☆k with k ≥ 1 (for a partial position).  If omitted, the ending .ε is
+   * assumed.  Instead of supplying a negative number, also !i with i ≥ 1 may be used.
    */
-  public static Position parse(String text) throws CustomParserException {
+  public static Position parse(String text) throws PositionFormatException {
     if (text.equals("")) return empty;
 
     // find chop count, if any, and remove that part from the text
@@ -109,8 +103,8 @@ public sealed interface Position permits
     if (star != -1) {
       try { chp = Integer.parseInt(text.substring(star+1)); }
       catch (NumberFormatException ex) {
-        throw new CustomParserException(1, star + 1, text.substring(star+1),
-          "chop count should be an integer");
+        throw new PositionFormatException(star + 1, text, "chop count should be an integer, but " +
+          "instead is [" + text.substring(star+1) + "].");
       }
       n = star;
     }
@@ -123,7 +117,7 @@ public sealed interface Position permits
     Position ret = chp == 0 ? empty : new FinalPos(chp);
     while (n > 0) {
       int dot = text.lastIndexOf('.', n-1);
-      if (dot == n-1) throw new CustomParserException(1, dot+1, text, "empty position index");
+      if (dot == n-1) throw new PositionFormatException(dot+1, text, "empty position index");
       String part = text.substring(dot+1, n);
       boolean meta = false;
       if (part.length() > 0 && part.charAt(0) == '!') {
@@ -133,7 +127,8 @@ public sealed interface Position permits
       int num;
       try { num = Integer.parseInt(part); }
       catch (NumberFormatException ex) {
-        throw new CustomParserException(1, dot+1, part, "position index should be an integer");
+        throw new PositionFormatException(dot+1, text, "position index should be an integer, " +
+          "but instead is [" + part + "].");
       }
       if (num < 0) {
         meta = true;

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,11 +15,11 @@
 
 package charlie.parser;
 
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Stack;
 import java.util.TreeMap;
 
+import charlie.util.FixedList;
 import charlie.parser.lib.Token;
 import charlie.parser.lib.ParsingStatus;
 import charlie.parser.Parser.ParserTerm;
@@ -65,7 +65,7 @@ class InfixManager {
   /**
    * This function provides the main functionality of the infix manager.
    * Given a sequence of N+1 terms (say, s{0},...,s{N}) and N operators (say op{1}, ..., op{N}),
-   * generates a Parserterm corresponding to s{0} op{1} s{1} op{2} ... op{N-1} s{N-1} op{N} s{N},
+   * generates a ParserTerm corresponding to s{0} op{1} s{1} op{2} ... op{N-1} s{N-1} op{N} s{N},
    * taking the associativity and priorities of all operators into account.
    * If any of the given operators has a name that is not in one of the declared groups, then an
    * IllegalArgumentException is thrown.  This also happens if the lengths of the respective lists
@@ -128,7 +128,7 @@ class InfixManager {
   }
 
   /**
-   * Helper function for convertchain: pops the top two terms of the term stack, and the top
+   * Helper function for convertChain: pops the top two terms of the term stack, and the top
    * operator from the operator stack, applies the operator to the terms, and pushes the result
    * back to the term stack
    */
@@ -137,7 +137,7 @@ class InfixManager {
     ParserTerm b = tstack.pop();
     ParserTerm a = tstack.pop();
     ParserTerm head = new Parser.CalcSymbol(o.token(), o.name());
-    ParserTerm result = new Parser.Application(a.token(), head, ImmutableList.of(a, b));
+    ParserTerm result = new Parser.Application(a.token(), head, FixedList.of(a, b));
     tstack.push(result);
   }
 }

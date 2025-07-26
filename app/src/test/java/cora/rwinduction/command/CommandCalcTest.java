@@ -60,8 +60,8 @@ class CommandCalcTest {
   public void testBadInvocation() {
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(createStep(module, "calc L1 LR R1") == null);
-    assertTrue(module.toString().equals("Illegal position LR: 1:0: Parser exception on input " +
-      "[R]: position index should be an integer\n\n"));
+    assertTrue(module.toString().equals("Illegal position LR (character 1): position index " +
+      "should be an integer, but instead is [R].\n\n"));
   }
 
   @Test

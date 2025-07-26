@@ -18,8 +18,8 @@ package cora.rwinduction.command;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import charlie.exceptions.CustomParserException;
 import charlie.util.FixedList;
+import charlie.terms.position.PositionFormatException;
 import charlie.terms.Term;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
@@ -81,8 +81,9 @@ public class CommandCalc extends DeductionCommand {
         word = input.nextWord();
       }
     }
-    catch (CustomParserException e) {
-      _module.println("Illegal position %a: %a", word, e.getMessage());
+    catch (PositionFormatException e) {
+      _module.println("Illegal position %a (character %a): %a", word, e.queryProblemPos(),
+        e.queryExplanation());
       return null;
     }
     

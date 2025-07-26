@@ -17,7 +17,6 @@ package charlie.terms;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import charlie.exceptions.ArityException;
 import charlie.types.*;
 
 public class TermFactory {
@@ -80,9 +79,9 @@ public class TermFactory {
           builder.add(inp);
           tmp = out;
           break;
-        default: throw new ArityException("TermFactory", "createMetaVar",
-          "trying to create a meta-variable with arity " + arity + " while the given type (" +
-          type.toString() + ") only has arity " + i);
+        default: throw new TypingException("Cannot construct meta-variable with type ", type,
+          " and arity " + arity + " since the arity may not be larger than the number of input " +
+          "arguments to the type.");
       }
     }
     return new HigherMetaVar(name, builder.build(), tmp);

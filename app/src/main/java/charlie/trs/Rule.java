@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024, 2025 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.Collections;
 import charlie.util.NullStorageException;
 import charlie.exceptions.IllegalRuleException;
-import charlie.exceptions.TypingException;
 import charlie.exceptions.UnexpectedPatternException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
@@ -240,8 +239,8 @@ public class Rule {
   /** Checks that both sides of a rule have the same type, and the constraint has type Bool */
   private void checkTypesCorrect() {
     if (!_left.queryType().equals(_right.queryType())) {
-      throw new TypingException("Rule", "checkTypesCorrect", "right-hand side",
-                                _right.queryType().toString(), _left.queryType().toString());
+      throw new TypingException("Typing error creating rule: left-hand side ", _left, " has type ",
+        _left.queryType(), " while right-hand side ", _right," has type ", _right.queryType(), ".");
     }
     Type t = _constraint.queryType();
     if (!t.equals(TypeFactory.boolSort) || !t.isTheoryType()) {

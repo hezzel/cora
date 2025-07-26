@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
 import charlie.exceptions.IllegalRuleException;
-import charlie.exceptions.TypingException;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;

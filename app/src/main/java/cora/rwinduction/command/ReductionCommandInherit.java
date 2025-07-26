@@ -19,9 +19,9 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.TreeSet;
 
-import charlie.exceptions.CustomParserException;
 import charlie.util.Pair;
 import charlie.util.FixedList;
+import charlie.terms.position.PositionFormatException;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.printer.Printer;
@@ -185,8 +185,9 @@ abstract class ReductionCommandInherit extends DeductionCommand {
       _module.println("Unexpected argument %a: I expected a valid position " +
         "(or \"with\").\n\n", input);
     }
-    catch (CustomParserException e) {
-      _module.println("Illegal position %a: %a", input, e.getMessage());
+    catch (PositionFormatException e) {
+      _module.println("Illegal position %a (character %a): %a", input, e.queryProblemPos(),
+        e.queryExplanation());
     }
     return null;
   }

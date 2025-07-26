@@ -20,12 +20,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import charlie.exceptions.TypingException;
 import charlie.util.LookupMap;
 import charlie.util.NullStorageException;
 import charlie.types.*;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TermFactory;
+import charlie.terms.TypingException;
 
 public class AlphabetTest {
   private Type baseType(String name) {

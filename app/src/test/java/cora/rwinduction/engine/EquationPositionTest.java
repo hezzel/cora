@@ -19,12 +19,12 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
-import charlie.exceptions.CustomParserException;
+import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
 
 class EquationPositionTest {
   @Test
-  public void testParseWithoutPosition() throws CustomParserException {
+  public void testParseWithoutPosition() throws PositionFormatException {
     EquationPosition pos = EquationPosition.parse("");
     assertTrue(pos.equals(EquationPosition.TOPLEFT));
     assertFalse(pos.equals(EquationPosition.TOPRIGHT));
@@ -45,7 +45,7 @@ class EquationPositionTest {
   }
 
   @Test
-  public void testParseWithPosition() throws CustomParserException {
+  public void testParseWithPosition() throws PositionFormatException {
     EquationPosition pos = EquationPosition.parse("L.1.2.ε");
     assertTrue(pos.querySide() == EquationPosition.Side.Left);
     assertTrue(pos.queryPosition().toString().equals("1.2"));
@@ -60,7 +60,7 @@ class EquationPositionTest {
   }
 
   @Test
-  public void testParsePartial() throws CustomParserException {
+  public void testParsePartial() throws PositionFormatException {
     EquationPosition pos = EquationPosition.parse("1.2.*3");
     assertTrue(pos.querySide() == EquationPosition.Side.Left);
     assertTrue(pos.queryPosition().toString().equals("1.2.☆3"));

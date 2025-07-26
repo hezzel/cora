@@ -106,7 +106,7 @@ class CommandAlterTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     assertTrue(createStep(module, "alter add a =") == null);
     assertTrue(module.toString().equals(
-      "Parsing error at position 14: Expected term, started by an identifier, λ, string or " +
+      "Parsing error at position 14: Expected term, started by an identifier, LAMBDA, string or " +
       "(, but got end of input.\n\n"));
   }
 

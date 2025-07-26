@@ -42,7 +42,7 @@ public class VarTest extends TermTestFoundation {
   @Test
   public void testSubtermRequest() {
     Variable x = new Var("x", baseType("o"));
-    assertThrows(IndexingException.class, () -> x.queryArgument(1));
+    assertThrows(IndexOutOfBoundsException.class, () -> x.queryArgument(1));
   }
 
   @Test
@@ -68,9 +68,7 @@ public class VarTest extends TermTestFoundation {
   @Test
   public void testBaseVariableApplication() {
     Term t = new Var("x", baseType("Int"));
-    assertThrows(ArityException.class, () -> t.apply(t));
-  }
-
+    assertThrows(TypingException.class, () -> t.apply(t)); }
   @Test
   public void testIllegalTypeApplication() {
     Term t = new Var("x", arrowType("a", "b"));
@@ -196,14 +194,14 @@ public class VarTest extends TermTestFoundation {
   public void testSubtermBad() {
     Term s = new Var("x", baseType("o"));
     Position p = new ArgumentPos(1, Position.empty);
-    assertThrows(IndexingException.class, () -> s.querySubterm(p));
+    assertThrows(InvalidPositionException.class, () -> s.querySubterm(p));
   }
 
   @Test
   public void testHeadSubtermBad() {
     Term s = new Var("x", baseType("o"));
     Position p = new ArgumentPos(1, Position.empty);
-    assertThrows(IndexingException.class, () -> s.querySubterm(p));
+    assertThrows(InvalidPositionException.class, () -> s.querySubterm(p));
   }
 
   @Test
@@ -225,14 +223,14 @@ public class VarTest extends TermTestFoundation {
   public void testSubtermReplacementBad() {
     Term s = new Var("x", baseType("o"));
     Position p = new MetaPos(1, Position.empty);
-    assertThrows(IndexingException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
+    assertThrows(InvalidPositionException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
   }
 
   @Test
   public void testHeadSubtermReplacementBad() {
     Term s = new Var("x", baseType("o"));
     Position p = new FinalPos(1);
-    assertThrows(IndexingException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
+    assertThrows(InvalidPositionException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
   }
 
   @Test

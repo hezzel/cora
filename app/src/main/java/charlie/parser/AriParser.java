@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,13 +15,14 @@
 
 package charlie.parser;
 
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
+import charlie.util.FixedList;
 import charlie.util.LookupMap;
-import charlie.types.*;
+import charlie.types.Type;
+import charlie.types.TypeFactory;
 import charlie.parser.lib.*;
 import charlie.parser.InfixManager.OperatorData;
 import charlie.parser.Parser.*;
@@ -116,13 +117,13 @@ public class AriParser {
     // case: ( IDENTIFIER term+ )
     Token main = _status.readNextIf(AriTokenData.IDENTIFIER);
     if (main != null) {
-      ImmutableList.Builder<ParserTerm> builder = ImmutableList.<ParserTerm>builder();
+      FixedList.Builder<ParserTerm> builder = new FixedList.Builder<ParserTerm>();
       while (_status.readNextIf(AriTokenData.BRACKETCLOSE) == null) {
         ParserTerm arg = readTerm();
         if (arg == null) { readUntilCloseBracket(); break; }
         builder.add(arg);
       }
-      ImmutableList<ParserTerm> args = builder.build();
+      FixedList<ParserTerm> args = builder.build();
       if (args.size() == 0) {
         _status.storeError(main, "Identifier without arguments should not be in brackets.");
       }
@@ -236,7 +237,7 @@ public class AriParser {
    *
    * Grammar: ( RULE term term )
    */
-  private void readRules(ImmutableList.Builder<ParserRule> rules) {
+  private void readRules(FixedList.Builder<ParserRule> rules) {
     Token ruletok;
     while (true) {
       Token open = _status.readNextIf(AriTokenData.BRACKETOPEN);
@@ -259,7 +260,7 @@ public class AriParser {
 
   private ParserProgram readTRS() {
     LookupMap.Builder<ParserDeclaration> symbols = new LookupMap.Builder<ParserDeclaration>();
-    ImmutableList.Builder<ParserRule> rules = ImmutableList.<ParserRule>builder();
+    FixedList.Builder<ParserRule> rules = new FixedList.Builder<ParserRule>();
 
     // read format line
     TrsFormat format = readFormat();

@@ -53,6 +53,10 @@ public record MetaPos(int index, Position tail) implements Position {
     return new MetaPos(this.index, this.tail.append(p));
   }
 
+  public int queryChopCount() {
+    return tail.queryChopCount();
+  }
+
   public int queryHead() {
     return - index;
   }

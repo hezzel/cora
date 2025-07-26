@@ -15,8 +15,6 @@
 
 package cora.data.digraph;
 
-import charlie.exceptions.IndexingException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -73,12 +71,13 @@ public class Digraph {
    * @param vertex the integer parameter to be checked as vertex
    * @param method the method in the class name
    *
-   * @throws IndexingException if the {@code vertex} parameter is out of bounds for this graph;
-   * that is, {@code vertex < 0 || vertex > this.getNumberOfVertices() - 1}.
+   * @throws IndexOutOfBoundsException if the {@code vertex} parameter is out of bounds for this
+   * graph; that is, {@code vertex < 0 || vertex > this.getNumberOfVertices() - 1}.
    */
   private void validateVertex(int vertex, String method) {
     if (vertex < 0 || vertex >= _numberOfVertices) {
-      throw new IndexingException("Digraph", method, vertex, 0, _numberOfVertices-1);
+      throw new IndexOutOfBoundsException("Digraph::" + method + "(" + vertex + ") called; " +
+        "expected a value between 0 and " + (_numberOfVertices - 1) + ".");
     }
   }
 
@@ -93,7 +92,7 @@ public class Digraph {
    * If such an edge is already present nothing is done since we do not allow for parallel edges.
    * @param originVertex the origin vertex
    * @param destinationVertex the destination vertex
-   * @throws IndexingException if {@code originVertex < 0} or {@code originVertex >=
+   * @throws IndexOutOfBoundsException if {@code originVertex < 0} or {@code originVertex >=
    *   getNumberOfVertices()} and, analogously, if
    *   {@code destinationVertex < 0} or {@code destinationVertex >= getNumberOfVertices()}
    */
@@ -114,8 +113,8 @@ public class Digraph {
    * {@code destinationVertex}.  If not present, nothing is done.
    * @param originVertex the origing vertex
    * @param destinationVertex the destination vertex
-   * @throws IndexingException if either the first or second parameter is out of bounds related
-   * to the number of vertices in the graph
+   * @throws IndexOutOfBoundsException if either the first or second parameter is out of bounds
+   * related to the number of vertices in the graph
    */
   public void removeEdge(int originVertex, int destinationVertex) {
     validateVertex(originVertex, "removeEdge");
@@ -132,7 +131,8 @@ public class Digraph {
    * that is, if there is an edge from {@code origin} to {@code destination}.
    * @param originVertex the origin vertex
    * @param destinationVertex the destination vertex
-   * @throws IndexingException if either {@code origin} or {@code destination} are out of bounds
+   * @throws IndexOutOfBoundsException if either {@code origin} or {@code destination} are out of
+   * bounds
    */
   public boolean isAdjacent(int originVertex, int destinationVertex) {
     validateVertex(originVertex,"isAdjacent");
@@ -160,7 +160,8 @@ public class Digraph {
    * point to a vertex that is not in the list.
    * @param vertices a list of vertices
    * @return the subgraph that has {@code vertices} as the set of vertex
-   * @throws IndexingException if any of the integers in the {@code vertices} list is out of bounds
+   * @throws IndexOutOfBoundsException if any of the integers in the {@code vertices} list is out of
+   * bounds
    */
   public Digraph getSubgraph(List<Integer> vertices) {
     // Note: the comments below are a bit long, but they are included because it is easy to get

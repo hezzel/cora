@@ -17,14 +17,13 @@ package charlie.theorytranslation;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import charlie.exceptions.UnsupportedTheoryException;
-import charlie.exceptions.TypingException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.TermFactory;
 import charlie.terms.TheoryFactory;
+import charlie.terms.TypingException;
 import charlie.smt.*;
 
 public class TermSmtTranslatorTest {

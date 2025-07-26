@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.ArrayList;
-import charlie.exceptions.IndexingException;
 import charlie.util.Pair;
 
 public final class Addition extends IntegerExpression {
@@ -90,9 +89,6 @@ public final class Addition extends IntegerExpression {
 
   /** For 1 ≤ index ≤ numChildren(), returns the corresponding child. */
   public IntegerExpression queryChild(int index) {
-    if (index <= 0 || index > _children.size()) {
-      throw new IndexingException("Addition", "queryChild", index, 1, _children.size());
-    }
     return _children.get(index-1);
   }
 

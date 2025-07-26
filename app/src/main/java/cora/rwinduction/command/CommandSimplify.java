@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.TreeSet;
 
-import charlie.exceptions.CustomParserException;
 import charlie.util.Pair;
 import charlie.util.FixedList;
 import charlie.terms.FunctionSymbol;
