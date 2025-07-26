@@ -50,11 +50,11 @@ Commonly, this is either ``~/.bashrc`` or ``~/.zshrc`` depending on which bash y
 
 You can invoke ``cora`` using files present in ``./benchmarks``.
 For instance,
-to run ``cora`` in the file ``./benchmarks/esop2024/factunit.lcstrs``,
+to run ``cora`` in the file ``./benchmarks/lcstrs/esop2024/factunit.lcstrs``,
 we execute the following command (from the root of this artifact).
 
 ```bash
-cora ./benchmarks/esop2024/factunit.lcstrs
+cora ./benchmarks/lcstrs/esop2024/factunit.lcstrs
 ```
 
 If everything is fine, the output should be:
