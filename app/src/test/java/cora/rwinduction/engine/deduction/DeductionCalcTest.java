@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.Optional;
 
-import charlie.exceptions.CustomParserException;
 import charlie.util.FixedList;
+import charlie.terms.position.PositionFormatException;
 import charlie.terms.Renaming;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -46,7 +46,7 @@ class DeductionCalcTest {
   }
 
   @Test
-  public void testImmediateStep() throws CustomParserException {
+  public void testImmediateStep() throws PositionFormatException {
     PartialProof pp = setupProof();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
@@ -62,7 +62,7 @@ class DeductionCalcTest {
   }
 
   @Test
-  public void testKnownCalculation() throws CustomParserException {
+  public void testKnownCalculation() throws PositionFormatException {
     PartialProof pp = setupProof();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
@@ -78,7 +78,7 @@ class DeductionCalcTest {
   }
 
   @Test
-  public void testMultipleKnownCalculations() throws CustomParserException {
+  public void testMultipleKnownCalculations() throws PositionFormatException {
     PartialProof pp = setupProof();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
@@ -96,7 +96,7 @@ class DeductionCalcTest {
   }
 
   @Test
-  public void testUnknownCalculation() throws CustomParserException {
+  public void testUnknownCalculation() throws PositionFormatException {
     PartialProof pp = setupProof();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
@@ -113,7 +113,7 @@ class DeductionCalcTest {
   }
 
   @Test
-  public void testMultipleUnknownCalculation() throws CustomParserException {
+  public void testMultipleUnknownCalculation() throws PositionFormatException {
     PartialProof pp = setupProof();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
@@ -131,7 +131,7 @@ class DeductionCalcTest {
   }
 
   @Test
-  public void testBiggerKnownCalculation() throws CustomParserException {
+  public void testBiggerKnownCalculation() throws PositionFormatException {
     PartialProof pp = setupProof();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
@@ -147,7 +147,7 @@ class DeductionCalcTest {
   }
 
   @Test
-  public void testBiggerUnknownCalculation() throws CustomParserException {
+  public void testBiggerUnknownCalculation() throws PositionFormatException {
     PartialProof pp = setupProof();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
@@ -162,7 +162,7 @@ class DeductionCalcTest {
   }
 
   @Test
-  public void testMultiStepRightOrder() throws CustomParserException {
+  public void testMultiStepRightOrder() throws PositionFormatException {
     PartialProof pp = setupProof();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
@@ -179,7 +179,7 @@ class DeductionCalcTest {
   }
 
   @Test
-  public void testMultistepWrongOrder() throws CustomParserException {
+  public void testMultistepWrongOrder() throws PositionFormatException {
     PartialProof pp = setupProof();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);

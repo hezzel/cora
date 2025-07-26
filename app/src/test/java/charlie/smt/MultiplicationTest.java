@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -53,8 +53,8 @@ public class MultiplicationTest {
   @Test
   public void testQueryBadChild() {
     Multiplication prod = new Multiplication(new IValue(0), new IVar(2));
-    assertThrows(charlie.exceptions.IndexingException.class, () -> prod.queryChild(0));
-    assertThrows(charlie.exceptions.IndexingException.class, () -> prod.queryChild(3));
+    assertThrows(java.lang.IndexOutOfBoundsException.class, () -> prod.queryChild(0));
+    assertThrows(java.lang.IndexOutOfBoundsException.class, () -> prod.queryChild(3));
   }
 
   @Test

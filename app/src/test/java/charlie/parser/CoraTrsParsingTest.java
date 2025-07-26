@@ -88,7 +88,7 @@ public class CoraTrsParsingTest {
   public void testEmptyEnvironment() {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = CoraParser.readRule("{ }  aa → aa", false, collector);
-    assertTrue(rule.toString().equals("{ [] } aa → aa"));
+    assertTrue(rule.toString().equals("{ [] } aa -> aa"));
     assertTrue(rule.vars().size() == 0);
     assertTrue(collector.queryErrorCount() == 0);
   }
@@ -162,7 +162,7 @@ public class CoraTrsParsingTest {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = CoraParser.readRule("{ x :: [a } aa -> aa", false, collector);
     assertTrue(rule.vars().size() == 0);
-    assertTrue(rule.toString().equals("{ [] } aa → aa"));
+    assertTrue(rule.toString().equals("{ [] } aa -> aa"));
     assertTrue(collector.toString().equals(
       "1:11: Expected comma or ] or ⟩ but got BRACECLOSE (}).\n"));
   }
@@ -172,7 +172,7 @@ public class CoraTrsParsingTest {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = CoraParser.readRule("{ x :: [a (), y :: Bool } aa -> aa", true, collector);
     assertTrue(rule.vars().size() == 0);
-    assertTrue(rule.toString().equals("{ [] } aa → aa"));
+    assertTrue(rule.toString().equals("{ [] } aa -> aa"));
     assertTrue(collector.toString().equals(
       "1:11: Expected comma or ] or ⟩ but got BRACKETOPEN (().\n" +
       "1:12: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n" +
@@ -195,9 +195,9 @@ public class CoraTrsParsingTest {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = CoraParser.readRule("{ x :: [b]}  aa -> aa", false, collector);
     assertTrue(rule.vars().size() == 0);
-    assertTrue(rule.toString().equals("{ [] } aa → aa"));
+    assertTrue(rule.toString().equals("{ [] } aa -> aa"));
     assertTrue(collector.toString().equals(
-      "1:11: Expected arrow operator → but got BRACECLOSE (}).\n"));
+      "1:11: Expected arrow operator -> but got BRACECLOSE (}).\n"));
   }
 
   @Test
@@ -205,7 +205,7 @@ public class CoraTrsParsingTest {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = CoraParser.readRule("{ x : a, y : b } aa -> aa", true, collector);
     assertTrue(rule.vars().size() == 0);
-    assertTrue(rule.toString().equals("{ [] } aa → aa"));
+    assertTrue(rule.toString().equals("{ [] } aa -> aa"));
     assertTrue(collector.toString().equals(
       "1:5: Expected declare symbol (::) but got COLON (:).\n" +
       "1:12: Expected declare symbol (::) but got COLON (:).\n"));
@@ -214,7 +214,7 @@ public class CoraTrsParsingTest {
   @Test
   public void testCorrectFirstOrderRule() {
     ParserRule rule = CoraParser.readRule("h(x, y) -> h(x, h(aa, y))");
-    assertTrue(rule.toString().equals("{ [] } @(h, [x, y]) → @(h, [x, @(h, [aa, y])])"));
+    assertTrue(rule.toString().equals("{ [] } @(h, [x, y]) -> @(h, [x, @(h, [aa, y])])"));
   }
 
   @Test
@@ -224,15 +224,15 @@ public class CoraTrsParsingTest {
     assertTrue(rule.vars().get("F").type().toString().equals("a → a"));
     assertTrue(rule.vars().get("F").extra() == 0);
     assertTrue(rule.toString().equals(
-      "{ [F] } @(h, [@(F, [aa]), bb]) → @(f, [@(F, [@(i, [bb])])])"));
+      "{ [F] } @(h, [@(F, [aa]), bb]) -> @(f, [@(F, [@(i, [bb])])])"));
   }
 
   @Test
   public void testCreatePatternRule() {
     ParserRule rule = CoraParser.readRule("map(λx.F[x], cons(H, T)) → " +
                                           "cons(F[H], map(λx::nat.F[x], T))");
-    assertTrue(rule.toString().equals("{ [] } @(map, [λx.F⟨[x]⟩, @(cons, [H, T])]) → " +
-      "@(cons, [F⟨[H]⟩, @(map, [λx::nat.F⟨[x]⟩, T])])"));
+    assertTrue(rule.toString().equals("{ [] } @(map, [LAMBDA x.F[[x]], @(cons, [H, T])]) -> " +
+      "@(cons, [F[[H]], @(map, [LAMBDA x::nat.F[[x]], T])])"));
   }
 
   @Test
@@ -247,7 +247,7 @@ public class CoraTrsParsingTest {
   @Test
   public void testCreateHigherOrderConstrainedRule() {
     ParserRule rule = CoraParser.readRule("rec(F, x, y) → F(x, y, rec(F, x-1, y)) | x > 0");
-    assertTrue(rule.toString().equals("{ [] } @(rec, [F, x, y]) → " +
+    assertTrue(rule.toString().equals("{ [] } @(rec, [F, x, y]) -> " +
       "@(F, [x, y, @(rec, [F, @(-, [x, 1]), y])]) | @(>, [x, 0])"));
   }
 
@@ -256,7 +256,7 @@ public class CoraTrsParsingTest {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = CoraParser.readRule(
       "app(F,x) -> F(x)|0 <= x ∧ (x < 10 ∨ x = 13)\naa -> aa", true, collector);
-    assertTrue(rule.toString().equals("{ [] } @(app, [F, x]) → @(F, [x]) | " +
+    assertTrue(rule.toString().equals("{ [] } @(app, [F, x]) -> @(F, [x]) | " +
       "@(∧, [@(≤, [0, x]), @(∨, [@(<, [x, 10]), @(=, [x, 13])])])"));
     // we stop reading at the right point
     assertTrue(collector.toString().equals(
@@ -267,7 +267,7 @@ public class CoraTrsParsingTest {
   public void testRuleWithHigherVariableInConstraint() {
     ParserRule rule = CoraParser.readRule("filter(F,cons(H,T)) -> cons(H, filter(F, T)) | F(H)");
     // nothing wrong with this, no erorrs while parsing! (that happens in the reader)
-    assertTrue(rule.toString().equals("{ [] } @(filter, [F, @(cons, [H, T])]) → " +
+    assertTrue(rule.toString().equals("{ [] } @(filter, [F, @(cons, [H, T])]) -> " +
       "@(cons, [H, @(filter, [F, T])]) | @(F, [H])"));
   }
 
@@ -277,7 +277,7 @@ public class CoraTrsParsingTest {
     try { CoraParser.readRule("() -> bb next x → x a b", false, collector); }
     catch (ParsingException e) {
       assertTrue(e.getMessage().equals("1:2: Expected term, started by " +
-      "an identifier, λ, string or (, but got BRACKETCLOSE ()).\n" +
+      "an identifier, LAMBDA, string or (, but got BRACKETCLOSE ()).\n" +
       // we do stop reading after bb
       "1:10: Expected end of input but got IDENTIFIER (next).\n"));
       return;
@@ -290,7 +290,7 @@ public class CoraTrsParsingTest {
     try { CoraParser.readRule("aa -> () next aa :: bb", true, new ErrorCollector()); }
     catch (ParsingException e) {
       assertTrue(e.getMessage().equals("1:8: Expected term, started by an " +
-        "identifier, λ, string or (, but got BRACKETCLOSE ()).\n" +
+        "identifier, LAMBDA, string or (, but got BRACKETCLOSE ()).\n" +
         "1:15: Expected end of input but got IDENTIFIER (aa).\n"));
       return;
     }
@@ -457,9 +457,9 @@ public class CoraTrsParsingTest {
     assertTrue(trs.fundecs().get("0").type().toString().equals("N"));
     assertTrue(trs.fundecs().get("s").type().toString().equals("N → N"));
     assertTrue(trs.fundecs().get("add").type().toString().equals("N → N → N"));
-    assertTrue(trs.rules().get(0).toString().equals("{ [] } @(add, [0, y]) → y"));
+    assertTrue(trs.rules().get(0).toString().equals("{ [] } @(add, [0, y]) -> y"));
     assertTrue(trs.rules().get(1).toString().equals(
-      "{ [] } @(add, [@(s, [x]), y]) → @(s, [@(add, [x, y])])"));
+      "{ [] } @(add, [@(s, [x]), y]) -> @(s, [@(add, [x, y])])"));
     assertTrue(collector.queryErrorCount() == 0);
   }
 
@@ -470,8 +470,8 @@ public class CoraTrsParsingTest {
     assertTrue(trs.fundecs().get("f").type().toString().equals("a → a → a"));
     assertTrue(trs.fundecs().get("b").type().toString().equals("b"));
     assertTrue(trs.fundecs().get("c").type().toString().equals("a"));
-    assertTrue(trs.rules().get(0).toString().equals("{ [] } @(f, [x, x]) → x"));
-    assertTrue(trs.rules().get(1).toString().equals("{ [] } b → b"));
+    assertTrue(trs.rules().get(0).toString().equals("{ [] } @(f, [x, x]) -> x"));
+    assertTrue(trs.rules().get(1).toString().equals("{ [] } b -> b"));
   }
 
   @Test
@@ -480,7 +480,7 @@ public class CoraTrsParsingTest {
       ParserProgram trs = CoraParser.readProgramFromString("f :: a -> a -> b :: c d :: e");
     }
     catch(ParsingException e) {
-      assertTrue(e.getMessage().equals("1:18: Expected term, started by an identifier, λ, " +
+      assertTrue(e.getMessage().equals("1:18: Expected term, started by an identifier, LAMBDA, " +
         "string or (, but got DECLARE (::).\n"));
       return;
     }
@@ -502,9 +502,10 @@ public class CoraTrsParsingTest {
     catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
         "2:17: Expected a comma or closing bracket ) but got MID (|).\n" +
-        "3:18: Expected term, started by an identifier, λ, string or (, but got " +
+        "3:18: Expected term, started by an identifier, LAMBDA, string or (, but got " +
           "BRACKETCLOSE ()).\n" +
-        "5:3: Expected term, started by an identifier, λ, string or (, but got DECLARE (::).\n" +
+        "5:3: Expected term, started by an identifier, LAMBDA, string or (, but got " +
+          "DECLARE (::).\n" +
         "7:4: Expected a closing bracket but got COMMA (,).\n"));
       return;
     }

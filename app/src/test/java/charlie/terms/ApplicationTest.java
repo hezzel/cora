@@ -58,7 +58,7 @@ public class ApplicationTest extends TermTestFoundation {
     args.add(constantTerm("c", baseType("a")));
     args.add(constantTerm("d", baseType("b")));
     args.add(constantTerm("e", baseType("a")));
-    assertThrows(ArityException.class, () -> new Application(x, args));
+    assertThrows(TypingException.class, () -> new Application(x, args));
   }
 
   @Test
@@ -69,7 +69,7 @@ public class ApplicationTest extends TermTestFoundation {
     List<Term> args = new ArrayList<Term>();
     args.add(constantTerm("d", baseType("b")));
     args.add(constantTerm("e", baseType("a")));
-    assertThrows(ArityException.class, () -> new Application(head, args));
+    assertThrows(TypingException.class, () -> new Application(head, args));
   }
 
   @Test
@@ -256,8 +256,8 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testIncorrectSubterm() {
     Term t = twoArgVarTerm();
-    assertThrows(IndexingException.class, () -> t.queryArgument(0));
-    assertThrows(IndexingException.class, () -> t.queryArgument(3));
+    assertThrows(IndexOutOfBoundsException.class, () -> t.queryArgument(0));
+    assertThrows(IndexOutOfBoundsException.class, () -> t.queryArgument(3));
   }
 
   @Test
@@ -624,14 +624,14 @@ public class ApplicationTest extends TermTestFoundation {
   public void testSubtermBad() {
     Term s = twoArgVarTerm();
     Position pos = new ArgumentPos(1, new ArgumentPos(2, Position.empty));
-    assertThrows(IndexingException.class, () -> s.querySubterm(pos));
+    assertThrows(InvalidPositionException.class, () -> s.querySubterm(pos));
   }
 
   @Test
   public void testHeadSubtermBad() {
     Term s = twoArgFuncTerm();
     Position pos = new ArgumentPos(2, new FinalPos(2));
-    assertThrows(IndexingException.class, () -> s.querySubterm(pos));
+    assertThrows(InvalidPositionException.class, () -> s.querySubterm(pos));
   }
 
   @Test
@@ -645,7 +645,7 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testSubtermInHeadReplacementGood() throws CustomParserException {
+  public void testSubtermInHeadReplacementGood() throws PositionFormatException {
     // (λxy.f(y,x))(a, b)
     Variable x = new Binder("x", baseType("o"));
     Variable y = new Binder("y", baseType("o"));
@@ -684,7 +684,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testSubtermReplacementBadPosition() {
     Variable z = new Var("Z", arrowType("Int", "Int"));
     Term s = new Application(z, constantTerm("37", baseType("Int")));
-    assertThrows(IndexingException.class, () ->
+    assertThrows(InvalidPositionException.class, () ->
       s.replaceSubterm(new ArgumentPos(2, Position.empty), s));
   }
 
@@ -692,7 +692,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testSubtermHeadReplacementBadPosition() {
     Variable z = new Var("Z", arrowType("Int", "Int"));
     Term s = new Application(z, constantTerm("37", baseType("Int")));
-    assertThrows(IndexingException.class, () ->
+    assertThrows(InvalidPositionException.class, () ->
       s.replaceSubterm(new ArgumentPos(2, new FinalPos(1)), s));
   }
 
@@ -700,7 +700,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testSubtermHeadReplacementBadHeadPosition() {
     Constant f = new Constant("f", arrowType("Int", "Int"));
     Term s = new Application(f, constantTerm("37", baseType("Int")));
-    assertThrows(IndexingException.class, () ->
+    assertThrows(InvalidPositionException.class, () ->
       s.replaceSubterm(new FinalPos(2), constantTerm("a", baseType("B"))));
   }
 
@@ -733,7 +733,7 @@ public class ApplicationTest extends TermTestFoundation {
   public void testApplyingBaseTerm() {
     Term s = twoArgVarTerm();
     Term t = constantTerm("37", baseType("Int"));
-    assertThrows(ArityException.class, () -> s.apply(t));
+    assertThrows(TypingException.class, () -> s.apply(t));
   }
 
   @Test

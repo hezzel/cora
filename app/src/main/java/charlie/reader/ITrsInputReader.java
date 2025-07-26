@@ -15,7 +15,6 @@
 
 package charlie.reader;
 
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
@@ -24,6 +23,7 @@ import java.util.TreeSet;
 import java.util.Stack;
 
 import charlie.exceptions.*;
+import charlie.util.FixedList;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.Token;
@@ -95,15 +95,15 @@ public class ITrsInputReader {
           case BoolVal(Token token, boolean istrue): continue;  // nothing to do
           case IntVal(Token token, int value): continue;        // nothing to do
           case Identifier(Token token, String name):
-            checkFunctionalArities(token, name, ImmutableList.of(), vars, ret);
+            checkFunctionalArities(token, name, FixedList.of(), vars, ret);
             continue;
           case Application(Token dummy, Identifier(Token token, String name),
-                           ImmutableList<ParserTerm> args):
+                           FixedList<ParserTerm> args):
             for (int j = args.size()-1; j >= 0; j--) terms.push(args.get(j));
             checkFunctionalArities(token, name, args, vars, ret);
             continue;
           case Application(Token dummy, CalcSymbol(Token token, String name),
-                           ImmutableList<ParserTerm> args):
+                           FixedList<ParserTerm> args):
             for (int j = args.size()-1; j >= 0; j--) terms.push(args.get(j));
             checkTheoryArities(token, name, args);
             continue;
@@ -117,7 +117,7 @@ public class ITrsInputReader {
   }
 
   /** Helper function for checkArities: checks a single term of the form f(s1,...,sn). */
-  private void checkFunctionalArities(Token token, String fname, ImmutableList<ParserTerm> args,
+  private void checkFunctionalArities(Token token, String fname, FixedList<ParserTerm> args,
                                       LookupMap<ParserDeclaration> vars,
                                       TreeMap<String,Integer> store) {
     // if it's a variable, it shouldn't be applied
@@ -141,7 +141,7 @@ public class ITrsInputReader {
    * Helper function for checkArities: checks a single term of the form f(s1,...,sn) where f is
    * a calculation symbol.
    */
-  private void checkTheoryArities(Token token, String fname, ImmutableList<ParserTerm> args) {
+  private void checkTheoryArities(Token token, String fname, FixedList<ParserTerm> args) {
     if (fname.equals(ITrsParser.NOT)) {
       if (args.size() != 1) {
         storeError("Encountered negation with " + args.size() + " arguments (expected: 1).", token);
@@ -210,9 +210,9 @@ public class ITrsInputReader {
       case Identifier(Token token, String name):
         if (vars.containsKey(name)) return varTypeNode(name, rule);
         else return funArgNode(name, 0);
-      case Application(Token t1, Identifier(Token t2, String name), ImmutableList<ParserTerm> a):
+      case Application(Token t1, Identifier(Token t2, String name), FixedList<ParserTerm> a):
         return funOutNode(name);
-      case Application(Token t1, CalcSymbol(Token t2, String name), ImmutableList<ParserTerm> a):
+      case Application(Token t1, CalcSymbol(Token t2, String name), FixedList<ParserTerm> a):
         if (name.equals(ITrsParser.PLUS) || name.equals(ITrsParser.MINUS) ||
             name.equals(ITrsParser.TIMES) || name.equals(ITrsParser.DIV) ||
             name.equals(ITrsParser.MOD)) return intNode();
@@ -245,7 +245,7 @@ public class ITrsInputReader {
       if (constr != null) todo.push(constr);
       while (!todo.isEmpty()) {
         ParserTerm t = todo.pop();
-        if (!(t instanceof Application(Token x, ParserTerm h, ImmutableList<ParserTerm> a))) continue;
+        if (!(t instanceof Application(Token x, ParserTerm h, FixedList<ParserTerm> a))) continue;
         for (ParserTerm u : a) todo.push(u);
         String base = null;
         if (h instanceof CalcSymbol(Token y, String name)) {
@@ -340,7 +340,7 @@ public class ITrsInputReader {
         x = TermFactory.createVar(name, expected);
         _symbols.addVariable(x);
         return x;
-      case Application(Token token, ParserTerm head, ImmutableList<ParserTerm> args):
+      case Application(Token token, ParserTerm head, FixedList<ParserTerm> args):
         f = readSymbol(head);
         ArrayList<Term> targs = new ArrayList<Term>();
         // a special case for minus, which can be used both in unary and binary notation in the

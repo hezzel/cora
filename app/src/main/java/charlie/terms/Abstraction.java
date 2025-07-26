@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import charlie.exceptions.*;
 import charlie.util.NullStorageException;
 import charlie.util.Pair;
 import charlie.types.Type;
@@ -137,7 +136,7 @@ class Abstraction extends TermInherit {
       case LambdaPos(Position tail):
         return _subterm.querySubterm(tail);
       default:
-        throw new IndexingException("Abstraction", "querySubterm", toString(), pos.toString());
+        throw new InvalidPositionException(this, pos, "querying subterm of an abstraction");
     }
   }
 
@@ -147,7 +146,7 @@ class Abstraction extends TermInherit {
       case LambdaPos(Position tail):
         return new Abstraction(_binder, _subterm.replaceSubterm(pos.queryTail(), replacement));
       default:  
-        throw new IndexingException("Abstraction", "replaceSubterm", toString(), pos.toString());
+        throw new InvalidPositionException(this, pos, "replacing subterm of an abstraction");
     }
   }
 

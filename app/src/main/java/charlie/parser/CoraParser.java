@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,10 +15,10 @@
 
 package charlie.parser;
 
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import charlie.util.FixedList;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.*;
@@ -271,7 +271,7 @@ public class CoraParser {
     if ((token = _status.readNextIf(CoraTokenData.NOT)) != null) {
       ParserTerm child = readMainTerm();
       if (child == null) return new CalcSymbol(token, NOT);
-      return new Application(token, new CalcSymbol(token, NOT), ImmutableList.of(child));
+      return new Application(token, new CalcSymbol(token, NOT), FixedList.of(child));
     }
 
     // MINUS mainterm
@@ -279,7 +279,7 @@ public class CoraParser {
       ParserTerm child = readMainTerm();
       if (child == null) return new CalcSymbol(token, MINUS);
       if (child instanceof IntVal(Token t, int v)) return new IntVal(token, -v);
-      return new Application(token, new CalcSymbol(token, MINUS), ImmutableList.of(child));
+      return new Application(token, new CalcSymbol(token, MINUS), FixedList.of(child));
     }
 
     // value
@@ -321,10 +321,10 @@ public class CoraParser {
 
     // TUPLEOPEN termlist TUPLECLOSE
     else if ((token = _status.readNextIf(CoraTokenData.TUPLEOPEN)) != null) {
-      ImmutableList<ParserTerm> args =
-        readTermList(CoraTokenData.TUPLECLOSE, "tuple closing bracket ⦈");
+      FixedList<ParserTerm> args =
+        readTermList(CoraTokenData.TUPLECLOSE, "tuple closing bracket |)");
       if (args == null || args.size() == 0) {
-        ret = new PErr(new Identifier(token, "⦇⦈"));
+        ret = new PErr(new Identifier(token, "(| |)"));
         if (args != null) _status.storeError(token, "Empty tuples are not allowed.");
       }
       else if (args.size() == 1) {
@@ -337,14 +337,14 @@ public class CoraParser {
     // IDENTIFIER
     else {
       token = _status.expect(CoraTokenData.IDENTIFIER, "term, started by an identifier, " +
-        "λ, string or (,");
+        "LAMBDA, string or (,");
       if (token == null) return null;
       Token next;
       // IDENTIFIER METAOPEN termlist METACLOSE
       if ((next = _status.readNextIf(CoraTokenData.METAOPEN)) != null) {
-        ImmutableList<ParserTerm> args = readTermList(CoraTokenData.METACLOSE,
-          "meta-closing bracket " + (next.getText().equals("[") ? "]" : "⟩"));
-        if (args == null) ret = new PErr(new Meta(token, token.getText(), ImmutableList.of()));
+        FixedList<ParserTerm> args = readTermList(CoraTokenData.METACLOSE,
+          "meta-closing bracket " + (next.getText().equals("⟨") ? "⟩" : "]"));
+        if (args == null) ret = new PErr(new Meta(token, token.getText(), FixedList.of()));
         else ret = new Meta(token, token.getText(), args);
       }
       // just IDENTIFIER (so a function symbol or variable)
@@ -353,7 +353,7 @@ public class CoraParser {
 
     // if we see an argument list, read it, and make the application structure
     while (_status.readNextIf(CoraTokenData.BRACKETOPEN) != null) {
-      ImmutableList<ParserTerm> args = readTermList(CoraTokenData.BRACKETCLOSE,"closing bracket )");
+      FixedList<ParserTerm> args = readTermList(CoraTokenData.BRACKETCLOSE,"closing bracket )");
       if (args == null) ret = new PErr(ret);
       else ret = new Application(ret.token(), ret, args);
     }
@@ -370,7 +370,7 @@ public class CoraParser {
    */
   private ParserTerm readAbstraction() {
     // read λ
-    if (_status.expect(CoraTokenData.LAMBDA, "a λ") == null) return null;
+    if (_status.expect(CoraTokenData.LAMBDA, "a LAMBDA") == null) return null;
     boolean errored = false;
 
     // read every (name,type) combination into (variables,type); when type is not given, this
@@ -440,7 +440,7 @@ public class CoraParser {
       }
     }
     if (!token.getName().equals(CoraTokenData.STRING)) {
-      throw new Error("Calling readValueStructure when it shouldn't be.");
+      throw new RuntimeException("Calling readValue when it shouldn't be.");
     }
     // take the token's text without the closing "
     StringBuilder text =
@@ -458,11 +458,11 @@ public class CoraParser {
   /**
    * termlist ::= ε [followName] | term (COMMA term)* [followName]
    *
-   * The terms are returned as an ImmutableList.
+   * The terms are returned as a FixedList.
    */
-  private ImmutableList<ParserTerm> readTermList(String followName, String followDescription) {
+  private FixedList<ParserTerm> readTermList(String followName, String followDescription) {
     // handle the case ε [followName]
-    if (_status.readNextIf(followName) != null) return ImmutableList.of();
+    if (_status.readNextIf(followName) != null) return FixedList.of();
 
     Token token;
     ArrayList<ParserTerm> ret = new ArrayList<ParserTerm>();
@@ -494,7 +494,7 @@ public class CoraParser {
       if (ret.size() == 0) return null;
       ret.set(ret.size()-1, new PErr(ret.get(ret.size()-1)));
     }
-    return ImmutableList.copyOf(ret);
+    return FixedList.copy(ret);
   }
 
   /**
@@ -598,7 +598,7 @@ public class CoraParser {
           }
         }
       }
-      _status.expect(CoraTokenData.ARROW, "arrow operator →");
+      _status.expect(CoraTokenData.ARROW, "arrow operator ->");
     }
     else _status.readNextIf(CoraTokenData.ARROW);
 
@@ -777,7 +777,7 @@ public class CoraParser {
 
   private ParserProgram readTRS() {
     LookupMap.Builder<ParserDeclaration> symbols = new LookupMap.Builder<ParserDeclaration>();
-    ImmutableList.Builder<ParserRule> rules = ImmutableList.<ParserRule>builder();
+    FixedList.Builder<ParserRule> rules = new FixedList.Builder<ParserRule>();
     while (!_status.peekNext().isEof()) {
       ParserDeclaration decl = tryReadDeclaration();
       if (decl == null) {

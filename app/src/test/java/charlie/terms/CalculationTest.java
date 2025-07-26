@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -100,19 +100,20 @@ public class CalculationTest extends TermTestFoundation {
   @Test
   public void testArgumentPositionRequest() {
     FunctionSymbol a = TheoryFactory.andSymbol;
-    assertThrows(IndexingException.class, () -> a.querySubterm(new ArgumentPos(1, Position.empty)));
+    assertThrows(InvalidPositionException.class, () ->
+      a.querySubterm(new ArgumentPos(1, Position.empty)));
   }
 
   @Test
   public void testHeadPositionRequest() {
     FunctionSymbol o = TheoryFactory.orSymbol;
-    assertThrows(IndexingException.class, () -> o.querySubterm(new FinalPos(1)));
+    assertThrows(InvalidPositionException.class, () -> o.querySubterm(new FinalPos(1)));
   }
 
   @Test
   public void testBadPositionReplacement() {
     FunctionSymbol plus = TheoryFactory.plusSymbol;
-    assertThrows(IndexingException.class, () ->
+    assertThrows(InvalidPositionException.class, () ->
       plus.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a"))));
   }
 }

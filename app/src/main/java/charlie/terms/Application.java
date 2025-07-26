@@ -77,15 +77,16 @@ class Application extends TermInherit {
       switch (type) {
         case Arrow(Type inp, Type out):
           if (!inp.equals(arg.queryType())) {
-            throw new TypingException("Application", "constructor", "arg " + (i+1) + " of " +
-              head.toString(), arg.queryType() == null ? "null" : arg.queryType().toString(),
-              inp.toString());
+            throw new TypingException("Could not construct application headed by ", head, ": " +
+              "argument " + (i+1) + " of the head has type ", inp, " while the given argument to " +
+              "be applied, ", arg, ", has type ", arg.queryType(), ".");
           }
           type = out;
           break;
         default:
-          throw new ArityException("Application", "constructor", "head term " + head.toString() +
-            " has maximum arity " + i + " and is given " + args.size() + " arguments.");
+          throw new TypingException("Could not construct application headed by ", head, " with " +
+            args.size() + " arguments: the head has type " + head.queryType(), ", which only " +
+            "permits " + i + " arguments!");
       }
     }
 
@@ -200,7 +201,8 @@ class Application extends TermInherit {
   /** For a term head(s1,...,sn), this returns si if 1 <= i <= n, and throws an error otherwise. */
   public Term queryArgument(int i) {
     if (i <= 0 || i > _args.size()) {
-      throw new IndexingException("Application", "queryArgument", i, 1, _args.size());
+      throw new IndexOutOfBoundsException("Application::queryArgument(" + i + ") called on " +
+        "application with " + _args.size() + " arguments. (" + toString() + ")");
     }
     return _args.get(i-1);
   }
@@ -213,7 +215,8 @@ class Application extends TermInherit {
   /** For a term h(s1,...,sn) this returns h(s1,...,si). */
   public Term queryImmediateHeadSubterm(int i) {
     if (i < 0 || i > _args.size()) {
-      throw new IndexingException("Application", "queryImmediateHeadSubterm", i, 0, _args.size());
+      throw new IndexOutOfBoundsException("Application::queryImmediateHeadSubterm(" + i + ") " +
+        "called on application with " + _args.size() + " arguments (" + toString() + ")");
     }   
     if (i == 0) return _head;
     return new Application(_head, _args.subList(0, i));
@@ -303,12 +306,14 @@ class Application extends TermInherit {
     switch (pos) {
       case FinalPos(int k):
         if (k > _args.size()) {
-          throw new IndexingException("Application", "querySubterm", toString(), pos.toString());
+          throw new InvalidPositionException(this, pos,
+            "querying subterm with excessive chop count in application");
         }
         return _head.apply(_args.subList(0, _args.size() - k));
       case ArgumentPos(int index, Position tail):
         if (index > _args.size()) {
-          throw new IndexingException("Application", "querySubterm", toString(), pos.toString());
+          throw new InvalidPositionException(this, pos,
+            "querying subterm in non-existing argument of application");
         }
         return _args.get(index-1).querySubterm(tail);
       default:
@@ -318,26 +323,31 @@ class Application extends TermInherit {
 
   /**
    * @return a copy of the term with the subterm at the given (non-empty) position replaced by
-   * replacement, if such a position exists; otherwise throws an IndexingException.
+   * replacement, if such a position exists; otherwise throws an InvalidPositionException.
    */
   public Term replaceSubtermMain(Position pos, Term replacement) {
     switch (pos) {
       case FinalPos(int k):
         if (k > _args.size()) {
-          throw new IndexingException("Application", "replaceSubterm", toString(), pos.toString());
+          throw new InvalidPositionException(this, pos,
+            "replacing subterm with excessive chop count in application");
         }
         Type type = queryType();
         for (int i = 1; i <= k; i++) {
           type = TypeFactory.createArrow(_args.get(_args.size()-i).queryType(), type);
         }
         if (!type.equals(replacement.queryType())) {
-          throw new TypingException("Application", "replaceSubterm", "replacement term " +
-            replacement.toString(), replacement.queryType().toString(), type.toString());
+          Term t = k == 0 ? this : k == _args.size() ? _head
+                          : new Application(_head, _args.subList(0, _args.size()-k));
+          throw new TypingException("Typing error when replacing a subterm: I cannot replace ", t,
+            " by ", replacement, " since the former has type ", type, " while the latter has type ",
+            replacement.queryType(), ".");
         }
         return replacement.apply(_args.subList(_args.size()-k, _args.size()));
       case ArgumentPos(int index, Position tail):
         if (index > _args.size()) {
-          throw new IndexingException("Application", "replaceSubterm", toString(), pos.toString());
+          throw new InvalidPositionException(this, pos,
+            "replacing subterm in non-existing argument of application");
         }
         ArrayList<Term> lst = new ArrayList<Term>(_args);
         lst.set(index-1, _args.get(index-1).replaceSubterm(tail, replacement));

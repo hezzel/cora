@@ -53,9 +53,9 @@ class MetaApplication extends TermInherit {
         "without arguments is just a non-binder variable.");
     }
     if (args.size() != mvar.queryArity()) {
-      throw new ArityException("MetaApplication", "constructor", "meta-variable " +
-        mvar.queryName() + " has arity " + mvar.queryArity() + " but " + args.size() +
-        " arguments are given.");
+      throw new TypingException("Arity error constructing meta-variable application: " +
+        "meta-variable ", mvar, " has arity " + mvar.queryArity() + " but is given " +
+        args.size() + " arguments.");
     }
 
     for (int i = 0; i < args.size(); i++) {
@@ -65,8 +65,9 @@ class MetaApplication extends TermInherit {
           "meta-variable application for " + mvar.queryName() + ".");
       }
       if (!arg.queryType().equals(mvar.queryInputType(i+1))) {
-        throw new TypingException("MetaApplication", "constructor", "arg " + (i+1) + " of " +
-          mvar.toString(), arg.queryType().toString(), mvar.queryInputType(i+1).toString());
+        throw new TypingException("Typing error constructing meta-variable application: " +
+          "imput type " + (i+1) + " of meta-variable ", mvar, " is ", mvar.queryInputType(i+1) +
+          ", while the argument term ", arg, " has type ", arg.queryType());
       }
     }
     ImmutableList.Builder<Term> builder = ImmutableList.<Term>builder();
@@ -121,7 +122,8 @@ class MetaApplication extends TermInherit {
   /** If this term is Z⟨s1,...,sk⟩, returns si. */
   public Term queryMetaArgument(int i) {
     if (i <= 0 || i > _args.size()) {
-      throw new IndexingException("MetaApplication", "queryMetaArgument", i, 1, _args.size());
+      throw new IndexOutOfBoundsException("MetaApplication::queryMetaArgument(" + i + ") called " +
+        "on meta-variable application with " + _args.size() + " arguments.");
     }
     return _args.get(i-1);
   }
@@ -174,13 +176,13 @@ class MetaApplication extends TermInherit {
       case MetaPos(int index, Position tail):
         if (index <= _args.size()) return _args.get(index-1).querySubterm(tail);
       default:
-        throw new IndexingException("MetaApplication", "querySubterm", toString(), pos.toString());
+        throw new InvalidPositionException(this, pos, "querying subterm of meta-application");
     }
   }
 
   /**
    * @return a copy of the term with the subterm at the given (non-empty) position replaced by
-   * replacement, if such a position exists; otherwise throws an IndexingException.
+   * replacement, if such a position exists; otherwise throws an InvalidPositionException.
    */
   public Term replaceSubtermMain(Position pos, Term replacement) {
     switch (pos) {
@@ -191,7 +193,7 @@ class MetaApplication extends TermInherit {
           return new MetaApplication(_metavar, newargs);
         }
       default:
-        throw new IndexingException("MetaApplication","replaceSubterm",toString(),pos.toString());
+        throw new InvalidPositionException(this, pos, "replacing subterm of meta-application");
     }
   }
 
@@ -210,9 +212,9 @@ class MetaApplication extends TermInherit {
     Term v = value;
     for (int i = 0; i < newArgs.size(); i++) {
       if (!v.isAbstraction()) {
-        throw new ArityException("MetaApplication", "substitute", "trying to substitute " +
-          "meta-variable in " + toString() + " by " + value.toString() +
-          ": there should be " + newArgs.size() + " abstractions!");
+        throw new TypingException("Arity error when trying to substitute ", _metavar, " by ",
+          value, ": meta-variable takes " + newArgs.size() + " arguments, so there should be " +
+          "at least this many abstractions!");
       }
       Variable x = v.queryVariable();
       v = v.queryAbstractionSubterm();

@@ -17,8 +17,8 @@ package charlie.parser;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import com.google.common.collect.ImmutableList;
 
+import charlie.util.FixedList;
 import charlie.types.TypeFactory;
 import charlie.parser.lib.Token;
 import charlie.parser.lib.ParsingStatus;
@@ -58,10 +58,10 @@ public class ParserTermTest {
     ParserTerm b = new Lambda(t, "x", TypeFactory.intSort, a);
     ParserTerm c = new Identifier(t, "aa");
     ParserTerm h = new Identifier(t, "f");
-    ImmutableList<ParserTerm> goodlst = ImmutableList.of(a, c);
-    ImmutableList<ParserTerm> badlst1 = ImmutableList.of(a, new PErr(c));
-    ImmutableList<ParserTerm> badlst2 = ImmutableList.of(new PErr(a), c);
-    ImmutableList<ParserTerm> badlst3 = ImmutableList.of(new PErr(a), new PErr(c));
+    FixedList<ParserTerm> goodlst = FixedList.of(a, c);
+    FixedList<ParserTerm> badlst1 = FixedList.of(a, new PErr(c));
+    FixedList<ParserTerm> badlst2 = FixedList.of(new PErr(a), c);
+    FixedList<ParserTerm> badlst3 = FixedList.of(new PErr(a), new PErr(c));
 
     ParserTerm d1 = new Meta(t, "Z", goodlst);
     ParserTerm d2 = new Meta(t, "Z", badlst1);

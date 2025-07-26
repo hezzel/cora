@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,10 +15,10 @@
 
 package charlie.parser;
 
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import charlie.util.FixedList;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.ErrorCollector;
@@ -165,7 +165,7 @@ public class ITrsParser extends FirstOrderParser implements Parser {
     if (head == null) return null;
     ParserTerm ret = readMainTerm();
     if (ret == null) return null;
-    return new Application(token, head, ImmutableList.of(ret));
+    return new Application(token, head, FixedList.of(ret));
   }
 
   /** bracketedterm ::= BRACKETOPEN term BRACKETCLOSE */
@@ -237,7 +237,7 @@ public class ITrsParser extends FirstOrderParser implements Parser {
   private ParserProgram readTRS() {
     LookupMap<ParserDeclaration> vars = readVarList();
     if (vars == null) vars = LookupMap.<ParserDeclaration>empty();
-    ImmutableList<ParserRule> rules = readRules(vars);
+    FixedList<ParserRule> rules = readRules(vars);
     if (!readComment()) _status.expect(Token.EOF, "end of input");
     return new ParserProgram(LookupMap.<ParserDeclaration>empty(), rules);
   }

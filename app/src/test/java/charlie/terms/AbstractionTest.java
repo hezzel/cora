@@ -21,11 +21,13 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
 import charlie.exceptions.*;
 import charlie.util.Pair;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
 
 class AbstractionTest extends TermTestFoundation {
@@ -220,7 +222,7 @@ class AbstractionTest extends TermTestFoundation {
 
   @Test
   void testImmediateheadSubterm() {
-    assertThrows(IndexingException.class, () -> {
+    assertThrows(IndexOutOfBoundsException.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
       term.queryImmediateHeadSubterm(1);
     });
@@ -295,7 +297,7 @@ class AbstractionTest extends TermTestFoundation {
   }
 
   @Test
-  public void testQuerySubtermGood() throws CustomParserException {
+  public void testQuerySubtermGood() throws PositionFormatException {
     // λx.f(x, λy.y)
     Variable x = new Binder("x", baseType("o"));
     Term term = makeTerm(x);
@@ -304,7 +306,7 @@ class AbstractionTest extends TermTestFoundation {
   }
 
   @Test
-  public void testQueryPartialSubtermGood() throws CustomParserException {
+  public void testQueryPartialSubtermGood() throws PositionFormatException {
     Variable x = new Binder("x", baseType("o"));
     Term term = makeTerm(x);
     Position pos = Position.parse("0.☆1");
@@ -312,23 +314,23 @@ class AbstractionTest extends TermTestFoundation {
   }
 
   @Test
-  void testBadArgumentPositionRequest() throws CustomParserException {
-    assertThrows(IndexingException.class, () -> {
+  void testBadArgumentPositionRequest() throws PositionFormatException {
+    assertThrows(InvalidPositionException.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
       term.querySubterm(Position.parse("1.ε"));
     });
   }
 
   @Test
-  void testBadPartialPositionRequest() throws CustomParserException {
-    assertThrows(IndexingException.class, () -> {
+  void testBadPartialPositionRequest() throws PositionFormatException {
+    assertThrows(InvalidPositionException.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
       term.querySubterm(Position.parse("1.2.☆1"));
     });
   }
 
   @Test
-  public void testReplaceSubtermGood() throws CustomParserException {
+  public void testReplaceSubtermGood() throws PositionFormatException {
     Term h = constantTerm("h", arrowType("a", "a"));
     Variable x = new Binder("x", baseType("b"));
     Variable y = new Binder("y", baseType("b"));
@@ -342,15 +344,15 @@ class AbstractionTest extends TermTestFoundation {
   }
 
   @Test
-  void testBadPositionReplacement() throws CustomParserException {
-    assertThrows(IndexingException.class, () -> {
+  void testBadPositionReplacement() throws PositionFormatException {
+    assertThrows(InvalidPositionException.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
       term.replaceSubterm(Position.parse("1"), constantTerm("a", baseType("o")));
     });
   }
 
   @Test
-  void testBadTypeReplacement() throws CustomParserException {
+  void testBadTypeReplacement() throws PositionFormatException {
     assertThrows(TypingException.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
       term.replaceSubterm(Position.parse("0.2"), constantTerm("a", baseType("o")));
@@ -358,7 +360,7 @@ class AbstractionTest extends TermTestFoundation {
   }
 
   @Test
-  public void testReplacePartialSubtermGood() throws CustomParserException {
+  public void testReplacePartialSubtermGood() throws PositionFormatException {
     Term term = makeTerm(new Binder("x", baseType("o")));
     Term h = constantTerm("h", arrowType(arrowType("a", "a"), baseType("b")));
     Term a = constantTerm("A", arrowType("o", "b"));
@@ -369,31 +371,31 @@ class AbstractionTest extends TermTestFoundation {
   }
 
   @Test
-  void testReplaceHeadOfAbstraction() throws CustomParserException {
-    assertThrows(IndexingException.class, () -> {
+  void testReplaceHeadOfAbstraction() throws PositionFormatException {
+    assertThrows(InvalidPositionException.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
       term.replaceSubterm(Position.parse("*1"), constantTerm("a", baseType("o")));
     });
   }
 
   @Test
-  void testNonExistentInternalPartialPosition() throws CustomParserException {
-    assertThrows(IndexingException.class, () -> {
+  void testNonExistentInternalPartialPosition() throws PositionFormatException {
+    assertThrows(InvalidPositionException.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
       term.replaceSubterm(Position.parse("0.0"), constantTerm("a", baseType("o")));
     });
   }
 
   @Test
-  void testNonExistingPartialPosition() throws CustomParserException {
-    assertThrows(IndexingException.class, () -> {
+  void testNonExistingPartialPosition() throws PositionFormatException {
+    assertThrows(InvalidPositionException.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
       term.replaceSubterm(Position.parse("1"), constantTerm("a", baseType("b")));
     });
   }
 
   @Test
-  void testReplaceHeadWithIllTyped() throws CustomParserException {
+  void testReplaceHeadWithIllTyped() throws PositionFormatException {
     assertThrows(TypingException.class, () -> {
       Term term = makeTerm(new Binder("x", baseType("o")));
       term.replaceSubterm(Position.parse("ε"), constantTerm("a", baseType("b")));

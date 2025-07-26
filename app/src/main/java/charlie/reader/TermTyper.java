@@ -15,10 +15,10 @@
 
 package charlie.reader;
 
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 
 import charlie.exceptions.*;
+import charlie.util.FixedList;
 import charlie.types.*;
 import charlie.parser.lib.Token;
 import charlie.parser.lib.ParsingErrorMessage;
@@ -98,13 +98,13 @@ class TermTyper {
         return makeCalculationSymbol(t, name, expectedType);
       case Identifier(Token t, String name):
         return makeIdentifier(t, name, expectedType, typeShouldBeDerivable);
-      case Meta(Token t, String name, ImmutableList<ParserTerm> args):
+      case Meta(Token t, String name, FixedList<ParserTerm> args):
         return makeMeta(t, name, args, expectedType, typeShouldBeDerivable);
       case Lambda(Token t, String varname, Type type, ParserTerm arg):
         return makeAbstraction(t, varname, type, arg, expectedType, typeShouldBeDerivable);
-      case Tup(Token t, ImmutableList<ParserTerm> args):
+      case Tup(Token t, FixedList<ParserTerm> args):
         return makeTuple(t, args, expectedType, typeShouldBeDerivable);
-      case Application(Token t, ParserTerm head, ImmutableList<ParserTerm> args):
+      case Application(Token t, ParserTerm head, FixedList<ParserTerm> args):
         return makeApplication(t, head, args, expectedType, typeShouldBeDerivable);
       case PErr(ParserTerm t):
         return makeTerm(t, expectedType, typeShouldBeDerivable);
@@ -212,7 +212,7 @@ class TermTyper {
    * not derivable when it should be, or if the arity does not match previous usage of this
    * meta-variable.
    */
-  private Term makeMeta(Token token, String name, ImmutableList<ParserTerm> args, Type expected,
+  private Term makeMeta(Token token, String name, FixedList<ParserTerm> args, Type expected,
                         boolean typeShouldBeDerivable) {
     // no arguments are supplied -- it's actually a free variable
     if (args.size() == 0) return makeFreeVarTerm(token, name, expected, typeShouldBeDerivable);
@@ -300,7 +300,7 @@ class TermTyper {
   /**
    * This function handles a ParserTerm mvar[children], when mvar has already been declared.
    */
-  private Term makeKnownMetaTerm(Token token, MetaVariable mvar, ImmutableList<ParserTerm> children,
+  private Term makeKnownMetaTerm(Token token, MetaVariable mvar, FixedList<ParserTerm> children,
                                  Type expected) {
 
     ArrayList<Term> args = new ArrayList<Term>();
@@ -340,7 +340,7 @@ class TermTyper {
    * the epxected type; if not, then it is wrapped to ensure that the return value has the
    * expected type. (If expected == null, any type suffices.)
    */
-  private Term makeTuple(Token token, ImmutableList<ParserTerm> elems, Type expected,
+  private Term makeTuple(Token token, FixedList<ParserTerm> elems, Type expected,
                          boolean typeShouldBeDerivable) {
     // handle the correct case first
     if (elems.size() >= 2 && (expected == null ||
@@ -450,7 +450,7 @@ class TermTyper {
    * it matches the expected type.  This checks a few special cases of theory terms, and otherwise
    * delegates the work to makeStandardApplication.
    */
-  private Term makeApplication(Token token, ParserTerm apphead, ImmutableList<ParserTerm> args,
+  private Term makeApplication(Token token, ParserTerm apphead, FixedList<ParserTerm> args,
                                Type expected, boolean typeShouldBeDerivable) {
     switch (apphead) {
       case CalcSymbol(Token t, String name):
@@ -484,7 +484,7 @@ class TermTyper {
    * it matches the expected type.  We require that the term at the head of an application can
    * always figure out its own type, so the expected type is only used for checking here.
    */
-  private Term makeStandardApplication(Token token, ParserTerm apphead, ImmutableList<ParserTerm>
+  private Term makeStandardApplication(Token token, ParserTerm apphead, FixedList<ParserTerm>
                                        args, Type expected, boolean typeShouldBeDerivable) {
     Term head = makeTerm(apphead, null, true);
     if (head.queryType().queryArity() >= args.size()) {
@@ -513,7 +513,7 @@ class TermTyper {
    * Creates a fake term of the given output type, representing the head applied to the given
    * arguments.
    */
-  private Term makeFakeApplication(String head, ImmutableList<ParserTerm> args, Type exp) {
+  private Term makeFakeApplication(String head, FixedList<ParserTerm> args, Type exp) {
     // read arguments
     ArrayList<Term> parts = new ArrayList<Term>();
     for (int i = 0; i < args.size(); i++) parts.add(makeTerm(args.get(i), null, false));
@@ -533,7 +533,7 @@ class TermTyper {
    * and unary form, and sometimes even to construct an integer.
    * Here, args.size() 
    */
-  private Term makeMinusApplication(Token token, ImmutableList<ParserTerm> args, Type expected) {
+  private Term makeMinusApplication(Token token, FixedList<ParserTerm> args, Type expected) {
     if (args.size() == 0) return makeCalculationSymbol(token, CoraParser.MINUS, expected);
     ArrayList<Term> targs = new ArrayList<Term>();
     for (int i = 0; i < args.size(); i++) {
@@ -571,7 +571,7 @@ class TermTyper {
    * Note that this is only called if the type cannot be derived from the expected type.
    */
   private Term makeOverloadedApplication(Token token, String name,
-                                         ImmutableList<ParserTerm> args, Type expected) {
+                                         FixedList<ParserTerm> args, Type expected) {
     Term arg1, arg2;
 
     // error case: too many arguments are given

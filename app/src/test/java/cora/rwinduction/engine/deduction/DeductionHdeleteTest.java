@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.Optional;
 
-import charlie.exceptions.CustomParserException;
 import charlie.util.FixedList;
+import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
 import charlie.terms.*;
 import charlie.trs.TRS;
@@ -136,7 +136,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testSuccessfulStepInContext() throws CustomParserException {
+  public void testSuccessfulStepInContext() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(x) + 13", "sum1(x) + 12", "sum2(y) + 12", "x = y",
       "sum2(y) + 13", "sum1(a) = sum2(b) | b >= a");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -155,7 +155,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testFailedContextPositionDoesNotExist() throws CustomParserException {
+  public void testFailedContextPositionDoesNotExist() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(sum1(x))", "sum1(sum1(x))", "12 + sum2(y)", "x > y",
       "sum2(y) + 13", "sum1(a) = sum2(b) | b >= a");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -167,7 +167,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testFailedContextSubtermDoesNotMatch() throws CustomParserException {
+  public void testFailedContextSubtermDoesNotMatch() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(sum1(x))", "sum1(y) + 12", "12 + sum2(y)", "x > y",
       "sum2(y) + 13", "sum1(a) = sum2(b) | b >= a");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -179,7 +179,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testFailedContextDifferentContext() throws CustomParserException {
+  public void testFailedContextDifferentContext() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(sum1(x))", "13 + sum1(x)", "12 + sum2(y)", "x > y",
       "sum2(y) + 13", "sum1(a) = sum2(b) | b >= a");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -191,7 +191,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testFailedContextDifferentTypes() throws CustomParserException {
+  public void testFailedContextDifferentTypes() throws PositionFormatException {
     PartialProof pp = setupProof("toint(x) = sum2(sum1(y)) | x ∧ y = 1", "sum1(z) = z | z = 1");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
@@ -202,7 +202,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testContextAtPartialPosition() throws CustomParserException {
+  public void testContextAtPartialPosition() throws PositionFormatException {
     PartialProof pp = setupProof("sum2(x)", "3 + sum1(x)", "3 + iter(0, 0, x)","x = 0",
       "sum2(0)", "sum1 = iter(0,0)");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -221,7 +221,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testContextFailsInPartialPosition() throws CustomParserException {
+  public void testContextFailsInPartialPosition() throws PositionFormatException {
     PartialProof pp = setupProof("x + sum1(1) = x + iter(0, 0, 2) | x = 0", "sum1 = iter(0,0)");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
@@ -232,7 +232,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testImpossibleOrderingRequirement() throws CustomParserException {
+  public void testImpossibleOrderingRequirement() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(x)", "sum1(x)", "sum2(x)", "x > 0", "sum2(x)",
       "sum1(x) = sum2(x)");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -245,7 +245,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testPossibleOrderingRequirementDueToPartial() throws CustomParserException {
+  public void testPossibleOrderingRequirementDueToPartial() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(x)", "sum1(x)", "sum2(x)", "x > 0", "sum2(x)",
       "sum1 = sum2");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -259,7 +259,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testFigureOutFreshVariablesOnOtherSide() throws CustomParserException {
+  public void testFigureOutFreshVariablesOnOtherSide() throws PositionFormatException {
     PartialProof pp = setupProof("iter(0, 0, sum1(x)) = iter(0, 0, sum2(y)) | x = z ∧ z = y",
                                  "sum2(b) = sum1(a) | a = c ∧ c = b");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -271,7 +271,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testFreshVariablesDontQuiteMatch() throws CustomParserException {
+  public void testFreshVariablesDontQuiteMatch() throws PositionFormatException {
     PartialProof pp = setupProof("iter(0, 0, sum1(2+x)) = iter(0, 0, sum2(y+2))",
                                  "sum1(z+a) = sum2(a+z) | z > 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -283,7 +283,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testUnknowableVariablesInConstraint() throws CustomParserException {
+  public void testUnknowableVariablesInConstraint() throws PositionFormatException {
     PartialProof pp = setupProof("iter(0, 0, sum1(x)) = iter(0, 0, sum2(y)) | x = y",
                                  "sum2(b) = sum1(a) | a ≥ c ∧ c ≥ b");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -296,7 +296,7 @@ class DeductionHdeleteTest {
   }
 
   @Test
-  public void testSupplySubstitution() throws CustomParserException {
+  public void testSupplySubstitution() throws PositionFormatException {
     PartialProof pp = setupProof("iter(0, 0, sum1(x)) = iter(0, 0, sum2(y)) | x = y",
                                  "sum1(b) = sum2(a) | a ≥ c ∧ c ≥ b");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");

@@ -390,7 +390,7 @@ public class OCocoParserTest {
     ErrorCollector collector = new ErrorCollector();
     ParserRule rule = OCocoParser.readRule("f(x,s(y)) -> f(s(x), y)", collector);
     assertTrue(collector.queryErrorCount() == 0);
-    assertTrue(rule.toString().equals("{ [] } @(f, [x, @(s, [y])]) → @(f, [@(s, [x]), y])"));
+    assertTrue(rule.toString().equals("{ [] } @(f, [x, @(s, [y])]) -> @(f, [@(s, [x]), y])"));
   }
 
   @Test
@@ -449,9 +449,9 @@ public class OCocoParserTest {
     assertTrue(trs.rules().get(0).vars().size() == 2);
     assertTrue(trs.rules().get(0).vars().get("x").type().toString().equals("o"));
     assertTrue(trs.rules().get(0).vars().get("y").type().toString().equals("o"));
-    assertTrue(trs.rules().get(0).toString().equals("{ [x, y] } @(+, [x, 0]) → x"));
+    assertTrue(trs.rules().get(0).toString().equals("{ [x, y] } @(+, [x, 0]) -> x"));
     assertTrue(trs.rules().get(1).toString().equals(
-      "{ [x, y] } @(+, [x, @(s, [y])]) → @(s, [@(+, [x, y])])"));
+      "{ [x, y] } @(+, [x, @(s, [y])]) -> @(s, [@(+, [x, y])])"));
   }
 
   @Test
@@ -467,7 +467,7 @@ public class OCocoParserTest {
     assertTrue(trs.fundecs().get("0").type().toString().equals("o"));
     assertTrue(trs.fundecs().get("append").type().toString().equals("o → o → o"));
     assertTrue(trs.rules().size() == 2);
-    assertTrue(trs.rules().get(0).toString().equals("{ [x, xs, ys] } @(append, [nil, zs]) → zs"));
+    assertTrue(trs.rules().get(0).toString().equals("{ [x, xs, ys] } @(append, [nil, zs]) -> zs"));
   }
 
   @Test
@@ -489,7 +489,7 @@ public class OCocoParserTest {
     assertTrue(trs.fundecs().size() == 6);
     assertTrue(trs.fundecs().get("nil").type().toString().equals("List"));
     assertTrue(trs.rules().size() == 4);
-    assertTrue(trs.rules().get(2).toString().equals("{ [] } @(len, [nil]) → 0"));
+    assertTrue(trs.rules().get(2).toString().equals("{ [] } @(len, [nil]) -> 0"));
   }
 
   @Test

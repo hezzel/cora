@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,7 +18,6 @@ package charlie.smt;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import charlie.exceptions.IndexingException;
 
 public final class Multiplication extends IntegerExpression {
   protected ArrayList<IntegerExpression> _children;
@@ -58,7 +57,8 @@ public final class Multiplication extends IntegerExpression {
 
   public IntegerExpression queryChild(int index) {
     if (index <= 0 || index > _children.size()) {
-      throw new IndexingException("Multiplication", "queryChild", index, 1, _children.size());
+      throw new IndexOutOfBoundsException("Multiplication::queryChild(" + index + ") called on " +
+        "a Multiplication with " + _children.size() + " children! (" + toString() + ")");
     }
     return _children.get(index-1);
   }

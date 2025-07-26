@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.Optional;
 
-import charlie.exceptions.CustomParserException;
 import charlie.util.FixedList;
 import charlie.terms.Term;
 import charlie.terms.Renaming;

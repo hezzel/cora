@@ -133,9 +133,6 @@ public class Tuple extends TermInherit {
 
   @Override
   public Term queryTupleArgument(int i) {
-    if (i <= 0 || i > _components.size()) {
-      throw new IndexingException("Tuple", "queryTupleArgument", i, 1, _components.size());
-    }
     return _components.get(i-1);
   }
 
@@ -207,7 +204,7 @@ public class Tuple extends TermInherit {
 
   /**
    * Returns the subterm at the given (non-empty) position, assuming that this is indeed a position
-   * of the current term.  If not, an IndexingException is thrown.
+   * of the current term.  If not, an InvalidPositionException is thrown.
    */
   @Override
   public Term querySubtermMain(Position pos) {
@@ -217,7 +214,7 @@ public class Tuple extends TermInherit {
           return _components.get(index-1).querySubterm(tail);
         }
       default:
-        throw new IndexingException("Tuple", "querySubterm", toString(), pos.toString());
+        throw new InvalidPositionException(this, pos, "querying subterm of tuple");
     }
   }
 
@@ -235,7 +232,7 @@ public class Tuple extends TermInherit {
           return new Tuple(newcomps);
         }
       default:
-        throw new IndexingException("Tuple", "replaceSubterm", toString(), pos.toString());
+        throw new InvalidPositionException(this, pos, "replacing subterm of tuple");
     }
   }
 

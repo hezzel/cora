@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.Optional;
 
-import charlie.exceptions.CustomParserException;
 import charlie.util.FixedList;
+import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
 import charlie.terms.*;
 import charlie.trs.TRS;
@@ -127,7 +127,7 @@ class DeductionHypothesisTest {
   }
 
   @Test
-  public void testSuccessfulStepWithExtraTerms() throws CustomParserException {
+  public void testSuccessfulStepWithExtraTerms() throws PositionFormatException {
     PartialProof pp = setupProof("sum2(y)", "sum2(x)", "0 + sum1(x)", "y = x + 1 ∧ x > 0",
       "sum1(y)", "sum1(z) = iter(z, 0, y) | z ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -178,7 +178,7 @@ class DeductionHypothesisTest {
   }
 
   @Test
-  public void testSuccessfulInverseStepWithExtraTerms() throws CustomParserException {
+  public void testSuccessfulInverseStepWithExtraTerms() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(z)", "sum1(sum1(x))", "0 + sum1(x)", "x = x",
       "sum1(y)", "iter(z, 0, y) = sum1(y) | z ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -201,7 +201,7 @@ class DeductionHypothesisTest {
   }
 
   @Test
-  public void testSuccessfulStepWithEqualLeftGreaterTerm() throws CustomParserException {
+  public void testSuccessfulStepWithEqualLeftGreaterTerm() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(x)", "sum1(x)", "0 + sum1(x)", "x < y", "sum1(y)",
       "iter(z, 0, y) = sum1(y) | z ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -224,7 +224,7 @@ class DeductionHypothesisTest {
   }
 
   @Test
-  public void testSuccessfulStepWithEqualRightGreaterTerm() throws CustomParserException {
+  public void testSuccessfulStepWithEqualRightGreaterTerm() throws PositionFormatException {
     PartialProof pp = setupProof("sum2(sum2(y))", "0 + sum1(x)", "sum1(x)", "x < y",
       "sum1(x)", "sum1(y) = iter(z, 0, y) | z > 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -247,7 +247,7 @@ class DeductionHypothesisTest {
   }
 
   @Test
-  public void testSuccessfulFinishingStep() throws CustomParserException {
+  public void testSuccessfulFinishingStep() throws PositionFormatException {
      PartialProof pp = setupProof("sum1(y)", "sum1(sum1(x))", "sum1(iter(12, 0, x))", "y > x",
       "sum2(y)", "iter(z, 0, y) = sum1(y) | z ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -270,7 +270,7 @@ class DeductionHypothesisTest {
   }
 
   @Test
-  public void testLeftGreaterEqualsRightGamma() throws CustomParserException {
+  public void testLeftGreaterEqualsRightGamma() throws PositionFormatException {
     PartialProof pp = setupProof("0 + sum1(x)", "sum2(x)", "sum1(x)", "true", "sum1(x + 3)",
       "sum2(x) = 0 + sum1(x)");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -288,7 +288,7 @@ class DeductionHypothesisTest {
   }
 
   @Test
-  public void testLeftGreaterEqualsContextOfRightGamma() throws CustomParserException {
+  public void testLeftGreaterEqualsContextOfRightGamma() throws PositionFormatException {
     PartialProof pp = setupProof("0 + sum1(x)", "0 + sum2(x)", "iter(x, 0, x)", "true",
       "iter(x, x, 0)", "sum1(z) = sum2(z)");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
@@ -356,7 +356,7 @@ class DeductionHypothesisTest {
   }
 
   @Test
-  public void testCreateStepWithExtraVariables() throws CustomParserException {
+  public void testCreateStepWithExtraVariables() throws PositionFormatException {
     PartialProof pp = setupProof("sum2(y)", "sum2(x)", "0 + sum1(x)", "y = x + 1 ∧ x > 0",
       "sum1(y)", "sum1(z) = iter(z, 0, y) | z ≥ a");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");

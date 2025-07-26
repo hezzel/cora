@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -122,20 +122,20 @@ public interface Term {
 
   /**
    * If 1 <= i <= numberArguments, this returns the thus indexed argument.
-   * @throws charlie.exceptions.IndexingException if i is negative or > numberArguments.
+   * @throws java.lang.IndexOutOfBoundsException if i is negative or > numberArguments.
    */
   Term queryArgument(int i);
 
   /**
    * If the current term or its head is a meta-variable application, and its meta-variable has
    * arity k, and 1 ≤ i ≤ k, this returns the thus indexed argument to the meta-variable
-   * application.  Otherwise, this results in an IndexingException.
+   * application.  Otherwise, this results in an IndexOutOfBoundsException.
    */
   Term queryMetaArgument(int i);
 
   /**
    * If the current term is a tuple of length k, and 1 ≤ i ≤ k, this returns the thus indexed tuple
-   * component.  Otherwise, this results in an IndexingException.
+   * component.  Otherwise, this results in an IndexOutOfBoundsException.
    */
   Term queryTupleArgument(int i);
 
@@ -149,7 +149,7 @@ public interface Term {
    * For an applicative term a(s1,...,sn) (where a itself is not an application), the immediate
    * subterms are s1,...,sn.  There are also n+1 head subterms: a, a(s1), a(s1,s2), ...,
    * a(s1,...,sn).  Here, queryImmediateHeadSubterm(i) returns a(s1,...,si) if 0 ≤ i ≤ n, and
-   * throws an IndexingException otherwise.
+   * throws an IndexOutOfBoundsException otherwise.
    * (Note that this should not be used in analysis of first-order term rewriting, since all
    * non-trivial head subterms have a higher type).
    */
@@ -271,11 +271,14 @@ public interface Term {
   /**
    * Returns the subterm at the given position, assuming that this is indeed a position of the
    * current term.
-   * If not, an IndexingException is thrown.
+   * If not, an InvalidPositionException is thrown.
    */
   Term querySubterm(Position pos);
 
-  /** Returns the term obtained by replacing the subterm at the given position by replacement. */
+  /**
+   * Returns the term obtained by replacing the subterm at the given position by replacement.
+   * If the subterm doesn't exist, an InvalidPositionException is thrown.
+   */
   Term replaceSubterm(Position pos, Term replacement);
 
   /**
@@ -292,7 +295,7 @@ public interface Term {
    *
    * @param args a possibly empty list of terms, if <code>args</code> is an empty list then this
    *             method returns the calling object back
-   * @throws charlie.exceptions.TypingException if the term cannot be constructed for typing reasons.
+   * @throws TypingException if the term cannot be constructed for typing reasons.
    *
    */
   Term apply(List<Term> args);

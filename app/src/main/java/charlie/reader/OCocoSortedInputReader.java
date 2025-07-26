@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,12 +15,12 @@
 
 package charlie.reader;
 
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.UnexpectedPatternException;
+import charlie.util.FixedList;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.Token;
@@ -117,7 +117,7 @@ public class OCocoSortedInputReader {
 
       // main case: a functional term f(s1,...,sn)
       case Parser.Application(Token token, Parser.Identifier(Token t2, String name),
-                              ImmutableList<ParserTerm> args):
+                              FixedList<ParserTerm> args):
         f = _symbols.lookupFunctionSymbol(name);
         ArrayList<Term> children = new ArrayList<Term>();
         if (f != null && f.queryArity() == args.size() &&

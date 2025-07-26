@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -14,8 +14,6 @@
  *************************************************************************************************/
 
 package charlie.terms.position;
-
-import charlie.exceptions.InappropriatePatternDataException;
 
 public record FinalPos(int chopcount) implements Position {
   public FinalPos(int chopcount) {
@@ -60,10 +58,10 @@ public record FinalPos(int chopcount) implements Position {
   }
 
   public int queryHead() {
-    throw new InappropriatePatternDataException("FinalPos", "queryHead", "non-empty positions");
+    throw new IndexOutOfBoundsException("Calling queryHead() on FinalPos!");
   }
 
   public Position queryTail() {
-    throw new InappropriatePatternDataException("FinalPos", "queryTail", "non-empty positions");
+    throw new IndexOutOfBoundsException("Calling queryTail() on FinalPos!");
   }
 }

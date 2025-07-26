@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,9 +15,9 @@
 
 package cora.rwinduction.engine;
 
-import charlie.exceptions.IndexingException;
 import charlie.terms.Term;
 import charlie.terms.Renaming;
+import charlie.terms.InvalidPositionException;
 import charlie.terms.TermPrinter;
 import charlie.terms.TheoryFactory;
 import charlie.printer.Printer;
@@ -72,7 +72,7 @@ public final class Equation {
   public Term querySubterm(EquationPosition pos) {
     Term t = pos.querySide() == EquationPosition.Side.Left ? _lhs : _rhs;
     try { return t.querySubterm(pos.queryPosition()); }
-    catch (IndexingException e) { return null; }
+    catch (InvalidPositionException e) { return null; }
   }
 
   /**

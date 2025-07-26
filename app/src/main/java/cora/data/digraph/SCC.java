@@ -1,7 +1,5 @@
 package cora.data.digraph;
 
-import charlie.exceptions.IndexingException;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -59,7 +57,8 @@ public class SCC {
     // as in the graph's number of vertices, which is defined at construction.
     int bound = _visided.length;
     if (vertex < 0 || vertex > bound - 1) {
-      throw new IndexingException("SCC", method, vertex, 0, bound-1);
+      throw new IndexOutOfBoundsException("SCC::" + method + "(" + vertex + ") called; " +
+        "expected a value between 0 and " + (bound-1) + ".");
     }
   }
 

@@ -47,6 +47,10 @@ public record LambdaPos(Position tail) implements Position {
     return new LambdaPos(this.tail.append(p));
   }
 
+  public int queryChopCount() {
+    return tail.queryChopCount();
+  }
+
   public int queryHead() {
     return 0;
   }

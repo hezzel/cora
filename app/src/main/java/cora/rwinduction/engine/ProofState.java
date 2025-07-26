@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -17,7 +17,6 @@ package cora.rwinduction.engine;
 
 import java.util.List;
 
-import charlie.exceptions.IndexingException;
 import charlie.util.FixedList;
 import charlie.util.NullStorageException;
 import charlie.trs.Rule;
@@ -90,10 +89,9 @@ public class ProofState {
 
   /**
    * Returns the equation context that's currently at the top of the list.
-   * @throws IndexingException if there are no equations anymore.
+   * @throws IndexOutOfBoundException if there are no equations anymore.
    */
   public EquationContext getTopEquation() {
-    if (_equations.isEmpty()) throw new IndexingException("ProofState", "getTopEquation", 0);
     return _equations.get(_equations.size()-1);
   }
 
@@ -132,12 +130,15 @@ public class ProofState {
    * else is unaltered.
    * @param newData the new equation context
    * @return the new proof state
-   * @throws IndexingException if the set of equations is empty (so there is no top proof state
-   *  to replace
+   * @throws IndexOutOfBoundsException if the set of equations is empty (so there is no top proof
+   *  state to replace
    */
   public ProofState replaceTopEquation(List<EquationContext> newData) {
     int last = _lastUsedIndex;
-    if (_equations.isEmpty()) throw new IndexingException("ProofState", "replaceTopEquation", 0);
+    if (_equations.isEmpty()) {
+      throw new IndexOutOfBoundsException("ProofState::replaceTopEquation() called when the set " +
+        "of equations is empty!");
+    }
     FixedList.Builder<EquationContext> lst =
       new FixedList.Builder<EquationContext>(_equations.size() + newData.size() - 1);
     for (int i = 0; i < _equations.size()-1; i++) lst.add(_equations.get(i));

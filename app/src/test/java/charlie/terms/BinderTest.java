@@ -46,7 +46,7 @@ public class BinderTest extends TermTestFoundation {
   @Test
   public void testSubtermRequest() {
     Variable x = new Binder("x", baseType("o"));
-    assertThrows(IndexingException.class, () -> x.queryArgument(1));
+    assertThrows(IndexOutOfBoundsException.class, () -> x.queryArgument(1));
   }
 
   @Test
@@ -71,7 +71,7 @@ public class BinderTest extends TermTestFoundation {
   @Test
   public void testBaseVariableApplication() {
     Term t = new Binder("x", baseType("Int"));
-    assertThrows(ArityException.class, () -> t.apply(t));
+    assertThrows(TypingException.class, () -> t.apply(t));
   }
 
   @Test
@@ -240,14 +240,14 @@ public class BinderTest extends TermTestFoundation {
   public void testSubtermBad() {
     Term s = new Binder("x", baseType("o"));
     Position p = new ArgumentPos(1, Position.empty);
-    assertThrows(IndexingException.class, () -> s.querySubterm(p));
+    assertThrows(InvalidPositionException.class, () -> s.querySubterm(p));
   }
 
   @Test
   public void testHeadSubtermBad() {
     Term s = new Binder("x", baseType("o"));
     Position p = new FinalPos(1);
-    assertThrows(IndexingException.class, () -> s.querySubterm(p));
+    assertThrows(InvalidPositionException.class, () -> s.querySubterm(p));
   }
 
   @Test
@@ -269,14 +269,14 @@ public class BinderTest extends TermTestFoundation {
   public void testSubtermReplacementBad() {
     Term s = new Binder("x", baseType("o"));
     Position p = new ArgumentPos(1, Position.empty);
-    assertThrows(IndexingException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
+    assertThrows(InvalidPositionException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
   }
 
   @Test
   public void testHeadSubtermReplacementBad() {
     Term s = new Binder("x", baseType("o"));
     Position p = new FinalPos(3);
-    assertThrows(IndexingException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
+    assertThrows(InvalidPositionException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
   }
 
   @Test

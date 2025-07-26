@@ -19,9 +19,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
-import charlie.exceptions.CustomParserException;
-import charlie.exceptions.TypingException;
+import charlie.terms.position.PositionFormatException;
 import charlie.terms.Term;
+import charlie.terms.TypingException;
 import charlie.terms.Renaming;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -42,7 +42,7 @@ class EquationTest {
   }
 
   @Test
-  public void testReplaceGood() throws CustomParserException {
+  public void testReplaceGood() throws PositionFormatException {
     Renaming renaming = new Renaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n" +
@@ -59,7 +59,7 @@ class EquationTest {
   }
 
   @Test
-  public void testReplaceBadType() throws CustomParserException {
+  public void testReplaceBadType() throws PositionFormatException {
     Renaming renaming = new Renaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n" +

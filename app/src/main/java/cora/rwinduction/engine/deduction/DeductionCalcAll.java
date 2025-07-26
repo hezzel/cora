@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.Stack;
 
-import charlie.exceptions.IndexingException;
 import charlie.util.Pair;
 import charlie.terms.*;
 import charlie.printer.Printer;

@@ -15,7 +15,7 @@
 
 package cora.rwinduction.engine;
 
-import charlie.exceptions.CustomParserException;
+import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
@@ -80,17 +80,22 @@ public class EquationPosition implements PrintableObject {
 
   /**
    * This parses the given string into an EquationPosition if possible, and if not, throws an
-   * appropriate CustomParserException.
+   * appropriate PositionFormatException.
    */
-  public static EquationPosition parse(String desc) throws CustomParserException {
+  public static EquationPosition parse(String desc) throws PositionFormatException {
     desc = desc.trim();
     if (desc.equals("") || desc.equals("L")) return TOPLEFT;
     if (desc.equals("R")) return TOPRIGHT;
     Side side = Side.Left;
     if (desc.charAt(0) == 'L') desc = desc.substring(1);
     else if (desc.charAt(0) == 'R') { desc = desc.substring(1); side = Side.Right; }
-    Position pos = Position.parse(desc);
-    return new EquationPosition(side, pos);
+    try {
+      Position pos = Position.parse(desc);
+      return new EquationPosition(side, pos);
+    }
+    catch (PositionFormatException e) {
+      throw new PositionFormatException(e.queryProblemPos() + 1, desc, e.queryExplanation());
+    }
   }
 }
 

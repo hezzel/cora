@@ -117,9 +117,9 @@ class ProofStateTest {
     ProofState state7 = state6.deleteTopEquation();
     assertTrue(state7.getLastUsedIndex() == 7);
     assertTrue(state7.isFinalState());
-    assertThrows(charlie.exceptions.IndexingException.class,
+    assertThrows(java.lang.IndexOutOfBoundsException.class,
       () -> state7.deleteTopEquation());
-    assertThrows(charlie.exceptions.IndexingException.class,
+    assertThrows(java.lang.IndexOutOfBoundsException.class,
       () -> state7.replaceTopEquation(eq2));
   }
 

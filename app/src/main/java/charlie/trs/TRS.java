@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024, 2025 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import charlie.exceptions.IndexingException;
 import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.IllegalSymbolException;
 import charlie.util.NullStorageException;
@@ -206,12 +205,9 @@ public class TRS {
 
   /**
    * For 0 ≤ index < queryRuleCount(), this returns one of the rules in the system.
-   * @throws IndexingException
+   * @throws IndexOutOfBoundsException
    */
   public Rule queryRule(int index) {
-    if (index < 0 || index >= queryRuleCount()) {
-      throw new IndexingException("TRS", "queryRule", index, 0, queryRuleCount()-1);
-    }
     return _rules.get(index);
   }
 
@@ -225,11 +221,11 @@ public class TRS {
     return _schemes.size();
   }
 
-  /** For 0 ≤ index < querySchemeCount(), this returns one of the schemes in the system. */
+  /**
+   * For 0 ≤ index < querySchemeCount(), this returns one of the schemes in the system.
+   * @throws IndexOutOfBoundsException
+   */
   public RuleScheme queryScheme(int index) {
-    if (index < 0 || index >= querySchemeCount()) {
-      throw new IndexingException("TRS", "queryScheme", index, 0, querySchemeCount()-1);
-    }
     return _schemes.get(index);
   }
 

@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.Stack;
 
-import charlie.exceptions.IndexingException;
 import charlie.util.Pair;
 import charlie.terms.*;
 import charlie.printer.Printer;
@@ -139,19 +138,18 @@ public final class DeductionCalc extends DeductionStep {
    * Helper class for createStep: a mutable pair of two terms.  We will use this to pass around
    * the equation pair (not including the constraint) as we change it step-by-step, since the
    * equation itself is immutable.
+   * @throws InvalidPositionException
    */
   private static class ChangeablePair {
     Term left;
     Term right;
     ChangeablePair(Term l, Term r) { left = l; right = r; }
-    /** @throws IndexingException */
     Term subterm(EquationPosition pos) {
       return switch (pos.querySide()) {
         case EquationPosition.Side.Left -> left.querySubterm(pos.queryPosition());
         case EquationPosition.Side.Right -> right.querySubterm(pos.queryPosition());
       };
     }
-    /** @throws IndexingException */
     void replace(EquationPosition pos, Term replacement) {
       if (pos.querySide() == EquationPosition.Side.Left) {
         left = left.replaceSubterm(pos.queryPosition(), replacement);
@@ -214,7 +212,7 @@ public final class DeductionCalc extends DeductionStep {
                                    Optional<OutputModule> m) {
     Term sub;
     try { sub = pair.subterm(pos); }
-    catch (IndexingException e) {
+    catch (InvalidPositionException e) {
       String msg;
       if (original.querySubterm(pos) == null) msg = "No such position: %a.";
       else msg = "Subterm at position %a has already been calculated away!";

@@ -15,8 +15,6 @@
 
 package charlie.reader;
 
-import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +22,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import charlie.exceptions.*;
+import charlie.util.FixedList;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.Token;
@@ -91,7 +90,7 @@ public class AriInputReader extends TermTyper {
           bound.remove(varname);
         }
         break;
-      case Application(Token token, ParserTerm head, List<ParserTerm> args):
+      case Application(Token token, ParserTerm head, FixedList<ParserTerm> args):
         storeVariableArity(head, arity, bound, args.size());
         for (ParserTerm t : args) storeVariableArity(t, arity, bound, 0);
         break;
@@ -116,8 +115,8 @@ public class AriInputReader extends TermTyper {
           if (backup != null) arity.put(varname, backup);
           yield ret;
         }
-      case Application(Token token, ParserTerm head, List<ParserTerm> args) -> {
-          ImmutableList.Builder<ParserTerm> newargs = ImmutableList.<ParserTerm>builder();
+      case Application(Token token, ParserTerm head, FixedList<ParserTerm> args) -> {
+          FixedList.Builder<ParserTerm> newargs = new FixedList.Builder<ParserTerm>();
           for (ParserTerm arg : args) newargs.add(replaceMetaVariables(arg, arity));
           if (head instanceof Identifier(Token t, String name) &&
               arity.containsKey(name) && arity.get(name) > 0) {

@@ -113,9 +113,9 @@ public class AriParserTest {
       "(rule (map nil F) nil)\n" +
       "(rule (map (cons x l) F) (cons (F x) (map l F)))\n");
     assertTrue(program.rules().size() == 2);
-    assertTrue(program.rules().get(0).toString().equals("{ [] } @(map, [nil, F]) → nil"));
+    assertTrue(program.rules().get(0).toString().equals("{ [] } @(map, [nil, F]) -> nil"));
     assertTrue(program.rules().get(1).toString().equals(
-      "{ [] } @(map, [@(cons, [x, l]), F]) → @(cons, [@(F, [x]), @(map, [l, F])])"));
+      "{ [] } @(map, [@(cons, [x, l]), F]) -> @(cons, [@(F, [x]), @(map, [l, F])])"));
   }
 
   @Test
@@ -131,8 +131,8 @@ public class AriParserTest {
       collector
     );
     assertTrue(program.rules().size() == 2);
-    assertTrue(program.rules().get(0).toString().equals("{ [] } @(g, [x, x]) → x"));
-    assertTrue(program.rules().get(1).toString().equals("{ [] } @(f, [x, x]) → x"));
+    assertTrue(program.rules().get(0).toString().equals("{ [] } @(g, [x, x]) -> x"));
+    assertTrue(program.rules().get(1).toString().equals("{ [] } @(f, [x, x]) -> x"));
     assertTrue(collector.queryErrorCount() == 0);
   }
 
@@ -147,11 +147,11 @@ public class AriParserTest {
       "(rule (app (lambda ((x a)) (Z x)) y) (Z y))\n");
     assertTrue(program.rules().size() == 3);
     assertTrue(program.rules().get(0).toString().equals(
-      "{ [] } @(f, [Z]) → @(g, [λx::b.@(Z, [x])])"));
+      "{ [] } @(f, [Z]) -> @(g, [LAMBDA x::b.@(Z, [x])])"));
     assertTrue(program.rules().get(1).toString().equals(
-      "{ [] } @(f, [Z]) → @(g, [λx::a → b.λy::a.@(Z, [x])])"));
+      "{ [] } @(f, [Z]) -> @(g, [LAMBDA x::a → b.LAMBDA y::a.@(Z, [x])])"));
     assertTrue(program.rules().get(2).toString().equals(
-      "{ [] } @(app, [λx::a.@(Z, [x]), y]) → @(Z, [y])"));
+      "{ [] } @(app, [LAMBDA x::a.@(Z, [x]), y]) -> @(Z, [y])"));
   }
 
   @Test

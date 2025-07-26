@@ -82,7 +82,7 @@ public class ValueTest extends TermTestFoundation {
   @Test
   public void testValueApply() {
     Value v = new IntegerValue(13);
-    assertThrows(ArityException.class, () -> v.apply(new Constant("a", baseType("o"))));
+    assertThrows(TypingException.class, () -> v.apply(new Constant("a", baseType("o"))));
   }
 
   @Test
@@ -136,19 +136,20 @@ public class ValueTest extends TermTestFoundation {
   @Test
   public void testArgumentPositionRequest() {
     Term v = new StringValue("333");
-    assertThrows(IndexingException.class, () -> v.querySubterm(new ArgumentPos(1, Position.empty)));
+    assertThrows(InvalidPositionException.class, () ->
+      v.querySubterm(new ArgumentPos(1, Position.empty)));
   }
 
   @Test
   public void testHeadPositionRequest() {
     Term v = new IntegerValue(31);
-    assertThrows(IndexingException.class, () -> v.querySubterm(new FinalPos(1)));
+    assertThrows(InvalidPositionException.class, () -> v.querySubterm(new FinalPos(1)));
   }
 
   @Test
   public void testBadPositionReplacement() {
     Term v = new BooleanValue(true);
-    assertThrows(IndexingException.class, () ->
+    assertThrows(InvalidPositionException.class, () ->
       v.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a"))));
   }
 }
