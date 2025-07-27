@@ -18,7 +18,6 @@ package charlie.reader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.UnexpectedPatternException;
 import charlie.util.FixedList;
 import charlie.util.LookupMap;
@@ -62,6 +61,10 @@ public class OCocoUnsortedInputReader {
 
   private void storeError(Token token, String message) {
     _errors.addError(new ParsingErrorMessage(token, message));
+  }
+
+  private void storeError(Token token, IllegalRuleException e) {
+    _errors.addError(new ParsingErrorMessage(token, e));
   }
 
   // =============================== READING PARSERTERMS INTO TERMS ===============================
@@ -152,7 +155,7 @@ public class OCocoUnsortedInputReader {
 
     try { return TrsFactory.createRule(l, r, TrsFactory.MSTRS); }
     catch (IllegalRuleException e) {
-      storeError(rule.token(), e.queryProblem());
+      storeError(rule.token(), e);
       return null;
     }
   }

@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.IllegalSymbolException;
 import charlie.util.NullStorageException;
 import charlie.util.Pair;
@@ -155,7 +154,8 @@ public class TRS {
     // and give an error if we don't satisfy the given restrictions on the rules
     if (restrictions != null) {
       String problem = restrictions.checkCoverage(_rulesProperties);
-      if (problem != null) throw new IllegalRuleException(problem);
+      if (problem != null) throw new IllegalRuleException("The given rules are not suitable for " +
+        trsKindName + "s because " + problem);
     }
 
     // we will compute _functionRules and _variableRules only when we need them

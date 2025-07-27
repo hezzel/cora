@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,15 +13,19 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.exceptions;
+package charlie.terms;
+
+import charlie.util.UserException;
+import charlie.types.Type;
 
 /**
- * An IncorrectStringException is thrown when a user-supplied string is parsed, yet it contains
- * illegal escape sequences or does not have the right shape.
+ * A TypingException is thrown when the typing of some term fails, for example because something
+ * tries to assign a non-integer type to an integer value, or when a function of type A → B → C
+ * is applied on two arguments of type A.
  */
-public class IncorrectStringException extends Exception {
-  public IncorrectStringException(String input, String problem) {
-    super("Cannot parse string " + input + ": " + problem);
+public class TypingException extends UserException {
+  public TypingException(Object ...parts) {
+    super(parts);
   }
 }
 

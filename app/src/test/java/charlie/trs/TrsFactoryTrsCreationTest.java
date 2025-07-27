@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
-import charlie.exceptions.IllegalRuleException;
 import charlie.exceptions.IllegalSymbolException;
 import charlie.util.NullStorageException;
 import charlie.types.Type;

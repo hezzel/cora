@@ -42,7 +42,7 @@ public class RuleRestrictionsTest {
                                                      Lhs.NONPATTERN, Root.ANY, FreshRight.ANY);
     assertTrue(nothing.checkCoverage(nothing) == null);
     assertTrue(nothing.checkCoverage(anything).equals(
-      "rule level is limited to first-order terms, not meta-terms"));
+      "the rule level is limited to first-order terms, not meta-terms."));
     RuleRestrictions a = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES,
               TypeLevel.SIMPLEPRODUCTS, Lhs.PATTERN, Root.THEORY, FreshRight.NONE);
     RuleRestrictions b = new RuleRestrictions(Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE,
@@ -56,20 +56,20 @@ public class RuleRestrictionsTest {
     RuleRestrictions f = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.SIMPLE,
                                               Lhs.SEMIPATTERN, Root.ANY, FreshRight.CVARS);
     assertTrue(a.checkCoverage(b).equals(
-      "rule level is limited to applicative terms, not true terms"));
+      "the rule level is limited to applicative terms, not true terms."));
     assertTrue(a.checkCoverage(c).equals(
-      "left-hand side should have a function symbol as root, not anything else"));
+      "the left-hand side should have a function symbol as root, not anything else."));
     assertTrue(b.checkCoverage(a).equals(
-      "use of theory symbols / constraints is not supported"));
+      "the use of theory symbols / constraints is not supported."));
     assertTrue(c.checkCoverage(a).equals(
-      "use of tuples (or any occurrence of product types) is not supported"));
+      "the use of tuples (or any occurrence of product types) is not supported."));
     assertTrue(d.checkCoverage(b).equals(
-      "left-hand side should be a pattern, not a semi-pattern"));
+      "the left-hand side should be a pattern, not a semi-pattern."));
     assertTrue(nothing.checkCoverage(e).equals(
-      "right-hand side contains a variable that does not occur in the left-hand side"));
+      "the right-hand side contains a variable that does not occur in the left-hand side."));
     assertTrue(f.checkCoverage(d).equals(
-      "right-hand side contains a meta-variable that does not occur in the left-hand " +
-      "side or the constraint"));
+      "the right-hand side contains a meta-variable that does not occur in the left-hand " +
+      "side or the constraint."));
   }
 
   @Test

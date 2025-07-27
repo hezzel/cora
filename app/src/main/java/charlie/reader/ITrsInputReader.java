@@ -67,8 +67,12 @@ public class ITrsInputReader {
     _symbols = null;      // don't use before calling determineSymbolTypes
   }
 
-  private void storeError(String message, Token token) {
+  private void storeError(Token token, String message) {
     _errors.addError(new ParsingErrorMessage(token, message));
+  }
+
+  private void storeError(Token token, IllegalRuleException e) {
+    _errors.addError(new ParsingErrorMessage(token, e));
   }
 
   // ====================================== CHECKING ARITIES ======================================
@@ -123,7 +127,7 @@ public class ITrsInputReader {
     // if it's a variable, it shouldn't be applied
     if (vars.containsKey(fname)) {
       if (args.size() != 0) {
-        storeError("Variable " + fname + " occurs with arguments like a function symbol.", token);
+        storeError(token, "Variable " + fname + " occurs with arguments like a function symbol.");
       }
     }
     // if we haven't seen it before, it's a function symbol, and we store its arity
@@ -132,8 +136,8 @@ public class ITrsInputReader {
     }
     // if we have seen it before, it had better occur with the expected number of arguments!
     else if (store.get(fname) != args.size()) {
-      storeError("Function symbol " + fname + " occurs with " + args.size() + " arguments, " +
-        "while it previously occurred with " + store.get(fname) + ".", token);
+      storeError(token, "Function symbol " + fname + " occurs with " + args.size() +
+        " arguments, while it previously occurred with " + store.get(fname) + ".");
     }
   }
 
@@ -144,19 +148,19 @@ public class ITrsInputReader {
   private void checkTheoryArities(Token token, String fname, FixedList<ParserTerm> args) {
     if (fname.equals(ITrsParser.NOT)) {
       if (args.size() != 1) {
-        storeError("Encountered negation with " + args.size() + " arguments (expected: 1).", token);
+        storeError(token, "Encountered negation with " + args.size() + " arguments (expected: 1).");
       }
     }
     else if (fname.equals(ITrsParser.MINUS)) {
       if (args.size() != 1 && args.size() != 2) {
-        storeError("Encountered minus with " + args.size() + " arguments (expected: 1 or 2).",
-          token);
+        storeError(token, "Encountered minus with " + args.size() +
+          " arguments (expected: 1 or 2).");
       }
     }
     else {
       if (args.size() != 2) {
-        storeError("Encountered " + fname + " with " + args.size() + " arguments (expected: 2).",
-          token);
+        storeError(token, "Encountered " + fname + " with " + args.size() +
+          " arguments (expected: 2).");
       }
     }
   }
@@ -404,7 +408,7 @@ public class ITrsInputReader {
     _symbols.clearEnvironment();
     Term l = makeTerm(rule.left(), null);
     if (l.isVariable()) {
-      storeError("The left-hand side of a rule is not allowed to be a variable.", rule.token());
+      storeError(rule.token(), "The left-hand side of a rule is not allowed to be a variable.");
       makeTerm(rule.right(), null);    // for additional error messages
       return null;
     }   
@@ -417,7 +421,7 @@ public class ITrsInputReader {
       else return TrsFactory.createRule(l, r, TrsFactory.LCTRS);
     }
     catch (IllegalRuleException e) {
-      storeError(e.queryProblem(), rule.token());
+      storeError(rule.token(), e);
       return null;
     }
   }

@@ -16,7 +16,6 @@
 package charlie.terms;
 
 import java.util.Map;
-import charlie.exceptions.IncorrectStringException;
 import charlie.types.TypeFactory;
 
 /**

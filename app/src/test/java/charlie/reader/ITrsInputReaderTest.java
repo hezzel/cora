@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -168,8 +168,8 @@ public class ITrsInputReaderTest {
     try { ITrsInputReader.readTrsFromString(str); }
     catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
-        "2:13: The rule f(x) → g(y, x) is not allowed to occur in LCTRSs: right-hand " +
-          "side contains a variable that does not occur in the left-hand side or the " +
+        "2:13: Illegal rule [f(x) -> g(y, x)]: this rule may not occur in LCTRSs because the " +
+          "right-hand side contains a variable that does not occur in the left-hand side or the " +
           "constraint.\n"));
       return;
     }
@@ -188,8 +188,9 @@ public class ITrsInputReaderTest {
     try { ITrsInputReader.readTrsFromString(str); }
     catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
-        "3:8: The rule f(x) → g(y, x) is not allowed to occur in LCTRSs: right-hand side " +
-        "contains a variable that does not occur in the left-hand side or the constraint.\n"));
+        "3:8: Illegal rule [f(x) -> g(y, x)]: this rule may not occur in LCTRSs because the " +
+        "right-hand side contains a variable that does not occur in the left-hand side or the " +
+        "constraint.\n"));
       return;
     }
   }
@@ -205,8 +206,8 @@ public class ITrsInputReaderTest {
       ")";
     try { ITrsInputReader.readTrsFromString(str); }
     catch (ParsingException e) {
-      assertTrue(e.getMessage().equals("3:8: left-hand side of rule [¬y → if(y, false, true)] " +
-        "is a theory term!\n"));
+      assertTrue(e.getMessage().equals("3:8: Illegal rule [¬y -> if(y, false, true)]: the " +
+        "left-hand side is a theory term!\n"));
       return;
     }
     assertTrue(false);

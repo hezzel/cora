@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -254,7 +254,8 @@ public class CoraInputReaderTest {
     TRS trs = createEmptyTRS(alphabet);
     try { CoraInputReader.readRule("filter(F,cons(H,T)) -> cons(H, filter(F, T)) | F(H)", trs); }
     catch (ParsingException e) {
-      assertTrue(e.getMessage().equals("1:1: constraint [F(H)] is not first-order.\n"));
+      assertTrue(e.getMessage().equals("1:1: Illegal rule [filter(F, cons(H, T)) -> " +
+        "cons(H, filter(F, T)) | F(H)]: the constraint is not first-order.\n"));
       return;
     }
     assertTrue(false);
@@ -387,12 +388,12 @@ public class CoraInputReaderTest {
     }
     catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
-        "5:13: Expected term, started by an identifier, LAMBDA, string or (, but got ARROW (->).\n" +
+        "5:13: Expected term, started by an identifier, LAMBDA, string or (, but got ARROW (->).\n"+
         "3:9: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
         "5:1: Undeclared symbol: g.  Type cannot easily be deduced from context.\n" +
         "5:11: Expected term of type o, but got function symbol a which has type 3.\n" +
-        "6:1: The rule f(2) → _3 is not allowed to occur in AMSs: right-hand side contains a " +
-          "variable that does not occur in the left-hand side.\n"));
+        "6:1: Illegal rule [f(2) -> _3]: this rule may not occur in AMSs because the right-hand " +
+          "side contains a variable that does not occur in the left-hand side.\n"));
       return;
     }
     assertTrue(false);
@@ -446,8 +447,8 @@ public class CoraInputReaderTest {
     }
     catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
-        "1:17: The rule f(F(x)) → x is not allowed to occur in MSTRSs: rule level is " +
-        "limited to first-order terms, not applicative terms.\n"));
+        "1:17: Illegal rule [f(F(x)) -> x]: this rule may not occur in MSTRSs because the rule " +
+        "level is limited to first-order terms, not applicative terms.\n"));
       return;
     }
     assertTrue(false);
@@ -460,8 +461,9 @@ public class CoraInputReaderTest {
         "f :: (nat -> nat) -> nat f(F) → f(λx.F(x))", TrsFactory.STRS);
     }
     catch (ParsingException e) {
-      assertTrue(e.getMessage().equals("1:26: The rule f(F) → f(λx.F(x)) is not allowed to " +
-        "occur in STRSs: rule level is limited to applicative terms, not true terms.\n"));
+      assertTrue(e.getMessage().equals("1:26: Illegal rule [f(F) -> f(λx.F(x))]: this rule may " +
+        "not occur in STRSs because the rule level is limited to applicative terms, not true " +
+        "terms.\n"));
       return;
     }
     assertTrue(false);
@@ -475,8 +477,9 @@ public class CoraInputReaderTest {
         TrsFactory.CFS);
     }
     catch (ParsingException e) {
-      assertTrue(e.getMessage().equals("1:49: The rule map(λx.Z⟨x⟩, nil) → nil is not allowed " +
-        "to occur in CFSs: rule level is limited to true terms, not meta-terms.\n"));
+      assertTrue(e.getMessage().equals("1:49: Illegal rule [map(λx.Z⟨x⟩, nil) -> nil]: this " +
+        "rule may not occur in CFSs because the rule level is limited to true terms, not " +
+        "meta-terms.\n"));
       return;
     }
     assertTrue(false);

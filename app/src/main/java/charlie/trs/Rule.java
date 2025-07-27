@@ -21,8 +21,6 @@ import java.util.TreeSet;
 import java.util.LinkedList;
 import java.util.Collections;
 import charlie.util.NullStorageException;
-import charlie.exceptions.IllegalRuleException;
-import charlie.exceptions.UnexpectedPatternException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
@@ -244,20 +242,20 @@ public class Rule {
     }
     Type t = _constraint.queryType();
     if (!t.equals(TypeFactory.boolSort) || !t.isTheoryType()) {
-      throw new IllegalRuleException("constraint [" + _constraint.toString() + "] does not " +
-        "have the theory sort Bool (it has type " + t.toString() + ").");
+      throw new IllegalRuleException(_left, _right, _constraint, "the constraint does not have " +
+        "type Bool (it has type ", t, ").");
     }
   }
 
   /** Checks that both left- and right-hand side are closed. */
   private void checkBothSidesClosed() {
     if (!_left.isClosed()) { 
-      throw new IllegalRuleException("left-hand side of rule [" + toString() + "] is not closed " +
-        "(that is, freely contains a binder-variable).");
+      throw new IllegalRuleException(_left, _right, _constraint, "the left-hand side is not " +
+        "closed (that is, it freely contains a binder-variable).");
     }
     if (!_right.isClosed()) { 
-      throw new IllegalRuleException("right-hand side of rule [" + toString() + "] is not closed " +
-        "(that is, freely contains a binder-variable).");
+      throw new IllegalRuleException(_left, _right, _constraint, "the right-hand side is not " +
+        "closed (that is, it freely contains a binder-variable).");
     }
   }
 
@@ -287,12 +285,12 @@ public class Rule {
     }
     if (couldBeTheory) {
       if (_left.isTheoryTerm()) {
-        throw new IllegalRuleException("left-hand side of rule [" + toString() +
-          "] is a theory term!");
+        throw new IllegalRuleException(_left, _right, _constraint, "the left-hand side is a " +
+          "theory term!");
       }
       else {
-        throw new IllegalRuleException("left-hand side of rule [" + toString() +
-          "] could be instantiated to a theory term!");
+        throw new IllegalRuleException(_left, _right, _constraint, "the left-hand side could be " +
+          "instantiated to a theory term!");
       }
     }
   }
@@ -300,16 +298,16 @@ public class Rule {
   /** Checks that the constraint is a theory term. */
   private void checkConstraintTheory() {
     if (!_constraint.isTheoryTerm()) {
-      throw new IllegalRuleException("constraint [" + _constraint.toString() +
-        "] is not a theory term.");
+      throw new IllegalRuleException(_left, _right, _constraint,
+        "the constraint is not a theory term.");
     }
   }
 
   /** Checks that the constraint is a first-order term. */
   private void checkConstraintFirstOrder() {
     if (!_constraint.isFirstOrder()) {
-      throw new IllegalRuleException("constraint [" + _constraint.toString() +
-        "] is not first-order.");
+      throw new IllegalRuleException(_left, _right, _constraint,
+        "the constraint is not first-order.");
     }
   }
 }

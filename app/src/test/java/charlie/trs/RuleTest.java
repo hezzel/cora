@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
-import charlie.exceptions.IllegalRuleException;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;

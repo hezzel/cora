@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -203,8 +203,8 @@ public class OCocoUnsortedInputReaderTest {
       assertTrue(e.getMessage().equals(
         "1:42: Expected a comma or closing bracket but got IDENTIFIER (y).\n" +
         "1:63: Function symbol f was previously used with 2 arguments, but is here used with 1.\n" +
-        "1:60: The rule g(x) → f(z) is not allowed to occur in MSTRSs: right-hand side contains " +
-        "a variable that does not occur in the left-hand side.\n"));
+        "1:60: Illegal rule [g(x) -> f(z)]: this rule may not occur in MSTRSs because the " +
+        "right-hand side contains a variable that does not occur in the left-hand side.\n"));
       return;
     }
     assertTrue(false);
@@ -230,8 +230,8 @@ public class OCocoUnsortedInputReaderTest {
     try { OCocoUnsortedInputReader.readTrsFromString(str); }
     catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
-        "1:18: The rule x → f(x, x) is not allowed to occur in MSTRSs: left-hand side should " +
-        "have a non-theory function symbol as root, not anything else.\n"));
+        "1:18: Illegal rule [x -> f(x, x)]: this rule may not occur in MSTRSs because the " +
+        "left-hand side should have a non-theory function symbol as root, not anything else.\n"));
       return;
     }
     assertTrue(false);

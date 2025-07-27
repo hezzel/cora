@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,22 +13,23 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.exceptions;
+package charlie.terms;
 
 /**
- * An IllegalRuleException is thrown when something tries to construct a certain kind of rule in a
- * way that violates the restrictions for that rule (for example, a PatternRule where the left-hand
- * side is not a pattern).
+ * An IncorrectStringException is thrown when a user-supplied string is parsed, yet it contains
+ * illegal escape sequences or does not have the right shape.
  */
-public class IllegalRuleException extends RuntimeException {
-  private final String _problem;
+public class IncorrectStringException extends Exception {
+  private String _input;
+  private String _explanation;
 
-  public IllegalRuleException(String problem) {
-    super("Illegal rule creation: " + problem);
-    _problem = problem;
+  public IncorrectStringException(String input, String problem) {
+    super("Cannot parse string [" + input + "]: " + problem);
+    _input = input;
+    _explanation = problem;
   }
 
-  public String queryProblem() {
-    return _problem;
-  }
+  public String queryBadInput() { return _input; }
+  public String queryExplanation() { return _explanation; }
 }
+
