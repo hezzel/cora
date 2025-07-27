@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import charlie.exceptions.IllegalSymbolException;
 import charlie.util.NullStorageException;
 import charlie.util.Pair;
 import charlie.util.FixedList;
@@ -168,12 +167,12 @@ public class TRS {
     for (FunctionSymbol f : _alphabet.getSymbols()) {
       Type type = f.queryType();
       if (_level == TermLevel.FIRSTORDER && type.queryTypeOrder() > 1) {
-        throw new IllegalSymbolException("TRS", f.toString(), "Symbol " + f.toString() +
-          " with a type " + type.toString() + " cannot occur in a first-order TRS.");
+        throw new IllegalSymbolException(f, _trsKind, "higher-order symbols cannot occur in a " +
+          "first-order TRS.");
       }
       if (!_productsIncluded && type.hasProducts()) {
-        throw new IllegalSymbolException("TRS", f.toString(), "Symbol with a type " +
-          type.toString() + " cannot occur in a product-free TRS.");
+        throw new IllegalSymbolException(f, _trsKind, "product types cannot occur in a " +
+          "product-free TRS.");
       }
     }
   }

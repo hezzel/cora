@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
-import charlie.exceptions.IllegalSymbolException;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
@@ -121,11 +120,11 @@ public class TrsFactoryTrsCreationTest {
     Variable x = TermFactory.createVar("x");
     rules.add(TrsFactory.createRule(TermFactory.createApp(f, x, a), x));
 
-    assertThrows(charlie.exceptions.IllegalSymbolException.class,
+    assertThrows(IllegalSymbolException.class,
       () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.MSTRS));
 
     symbols.set(symbols.size()-1, TermFactory.createConstant("i", type("(|a , b|) → a")));
-    assertThrows(charlie.exceptions.IllegalSymbolException.class,
+    assertThrows(IllegalSymbolException.class,
       () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.CFS));
   }
 

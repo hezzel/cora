@@ -433,7 +433,8 @@ public class CoraInputReaderTest {
     }
     catch (ParsingException e) {
       assertTrue(e.getMessage().equals(
-        "Symbol g with a type (nat → nat) → nat cannot occur in a first-order TRS.\n"));
+        "Illegal occurrence of symbol g with type (nat → nat) → nat in MSTRS: higher-order " +
+          "symbols cannot occur in a first-order TRS.\n"));
       return;
     }
     assertTrue(false);
