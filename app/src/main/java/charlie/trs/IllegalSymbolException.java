@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,22 +13,19 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.exceptions;
+package charlie.trs;
+
+import charlie.util.UserException;
+import charlie.types.Type;
+import charlie.terms.FunctionSymbol;
 
 /**
  * An IllegalSymbolException is thrown when a symbol occurs in a TRS or a term that should not be
- * there for whatever reason (for example a higher-order symbol in a first-order TRS, or an
- * application symbol in a term that should be fully functional).
+ * there for whatever reason (for example a higher-order symbol in a first-order TRS).
  */
-public class IllegalSymbolException extends RuntimeException {
-  private final String _problem;
-
-  public IllegalSymbolException(String classname, String symbol, String problem) {
-    super("Illegal symbol occurrence " + symbol + " in " + classname + ": " + problem);
-    _problem = problem;
-  }
-
-  public String queryProblem() {
-    return _problem;
+public class IllegalSymbolException extends UserException {
+  public IllegalSymbolException(FunctionSymbol symbol, String kind, String explanation) {
+    super("Illegal occurrence of symbol ", symbol.queryName(), " with type ",
+      symbol.queryType(), " in " + kind + ": ", explanation);
   }
 }

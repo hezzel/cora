@@ -188,7 +188,7 @@ public class CoraInputReader extends TermTyper {
       storeError(null, e);
     }
     catch (IllegalSymbolException e) {
-      storeError(null, e.queryProblem());
+      storeError(null, e);
     }
     return null;
   }
