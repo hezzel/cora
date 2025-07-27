@@ -152,8 +152,8 @@ class RuleRestrictions {
       Map<Level,String> explanation = Map.of(
         Level.FIRSTORDER, "first-order ", Level.APPLICATIVE, "applicative ",
         Level.LAMBDA, "true ", Level.META, "meta-");
-      return "rule level is limited to " + explanation.get(_level) + "terms, not " +
-        explanation.get(other._level) + "terms";
+      return "the rule level is limited to " + explanation.get(_level) + "terms, not " +
+        explanation.get(other._level) + "terms.";
     }
     if (_rootStatus.compareTo(other._rootStatus) < 0) {
       String original = switch (_rootStatus) {
@@ -166,24 +166,24 @@ class RuleRestrictions {
         case Root.THEORY -> "a theory symbol";
         case Root.ANY -> "anything else";
       };
-      return "left-hand side should have " + original + " as root, not " + real;
+      return "the left-hand side should have " + original + " as root, not " + real + ".";
     }
     if (_pattern.compareTo(other._pattern) < 0) {
       Map<Lhs,String> explanation = Map.of(
         Lhs.PATTERN, "pattern", Lhs.SEMIPATTERN, "semi-pattern", Lhs.NONPATTERN, "non-pattern");
-      return "left-hand side should be a " + explanation.get(_pattern) + ", not a " +
-        explanation.get(other._pattern);
+      return "the left-hand side should be a " + explanation.get(_pattern) + ", not a " +
+        explanation.get(other._pattern) + ".";
     }
     if (_fresh.compareTo(other._fresh) < 0) {
-      return "right-hand side contains a " + (other._level == Level.META ? "meta-" : "") +
+      return "the right-hand side contains a " + (other._level == Level.META ? "meta-" : "") +
         "variable that does not occur in the left-hand side" +
-        (_fresh == FreshRight.NONE ? "" : " or the constraint");
+        (_fresh == FreshRight.NONE ? "" : " or the constraint") + ".";
     }
     if (!_theories && other._theories) {
-      return "use of theory symbols / constraints is not supported";
+      return "the use of theory symbols / constraints is not supported.";
     }
     if (!_products && other._products) {
-      return "use of tuples (or any occurrence of product types) is not supported";
+      return "the use of tuples (or any occurrence of product types) is not supported.";
     }
     return null;
   }

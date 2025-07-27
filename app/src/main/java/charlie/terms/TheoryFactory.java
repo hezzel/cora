@@ -15,7 +15,6 @@
 
 package charlie.terms;
 
-import charlie.exceptions.IncorrectStringException;
 import charlie.types.*;
 import charlie.terms.CalculationSymbol.Kind;
 import charlie.terms.CalculationSymbol.Associativity;

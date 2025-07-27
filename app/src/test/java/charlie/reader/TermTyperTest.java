@@ -63,7 +63,7 @@ public class TermTyperTest {
   @Test
   public void testStringWithIllegalEscapeInIt() {
     Term t = readTerm("\"a\\xb\"", null, true, null,
-      "1:1: Cannot parse string \"a\\xb\": stray escape character at position 3: " +
+      "1:1: Cannot parse string [\"a\\xb\"]: stray escape character at position 3: " +
       "\\x is not an escape sequence.\n");
     assertTrue(t.toString().equals("\"a\\xb\""));
   }

@@ -161,7 +161,7 @@ public class CoraInputReader extends TermTyper {
       else return TrsFactory.createRule(l, r, c, kind);
     }
     catch (IllegalRuleException e) {
-      storeError(rule.token(), e.queryProblem());
+      storeError(rule.token(), e);
       return null;
     }
   }
@@ -185,7 +185,7 @@ public class CoraInputReader extends TermTyper {
                                   _symbols.queryPrivateSymbols(), false, kind);
     }
     catch (IllegalRuleException e) {
-      storeError(null, e.queryProblem());
+      storeError(null, e);
     }
     catch (IllegalSymbolException e) {
       storeError(null, e.queryProblem());

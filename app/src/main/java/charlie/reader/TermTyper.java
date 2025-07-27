@@ -19,6 +19,7 @@ import java.util.ArrayList;
 
 import charlie.exceptions.*;
 import charlie.util.FixedList;
+import charlie.util.UserException;
 import charlie.types.*;
 import charlie.parser.lib.Token;
 import charlie.parser.lib.ParsingErrorMessage;
@@ -62,7 +63,10 @@ class TermTyper {
    */
   protected void storeError(Token token, Object ...message) {
     if (token != null && token == _lastStored) return;
-    _errors.addError(new ParsingErrorMessage(token, message));
+    if (message.length == 1 && message[0] instanceof UserException e) {
+      _errors.addError(new ParsingErrorMessage(token, e));
+    }
+    else _errors.addError(new ParsingErrorMessage(token, message));
     _lastStored = token;
   }
 
