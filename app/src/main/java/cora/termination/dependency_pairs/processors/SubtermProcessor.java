@@ -83,8 +83,8 @@ public class SubtermProcessor implements Processor {
       FunctionSymbol f = lhs.queryRoot();
       Term rhs = dp.rhs();
       FunctionSymbol g = rhs.queryRoot();
-      for (int i = 1; i <= lhs.queryArguments().size(); i++) {
-        for (int j = 1; j <= rhs.queryArguments().size(); j++) {
+      for (int i = 1; i <= lhs.numberArguments(); i++) {
+        for (int j = 1; j <= rhs.numberArguments(); j++) {
           if (f.equals(g) && i != j) continue;
           Term si = lhs.queryArgument(i);
           Term tj = rhs.queryArgument(j);

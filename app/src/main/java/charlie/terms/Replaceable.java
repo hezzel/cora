@@ -46,6 +46,13 @@ public interface Replaceable extends Comparable<Replaceable> {
    */
   int queryArity();
 
+  /**
+   * If the current Replaceable is a Term, then it is returned unmodified.  If it is a meta-variable
+   * Z :: [σ1 x ... x σn] → τ of higher arity, then this returns λx1 ... xn.Z[x1,...,xn] -- that is,
+   * a term that can be substituted for Z without changing anything.
+   */
+  Term makeTerm();
+
   /** @return equality to another Replaceable (this respects compareTo) */
   boolean equals(Replaceable x);
 

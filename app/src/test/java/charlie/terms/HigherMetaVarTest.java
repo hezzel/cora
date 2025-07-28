@@ -107,6 +107,14 @@ public class HigherMetaVarTest {
   }
 
   @Test
+  public void testMakeTerm() {
+    Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
+    MetaVariable z = TermFactory.createMetaVar("Z", fili(a,b), TypeFactory.createSort("c"));
+    Term t = z.makeTerm();
+    assertTrue(t.toString().equals("λb1.λb2.Z⟨b1, b2⟩"));
+  }
+
+  @Test
   public void testMetavarComparison() {
     Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
     Replaceable z = TermFactory.createMetaVar("z", fili(a,b), TypeFactory.createSort("c"));

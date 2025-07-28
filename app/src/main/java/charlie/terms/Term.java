@@ -15,6 +15,7 @@
 
 package charlie.terms;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -109,7 +110,7 @@ public interface Term {
    * Note also that this creates a copy of the actual arguments, so it costs more memory to
    * iterate over the arguments in this way than using numberArguments() and queryArgument(int i).
    */
-  List<Term> queryArguments();
+  ArrayList<Term> queryArguments();
 
   /**
    * Returns the list of components in a tuple term.
@@ -118,13 +119,13 @@ public interface Term {
    * Note also that this creates a copy of the actual tuple arguments, so it costs more memory to
    * iterate over the arguments in this way than using numberTupleArguments and queryTupleArgument.
    */
-  List<Term> queryTupleArguments();
+  ArrayList<Term> queryTupleArguments();
 
   /**
    * For a term of the form Z⟨t1,...,tk⟩(s1,...,sn), returns the list [t1,...,tk.]
    * Warning: this creates a copy of the actual meta-arguments, so does cost some memory.
    */
-  List<Term> queryMetaArguments();
+  ArrayList<Term> queryMetaArguments();
 
   /**
    * If 1 <= i <= numberArguments, this returns the thus indexed argument.

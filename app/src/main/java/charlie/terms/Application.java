@@ -91,7 +91,9 @@ class Application extends TermInherit {
     _head = head;
     if (_head.isApplication()) {
       _head = head.queryHead();
-      args = Stream.concat(head.queryArguments().stream(), args.stream()).toList();
+      ArrayList<Term> newArgs = head.queryArguments();
+      newArgs.addAll(args);
+      args = newArgs;
     }
     setupReplaceables(args);
   }
@@ -187,11 +189,11 @@ class Application extends TermInherit {
   }
 
   /** Returns the list of all arguments, so [s1,...,sn] for h(s1,...,sn). */
-  public List<Term> queryArguments() {
+  public ArrayList<Term> queryArguments() {
     return new ArrayList<Term>(_args);
   }
 
-  public List<Term> queryMetaArguments() {
+  public ArrayList<Term> queryMetaArguments() {
     return _head.queryMetaArguments();
   }
 
@@ -346,9 +348,11 @@ class Application extends TermInherit {
           throw new InvalidPositionException(this, pos,
             "replacing subterm in non-existing argument of application");
         }
-        ArrayList<Term> lst = new ArrayList<Term>(_args);
-        lst.set(index-1, _args.get(index-1).replaceSubterm(tail, replacement));
-        return new Application(_head, lst);
+        Term tmp = _args.get(index-1);
+        _args.set(index-1, tmp.replaceSubterm(tail, replacement));
+        Term ret = new Application(_head, _args);
+        _args.set(index-1, tmp);
+        return ret;
       default:
         Term newhead = _head.replaceSubterm(pos, replacement);
         return new Application(newhead, _args);
