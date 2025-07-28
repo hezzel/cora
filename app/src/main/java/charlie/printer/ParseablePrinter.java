@@ -39,7 +39,7 @@ public class ParseablePrinter extends AsciiPrinter{
     _builder.append(renaming.getName(x));
     _builder.append(" :: ");
     Type type = x.queryType();
-    if (x.queryReplaceableKind() == Replaceable.KIND_METAVAR) {
+    if (x.queryReplaceableKind() == Replaceable.Kind.METAVAR) {
       _builder.append("[");
       for (int i = 0; i < x.queryArity(); i++) {
         if (i > 0) _builder.append(", ");

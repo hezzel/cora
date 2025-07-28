@@ -40,10 +40,9 @@ public class DebugTermPrinter extends ParseableTermPrinter {
    */
   protected String generateName(Replaceable x, Predicate<String> available, int count, int num) {
     String start = switch(x.queryReplaceableKind()) {
-      case Replaceable.KIND_BINDER -> "B";
-      case Replaceable.KIND_BASEVAR -> "V";
-      case Replaceable.KIND_METAVAR -> "M";
-      default -> "?";
+      case Replaceable.Kind.BINDER -> "B";
+      case Replaceable.Kind.BASEVAR -> "V";
+      case Replaceable.Kind.METAVAR -> "M";
     };
     return start + x.queryName() + "." + x.queryIndex();
   }

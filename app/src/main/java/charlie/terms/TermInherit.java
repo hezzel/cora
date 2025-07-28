@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -150,7 +150,7 @@ abstract class TermInherit implements Term {
   public boolean isClosed() {
     ReplaceableList vs = freeReplaceables();
     for (Replaceable x : vs) {
-      if (x.queryReplaceableKind() == Replaceable.KIND_BINDER) return false;
+      if (x.queryReplaceableKind() == Replaceable.Kind.BINDER) return false;
     }
     return true;
   }
@@ -171,7 +171,7 @@ abstract class TermInherit implements Term {
   public boolean isTrueTerm() {
     ReplaceableList vs = freeReplaceables();
     for (Replaceable x : vs) {
-      if (x.queryReplaceableKind() == Replaceable.KIND_METAVAR) return false;
+      if (x.queryReplaceableKind() == Replaceable.Kind.METAVAR) return false;
     }
     return true;
   }
@@ -214,7 +214,7 @@ abstract class TermInherit implements Term {
       if (p.fst().equals(other)) {
         // check that other doesn't freely contain binder variables that are bound in us
         for (Replaceable x : other.freeReplaceables()) {
-          if (x.queryReplaceableKind() == Replaceable.KIND_BINDER &&
+          if (x.queryReplaceableKind() == Replaceable.Kind.BINDER &&
               !_freeReplaceables.contains(x)) return false;
         }
         return true;

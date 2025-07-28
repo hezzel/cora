@@ -197,7 +197,7 @@ public final class DeductionCase extends DeductionStep {
         }
         else {
           module.ifPresent(o -> o.println("Unknown %avariable in case term: \"%a\".",
-            x.queryReplaceableKind() == Replaceable.KIND_METAVAR ? "meta-" : "", _term));
+            x.queryReplaceableKind() == Replaceable.Kind.METAVAR ? "meta-" : "", _term));
         }
         return false;
       }

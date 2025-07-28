@@ -23,7 +23,7 @@ import charlie.types.TypeFactory;
 /**
  * This class is for Meta-variables of higher type; that is, arity ≥ 1.
  */
-class HigherMetaVar implements MetaVariable {
+final class HigherMetaVar implements MetaVariable {
   private static int _COUNTER = 0;
   private final String _name;
   private final ImmutableList<Type> _inputs;
@@ -62,8 +62,8 @@ class HigherMetaVar implements MetaVariable {
     return _inputs.size();
   }
 
-  public int queryReplaceableKind() {
-    return Replaceable.KIND_METAVAR;
+  public Kind queryReplaceableKind() {
+    return Replaceable.Kind.METAVAR;
   }
 
   public Type queryInputType(int i) {
@@ -84,7 +84,7 @@ class HigherMetaVar implements MetaVariable {
 
   public int compareTo(Replaceable other) {
     if (other == this) return 0;    // shortcut
-    int d = other.queryReplaceableKind() - queryReplaceableKind();
+    int d = other.queryReplaceableKind().compareTo(queryReplaceableKind());
     if (d != 0) return d;
     d = _index - other.queryIndex();
     if (d != 0) return d;

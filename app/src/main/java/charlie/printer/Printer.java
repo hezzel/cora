@@ -323,7 +323,7 @@ public abstract class Printer {
     }
     Collections.sort(dom, (x,y) ->
       x.fst().queryReplaceableKind() == y.fst().queryReplaceableKind() ? x.snd().compareTo(y.snd())
-                                : x.fst().queryReplaceableKind() - y.fst().queryReplaceableKind());
+                        : x.fst().queryReplaceableKind().compareTo(y.fst().queryReplaceableKind()));
 
     // print the lot
     _builder.append("[");
