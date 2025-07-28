@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,16 +13,19 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.exceptions;
+package charlie.terms;
+
+import charlie.util.UserException;
 
 /**
- * A PatternRequiredException is thrown when a certain function may only be called on patterns, or
- * on semi-patterns (which may have subterms Z⟨x1,...,xk⟩(s1,...,sn) so long as all xi are distinct
- * binder variables), yet is called on something else.
+ * A PatternRequiredException is thrown when a function like matching is called on something that
+ * is not a pattern, to explain why a (sub-)term is not a pattern or semi-pattern (and thus the
+ * function may not be used).
  */
-public class PatternRequiredException extends RuntimeException {
-  public PatternRequiredException(String term, String function, String message) {
-    super("Calling " + function + " on term " + term + " which is not supported: " + message);
+public class PatternRequiredException extends UserException {
+  public PatternRequiredException(Term term, String functionality, int argument, String expl) {
+    super("Cannot use " + functionality + " on (sub-)term ", term, " since it is not a (semi-)" +
+      "pattern: argument " + argument + " " + expl);
   }
 }
 

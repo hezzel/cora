@@ -18,7 +18,6 @@ package charlie.reader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import charlie.exceptions.UnexpectedPatternException;
 import charlie.util.FixedList;
 import charlie.util.LookupMap;
 import charlie.types.*;

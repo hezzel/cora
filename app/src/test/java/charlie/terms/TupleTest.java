@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.TreeMap;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import charlie.exceptions.*;
 import charlie.util.NullStorageException;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;

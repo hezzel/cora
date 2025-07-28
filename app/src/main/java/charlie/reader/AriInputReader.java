@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import charlie.exceptions.*;
 import charlie.util.FixedList;
 import charlie.util.LookupMap;
 import charlie.types.*;

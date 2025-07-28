@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import charlie.exceptions.*;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.Token;
@@ -258,8 +257,8 @@ public class CoraInputReader extends TermTyper {
       if (r instanceof Variable x) data.addVariable(x, name);
       else if (r instanceof MetaVariable z) data.addMetaVariable(z, name);
       else {
-        throw new UnexpectedPatternException("CoraInputReader", "setupSymbolData",
-          "replaceable " + name, "either a variable or a meta-variable");
+        throw new IllegalArgumentException("Renaming passed to CoraInputReader::setupSymbolData " +
+          "contains a replaceable " + name + " which is neither a variable nor a meta-variable!");
       }
     }
     return data;

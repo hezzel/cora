@@ -29,6 +29,8 @@ import charlie.parser.Parser.*;
  * The CoraParser parses the main Cora input format -- both for the unconstrained basic formalisms
  * (which do not have any theory symbols), and the constrained ones (which currently include all
  * the standard formalisms).
+ *
+ * Note that if the parser is altered, the corresponding reader must be altered accordingly!
  */
 public class CoraParser {
   public static final String PLUS = "+";

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,14 +13,13 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.exceptions;
+package charlie.reader;
 
 /**
- * Some interfaces define a kind of object which can have various patterns (eg, a Type is either
- * ARROW(σ,τ) with σ,τ types, or BASE(c, [σ1,...,σn]) with c a type constructor and all σi types.
- * There are some features that exclusively enumerate all possible patterns.  If a pattern is
- * given that is not enumerated -- typically because a new pattern was introduced later -- an
- * UnexpectedPatternException is thrown.
+ * The parser defines a number of shapes that a term can have, with different formalisms supporting
+ * a different subset of these shapes.  The various readers proceed to turn the parser terms into
+ * real terms.  However, to do so they must be given parser terms built by the right parser.
+ * This exception is thrown if they are given a parser term that is not supported in their format.
  */
 public class UnexpectedPatternException extends RuntimeException {
   public UnexpectedPatternException(String classname, String functionname, String expected,

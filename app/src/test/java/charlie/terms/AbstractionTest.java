@@ -22,7 +22,6 @@ import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import charlie.exceptions.*;
 import charlie.util.Pair;
 import charlie.util.NullStorageException;
 import charlie.types.Type;

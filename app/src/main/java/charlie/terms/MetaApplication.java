@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import charlie.exceptions.*;
 import charlie.util.Pair;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
@@ -238,25 +237,22 @@ class MetaApplication extends TermInherit {
     ArrayList<Variable> substitutedArgs = new ArrayList<Variable>();
     TreeSet<Variable> set = new TreeSet<Variable>();
     for (int i = 0; i < _args.size(); i++) {
-      if (!_args.get(i).isVariable()) throw new PatternRequiredException(toString(), "match",
-        "argument " + (i+1) + " (" + _args.get(i) + ") is not a variable.");
+      if (!_args.get(i).isVariable()) throw new PatternRequiredException(this, "matching", i+1,
+        "is not a variable (let alone a bound variable).");
       Variable x = _args.get(i).queryVariable();
-      if (!x.isBinderVariable()) throw new PatternRequiredException(toString(), "match",
-        "argument " + (i+1) + " ( " + x.toString() + ") is not a binder variable.");
+      if (!x.isBinderVariable()) throw new PatternRequiredException(this, "matching", i+1,
+        "is not a binder variable.");
       Term replacement = gamma.get(x);
-      if (replacement == null) throw new PatternRequiredException(toString(), "match",
-        "argument " + (i+1) + " ( " + x.toString() + ") is not bound above " + toString() + ".");
-      if (!replacement.isVariable()) throw new PatternRequiredException(toString(), "match",
-        "argument " + (i+1) + " ( " + x.toString() + ") is substituted to " +
-        replacement.toString() + " in the context, which is not a variable.");
+      if (replacement == null) throw new PatternRequiredException(this, "matching", i+1,
+        "is not bound in the context above this subterm.");
+      if (!replacement.isVariable()) throw new PatternRequiredException(this, "matching", i+1,
+        "is substituted to a non-variable term in the context.");
       Variable y = replacement.queryVariable();
-      if (!y.isBinderVariable()) throw new PatternRequiredException(toString(), "match",
-        "argument " + (i+1) + " ( " + x.toString() + ") is substituted to " +
-        y.toString() + " in the context, which is a non-binder variable.");
+      if (!y.isBinderVariable()) throw new PatternRequiredException(this, "matching", i+1,
+        "is substituted to a non-binder variable in the context.");
       substitutedArgs.add(y);
-      if (set.contains(y)) throw new PatternRequiredException(toString(), "match",
-        "duplicate argument to meta-variable: argument " + (i+1) + " ( " + x.toString() + ") is " +
-        "substituted to " + y.toString() + " which occurred before.");
+      if (set.contains(y)) throw new PatternRequiredException(this, "matching", i+1,
+        "is substituted to the same binder variable as a previous argument.");
       set.add(y);
     }
     // create abstraction
