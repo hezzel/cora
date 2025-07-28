@@ -88,7 +88,7 @@ public class HigherMetaVarTest {
     MetaVariable x = TermFactory.createMetaVar("xx", type, 3);
     assertTrue(x.queryName().equals("xx"));
     assertTrue(x.queryArity() == 3);
-    assertTrue(x.queryReplaceableKind() == Replaceable.KIND_METAVAR);
+    assertTrue(x.queryReplaceableKind() == Replaceable.Kind.METAVAR);
     assertTrue(x.queryInputType(1).equals(TypeFactory.createSort("a")));
     assertTrue(x.queryInputType(2).equals(TypeFactory.createSort("b")));
     assertTrue(x.queryInputType(3).equals(TypeFactory.createSort("c")));

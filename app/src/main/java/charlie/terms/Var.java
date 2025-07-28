@@ -31,7 +31,7 @@ import charlie.types.Type;
  *
  * A non-binder variable is also a meta-variable with arity 0.
  */
-class Var extends LeafTermInherit implements Variable, MetaVariable {
+final class Var extends LeafTermInherit implements Variable, MetaVariable {
   private static int COUNTER = 0;
   private final String _name;
   private final int _index;
@@ -91,8 +91,8 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
     return _index;
   }
 
-  public int queryReplaceableKind() {
-    return Replaceable.KIND_BASEVAR;
+  public Kind queryReplaceableKind() {
+    return Replaceable.Kind.BASEVAR;
   }
 
   /** @return the type of this variable */
@@ -165,7 +165,7 @@ class Var extends LeafTermInherit implements Variable, MetaVariable {
   /** Implements a total ordering on replaceables using the kind, type and index. */
   public int compareTo(Replaceable other) {
     if (other == this) return 0;    // shortcut
-    int d = other.queryReplaceableKind() - queryReplaceableKind();
+    int d = other.queryReplaceableKind().compareTo(queryReplaceableKind());
     if (d != 0) return d;
     if (_index < other.queryIndex()) return -1; 
     if (_index > other.queryIndex()) return 1;
