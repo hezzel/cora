@@ -15,13 +15,13 @@
 
 package charlie.terms;
 
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import charlie.util.Pair;
+import charlie.util.FixedList;
 import charlie.util.NullStorageException;
+import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.position.Position;
@@ -31,7 +31,7 @@ import charlie.terms.position.ArgumentPos;
  * A tuple term is a term of the form ⦇t1,..., tk⦈, with k ≥ 2.
  */
 public class Tuple extends TermInherit {
-  private ImmutableList<Term> _components;
+  private ArrayList<Term> _components;
   private Type _tupleType;
 
   /** This private method does correctness checks and sets up the variables. */
@@ -45,17 +45,16 @@ public class Tuple extends TermInherit {
     }
 
     // configure the set of free variables for this term
-    ImmutableList.Builder<Term> builder = ImmutableList.<Term>builder();
+    _components = new ArrayList<Term>();
     ReplaceableList empty = ReplaceableList.EMPTY;
     ReplaceableList frees = calculateFreeReplaceablesForSubterms(tms, empty);
-    ReplaceableList bounds = calculateBoundVariablesAndRefreshSubs(tms, empty, frees, builder);
-    _components = builder.build();
+    ReplaceableList bounds = calculateBoundVariablesAndRefreshSubs(tms, empty, frees, _components);
     setVariables(frees, bounds);
 
     // set the type
-    ImmutableList<Type> tmsTy =
-      tms.stream().map(Term::queryType).collect(ImmutableList.toImmutableList());
-    _tupleType = TypeFactory.createProduct(tmsTy);
+    FixedList.Builder<Type> tmsTy = new FixedList.Builder<Type>();
+    for (Term t : tms) tmsTy.add(t.queryType());
+    _tupleType = TypeFactory.createProduct(tmsTy.build());
   }
 
   // Constructors ----------------------------------------------------------------------------------
@@ -128,7 +127,9 @@ public class Tuple extends TermInherit {
   }
 
   @Override
-  public ImmutableList<Term> queryTupleArguments() { return _components; }
+  public List<Term> queryTupleArguments() {
+    return new ArrayList<Term>(_components);
+  }
 
   @Override
   public Term queryTupleArgument(int i) {
