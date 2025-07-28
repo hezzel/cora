@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -14,8 +14,6 @@
  *************************************************************************************************/
 
 package charlie.smt;
-
-import charlie.exceptions.SmtEvaluationException;
 
 /** This class holds the negation of a boolean variable. */
 public final class NBVar extends Constraint {
@@ -39,7 +37,7 @@ public final class NBVar extends Constraint {
   }
 
   public boolean evaluate(Valuation val) {
-    if (val == null) throw new SmtEvaluationException("!" + _negated.queryName());
+    if (val == null) throw new SmtEvaluationException(_negated);
     else return !val.queryBoolAssignment(_negated.queryIndex());
   }
 
