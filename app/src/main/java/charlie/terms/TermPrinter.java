@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
 import java.util.function.Predicate;
-import charlie.exceptions.UnexpectedPatternException;
 import charlie.types.Type;
 
 /**
@@ -216,8 +215,8 @@ public class TermPrinter {
     else if (term.isAbstraction()) printAbstraction(term, naming, builder);
     else if (term.isMetaApplication()) printMetaApplication(term, naming, builder);
     else if (term.isApplication()) printApplication(term, naming, builder);
-    else throw new UnexpectedPatternException("TermPrinter", "print", "one of the standard term " +
-      "shapes", "something else");
+    else throw new IllegalArgumentException("TermPrinter::print called with a term that does " +
+      "not have any of the standard term shapes!");
   }
 
   /**

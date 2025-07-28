@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import charlie.exceptions.*;
 import charlie.util.Pair;
 import charlie.util.NullStorageException;
 import charlie.types.Type;

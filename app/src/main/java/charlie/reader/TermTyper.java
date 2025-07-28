@@ -17,7 +17,6 @@ package charlie.reader;
 
 import java.util.ArrayList;
 
-import charlie.exceptions.*;
 import charlie.util.FixedList;
 import charlie.util.UserException;
 import charlie.types.*;

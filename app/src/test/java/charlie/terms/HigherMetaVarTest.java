@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import com.google.common.collect.ImmutableList;
 
-import charlie.exceptions.*;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;

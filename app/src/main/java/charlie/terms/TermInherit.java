@@ -23,7 +23,6 @@ import java.util.TreeSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import charlie.exceptions.*;
 import charlie.util.Pair;
 import charlie.terms.position.Position;
 import charlie.terms.position.FinalPos;

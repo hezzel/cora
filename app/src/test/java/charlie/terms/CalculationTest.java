@@ -18,7 +18,6 @@ package charlie.terms;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.TreeSet;
-import charlie.exceptions.*;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
 
