@@ -15,7 +15,7 @@
 
 package charlie.terms;
 
-import com.google.common.collect.ImmutableList;
+import charlie.util.FixedList;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
@@ -26,12 +26,12 @@ import charlie.types.TypeFactory;
 final class HigherMetaVar implements MetaVariable {
   private static int _COUNTER = 0;
   private final String _name;
-  private final ImmutableList<Type> _inputs;
+  private final FixedList<Type> _inputs;
   private final Type _output;
   private final int _index;
   private Type _mytype;
 
-  HigherMetaVar(String name, ImmutableList<Type> inputs, Type output) {
+  HigherMetaVar(String name, FixedList<Type> inputs, Type output) {
     _name = name;
     _inputs = inputs;
     _output = output;

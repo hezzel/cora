@@ -15,7 +15,6 @@
 
 package charlie.terms;
 
-import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -107,18 +106,25 @@ public interface Term {
   /**
    * Returns the list of arguments; that is, [s1,...,sn] for a term h(s1,...,sn) with h not an
    * application.  Note that this is the empty list for any term that is not an application.
+   * Note also that this creates a copy of the actual arguments, so it costs more memory to
+   * iterate over the arguments in this way than using numberArguments() and queryArgument(int i).
    */
-  ImmutableList<Term> queryArguments();
+  List<Term> queryArguments();
 
   /**
    * Returns the list of components in a tuple term.
    * Notice that tuple terms that are valid have at least two components.
    * If the current term is not a tuple, the list returned is empty.
+   * Note also that this creates a copy of the actual tuple arguments, so it costs more memory to
+   * iterate over the arguments in this way than using numberTupleArguments and queryTupleArgument.
    */
-  ImmutableList<Term> queryTupleArguments();
+  List<Term> queryTupleArguments();
 
-  /** For a term of the form Z⟨t1,...,tk⟩(s1,...,sn), returns the list [t1,...,tk.] */
-  ImmutableList<Term> queryMetaArguments();
+  /**
+   * For a term of the form Z⟨t1,...,tk⟩(s1,...,sn), returns the list [t1,...,tk.]
+   * Warning: this creates a copy of the actual meta-arguments, so does cost some memory.
+   */
+  List<Term> queryMetaArguments();
 
   /**
    * If 1 <= i <= numberArguments, this returns the thus indexed argument.

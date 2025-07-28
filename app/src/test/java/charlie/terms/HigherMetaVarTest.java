@@ -17,15 +17,15 @@ package charlie.terms;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import com.google.common.collect.ImmutableList;
 
+import charlie.util.FixedList;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 
 public class HigherMetaVarTest {
-  private ImmutableList<Type> muli(Type type1, Type type2) {
-    ImmutableList.Builder<Type> builder = ImmutableList.<Type>builder();
+  private FixedList<Type> fili(Type type1, Type type2) {
+    FixedList.Builder<Type> builder = new FixedList.Builder<Type>();
     if (type1 != null) builder.add(type1);
     if (type2 != null) builder.add(type2);
     return builder.build();
@@ -35,7 +35,7 @@ public class HigherMetaVarTest {
   public void testCreateWithNullName() {
     Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
     assertThrows(NullStorageException.class, () ->
-      new HigherMetaVar(null, muli(a, b), TypeFactory.createSort("c")));
+      new HigherMetaVar(null, fili(a, b), TypeFactory.createSort("c")));
   }
 
   @Test
@@ -46,26 +46,26 @@ public class HigherMetaVarTest {
 
   @Test
   public void testCreateWithSingleNullInput() {
-    assertThrows(NullPointerException.class, () -> TermFactory.createMetaVar("z",
+    assertThrows(NullStorageException.class, () -> TermFactory.createMetaVar("z",
       TypeFactory.createSort("a"), null, TypeFactory.createSort("c")));
   }
 
   @Test
   public void testCreateWithNullOutput() {
     Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
-    assertThrows(NullStorageException.class, () -> new HigherMetaVar("z", muli(a, b), null));
+    assertThrows(NullStorageException.class, () -> new HigherMetaVar("z", fili(a, b), null));
   }
 
   @Test
   public void testCreateWithEmptyInputs() {
     assertThrows(IllegalArgumentException.class, () ->
-      new HigherMetaVar("z", muli(null, null), TypeFactory.createSort("c")));
+      new HigherMetaVar("z", fili(null, null), TypeFactory.createSort("c")));
   }
 
   @Test
   public void testCorrectCreation() {
     Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
-    MetaVariable z = TermFactory.createMetaVar("z", muli(a, b), TypeFactory.createSort("c"));
+    MetaVariable z = TermFactory.createMetaVar("z", fili(a, b), TypeFactory.createSort("c"));
     assertTrue(z.queryName().equals("z"));
     assertTrue(z.queryArity() == 2);
     assertTrue(z.queryInputType(1).equals(TypeFactory.createSort("a")));
@@ -99,8 +99,8 @@ public class HigherMetaVarTest {
   @Test
   public void testMetavarIndexes() {
     Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
-    MetaVariable z1 = TermFactory.createMetaVar("z", muli(a,b), TypeFactory.createSort("c"));
-    MetaVariable z2 = TermFactory.createMetaVar("z", muli(a,b), TypeFactory.createSort("c"));
+    MetaVariable z1 = TermFactory.createMetaVar("z", fili(a,b), TypeFactory.createSort("c"));
+    MetaVariable z2 = TermFactory.createMetaVar("z", fili(a,b), TypeFactory.createSort("c"));
     assertTrue(z1.queryIndex() < z2.queryIndex());
     assertTrue(z1.compareTo(z2) == -1);
     assertTrue(z2.compareTo(z1) == 1);
@@ -109,7 +109,7 @@ public class HigherMetaVarTest {
   @Test
   public void testMetavarComparison() {
     Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
-    Replaceable z = TermFactory.createMetaVar("z", muli(a,b), TypeFactory.createSort("c"));
+    Replaceable z = TermFactory.createMetaVar("z", fili(a,b), TypeFactory.createSort("c"));
     Replaceable x = new Var("z", z.queryType());
     Replaceable y = new Binder("z", x.queryType());
     assertTrue(z.compareTo(z) == 0);
@@ -120,7 +120,7 @@ public class HigherMetaVarTest {
     assertTrue(z.hashCode() == z.hashCode());
     assertFalse(z.hashCode() == x.hashCode());
     assertFalse(z.hashCode() == y.hashCode());
-    Replaceable zz = TermFactory.createMetaVar("z", muli(a,b), TypeFactory.createSort("c"));
+    Replaceable zz = TermFactory.createMetaVar("z", fili(a,b), TypeFactory.createSort("c"));
     assertFalse(z.hashCode() == zz.hashCode());
   }
 }

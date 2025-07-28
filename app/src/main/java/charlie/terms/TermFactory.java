@@ -15,8 +15,8 @@
 
 package charlie.terms;
 
-import com.google.common.collect.ImmutableList;
 import java.util.List;
+import charlie.util.FixedList;
 import charlie.types.*;
 
 public class TermFactory {
@@ -71,7 +71,7 @@ public class TermFactory {
     if (arity == 0) return new Var(name, type);
     if (arity < 0) throw new IllegalArgumentException("TermFactory::createMetaVar " +
       "received negative arity " + arity + ".");
-    ImmutableList.Builder<Type> builder = ImmutableList.<Type>builder();
+    FixedList.Builder<Type> builder = new FixedList.Builder<Type>();
     Type tmp = type;
     for (int i = 0; i < arity; i++) {
       switch (tmp) {
@@ -88,7 +88,7 @@ public class TermFactory {
   }
 
   /** Creates a meta-variable X with arity k */
-  public static MetaVariable createMetaVar(String name, ImmutableList<Type> inputs, Type output) {
+  public static MetaVariable createMetaVar(String name, FixedList<Type> inputs, Type output) {
     if (inputs.size() == 0) return new Var(name, output);
     return new HigherMetaVar(name, inputs, output);
   }
@@ -96,17 +96,17 @@ public class TermFactory {
   /** Creates a meta-variable X with arity k */
   public static MetaVariable createMetaVar(String name, List<Type> inputs, Type output) {
     if (inputs.size() == 0) return new Var(name, output);
-    return new HigherMetaVar(name, ImmutableList.copyOf(inputs), output);
+    return new HigherMetaVar(name, FixedList.copy(inputs), output);
   }
 
   /** Creates a meta-variable X with arity 1. */
   public static MetaVariable createMetaVar(String name, Type input, Type output) {
-    return new HigherMetaVar(name, ImmutableList.<Type>builder().add(input).build(), output);
+    return new HigherMetaVar(name, FixedList.of(input), output);
   }
 
   /** Creates a meta-variable X with arity 2. */
   public static MetaVariable createMetaVar(String name, Type in1, Type in2, Type output) {
-    return new HigherMetaVar(name, ImmutableList.<Type>builder().add(in1).add(in2).build(), output);
+    return new HigherMetaVar(name, FixedList.of(in1, in2), output);
   }
 
   /** Creates a tuple with 2 elements */
@@ -137,7 +137,7 @@ public class TermFactory {
    * including another application.
    */
   public static Term createApp(Term head, Term arg1, Term arg2) {
-    return head.apply(ImmutableList.<Term>builder().add(arg1).add(arg2).build());
+    return head.apply(List.of(arg1, arg2));
   }
 
   /**
@@ -162,12 +162,12 @@ public class TermFactory {
 
   /** Create a meta-application Z[arg] */
   public static Term createMeta(MetaVariable mv, Term arg) {
-    return new MetaApplication(mv, ImmutableList.<Term>builder().add(arg).build());
+    return new MetaApplication(mv, List.of(arg));
   }
 
   /** Create a meta-application Z[arg2] */
   public static Term createMeta(MetaVariable mv, Term arg1, Term arg2) {
-    return new MetaApplication(mv, ImmutableList.<Term>builder().add(arg1).add(arg2).build());
+    return new MetaApplication(mv, List.of(arg1, arg2));
   }
 
   /** Creates an empty substitution. */

@@ -15,7 +15,6 @@
 
 package charlie.terms;
 
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -90,13 +89,14 @@ abstract class TermInherit implements Term {
   /**
    * Refreshes bound variables in the given list if necessary to ensure that they do not overlap
    * with the variables in the given "avoid" set (to ensure well-behavedness of terms), and stores
-   * the resulting terms (or original terms if they already do not overlap) in the given builder.
+   * the resulting terms (or original terms if they already do not overlap) in the given list
+   * updatedSubs.
    * Note that subs itself is not changed.  The function returns the resulting combined set of
    * bound variables, including all those in "include".
    */
   protected static ReplaceableList calculateBoundVariablesAndRefreshSubs(List<Term> subs,
                                         ReplaceableList include, ReplaceableList avoid,
-                                        ImmutableList.Builder<Term> builder) {
+                                        List<Term> updatedSubs) {
     for (int i = 0; i < subs.size(); i++) {
       Term sub = subs.get(i);
       ReplaceableList vs = sub.boundVars();
@@ -108,7 +108,7 @@ abstract class TermInherit implements Term {
         if (include.size() == 0) include = vs;
         else include = include.combine(vs);
       }
-      builder.add(sub);
+      updatedSubs.add(sub);
     }
     return include;
   }
@@ -350,9 +350,9 @@ abstract class TermInherit implements Term {
   public int numberArguments() { return 0; }
   public int numberMetaArguments() { return 0; }
   public int numberTupleArguments() { return 0; }
-  public ImmutableList<Term> queryArguments() { return ImmutableList.of(); }
-  public ImmutableList<Term> queryTupleArguments() { return ImmutableList.of(); }
-  public ImmutableList<Term> queryMetaArguments() { return ImmutableList.of(); }
+  public List<Term> queryArguments() { return List.of(); }
+  public List<Term> queryTupleArguments() { return List.of(); }
+  public List<Term> queryMetaArguments() { return List.of(); }
   public Term queryHead() { return this; }
   public Term queryArgument(int i) {
     throw new IndexOutOfBoundsException(queryMyClassName() + "::queryArgument(" + i + ") called.");

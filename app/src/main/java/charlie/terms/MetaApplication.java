@@ -15,7 +15,6 @@
 
 package charlie.terms;
 
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +33,7 @@ import charlie.terms.position.MetaPos;
  */
 class MetaApplication extends TermInherit {
   public MetaVariable _metavar;
-  public ImmutableList<Term> _args;
+  public ArrayList<Term> _args;
 
   /**
    * This constructor is used to create a term mvar⟨s1,...,sk⟩ with k ≥ 1.
@@ -69,12 +68,11 @@ class MetaApplication extends TermInherit {
           ", while the argument term ", arg, " has type ", arg.queryType());
       }
     }
-    ImmutableList.Builder<Term> builder = ImmutableList.<Term>builder();
+    _args = new ArrayList<Term>();
     ReplaceableList empty = ReplaceableList.EMPTY;
     ReplaceableList start = new ReplaceableList(_metavar);
     ReplaceableList frees = calculateFreeReplaceablesForSubterms(args, start);
-    ReplaceableList bounds = calculateBoundVariablesAndRefreshSubs(args, empty, frees, builder);
-    _args = builder.build();
+    ReplaceableList bounds = calculateBoundVariablesAndRefreshSubs(args, empty, frees, _args);
     setVariables(frees, bounds);
   }
 
@@ -114,8 +112,8 @@ class MetaApplication extends TermInherit {
   }
 
   /** @return the list of meta-arguments */
-  public ImmutableList<Term> queryMetaArguments() {
-    return _args;
+  public List<Term> queryMetaArguments() {
+    return new ArrayList<Term>(_args);
   }
 
   /** If this term is Z⟨s1,...,sk⟩, returns si. */

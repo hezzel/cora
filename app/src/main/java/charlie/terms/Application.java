@@ -15,7 +15,6 @@
 
 package charlie.terms;
 
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +30,7 @@ import charlie.terms.position.*;
 /** An Application is a term of the form h(s1,...,sn) where h is not an application. */
 class Application extends TermInherit {
   public Term _head;
-  public ImmutableList<Term> _args;
+  public ArrayList<Term> _args;
   public Type _outputType;
 
   //  Construction Phase ------------------------------------------------------
@@ -49,9 +48,8 @@ class Application extends TermInherit {
       _head = _head.refreshBinders();
       bounds = _head.boundVars();
     }
-    ImmutableList.Builder<Term> builder = ImmutableList.<Term>builder();
-    bounds = calculateBoundVariablesAndRefreshSubs(args, bounds, frees, builder);
-    _args = builder.build();
+    _args = new ArrayList<Term>();
+    bounds = calculateBoundVariablesAndRefreshSubs(args, bounds, frees, _args);
     setVariables(frees, bounds);
   }
 
@@ -189,11 +187,11 @@ class Application extends TermInherit {
   }
 
   /** Returns the list of all arguments, so [s1,...,sn] for h(s1,...,sn). */
-  public ImmutableList<Term> queryArguments() {
-    return _args;
+  public List<Term> queryArguments() {
+    return new ArrayList<Term>(_args);
   }
 
-  public ImmutableList<Term> queryMetaArguments() {
+  public List<Term> queryMetaArguments() {
     return _head.queryMetaArguments();
   }
 

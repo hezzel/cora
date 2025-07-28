@@ -17,13 +17,13 @@ package charlie.terms;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import charlie.util.Pair;
+import charlie.util.FixedList;
 import charlie.util.NullStorageException;
+import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
@@ -95,7 +95,7 @@ class MetaApplicationTest extends TermTestFoundation {
   }
 
   private Term makeMeta(String name, Term arg, Type output) {
-    ImmutableList<Type> inputs = ImmutableList.<Type>builder().add(arg.queryType()).build();
+    FixedList<Type> inputs = FixedList.of(arg.queryType());
     MetaVariable z = new HigherMetaVar(name, inputs, output);
     return TermFactory.createMeta(z, arg);
   }
