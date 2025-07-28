@@ -50,6 +50,7 @@ final class Binder extends LeafTermInherit implements Variable {
     _name = "x{" + COUNTER + "}";
     _index = COUNTER;
     COUNTER++;
+    setVariables(new ReplaceableList(this));
   }
 
   /** @return true */
@@ -95,6 +96,11 @@ final class Binder extends LeafTermInherit implements Variable {
 
   /** @return this */
   public Variable queryVariable() {
+    return this;
+  }
+
+  /** @return this */
+  public Term makeTerm() {
     return this;
   }
 

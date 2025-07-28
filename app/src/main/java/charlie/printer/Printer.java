@@ -244,11 +244,15 @@ public abstract class Printer {
     ArrayList<Term> terms = new ArrayList<Term>();
     for (int i = 0; i < objects.length; i++) {
       if (objects[i] instanceof Term t) terms.add(t);
+      else if (objects[i] instanceof Replaceable r) terms.add(r.makeTerm());
     }   
     Renaming renaming = _termPrinter.generateUniqueNaming(terms);
     for (int i = 0; i < objects.length; i++) {
       if (objects[i] instanceof Term t) objects[i] = new Pair<Term,Renaming>(t, renaming);
-    }   
+      else if (objects[i] instanceof Replaceable r) {
+        objects[i] = new Pair<Replaceable,Renaming>(r, renaming);
+      }
+    }
   }
 
   /**
@@ -275,6 +279,9 @@ public abstract class Printer {
           if (p.fst() instanceof Term t) _termPrinter.print(t, renaming, _builder);
           else if (p.fst() instanceof Rule rule) printRule(rule, renaming);
           else if (p.fst() instanceof Substitution sub) printSubstitution(sub, renaming, renaming);
+          else if (p.fst() instanceof Replaceable r) {
+            _termPrinter.printReplaceable(r, renaming, _builder);
+          }
           else printSingleUnknownObject(ob);
         }
         else printSingleUnknownObject(ob);

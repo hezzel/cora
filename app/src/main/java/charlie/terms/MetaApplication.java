@@ -112,7 +112,7 @@ class MetaApplication extends TermInherit {
   }
 
   /** @return the list of meta-arguments */
-  public List<Term> queryMetaArguments() {
+  public ArrayList<Term> queryMetaArguments() {
     return new ArrayList<Term>(_args);
   }
 
@@ -185,9 +185,11 @@ class MetaApplication extends TermInherit {
     switch (pos) {
       case MetaPos(int index, Position tail):
         if (index <= _args.size()) {
-          ArrayList<Term> newargs = new ArrayList<Term>(_args);
-          newargs.set(index-1, _args.get(index-1).replaceSubterm(tail, replacement));
-          return new MetaApplication(_metavar, newargs);
+          Term tmp = _args.get(index-1);
+          _args.set(index-1, tmp.replaceSubterm(tail, replacement));
+          Term ret = new MetaApplication(_metavar, _args);
+          _args.set(index-1, tmp);
+          return ret;
         }
       default:
         throw new InvalidPositionException(this, pos, "replacing subterm of meta-application");

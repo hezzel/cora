@@ -127,7 +127,7 @@ public class Tuple extends TermInherit {
   }
 
   @Override
-  public List<Term> queryTupleArguments() {
+  public ArrayList<Term> queryTupleArguments() {
     return new ArrayList<Term>(_components);
   }
 
@@ -227,9 +227,11 @@ public class Tuple extends TermInherit {
     switch (pos) {
       case ArgumentPos(int index, Position tail):
         if (index <= _components.size()) {
-          ArrayList<Term> newcomps = new ArrayList<Term>(_components);
-          newcomps.set(index - 1, newcomps.get(index - 1).replaceSubterm(tail, replacement));
-          return new Tuple(newcomps);
+          Term tmp = _components.get(index-1);
+          _components.set(index - 1, tmp.replaceSubterm(tail, replacement));
+          Term ret = new Tuple(_components);
+          _components.set(index - 1, tmp);
+          return ret;
         }
       default:
         throw new InvalidPositionException(this, pos, "replacing subterm of tuple");

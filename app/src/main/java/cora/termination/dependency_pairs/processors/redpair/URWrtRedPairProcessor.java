@@ -94,7 +94,9 @@ public class URWrtRedPairProcessor implements Processor {
     if (t.isFunctionalTerm()) {
       FunctionSymbol f = amap.getTranslation(t.queryRoot(), t.numberArguments());
       ArrayList<Term> args = new ArrayList<Term>(t.numberArguments());
-      for (Term arg : t.queryArguments()) args.add(translateTerm(amap, vmap, arg, lvar));
+      for (int i = 1; i <= t.numberArguments(); i++) {
+        args.add(translateTerm(amap, vmap, t.queryArgument(i), lvar));
+      }
       return f.apply(args);
     }
     

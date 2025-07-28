@@ -111,11 +111,11 @@ public class PrinterTest {
     Variable x = TermFactory.createVar("x");
     Variable y = TermFactory.createVar("x");
     Variable z = TermFactory.createVar("x");
-    Variable u = TermFactory.createVar("x");
+    MetaVariable u = TermFactory.createMetaVar("x", List.of(type("o")), type("o"));
     Printer printer = PrinterFactory.createPlainPrinter(trs);
     printer.add(new Object[] { "x = ", x, " and y = ", y },
       List.of(" and z = ", z, " and u = ", u));
-    assertTrue(printer.toString().equals("x = x__1 and y = x__2 and z = x__1 and u = x__2"));
+    assertTrue(printer.toString().equals("x = x__1 and y = x__2 and z = x__2 and u = x__1"));
   }
 
   @Test

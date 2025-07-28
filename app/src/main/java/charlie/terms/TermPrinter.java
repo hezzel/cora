@@ -237,6 +237,19 @@ public class TermPrinter {
   }
 
   /**
+   * This prints the given replaceable to the string builder in the same way it would be done by
+   * printVariable or printMetaApplication.
+   *
+   * The default implementation uses the renaming, and if no renaming for this Replaceable is
+   * defined then it uses its base name.
+   */
+  public void printReplaceable(Replaceable r, Renaming naming, StringBuilder builder) {
+    String name = naming.getName(r);
+    if (name == null) builder.append(r.queryName());
+    else builder.append(name);
+  }
+
+  /**
    * Called by print() to print a non-theory function symbol.
    *
    * When using the default implementations of printFunctionalTerm and printApplication, it is also

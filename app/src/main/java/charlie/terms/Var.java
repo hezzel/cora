@@ -115,6 +115,10 @@ final class Var extends LeafTermInherit implements Variable, MetaVariable {
     return this;
   }
 
+  public Term makeTerm() {
+    return this;
+  }
+
   /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */
   public Term substitute(Substitution gamma) {
     if (gamma == null) throw new NullPointerException("Substitution in Var::substitute");

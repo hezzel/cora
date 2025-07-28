@@ -350,9 +350,9 @@ abstract class TermInherit implements Term {
   public int numberArguments() { return 0; }
   public int numberMetaArguments() { return 0; }
   public int numberTupleArguments() { return 0; }
-  public List<Term> queryArguments() { return List.of(); }
-  public List<Term> queryTupleArguments() { return List.of(); }
-  public List<Term> queryMetaArguments() { return List.of(); }
+  public ArrayList<Term> queryArguments() { return new ArrayList<Term>(); }
+  public ArrayList<Term> queryTupleArguments() { return new ArrayList<Term>(); }
+  public ArrayList<Term> queryMetaArguments() { return new ArrayList<Term>(); }
   public Term queryHead() { return this; }
   public Term queryArgument(int i) {
     throw new IndexOutOfBoundsException(queryMyClassName() + "::queryArgument(" + i + ") called.");

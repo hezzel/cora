@@ -15,6 +15,7 @@
 
 package charlie.terms;
 
+import java.util.ArrayList;
 import charlie.util.FixedList;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
@@ -80,6 +81,18 @@ final class HigherMetaVar implements MetaVariable {
 
   public Type queryType() {
     return _mytype;
+  }
+
+  public Term makeTerm() {
+    ArrayList<Term> args = new ArrayList<Term>();
+    for (int i = 0; i < _inputs.size(); i++) {
+      args.add(new Binder("b" + (i+1), _inputs.get(i)));
+    }
+    Term ret = new MetaApplication(this, args);
+    for (int i = args.size()-1; i >= 0; i--) {
+      ret = new Abstraction(args.get(i).queryVariable(), ret);
+    }
+    return ret;
   }
 
   public int compareTo(Replaceable other) {
