@@ -17,19 +17,18 @@ package cora.rwinduction.engine;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
 import java.util.Set;
 
-import charlie.terms.FunctionSymbol;
-import charlie.terms.Renaming;
-import charlie.terms.TheoryFactory;
-import charlie.trs.TRS;
+import charlie.terms.*;
+import charlie.trs.*;
 import charlie.reader.CoraInputReader;
 
 class ProofContextTest {
   private TRS setupTRS() {
     return CoraInputReader.readTrsFromString(
       "sum1 :: Int -> Int\n" +
-      "sum1(x) -> 0 | x <= 0\n" +
+      "sum1(y) -> 0 | y <= 0\n" +
       "sum1(x) -> x + sum1(x-1) | x > 0\n" +
       "sum2 :: Int -> Int\n" +
       "sum2(x) -> iter(x, 0, 0)\n" +
@@ -73,6 +72,41 @@ class ProofContextTest {
     assertTrue(context.queryRuleArity(trs.lookupSymbol("partial")) == 1);
     assertTrue(context.queryRuleArity(TheoryFactory.plusSymbol) == 2);
     assertTrue(context.queryRuleArity(TheoryFactory.minusSymbol) == 1);
+  }
+
+  @Test
+  public void testVariableNamer() {
+    TRS trs = setupTRS();
+    TermPrinter printer = new TermPrinter(Set.of());
+    ProofContext context = new ProofContext(trs, lst -> printer.generateUniqueNaming(lst));
+    VariableNamer namer = context.getVariableNamer();
+    assertTrue(namer.queryDefaultNaming(trs.lookupSymbol("sum1"), 1) == null);
+    assertTrue(namer.queryDefaultNaming(trs.lookupSymbol("sum2"), 1).equals("x"));
+    assertTrue(namer.queryDefaultNaming(trs.lookupSymbol("sum2"), 2) == null);
+    assertTrue(namer.queryDefaultNaming(trs.lookupSymbol("iter"), 1).equals("x"));
+    assertTrue(namer.queryDefaultNaming(trs.lookupSymbol("iter"), 2).equals("i"));
+    assertTrue(namer.queryDefaultNaming(trs.lookupSymbol("iter"), 3).equals("z"));
+    assertTrue(namer.queryDefaultNaming(trs.lookupSymbol("add"), 1) == null);
+    assertTrue(namer.queryDefaultNaming(trs.lookupSymbol("s"), 1).equals("y"));
+  }
+
+  @Test
+  public void testVariableNamerWithDuplicateName() {
+    // create the TRS with one rule: f(x__1, x__2) -> f(x__1, x__2)
+    Variable x1 = TermFactory.createVar("x", CoraInputReader.readType("Int"));
+    Variable x2 = TermFactory.createVar("x", CoraInputReader.readType("Int"));
+    FunctionSymbol f = TermFactory.createConstant("f", CoraInputReader.readType("Int -> Int -> A"));
+    Term s = f.apply(x1).apply(x1);
+    Rule rule = TrsFactory.createRule(s, s);
+    Alphabet alphabet = new Alphabet(Set.of(f));
+    TRS trs = TrsFactory.createTrs(alphabet, List.of(rule), TrsFactory.MSTRS);
+    // create a proof context, and see the variable namer it creates
+    TermPrinter printer = new TermPrinter(Set.of("f"));
+    ProofContext context = new ProofContext(trs, lst -> printer.generateUniqueNaming(lst));
+    VariableNamer namer = context.getVariableNamer();
+    // make sure those variables are still called x!
+    assertTrue(namer.queryDefaultNaming(f, 1).equals("x"));
+    assertTrue(namer.queryDefaultNaming(f, 2).equals("x"));
   }
 }
 

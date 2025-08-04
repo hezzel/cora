@@ -22,6 +22,7 @@ import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;
+import charlie.terms.Variable;
 import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
@@ -39,7 +40,7 @@ public class ProofContext {
   private final HashMap<Type,Set<FunctionSymbol>> _constructors =
     new HashMap<Type,Set<FunctionSymbol>>();
   private final HashMap<FunctionSymbol,Integer> _arities = new HashMap<FunctionSymbol,Integer>();
-  private VariableNamer _namer = new VariableNamer();
+  private VariableNamer _namer;
 
   /**
    * Constructor: sets up a ProofContext with rules taken from the given TRS.
@@ -51,6 +52,7 @@ public class ProofContext {
     int n = initialSystem.queryRuleCount();
     createRuleInfo(renamingMaker);
     createConstructorInfo();
+    _namer = new VariableNamer(createNamingInfo());
   }
 
   /**
@@ -88,6 +90,45 @@ public class ProofContext {
     }
     for (Type t : _constructors.keySet()) {
       _constructors.put(t, Collections.unmodifiableSet(_constructors.get(t)));
+    }
+  }
+
+  /**
+   * Helper function for the constructor: this constructs a list of specific argument positions and
+   * the names of variables occurring in them (in the rules).
+   */
+  private ArrayList<Pair<Pair<FunctionSymbol,Integer>,String>> createNamingInfo() {
+    ArrayList<Pair<Pair<FunctionSymbol,Integer>,String>> ret =
+      new ArrayList<Pair<Pair<FunctionSymbol,Integer>,String>>();
+    for (int i = 0; i < _trs.queryRuleCount(); i++) {
+      Renaming renaming = _ruleRenamings.get(i);
+      _trs.queryRule(i).queryLeftSide().visitSubterms( (s,p) -> addSubtermInfo(ret, s, renaming) );
+    }
+    return ret;
+  }
+
+  /**
+   * Helper function for createNamingInfo: given a term s of the form f s1...sn, for each j in
+   * {1..n}: if sj is a variable, then this stores the pair ((f, j), varname) into the given info
+   * list.  To determine the variable's name, we primarily look into the given renaming, but if the
+   * variable's actual name is a substring, then we use that instead.
+   */
+  private void addSubtermInfo(ArrayList<Pair<Pair<FunctionSymbol,Integer>,String>> info,
+                              Term s, Renaming renaming) {
+    // does s have the form f s1 ... sn?
+    if (!s.isFunctionalTerm() || s.numberArguments() == 0) return;
+
+    // go over all the arguments
+    for (int j = 1; j <= s.numberArguments(); j++) {
+      if (!s.queryArgument(j).isVariable()) continue; // only interested in variable arguments
+      Variable x = s.queryArgument(j).queryVariable();
+      String name = renaming.getName(x);
+      if (name == null || (x.queryName().length() < name.length() &&
+          name.substring(0, x.queryName().length()).equals(x.queryName()))) {
+        name = x.queryName();
+      }
+      Pair<FunctionSymbol,Integer> pair = new Pair<FunctionSymbol,Integer>(s.queryRoot(), j);
+      info.add(new Pair<Pair<FunctionSymbol,Integer>,String>(pair, name));
     }
   }
 

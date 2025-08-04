@@ -109,15 +109,16 @@ public final class DeductionCalcAll extends DeductionStep {
     if (eq == null) return null;
     Renaming renaming = proof.getProofState().getTopEquation().getRenamingCopy();
     HashMap<Term,Variable> definedVars = CalcHelper.breakupConstraint(eq.getConstraint());
+    VariableNamer namer = proof.getContext().getVariableNamer();
 
     Term left = eq.getLhs();
     Term right = eq.getRhs();
     ReplacementInfo info = new ReplacementInfo();
     if (side == Side.Left || side == Side.Both) {
-      left = doCalculations(left, definedVars, renaming, info);
+      left = doCalculations(left, definedVars, renaming, info, namer, null);
     }
     if (side == Side.Right || side == Side.Both) {
-      right = doCalculations(right, definedVars, renaming, info);
+      right = doCalculations(right, definedVars, renaming, info, namer, null);
     }
     if (info.count == 0) {
       m.ifPresent(o -> o.println("There are no calculatable subterms."));
@@ -135,22 +136,25 @@ public final class DeductionCalcAll extends DeductionStep {
    * replaced and which new definitions should be added to the constraint.  The given map stores
    * [t→x] pairs if t = x occurs in the constraint, or has been added as a definition.  The given
    * renaming stores both the names for the variables in the term and the map, and is updated to
-   * store the new names for the fresh variables.
+   * store the new names for the fresh variables.  The given parent is a pair <f,i> such that this
+   * term is a term si inside f s1 ... sn, and may be null if that is not the case.
    */
   private static Term doCalculations(Term term, HashMap<Term,Variable> map, Renaming renaming,
-                                     ReplacementInfo info) {
+                                     ReplacementInfo info, VariableNamer namer,
+                                     Pair<FunctionSymbol,Integer> parent) {
     if (CalcHelper.calculatable(term)) {
       info.count++;
       if (term.isGround()) return TermAnalyser.evaluate(term);
       Term replacement = map.get(term);
       if (replacement != null) return replacement;
-      Variable x = createReplacementVariable(term, renaming);
+      Variable x = namer.chooseDerivativeForTerm(term, renaming,
+        term.queryType().toString().substring(0,1).toLowerCase(), parent);
       info.freshVars.add(x);
       info.varReplacements.add(term);
       map.put(term, x);
       return x;
     }
-    return doCalculcationsRecurse(term, map, renaming, info);
+    return doCalculcationsRecurse(term, map, renaming, info, namer);
   }
 
   /**
@@ -161,12 +165,15 @@ public final class DeductionCalcAll extends DeductionStep {
    * We use a small optimisation, avoiding unnecessary allocations if nothing is changed.
    */
   private static Term doCalculcationsRecurse(Term term, HashMap<Term,Variable> map,
-                                             Renaming renaming, ReplacementInfo info) {
+                                             Renaming renaming, ReplacementInfo info,
+                                             VariableNamer namer) {
     Term head = term.queryHead();
     ArrayList<Term> args = null;
     for (int i = 1; i <= term.numberArguments(); i++) {
       Term arg = term.queryArgument(i);
-      Term replacement = doCalculations(arg, map, renaming, info);
+      Pair<FunctionSymbol,Integer> parent = head.isConstant() ?
+        new Pair<FunctionSymbol,Integer>(head.queryRoot(), i) : null;
+      Term replacement = doCalculations(arg, map, renaming, info, namer, parent);
       if (arg != replacement && args == null) {
         args = new ArrayList<Term>();
         for (int j = 1; j < i; j++) args.add(term.queryArgument(j));
@@ -175,20 +182,6 @@ public final class DeductionCalcAll extends DeductionStep {
     }
     if (args == null) return term;
     return head.apply(args);
-  }
-
-  /**
-   * Helper function for doCalculations: if term is a calculatable term with at least one variable,
-   * this function creates a new variable that will be used to define the term.  The name of the
-   * variable is immediately added to the renaming.
-   */
-  private static Variable createReplacementVariable(Term term, Renaming renaming) {
-    String base = CalcHelper.chooseBaseName(term);
-    Variable ret = TermFactory.createVar(base, term.queryType());
-    for (int i = 1; ; i++) {
-      String attempt = base + i;
-      if (renaming.setName(ret, attempt)) return ret;
-    }
   }
 
   /**

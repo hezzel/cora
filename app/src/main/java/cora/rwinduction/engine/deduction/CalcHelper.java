@@ -43,9 +43,9 @@ final class CalcHelper {
 
   /**
    * This function takes a constraint of the form φ1 ∧...∧ φn, and for every φi of the form
-   * x = t or t = x, it stores [t ⇒ x] in the resulting hashmap.  This allows us to recognise
-   * calculatable terms that are already defined in the constraint of the equation, and that can
-   * thus be rewritten to the existing defining variable.
+   * x = t or t = x, it stores [t ⇒ x] in the resulting hashmap (provided t is not a variable).
+   * This allows us to recognise calculatable terms that are already defined in the constraint of
+   * the equation, and that can thus be rewritten to the existing defining variable.
    */
   static HashMap<Term,Variable> breakupConstraint(Term constraint) {
     HashMap<Term,Variable> ret = new HashMap<Term,Variable>();
@@ -71,17 +71,6 @@ final class CalcHelper {
       }
     }
     return ret;
-  }
-
-  /**
-   * This function chooses a base name for a variable that is meant to replace the given term.
-   * The real name (that should be added to the naming) should have the form <base><index>.
-   */
-  static String chooseBaseName(Term term) {
-    if (term.freeReplaceables().size() == 1) {
-      for (Replaceable x : term.freeReplaceables()) return x.queryName();
-    }
-    return term.queryType().toString().substring(0,1).toLowerCase();
   }
 }
 
