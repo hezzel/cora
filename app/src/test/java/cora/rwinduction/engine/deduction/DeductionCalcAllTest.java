@@ -86,8 +86,8 @@ class DeductionCalcAllTest {
       "of the equation where it is possible.\n\n"));
     assertTrue(step.execute(pp, o));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
-      "E2: (• , iter(1 + 2, x, y) ≈ iter(y1, u1, i1) | " +
-      "y > 0 ∧ y1 = -y ∧ u1 = u + 12 ∧ i1 = x / y , •)"));
+      "E2: (• , iter(1 + 2, x, y) ≈ iter(y1, u1, z1) | " +
+      "y > 0 ∧ y1 = -y ∧ u1 = u + 12 ∧ z1 = x / y , •)"));
   }
 
   @Test

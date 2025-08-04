@@ -15,13 +15,15 @@
 
 package cora.rwinduction.engine.deduction;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import charlie.util.Pair;
+import charlie.terms.position.Position;
 import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
@@ -45,7 +47,7 @@ public final class DeductionCalc extends DeductionStep {
   }
   
   /**
-   * Helper function for both tryApply and explains: creates the Renaming that is to be used for
+   * Helper function for both tryApply and explain: creates the Renaming that is to be used for
    * the resulting Equation.
    */
   private Renaming makeNewRenaming() {
@@ -154,7 +156,9 @@ public final class DeductionCalc extends DeductionStep {
       if (pos.querySide() == EquationPosition.Side.Left) {
         left = left.replaceSubterm(pos.queryPosition(), replacement);
       }
-      else right = right.replaceSubterm(pos.queryPosition(), replacement);
+      else {
+        right = right.replaceSubterm(pos.queryPosition(), replacement);
+      }
     }
   }
 
@@ -175,7 +179,8 @@ public final class DeductionCalc extends DeductionStep {
 
     List<Term> replacements = new ArrayList<Term>();
     for (EquationPosition pos : posses) {
-      Term newconstr = tryComputing(pos, pair, definedVars, newvars, replacements, renaming, eq, m);
+      Term newconstr = tryComputing(pos, pair, definedVars, newvars, replacements, renaming, eq, m,
+                                    proof);
       if (newconstr == null) return null; // error message has already been printed
       constraint = TheoryFactory.createConjunction(constraint, newconstr);
     }
@@ -208,8 +213,8 @@ public final class DeductionCalc extends DeductionStep {
                                    HashMap<Term,Variable> definedVars,
                                    HashMap<String,Variable> newvars,
                                    List<Term> replacements, Renaming renaming,
-                                   Equation original,
-                                   Optional<OutputModule> m) {
+                                   Equation original, Optional<OutputModule> m,
+                                   PartialProof proof) {
     Term sub;
     try { sub = pair.subterm(pos); }
     catch (InvalidPositionException e) {
@@ -232,7 +237,9 @@ public final class DeductionCalc extends DeductionStep {
     else replacement = definedVars.get(sub);
 
     if (replacement == null) {
-      Variable newvar = createNewVariable(sub, renaming, newvars);
+      Variable newvar = proof.getContext().getVariableNamer().chooseDerivativeForTerm(sub, renaming,
+                     sub.queryType().toString().substring(0,1).toLowerCase(), getParent(pair, pos));
+      newvars.put(renaming.getName(newvar), newvar);
       definedVars.put(sub, newvar);
       ret = TheoryFactory.createEquality(newvar, sub);
       replacement = newvar;
@@ -245,22 +252,22 @@ public final class DeductionCalc extends DeductionStep {
   }
 
   /**
-   * This function chooses a fresh variable name for a Variable that is meant to replace the given
-   * term, creates the variable, and adds the name both to newvars and to naming.
+   * If the given equation position occurs refers s{i} inside C[f s{1} ... s{i} ... s{n}], this
+   * returns the pair (f, i).  Otherwise, it returns null.
    */
-  private static Variable createNewVariable(Term term, Renaming naming,
-                                            HashMap<String,Variable> newvars) {
-    String base = CalcHelper.chooseBaseName(term);
-    Variable ret = TermFactory.createVar(base, term.queryType());
-    for (int i = 1; ; i++) {
-      String attempt = base + i;
-      if (naming.isAvailable(attempt) && !newvars.containsKey(attempt)) {
-        newvars.put(attempt, ret);
-        naming.setName(ret, attempt);
-        return ret;
-      }
+  private static Pair<FunctionSymbol,Integer> getParent(ChangeablePair pair, EquationPosition pos) {
+    Term t = switch (pos.querySide()) {
+      case EquationPosition.Side.Left -> pair.left;
+      case EquationPosition.Side.Right -> pair.right;
+    };
+    Position p = pos.queryPosition();
+    if (p.isFinal()) return null;
+    while (!p.queryTail().isFinal()) {
+      t = t.queryArgument(p.queryHead());
+      p = p.queryTail();
     }
+    if (!t.isFunctionalTerm()) return null;
+    return new Pair<FunctionSymbol,Integer>(t.queryRoot(), p.queryHead());
   }
-
 }
 

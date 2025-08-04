@@ -15,8 +15,15 @@
 
 package cora.rwinduction.engine;
 
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import charlie.util.Pair;
 import charlie.types.Type;
+import charlie.terms.Term;
 import charlie.terms.Variable;
+import charlie.terms.FunctionSymbol;
 import charlie.terms.Renaming;
 import charlie.terms.TermFactory;
 
@@ -26,7 +33,41 @@ import charlie.terms.TermFactory;
  * TRS rules.
  */
 public class VariableNamer {
+  private TreeMap<String,String> _defaultNames;
   public record VariableInfo(String basename, int index) {}
+
+  /** Created by ProofContext */
+  VariableNamer(ArrayList<Pair<Pair<FunctionSymbol,Integer>,String>> info) {
+    TreeMap<String,TreeSet<String>> usualNames = new TreeMap<String,TreeSet<String>>();
+    for (Pair<Pair<FunctionSymbol,Integer>,String> pair : info) {
+      FunctionSymbol f = pair.fst().fst();
+      int index = pair.fst().snd();
+      String name = pair.snd();
+      int n = name.length();
+      while (n > 0 && Character.isDigit(name.charAt(n-1))) n--;
+      if (n == 0) continue;
+      name = name.substring(0, n);
+      String key = f.queryName() + ":" + index;
+      if (!usualNames.containsKey(key)) usualNames.put(key, new TreeSet<String>());
+      usualNames.get(key).add(name);
+    }
+    _defaultNames = new TreeMap<String,String>();
+    for (Map.Entry<String,TreeSet<String>> entry : usualNames.entrySet()) {
+      if (entry.getValue().size() == 1) {
+        _defaultNames.put(entry.getKey(), entry.getValue().first());
+      }
+    }
+  }
+
+  /**
+   * In some cases, the immediate argument of a function symbol always has the same base name in
+   * the left-hand sides of rules.  In that case, when creating a new variable at this position, it
+   * may be a good idea to use the same name!  If the given function symbol / index combination has
+   * such a default name, this function returns it; otherwise, null is returned.
+   */
+  public String queryDefaultNaming(FunctionSymbol f, int index) {
+    return _defaultNames.get(f.queryName() + ":" + index);
+  }
 
   /**
    * Given a user-suggested variable name [fullName], this splits it up into an appropriate base
@@ -48,6 +89,7 @@ public class VariableNamer {
    * be a clearer division.
    */
   public VariableInfo getVariableInfo(String baseName, String fullName) {
+    if (fullName == null) fullName = baseName;
     VariableInfo ret = getVariableInfo(fullName);
     if (baseName.length() < ret.basename().length() &&
         ret.basename().substring(0, baseName.length()).equals(baseName)) {
@@ -71,7 +113,51 @@ public class VariableNamer {
       if (renaming.isAvailable(suggestedName)) return new VariableInfo(current.basename(), i);
     }
   }
-  
+
+  /** 
+   * For creating a new variable that is derived from t, this function returns an appropriate base
+   * name and index, so that <basename><index> does not occur in the given renaming.  For the base
+   * name, we either choose a variable from t if there is only one, or we choose the given default
+   * base; for the index we check which variables from that default occur inside t.
+   */  
+  public VariableInfo chooseDerivativeNamingForTerm(Term t, Renaming renaming, String defaultName) {
+    TreeSet<Variable> set = getSuitableVariablesForDerivative(t);
+    String base = null;
+    // if all variables in t have the same base name, that's our base
+    if (set.size() > 0) {
+      boolean first = true;
+      for (Variable y : set) {
+        VariableInfo info = getVariableInfo(y.queryName(), renaming.getName(y));
+        if (first) { first = false; base = info.basename(); }
+        else if (!base.equals(info.basename())) { base = null; break; }
+      }
+    }
+    // otherwise, we use the defaultName as the base
+    if (base == null) base = defaultName;
+    // let's pick an index beyond what's already in t
+    int index = 1;
+    for (Variable x : set) {
+      String fullname = renaming.getName(x);
+      if (fullname == null) fullname = x.queryName();
+      VariableInfo info = getVariableInfo(base, fullname);
+      if (info.basename().equals(base) && info.index() >= index) index = info.index() + 1;
+    }
+    while (!renaming.isAvailable(base + index)) index++;
+    return new VariableInfo(base, index);
+  }
+
+  /**
+   * This helper function returns the variables in the given term that have the same type as the
+   * given term, and which therefore are likely candidates to take a derivative name from.
+   */
+  public TreeSet<Variable> getSuitableVariablesForDerivative(Term term) {
+    TreeSet<Variable> set = new TreeSet<Variable>();
+    for (Variable x : term.vars()) {
+      if (x.queryType().equals(term.queryType())) set.add(x);
+    }
+    return set;
+  }
+
   /**
    * This function creates a new variable of the given type, whose name is chosen as a derivative
    * of x (for example, if x is named var203, then the new variable will be named var204).  The new
@@ -97,6 +183,28 @@ public class VariableNamer {
     }
     renaming.setName(newvar, info.basename() + info.index());
     return newvar;
+  }
+
+  /**
+   * This function finds a suitable name for a new variable of the same type as t, which is in some
+   * way based on t.  Specifically, it does so as follows:
+   * - if t contains exactly one variable, the new variable will be a derivative of it
+   * - otherwise, if occursInside is a pair (f,i) such that all rules rooted by f have a form f ...
+   *   x_i ... → r | φ where the name of x_i is always the same, then this name will be used as the
+   *   basis for the naming
+   * - otherwise, we use defbase as the base name for the new variable
+   * Note that occursInside is allowed to be null, in which case the second option does not happen.
+   */
+  public Variable chooseDerivativeForTerm(Term t, Renaming renaming, String defbase,
+                                          Pair<FunctionSymbol,Integer> occursInside) {
+    if (occursInside != null) {
+      String placename = queryDefaultNaming(occursInside.fst(), occursInside.snd());
+      if (placename != null) defbase = placename;
+    }
+    VariableInfo info = chooseDerivativeNamingForTerm(t, renaming, defbase);
+    Variable x = TermFactory.createVar(info.basename(), t.queryType());
+    if (!renaming.setName(x, info.basename() + info.index())) System.out.println("Miep! name = " + info.basename() + info.index());
+    return x;
   }
 }
 

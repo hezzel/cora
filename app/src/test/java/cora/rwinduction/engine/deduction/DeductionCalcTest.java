@@ -33,8 +33,8 @@ import cora.rwinduction.engine.*;
 class DeductionCalcTest {
   private TRS trs = CoraInputReader.readTrsFromString(
     "iter :: Int -> Int -> Int -> Int\n" +
-    "iter(x, i, z) -> z | i > x\n" +
-    "iter(x, i, z) -> iter(x, i+1, z+i) | i <= x\n");
+    "iter(x, a, z) -> z | a > x\n" +
+    "iter(x, a, b) -> iter(x, a+1, b+a) | a <= x\n");
 
   public PartialProof setupProof() {
     return new PartialProof(trs,
@@ -154,11 +154,11 @@ class DeductionCalcTest {
     EquationPosition pos = EquationPosition.parse("L2");
     DeductionCalc step = DeductionCalc.createStep(pp, o, List.of(pos));
     step.explain(module);
-    assertTrue(module.toString().equals("We use ALTER to add i1 = x * y + z to the constraint, " +
+    assertTrue(module.toString().equals("We use ALTER to add a1 = x * y + z to the constraint, " +
       "and then use CALC at position L2.\n\n"));
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
-      "E3: (• , iter(1 + (2 + 3), i1, x + y) ≈ x + y | x ≥ 0 ∧ u = x * y ∧ i1 = x * y + z , •)"));
+      "E3: (• , iter(1 + (2 + 3), a1, x + y) ≈ x + y | x ≥ 0 ∧ u = x * y ∧ a1 = x * y + z , •)"));
   }
 
   @Test
@@ -171,11 +171,11 @@ class DeductionCalcTest {
       EquationPosition.parse("L1.2"), EquationPosition.parse("L2.1"),
       EquationPosition.parse("L2"), EquationPosition.parse("L1")));
     step.explain(module);
-    assertTrue(module.toString().equals("We use ALTER to add i1 = u + z to the constraint, and " +
+    assertTrue(module.toString().equals("We use ALTER to add a1 = u + z to the constraint, and " +
       "then use CALC at positions L1.2, L2.1, L2 and L1.\n\n"));
     assertTrue(step.execute(pp, o));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
-      "E3: (• , iter(6, i1, x + y) ≈ x + y | x ≥ 0 ∧ u = x * y ∧ i1 = u + z , •)"));
+      "E3: (• , iter(6, a1, x + y) ≈ x + y | x ≥ 0 ∧ u = x * y ∧ a1 = u + z , •)"));
   }
 
   @Test
@@ -183,11 +183,27 @@ class DeductionCalcTest {
     PartialProof pp = setupProof();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Optional<OutputModule> o = Optional.of(module);
-    EquationPosition pos = EquationPosition.parse("L2");
     assertTrue(DeductionCalc.createStep(pp, o, List.of(EquationPosition.parse("L1"),
       EquationPosition.parse("L1.2"))) == null);
     assertTrue(module.toString().equals(
       "Subterm at position L1.2 has already been calculated away!\n\n"));
+  }
+
+  @Test
+  public void testNaming() throws PositionFormatException {
+    OutputModule module = OutputModule.createUnicodeModule(trs);
+    Optional<OutputModule> o = Optional.of(module);
+    PartialProof proof = new PartialProof(trs,
+      EquationParser.parseEquationList("iter(x + y, x * 2, z + x / y) = " +
+                                       "iter(- y, a - 1, z + 17)", trs),
+      lst -> module.generateUniqueNaming(lst));
+    DeductionCalc step = DeductionCalc.createStep(proof, o, List.of(
+      EquationPosition.parse("L1"), EquationPosition.parse("L2"), EquationPosition.parse("L3"),
+      EquationPosition.parse("R1"), EquationPosition.parse("R2"), EquationPosition.parse("R3")));
+    assertTrue(step.verifyAndExecute(proof, o));
+    assertTrue(proof.getProofState().getTopEquation().toString().equals(
+      "E2: (• , iter(x1, x2, i1) ≈ iter(y1, a1, z1) | x1 = x + y ∧ x2 = x * 2 ∧ " +
+      "i1 = z + x / y ∧ y1 = -y ∧ a1 = a - 1 ∧ z1 = z + 17 , •)"));
   }
 }
 
