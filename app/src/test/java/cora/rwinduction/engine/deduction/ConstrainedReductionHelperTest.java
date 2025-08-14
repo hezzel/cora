@@ -295,5 +295,22 @@ class ConstrainedReductionHelperTest {
       "instantiated by z + 0, which is not a value, nor a variable in the constraint of the " +
       "equation.\n\n"));
   }
+
+  @Test
+  public void testCheckInnermost() throws PositionFormatException {
+    PartialProof pp = setupProof("sum2(sum2(0)) = 0");
+    Rule rule = pp.getContext().getRule("O3");
+    Renaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Substitution subst = TermFactory.createEmptySubstitution();
+    ConstrainedReductionHelper crh =
+      new ConstrainedReductionHelper(rule.queryLeftSide(), rule.queryRightSide(),
+        rule.queryConstraint(), pp.getContext().getRenaming("O3"), "XXX", pp,
+        EquationPosition.TOPLEFT, subst);
+    assertFalse(crh.checkInnermost());
+    EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
+    crh = new ConstrainedReductionHelper(rule.queryLeftSide(), rule.queryRightSide(),
+        rule.queryConstraint(), pp.getContext().getRenaming("O3"), "XXX", pp, pos, subst);
+    assertTrue(crh.checkInnermost());
+  }
 }
 

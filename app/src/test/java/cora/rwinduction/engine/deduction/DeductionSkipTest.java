@@ -57,7 +57,7 @@ class DeductionSkipTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     PartialProof pp = setupProof(module, 3);
-    DeductionSkip step = DeductionSkip.createStep(pp, o).get();
+    DeductionSkip step = DeductionSkip.createStep(pp, o);
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 3);
     assertTrue(pp.getProofState().getLastUsedIndex() == 3);
@@ -74,7 +74,7 @@ class DeductionSkipTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     PartialProof pp = setupProof(module, 0);
-    assertTrue(DeductionSkip.createStep(pp, o).isEmpty());
+    assertTrue(DeductionSkip.createStep(pp, o) == null);
     assertTrue(module.toString().equals(
       "The SKIP rule cannot be applied, since there are no equations.\n\n"));
   }
@@ -84,7 +84,7 @@ class DeductionSkipTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     PartialProof pp = setupProof(module, 1);
-    DeductionSkip step = DeductionSkip.createStep(pp, o).get();
+    DeductionSkip step = DeductionSkip.createStep(pp, o);
     assertFalse(step.verifyAndExecute(pp, o));
     assertTrue(module.toString().equals(
       "The SKIP rule cannot be applied, since there is only one equation.\n\n"));

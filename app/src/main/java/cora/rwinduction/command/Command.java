@@ -146,6 +146,9 @@ public abstract class Command {
     return Optional.of(_module);
   }
 
+  /** Returns whether or not this is an environment command. */
+  public final boolean isEnvironmentCommand() { return queryName().charAt(0) == ':'; }
+
   public final String toString() { return "Command: " + queryName(); }
 }
 

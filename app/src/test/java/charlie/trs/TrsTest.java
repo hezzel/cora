@@ -345,5 +345,36 @@ public class TrsTest {
     FunctionSymbol i = makeConstant("i", "a");
     assertEquals(0, trs.queryRulesForSymbol(i, true).count());
   }
+
+  @Test
+  public void testRuleArity() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "fact :: Int -> (Int -> o) -> o\n" +
+      "comp :: (Int -> o) -> (Int -> Int) -> Int -> o\n" +
+      "fact(n, k) -> k(1) | n <= 0\n" +
+      "fact(n, k) -> fact(n - 1, comp(k, [*](n))) | n > 0\n" +
+      "comp(g, f, x) -> g(f(x))\n" +
+      "error :: Int\n" +
+      "[+](error, y) -> error()\n" +
+      "[*](error) -> [+](error)\n" +
+      "s :: Nat -> Nat\n" +
+      "nul :: Nat\n" +
+      "id :: Nat -> Nat\n" +
+      "id(n) -> n\n" +
+      "add :: Nat -> Nat -> Nat\n" +
+      "add(s(x), y) -> add(x, s(y))\n" +
+      "add(nul) -> id\n"
+    );
+    Alphabet alf = trs.queryAlphabet();
+    assertTrue(trs.queryRuleArity(alf.lookup("fact")) == 2);
+    assertTrue(trs.queryRuleArity(alf.lookup("comp")) == 3);
+    assertTrue(trs.queryRuleArity(alf.lookup("error")) == 0);
+    assertTrue(trs.queryRuleArity(alf.lookup("s")) == 0);
+    assertTrue(trs.queryRuleArity(alf.lookup("id")) == 1);
+    assertTrue(trs.queryRuleArity(alf.lookup("add")) == -1);
+    assertTrue(trs.queryRuleArity(TheoryFactory.plusSymbol) == 2);
+    assertTrue(trs.queryRuleArity(TheoryFactory.minusSymbol) == 1);
+    assertTrue(trs.queryRuleArity(TheoryFactory.timesSymbol) == -1);
+  }
 }
 

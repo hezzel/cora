@@ -56,6 +56,23 @@ public class OrdReq implements PrintableObject {
     _renaming = renaming.copy();
   }
 
+  public Term getLhs() {
+    return _lhs;
+  }
+
+  public Term getRhs() {
+    return _rhs;
+  }
+
+  public Term getConstraint() {
+    return _constraint;
+  }
+
+  /** Returns the renaming used for the present OrdReq.  This is not meant to be modified! */
+  public Renaming queryRenaming() {
+    return _renaming;
+  }
+
   /** Adds the current hypothesis to the given printer. */
   public void print(Printer printer) {
     printer.add(printer.makePrintable(_lhs, _renaming),

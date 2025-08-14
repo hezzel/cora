@@ -28,6 +28,7 @@ import charlie.terms.Renaming;
 import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
+import cora.io.ProofObject;
 
 /**
  * A PartialProof keeps track of the current proof state, the proof context, and the history.
@@ -45,6 +46,7 @@ public class PartialProof {
 
   private ProofState _currentState;
   private boolean _aborted;
+  private ProofObject _finished;
 
   /**
    * Constructor: sets up a partial proof with empty history, the proof state
@@ -57,6 +59,7 @@ public class PartialProof {
     _pcontext = new ProofContext(initialSystem, renamingMaker);
     _currentState = new ProofState(initialEquations);
     _aborted = false;
+    _finished = null;
   }
 
   /**
@@ -76,11 +79,16 @@ public class PartialProof {
   }
 
   /**
-   * This returns true if either the current state is final, or the partial proof has been forcibly
-   * marked as aborted.
+   * This returns true if the partial proof has either been forcibly marked as aborted, or marked
+   * as finished.
    */
   public boolean isDone() {
-    return _aborted || _currentState.isFinalState();
+    return _aborted || _finished != null;
+  }
+
+  /** This returns true if the current state is final. */
+  public boolean isFinal() {
+    return _currentState.isFinalState();
   }
 
   /**
@@ -89,6 +97,17 @@ public class PartialProof {
    */
   public void abort() {
     _aborted = true;
+  }
+
+  /**
+   * This marks the PartialProof as "complete": this can only be done if the proof state is final,
+   * and should be called with a proof that the ordering requirements are satisfiable.
+   */
+  public void finish(ProofObject terminationProof) {
+    if (!_currentState.isFinalState()) {
+      throw new RuntimeException("Calling finish when the last proof state is not final!");
+    }
+    _finished = terminationProof;
   }
 
   /**
@@ -142,6 +161,11 @@ public class PartialProof {
   /** Returns a list with all the deduction steps used to get to the current state. */
   public ArrayList<DeductionStep> getDeductionHistory() {
     return new ArrayList<DeductionStep>(_previousCommands);
+  }
+
+  /** This returns a termination proof if one has been stored, or null otherwise. */
+  public ProofObject getTerminationProof() {
+    return _finished;
   }
 }
 

@@ -20,7 +20,7 @@ import cora.io.OutputModule;
 import cora.rwinduction.engine.deduction.DeductionSkip;
 
 /** The syntax for the semi-deduction command skip. */
-public class CommandSkip extends SingularCommandInherit {
+public class CommandSkip extends SingularDeductionCommandInherit {
   @Override
   public String queryName() {
     return "skip";
@@ -34,10 +34,8 @@ public class CommandSkip extends SingularCommandInherit {
   }
   
   @Override
-  protected boolean run() {
-    Optional<DeductionSkip> step = DeductionSkip.createStep(_proof, optionalModule());
-    if (step.isEmpty()) return false;
-    return step.get().verifyAndExecute(_proof, optionalModule());
+  protected DeductionSkip createStep() {
+    return DeductionSkip.createStep(_proof, optionalModule());
   }
 }
 

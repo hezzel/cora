@@ -130,6 +130,7 @@ class DeductionContextTest {
     PartialProof pp = setupProof("@(F, sum1(x)) = @(F, sum2(x))");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
+    Settings.setStrategy(Settings.Strategy.Full);
     DeductionSimplify simpl = DeductionSimplify.createStep(pp, o, "O8",
       EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution());
     assertTrue(simpl.verifyAndExecute(pp, o));
