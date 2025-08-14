@@ -454,7 +454,7 @@ public class TRS {
    * This helper method for queryRulesForSymbol returns true if longtype has a shape
    * A1 →...→ An → outputtype (with n ≥ 0).
    */
-  boolean isPotentialOutputType(Type longtype, Type outputtype) {
+  private boolean isPotentialOutputType(Type longtype, Type outputtype) {
     int nArgs = longtype.queryArity() - outputtype.queryArity();
     if (nArgs < 0) return false;
     while (nArgs > 0 && longtype.isArrowType()) {
@@ -462,6 +462,23 @@ public class TRS {
       longtype = longtype.subtype(2);
     }
     return longtype.equals(outputtype);
+  }
+
+  /**
+   * If all rules of the form f l1...lk → r| φ have the same arity k (including calculation rules),
+   * then this returns k, which is at least 0.  If not, it returns -1.
+   */
+  public int queryRuleArity(FunctionSymbol f) {
+    boolean first = true;
+    int ret = 0;
+    if (_functionRules == null) computeRulesCache();
+    if (f.isTheorySymbol()) { ret = f.queryArity(); first = false; }
+    if (!_functionRules.containsKey(f)) return ret;
+    for (Rule rule : _functionRules.get(f)) {
+      if (first) { ret = rule.queryLeftSide().numberArguments(); first = false; }
+      else if (ret != rule.queryLeftSide().numberArguments()) return -1;
+    }
+    return ret;
   }
 }
 

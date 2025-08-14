@@ -418,5 +418,35 @@ public abstract class Printer {
       }
     };
   }
+
+  /**
+   * This creates a wrapper for a user exception where a fixed renaming is to be used for the terms
+   * occuring in its components.
+   */
+  public static PrintableObject makePrintable(UserException e, Renaming renaming) {
+    return new PrintableObject() {
+      public void print(Printer p) {
+        Object[] objects = e.makeArray();
+        for (int i = 0; i < objects.length; i++) {
+          if (objects[i] instanceof Term t) objects[i] = new Pair<Term,Renaming>(t, renaming);
+          else if (objects[i] instanceof Replaceable r) {
+            objects[i] = new Pair<Replaceable,Renaming>(r, renaming);
+          }
+        }
+        p.add(objects);
+      }
+      public String toString() {
+        TermPrinter pr = new TermPrinter(Set.of());
+        StringBuilder builder = new StringBuilder();
+        Object[] objects = e.makeArray();
+        for (int i = 0; i < objects.length; i++) {
+          if (objects[i] instanceof Term t) pr.print(t, renaming, builder);
+          else if (objects[i] instanceof Replaceable r) pr.printReplaceable(r, renaming, builder);
+          else builder.append(objects[i].toString());
+        }
+        return builder.toString();
+      }
+    };
+  }
 }
 

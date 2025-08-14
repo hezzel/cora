@@ -52,6 +52,7 @@ public final class CmdList {
       throw new IllegalArgumentException("Double registration of command " + name + ".");
     }
     _commands.put(cmd.queryName(), cmd);
+
     _deductionCommands.put(cmd.queryName(), cmd);
     _originals.add(cmd.queryName());
     if (_proof != null && _module != null) cmd.storeContext(_proof, _module);

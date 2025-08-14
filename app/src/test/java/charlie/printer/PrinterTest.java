@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 
 import charlie.util.Pair;
+import charlie.util.UserException;
 import charlie.types.Type;
 import charlie.types.TypePrinter;
 import charlie.terms.position.Position;
@@ -116,6 +117,40 @@ public class PrinterTest {
     printer.add(new Object[] { "x = ", x, " and y = ", y },
       List.of(" and z = ", z, " and u = ", u));
     assertTrue(printer.toString().equals("x = x__1 and y = x__2 and z = x__2 and u = x__1"));
+  }
+
+  @Test
+  public void testPrintException() {
+    TRS trs = exampleTrs();
+    Printer printer = PrinterFactory.createPlainPrinter(trs);
+    
+    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
+    Term term1 = CoraInputReader.readTermAndUpdateNaming("f(x, y)", renaming, trs);
+    Variable x1 = renaming.getVariable("x");
+    Variable y1 = renaming.getVariable("y");
+    renaming = new Renaming(trs.queryFunctionSymbolNames());
+    Term term2 = CoraInputReader.readTermAndUpdateNaming("f(x, z)", renaming, trs);
+    Variable x2 = renaming.getVariable("x");
+    Variable z2 = renaming.getVariable("z");
+    Type type = CoraInputReader.readType("a -> b -> a");
+    MetaVariable x3 = TermFactory.createMetaVar("x", type, 2);
+    Term lambda = CoraInputReader.readTerm("λx::Int.x", trs);
+
+    UserException e =
+      new UserException("term 1 = ", term1, ", term 2 = ", term2, ", type = ", type,
+                        ", metavar = ", x3, ", lambda = ", lambda);
+    renaming = new Renaming(trs.queryFunctionSymbolNames());
+    renaming.setName(x1, "x1");
+    renaming.setName(x2, "x2");
+    renaming.setName(x3, "X");
+    renaming.setName(y1, "y");
+    renaming.setName(z2, "z");
+    PrintableObject po = printer.makePrintable(e, renaming);
+    assertTrue(po.toString().equals("term 1 = f(x1, y), term 2 = f(x2, z), type = a → b → a, " +
+                                    "metavar = X, lambda = λx.x"));
+    printer.add(po);
+    assertTrue(printer.toString().equals("term 1 = f(x1, y), term 2 = f(x2, z), type = a -> b -> " +
+                                         "a, metavar = X, lambda = \\x.x"));
   }
 
   @Test

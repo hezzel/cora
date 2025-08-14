@@ -222,6 +222,7 @@ class DeductionSimplifyTest {
 
   @Test
   public void testSimplifyConstraintVariableNotAValue() {
+    Settings.setStrategy(Settings.Strategy.Full);
     PartialProof pp = setupProof("sum1(z + 1) = iter(z + 1, 0, 0) | z ≥ 0");
     OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(true);

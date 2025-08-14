@@ -23,14 +23,16 @@ import cora.rwinduction.engine.*;
 public class RewritingInductionProof implements ProofObject {
   private ArrayList<DeductionStep> _steps;
   private ProofState _finalState;
+  private ProofObject _terminationProof;
 
   public RewritingInductionProof(PartialProof proof) {
     _finalState = proof.getProofState();
     _steps = proof.getDeductionHistory();
+    _terminationProof = proof.getTerminationProof();
   }
 
   public Answer queryAnswer() {
-    if (_finalState.isFinalState()) return Answer.YES;
+    if (_finalState.isFinalState() && _terminationProof != null) return Answer.YES;
     return Answer.MAYBE;
   }
 
@@ -51,8 +53,19 @@ public class RewritingInductionProof implements ProofObject {
       }
     }
     if (_finalState.isFinalState()) {
-      module.println("All equations have been removed, so the proof is complete: the original " +
-        "equations are inductive theorems.");
+      if (_terminationProof == null || _terminationProof.queryAnswer() != ProofObject.Answer.YES) {
+        module.println("All equations have been removed, so the proof is complete: the original " +
+          "equations are inductive theorems, provided the underlying ordering requirements can " +
+          "be satisfied.  Unfortunately, the existence of a suitable ordering has not yet been " +
+          "proved.");
+      }
+      else {
+        module.println("All equations have been removed, so the proof is complete: the original " +
+          "equations are inductive theorems.  The existence of a suitable bounding pair is " +
+          "guaranteed by the termination of the corresponding term rewriting systems, as " +
+          "is demonstrated below.");
+        _terminationProof.justify(module);
+      }
     }
     else {
       module.println("The proof attempt was aborted before a proof could be found.");

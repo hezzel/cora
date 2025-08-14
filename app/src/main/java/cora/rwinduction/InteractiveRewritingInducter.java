@@ -23,11 +23,14 @@ import java.util.Scanner;
 
 import charlie.util.Either;
 import charlie.util.FixedList;
+import charlie.types.Type;
 import charlie.parser.lib.ParsingException;
+import charlie.terms.FunctionSymbol;
 import charlie.trs.TRS;
 import charlie.trs.TrsProperties.*;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
+import cora.config.Settings;
 import cora.rwinduction.engine.EquationContext;
 import cora.rwinduction.engine.PartialProof;
 import cora.rwinduction.parser.RIParser;
@@ -89,8 +92,8 @@ public class InteractiveRewritingInducter {
     clst.registerEnvironmentCommand(new CommandEquations());
     clst.registerEnvironmentCommand(new CommandHypotheses());
     clst.registerEnvironmentCommand(new CommandOrdering());
-    clst.registerEnvironmentCommand(new CommandSkip());
     clst.registerEnvironmentCommand(new CommandSave());
+    clst.registerEnvironmentCommand(new CommandCheck());
 
     clst.registerEnvironmentCommand(new CommandUndo());
     clst.registerEnvironmentCommand(new CommandRedo());
@@ -107,6 +110,7 @@ public class InteractiveRewritingInducter {
     clst.registerDeductionCommand(new CommandHdelete());
     clst.registerDeductionCommand(new CommandAlter());
     clst.registerDeductionCommand(new CommandPostulate());
+    clst.registerDeductionCommand(new CommandSkip());
 
     return clst;
   }
@@ -245,16 +249,63 @@ public class InteractiveRewritingInducter {
     if (!trs.verifyProperties(Level.META, Constrained.YES, TypeLevel.SIMPLEPRODUCTS,
                               Lhs.SEMIPATTERN, Root.THEORY, FreshRight.ANY)) {
       return "The TRS does not satisfy the requirements to apply rewriting induction: " +
-        "(a simply-typed LCSTRS with left-hand sides being functional terms).";
+        "a simply-typed LCSTRS with left-hand sides being functional terms.";
     }
+    String ret = checkNoIllegalConstructors(trs);
+    if (ret == null) ret = checkConsistentArity(trs);
+    if (ret == null) ret = checkStrategy();
+    if (ret != null) return ret;
     return RIParser.checkTrs(trs);
+  }
+
+  /**
+   * Helper function for checkLegalTrs: this verifies that all constructors have a non-theory type
+   * as output type.
+   */
+  private static String checkNoIllegalConstructors(TRS trs) {
+    for (FunctionSymbol f : trs.queryAlphabet().getSymbols()) {
+      if (trs.isDefined(f)) continue;
+      Type output = f.queryType().queryOutputType();
+      if (!output.isBaseType() || output.isTheoryType()) {
+        return "The TRS does not satisfy the requirements of the present implementation: " +
+          "all constructors other than values should have a non-theory sort as output type " +
+          "(this is not the case for " + f.queryName() + ").";
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Helper function for checkLegalTrs: this verifies that all defined symbols have a consistent
+   * rule arity.
+   */
+  private static String checkConsistentArity(TRS trs) {
+    for (FunctionSymbol f : trs.definedSymbols()) {
+      if (trs.queryRuleArity(f) == -1) {
+        return "The TRS does not satisfy the requirements to apply rewriting induction: " +
+          "the function symbol " + f.queryName() + " does not have a consistent arity.";
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Helper function for checkLegalTrs: this verifies that the reduction strategy is supported.
+   */
+  private static String checkStrategy() {
+    switch (Settings.queryRewritingStrategy()) {
+      case Settings.Strategy.Full: return null;
+      case Settings.Strategy.Innermost: return null;
+      case Settings.Strategy.CallByValue: return null;
+      default:
+        return "The reduction strategy is not supported.  Only full, innermost or call-by-value " +
+          "reduction is supported in this module.";
+    }
   }
 
   private ProofObject proveEquivalence() {
     while (!_proof.isDone()) {
-      _output.print("%aGoal:%a ", "\033[1;34m", "\033[0m");
-      _proof.getProofState().getTopEquation().prettyPrint(_output, true);
-      _output.println();
+      printCurrentState();
       CommandParsingStatus status = new CommandParsingStatus(_input.readLine());
       while (!status.done()) {
         while (status.skipSeparator());   // read past ; if there is one
@@ -264,6 +315,10 @@ public class InteractiveRewritingInducter {
         if (cmd == null) {
           _output.println("Unknown command: %a.  Use \":help commands\" to list available " +
           "commands.", cmdname);
+          break;
+        }
+        else if (_proof.isFinal() && !cmd.isEnvironmentCommand()) {
+          _output.println("As there are no goals left, only environment commands can be executed.");
           break;
         }
         else if (!cmd.execute(status)) break;
@@ -276,6 +331,29 @@ public class InteractiveRewritingInducter {
       }
     }
     return new RewritingInductionProof(_proof);
+  }
+
+  /** Helper function for proveEquivalence */
+  private void printCurrentState() {
+    if (_proof.isFinal()) {
+      _output.println("All goals have been successfully removed!");
+      _output.println("To complete the proof, you still need to verify that a suitable ordering " +
+        "exists.  You can do this using the :check command.  Other useful environment commands " +
+        "can use include:");
+      _output.startTable();
+      _output.println(":undo -- to go back to the previous proof state");
+      _output.println(":quit -- to end the proof process without termination check");
+      _output.println(":ordering -- to see the current ordering requirements");
+      _output.println(":rules -- to see the current rules (these must also be oriented)");
+      _output.println(":check verbose -- to run the termination check and see an elaborate " +
+        "explanation of the outcome (particularly useful if the result is a failure)");
+      _output.endTable();
+    }
+    else {
+      _output.print("%aGoal:%a ", "\033[1;34m", "\033[0m");
+      _proof.getProofState().getTopEquation().prettyPrint(_output, true);
+      _output.println();
+    }
   }
 }
 

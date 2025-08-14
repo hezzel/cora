@@ -149,6 +149,11 @@ public final class DeductionHypothesis extends DeductionStep {
    */
   @Override
   public boolean verify(Optional<OutputModule> module) {
+    // it needs to be an innermost step if we're using innermost strategy
+    if ( (Settings.queryRewritingStrategy().equals(Settings.Strategy.Innermost) ||
+          Settings.queryRewritingStrategy().equals(Settings.Strategy.CallByValue)) &&
+         !_helper.checkInnermost()) return false;
+    // the constraint implication should be satisfied
     if (_helper.constraintIsTrue()) return true;
     return _helper.checkConstraintGoodForReduction(module, Settings.smtSolver);
   }

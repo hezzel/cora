@@ -25,14 +25,13 @@ public final class DeductionSkip extends DeductionStep {
     super(state, context);
   }
  
-  public static Optional<DeductionSkip> createStep(PartialProof proof,
-                                                   Optional<OutputModule> module) {
+  public static DeductionSkip createStep(PartialProof proof, Optional<OutputModule> module) {
     if (proof.getProofState().getEquations().size() == 0) {
       module.ifPresent(o -> o.println(
         "The SKIP rule cannot be applied, since there are no equations."));
-      return Optional.empty();
+      return null;
     }
-    return Optional.of(new DeductionSkip(proof.getProofState(), proof.getContext()));
+    return new DeductionSkip(proof.getProofState(), proof.getContext());
   }
 
   @Override

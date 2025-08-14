@@ -137,7 +137,7 @@ class DeductionDeleteTest {
     step = DeductionDelete.createStep(pp, oo);
     assertFalse(step.verify(oo));
     assertTrue(step.execute(pp, oo));
-    assertTrue(pp.isDone());
+    assertTrue(pp.isFinal());
   }
 
   @Test

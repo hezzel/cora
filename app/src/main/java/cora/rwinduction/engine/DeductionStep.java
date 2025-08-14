@@ -66,7 +66,7 @@ public abstract class DeductionStep {
    * is returned.  Otherwise, true is returned.
    */
   public final boolean execute(PartialProof proof, Optional<OutputModule> o) {
-    if (proof.isDone()) return println(o, "The proof is already finished.");
+    if (proof.isFinal()) return println(o, "The proof is already finished.");
     if (proof.getProofState() != _state) return println(o, "Cannot apply step to different state.");
 
     try {

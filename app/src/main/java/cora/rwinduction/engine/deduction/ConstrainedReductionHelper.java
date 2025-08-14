@@ -121,6 +121,25 @@ class ConstrainedReductionHelper {
   }
 
   /**
+   * This returns true if the term to be reduced has no strict subterms of the form f s1...sn with
+   * f a defined or calculation symbol and n ≥ arity(f).  When using innermost or call-by-value
+   * reduction (which is the same in the case of a quasi-reductive LCSTRS), this is exactly what is
+   * needed to be able to apply a rule or induction hypothesis.
+   */
+  boolean checkInnermost() {
+    Term s = _proof.getProofState().getTopEquation().getEquation().querySubterm(_position);
+    for (Pair<Term,Position> pair : s.querySubterms()) {
+      if (pair.snd().isEmpty()) continue;
+      Term t = pair.fst();
+      if (!t.isFunctionalTerm()) continue;
+      FunctionSymbol f = t.queryRoot();
+      if (f.toCalculationSymbol() == null && !_proof.getContext().getTRS().isDefined(f)) continue;
+      if (_proof.getContext().queryRuleArity(f) <= t.numberArguments()) return false;
+    }
+    return true;
+  }
+
+  /**
    * Writing C[s]_p ≈ t | ψ for the top equation, where p is the underlying position, this method
    * extends the underlying substitution γ to a substitution δ so that _left δ = s, if possible.
    * If this is not possible, then an appropriate error message is given on m and false is
