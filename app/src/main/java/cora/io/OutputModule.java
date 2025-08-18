@@ -240,6 +240,7 @@ public class OutputModule {
       case "%{or}" -> _printer.symbOr();
       case "%{not}" -> _printer.symbNot();
       case "%{implies}" -> _printer.symbImplies();
+      case "%{iff}" -> _printer.symbIff();
       case "%{emptyset}" -> _printer.symbEmptySet();
       case "%{union}" -> _printer.symbUnion();
       case "%{subterm}" -> _printer.symbSubterm();

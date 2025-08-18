@@ -196,6 +196,21 @@ class CommandAlterTest {
       "name but got end of input.\n\n"));
   }
 
+  @Test
+  public void testConstraint() {
+    OutputModule module = OutputModule.createUnicodeModule(trs);
+    DeductionStep step = createStep(module, "alter constraint y < z + -1");
+    assertTrue(step.toString().equals("alter constraint y < z - 1"));
+  }
+
+  @Test
+  public void testIllegalConstraint() {
+    OutputModule module = OutputModule.createUnicodeModule(trs);
+    assertTrue(createStep(module, "alter constraint y < z +") == null);
+    assertTrue(module.toString().equals("Parsing error at position 25: Expected term, started by " +
+      "an identifier, LAMBDA, string or (, but got end of input.\n\n"));
+  }
+
   private ArrayList<Command.TabSuggestion> getSuggestions(String args) {
     CommandAlter cmd = new CommandAlter();
     EquationContext ec =
@@ -210,9 +225,10 @@ class CommandAlterTest {
   @Test
   public void testSuggestionEmpty() {
     ArrayList<Command.TabSuggestion> suggestions = getSuggestions("");
-    assertTrue(suggestions.size() == 2);
+    assertTrue(suggestions.size() == 3);
     assertTrue(suggestions.get(0).text().equals("add"));
     assertTrue(suggestions.get(1).text().equals("rename"));
+    assertTrue(suggestions.get(2).text().equals("constraint"));
   }
 
   @Test
@@ -333,6 +349,24 @@ class CommandAlterTest {
     assertTrue(suggestions.get(0).category().equals("existing variable name"));
     assertTrue(suggestions.get(1).text().equals("z"));
     assertTrue(suggestions.get(1).category().equals("existing variable name"));
+  }
+
+  @Test
+  public void testSuggestionOnlyConstraint() {
+    ArrayList<Command.TabSuggestion> suggestions = getSuggestions("constraint");
+    assertTrue(suggestions.size() == 1);
+    assertTrue(suggestions.get(0).text() == null);
+    assertTrue(suggestions.get(0).category().equals("constraint"));
+  }
+
+  @Test
+  public void testConstraintSuggestionsSomethingGiven() {
+    ArrayList<Command.TabSuggestion> suggestions = getSuggestions("constraint x");
+    assertTrue(suggestions.size() == 2);
+    assertTrue(suggestions.get(0).text() == null);
+    assertTrue(suggestions.get(1).text() == null);
+    assertTrue(suggestions.get(0).category().equals("rest of constraint"));
+    assertTrue(suggestions.get(1).category().equals("end of command"));
   }
 }
 

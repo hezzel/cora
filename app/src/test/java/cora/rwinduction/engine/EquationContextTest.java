@@ -141,6 +141,7 @@ class EquationContextTest {
       "h :: Int -> o\n" +
       "g :: Int -> Int -> Int\n");
     
+    // c1: E103: (f(f(x)) , f(f(x)) ≈ g(x, y) | x > 0 ∧ z = 0 , f(z))
     Term left = CoraInputReader.readTermAndUpdateNaming("f(f(x))", renaming, trs);
     Term right = CoraInputReader.readTermAndUpdateNaming("g(x,y)", renaming, trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > 0 ∧ z = 0", renaming, trs);
