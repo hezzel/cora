@@ -27,6 +27,7 @@ import charlie.terms.TermFactory;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.DeductionStep;
 import cora.rwinduction.engine.VariableNamer;
+import cora.rwinduction.engine.deduction.DeductionAlterConstraint;
 import cora.rwinduction.engine.deduction.DeductionAlterDefinitions;
 import cora.rwinduction.engine.deduction.DeductionAlterRename;
 import cora.rwinduction.parser.CommandParsingStatus;
@@ -41,7 +42,8 @@ public class CommandAlter extends DeductionCommand {
   @Override
   public FixedList<String> callDescriptor() {
     return FixedList.of("alter add <var> = <term> , ..., <var> = <term>",
-                        "alter rename <name> := <newname> , ... , <name> := <newname>");
+                        "alter rename <name> := <newname> , ... , <name> := <newname>",
+                        "alter constraint <constraint>");
   }
   
   @Override
@@ -55,6 +57,9 @@ public class CommandAlter extends DeductionCommand {
       "been introduced by definition to the left.");
     module.println("For ALTER RENAME, note that the new names you introduce should not occur " +
       "in the bounding terms either!");
+    module.println("For ALTER CONSTRAINT, the new constraint should be equivalent to the " +
+      "original one. No fresh variables are allowed to occur in it (but you can add variables " +
+      "that occur only in the body of the equation context, not yet the constraint).");
   }
 
   @Override
@@ -66,6 +71,7 @@ public class CommandAlter extends DeductionCommand {
     }
     if (action.equals("add")) return createAddStep(input);
     if (action.equals("rename")) return createRenameStep(input);
+    if (action.equals("constraint")) return createConstraintStep(input);
     _module.println("Unknown action for alter: %a.", action);
     return null;
   }
@@ -131,7 +137,15 @@ public class CommandAlter extends DeductionCommand {
     return DeductionAlterRename.createStep(_proof, om, names);
   }
 
-  /** Tab suggestions for this command are either variables, =, or a term. */
+  /** Handle an alter constraint command */
+  DeductionAlterConstraint createConstraintStep(CommandParsingStatus input) {
+    Term constraint = input.readTerm(_proof.getContext().getTRS(),
+                                     _proof.getProofState().getTopEquation().getRenamingCopy(),
+                                     _module);
+    if (constraint == null) return null;
+    return DeductionAlterConstraint.createStep(_proof, optionalModule(), constraint);
+  }
+
   @Override
   public ArrayList<TabSuggestion> suggestNext(String args) {
     ArrayList<TabSuggestion> ret = new ArrayList<TabSuggestion>();
@@ -139,11 +153,13 @@ public class CommandAlter extends DeductionCommand {
     if (status.commandEnded()) {
       ret.add(new TabSuggestion("add", "keyword"));
       ret.add(new TabSuggestion("rename", "keyword"));
+      ret.add(new TabSuggestion("constraint", "keyword"));
       return ret;
     }
     String w = status.nextWord();
     if (w.equals("add")) addAddSuggestions(status, ret);
     else if (w.equals("rename")) addRenameSuggestions(status, ret);
+    else if (w.equals("constraint")) addConstraintSuggestions(status, ret);
     return ret;
   }
 
@@ -213,6 +229,14 @@ public class CommandAlter extends DeductionCommand {
     if (kind == 3) ret.add(new TabSuggestion(null, "fresh variable name"));
     if (kind == 4) {
       ret.add(new TabSuggestion(",", "keyword"));
+      ret.add(endOfCommandSuggestion());
+    }
+  }
+
+  private void addConstraintSuggestions(CommandParsingStatus status, ArrayList<TabSuggestion> ret) {
+    if (status.commandEnded()) ret.add(new TabSuggestion(null, "constraint"));
+    else {
+      ret.add(new TabSuggestion(null, "rest of constraint"));
       ret.add(endOfCommandSuggestion());
     }
   }

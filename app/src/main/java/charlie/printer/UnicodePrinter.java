@@ -41,6 +41,7 @@ public class UnicodePrinter extends Printer {
   public String symbOr()              { return "∨"; }
   public String symbNot()             { return "¬"; }
   public String symbImplies()         { return "⇒"; }
+  public String symbIff()             { return "⟺ "; } // ⇔
 
   public String symbEmptySet()        { return "ø"; }
   public String symbUnion()           { return "∪"; }

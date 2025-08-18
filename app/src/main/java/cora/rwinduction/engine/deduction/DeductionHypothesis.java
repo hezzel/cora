@@ -106,14 +106,14 @@ public final class DeductionHypothesis extends DeductionStep {
       if (!original.getLeftGreaterTerm().isEmpty()) sprime = original.getLeftGreaterTerm().get();
       if (!original.getRightGreaterTerm().isEmpty()) tprime = original.getRightGreaterTerm().get();
       s = original.getEquation().getLhs();
-      q = neweq.getLhs();
+      q = neweq.getLhs(); // C[rγ]
       t = original.getEquation().getRhs();
     }
     else {
       if (!original.getRightGreaterTerm().isEmpty()) sprime = original.getRightGreaterTerm().get();
       if (!original.getLeftGreaterTerm().isEmpty()) tprime = original.getLeftGreaterTerm().get();
       s = original.getEquation().getRhs();
-      q = neweq.getRhs();
+      q = neweq.getRhs(); // C[rγ]
       t = original.getEquation().getLhs();
     }
 
@@ -125,12 +125,12 @@ public final class DeductionHypothesis extends DeductionStep {
     boolean sequalq = sprime.equals(q);
     Term lgamma = original.getEquation().querySubterm(pos);
     Term phi = neweq.getConstraint();
-    // in both cases, s' ≽ q must hold, and since we don't have s = q, let's require s ≻ q
+    // in both cases, s' ≽ q must hold, so if we don't have s = q, let's require s' ≻ q
     if (!sequalq) reqs.add(new OrdReq(sprime, q, phi, newrenaming));
     // if case [A] is possible, then go for that
     if (!sprime.equals(lgamma)) { // since s' ≽ C[lγ] ≽ lγ, this implies s' ≻ lγ directly
       if (!sequalq) return true;  // we have already required s' ≻ q ≽ rγ
-      if (!pos.queryPosition().isEmpty()) return true; // we have s' = C[rγ] ≻ rγ
+      if (!pos.queryPosition().isEmpty()) return true; // we have s' = q = C[rγ] ≻ rγ
     }
     // otherwise, go for case [B]; note that this can only occur if C is the empty context, so
     // rγ = q
