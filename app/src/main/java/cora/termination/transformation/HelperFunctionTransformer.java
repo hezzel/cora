@@ -34,6 +34,7 @@ import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.position.*;
+import charlie.terms.replaceable.ReplaceableList;
 import charlie.terms.*;
 import charlie.trs.*;
 import cora.io.OutputModule;

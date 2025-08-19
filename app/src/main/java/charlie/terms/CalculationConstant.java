@@ -17,6 +17,7 @@ package charlie.terms;
 
 import java.util.Map;
 import charlie.types.Type;
+import charlie.terms.replaceable.ReplaceableList;
 
 /** A Constant that happens to be a Calculation Symbol. */
 public class CalculationConstant extends LeafTermInherit implements CalculationSymbol {

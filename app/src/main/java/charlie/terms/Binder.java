@@ -18,6 +18,8 @@ package charlie.terms;
 import java.util.Map;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.ReplaceableList;
 
 /**
  * Binders are variables in Vbinder: variables that are only meant to be used as binders in an

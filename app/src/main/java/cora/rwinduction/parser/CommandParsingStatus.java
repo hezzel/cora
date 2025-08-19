@@ -25,6 +25,9 @@ import charlie.parser.Parser.ParserTerm;
 import charlie.parser.Parser.Identifier;
 import charlie.parser.CoraTokenData;
 import charlie.parser.CoraParser;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -210,7 +213,7 @@ public class CommandParsingStatus {
     try {
       ParserTerm pterm = CoraParser.readSingleSymbol(status);
       recoverPosition(status);
-      fterm = CoraInputReader.readTerm(pterm, new Renaming(Set.of()), false, trs);
+      fterm = CoraInputReader.readTerm(pterm, new MutableRenaming(Set.of()), trs);
     }
     catch (ParsingException e) {
       printErrorText(module, e);
@@ -237,7 +240,7 @@ public class CommandParsingStatus {
       ParserTerm pterm = CoraParser.readTerm(status);
       if (pterm instanceof Identifier(Token tok, String name)) vname = name;
       recoverPosition(status);
-      return CoraInputReader.readTerm(pterm, varnames, false, trs);
+      return CoraInputReader.readTerm(pterm, varnames, trs);
     }
     catch (ParsingException e) {
       if (vname != null) module.println("Unknown variable: " + vname);
@@ -251,10 +254,10 @@ public class CommandParsingStatus {
    * returns the result.  If this fails, it instead prints an error message to the given
    * OutputModule and returns null, and the status is not advanced.
    */
-  public Pair<Equation,Renaming> readEquation(TRS trs, OutputModule module) {
+  public Pair<Equation,MutableRenaming> readEquation(TRS trs, OutputModule module) {
     ParsingStatus status = makeStatus();
     try {
-      Pair<Equation,Renaming> ret = EquationParser.parseEquation(status, trs);
+      Pair<Equation,MutableRenaming> ret = EquationParser.parseEquation(status, trs);
       if (ret != null) recoverPosition(status);
       return ret;
     }
@@ -286,8 +289,8 @@ public class CommandParsingStatus {
    * OutputModule and returns null.  Depending on the kind and position of the failure, the parsing
    * status may or may not be advanced.
    */
-  public Substitution readSubstitution(TRS trs, Renaming keyNames, Renaming valueNames,
-                                       OutputModule module) {
+  public Substitution readSubstitution(TRS trs, Renaming keyNames,
+                                       MutableRenaming valueNames, OutputModule module) {
     // We make a ParsingStatus with *no* error tolerance.  This is important to avoice hanging.
     ParsingStatus status = makeStatus();
     Substitution ret = null;
@@ -310,8 +313,10 @@ public class CommandParsingStatus {
    * (But a ParsingStatus created by the RIParser has this property.)
    * In the case of success, a Substitution is returned; otherwise null.
    */
-  private Substitution parseSubstitution(ParsingStatus status, TRS trs, Renaming keyNames,
-                                         Renaming valueNames, OutputModule module) {
+  private Substitution parseSubstitution(ParsingStatus status, TRS trs,
+                                         Renaming keyNames,
+                                         MutableRenaming valueNames,
+                                         OutputModule module) {
     status.expect(CoraTokenData.METAOPEN, "substitution opening bracket [");
     Substitution subst = TermFactory.createEmptySubstitution();
     boolean first = true;
@@ -324,7 +329,7 @@ public class CommandParsingStatus {
       String varname = vartok.getText();
       Replaceable x = keyNames.getReplaceable(varname);
       if (x == null) { status.storeError(vartok, "No such variable: " + varname); return null; }
-      Term term = CoraInputReader.readTerm(pterm, valueNames, true, trs);
+      Term term = CoraInputReader.readTermAndUpdateNaming(pterm, valueNames, trs);
       if (!x.queryType().equals(term.queryType())) {
         module.println("Ill-typed substitution: %a has type %a but is mapped to a term %a of " +
           "type %a.", varname, x.queryType(), term, term.queryType());

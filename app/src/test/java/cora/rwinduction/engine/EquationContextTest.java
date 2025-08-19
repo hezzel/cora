@@ -19,8 +19,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
-import charlie.terms.Renaming;
 import charlie.terms.Variable;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -29,7 +30,7 @@ import cora.io.OutputModule;
 class EquationContextTest {
   @Test
   public void testToStringEmptyExtra() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "sum1 :: Int -> Int\n" +
       "sum2 :: Int -> Int\n");
@@ -43,7 +44,7 @@ class EquationContextTest {
 
   @Test
   public void testToStringWithExtra() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "sum1 :: Int -> Int\n" +
       "sum2 :: Int -> Int\n");
@@ -59,7 +60,7 @@ class EquationContextTest {
 
   @Test
   public void testRenamingInConstructor() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "sum1 :: Int -> Int\n" +
       "sum2 :: Int -> Int\n");
@@ -80,7 +81,7 @@ class EquationContextTest {
 
   @Test
   public void testModifyingRenamingDoesNotMatter() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "sum1 :: Int -> Int\n" +
       "sum2 :: Int -> Int\n");
@@ -90,14 +91,14 @@ class EquationContextTest {
     Term kk = CoraInputReader.readTermAndUpdateNaming("sum1(z)", renaming, trs);
     Equation eq = new Equation(left, right, constraint);
     EquationContext context = new EquationContext(eq, 8, renaming);
-    Variable x = renaming.getVariable("x");
+    Replaceable x = renaming.getReplaceable("x");
     context.getRenamingCopy().setName(x, "AAA");
     assertTrue(renaming.getName(x).equals("x"));
   }
 
   @Test
   public void testIndex() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "sum1 :: Int -> Int\n" +
       "sum2 :: Int -> Int\n");
@@ -116,7 +117,7 @@ class EquationContextTest {
 
   @Test
   public void testPrintableObject() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n" +
       "h :: Int -> o\n" +
@@ -125,7 +126,7 @@ class EquationContextTest {
     Term right = CoraInputReader.readTermAndUpdateNaming("g(x,y)", renaming, trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > 0 ∧ y = 0", renaming, trs);
     Equation equation = new Equation(left, right, constraint);
-    renaming.setName(renaming.getVariable("x"), "z");
+    renaming.setName(renaming.getReplaceable("x"), "z");
     EquationContext context = new EquationContext(left, equation, right, 103, renaming);
     OutputModule module = OutputModule.createUnicodeModule(trs);
     module.println("%a", context);
@@ -135,7 +136,7 @@ class EquationContextTest {
 
   @Test
   public void testReplace() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n" +
       "h :: Int -> o\n" +

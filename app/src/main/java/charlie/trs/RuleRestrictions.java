@@ -21,8 +21,8 @@ import java.util.Collection;
 import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.Variable;
-import charlie.terms.Replaceable;
-import charlie.terms.ReplaceableList;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.ReplaceableList;
 import charlie.terms.position.Position;
 import charlie.trs.TrsProperties.*;
 

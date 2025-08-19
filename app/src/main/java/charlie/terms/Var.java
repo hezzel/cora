@@ -18,6 +18,8 @@ package charlie.terms;
 import java.util.Map;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.ReplaceableList;
 
 /**
  * Non-binder variables are both used as parts of constraints, as generic expressions in terms, and

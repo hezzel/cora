@@ -19,7 +19,6 @@ import charlie.util.FixedList;
 import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.Variable;
-import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import cora.io.OutputModule;
 import cora.io.ProofObject;

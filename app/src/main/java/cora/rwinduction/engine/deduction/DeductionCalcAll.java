@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.Stack;
 
 import charlie.util.Pair;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
@@ -37,12 +38,12 @@ public final class DeductionCalcAll extends DeductionStep {
   public enum Side { Left, Right, Both };
 
   private Equation _newEquation;
-  private Renaming _newRenaming;
+  private MutableRenaming _newRenaming;
   private Side _side;
   private int _numReplacements;
 
   private DeductionCalcAll(ProofState state, ProofContext context,
-                           Equation eq, Renaming ren, int numreps, Side side) {
+                           Equation eq, MutableRenaming ren, int numreps, Side side) {
     super(state, context);
     _newEquation = eq;
     _newRenaming = ren;
@@ -107,7 +108,7 @@ public final class DeductionCalcAll extends DeductionStep {
                                             Side side) {
     Equation eq = getTopEquation(proof.getProofState(), m);
     if (eq == null) return null;
-    Renaming renaming = proof.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = proof.getProofState().getTopEquation().getRenamingCopy();
     HashMap<Term,Variable> definedVars = CalcHelper.breakupConstraint(eq.getConstraint());
     VariableNamer namer = proof.getContext().getVariableNamer();
 
@@ -139,7 +140,8 @@ public final class DeductionCalcAll extends DeductionStep {
    * store the new names for the fresh variables.  The given parent is a pair <f,i> such that this
    * term is a term si inside f s1 ... sn, and may be null if that is not the case.
    */
-  private static Term doCalculations(Term term, HashMap<Term,Variable> map, Renaming renaming,
+  private static Term doCalculations(Term term, HashMap<Term,Variable> map,
+                                     MutableRenaming renaming,
                                      ReplacementInfo info, VariableNamer namer,
                                      Pair<FunctionSymbol,Integer> parent) {
     if (CalcHelper.calculatable(term)) {
@@ -165,7 +167,7 @@ public final class DeductionCalcAll extends DeductionStep {
    * We use a small optimisation, avoiding unnecessary allocations if nothing is changed.
    */
   private static Term doCalculcationsRecurse(Term term, HashMap<Term,Variable> map,
-                                             Renaming renaming, ReplacementInfo info,
+                                             MutableRenaming renaming, ReplacementInfo info,
                                              VariableNamer namer) {
     Term head = term.queryHead();
     ArrayList<Term> args = null;

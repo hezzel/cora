@@ -23,6 +23,7 @@ import java.util.Set;
 
 import charlie.util.Pair;
 import charlie.types.TypeFactory;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
@@ -62,7 +63,7 @@ class DeductionAlterDefinitionsTest {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     ArrayList<Pair<Pair<Variable,String>,Term>> defs =
       new ArrayList<Pair<Pair<Variable,String>,Term>>();
     Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
@@ -91,7 +92,7 @@ class DeductionAlterDefinitionsTest {
     PartialProof pp = setupProof("sum1(x) = f(F, u) | x > 0");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
     ArrayList<Pair<Pair<Variable,String>,Term>> defs =
       new ArrayList<Pair<Pair<Variable,String>,Term>>();
 
@@ -99,7 +100,7 @@ class DeductionAlterDefinitionsTest {
     assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs) == null);
 
     // variable already exists
-    Variable x = renaming.getVariable("x");
+    Variable x = (Variable)renaming.getReplaceable("x");
     Pair<Variable,String> xinfo = new Pair<Variable,String>(x, "x");
     defs.add(new Pair<Pair<Variable,String>,Term>(xinfo, TheoryFactory.createValue(0)));
     assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs) == null);
@@ -108,7 +109,7 @@ class DeductionAlterDefinitionsTest {
     // non-theory variable
     x = TermFactory.createVar("x", CoraInputReader.readType("unit"));
     xinfo = new Pair<Variable,String>(x, "x2");
-    defs.add(new Pair<Pair<Variable,String>,Term>(xinfo, renaming.getVariable("u")));
+    defs.add(new Pair<Pair<Variable,String>,Term>(xinfo, (Variable)renaming.getReplaceable("u")));
     assertTrue(DeductionAlterDefinitions.createStep(pp, o, defs) == null);
     defs.clear();
 

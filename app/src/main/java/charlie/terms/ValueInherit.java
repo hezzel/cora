@@ -18,6 +18,7 @@ package charlie.terms;
 import java.util.Map;
 import charlie.types.Base;
 import charlie.types.TypeFactory;
+import charlie.terms.replaceable.ReplaceableList;
 
 /**
  * Values are constants of a theory sorts that cannot be rewritten; they are the representations of

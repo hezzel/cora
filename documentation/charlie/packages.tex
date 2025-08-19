@@ -26,22 +26,25 @@ and \texttt{charlie.types}, but not from (e.g.) \texttt{charlie.smt} or \texttt{
 \node [veld] (types) [below of=util, node distance=15mm] {types};
 \draw (util) -- (types);
 
-\node [veld] (parserlib) [left of=types, node distance=15mm, anchor=east] {parser.lib};
+\node [veld] (parserlib) [left of=types, node distance=20mm, anchor=east] {parser.lib};
 \draw (util) -- (parserlib);
 
 \node [veld] (parser) [below of=parserlib, node distance=10mm] {parser};
 \draw (parserlib) -- (parser);
 \draw (types) -- (parser);
 
-\node [veld] (termspos) [right of=types, node distance=10mm, anchor=west] {terms.position};
-\draw (util) -- (termspos);
+\node [veld] (position) [right of=types, node distance=15mm, anchor=west] {terms.position};
+\draw (util) -- (position);
 
-%\node [veld] (smt) [right of=termspos, node distance=17mm, anchor=west] {smt};
+\node [veld] (replaceable) [below of=types, node distance=10mm] {terms.replaceable};
+\draw (types) -- (replaceable);
+
+%\node [veld] (smt) [right of=position, node distance=17mm, anchor=west] {smt};
 %\draw (util) -- (smt);
 %
 %\node [veld] (terms) [below of=types, node distance=10mm] {terms};
 %\draw (types) -- (terms);
-%\draw (termspos) -- (terms);
+%\draw (position) -- (terms);
 %
 %\node [veld] (trs) [below of=terms, node distance=10mm] {trs};
 %\draw (terms) -- (trs);

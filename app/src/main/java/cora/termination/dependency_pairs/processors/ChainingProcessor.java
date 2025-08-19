@@ -1,13 +1,5 @@
 package cora.termination.dependency_pairs.processors;
 
-import charlie.util.Pair;
-import charlie.terms.*;
-import charlie.trs.TRS;
-import cora.io.OutputModule;
-import cora.config.Settings;
-import cora.termination.dependency_pairs.DP;
-import cora.termination.dependency_pairs.Problem;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -20,6 +12,17 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import charlie.util.Pair;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
+import charlie.terms.*;
+import charlie.trs.TRS;
+import cora.io.OutputModule;
+import cora.config.Settings;
+import cora.termination.dependency_pairs.DP;
+import cora.termination.dependency_pairs.Problem;
 
 /**
  * Chains consecutive DPs in the DP graph into new DPs that have the same
@@ -265,14 +268,14 @@ public class ChainingProcessor implements Processor {
       Term[] vars = new Term[allvars.size()];
       int i = 0;
       for (Variable x : dp1.getAllVariables()) vars[i++] = x;
-      Renaming ret = module.generateUniqueNaming(vars);
+      MutableRenaming ret = module.generateUniqueNaming(vars);
       for (Variable x : dp2.getAllVariables()) extend(ret, x);
       for (Variable x : dp3.getAllVariables()) extend(ret, x);
       return ret;
     }
 
     /** Helper function for getRenaming: extends the given renaming with a name for x */
-    private void extend(Renaming renaming, Variable x) {
+    private void extend(MutableRenaming renaming, Variable x) {
       if (renaming.getName(x) != null) return;
       String name = x.queryName();
       while (!renaming.isAvailable(name)) name += "'";

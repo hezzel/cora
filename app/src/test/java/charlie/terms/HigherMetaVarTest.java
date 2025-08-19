@@ -22,6 +22,7 @@ import charlie.util.FixedList;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.terms.replaceable.Replaceable;
 
 public class HigherMetaVarTest {
   private FixedList<Type> fili(Type type1, Type type2) {
@@ -110,7 +111,7 @@ public class HigherMetaVarTest {
   public void testMakeTerm() {
     Type a = TypeFactory.createSort("a"), b = TypeFactory.createSort("b");
     MetaVariable z = TermFactory.createMetaVar("Z", fili(a,b), TypeFactory.createSort("c"));
-    Term t = z.makeTerm();
+    Term t = TermFactory.makeTerm(z);
     assertTrue(t.toString().equals("λb1.λb2.Z⟨b1, b2⟩"));
   }
 

@@ -24,6 +24,7 @@ import java.util.Optional;
 import charlie.util.FixedList;
 import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -55,7 +56,7 @@ class DeductionHdeleteTest {
 
   private EquationContext readEquationContext(TRS trs, String leftgr, String lhs, String rhs,
                                               String constraint, String rightgr) {
-    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming renaming = new MutableRenaming(trs.queryFunctionSymbolNames());
     Term lg = CoraInputReader.readTermAndUpdateNaming(leftgr, renaming, trs);
     Term ls = CoraInputReader.readTermAndUpdateNaming(lhs, renaming, trs);
     Term rs = CoraInputReader.readTermAndUpdateNaming(rhs, renaming, trs);
@@ -64,7 +65,7 @@ class DeductionHdeleteTest {
     return new EquationContext(lg, new Equation(ls, rs, co), rg, 19, renaming);
   }
 
-  private Renaming makeNaming(TRS trs, List<Term> lst) {
+  private MutableRenaming makeNaming(TRS trs, List<Term> lst) {
     TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
     return printer.generateUniqueNaming(lst);
   }
@@ -302,8 +303,8 @@ class DeductionHdeleteTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
-    subst.extend(h8.getRenamingCopy().getVariable("c"),
-                 pp.getProofState().getTopEquation().getRenamingCopy().getVariable("y"));
+    subst.extend(h8.getRenamingCopy().getReplaceable("c"),
+      (Variable)pp.getProofState().getTopEquation().getRenamingCopy().getReplaceable("y"));
     DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
                                                         EquationPosition.parse("L3"), subst);
     assertTrue(step.commandDescription().equals("hdelete H8 L3 with [a := y, b := x, c := y]"));

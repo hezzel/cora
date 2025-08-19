@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.ReplaceableList;
 
 public class VariableEnvironmentTest {
   private Type baseType(String name) {

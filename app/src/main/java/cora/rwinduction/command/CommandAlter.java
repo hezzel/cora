@@ -20,9 +20,10 @@ import java.util.Optional;
 
 import charlie.util.Pair;
 import charlie.util.FixedList;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
 import charlie.terms.Variable;
-import charlie.terms.Renaming;
 import charlie.terms.TermFactory;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.DeductionStep;
@@ -80,7 +81,7 @@ public class CommandAlter extends DeductionCommand {
   DeductionAlterDefinitions createAddStep(CommandParsingStatus input) {
     ArrayList<Pair<Pair<Variable,String>,Term>> definitions =
       new ArrayList<Pair<Pair<Variable,String>,Term>>();
-    Renaming renaming = _proof.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = _proof.getProofState().getTopEquation().getRenamingCopy();
     VariableNamer namer = _proof.getContext().getVariableNamer();
     Optional<OutputModule> om = optionalModule();
     while (true) {

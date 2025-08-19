@@ -24,6 +24,8 @@ import java.util.function.BiFunction;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.position.Position;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.ReplaceableList;
 
 /**
  * Terms are the main object to be rewritten, or used to construct rules.  There are various kinds

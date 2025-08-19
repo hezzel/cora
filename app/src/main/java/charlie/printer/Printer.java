@@ -27,6 +27,9 @@ import charlie.types.Type;
 import charlie.types.TypePrinter;
 import charlie.terms.position.Position;
 import charlie.terms.position.PositionPrinter;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
@@ -90,7 +93,7 @@ public abstract class Printer {
    * This uses the underlying TermPrinter to generate a Renaming that takes all the variables (and
    * meta-variables) in the given terms into account.
    */
-  public final Renaming generateUniqueNaming(Term ...terms) {
+  public final MutableRenaming generateUniqueNaming(Term ...terms) {
     return _termPrinter.generateUniqueNaming(Arrays.asList(terms));
   }
 
@@ -98,7 +101,7 @@ public abstract class Printer {
    * This uses the underlying TermPrinter to generate a Renaming that takes all the variables (and
    * meta-variables) in the given terms into account.
    */
-  public final Renaming generateNaming(List<Term> terms) {
+  public final MutableRenaming generateNaming(List<Term> terms) {
     return _termPrinter.generateUniqueNaming(terms);
   }
 
@@ -245,7 +248,7 @@ public abstract class Printer {
     ArrayList<Term> terms = new ArrayList<Term>();
     for (int i = 0; i < objects.length; i++) {
       if (objects[i] instanceof Term t) terms.add(t);
-      else if (objects[i] instanceof Replaceable r) terms.add(r.makeTerm());
+      else if (objects[i] instanceof Replaceable r) terms.add(TermFactory.makeTerm(r));
     }   
     Renaming renaming = _termPrinter.generateUniqueNaming(terms);
     for (int i = 0; i < objects.length; i++) {

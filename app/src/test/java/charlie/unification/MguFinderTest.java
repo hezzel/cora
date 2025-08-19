@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2025 Cynthia Kop & Liye Guo
+ Copyright 2025 Cynthia Kop and Liye Guo
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -19,20 +19,20 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Set;
-import charlie.terms.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
 import charlie.terms.TermFactory;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 
 class MguFinderTest {
-  private Term read(String desc, Renaming renaming, TRS trs) {
+  private Term read(String desc, MutableRenaming renaming, TRS trs) {
     return CoraInputReader.readTermAndUpdateNaming(desc, renaming, trs);
   }
 
   @Test
   public void testTypeMismatch() {
-    var renaming = new Renaming(Set.of());
+    var renaming = new MutableRenaming(Set.of());
     var trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n");
 
@@ -48,7 +48,7 @@ class MguFinderTest {
 
   @Test
   public void testOccurrence() {
-    var renaming = new Renaming(Set.of());
+    var renaming = new MutableRenaming(Set.of());
     var trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n");
 
@@ -59,7 +59,7 @@ class MguFinderTest {
 
   @Test
   public void testVariable() {
-    var renaming = new Renaming(Set.of());
+    var renaming = new MutableRenaming(Set.of());
     var trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n");
 
@@ -77,7 +77,7 @@ class MguFinderTest {
 
   @Test
   public void testConstant() {
-    var renaming = new Renaming(Set.of());
+    var renaming = new MutableRenaming(Set.of());
     var trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n" +
       "g :: Int -> Int\n");
@@ -92,7 +92,7 @@ class MguFinderTest {
 
   @Test
   public void testApplication1() {
-    var renaming = new Renaming(Set.of());
+    var renaming = new MutableRenaming(Set.of());
     var trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int -> Int\n" +
       "a :: Int\n");
@@ -111,7 +111,7 @@ class MguFinderTest {
 
   @Test
   public void testApplication2() {
-    var renaming = new Renaming(Set.of());
+    var renaming = new MutableRenaming(Set.of());
     var trs = CoraInputReader.readTrsFromString(
       "f :: o -> o\n" +
       "g :: o -> o -> o -> o\n" +
@@ -138,7 +138,7 @@ class MguFinderTest {
 
   @Test
   public void testApplication3() {
-    var renaming = new Renaming(Set.of());
+    var renaming = new MutableRenaming(Set.of());
     var trs = CoraInputReader.readTrsFromString(
       "f :: o -> o -> o\n" +
       "g :: o -> o\n");
@@ -158,7 +158,7 @@ class MguFinderTest {
 
   @Test
   public void testApplication4() {
-    var renaming = new Renaming(Set.of());
+    var renaming = new MutableRenaming(Set.of());
     var trs = CoraInputReader.readTrsFromString(
       "f :: o -> o -> o\n" +
       "a :: o\n" +

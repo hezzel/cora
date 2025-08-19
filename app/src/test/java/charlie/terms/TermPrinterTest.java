@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 import charlie.types.*;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 
 /**
  * Not too many tests here, because most testing is actually done through the toString() functions
@@ -93,7 +95,7 @@ public class TermPrinterTest {
     Term term = TermFactory.createApp(f, abs1, abs2); // f(λx.x, λy.y)
 
     TermPrinter printer = new TermPrinter(Set.of());
-    Renaming naming = printer.generateUniqueNaming(term, x);
+    MutableRenaming naming = printer.generateUniqueNaming(term, x);
     assertTrue(naming.getName(x).equals("x"));
     assertTrue(naming.getName(y) == null);
     assertFalse(naming.isAvailable("x"));
@@ -123,14 +125,14 @@ public class TermPrinterTest {
     Term abs = new Abstraction(x, new Abstraction(y, new Abstraction(u, main)));
 
     TermPrinter printer = new TermPrinter(Set.of());
-    Renaming naming = printer.generateUniqueNaming(abs);
+    MutableRenaming naming = printer.generateUniqueNaming(abs);
 
     StringBuilder builder = new StringBuilder();
     printer.print(abs, naming, builder);
     assertTrue(builder.toString().equals("λx.λy.λx1.f(g(z__2, x1), z__1, x)"));
 
     builder.setLength(0);
-    naming = new Renaming(Set.of());
+    naming = new MutableRenaming(Set.of());
     printer.print(abs, naming, builder);
     assertEquals("λx.λy.λx1.f(g(z, x1), z, x)", builder.toString());
 

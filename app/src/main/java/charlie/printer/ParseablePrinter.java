@@ -19,8 +19,8 @@ import java.util.Set;
 
 import charlie.types.Type;
 import charlie.types.TypePrinter;
-import charlie.terms.Replaceable;
-import charlie.terms.Renaming;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.TermPrinter;
 import charlie.terms.position.PositionPrinter;
 import charlie.trs.Rule;

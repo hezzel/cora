@@ -18,6 +18,7 @@ package charlie.terms;
 import java.util.HashMap;
 import java.util.Set;
 import charlie.util.NullStorageException;
+import charlie.terms.replaceable.Replaceable;
 
 /**
  * A substitution is a function that maps a finite set of variables/meta-variables (replaceables)

@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
 import charlie.terms.position.PositionFormatException;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
 import charlie.terms.TypingException;
-import charlie.terms.Renaming;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
@@ -30,7 +30,7 @@ import cora.io.OutputModule;
 class EquationTest {
   @Test
   public void testToString() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "sum1 :: Int -> Int\n" +
       "sum2 :: Int -> Int\n");
@@ -43,7 +43,7 @@ class EquationTest {
 
   @Test
   public void testReplaceGood() throws PositionFormatException {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n" +
       "g :: Int -> Int -> Int\n");
@@ -60,7 +60,7 @@ class EquationTest {
 
   @Test
   public void testReplaceBadType() throws PositionFormatException {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n" +
       "h :: Int -> o\n" +
@@ -76,7 +76,7 @@ class EquationTest {
 
   @Test
   public void testPrintableObject() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     TRS trs = CoraInputReader.readTrsFromString(
       "f :: Int -> Int\n" +
       "h :: Int -> o\n" +
@@ -85,7 +85,7 @@ class EquationTest {
     Term right = CoraInputReader.readTermAndUpdateNaming("g(x,y)", renaming, trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > 0 ∧ y = 0", renaming, trs);
     Equation equation = new Equation(left, right, constraint);
-    renaming.setName(renaming.getVariable("x"), "z");
+    renaming.setName(renaming.getReplaceable("x"), "z");
     OutputModule module = OutputModule.createUnicodeModule(trs);
     module.println("%a", equation.makePrintableWith(renaming));
     assertTrue(module.toString().equals("f(f(z)) ≈ g(z, y) | z > 0 ∧ y = 0\n\n"));

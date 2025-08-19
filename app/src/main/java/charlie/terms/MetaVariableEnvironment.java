@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -17,6 +17,8 @@ package charlie.terms;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.ReplaceableList;
 
 /**
  * MetaVariableEnvironment is an Environment of MetaVariables.  It is based on a ReplaceableList,

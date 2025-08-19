@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import charlie.util.FixedList;
-import charlie.terms.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
@@ -103,7 +103,7 @@ class CommandPostulateTest {
     assertTrue(module.toString().equals("Parsing error at position 11: Unexpected equation: I " +
       "expected a form \"a -><- b (| c)?\" but only found one term: iter(x, y, z).\n\n"));
     assertTrue(status.currentPosition() == 11);
-    Renaming renaming = new Renaming(java.util.Set.of());
+    MutableRenaming renaming = new MutableRenaming(java.util.Set.of());
     assertTrue(status.readTerm(trs, renaming, module) != null);
   }
 

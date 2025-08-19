@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Optional;
 
-import charlie.terms.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
@@ -38,7 +38,7 @@ class DeductionCalcAllTest {
   public PartialProof setupProof(String eqs) {
     return new PartialProof(trs,
       EquationParser.parseEquationList(eqs, trs),
-      lst -> new Renaming(trs.queryFunctionSymbolNames()));
+      lst -> new MutableRenaming(trs.queryFunctionSymbolNames()));
   }
 
   @Test

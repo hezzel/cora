@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,13 +13,14 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.terms.replaceable;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.types.TypeFactory;
+import charlie.terms.*;
 
 public class ReplaceableListTest {
   private MetaVariable makeMetaVar(String name) {
@@ -29,8 +30,8 @@ public class ReplaceableListTest {
 
   @Test
   public void testCreationWithThreeSimilarVariables() {
-    Variable x = new Var("x", TypeFactory.createSort("a"));
-    Variable y = new Binder("x", TypeFactory.createSort("a"));
+    Variable x = TermFactory.createVar("x", TypeFactory.createSort("a"));
+    Variable y = TermFactory.createBinder("x", TypeFactory.createSort("a"));
     ArrayList<Replaceable> vars = new ArrayList<Replaceable>();
     vars.add(x);
     vars.add(y);
@@ -53,9 +54,9 @@ public class ReplaceableListTest {
 
   @Test
   public void testAdd() {
-    Variable x = new Var("x", TypeFactory.createSort("a"));
+    Variable x = TermFactory.createVar("x", TypeFactory.createSort("a"));
     Replaceable y = makeMetaVar("y");
-    Replaceable z = new Var("z", TypeFactory.createSort("a"));
+    Replaceable z = TermFactory.createVar("z", TypeFactory.createSort("a"));
     ReplaceableList lst1 = new ReplaceableList(x);
     ReplaceableList lst2 = lst1.add(y);
     ReplaceableList lst3 = lst2.add(z);
@@ -68,9 +69,9 @@ public class ReplaceableListTest {
 
   @Test
   public void testRemove() {
-    Variable x = new Var("x", TypeFactory.createSort("a"));
-    Variable y = new Var("y", TypeFactory.createSort("a"));
-    Variable z = new Var("z", TypeFactory.createSort("a"));
+    Variable x = TermFactory.createVar("x", TypeFactory.createSort("a"));
+    Variable y = TermFactory.createVar("y", TypeFactory.createSort("a"));
+    Variable z = TermFactory.createVar("z", TypeFactory.createSort("a"));
     ArrayList<Replaceable> vars = new ArrayList<Replaceable>();
     vars.add(x);
     vars.add(y);
@@ -87,8 +88,8 @@ public class ReplaceableListTest {
 
   @Test
   public void testCombineEquals() {
-    Variable x = new Var("x", TypeFactory.createSort("a"));
-    Variable y = new Var("y", TypeFactory.createSort("a"));
+    Variable x = TermFactory.createVar("x", TypeFactory.createSort("a"));
+    Variable y = TermFactory.createVar("y", TypeFactory.createSort("a"));
     Replaceable z = makeMetaVar("z");
     ArrayList<Replaceable> reps = new ArrayList<Replaceable>();
     reps.add(x);
@@ -103,8 +104,8 @@ public class ReplaceableListTest {
   @Test
   public void testTrueCombination() {
     Replaceable x = makeMetaVar("x");
-    Replaceable y = new Var("y", TypeFactory.createSort("a"));
-    Replaceable z = new Var("z", TypeFactory.createSort("a"));
+    Replaceable y = TermFactory.createVar("y", TypeFactory.createSort("a"));
+    Replaceable z = TermFactory.createVar("z", TypeFactory.createSort("a"));
     ArrayList<Replaceable> reps = new ArrayList<Replaceable>();
     reps.add(x);
     reps.add(y);
@@ -122,10 +123,10 @@ public class ReplaceableListTest {
 
    @Test
    public void testOverlap() {
-    Replaceable x = new Var("x", TypeFactory.createSort("a"));
+    Replaceable x = TermFactory.createVar("x", TypeFactory.createSort("a"));
     Replaceable y = makeMetaVar("y");
-    Replaceable z = new Var("x", TypeFactory.createSort("a"));
-    Replaceable u = new Binder("u", TypeFactory.createSort("b"));
+    Replaceable z = TermFactory.createVar("x", TypeFactory.createSort("a"));
+    Replaceable u = TermFactory.createBinder("u", TypeFactory.createSort("b"));
     ArrayList<Replaceable> reps1 = new ArrayList<Replaceable>();
     reps1.add(x);
     reps1.add(y);

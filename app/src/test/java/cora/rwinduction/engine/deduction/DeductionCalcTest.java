@@ -23,7 +23,7 @@ import java.util.Optional;
 
 import charlie.util.FixedList;
 import charlie.terms.position.PositionFormatException;
-import charlie.terms.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
@@ -42,7 +42,7 @@ class DeductionCalcTest {
         "iter(x + y, x * 2, x / y) -><- iter(- y, u + 12, 17) | a = x + y ∧ x / y = u ∧ -y = z ; " +
         "iter(1 + (2 + 3), x * y + z, x + y) -><- x + y| x ≥ 0 ∧ u = x * y ;"
         , trs),
-      lst -> new Renaming(trs.queryFunctionSymbolNames()));
+      lst -> new MutableRenaming(trs.queryFunctionSymbolNames()));
   }
 
   @Test

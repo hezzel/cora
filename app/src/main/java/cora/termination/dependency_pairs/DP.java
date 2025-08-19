@@ -17,6 +17,7 @@ package cora.termination.dependency_pairs;
 
 import charlie.types.TypePrinter;
 import charlie.terms.position.PositionPrinter;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;

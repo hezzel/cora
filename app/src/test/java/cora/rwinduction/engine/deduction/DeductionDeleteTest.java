@@ -24,7 +24,6 @@ import java.util.Optional;
 import charlie.util.FixedList;
 import charlie.terms.Term;
 import charlie.terms.TermPrinter;
-import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;

@@ -27,6 +27,7 @@ import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
+import charlie.terms.replaceable.ReplaceableList;
 
 class MetaApplicationTest extends TermTestFoundation {
   @Test

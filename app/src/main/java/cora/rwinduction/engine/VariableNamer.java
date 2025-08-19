@@ -21,10 +21,10 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.types.Type;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.FunctionSymbol;
-import charlie.terms.Renaming;
 import charlie.terms.TermFactory;
 
 /**
@@ -101,9 +101,9 @@ public class VariableNamer {
   /**
    * For creating a new variable that is derived from x (for example, it's one of the variables
    * needed in a case analysis on x), this function returns an appropriate base name and index,
-   * so that <basename><index> does not occur in the given renaming.
+   * so that <basename><index> is available to be used in the given renaming.
    */
-  public VariableInfo chooseDerivativeNaming(Variable x, Renaming renaming) {
+  public VariableInfo chooseDerivativeNaming(Variable x, MutableRenaming renaming) {
     String basename = x.queryName();
     String fullname = renaming.getName(x);
     if (fullname == null) fullname = basename;
@@ -120,7 +120,8 @@ public class VariableNamer {
    * name, we either choose a variable from t if there is only one, or we choose the given default
    * base; for the index we check which variables from that default occur inside t.
    */  
-  public VariableInfo chooseDerivativeNamingForTerm(Term t, Renaming renaming, String defaultName) {
+  public VariableInfo chooseDerivativeNamingForTerm(Term t, MutableRenaming renaming,
+                                                    String defaultName) {
     TreeSet<Variable> set = getSuitableVariablesForDerivative(t);
     String base = null;
     // if all variables in t have the same base name, that's our base
@@ -163,7 +164,7 @@ public class VariableNamer {
    * of x (for example, if x is named var203, then the new variable will be named var204).  The new
    * variable will be immediately stored in the renaming.
    */
-  public Variable chooseDerivative(Variable x, Renaming renaming, Type type) {
+  public Variable chooseDerivative(Variable x, MutableRenaming renaming, Type type) {
     VariableInfo info = chooseDerivativeNaming(x, renaming);
     Variable newvar = TermFactory.createVar(info.basename(), type);
     renaming.setName(newvar, info.basename() + info.index());
@@ -175,7 +176,7 @@ public class VariableNamer {
    * same as x, if that is available, or otherwise as a derivative of x (as in chooseDerivative).
    * The new variable will be immediately stored in the renaming.
    */
-  public Variable chooseDerivativeOrSameNaming(Variable x, Renaming renaming, Type type) {
+  public Variable chooseDerivativeOrSameNaming(Variable x, MutableRenaming renaming, Type type) {
     VariableInfo info = chooseDerivativeNaming(x, renaming);
     Variable newvar = TermFactory.createVar(info.basename(), type);
     if (renaming.getName(x) == null && renaming.getReplaceable(x.queryName()) == null) {
@@ -195,7 +196,7 @@ public class VariableNamer {
    * - otherwise, we use defbase as the base name for the new variable
    * Note that occursInside is allowed to be null, in which case the second option does not happen.
    */
-  public Variable chooseDerivativeForTerm(Term t, Renaming renaming, String defbase,
+  public Variable chooseDerivativeForTerm(Term t, MutableRenaming renaming, String defbase,
                                           Pair<FunctionSymbol,Integer> occursInside) {
     if (occursInside != null) {
       String placename = queryDefaultNaming(occursInside.fst(), occursInside.snd());
@@ -203,7 +204,8 @@ public class VariableNamer {
     }
     VariableInfo info = chooseDerivativeNamingForTerm(t, renaming, defbase);
     Variable x = TermFactory.createVar(info.basename(), t.queryType());
-    if (!renaming.setName(x, info.basename() + info.index())) System.out.println("Miep! name = " + info.basename() + info.index());
+    if (!renaming.setName(x, info.basename() + info.index())) throw new RuntimeException(
+      "Unexpected behaviour in chooseDerivativeForTerm, name = " + info.basename() + info.index());
     return x;
   }
 }

@@ -26,6 +26,8 @@ import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.position.Position;
 import charlie.terms.position.LambdaPos;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.ReplaceableList;
 
 /** Abstractions are terms of the form λx.s where x is a variable and s a term. */
 class Abstraction extends TermInherit {

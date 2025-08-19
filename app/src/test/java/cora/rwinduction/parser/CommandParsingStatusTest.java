@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Optional;
 
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -186,7 +187,7 @@ class CommandParsingStatusTest {
     CommandParsingStatus status = new CommandParsingStatus("test x+  sum(3) y");
     OutputModule module = OutputModule.createUnicodeModule(trs);
     status.nextWord();
-    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming renaming = new MutableRenaming(trs.queryFunctionSymbolNames());
     Term t = status.readTerm(trs, renaming, module);
     assertTrue(module.toString().equals(""));
     assertTrue(t.toString().equals("x + sum(3)"));
@@ -199,20 +200,20 @@ class CommandParsingStatusTest {
   public void testReadVariable() {
     CommandParsingStatus status = new CommandParsingStatus("myvar");
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming renaming = new MutableRenaming(trs.queryFunctionSymbolNames());
     renaming.setName(TermFactory.createVar(CoraInputReader.readType("A")), "myvar");
     Term t = status.readTerm(trs, renaming, module);
     assertTrue(module.toString().equals(""));
     assertTrue(t.isVariable());
     assertTrue(t.queryType().toString().equals("A"));
-    assertTrue(renaming.getVariable("myvar") == t);
+    assertTrue(renaming.getReplaceable("myvar") == t);
   }
 
   @Test
   public void testReadFreshVariable() {
     CommandParsingStatus status = new CommandParsingStatus("  myvar");
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming renaming = new MutableRenaming(trs.queryFunctionSymbolNames());
     assertTrue(status.readTerm(trs, renaming, module) == null);
     assertTrue(module.toString().equals("Unknown variable: myvar\n\n"));
   }
@@ -224,10 +225,10 @@ class CommandParsingStatusTest {
   public void testParseSubstitution() {
     Variable x = TermFactory.createVar(CoraInputReader.readType("Int"));
     Variable z = TermFactory.createVar(CoraInputReader.readType("Int"));
-    Renaming keys = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming keys = new MutableRenaming(trs.queryFunctionSymbolNames());
     keys.setName(x, "x");
     keys.setName(z, "z");
-    Renaming values = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming values = new MutableRenaming(trs.queryFunctionSymbolNames());
     Term t1 = CoraInputReader.readTermAndUpdateNaming("x + sum(y)", values, trs);
     Term t2 = CoraInputReader.readTermAndUpdateNaming("sum(3)", values, trs);
     CommandParsingStatus status = new CommandParsingStatus(" X [x := x + sum(y), z := sum(3)] Y");
@@ -244,8 +245,8 @@ class CommandParsingStatusTest {
   public void testParseEmptySubstitution() {
     CommandParsingStatus status = new CommandParsingStatus(" [] ");
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Renaming keys = new Renaming(trs.queryFunctionSymbolNames());
-    Renaming values = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming keys = new MutableRenaming(trs.queryFunctionSymbolNames());
+    MutableRenaming values = new MutableRenaming(trs.queryFunctionSymbolNames());
     Substitution subst = status.readSubstitution(trs, keys, values, module);
     assertTrue(subst != null);
     assertTrue(status.commandEnded());
@@ -253,9 +254,9 @@ class CommandParsingStatusTest {
 
   @Test
   public void testMissingKeyInSubstitution() {
-    Renaming keys = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming keys = new MutableRenaming(trs.queryFunctionSymbolNames());
     keys.setName(TermFactory.createVar("z", CoraInputReader.readType("Int")), "z");
-    Renaming values = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming values = new MutableRenaming(trs.queryFunctionSymbolNames());
     Term t1 = CoraInputReader.readTermAndUpdateNaming("x + sum(y)", values, trs);
     CommandParsingStatus status = new CommandParsingStatus("[x := x + sum(y), z := sum(3)] Z");
     OutputModule module = OutputModule.createUnicodeModule(trs);
@@ -268,10 +269,10 @@ class CommandParsingStatusTest {
   public void testSubstitutionMissingVariableInValue() {
     Variable x = TermFactory.createVar(CoraInputReader.readType("Int"));
     Variable z = TermFactory.createVar(CoraInputReader.readType("Int"));
-    Renaming keys = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming keys = new MutableRenaming(trs.queryFunctionSymbolNames());
     keys.setName(x, "x");
     keys.setName(z, "z");
-    Renaming values = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming values = new MutableRenaming(trs.queryFunctionSymbolNames());
     CommandParsingStatus status = new CommandParsingStatus("[x := x + sum(y), z := sum(3)]");
     OutputModule module = OutputModule.createUnicodeModule(trs);
     Substitution subst = status.readSubstitution(trs, keys, values, module);
@@ -287,10 +288,10 @@ class CommandParsingStatusTest {
   public void testIllTypedSubstitution() {
     Variable x = TermFactory.createVar(CoraInputReader.readType("Int"));
     Variable z = TermFactory.createVar(CoraInputReader.readType("Bool"));
-    Renaming keys = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming keys = new MutableRenaming(trs.queryFunctionSymbolNames());
     keys.setName(x, "x");
     keys.setName(z, "z");
-    Renaming values = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming values = new MutableRenaming(trs.queryFunctionSymbolNames());
     CommandParsingStatus status = new CommandParsingStatus("[x := x + sum(y), z := sum(3)]");
     OutputModule module = OutputModule.createUnicodeModule(trs);
     assertTrue(status.readSubstitution(trs, keys, values, module) == null);

@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import charlie.util.NullStorageException;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
+import charlie.terms.replaceable.ReplaceableList;
 
 class TupleTest extends TermTestFoundation {
   final Term _s = TermFactory.createVar(TypeFactory.intSort);

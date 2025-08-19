@@ -21,6 +21,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
 import charlie.types.*;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.smt.*;
 import charlie.theorytranslation.TermSmtTranslator;

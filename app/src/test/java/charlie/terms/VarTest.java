@@ -24,6 +24,7 @@ import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
+import charlie.terms.replaceable.ReplaceableList;
 
 public class VarTest extends TermTestFoundation {
   @Test

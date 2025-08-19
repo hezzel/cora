@@ -20,8 +20,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 import charlie.types.Type;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.Term;
-import charlie.terms.Renaming;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 

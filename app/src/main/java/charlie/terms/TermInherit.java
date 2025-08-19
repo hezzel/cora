@@ -25,6 +25,8 @@ import java.util.function.BiFunction;
 import charlie.util.Pair;
 import charlie.terms.position.Position;
 import charlie.terms.position.FinalPos;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.ReplaceableList;
 
 /**
  * A TermInherit supplies default functionality for all instances of Term.

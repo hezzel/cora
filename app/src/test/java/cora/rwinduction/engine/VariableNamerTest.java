@@ -24,10 +24,10 @@ import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.types.TypeFactory;
 import charlie.reader.CoraInputReader;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.FunctionSymbol;
-import charlie.terms.Renaming;
 import charlie.terms.TermFactory;
 import charlie.trs.TRS;
 import charlie.trs.TrsFactory;
@@ -70,7 +70,7 @@ class VariableNamerTest {
     Variable y = TermFactory.createVar("x1");
     Variable z = TermFactory.createVar("x");
     Variable u = TermFactory.createVar("x");
-    Renaming renaming = new Renaming(new TreeSet<String>());
+    MutableRenaming renaming = new MutableRenaming(new TreeSet<String>());
     renaming.setName(x, "x");
     renaming.setName(y, "x1");
     renaming.setName(z, "x2");
@@ -103,7 +103,7 @@ class VariableNamerTest {
   public void testDerivativeNamingForTerm() {
     VariableNamer namer = createNamer();
     TRS trs = CoraInputReader.readTrsFromString("", TrsFactory.LCTRS);
-    Renaming renaming = new Renaming(new TreeSet<String>());
+    MutableRenaming renaming = new MutableRenaming(new TreeSet<String>());
     Term t;
     VariableNamer.VariableInfo info;
 
@@ -122,7 +122,7 @@ class VariableNamerTest {
     assertTrue(info.index() == 4);
 
     // there are none of the right type (yet multiple of the wrong type)
-    renaming = new Renaming(new TreeSet<String>());
+    renaming = new MutableRenaming(new TreeSet<String>());
     t = CoraInputReader.readTermAndUpdateNaming("x3 < y18", renaming, trs);
     info = namer.chooseDerivativeNamingForTerm(t, renaming, "test");
     assertTrue(info.basename().equals("test"));

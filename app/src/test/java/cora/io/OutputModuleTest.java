@@ -24,6 +24,7 @@ import java.util.Set;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.position.Position;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.trs.*;
 import charlie.reader.CoraInputReader;

@@ -24,6 +24,8 @@ import java.util.TreeSet;
 
 import charlie.util.Pair;
 import charlie.terms.position.Position;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
@@ -50,9 +52,11 @@ public final class DeductionCalc extends DeductionStep {
    * Helper function for both tryApply and explain: creates the Renaming that is to be used for
    * the resulting Equation.
    */
-  private Renaming makeNewRenaming() {
-    Renaming renaming = _equ.getRenamingCopy();
-    for (String name : _newvars.keySet()) { renaming.setName(_newvars.get(name), name); }
+  private MutableRenaming makeNewRenaming() {
+    MutableRenaming renaming = _equ.getRenamingCopy();
+    for (String name : _newvars.keySet()) {
+      renaming.setName(_newvars.get(name), name);
+    }
     return renaming;
   }
 
@@ -115,9 +119,9 @@ public final class DeductionCalc extends DeductionStep {
   @Override
   public void explain(OutputModule module) {
     if (_newconstraint != null) {
-      Renaming renaming = makeNewRenaming();
+      MutableRenaming renaming = makeNewRenaming();
       module.print("We use ALTER to add %a to the constraint, and then ",
-        new Pair<Term,Renaming>(_newconstraint, renaming));
+        Printer.makePrintable(_newconstraint, renaming));
     }
     else module.print("We ");
     
@@ -171,7 +175,7 @@ public final class DeductionCalc extends DeductionStep {
                                          List<EquationPosition> posses) {
     Equation eq = getTopEquation(proof.getProofState(), m);
     if (eq == null) return null;
-    Renaming renaming = proof.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = proof.getProofState().getTopEquation().getRenamingCopy();
     HashMap<Term,Variable> definedVars = CalcHelper.breakupConstraint(eq.getConstraint());
     ChangeablePair pair = new ChangeablePair(eq.getLhs(), eq.getRhs());
     Term constraint = TheoryFactory.trueValue;
@@ -212,7 +216,7 @@ public final class DeductionCalc extends DeductionStep {
   private static Term tryComputing(EquationPosition pos, ChangeablePair pair,
                                    HashMap<Term,Variable> definedVars,
                                    HashMap<String,Variable> newvars,
-                                   List<Term> replacements, Renaming renaming,
+                                   List<Term> replacements, MutableRenaming renaming,
                                    Equation original, Optional<OutputModule> m,
                                    PartialProof proof) {
     Term sub;

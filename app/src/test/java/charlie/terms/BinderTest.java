@@ -24,6 +24,7 @@ import charlie.util.Pair;
 import charlie.util.NullStorageException;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
+import charlie.terms.replaceable.ReplaceableList;
 
 public class BinderTest extends TermTestFoundation {
   @Test

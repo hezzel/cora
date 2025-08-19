@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,28 +13,62 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.terms.replaceable;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 import charlie.util.Pair;
+import charlie.types.Type;
 import charlie.parser.CoraParser;
 
 /**
  * Not too many tests here, because most testing is actually done through the toString() functions
  * of the various kinds of terms.
  */
-public class RenamingTest {
-  private Renaming makeRenaming() {
-    return new Renaming(Set.of("ban", "uu", "var"));
+public class MutableRenamingTest {
+  private MutableRenaming makeRenaming() {
+    return new MutableRenaming(Set.of("ban", "uu", "var"));
+  }
+
+  private static int _counter = 0;
+
+  private class MyReplaceable implements Replaceable {
+    int _index;
+    String _name;
+    Type _type;
+    int _arity;
+    
+    MyReplaceable(String name, Type type, int arity) {
+      _counter++;
+      _index = _counter;
+      _name = name;
+      _type = type;
+      _arity = arity;
+    }
+
+    public Kind queryReplaceableKind() { return _arity == 0 ? Kind.BASEVAR : Kind.METAVAR; }
+    public String queryName() { return _name; }
+    public Type queryType() { return _type; }
+    public int queryArity() { return _arity; }
+    public int queryIndex() { return _index; }
+    public boolean equals(Replaceable x) { return x.queryIndex() == _index; }
+    public int compareTo(Replaceable x) { return _index - x.queryIndex(); }
+  }
+
+  private Replaceable makeVar(String name, Type type) {
+    return new MyReplaceable(name, type, 0);
+  }
+
+  private Replaceable makeMeta(String name, Type type, int arity) {
+    return new MyReplaceable(name, type, arity);
   }
 
   @Test
   public void testAddAndRemove() {
-    Variable x = TermFactory.createVar("x", CoraParser.readType("a"));
-    MetaVariable y = TermFactory.createMetaVar("z", CoraParser.readType("a -> b -> c"), 2);
-    Renaming ren = makeRenaming();
+    Replaceable x = makeVar("x", CoraParser.readType("a"));
+    Replaceable y = makeMeta("z", CoraParser.readType("a -> b -> c"), 2);
+    MutableRenaming ren = makeRenaming();
     assertTrue(ren.setName(x, "x"));
     assertTrue(ren.setName(y, "y"));
     assertTrue(ren.getReplaceable("x") == x);
@@ -55,9 +89,9 @@ public class RenamingTest {
 
   @Test
   public void testDomainAndRange() {
-    Variable x = TermFactory.createVar("x", CoraParser.readType("a"));
-    MetaVariable y = TermFactory.createMetaVar("z", CoraParser.readType("a -> b -> c"), 2);
-    Renaming ren = makeRenaming();
+    Replaceable x = makeVar("x", CoraParser.readType("a"));
+    Replaceable y = makeMeta("z", CoraParser.readType("a -> b -> c"), 2);
+    MutableRenaming ren = makeRenaming();
     assertTrue(ren.setName(x, "x"));
     assertTrue(ren.setName(y, "y"));
     assertTrue(ren.domain().size() == 2);
@@ -78,41 +112,30 @@ public class RenamingTest {
   }
 
   @Test
-  public void testGetVariable() {
-    Variable x = TermFactory.createVar("x", CoraParser.readType("a"));
-    MetaVariable y = TermFactory.createMetaVar("x", CoraParser.readType("a -> b -> c"), 2);
-    Renaming ren = makeRenaming();
-    assertTrue(ren.setName(x, "x"));
-    assertTrue(ren.setName(y, "y"));
-    assertTrue(ren.getVariable("x") == x);
-    assertTrue(ren.getVariable("y") == null);
-  }
-
-  @Test
   public void testLegalRename() {
-    Variable x = TermFactory.createVar("x", CoraParser.readType("a"));
-    Variable y = TermFactory.createVar("x", CoraParser.readType("a"));
-    Renaming ren = makeRenaming();
+    Replaceable x = makeVar("x", CoraParser.readType("a"));
+    Replaceable y = makeVar("x", CoraParser.readType("a"));
+    MutableRenaming ren = makeRenaming();
     assertTrue(ren.setName(x, "x"));
     assertTrue(ren.setName(x, "y"));
     assertTrue(ren.getName(x).equals("y"));
-    assertTrue(ren.getVariable("y") == x);
-    assertTrue(ren.getVariable("x") == null);
+    assertTrue(ren.getReplaceable("y") == x);
+    assertTrue(ren.getReplaceable("x") == null);
     assertTrue(ren.isAvailable("x"));   // after renaming, x became available again
     assertFalse(ren.isAvailable("y"));
     assertTrue(ren.setName(y, "x"));
-    assertTrue(ren.getVariable("x") == y);
+    assertTrue(ren.getReplaceable("x") == y);
     assertTrue(ren.setName(y, "x"));    // renaming to itself is allowed!
-    assertTrue(ren.getVariable("x") == y);
+    assertTrue(ren.getReplaceable("x") == y);
     assertTrue(ren.getName(x).equals("y"));
     assertTrue(ren.getName(y).equals("x"));
   }
 
   @Test
   public void testIllegalName() {
-    Variable x = TermFactory.createVar("x", CoraParser.readType("a"));
-    MetaVariable y = TermFactory.createMetaVar("y", CoraParser.readType("a -> b -> c"), 2);
-    Renaming ren = makeRenaming();
+    Replaceable x = makeVar("x", CoraParser.readType("a"));
+    Replaceable y = makeMeta("y", CoraParser.readType("a -> b -> c"), 2);
+    MutableRenaming ren = makeRenaming();
     assertTrue(ren.setName(x, "x"));
     assertFalse(ren.setName(y, "ban"));
     assertTrue(ren.getName(y) == null);
@@ -126,9 +149,9 @@ public class RenamingTest {
 
   @Test
   public void testDuplicateName() {
-    Variable x = TermFactory.createVar("x", CoraParser.readType("b"));
-    Variable y = TermFactory.createVar("y", CoraParser.readType("b"));
-    Renaming ren = makeRenaming();
+    Replaceable x = makeVar("x", CoraParser.readType("b"));
+    Replaceable y = makeVar("y", CoraParser.readType("b"));
+    MutableRenaming ren = makeRenaming();
     assertTrue(ren.setName(x, "z"));
     assertFalse(ren.setName(y, "z"));
     assertTrue(ren.getReplaceable("z") == x);
@@ -145,8 +168,8 @@ public class RenamingTest {
 
   @Test
   public void testAddToAvoid() {
-    Variable x = TermFactory.createVar("x", CoraParser.readType("b"));
-    Renaming ren = makeRenaming();
+    Replaceable x = makeVar("x", CoraParser.readType("b"));
+    MutableRenaming ren = makeRenaming();
     
     ren.avoid("x");
     assertFalse(ren.setName(x, "x"));
@@ -170,15 +193,15 @@ public class RenamingTest {
 
   @Test
   public void testCopy() {
-    Renaming renaming = makeRenaming();
-    Variable x = TermFactory.createVar("x", CoraParser.readType("b"));
-    Variable y = TermFactory.createVar("y", CoraParser.readType("b"));
+    MutableRenaming renaming = makeRenaming();
+    Replaceable x = makeVar("x", CoraParser.readType("b"));
+    Replaceable y = makeVar("y", CoraParser.readType("b"));
     renaming.setName(x, "x");
     renaming.setName(y, "q");
-    Renaming ren2 = renaming.copy();
+    MutableRenaming ren2 = renaming.copy();
     renaming.setName(y, "y");
-    Variable z1 = TermFactory.createVar("z1", CoraParser.readType("a"));
-    Variable z2 = TermFactory.createVar("z2", CoraParser.readType("b"));
+    Replaceable z1 = makeVar("z1", CoraParser.readType("a"));
+    Replaceable z2 = makeVar("z2", CoraParser.readType("b"));
     renaming.setName(z1, "z");
     ren2.setName(z2, "z");
     renaming.avoid("a");
@@ -209,19 +232,17 @@ public class RenamingTest {
 
   @Test
   public void testLimit() {
-    Renaming renaming = makeRenaming();
-    Variable x = TermFactory.createVar("x", CoraParser.readType("b"));
-    Variable y = TermFactory.createVar("y", CoraParser.readType("b"));
-    Variable z = TermFactory.createVar("z", CoraParser.readType("b"));
-    Variable w = TermFactory.createVar("w", CoraParser.readType("b"));
+    MutableRenaming renaming = makeRenaming();
+    Replaceable x = makeVar("x", CoraParser.readType("b"));
+    Replaceable y = makeVar("y", CoraParser.readType("b"));
+    Replaceable z = makeVar("z", CoraParser.readType("b"));
+    Replaceable w = makeVar("w", CoraParser.readType("b"));
     renaming.setName(x, "x");
     renaming.setName(y, "q");
 
-    FunctionSymbol f = TermFactory.createConstant("f", CoraParser.readType("b -> b"));
-    FunctionSymbol g = TermFactory.createConstant("g", CoraParser.readType("b -> b -> b"));
-    Term a = f.apply(x);          // f(x)
-    Term b = g.apply(x).apply(z); // g(x, z)
-    Term c = g.apply(w).apply(z); // g(w, z)
+    ReplaceableList a = new ReplaceableList(x);
+    ReplaceableList b = new ReplaceableList(Set.of(x, z));
+    ReplaceableList c = new ReplaceableList(Set.of(w, z));
 
     renaming.limitDomain(a, b, c);
 
