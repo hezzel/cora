@@ -18,6 +18,7 @@ package cora.rwinduction.engine.deduction;
 import java.util.ArrayList;
 import java.util.Optional;
 import charlie.util.Pair;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;

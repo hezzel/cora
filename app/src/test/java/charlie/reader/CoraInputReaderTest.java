@@ -26,6 +26,7 @@ import charlie.types.TypeFactory;
 import charlie.parser.lib.ParsingException;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.CoraParser;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.*;
 
@@ -514,14 +515,12 @@ public class CoraInputReaderTest {
     Term t = CoraInputReader.readTerm("f(x, h(0, y))", trs);
     assertFalse(s.equals(t)); // different variables!
     TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
-    Renaming renaming = printer.generateUniqueNaming(s);
+    MutableRenaming renaming = printer.generateUniqueNaming(s);
     assertTrue(CoraInputReader.readTerm("f(x, h(0, y))", renaming, trs).equals(s));
-    Variable x = renaming.getVariable("x");
-    Variable y = renaming.getVariable("y");
 
-    Renaming newnaming = new Renaming(trs.queryFunctionSymbolNames());
-    newnaming.setName(x, "aa");
-    newnaming.setName(y, "bb");
+    MutableRenaming newnaming = new MutableRenaming(trs.queryFunctionSymbolNames());
+    newnaming.setName(renaming.getReplaceable("x"), "aa");
+    newnaming.setName(renaming.getReplaceable("y"), "bb");
     Term q = CoraInputReader.readTerm("f(aa, h(0, bb))", newnaming, trs);
     assertTrue(s.equals(q));
   }
@@ -529,7 +528,7 @@ public class CoraInputReaderTest {
   @Test
   public void testUpdateRenaming() {
     TRS trs = CoraInputReader.readTrsFromString("f :: a -> a -> a");
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     Variable x = TermFactory.createVar("x", type("a"));
     renaming.setName(x, "y");
     Term s = CoraInputReader.readTermAndUpdateNaming("f(x, y)", renaming, trs);
@@ -541,9 +540,11 @@ public class CoraInputReaderTest {
   @Test
   public void testUpdateRenamingIllegal() {
     TRS trs = CoraInputReader.readTrsFromString("f :: a -> a");
-    Renaming renaming = new Renaming(Set.of("x"));
+    MutableRenaming renaming = new MutableRenaming(Set.of("x"));
+    // we can read x as a variable because it's only blocked in the renaming
     Term s = CoraInputReader.readTerm("f(x)", renaming, trs);
     assertTrue(s.toString().equals("f(x)"));
+    // now we can't read x as a variable, because we cannot update the renaming
     assertThrows(ParsingException.class, () ->
       CoraInputReader.readTermAndUpdateNaming("f(x)", renaming, trs));
   }

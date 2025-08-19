@@ -18,7 +18,7 @@ package cora.rwinduction.command;
 import java.util.Optional;
 
 import charlie.util.Pair;
-import charlie.terms.Renaming;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.Substitution;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationPosition;

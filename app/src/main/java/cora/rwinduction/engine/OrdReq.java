@@ -16,8 +16,8 @@
 package cora.rwinduction.engine;
 
 import charlie.util.Pair;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.Term;
-import charlie.terms.Renaming;
 import charlie.terms.TheoryFactory;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;

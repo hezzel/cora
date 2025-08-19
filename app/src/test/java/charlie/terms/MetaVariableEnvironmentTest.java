@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.TreeSet;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.ReplaceableList;
 
 public class MetaVariableEnvironmentTest {
   private Type baseType(String name) {

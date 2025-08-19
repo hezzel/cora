@@ -20,7 +20,7 @@ import java.util.Optional;
 
 import charlie.util.FixedList;
 import charlie.util.Pair;
-import charlie.terms.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.trs.TRS;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.Equation;
@@ -49,7 +49,7 @@ public class CommandPostulate extends DeductionCommand {
   @Override
   protected DeductionPostulate createStep(CommandParsingStatus input) {
     TRS trs = _proof.getContext().getTRS();
-    Pair<Equation,Renaming> pair = input.readEquation(trs, _module);
+    Pair<Equation,MutableRenaming> pair = input.readEquation(trs, _module);
     if (pair == null) return null;
     return DeductionPostulate.createStep(_proof, Optional.of(_module), pair.fst(), pair.snd());
   }

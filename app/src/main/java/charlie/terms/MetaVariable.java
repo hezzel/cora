@@ -16,6 +16,7 @@
 package charlie.terms;
 
 import charlie.types.Type;
+import charlie.terms.replaceable.Replaceable;
 
 /**
  * Meta-variables are used in matching.  They take zero or more arguments to create a

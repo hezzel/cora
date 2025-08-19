@@ -16,7 +16,7 @@
 package cora.termination.dependency_pairs;
 
 import charlie.types.TypeFactory;
-import charlie.terms.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.TRS;
 import charlie.printer.Printer;
@@ -35,22 +35,24 @@ public class DPTest {
 
   @Test
   void testCreateFullDP() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, y)", renaming, trs);
     Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, trs);
     Term constraint = CoraInputReader.readTerm("x > y", renaming, trs);
-    Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"));
+    Set<Variable> vars = Set.of((Variable)renaming.getReplaceable("x"),
+                                (Variable)renaming.getReplaceable("y"));
     DP dp = new DP(lhs, rhs, constraint, vars);
     assertTrue(dp.ustr().equals("eval(x, y) ➡ eval(x - 1, y) | x > y"));
   }
 
   @Test
   void testCreateFullDPWithExtraVariable() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, y)", renaming, trs);
     Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, trs);
     Term constraint = CoraInputReader.readTerm("x > y", renaming, trs);
-    Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"),
+    Set<Variable> vars = Set.of((Variable)renaming.getReplaceable("x"),
+                                (Variable)renaming.getReplaceable("y"),
                                 TheoryFactory.createVar("z", TypeFactory.boolSort));
     DP dp = new DP(lhs, rhs, constraint, vars);
     assertTrue(dp.ustr().equals("eval(x, y) ➡ eval(x - 1, y) | x > y"));
@@ -58,7 +60,7 @@ public class DPTest {
 
   @Test
   void testDeduceVariables() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, y)", renaming, trs);
     Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, trs);
     Term constraint = CoraInputReader.readTerm("x > y", renaming, trs);
@@ -68,7 +70,7 @@ public class DPTest {
 
   @Test
   void testDeduceConstraint() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, x)", renaming, trs);
     Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, trs);
     DP dp = new DP(lhs, rhs);
@@ -77,32 +79,33 @@ public class DPTest {
 
   @Test
   public void testAllVariables() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, y)", renaming, trs);
     Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > y ∧ z =_Int z", renaming, trs);
-    Set<Variable> vars = Set.of(renaming.getVariable("x"), renaming.getVariable("y"),
-                                renaming.getVariable("z"),
+    Set<Variable> vars = Set.of((Variable)renaming.getReplaceable("x"),
+                                (Variable)renaming.getReplaceable("y"),
+                                (Variable)renaming.getReplaceable("z"),
                                 TheoryFactory.createVar("a", TypeFactory.boolSort));
     DP dp = new DP(lhs, rhs, constraint, vars);
     Set<Variable> allvars = dp.getAllVariables();
     assertTrue(allvars.size() == 3);
-    assertTrue(allvars.contains(renaming.getVariable("x")));
-    assertTrue(allvars.contains(renaming.getVariable("y")));
-    assertTrue(allvars.contains(renaming.getVariable("z")));
-    assertFalse(allvars.contains(renaming.getVariable("a")));
+    assertTrue(allvars.contains((Variable)renaming.getReplaceable("x")));
+    assertTrue(allvars.contains((Variable)renaming.getReplaceable("y")));
+    assertTrue(allvars.contains((Variable)renaming.getReplaceable("z")));
+    assertFalse(allvars.contains((Variable)renaming.getReplaceable("a")));
   }
 
   @Test
   public void testRenaming() {
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, y)", renaming, trs);
     Term rhs = CoraInputReader.readTermAndUpdateNaming("eval(x-1, y)", renaming, trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > y ∧ z =_Int z", renaming, trs);
     Set<Variable> vars = new TreeSet<Variable>();
-    vars.add(renaming.getVariable("x"));
-    vars.add(renaming.getVariable("y"));
-    vars.add(renaming.getVariable("z"));
+    vars.add((Variable)renaming.getReplaceable("x"));
+    vars.add((Variable)renaming.getReplaceable("y"));
+    vars.add((Variable)renaming.getReplaceable("z"));
     vars.add(TheoryFactory.createVar("a", TypeFactory.boolSort));
     DP dp = new DP(lhs, rhs, constraint, vars);
     DP dp2 = dp.getRenamed();
@@ -120,15 +123,15 @@ public class DPTest {
 
   @Test
   public void testPrint() {
-    Renaming renaming1 = new Renaming(Set.of());
+    MutableRenaming renaming1 = new MutableRenaming(Set.of());
     Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, y)", renaming1, trs);
-    Renaming renaming = new Renaming(Set.of());
+    MutableRenaming renaming = new MutableRenaming(Set.of());
     Term rhs = CoraInputReader.readTermAndUpdateNaming("eval(x-1, y)", renaming, trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > z", renaming, trs);
     Set<Variable> vars = new TreeSet<Variable>();
-    vars.add(renaming.getVariable("x"));
-    vars.add(renaming.getVariable("y"));
-    vars.add(renaming.getVariable("z"));
+    vars.add((Variable)renaming.getReplaceable("x"));
+    vars.add((Variable)renaming.getReplaceable("y"));
+    vars.add((Variable)renaming.getReplaceable("z"));
     vars.add(TheoryFactory.createVar("a", TypeFactory.boolSort));
     DP dp = new DP(lhs, rhs, constraint, vars);
     Printer printer = PrinterFactory.createPlainPrinter(trs);

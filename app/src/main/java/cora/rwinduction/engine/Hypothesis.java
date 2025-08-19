@@ -15,7 +15,8 @@
 
 package cora.rwinduction.engine;
 
-import charlie.terms.Renaming;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
 import charlie.printer.PrinterFactory;
@@ -51,7 +52,7 @@ public class Hypothesis implements PrintableObject {
   }
 
   /** Returns a copy of the Renaming that determines how to print the equation. */
-  public Renaming getRenamingCopy() {
+  public MutableRenaming getRenamingCopy() {
     return _varNaming.copy();
   }
 

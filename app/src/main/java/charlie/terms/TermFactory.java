@@ -15,9 +15,11 @@
 
 package charlie.terms;
 
+import java.util.ArrayList;
 import java.util.List;
 import charlie.util.FixedList;
 import charlie.types.*;
+import charlie.terms.replaceable.Replaceable;
 
 public class TermFactory {
   /** Create a non-binder variable with the given name and type. */
@@ -168,6 +170,27 @@ public class TermFactory {
   /** Create a meta-application Z[arg2] */
   public static Term createMeta(MetaVariable mv, Term arg1, Term arg2) {
     return new MetaApplication(mv, List.of(arg1, arg2));
+  }
+
+  /**
+   * Creates the meta-application λx1...xn.Z[x1,...,xn] if x is a meta-variable Z,
+   * otherwise returns x unmodified.
+   */
+  public static Term makeTerm(Replaceable x) {
+    if (x instanceof Term s) return s;
+    if (x instanceof HigherMetaVar z) {
+      ArrayList<Term> args = new ArrayList<Term>();
+      for (int i = 1; i <= z.queryArity(); i++) {
+        args.add(new Binder("b" + i, z.queryInputType(i)));
+      }
+      Term ret = new MetaApplication(z, args);
+      for (int i = args.size()-1; i >= 0; i--) {
+        ret = new Abstraction(args.get(i).queryVariable(), ret);
+      }
+      return ret;
+    }
+    throw new IllegalArgumentException("Given replaceable " + x.queryName() + " which is " +
+      "neither a term nor a higher meta-variable!");
   }
 
   /** Creates an empty substitution. */

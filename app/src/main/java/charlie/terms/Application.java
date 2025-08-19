@@ -26,6 +26,7 @@ import charlie.types.Arrow;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
+import charlie.terms.replaceable.ReplaceableList;
 
 /** An Application is a term of the form h(s1,...,sn) where h is not an application. */
 class Application extends TermInherit {

@@ -21,6 +21,7 @@ import charlie.util.Pair;
 import charlie.util.FixedList;
 import charlie.types.Type;
 import charlie.types.Arrow;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;

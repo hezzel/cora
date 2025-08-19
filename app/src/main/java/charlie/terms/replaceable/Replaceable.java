@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,14 +13,17 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.terms.replaceable;
 
 import java.lang.Comparable;
 import charlie.types.Type;
 
 /**
- * Replaceable is a parent class for variables and meta-variables: objects that can be substituted,
- * as well as renamed.
+ * A Replaceable is an object with an index, arity and type.  In particular, this is an object that
+ * can be substituted, as well as renamed.
+ *
+ * Within Cora, a replaceable must necessarily be either a (binder or free) variable or a
+ * meta-variable.  These instances are defined in the cora.terms package.
  */
 public interface Replaceable extends Comparable<Replaceable> {
   public enum Kind { BINDER, BASEVAR, METAVAR }
@@ -45,13 +48,6 @@ public interface Replaceable extends Comparable<Replaceable> {
    * (this is necessarily 0 for a binder or base variable)
    */
   int queryArity();
-
-  /**
-   * If the current Replaceable is a Term, then it is returned unmodified.  If it is a meta-variable
-   * Z :: [σ1 x ... x σn] → τ of higher arity, then this returns λx1 ... xn.Z[x1,...,xn] -- that is,
-   * a term that can be substituted for Z without changing anything.
-   */
-  Term makeTerm();
 
   /** @return equality to another Replaceable (this respects compareTo) */
   boolean equals(Replaceable x);

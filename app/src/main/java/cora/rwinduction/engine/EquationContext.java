@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,6 +18,7 @@ package cora.rwinduction.engine;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
+import charlie.terms.replaceable.*;
 import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
@@ -52,9 +53,12 @@ public class EquationContext implements PrintableObject {
     _leftGeq = Optional.of(leftgr);
     _rightGeq = Optional.of(rightgr);
     _index = index;
-    _varNaming = naming.copy();
-    _varNaming.limitDomain(leftgr, rightgr, _equation.getLhs(), _equation.getRhs(),
-                           _equation.getConstraint());
+    MutableRenaming varnaming = naming.copy();
+    varnaming.limitDomain(leftgr.freeReplaceables(), rightgr.freeReplaceables(),
+                          _equation.getLhs().freeReplaceables(),
+                          _equation.getRhs().freeReplaceables(),
+                          _equation.getConstraint().freeReplaceables());
+    _varNaming = varnaming.makeImmutable();
     checkReplaceableNaming();
     checkIndex();
   }
@@ -70,8 +74,11 @@ public class EquationContext implements PrintableObject {
     _leftGeq = Optional.empty();
     _rightGeq = Optional.empty();
     _index = index;
-    _varNaming = naming.copy();
-    _varNaming.limitDomain(_equation.getLhs(), _equation.getRhs(), _equation.getConstraint());
+    MutableRenaming varnaming = naming.copy();
+    varnaming.limitDomain(_equation.getLhs().freeReplaceables(),
+                          _equation.getRhs().freeReplaceables(),
+                          _equation.getConstraint().freeReplaceables());
+    _varNaming = varnaming.makeImmutable();
     checkReplaceableNaming();
     checkIndex();
   }
@@ -87,10 +94,15 @@ public class EquationContext implements PrintableObject {
     _leftGeq = leftgr;
     _rightGeq = rightgr;
     _index = index;
-    _varNaming = naming.copy();
-    _varNaming.limitDomain(leftgr.isEmpty() ? TheoryFactory.trueValue : leftgr.get(),
-                           _equation.getLhs(), _equation.getRhs(), _equation.getConstraint(),
-                           rightgr.isEmpty() ? TheoryFactory.trueValue : rightgr.get());
+    MutableRenaming varnaming = naming.copy();
+    varnaming.limitDomain(leftgr.isEmpty() ? ReplaceableList.EMPTY
+                                           : leftgr.get().freeReplaceables(),
+                          _equation.getLhs().freeReplaceables(),
+                          _equation.getRhs().freeReplaceables(),
+                          _equation.getConstraint().freeReplaceables(),
+                          rightgr.isEmpty() ? ReplaceableList.EMPTY
+                                            : rightgr.get().freeReplaceables());
+    _varNaming = varnaming.makeImmutable();
     checkReplaceableNaming();
     checkIndex();
   }
@@ -100,20 +112,20 @@ public class EquationContext implements PrintableObject {
    * but does limit its domain and check that it satisfies the requirements.
    */
   private EquationContext(Optional<Term> leftgr, Optional<Term> rightgr, Equation equation,
-                          int index, Renaming naming) {
+                          int index, MutableRenaming naming) {
     _equation = equation;
     _leftGeq = leftgr;
     _rightGeq = rightgr;
     _index = index;
     _varNaming = naming;
     // limit the domain
-    ArrayList<Term> lst = new ArrayList<Term>(5);
-    lst.add(_equation.getLhs());
-    lst.add(_equation.getRhs());
-    lst.add(_equation.getConstraint());
-    leftgr.ifPresent( t -> lst.add(t) );
-    rightgr.ifPresent( t -> lst.add(t) );
-    _varNaming.limitDomain(lst.toArray(Term[]::new));
+    ArrayList<ReplaceableList> lst = new ArrayList<ReplaceableList>(5);
+    lst.add(_equation.getLhs().freeReplaceables());
+    lst.add(_equation.getRhs().freeReplaceables());
+    lst.add(_equation.getConstraint().freeReplaceables());
+    leftgr.ifPresent( t -> lst.add(t.freeReplaceables()) );
+    rightgr.ifPresent( t -> lst.add(t.freeReplaceables()) );
+    naming.limitDomain(lst.toArray(ReplaceableList[]::new));
     // do checks
     checkReplaceableNaming();
     checkIndex();
@@ -193,7 +205,7 @@ public class EquationContext implements PrintableObject {
    * in isolation).  It is allowed to modify this Renaming; doing so will not affect the
    * EquationContext, as a copy is returned.
    */
-  public Renaming getRenamingCopy() {
+  public MutableRenaming getRenamingCopy() {
     return _varNaming.copy();
   }
 

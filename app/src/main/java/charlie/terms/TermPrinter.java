@@ -22,6 +22,9 @@ import java.util.TreeSet;
 import java.util.Set;
 import java.util.function.Predicate;
 import charlie.types.Type;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 
 /**
  * TermPrinters are used in the overall output process of the tool.  This class provides a default
@@ -61,7 +64,7 @@ public class TermPrinter {
    * This access function to generateUniqueNaming can be called with an arbitrary number of
    * term arguments.
    */
-  public final Renaming generateUniqueNaming(Term ...terms) {
+  public final MutableRenaming generateUniqueNaming(Term ...terms) {
     return generateUniqueNaming(Arrays.asList(terms));
   }
 
@@ -81,7 +84,7 @@ public class TermPrinter {
    *
    * To influence the chosen names, override the generateNames function.
    */
-  public final Renaming generateUniqueNaming(List<Term> terms) {
+  public final MutableRenaming generateUniqueNaming(List<Term> terms) {
     TreeMap<String,TreeSet<Replaceable>> existingNames = new TreeMap<String,TreeSet<Replaceable>>();
     // group (meta-)variables by name, so we can see how often each name occurs
     for (Term t : terms) {
@@ -96,9 +99,9 @@ public class TermPrinter {
       }
     }
     // to generate a new renaming that assigns them all distinct names, we first assign names for
-    // the replaceables whose name is already unique (since they can likely be unchanged), and then
-    // for the rest
-    Renaming ret = new Renaming(_blockedNames);
+    // the replaceables whose name is already unique (since they can likely remain unchanged), and
+    // only then for the rest
+    MutableRenaming ret = new MutableRenaming(_blockedNames);
     for (int i = 0; i < 2; i++) {
       for (TreeSet<Replaceable> set : existingNames.values()) {
         if (i == 0 && set.size() != 1) continue;
@@ -144,8 +147,8 @@ public class TermPrinter {
   }
 
   /**
-   * Helper function for the default implementation of generateName: returns true if it is likely
-   * to be confusing to use a variable name starting with the given letter, and false otherwise.
+   * Helper function for the default implementation of generateName: returns false if it is likely
+   * to be confusing to use a variable name starting with the given letter, and true otherwise.
    * This is quite arbitrary, so this is private functionality; if someone wants to override
    * generateName, they can implement their own preferences!
    */
@@ -167,7 +170,8 @@ public class TermPrinter {
 
   /**
    * Returns a string representation of the given term using the given Renaming (and using the
-   * print function that takes two arguments).
+   * print function that takes two arguments).  Note that the renaming is expected to have all
+   * free replaceables of the given term in its domain, or the output may be confusing.
    * This is only supplied as a public access function, and is not meant to be overridden.
    */
   public final String print(Term term, Renaming naming) {
@@ -190,15 +194,34 @@ public class TermPrinter {
    * Renaming to print names for variables.  Note that the renaming should have been created
    * specifically for this term (perhaps among others); if this is not the case, it is possible that
    * some distinct variables will be printed with the same name.
+   * This is only supplied as a public access function, and is not meant to be overridden.
+   */
+  public final void print(Term term, Renaming naming, StringBuilder builder) {
+    TreeSet<String> blocked = new TreeSet<String>(_blockedNames);
+    blocked.addAll(naming.range());
+    for (Replaceable x : naming.domain()) blocked.add(x.queryName());
+    MutableRenaming mren = new MutableRenaming(blocked);
+    printRecursive(term, naming, mren, builder);
+  }
+
+  /**
+   * The main print function: it adds a string representation of the given term to the given string
+   * builder, using the two given renamings to print names for variables.
+   *
+   * Here, the boundNaming is intended to be used for terms that occurred bound in the original
+   * term.  Hence, it should only contain mappings for binder variables, and is used as leading
+   * when deciding what name to use for a variable.  If some variable does not occur in boundNaming,
+   * then it is looked up in freeNaming (as are all meta-variables).
    *
    * To define a custom TermPrinter, you can either override this method directly -- in which case
    * there is no need to override any of the other methods in the class except perhaps
    * generateName if you also wish to override the default variable name generation -- or directly
    * override (some of) the functions it calls: these are the functions print<Something>.
    */
-  public void print(Term term, Renaming naming, StringBuilder builder) {
-    if (term.isVariable()) printVariable(term.queryVariable(), naming, builder);
-    else if (term.isVarTerm()) printVarTerm(term, naming, builder);
+  protected final void printRecursive(Term term, Renaming freeNaming, MutableRenaming boundNaming,
+                                      StringBuilder builder) {
+    if (term.isVariable()) printVariable(term.queryVariable(), freeNaming, boundNaming, builder);
+    else if (term.isVarTerm()) printVarTerm(term, freeNaming, boundNaming, builder);
     else if (term.isValue()) printValue(term.toValue(), builder);
     else if (term.isConstant()) {
       FunctionSymbol root = term.queryRoot();
@@ -207,38 +230,44 @@ public class TermPrinter {
     }
     else if (term.isFunctionalTerm()) {
       FunctionSymbol root = term.queryRoot();
-      if (!root.isTheorySymbol()) printFunctionalTerm(term, naming, builder);
-      else if (term.queryType().isArrowType()) printPartialTheoryTerm(term, naming, builder);
-      else printFullTheoryTerm(term, naming, builder);
+      if (!root.isTheorySymbol()) printFunctionalTerm(term, freeNaming, boundNaming, builder);
+      else if (term.queryType().isArrowType()) {
+        printPartialTheoryTerm(term, freeNaming, boundNaming, builder);
+      }
+      else printFullTheoryTerm(term, freeNaming, boundNaming, builder);
     }
-    else if (term.isTuple()) printTuple(term, naming, builder);
-    else if (term.isAbstraction()) printAbstraction(term, naming, builder);
-    else if (term.isMetaApplication()) printMetaApplication(term, naming, builder);
-    else if (term.isApplication()) printApplication(term, naming, builder);
+    else if (term.isTuple()) printTuple(term, freeNaming, boundNaming, builder);
+    else if (term.isAbstraction()) printAbstraction(term, freeNaming, boundNaming, builder);
+    else if (term.isMetaApplication()) printMetaApplication(term, freeNaming, boundNaming, builder);
+    else if (term.isApplication()) printApplication(term, freeNaming, boundNaming, builder);
     else throw new IllegalArgumentException("TermPrinter::print called with a term that does " +
       "not have any of the standard term shapes!");
   }
 
   /**
-   * Called by print() to print a (binder or free) variable.
+   * Called by printRecursive() to print a (binder or free) variable.
    *
    * When using the default implementations of printVarTerm and printApplication, it is also called
    * to print the head x of a var term x(s1,...,sn).
    * (If you only want to use this function to print stand-alone variables, then override the
    * default implementation of printVarTerm.)
    *
-   * The default implementation uses the renaming, and if no renaming for this variable is defined
-   * then it uses the variable's base name.
+   * The default implementation uses the name for the variable in boundNaming, or if that doesn't
+   * exist, the name in freeNaming.  If there is no name set in either Renaming, then it uses the
+   * variable's base name.
    */
-  protected void printVariable(Variable variable, Renaming naming, StringBuilder builder) {
-    String name = naming.getName(variable);
+  protected void printVariable(Variable variable, Renaming freeNaming, MutableRenaming boundNaming,
+                               StringBuilder builder) {
+    String name = boundNaming.getName(variable);
+    if (name == null) name = freeNaming.getName(variable);
     if (name == null) builder.append(variable.queryName());
     else builder.append(name);
   }
 
   /**
    * This prints the given replaceable to the string builder in the same way it would be done by
-   * printVariable or printMetaApplication.
+   * printVariable or printMetaApplication, but considers only one renaming (so the given
+   * replaceable is not expected to occur bound in the original term).
    *
    * The default implementation uses the renaming, and if no renaming for this Replaceable is
    * defined then it uses its base name.
@@ -250,7 +279,7 @@ public class TermPrinter {
   }
 
   /**
-   * Called by print() to print a non-theory function symbol.
+   * Called by printRecursive() to print a non-theory function symbol.
    *
    * When using the default implementations of printFunctionalTerm and printApplication, it is also
    * called to print the root symbol f of a functional term f(s1,...,sn).
@@ -267,7 +296,7 @@ public class TermPrinter {
   }
 
   /**
-   * Called by print() to print a (theory) value.
+   * Called by printRecursive() to print a (theory) value.
    *
    * The default functionality just prints the value's name.
    */
@@ -276,7 +305,7 @@ public class TermPrinter {
   }
 
   /**
-   * Called by print() to print a calculation symbol (that is used stand-alone).
+   * Called by printRecursive() to print a calculation symbol (that is used stand-alone).
    *
    * When using the default implementations of printPartialTheoryTerm and printApplication, it is
    * also called to print the root symbol f of a functional term f(s1,...,sn) if (a) that root
@@ -294,17 +323,18 @@ public class TermPrinter {
   }
 
   /**
-   * Called by print() to print a var-term that is not a variable: an application whose head is a
-   * variable, and which takes at least 1 argument.
+   * Called by printRecursive() to print a var-term that is not a variable: an application whose
+   * head is a variable, and which takes at least 1 argument.
    *
    * The default implementation just calls printApplication.
    */
-  protected void printVarTerm(Term term, Renaming naming, StringBuilder builder) {
-    printApplication(term, naming, builder);
+  protected void printVarTerm(Term term, Renaming freeNaming, MutableRenaming boundNaming,
+                              StringBuilder builder) {
+    printApplication(term, freeNaming, boundNaming, builder);
   }
   
   /**
-   * Called by print() to print a standard functional term: an application whose head is a
+   * Called by printRecursive() to print a standard functional term: an application whose head is a
    * non-theory function symbol, and which takes at least 1 argument.
    *
    * The default functionality just calls printApplication.
@@ -313,25 +343,27 @@ public class TermPrinter {
    * printPartialTheoryTerm or printFullTheoryTerm, and that if n = 0, printConstant is called
    * directly instead.
    */
-  protected void printFunctionalTerm(Term term, Renaming naming, StringBuilder builder) {
-    printApplication(term, naming, builder);
+  protected void printFunctionalTerm(Term term, Renaming freeNaming, MutableRenaming boundNaming,
+                                     StringBuilder builder) {
+    printApplication(term, freeNaming, boundNaming, builder);
   }
 
   /**
-   * Called by print() to print a functional term of the form f(s1,...,sn) where (a) f is a
-   * calculation symbol, and (b) the term is of higher type, so not maximally applied.
+   * Called by printRecursive() to print a functional term of the form f(s1,...,sn) where (a) f is
+   * a calculation symbol, and (b) the term is of higher type, so not maximally applied.
    *
    * The default functionality just calls printApplication.
    *
    * Note that functional terms that are fully applied are printed through printFullTheoryTerm.
    */
-  protected void printPartialTheoryTerm(Term term, Renaming naming, StringBuilder builder) {
-    printApplication(term, naming, builder);
+  protected void printPartialTheoryTerm(Term term, Renaming freeNaming, MutableRenaming boundNaming,
+                                        StringBuilder builder) {
+    printApplication(term, freeNaming, boundNaming, builder);
   }
 
   /**
-   * Called by print() to print a base-type functional term f(s1,...,sn) whose root symbol is a
-   * calculation symbol (which also implies that n ≥ 1).
+   * Called by printRecursive() to print a base-type functional term f(s1,...,sn) whose root symbol
+   * is a calculation symbol (which also implies that n ≥ 1).
    *
    * The default functionality calls either printUnaryCalculation() or printInfix(), depending on
    * whether there are one or two arguments. (There are currently no calculation symbols in Cora
@@ -341,21 +373,23 @@ public class TermPrinter {
    * are printed through printPartialTheoryTerm or (if they have no arguments) through
    * printSoloCalculationSymbol.  Values are printed through printValue.
    */
-  protected void printFullTheoryTerm(Term term, Renaming naming, StringBuilder builder) {
+  protected void printFullTheoryTerm(Term term, Renaming freeNaming, MutableRenaming boundNaming,
+                                     StringBuilder builder) {
     CalculationSymbol root = term.queryRoot().toCalculationSymbol();
 
     if (term.numberArguments() == 0) {  // this shouldn't really happen, but just in case
       printSoloCalculationSymbol(root, builder);
     }
     else if (term.numberArguments() == 1) {  // this happens for NOT and MINUS
-      printUnaryCalculation(root, term.queryArgument(1), naming, builder);
+      printUnaryCalculation(root, term.queryArgument(1), freeNaming, boundNaming, builder);
     }
     else if (term.numberArguments() == 2 &&
              root.queryAssociativity() != CalculationSymbol.Associativity.NOT_INFIX) {
-      printInfix(root, term.queryArgument(1), term.queryArgument(2), naming, builder);
+      printInfix(root, term.queryArgument(1), term.queryArgument(2), freeNaming, boundNaming,
+                 builder);
     }
     else { // this shouldn't really happen, but just in case
-      printApplication(term, naming, builder);
+      printApplication(term, freeNaming, boundNaming, builder);
     }
   }
 
@@ -368,8 +402,8 @@ public class TermPrinter {
    * do not need brackets; override (or override printFullTheoryTerm or printTerm) if this is not
    * the case.
    */
-  protected void printUnaryCalculation(CalculationSymbol rootsymb, Term arg, Renaming naming,
-                                       StringBuilder builder) {
+  protected void printUnaryCalculation(CalculationSymbol rootsymb, Term arg, Renaming freeNaming,
+                                       MutableRenaming boundNaming, StringBuilder builder) {
     boolean brackets = arg.isFunctionalTerm() && arg.queryRoot().toCalculationSymbol() != null;
     if (!brackets && arg.isValue()) {
       Value v = arg.toValue();
@@ -378,7 +412,7 @@ public class TermPrinter {
     builder.append(queryCalculationName(rootsymb.queryKind(), rootsymb.queryName(),
                                         rootsymb.queryType()));
     if (brackets) builder.append("(");
-    print(arg, naming, builder);
+    printRecursive(arg, freeNaming, boundNaming, builder);
     if (brackets) builder.append(")");
   }
 
@@ -400,8 +434,8 @@ public class TermPrinter {
    * implementation ONLY prints brackets surrounding terms whose root symbol is a calculation
    * symbol; if this is undesirable, you should override the whole function instead.
    */
-  protected void printInfix(CalculationSymbol root, Term left, Term right, Renaming naming,
-                            StringBuilder builder) {
+  protected void printInfix(CalculationSymbol root, Term left, Term right, Renaming freeNaming,
+                            MutableRenaming boundNaming, StringBuilder builder) {
     CalculationSymbol.Kind rootkind = root.queryKind();
     String rootname = root.queryName();
 
@@ -426,9 +460,9 @@ public class TermPrinter {
         left.isFunctionalTerm() && left.queryRoot().equals(root)) leftpriority--;
     if (root.queryAssociativity().equals(CalculationSymbol.Associativity.ASSOC_RIGHT) &&
         right.isFunctionalTerm() && right.queryRoot().equals(root)) rightpriority--;
-    printInfixHelper(left, naming, builder, leftpriority);
+    printInfixHelper(left, freeNaming, boundNaming, builder, leftpriority);
     printInfixOperator(rootkind, rootname, root.queryType(), builder);
-    printInfixHelper(right, naming, builder, rightpriority);
+    printInfixHelper(right, freeNaming, boundNaming, builder, rightpriority);
   }
 
   /**
@@ -447,7 +481,8 @@ public class TermPrinter {
    * This function prints the given argument to the string builder, putting it in brackets if it's
    * a term with infix root of priority ≤ priority.
    */
-  private void printInfixHelper(Term arg, Renaming naming, StringBuilder builder, int priority) {
+  private void printInfixHelper(Term arg, Renaming freeNaming, MutableRenaming boundNaming,
+                                StringBuilder builder, int priority) {
     boolean brackets = false;
     if (arg.isFunctionalTerm()) {
       CalculationSymbol root = arg.queryRoot().toCalculationSymbol();
@@ -456,61 +491,65 @@ public class TermPrinter {
       }
     }
     if (brackets) builder.append("(");
-    print(arg, naming, builder);
+    printRecursive(arg, freeNaming, boundNaming, builder);
     if (brackets) builder.append(")");
   }
 
   /**
-   * Called by print() to print a tuple.
+   * Called by printRecursive() to print a tuple.
    *
    * The default functionality prints a shape ⦇s1,...,sn⦈ -- however, to print the opening and
    * closing bracket, queryTupleOpenBracket() and queryTupleCloseBracket() are called.  To keep the
    * default functionality but different brackets, override those two functions instead.
    */
-  protected void printTuple(Term term, Renaming naming, StringBuilder builder) {
+  protected void printTuple(Term term, Renaming freeNaming, MutableRenaming boundNaming,
+                            StringBuilder builder) {
     builder.append(queryTupleOpenBracket());
     for (int i = 1; i <= term.numberTupleArguments(); i++){
       if (i > 1) builder.append(", ");
-      print(term.queryTupleArgument(i), naming, builder);
+      printRecursive(term.queryTupleArgument(i), freeNaming, boundNaming, builder);
     }   
     builder.append(queryTupleCloseBracket());
   }
 
   /**
-   * Called by print() to print an abstraction.
+   * Called by printRecursive() to print an abstraction.
    *
    * The default functionality prints LAMBDA <varname>.subterm, where LAMBDA is the symbol given by
    * queryLambda().  To print the varname, the "available" function in the renaming is checked:
    *
-   * - if the variable's base name is still available, it becomes the varname
+   * - if the variable's base name is still available in boundNaming, it becomes the varname
    * - otherwise, the first <base_name>i with i ≥ 1 that is still available becomes the varname
    *
-   * This name is added to naming in order to print the subterm, but removed again before the
+   * This name is added to boundNaming in order to print the subterm, but removed again before the
    * function returns.
    *
    * Note: if a name already exists for the binder, this name is ignored (and restored at the end
    * of the function).  Hence, there is no point in assigning names to bound variables at the start
    * of the printing process.
    */
-  protected void printAbstraction(Term term, Renaming naming, StringBuilder builder) {
+  protected void printAbstraction(Term term, Renaming freeNaming, MutableRenaming boundNaming,
+                                  StringBuilder builder) {
     Variable binder = term.queryVariable();
-    String backup = naming.getName(binder);
+    String backup = boundNaming.getName(binder);
 
     // find varname
     String bname = binder.queryName();
     String name = bname;
-    for (int i = 1; !naming.isAvailable(name); i++) name = bname + i;
-    naming.setName(binder, name);
+    for (int i = 1; !boundNaming.isAvailable(name); i++) {
+      name = bname + i;
+    }
+    boundNaming.setName(binder, name);
 
     // print term
     builder.append(queryLambda());
     printAbstractionBinder(binder, name, builder);
     builder.append(".");
-    print(term.queryAbstractionSubterm(), naming, builder);
+    printRecursive(term.queryAbstractionSubterm(), freeNaming, boundNaming, builder);
 
     // restore naming
-    if (backup == null) naming.unsetName(binder);
-    else naming.setName(binder, backup);
+    if (backup == null) boundNaming.unsetName(binder);
+    else boundNaming.setName(binder, backup);
   }
 
   /**
@@ -522,7 +561,7 @@ public class TermPrinter {
   }
 
   /**
-   * Called by print() to print a meta-application with at least one argument.
+   * Called by printRecursive() to print a meta-application with at least one argument.
    *
    * The default functionality prints <metaname><metaopen>arg1, ..., argn<metaclose>, where
    * - <metaname> is given by the renaming; if the meta-variable does not occur in the naming then
@@ -530,21 +569,22 @@ public class TermPrinter {
    * - <metaopen> is given by queryMetaOpenBracket()
    * - <metaclose> is given by queryMetaCloseBracket()
    */
-  protected void printMetaApplication(Term term, Renaming naming, StringBuilder builder) {
+  protected void printMetaApplication(Term term, Renaming freeNaming, MutableRenaming boundNaming,
+                                      StringBuilder builder) {
     MetaVariable mvar = term.queryMetaVariable();
-    String name = naming.getName(mvar);
+    String name = freeNaming.getName(mvar);
     if (name == null) builder.append(mvar.queryName());
     else builder.append(name);
     builder.append(queryMetaOpenBracket());
     for (int i = 1; i <= term.numberMetaArguments(); i++) {
       if (i != 1) builder.append(", ");
-      print(term.queryMetaArgument(i), naming, builder);
+      printRecursive(term.queryMetaArgument(i), freeNaming, boundNaming, builder);
     }
     builder.append(queryMetaCloseBracket());
   }
 
   /**
-   * Called by print() to print an application where the head is not a function symbol or variable,
+   * Called by printRecursive() to print an application where the head is not a function symbol or variable,
    * and called by the default implementation of printVarTerm, printFunctionalTerm and
    * printPartialTheoryTerm to print an application where the head is a function symbol or variable
    * (with the exception of base-type applications with the head a calculation symbol, which are
@@ -553,15 +593,16 @@ public class TermPrinter {
    * The default functionality prints head(arg1,...,argn), or (head)(arg1,...,argn) if head is an
    * abstraction.
    */
-  protected void printApplication(Term term, Renaming naming, StringBuilder builder) {
+  protected void printApplication(Term term, Renaming freeNaming, MutableRenaming boundNaming,
+                                  StringBuilder builder) {
     Term head = term.queryHead();
     if (head.isAbstraction()) builder.append("(");
-    print(head, naming, builder);
+    printRecursive(head, freeNaming, boundNaming, builder);
     if (head.isAbstraction()) builder.append(")");
     builder.append("(");
     for (int i = 1; i <= term.numberArguments(); i++) {
       if (i > 1) builder.append(", ");
-      print(term.queryArgument(i), naming, builder);
+      printRecursive(term.queryArgument(i), freeNaming, boundNaming, builder);
     }
     builder.append(")");
   }

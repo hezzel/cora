@@ -21,9 +21,9 @@ import java.util.TreeSet;
 
 import charlie.util.Pair;
 import charlie.util.FixedList;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
-import charlie.terms.Renaming;
 import charlie.terms.Substitution;
 import charlie.trs.Rule;
 import cora.io.OutputModule;

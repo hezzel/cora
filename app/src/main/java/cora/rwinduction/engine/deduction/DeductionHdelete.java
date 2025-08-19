@@ -20,6 +20,7 @@ import charlie.util.Pair;
 import charlie.terms.position.Position;
 import charlie.terms.position.ArgumentPos;
 import charlie.terms.position.FinalPos;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
@@ -133,7 +134,7 @@ public final class DeductionHdelete extends DeductionStep {
   private static void printBadContextError(EquationContext ec, Position pos, OutputModule o) {
     Term left = ec.getEquation().getLhs();
     Term right = ec.getEquation().getRhs();
-    Renaming renaming = ec.getRenamingCopy();
+    MutableRenaming renaming = ec.getRenamingCopy();
     Term subterm = left.querySubterm(pos);
     Variable x = TermFactory.createVar("[]", subterm.queryType());
     left = left.replaceSubterm(pos, x);

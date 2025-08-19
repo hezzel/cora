@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Optional;
 import charlie.util.FixedList;
 import charlie.terms.Term;
-import charlie.terms.Renaming;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 

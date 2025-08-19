@@ -23,7 +23,7 @@ import charlie.types.Type;
 import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Variable;
-import charlie.terms.Renaming;
+import charlie.terms.replaceable.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.util.Pair;
@@ -63,7 +63,7 @@ public class ProofContext {
     for (int i = 0; i < _trs.queryRuleCount(); i++) {
       Rule rule = _trs.queryRule(i);
       Renaming renaming = renamingMaker.apply(List.of(
-        rule.queryLeftSide(), rule.queryRightSide(), rule.queryConstraint()));
+        rule.queryLeftSide(), rule.queryRightSide(), rule.queryConstraint())).makeImmutable();
       String name = "O" + (i+1);
       _ruleNames.add(name);
       _nameToRule.put(name, i);
@@ -150,7 +150,7 @@ public class ProofContext {
     return _trs.queryRule(i);
   }
 
-  /** This gives the actual renaming for the rule.  Do not modify! */
+  /** This gives the actual (immutable) renaming for the rule. */
   public Renaming getRenaming(String ruleName) {
     Integer i = _nameToRule.get(ruleName);
     if (i == null) return null;

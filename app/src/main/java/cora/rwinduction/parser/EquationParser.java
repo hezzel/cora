@@ -24,6 +24,8 @@ import charlie.parser.lib.*;
 import charlie.parser.Parser.*;
 import charlie.parser.CoraTokenData;
 import charlie.parser.CoraParser;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.TRS;
 import charlie.printer.Printer;
@@ -41,9 +43,9 @@ public class EquationParser {
    * If there is any error with the input, a ParsingException will be thrown.
    * @throws charlie.parser.lib.ParsingException
    */
-  public static Pair<Equation,Renaming> parseEquation(String str, TRS trs) {
+  public static Pair<Equation,MutableRenaming> parseEquation(String str, TRS trs) {
     ParsingStatus status = RIParser.createStatus(str);
-    Pair<Equation,Renaming> ret = parseEquation(status, trs);
+    Pair<Equation,MutableRenaming> ret = parseEquation(status, trs);
     status.expect(Token.EOF, "end of input");
     return ret;
   }
@@ -66,7 +68,7 @@ public class EquationParser {
    */
   public static EquationContext parseEquationData(String str, TRS trs, int index) {
     ParsingStatus status = RIParser.createStatus(str);
-    Pair<Equation,Renaming> pair = parseEquation(status, trs);
+    Pair<Equation,MutableRenaming> pair = parseEquation(status, trs);
     EquationContext ret = new EquationContext(pair.fst(), index, pair.snd());
     status.expect(Token.EOF, "end of input");
     return ret;
@@ -84,7 +86,7 @@ public class EquationParser {
     ParsingStatus status = RIParser.createStatus(str);
     FixedList.Builder<EquationContext> ret = new FixedList.Builder<EquationContext>();
     for (int index = 1; ; index++) {
-      Pair<Equation,Renaming> pair = parseEquation(status, trs);
+      Pair<Equation,MutableRenaming> pair = parseEquation(status, trs);
       ret.add(new EquationContext(pair.fst(), index, pair.snd()));
       if (status.readNextIf(RIParser.SEPARATOR) == null) {
         status.expect(Token.EOF, "semi-colon or end of input");
@@ -107,7 +109,7 @@ public class EquationParser {
     if (tok.getText().equals("•") || tok.getText().equals("*")) status.nextToken();
     else leftgr = CoraParser.readTerm(status);
     status.expect(CoraTokenData.COMMA, "comma");
-    Pair<Equation,Renaming> pair = parseEquation(status, trs);
+    Pair<Equation,MutableRenaming> pair = parseEquation(status, trs);
     status.expect(CoraTokenData.COMMA, "comma");
     tok = status.peekNext();
     if (tok.getText().equals("•") || tok.getText().equals("*")) status.nextToken();
@@ -115,9 +117,9 @@ public class EquationParser {
     status.expect(CoraTokenData.BRACKETCLOSE, "closing bracket");
     Optional<Term> lg, rg;
     if (leftgr == null) lg = Optional.empty();
-    else lg = Optional.of(CoraInputReader.readTerm(leftgr, pair.snd(), true, trs));
+    else lg = Optional.of(CoraInputReader.readTermAndUpdateNaming(leftgr, pair.snd(), trs));
     if (rightgr == null) rg = Optional.empty();
-    else rg = Optional.of(CoraInputReader.readTerm(rightgr, pair.snd(), true, trs));
+    else rg = Optional.of(CoraInputReader.readTermAndUpdateNaming(rightgr, pair.snd(), trs));
     return new EquationContext(lg, pair.fst(), rg, index, pair.snd());
   }
 
@@ -127,9 +129,9 @@ public class EquationParser {
    * If there is any error, a ParsingException will be thrown.
    * @throws charlie.parser.lib.ParsingException
    */
-  public static Pair<Equation,Renaming> parseEquation(ParsingStatus status, TRS trs) {
-    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
-    return new Pair<Equation,Renaming>(parseEquation(status, renaming, trs), renaming);
+  public static Pair<Equation,MutableRenaming> parseEquation(ParsingStatus status, TRS trs) {
+    MutableRenaming renaming = new MutableRenaming(trs.queryFunctionSymbolNames());
+    return new Pair<Equation,MutableRenaming>(parseEquation(status, renaming, trs), renaming);
   }
 
   /**
@@ -140,7 +142,7 @@ public class EquationParser {
    * set up to tolerate 0 errors).
    * @throws charlie.parser.lib.ParsingException
    */
-  public static Equation parseEquation(ParsingStatus status, Renaming renaming, TRS trs) {
+  public static Equation parseEquation(ParsingStatus status, MutableRenaming renaming, TRS trs) {
     Token tok = status.peekNext();
     ParserTerm left, right = null, constr = null;
     left = CoraParser.readTerm(status);
@@ -152,16 +154,16 @@ public class EquationParser {
       left = args.get(0);
       right = args.get(1);
     }
-    Term l = CoraInputReader.readTerm(left, renaming, true, trs);
+    Term l = CoraInputReader.readTermAndUpdateNaming(left, renaming, trs);
     if (right == null) {
       throw ParsingException.create(tok, "Unexpected equation: I expected a form " +
         "\"a -><- b (| c)?\" but only found one term: ",
         Printer.makePrintable(l, renaming), ".");
     }
     if (status.readNextIf(CoraTokenData.MID) != null) constr = CoraParser.readTerm(status);
-    Term r = CoraInputReader.readTerm(right, renaming, true, trs);
+    Term r = CoraInputReader.readTermAndUpdateNaming(right, renaming, trs);
     Term constraint = constr == null ? TheoryFactory.createValue(true)
-                                     : CoraInputReader.readTerm(constr, renaming, true, trs);
+                              : CoraInputReader.readTermAndUpdateNaming(constr, renaming, trs);
     checkEquation(tok, l, r, constraint, renaming);
     return new Equation(l, r, constraint);
   }

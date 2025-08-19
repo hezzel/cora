@@ -22,9 +22,9 @@ import java.util.Set;
 import java.util.Optional;
 
 import charlie.util.FixedList;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
 import charlie.terms.TermPrinter;
-import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -52,7 +52,7 @@ class DeductionInductTest {
   public PartialProof setupProof(String leftgr, String left, String right, String constr,
                                  String rightgr) {
     TRS trs = setupTRS();
-    Renaming renaming = new Renaming(trs.queryFunctionSymbolNames());
+    MutableRenaming renaming = new MutableRenaming(trs.queryFunctionSymbolNames());
     Optional<Term> lg, rg;
     if (leftgr == null) lg = Optional.empty();
     else lg = Optional.of(CoraInputReader.readTermAndUpdateNaming(leftgr, renaming, trs));

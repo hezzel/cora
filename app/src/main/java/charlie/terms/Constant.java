@@ -18,6 +18,7 @@ package charlie.terms;
 import java.util.Map;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
+import charlie.terms.replaceable.ReplaceableList;
 
 /**
  * Constants are the default kind of FunctionSymbol.

@@ -26,6 +26,7 @@ import charlie.util.Pair;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.terms.position.*;
+import charlie.terms.replaceable.ReplaceableList;
 
 public class ApplicationTest extends TermTestFoundation {
   @Test

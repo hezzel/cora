@@ -21,7 +21,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
 import java.util.function.Predicate;
-import charlie.terms.Replaceable;
+import charlie.terms.replaceable.Replaceable;
 
 /**
  * The DebugTermPrinter is a term printer that prints all replaceables by their actual index.

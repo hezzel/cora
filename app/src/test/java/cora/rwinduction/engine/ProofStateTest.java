@@ -22,8 +22,8 @@ import java.util.Set;
 
 import charlie.util.Pair;
 import charlie.util.FixedList;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
-import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -51,7 +51,7 @@ class ProofStateTest {
   public void testToString() {
     TRS trs = setupTRS();
     ProofState state1 = setupProofState(trs);
-    Pair<Equation,Renaming> hypo =
+    Pair<Equation,MutableRenaming> hypo =
       EquationParser.parseEquation("sum1(x) = iter(x, 0, 0) | x > 0", trs);
     ProofState state2 = state1.addHypothesis(new Hypothesis(hypo.fst(), 2, hypo.snd()));
     Rule req = CoraInputReader.readRule("sum1(x) -> iter(x, 0, 0) | x > 0", trs);
@@ -127,7 +127,8 @@ class ProofStateTest {
   public void testFindHypothesis() {
     TRS trs = setupTRS();
     ProofState state = setupProofState(trs);
-    Pair<Equation,Renaming> hypo = EquationParser.parseEquation("sum1(x+y) = y * sum1(x)", trs);
+    Pair<Equation,MutableRenaming> hypo =
+      EquationParser.parseEquation("sum1(x+y) = y * sum1(x)", trs);
     state = state.addHypothesis(new Hypothesis(hypo.fst(), 2, hypo.snd()));
     hypo = EquationParser.parseEquation("sum1(x) = iter(x, 0, 0) | x > 0", trs);
     state = state.addHypothesis(new Hypothesis(hypo.fst(), 17, hypo.snd()));

@@ -21,6 +21,9 @@ import java.util.Set;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
@@ -48,7 +51,7 @@ public final class DeductionCase extends DeductionStep {
     ProofState state = proof.getProofState();
     Equation eq = DeductionStep.getTopEquation(state, module);
     if (eq == null) return null;
-    Renaming renaming = state.getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = state.getTopEquation().getRenamingCopy();
     ArrayList<ExtraInfo> ret = new ArrayList<ExtraInfo>();
 
     if (caseterm.queryType().equals(TypeFactory.boolSort)) {
@@ -137,15 +140,13 @@ public final class DeductionCase extends DeductionStep {
   /**
    * Helper function for createStep: given that caseterm is a non-theory non-array-type variable,
    * this considers all possible constructor instantiations.
-   *
-   * The renaming is used, but not altered or stored in ret.
    */
   private static void createConstructorCases(Variable caseterm, Renaming renaming,
                                              ProofContext pcontext,
                                              ArrayList<ExtraInfo> ret) {
     Set<FunctionSymbol> constructors = pcontext.getConstructors(caseterm.queryType());
     for (FunctionSymbol c : constructors) {
-      Renaming ren = renaming.copy();
+      MutableRenaming ren = renaming.copy();
       Type t = c.queryType();
       ArrayList<Term> args = new ArrayList<Term>(t.queryArity());
       while (t.isArrowType()) {
@@ -166,7 +167,7 @@ public final class DeductionCase extends DeductionStep {
    * Note that this adds the new variables to the given renaming, and uses this same Renaming in
    * ExtraInfo.
    */
-  private static void createTupleCase(Variable caseterm, Renaming renaming,
+  private static void createTupleCase(Variable caseterm, MutableRenaming renaming,
                                       ProofContext pcontext,
                                       ArrayList<ExtraInfo> ret) {
     Type type = caseterm.queryType();

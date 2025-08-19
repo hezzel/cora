@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Set;
 import charlie.util.Pair;
 import charlie.util.FixedList;
 import charlie.parser.lib.ParsingException;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -38,9 +39,9 @@ class EquationParserTest {
 
   @Test
   public void testEquationWithConstraint() {
-    Pair<Equation,Renaming> p = EquationParser.parseEquation("sum(x) ≈ sum(y) | x = y", trs);
+    Pair<Equation,MutableRenaming> p = EquationParser.parseEquation("sum(x) ≈ sum(y) | x = y", trs);
     Equation equation = p.fst();
-    Renaming renaming = p.snd();
+    MutableRenaming renaming = p.snd();
     Term l = equation.getLhs();
     Term r = equation.getRhs();
     Term c = equation.getConstraint();
@@ -48,10 +49,10 @@ class EquationParserTest {
     assertTrue(r.toString().equals("sum(y)"));
     assertTrue(c.toString().equals("x = y"));
     assertTrue(renaming.domain().size() == 2);
-    assertTrue(l.queryArgument(1) == renaming.getVariable("x"));
-    assertTrue(r.queryArgument(1) == renaming.getVariable("y"));
-    assertTrue(c.queryArgument(1) == renaming.getVariable("x"));
-    assertTrue(c.queryArgument(2) == renaming.getVariable("y"));
+    assertTrue(l.queryArgument(1) == renaming.getReplaceable("x"));
+    assertTrue(r.queryArgument(1) == renaming.getReplaceable("y"));
+    assertTrue(c.queryArgument(1) == renaming.getReplaceable("x"));
+    assertTrue(c.queryArgument(2) == renaming.getReplaceable("y"));
   }
 
   @Test
@@ -65,9 +66,9 @@ class EquationParserTest {
     assertTrue(c.toString().equals("true"));
     assertTrue(context.getIndex() == 15);
     assertFalse(context.hasExtraTerms());
-    assertTrue(l.queryArgument(1) == context.getRenamingCopy().getVariable("y"));
-    assertTrue(r.queryArgument(1).queryArgument(1) == context.getRenamingCopy().getVariable("x"));
-    assertTrue(r.queryArgument(1).queryArgument(2) == context.getRenamingCopy().getVariable("y"));
+    assertTrue(l.queryArgument(1) == context.getRenamingCopy().getReplaceable("y"));
+    assertTrue(r.queryArgument(1).queryArgument(1) == context.getRenamingCopy().getReplaceable("x"));
+    assertTrue(r.queryArgument(1).queryArgument(2) == context.getRenamingCopy().getReplaceable("y"));
   }
 
   @Test
@@ -81,7 +82,7 @@ class EquationParserTest {
     assertTrue(c.toString().equals("x = y"));
     assertTrue(context.getRenamingCopy().domain().size() == 2);
 
-    Pair<Equation,Renaming> p = EquationParser.parseEquation("sum(y) = sum(y+y)", trs);
+    Pair<Equation,MutableRenaming> p = EquationParser.parseEquation("sum(y) = sum(y+y)", trs);
     assertTrue(p.fst().getLhs().toString().equals("sum(y)"));
     assertTrue(p.fst().getRhs().toString().equals("sum(y + y)"));
     assertTrue(p.snd().domain().size() == 1);

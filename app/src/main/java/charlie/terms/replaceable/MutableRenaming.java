@@ -13,33 +13,37 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.terms.replaceable;
 
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
 import charlie.util.Pair;
 import charlie.util.NullStorageException;
+import charlie.terms.replaceable.Replaceable;
 
 /**
- * Renamings are used by TermPrinters to give each (meta-)variable in a given term or set of terms
- * a unique name.  They can also be used to look up (meta-)variables by their name.
+ * A MutableRenaming is a finite Renaming that can be changed, both with items added and removed.
+ * A MutableRenaming also carries a list of "forbidden" names that may not be used, but this is
+ * guaranteed to be finite, so users can always iterate to find a suitable name for a new
+ * Replaceable that is neither used yet nor forbidden.
  */
-public class Renaming {
+public class MutableRenaming implements Renaming {
   /** Maps the (meta-)variables in the domain of this renaming to unique names. */
-  private TreeMap<Replaceable,String> _varToName;
+  private TreeMap<Replaceable,String> _repToName;
   /** Maps the names to their corresponding (meta-)variable. */
-  private TreeMap<String,Replaceable> _nameToVar;
+  private TreeMap<String,Replaceable> _nameToRep;
   /** Names that may not be used in an assignment. */
   private TreeSet<String> _avoid;
   
   /**
    * Creates a renaming that avoids the given set of names.
-   * The given set of blocked names is guaranteed to not be altered or saved.
+   * The given set of blocked names is guaranteed to not be altered, nor will it be saved; we only
+   * make a copy for internal use.
    */
-  public Renaming(Set<String> blockedNames) {
-    _varToName = new TreeMap<Replaceable,String>();
-    _nameToVar = new TreeMap<String,Replaceable>();
+  public MutableRenaming(Set<String> blockedNames) {
+    _repToName = new TreeMap<Replaceable,String>();
+    _nameToRep = new TreeMap<String,Replaceable>();
     _avoid = new TreeSet<String>(blockedNames);
   }
 
@@ -47,8 +51,8 @@ public class Renaming {
    * Adds a name to the list of names that should be avoided (that is, the names that will be
    * blocked in setName, and for which isAvailable should return false).
    *
-   * Note that marking a name is avoidable will not remove it from the mapping if there's already
-   * a replaceable with that name.
+   * Note that marking a name as avoidable will not remove it from the mapping if there's already
+   * a Replaceable with that name.
    */
   public void avoid(String name) {
     _avoid.add(name);
@@ -67,13 +71,13 @@ public class Renaming {
       throw new NullStorageException("Renaming", "replaceable or name");
     }
     if (_avoid.contains(name)) return false;
-    Replaceable y = _nameToVar.get(name);
+    Replaceable y = _nameToRep.get(name);
     if (y != null && y != x) return false;
     // we can store it!
-    String origName = _varToName.get(x);
-    if (origName != null) _nameToVar.remove(origName);
-    _varToName.put(x, name);
-    _nameToVar.put(name, x);
+    String origName = _repToName.get(x);
+    if (origName != null) _nameToRep.remove(origName);
+    _repToName.put(x, name);
+    _nameToRep.put(name, x);
     return true;
   }
 
@@ -82,43 +86,32 @@ public class Renaming {
    * other replaceables again.
    */
   public void unsetName(Replaceable x) {
-    String name = _varToName.get(x);
+    String name = _repToName.get(x);
     if (name == null) return;
-    _varToName.remove(x);
-    _nameToVar.remove(name);
+    _repToName.remove(x);
+    _nameToRep.remove(name);
   }
   
   /** Returns the chosen name for the given replaceable, or null if it's not in the domain. */
   public String getName(Replaceable x) {
-    return _varToName.get(x);
+    return _repToName.get(x);
   }
 
   /** Returns the replaceable with the given name, if there is one; null if not. */
   public Replaceable getReplaceable(String name) {
-    return _nameToVar.get(name);
+    return _nameToRep.get(name);
   }
 
   /** Returns the replaceables this Renaming gives a name to. */
   public Set<Replaceable> domain() {
-    return _varToName.keySet();
+    return _repToName.keySet();
   }
 
   /** Returns the names used in this Renaming. */
   public Set<String> range() {
-    return _nameToVar.keySet();
+    return _nameToRep.keySet();
   }
 
-  /**
-   * Returns the variable with the given name, if there is one; null if not.
-   * Note that if the given name is held by a meta-variable with arity > 0, then null is also
-   * returned since there is no _variable_ with the given name.
-   */
-  public Variable getVariable(String name) {
-    Replaceable ret = _nameToVar.get(name);
-    if (ret != null && ret instanceof Variable) return (Variable)ret;
-    return null;
-  }
-  
   /**
    * Returns whether the given name is available to be used for further renamings.
    * (The renaming is set up so that any name that is already in use is not available, along
@@ -126,24 +119,29 @@ public class Renaming {
    * names).
    */
   public boolean isAvailable(String name) {
-    return !_avoid.contains(name) && _nameToVar.get(name) == null;
+    return !_avoid.contains(name) && _nameToRep.get(name) == null;
   }
 
   /** Makes a copy of the current renaming, so one can be changed without affecting the other. */
-  public Renaming copy() {
-    Renaming ret = new Renaming(_avoid);
-    ret._varToName.putAll(_varToName);
-    ret._nameToVar.putAll(_nameToVar);
+  public MutableRenaming copy() {
+    MutableRenaming ret = new MutableRenaming(_avoid);
+    ret._repToName.putAll(_repToName);
+    ret._nameToRep.putAll(_nameToRep);
     return ret;
   }
 
-  /** Limits the Renaming to only the replaceables that occur in any of the given terms. */
-  public void limitDomain(Term ...terms) {
+  /** Puts a wrapper around the current Renaming to make it immutable. */
+  public ImmutableRenaming makeImmutable() {
+    return new ImmutableRenaming(this);
+  }
+
+  /** Limits the Renaming to only the replaceables that occur in any of the given lists. */
+  public void limitDomain(ReplaceableList ...lists) {
     TreeSet<Replaceable> remove = new TreeSet<Replaceable>();
-    for (Replaceable r : _varToName.keySet()) {
+    for (Replaceable r : _repToName.keySet()) {
       boolean ok = false;
-      for (Term t : terms) {
-        if (t.freeReplaceables().contains(r)) {
+      for (ReplaceableList l : lists) {
+        if (l.contains(r)) {
           ok = true;
           break;
         }

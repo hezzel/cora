@@ -24,6 +24,8 @@ import java.util.Optional;
 import charlie.util.Pair;
 import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
@@ -112,7 +114,7 @@ class ConstrainedReductionHelperTest {
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.TOPLEFT;
     Substitution subst = TermFactory.createEmptySubstitution();
-    Renaming renaming = new Renaming(_trs.queryFunctionSymbolNames());
+    MutableRenaming renaming = new MutableRenaming(_trs.queryFunctionSymbolNames());
     Term left = CoraInputReader.readTermAndUpdateNaming("iter(a, b, c)", renaming, _trs);
     Term right = CoraInputReader.readTermAndUpdateNaming("iter(a, d, e)", renaming, _trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming(
@@ -122,7 +124,7 @@ class ConstrainedReductionHelperTest {
     assertTrue(crh.extendSubstitutionBasic(o));
     assertTrue(crh.extendSubstitutionWithConstraintDefinitions());
     assertFalse(crh.makePreAlter());
-    Renaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Substitution gamma = crh.querySubstitution();
     assertTrue(gamma.get(renaming.getReplaceable("a")) == eqnaming.getReplaceable("x"));
     assertTrue(gamma.get(renaming.getReplaceable("b")) == eqnaming.getReplaceable("y"));
@@ -138,7 +140,7 @@ class ConstrainedReductionHelperTest {
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.TOPLEFT;
     Substitution subst = TermFactory.createEmptySubstitution();
-    Renaming renaming = new Renaming(_trs.queryFunctionSymbolNames());
+    MutableRenaming renaming = new MutableRenaming(_trs.queryFunctionSymbolNames());
     Term left = CoraInputReader.readTermAndUpdateNaming("iter(a, b, q)", renaming, _trs);
     Term right = CoraInputReader.readTermAndUpdateNaming("c + d", renaming, _trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming(
@@ -161,7 +163,7 @@ class ConstrainedReductionHelperTest {
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.TOPLEFT;
     Substitution subst = TermFactory.createEmptySubstitution();
-    Renaming renaming = new Renaming(_trs.queryFunctionSymbolNames());
+    MutableRenaming renaming = new MutableRenaming(_trs.queryFunctionSymbolNames());
     Term left = CoraInputReader.readTermAndUpdateNaming("iter(x, y, z)", renaming, _trs);
     Term right = CoraInputReader.readTermAndUpdateNaming("a + b", renaming, _trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming(
@@ -197,10 +199,14 @@ class ConstrainedReductionHelperTest {
 
     Pair<Equation,Renaming> eqpair = crh.reduce();
     Equation eq = eqpair.fst();
-    assertTrue(eqpair.snd() == eqnaming);
+    assertTrue(eqpair.snd() instanceof charlie.terms.replaceable.ImmutableRenaming);
     Printer printer = PrinterFactory.createPrinterNotForUserOutput();
     printer.add(eq.makePrintableWith(eqnaming));
     assertTrue(printer.toString().equals("a + b1 ≈ 5 | b > 0 ∧ a = u + 1 ∧ b1 = v + a"));
+  }
+
+  private Variable getVariable(String name, Renaming renaming) {
+    return (Variable)renaming.getReplaceable(name);
   }
 
   @Test
@@ -213,7 +219,7 @@ class ConstrainedReductionHelperTest {
     ConstrainedReductionHelper crh =
       new ConstrainedReductionHelper(rule.queryLeftSide(), rule.queryRightSide(),
         rule.queryConstraint(), pp.getContext().getRenaming("O2"), "thingy", pp, pos, subst);
-    Variable x = pp.getContext().getRenaming("O2").getVariable("x");
+    Variable x = getVariable("x", pp.getContext().getRenaming("O2"));
     subst.extend(x, TheoryFactory.createValue(37));
     Optional<OutputModule> o = Optional.of(module);
     // note that no checks are done in the reduce function!
@@ -228,14 +234,14 @@ class ConstrainedReductionHelperTest {
     OutputModule module = OutputModule.createUnitTestModule();
     EquationPosition pos = EquationPosition.TOPLEFT;
     Optional<OutputModule> o = Optional.of(module);
-    Renaming renaming = new Renaming(_trs.queryFunctionSymbolNames());
+    MutableRenaming renaming = new MutableRenaming(_trs.queryFunctionSymbolNames());
     Term left = CoraInputReader.readTermAndUpdateNaming("iter(x, 0, 0)", renaming, _trs);
     Term right = CoraInputReader.readTermAndUpdateNaming("iter(x, y, z)", renaming, _trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("z > 0 ∧ a != 0", renaming, _trs);
     Rule rule = pp.getContext().getRule("O4");
     Substitution subst = TermFactory.createEmptySubstitution();
-    subst.extend(renaming.getVariable("x"), TheoryFactory.createValue(7));
-    subst.extend(renaming.getVariable("z"), renaming.getVariable("z"));
+    subst.extend(getVariable("x", renaming), TheoryFactory.createValue(7));
+    subst.extend(getVariable("z", renaming), getVariable("z", renaming));
     ConstrainedReductionHelper crh =
       new ConstrainedReductionHelper(left, right, constraint, renaming, "XX", pp, pos, subst);
     assertFalse(crh.checkEverythingSubstituted(o));
@@ -249,14 +255,14 @@ class ConstrainedReductionHelperTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.TOPRIGHT;
-    Renaming renaming = new Renaming(_trs.queryFunctionSymbolNames());
+    MutableRenaming renaming = new MutableRenaming(_trs.queryFunctionSymbolNames());
     Term left = CoraInputReader.readTermAndUpdateNaming("iter(x, 0, 0)", renaming, _trs);
     Term right = CoraInputReader.readTermAndUpdateNaming("iter(x, y, z)", renaming, _trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("z > 0 ∧ a != 0", renaming, _trs);
     Renaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Substitution subst = TermFactory.createEmptySubstitution();
-    subst.extend(renaming.getVariable("z"), TheoryFactory.createValue(7));
-    subst.extend(renaming.getVariable("a"), eqnaming.getVariable("z"));
+    subst.extend(getVariable("z", renaming), TheoryFactory.createValue(7));
+    subst.extend(getVariable("a", renaming), getVariable("z", eqnaming));
     ConstrainedReductionHelper crh =
       new ConstrainedReductionHelper(left, right, constraint, renaming, "XX", pp, pos, subst);
     assertTrue(crh.extendSubstitutionBasic(o));
@@ -280,7 +286,7 @@ class ConstrainedReductionHelperTest {
     Optional<OutputModule> o = Optional.of(module);
     EquationPosition pos = EquationPosition.TOPLEFT;
     Rule rule = pp.getContext().getRule("O1");
-    Variable x = pp.getContext().getRenaming("O1").getVariable("x");
+    Variable x = getVariable("x", pp.getContext().getRenaming("O1"));
     Substitution subst = TermFactory.createEmptySubstitution();
     Renaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
     Term complexterm = CoraInputReader.readTerm("z + 0", eqnaming, _trs);

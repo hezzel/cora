@@ -23,6 +23,7 @@ import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.parser.CoraParser;
+import charlie.terms.replaceable.Replaceable;
 import charlie.terms.*;
 import charlie.trs.TrsProperties.*;
 

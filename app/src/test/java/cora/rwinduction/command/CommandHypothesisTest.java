@@ -23,7 +23,7 @@ import java.util.Set;
 
 import charlie.util.Pair;
 import charlie.util.FixedList;
-import charlie.terms.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
@@ -57,7 +57,7 @@ class CommandHypothesisTest {
     // set up a proof state with one equation and two hypotheses
     PartialProof proof = new PartialProof(_trs, EquationParser.parseEquationList(
       "add(0, sum1(x)) = sum2(x + 0) | x > 0", _trs), lst -> module.generateUniqueNaming(lst));
-    Pair<Equation,Renaming> hypo = EquationParser.parseEquation("sum1(x) = sum2(x)", _trs);
+    Pair<Equation,MutableRenaming> hypo = EquationParser.parseEquation("sum1(x) = sum2(x)", _trs);
     ProofState state =
       proof.getProofState().addHypothesis(new Hypothesis(hypo.fst(), 12, hypo.snd()));
     hypo = EquationParser.parseEquation("sum2(x) = sum1(x) | x != y", _trs);
@@ -114,7 +114,7 @@ class CommandHypothesisTest {
     OutputModule module = OutputModule.createUnicodeModule(_trs);
     PartialProof proof = new PartialProof(_trs, EquationParser.parseEquationList(
       "add(0, sum2(x)) = sum2(x + 0) | x > 0", _trs), lst -> module.generateUniqueNaming(lst));
-    Pair<Equation,Renaming> hypo = EquationParser.parseEquation("sum1(x) = sum2(x) | x != y", _trs);
+    Pair<Equation,MutableRenaming> hypo = EquationParser.parseEquation("sum1(x) = sum2(x) | x != y", _trs);
     ProofState state =
       proof.getProofState().addHypothesis(new Hypothesis(hypo.fst(), 12, hypo.snd()));
     hypo = EquationParser.parseEquation("add(0, x) = error", _trs);

@@ -18,8 +18,8 @@ package cora.rwinduction.engine.deduction;
 import java.util.ArrayList;
 import java.util.Optional;
 import charlie.util.Pair;
-import charlie.terms.Renaming;
-import charlie.terms.Replaceable;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
 import cora.io.OutputModule;
@@ -28,11 +28,12 @@ import cora.rwinduction.engine.*;
 /** The variant of Alter that is only used to change the names of variables. */
 public final class DeductionAlterRename extends DeductionStep {
   private ArrayList<Pair<String,String>> _assignments;
-  private Renaming _newRenaming;
+  private MutableRenaming _newRenaming;
 
   /** Creates the step, claiming the arguments as its own property. */
   private DeductionAlterRename(ProofState state, ProofContext context,
-                               ArrayList<Pair<String,String>> assignments, Renaming renaming) {
+                               ArrayList<Pair<String,String>> assignments,
+                               MutableRenaming renaming) {
     super(state, context);
     _assignments = assignments;
     _newRenaming = renaming;
@@ -49,7 +50,7 @@ public final class DeductionAlterRename extends DeductionStep {
   public static DeductionAlterRename createStep(PartialProof proof, Optional<OutputModule> module,
                                                 ArrayList<Pair<String,String>> mapping) {
     ProofState state = proof.getProofState();
-    Renaming renaming = state.getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = state.getTopEquation().getRenamingCopy();
     for (Pair<String,String> pair : mapping) {
       String original = pair.fst();
       String newname = pair.snd();

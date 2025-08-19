@@ -23,6 +23,8 @@ import java.util.Optional;
 
 import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -145,8 +147,8 @@ class DeductionSimplifyTest {
     Settings.smtSolver = new MySimpleSolver();
 
     Substitution subst = TermFactory.createEmptySubstitution();
-    Variable x = pp.getContext().getRenaming("O6").getVariable("x");
-    Variable y = pp.getContext().getRenaming("O6").getVariable("y");
+    Replaceable x = pp.getContext().getRenaming("O6").getReplaceable("x");
+    Replaceable y = pp.getContext().getRenaming("O6").getReplaceable("y");
     subst.extend(x, TheoryFactory.createValue(-1));
     subst.extend(y, TheoryFactory.createValue(8));
 
@@ -168,9 +170,9 @@ class DeductionSimplifyTest {
     Renaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
 
     Substitution subst = TermFactory.createEmptySubstitution();
-    Variable x = rulenaming.getVariable("x");
-    Variable y = rulenaming.getVariable("y");
-    subst.extend(x, eqnaming.getVariable("z"));
+    Replaceable x = rulenaming.getReplaceable("x");
+    Replaceable y = rulenaming.getReplaceable("y");
+    subst.extend(x, (Variable)eqnaming.getReplaceable("z"));
     subst.extend(y, TheoryFactory.createValue(1));
 
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O6",

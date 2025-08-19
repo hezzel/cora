@@ -22,6 +22,8 @@ import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.util.FixedList;
 import charlie.terms.position.PositionFormatException;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.printer.Printer;
@@ -201,7 +203,7 @@ abstract class ReductionCommandInherit extends DeductionCommand {
       _module.println("The proof state is empty; there is nothing to reduce.");
       return null;
     }
-    Renaming valueNames = _proof.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming valueNames = _proof.getProofState().getTopEquation().getRenamingCopy();
     return input.readSubstitution(_proof.getContext().getTRS(), keyNames, valueNames, _module);
   }
 }

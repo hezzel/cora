@@ -16,6 +16,7 @@
 package charlie.terms;
 
 import java.util.Set;
+import charlie.terms.replaceable.Replaceable;
 
 /**
  * A substitution is a function that maps a finite set of replaceables to terms of the same type.

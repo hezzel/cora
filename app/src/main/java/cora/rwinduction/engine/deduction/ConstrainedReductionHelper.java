@@ -20,6 +20,9 @@ import java.util.Optional;
 import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.terms.position.Position;
+import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.printer.Printer;
@@ -69,7 +72,7 @@ class ConstrainedReductionHelper {
                              PartialProof proof, EquationPosition pos, Substitution subst) {
     _left = left;
     _right = right;
-    _renaming = renaming;
+    _renaming = renaming.makeImmutable();
     _kind = kind;
     _proof = proof;
     _position = pos;
@@ -92,8 +95,7 @@ class ConstrainedReductionHelper {
 
   /**
    * This returns the renaming specific to the current constrained reduction helper (to be used for
-   * printing the (meta-)variables of the reducer object).  Outside objects should not change this
-   * renaming.
+   * printing the (meta-)variables of the reducer object).
    */
   Renaming queryRenaming() {
     return _renaming;
@@ -305,7 +307,7 @@ class ConstrainedReductionHelper {
   public boolean makePreAlter() {
     ArrayList<Pair<Pair<Variable,String>,Term>> adding =
       new ArrayList<Pair<Pair<Variable,String>,Term>>();
-    Renaming renaming = _proof.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = _proof.getProofState().getTopEquation().getRenamingCopy();
 
     ArrayList<Variable> defined = new ArrayList<Variable>();
     for (Pair<Variable,Term> pair : _definitions) {

@@ -17,9 +17,9 @@ package cora.io;
 
 import java.util.ArrayList;
 import java.util.List;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
-import charlie.terms.Renaming;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.printer.Printer;
@@ -118,7 +118,7 @@ public class OutputModule {
    * This uses the underlying Printer to generate a Renaming that takes all the variables (and
    * meta-variables) in the given terms into account.
    */
-  public final Renaming generateUniqueNaming(Term ...terms) {
+  public final MutableRenaming generateUniqueNaming(Term ...terms) {
     return _printer.queryTermPrinter().generateUniqueNaming(terms);
   }
 
@@ -126,7 +126,7 @@ public class OutputModule {
    * This uses the underlying Printer to generate a Renaming that takes all the variables (and
    * meta-variables) in the given terms into account.
    */
-  public final Renaming generateUniqueNaming(List<Term> terms) {
+  public final MutableRenaming generateUniqueNaming(List<Term> terms) {
     return _printer.queryTermPrinter().generateUniqueNaming(terms);
   }
 

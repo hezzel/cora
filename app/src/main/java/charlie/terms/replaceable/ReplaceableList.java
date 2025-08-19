@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,33 +13,33 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.terms.replaceable;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.TreeSet;
 
 /**
- * A ReplaceableList is an immutable set of Replaceables (both variables and metavariables are
- * allowed to be included) with not-necessarily-unique names.
+ * A ReplaceableList is an immutable set of Replaceables.
+ * The names used within a replaceable list are not necessarily unique.
  */
 public class ReplaceableList implements Iterable<Replaceable> {
   private final TreeSet<Replaceable> _elements;
   public static final ReplaceableList EMPTY = new ReplaceableList();
 
   /** Constructs the empty list */
-  ReplaceableList() {
+  public ReplaceableList() {
     _elements = new TreeSet<Replaceable>();
   }
 
-  /** Constructs the list with just the given (meta-)variable */
-  ReplaceableList(Replaceable x) {
+  /** Constructs the list with just the given replaceable. */
+  public ReplaceableList(Replaceable x) {
     _elements = new TreeSet<Replaceable>();
     _elements.add(x);
   }
 
   /** Constructs the list with a copy of the given replaceables. */
-  ReplaceableList(Collection<Replaceable> elems) {
+  public ReplaceableList(Collection<Replaceable> elems) {
     _elements = new TreeSet<Replaceable>(elems);
   }
 
@@ -96,3 +96,4 @@ public class ReplaceableList implements Iterable<Replaceable> {
     return ret;
   }
 }
+

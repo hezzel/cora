@@ -23,6 +23,7 @@ import java.util.Set;
 
 import charlie.util.Pair;
 import charlie.types.TypeFactory;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;

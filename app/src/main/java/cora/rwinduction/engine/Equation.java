@@ -15,8 +15,8 @@
 
 package cora.rwinduction.engine;
 
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.Term;
-import charlie.terms.Renaming;
 import charlie.terms.InvalidPositionException;
 import charlie.terms.TermPrinter;
 import charlie.terms.TheoryFactory;

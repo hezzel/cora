@@ -26,6 +26,7 @@ import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.position.Position;
 import charlie.terms.position.ArgumentPos;
+import charlie.terms.replaceable.ReplaceableList;
 
 /**
  * A tuple term is a term of the form ⦇t1,..., tk⦈, with k ≥ 2.

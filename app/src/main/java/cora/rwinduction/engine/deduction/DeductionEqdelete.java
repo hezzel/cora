@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import charlie.util.Pair;
 import charlie.terms.position.Position;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.printer.Printer;
 import charlie.theorytranslation.TermSmtTranslator;

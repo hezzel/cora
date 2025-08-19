@@ -25,6 +25,7 @@ import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.terms.position.Position;
 import charlie.terms.position.MetaPos;
+import charlie.terms.replaceable.ReplaceableList;
 
 /**
  * A MetaApplication is a term of the form Z⟨s1,...,sk⟩ where Z is a meta-variable with arity

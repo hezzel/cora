@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.Set;
 
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.trs.*;
 import charlie.reader.CoraInputReader;
@@ -49,7 +50,7 @@ class ProofContextTest {
   @Test
   public void testConstructors() {
     TRS trs = setupTRS();
-    ProofContext context = new ProofContext(trs, lst -> new Renaming(Set.of()));
+    ProofContext context = new ProofContext(trs, lst -> new MutableRenaming(Set.of()));
     assertTrue(context.getConstructors(CoraInputReader.readType("Int")).isEmpty());
     assertTrue(context.getConstructors(CoraInputReader.readType("Bool")).isEmpty());
     Set<FunctionSymbol> funcs = context.getConstructors(CoraInputReader.readType("nat"));
@@ -64,7 +65,7 @@ class ProofContextTest {
   @Test
   public void testRuleArity() {
     TRS trs = setupTRS();
-    ProofContext context = new ProofContext(trs, lst -> new Renaming(Set.of()));
+    ProofContext context = new ProofContext(trs, lst -> new MutableRenaming(Set.of()));
     assertTrue(context.queryRuleArity(trs.lookupSymbol("o")) == 1);
     assertTrue(context.queryRuleArity(trs.lookupSymbol("something")) == 3);
     assertTrue(context.queryRuleArity(trs.lookupSymbol("add")) == 1);
