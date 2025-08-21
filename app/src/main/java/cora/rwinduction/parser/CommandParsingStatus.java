@@ -287,7 +287,8 @@ public class CommandParsingStatus {
    * This method reads a substitution from the underlying string at the current parsing position,
    * and returns the result.  If this fails, it instead prints an error message to the given
    * OutputModule and returns null.  Depending on the kind and position of the failure, the parsing
-   * status may or may not be advanced.
+   * status may or may not be advanced.  While the keys must all occur in keyNames, it is allowed
+   * for the values to contain some fresh variables, for which mappings will be added to valueNames.
    */
   public Substitution readSubstitution(TRS trs, Renaming keyNames,
                                        MutableRenaming valueNames, OutputModule module) {

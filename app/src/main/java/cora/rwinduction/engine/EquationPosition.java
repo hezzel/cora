@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -87,14 +87,15 @@ public class EquationPosition implements PrintableObject {
     if (desc.equals("") || desc.equals("L")) return TOPLEFT;
     if (desc.equals("R")) return TOPRIGHT;
     Side side = Side.Left;
-    if (desc.charAt(0) == 'L') desc = desc.substring(1);
-    else if (desc.charAt(0) == 'R') { desc = desc.substring(1); side = Side.Right; }
+    int extra = 0;
+    if (desc.charAt(0) == 'L') { desc = desc.substring(1); extra = 1; }
+    else if (desc.charAt(0) == 'R') { desc = desc.substring(1); side = Side.Right; extra = 1; }
     try {
       Position pos = Position.parse(desc);
       return new EquationPosition(side, pos);
     }
     catch (PositionFormatException e) {
-      throw new PositionFormatException(e.queryProblemPos() + 1, desc, e.queryExplanation());
+      throw new PositionFormatException(e.queryProblemPos() + extra, desc, e.queryExplanation());
     }
   }
 }

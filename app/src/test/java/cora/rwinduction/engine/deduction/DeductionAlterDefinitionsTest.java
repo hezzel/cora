@@ -63,7 +63,7 @@ class DeductionAlterDefinitionsTest {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenaming().copy();
     ArrayList<Pair<Pair<Variable,String>,Term>> defs =
       new ArrayList<Pair<Pair<Variable,String>,Term>>();
     Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
@@ -92,7 +92,7 @@ class DeductionAlterDefinitionsTest {
     PartialProof pp = setupProof("sum1(x) = f(F, u) | x > 0");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenaming().copy();
     ArrayList<Pair<Pair<Variable,String>,Term>> defs =
       new ArrayList<Pair<Pair<Variable,String>,Term>>();
 

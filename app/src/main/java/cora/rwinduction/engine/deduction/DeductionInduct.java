@@ -52,7 +52,7 @@ public final class DeductionInduct extends DeductionStep {
   @Override
   public ProofState tryApply(Optional<OutputModule> module) {
     Hypothesis hypothesis = new Hypothesis(_equ.getEquation(), _equ.getIndex(),
-                                           _equ.getRenamingCopy());
+                                           _equ.getRenaming());
     // special case: the equation context was already (s, s = t | φ, t); in this case the ec stays
     // the same, but the hypothesis *is* added
     if (!_equ.getLeftGreaterTerm().isEmpty() && !_equ.getRightGreaterTerm().isEmpty() &&
@@ -64,7 +64,7 @@ public final class DeductionInduct extends DeductionStep {
     int index = _state.getLastUsedIndex() + 1;
     Equation equation = _equ.getEquation();
     EquationContext newequ = new EquationContext(equation.getLhs(), equation,
-      equation.getRhs(), index, _equ.getRenamingCopy());
+      equation.getRhs(), index, _equ.getRenaming());
     FixedList.Builder<EquationContext> ecbuilder = new FixedList.Builder<EquationContext>();
     for (EquationContext ec : _state.getEquations()) {
       if (ec == _equ) ecbuilder.add(newequ);
@@ -86,7 +86,7 @@ public final class DeductionInduct extends DeductionStep {
   public void explain(OutputModule module) {
     module.println("We apply INDUCT to %a, which causes %a to be added to the set H of induction " +
       "hypotheses.", _equ.getName(),
-      _equ.getEquation().makePrintableWith(_equ.getRenamingCopy()));
+      _equ.getEquation().makePrintableWith(_equ.getRenaming()));
   }
 }
 

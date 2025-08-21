@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -26,9 +26,6 @@ import charlie.printer.PrinterFactory;
 /**
  * A requirement that left ≻ right or left ≽ right under some condition.  Within the rewriting
  * induction process, ordering requirements are tracked to pass into a termination process.
- *
- * For the purpose of consistent printing this is coupled with a Renaming, but the user cannot
- * access it since the ordering is only meant to _exist_, not to be changed (only added to).
  */
 public class OrdReq implements PrintableObject {
   private Term _lhs;
@@ -37,23 +34,33 @@ public class OrdReq implements PrintableObject {
   private boolean _strict;
   private Renaming _renaming;
 
-  /** Creates a strict requirement */
+  /**
+   * Creates a strict requirement.
+   *
+   * WARNING: the renaming becomes the property of the OrdReq: it may be shared with other objects,
+   * but should not be changed afterwards as doing so will also affect the OrdReq.
+   */
   public OrdReq(Term left, Term right, Term constraint, Renaming renaming) {
     _lhs = left;
     _rhs = right;
     _constraint = constraint;
     _strict = true;
-    _renaming = renaming.copy();
+    _renaming = renaming.makeImmutable();
   }
 
-  /** Creates a strict or non-strict requirement. */
+  /**
+   * Creates a strict or non-strict requirement.
+   *
+   * WARNING: the renaming becomes the property of the OrdReq: it should not be changed afterwards
+   * as doing so will also affect the OrdReq.
+   */
   public OrdReq(Term left, Term right, Term constraint, Renaming renaming,
                 boolean strict) {
     _lhs = left;
     _rhs = right;
     _constraint = constraint;
     _strict = strict;
-    _renaming = renaming.copy();
+    _renaming = renaming.makeImmutable();
   }
 
   public Term getLhs() {
@@ -68,12 +75,12 @@ public class OrdReq implements PrintableObject {
     return _constraint;
   }
 
-  /** Returns the renaming used for the present OrdReq.  This is not meant to be modified! */
+  /** Returns the (unmodifiable) renaming that determines how to print the present OrdReq. */
   public Renaming queryRenaming() {
     return _renaming;
   }
 
-  /** Adds the current hypothesis to the given printer. */
+  /** Adds the current ordering requirement to the given printer. */
   public void print(Printer printer) {
     printer.add(printer.makePrintable(_lhs, _renaming),
                 " ",

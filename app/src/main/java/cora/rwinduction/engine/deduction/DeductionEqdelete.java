@@ -57,7 +57,7 @@ public final class DeductionEqdelete extends DeductionStep {
 
     if (!checkSamePositions(posLeft, posRight, module)) return null;
 
-    Renaming renaming = state.getTopEquation().getRenamingCopy();
+    Renaming renaming = state.getTopEquation().getRenaming();
     ArrayList<Pair<Term,Term>> parts = new ArrayList<Pair<Term,Term>>();
 
     int k = posLeft.size();
@@ -200,7 +200,7 @@ public final class DeductionEqdelete extends DeductionStep {
     TermSmtTranslator translator = new TermSmtTranslator();
     translator.requireImplication(_equ.getEquation().getConstraint(), _required);
     if (Settings.smtSolver.checkValidity(translator.queryProblem())) return true;
-    Renaming renaming = _equ.getRenamingCopy();
+    Renaming renaming = _equ.getRenaming();
     module.ifPresent(o -> o.println("The EQ-DELETION rule is not obviously applicable: " +
       "I could not prove that %a %{Vdash} %a.",
       Printer.makePrintable(_equ.getEquation().getConstraint(), renaming),
@@ -220,7 +220,7 @@ public final class DeductionEqdelete extends DeductionStep {
 
   @Override
   public void explain(OutputModule module) {
-    Renaming renaming = _equ.getRenamingCopy();
+    Renaming renaming = _equ.getRenaming();
     module.println("We observe that %a %{Vdash} %a, and may therefore apply EQ-DELETION to " +
       "remove %a from the proof state.",
       Printer.makePrintable(_equ.getEquation().getConstraint(), renaming),

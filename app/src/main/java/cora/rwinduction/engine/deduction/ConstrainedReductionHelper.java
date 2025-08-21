@@ -35,7 +35,7 @@ import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 
 /**
- * This class provides functionality that is used both by the SIMPLIFICATION and HYPOTHESIS
+ * This class provides functionality that is used by the SIMPLIFICATION, HYPOTHESIS and HDELETE
  * commands.
  *
  * The ConstrainedReductionHelper has information on a rule / hypothesis / other reducible object,
@@ -58,12 +58,16 @@ class ConstrainedReductionHelper {
   /**
    * Sets up the class from reduction using a "rule" left → right | constraint, where renaming is
    * used for printing the variables of the rule (when necessary).
+   *
    * The reduction will be done on the top equation in the current state of the partial proof, at
-   * the given position, and with the given substitution or an extension thereof.  The given
-   * substitution will not be altered, and will not become the property of this class; instead, it
-   * will only be copied (and the copy may be changed by later calls on this object).  The renaming
-   * will not be copied, but will not be altered by this class either.  This is the renaming used
-   * to print the variables in left/right/constraint.
+   * the given position, and with the given substitution or an extension thereof.
+   * 
+   * The given substitution will not be altered, and will not become the property of this class;
+   * instead, it will only be copied (and the copy may be changed by later calls on this object).
+   * 
+   * The renaming will not be copied, and therefore becomes included in this class; outside objects
+   * should not alter it later on (or risk changing the CRH as well).  This is the renaming used to
+   * print the variables in left/right/constraint.
    *
    * The "kind" should either be "rule" or 'induction hypothesis" or something similar, to be
    * used in error messages.
@@ -94,8 +98,8 @@ class ConstrainedReductionHelper {
   }
 
   /**
-   * This returns the renaming specific to the current constrained reduction helper (to be used for
-   * printing the (meta-)variables of the reducer object).
+   * This returns the (unmodifiable) renaming specific to the current constrained reduction helper
+   * (to be used for printing the (meta-)variables of the reducer object).
    */
   Renaming queryRenaming() {
     return _renaming;
@@ -307,7 +311,7 @@ class ConstrainedReductionHelper {
   public boolean makePreAlter() {
     ArrayList<Pair<Pair<Variable,String>,Term>> adding =
       new ArrayList<Pair<Pair<Variable,String>,Term>>();
-    MutableRenaming renaming = _proof.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = _proof.getProofState().getTopEquation().getRenaming().copy();
 
     ArrayList<Variable> defined = new ArrayList<Variable>();
     for (Pair<Variable,Term> pair : _definitions) {
@@ -382,7 +386,7 @@ class ConstrainedReductionHelper {
     if (_preAlter == null) {
       EquationContext ec = _proof.getProofState().getTopEquation();
       equationConstraint = ec.getEquation().getConstraint();
-      equationRenaming = ec.getRenamingCopy();
+      equationRenaming = ec.getRenaming();
     }
     else {
       equationConstraint = _preAlter.queryUpdatedConstraint();
@@ -473,7 +477,7 @@ class ConstrainedReductionHelper {
     Equation equation = _proof.getProofState().getTopEquation().getEquation();
     Equation ret = equation.replaceSubterm(_position, substituted);
     Renaming renaming;
-    if (_preAlter == null) renaming = _proof.getProofState().getTopEquation().getRenamingCopy();
+    if (_preAlter == null) renaming = _proof.getProofState().getTopEquation().getRenaming();
     else {
       ret = new Equation(ret.getLhs(), ret.getRhs(), _preAlter.queryUpdatedConstraint());
       renaming = _preAlter.queryUpdatedRenaming();

@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.Stack;
 
 import charlie.util.Pair;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.printer.Printer;
@@ -38,15 +39,15 @@ public final class DeductionCalcAll extends DeductionStep {
   public enum Side { Left, Right, Both };
 
   private Equation _newEquation;
-  private MutableRenaming _newRenaming;
+  private Renaming _newRenaming;
   private Side _side;
   private int _numReplacements;
 
   private DeductionCalcAll(ProofState state, ProofContext context,
-                           Equation eq, MutableRenaming ren, int numreps, Side side) {
+                           Equation eq, Renaming ren, int numreps, Side side) {
     super(state, context);
     _newEquation = eq;
-    _newRenaming = ren;
+    _newRenaming = ren.makeImmutable();
     _numReplacements = numreps;
     _side = side;
   }
@@ -108,7 +109,7 @@ public final class DeductionCalcAll extends DeductionStep {
                                             Side side) {
     Equation eq = getTopEquation(proof.getProofState(), m);
     if (eq == null) return null;
-    MutableRenaming renaming = proof.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = proof.getProofState().getTopEquation().getRenaming().copy();
     HashMap<Term,Variable> definedVars = CalcHelper.breakupConstraint(eq.getConstraint());
     VariableNamer namer = proof.getContext().getVariableNamer();
 

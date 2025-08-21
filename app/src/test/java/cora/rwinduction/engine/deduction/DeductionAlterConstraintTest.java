@@ -71,7 +71,7 @@ class DeductionAlterConstraintTest {
     PartialProof pp = setupProof("iter(x, i, z) = iter(i, z, x) | x > i ∧ z != 0");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term newc = CoraInputReader.readTerm("(z > 0 ∨ z < 0) ∧ i <= x - 1", renaming,
                                          pp.getContext().getTRS());
     DeductionAlterConstraint dac = DeductionAlterConstraint.createStep(pp, o, newc);
@@ -100,7 +100,7 @@ class DeductionAlterConstraintTest {
     PartialProof pp = setupProof("iter(x, i, z) = iter(i, z, x) | x > i ∧ z != 0");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term newc = CoraInputReader.readTerm("z != 0", renaming, pp.getContext().getTRS());
     DeductionAlterConstraint dac = DeductionAlterConstraint.createStep(pp, o, newc);
     MySmtSolver mysolver = new MySmtSolver(false);
@@ -115,7 +115,7 @@ class DeductionAlterConstraintTest {
     PartialProof pp = setupProof("iter(x, i, z) = iter(i, z, x) | x > i ∧ z != 0");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    Renaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term newc = CoraInputReader.readTerm("x > i ∧ z != y", renaming, pp.getContext().getTRS());
     assertTrue(DeductionAlterConstraint.createStep(pp, o, newc) == null);
     assertTrue(module.toString().equals("Fresh occurrence of y is not allowed in this " +

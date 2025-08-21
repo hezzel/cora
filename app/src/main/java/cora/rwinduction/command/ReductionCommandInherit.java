@@ -203,7 +203,7 @@ abstract class ReductionCommandInherit extends DeductionCommand {
       _module.println("The proof state is empty; there is nothing to reduce.");
       return null;
     }
-    MutableRenaming valueNames = _proof.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming valueNames = _proof.getProofState().getTopEquation().getRenaming().copy();
     return input.readSubstitution(_proof.getContext().getTRS(), keyNames, valueNames, _module);
   }
 }

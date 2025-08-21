@@ -87,7 +87,7 @@ public final class DeductionHdelete extends DeductionStep {
     Equation hequ = hypo.getEquation();
     Term left = inverse ? hequ.getRhs() : hequ.getLhs();
     Term right = inverse ? hequ.getLhs() : hequ.getRhs();
-    return new ConstrainedReductionHelper(left, right, hequ.getConstraint(), hypo.getRenamingCopy(),
+    return new ConstrainedReductionHelper(left, right, hequ.getConstraint(), hypo.getRenaming(),
                                           "induction hypothesis", proof, pos, subst);
   }
 
@@ -134,7 +134,7 @@ public final class DeductionHdelete extends DeductionStep {
   private static void printBadContextError(EquationContext ec, Position pos, OutputModule o) {
     Term left = ec.getEquation().getLhs();
     Term right = ec.getEquation().getRhs();
-    MutableRenaming renaming = ec.getRenamingCopy();
+    MutableRenaming renaming = ec.getRenaming().copy();
     Term subterm = left.querySubterm(pos);
     Variable x = TermFactory.createVar("[]", subterm.queryType());
     left = left.replaceSubterm(pos, x);
@@ -189,14 +189,14 @@ public final class DeductionHdelete extends DeductionStep {
   public String commandDescription() {
     Printer printer = PrinterFactory.createParseablePrinter(_pcontext.getTRS());
     printer.add("hdelete ", _hypothesisName, " ", _helper.queryPosition(), " with ",
-      _helper.substitutionPrintable(_equ.getRenamingCopy()));
+      _helper.substitutionPrintable(_equ.getRenaming()));
     return printer.toString();
   }
 
   @Override
   public void explain(OutputModule module) {
     module.println("We apply HDELETE to %a with induction hypothesis %a and substitution %a.",
-      _equ.getName(), _hypothesisName, _helper.substitutionPrintable(_equ.getRenamingCopy()));
+      _equ.getName(), _hypothesisName, _helper.substitutionPrintable(_equ.getRenaming()));
   }
 }
 
