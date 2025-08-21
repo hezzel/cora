@@ -16,7 +16,6 @@
 package cora.rwinduction.engine.deduction;
 
 import java.util.Optional;
-import charlie.terms.replaceable.Renaming;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.Substitution;
@@ -61,10 +60,9 @@ public final class DeductionDelete extends DeductionStep {
           "side are not the same, and checking satisfiability returns MAYBE (%a)", reason);
         return false;
       case TermAnalyser.Result.YES(Substitution val):
-        Renaming renaming = _equ.getRenamingCopy();
         println(module, "The DELETE rule is not applicable: the left- and right-hand side are " +
           "not the same, and the constraint is satisfiable using substitution %a.",
-          Printer.makePrintable(val, renaming, renaming));
+          Printer.makePrintable(val, _equ.getRenaming(), _equ.getRenaming()));
         return false;
       case TermAnalyser.Result.NO(): return true;
     }

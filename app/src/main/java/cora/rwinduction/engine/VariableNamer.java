@@ -36,7 +36,12 @@ public class VariableNamer {
   private TreeMap<String,String> _defaultNames;
   public record VariableInfo(String basename, int index) {}
 
-  /** Created by ProofContext */
+  /**
+   * Created by ProofContext, the constructor takes as argument all occurrences of (f,i,xname) such
+   * that a rule left-hand side f(s1,...,si,...,sn) occurs where si is a variable named xname.
+   * This is used to store, in _defaultNames, a pair f:i ⇒ xname if the element at position i below
+   * f *always* has this name in the left-hand side of a rule.
+   */
   VariableNamer(ArrayList<Pair<Pair<FunctionSymbol,Integer>,String>> info) {
     TreeMap<String,TreeSet<String>> usualNames = new TreeMap<String,TreeSet<String>>();
     for (Pair<Pair<FunctionSymbol,Integer>,String> pair : info) {
@@ -102,6 +107,8 @@ public class VariableNamer {
    * For creating a new variable that is derived from x (for example, it's one of the variables
    * needed in a case analysis on x), this function returns an appropriate base name and index,
    * so that <basename><index> is available to be used in the given renaming.
+   *
+   * The renaming is not modified, but should be modifiable so that availability can be checked.
    */
   public VariableInfo chooseDerivativeNaming(Variable x, MutableRenaming renaming) {
     String basename = x.queryName();
@@ -119,6 +126,8 @@ public class VariableNamer {
    * name and index, so that <basename><index> does not occur in the given renaming.  For the base
    * name, we either choose a variable from t if there is only one, or we choose the given default
    * base; for the index we check which variables from that default occur inside t.
+   *
+   * The renaming is not modified, but should be modifiable so that availability can be checked.
    */  
   public VariableInfo chooseDerivativeNamingForTerm(Term t, MutableRenaming renaming,
                                                     String defaultName) {
@@ -161,8 +170,8 @@ public class VariableNamer {
 
   /**
    * This function creates a new variable of the given type, whose name is chosen as a derivative
-   * of x (for example, if x is named var203, then the new variable will be named var204).  The new
-   * variable will be immediately stored in the renaming.
+   * of x (for example, if x is named var203, then the new variable will be named var204).
+   * The new variable will be immediately stored in the renaming.
    */
   public Variable chooseDerivative(Variable x, MutableRenaming renaming, Type type) {
     VariableInfo info = chooseDerivativeNaming(x, renaming);
@@ -195,6 +204,8 @@ public class VariableNamer {
    *   basis for the naming
    * - otherwise, we use defbase as the base name for the new variable
    * Note that occursInside is allowed to be null, in which case the second option does not happen.
+   *
+   * The new variable will be immediately stored in the renaming.
    */
   public Variable chooseDerivativeForTerm(Term t, MutableRenaming renaming, String defbase,
                                           Pair<FunctionSymbol,Integer> occursInside) {

@@ -62,7 +62,7 @@ public final class DeductionHypothesis extends DeductionStep {
     Term right = inverse ? hequ.getLhs() : hequ.getRhs();
 
     ConstrainedReductionHelper helper =
-      new ConstrainedReductionHelper(left, right, hequ.getConstraint(), hypo.getRenamingCopy(),
+      new ConstrainedReductionHelper(left, right, hequ.getConstraint(), hypo.getRenaming(),
                                      "induction hypothesis", proof, pos, subst);
     EquationContext original = proof.getProofState().getTopEquation();
     if (!helper.extendSubstitutionBasic(m)) return null;
@@ -170,14 +170,14 @@ public final class DeductionHypothesis extends DeductionStep {
   public String commandDescription() {
     Printer printer = PrinterFactory.createParseablePrinter(_pcontext.getTRS());
     printer.add("hypothesis ", _hypothesisName, " ", _helper.queryPosition(), " with ",
-      _helper.substitutionPrintable(_equ.getRenamingCopy()));
+      _helper.substitutionPrintable(_equ.getRenaming()));
     return printer.toString();
   }
 
   @Override
   public void explain(OutputModule module) {
     module.print("We apply HYPOTHESIS to %a with induction hypothesis %a and substitution %a.  ",
-      _equ.getName(), _hypothesisName, _helper.substitutionPrintable(_equ.getRenamingCopy()));
+      _equ.getName(), _hypothesisName, _helper.substitutionPrintable(_equ.getRenaming()));
     if (_requirements.size() == 0) {
       module.println("This does not cause any new ordering requirements to be imposed.");
     }

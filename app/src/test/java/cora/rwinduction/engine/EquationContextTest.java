@@ -70,13 +70,13 @@ class EquationContextTest {
     Term kk = CoraInputReader.readTermAndUpdateNaming("sum1(z)", renaming, trs);
     Equation eq = new Equation(left, right, constraint);
     EquationContext context = new EquationContext(eq, 8, renaming);
-    assertTrue(context.getRenamingCopy().getReplaceable("z") == null);
+    assertTrue(context.getRenaming().getReplaceable("z") == null);
     assertTrue(renaming.getReplaceable("z") != null);
     assertThrows(IllegalArgumentException.class, () -> new EquationContext(left, eq, kk,
-      7, context.getRenamingCopy()));
+      7, context.getRenaming()));
     Equation badeq = new Equation(kk, right);
     assertThrows(IllegalArgumentException.class, () -> new EquationContext(badeq, 10,
-      context.getRenamingCopy()));
+      context.getRenaming()));
   }
 
   @Test
@@ -92,8 +92,8 @@ class EquationContextTest {
     Equation eq = new Equation(left, right, constraint);
     EquationContext context = new EquationContext(eq, 8, renaming);
     Replaceable x = renaming.getReplaceable("x");
-    context.getRenamingCopy().setName(x, "AAA");
-    assertTrue(renaming.getName(x).equals("x"));
+    renaming.setName(x, "AAA");
+    assertTrue(context.getRenaming().getName(x).equals("x"));
   }
 
   @Test
@@ -155,8 +155,8 @@ class EquationContextTest {
     EquationContext c2 = c1.replace(equation2, 107);
 
     assertTrue(c2.toString().equals("E107: (f(f(x)) , f(f(x)) ≈ f(f(x)) | x > 0 , f(z))"));
-    assertTrue(c2.getRenamingCopy().getReplaceable("y") == null);
-    assertTrue(c1.getRenamingCopy().getReplaceable("y") != null);
+    assertTrue(c2.getRenaming().getReplaceable("y") == null);
+    assertTrue(c1.getRenaming().getReplaceable("y") != null);
   }
 }
 

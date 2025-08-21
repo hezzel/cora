@@ -81,7 +81,7 @@ public class CommandAlter extends DeductionCommand {
   DeductionAlterDefinitions createAddStep(CommandParsingStatus input) {
     ArrayList<Pair<Pair<Variable,String>,Term>> definitions =
       new ArrayList<Pair<Pair<Variable,String>,Term>>();
-    MutableRenaming renaming = _proof.getProofState().getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = _proof.getProofState().getTopEquation().getRenaming().copy();
     VariableNamer namer = _proof.getContext().getVariableNamer();
     Optional<OutputModule> om = optionalModule();
     while (true) {
@@ -141,7 +141,7 @@ public class CommandAlter extends DeductionCommand {
   /** Handle an alter constraint command */
   DeductionAlterConstraint createConstraintStep(CommandParsingStatus input) {
     Term constraint = input.readTerm(_proof.getContext().getTRS(),
-                                     _proof.getProofState().getTopEquation().getRenamingCopy(),
+                                     _proof.getProofState().getTopEquation().getRenaming(),
                                      _module);
     if (constraint == null) return null;
     return DeductionAlterConstraint.createStep(_proof, optionalModule(), constraint);
@@ -221,7 +221,7 @@ public class CommandAlter extends DeductionCommand {
         ret.add(new TabSuggestion(null, "existing variable name"));
       }
       else {
-        for (String x : _proof.getProofState().getTopEquation().getRenamingCopy().range()) {
+        for (String x : _proof.getProofState().getTopEquation().getRenaming().range()) {
           ret.add(new TabSuggestion(x, "existing variable name"));
         }
       }

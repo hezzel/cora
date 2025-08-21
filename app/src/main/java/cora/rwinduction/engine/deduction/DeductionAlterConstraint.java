@@ -30,17 +30,13 @@ import cora.rwinduction.engine.*;
 public final class DeductionAlterConstraint extends DeductionStep {
   private Term _originalConstraint;
   private Term _newConstraint;
-  private Renaming _renaming;
-    // _renaming is just a copy of the original equation's renaming, but we store this to avoid
-    // needless copying
 
   /** Creates the step. */
   private DeductionAlterConstraint(ProofState state, ProofContext context, Term original,
-                                   Term update, Renaming renaming) {
+                                   Term update) {
     super(state, context);
     _originalConstraint = original;
     _newConstraint = update;
-    _renaming = renaming;
   }
 
   /**
@@ -52,7 +48,7 @@ public final class DeductionAlterConstraint extends DeductionStep {
                                                     Term newConstraint) {
     ProofState state = proof.getProofState();
     EquationContext original = state.getTopEquation();
-    Renaming renaming = original.getRenamingCopy();
+    Renaming renaming = original.getRenaming();
     for (Replaceable x : newConstraint.freeReplaceables()) {
       if (renaming.getName(x) == null) {
         module.ifPresent(o -> o.println("Fresh occurrence of " + x.queryName() + " is not " +
@@ -63,10 +59,10 @@ public final class DeductionAlterConstraint extends DeductionStep {
     }
     return new DeductionAlterConstraint(state, proof.getContext(),
                                         original.getEquation().getConstraint(),
-                                        newConstraint, renaming);
+                                        newConstraint);
   }
 
-  /** Before executing this alteration, we do not check if the constraints are indeed equivalent! */
+  /** Before executing this alteration, we should check if the constraints are indeed equivalent! */
   @Override
   public boolean verify(Optional<OutputModule> module) {
     TermSmtTranslator translator = new TermSmtTranslator();
@@ -75,8 +71,8 @@ public final class DeductionAlterConstraint extends DeductionStep {
     if (Settings.smtSolver.checkValidity(translator.queryProblem())) return true;
     module.ifPresent(o -> o.println("It is not obvious if this usage of alteration is permitted: " +
       "I could not prove that %a %{iff} %a.",
-      Printer.makePrintable(_originalConstraint, _renaming),
-      Printer.makePrintable(_newConstraint, _renaming)));
+      Printer.makePrintable(_originalConstraint, _state.getTopEquation().getRenaming()),
+      Printer.makePrintable(_newConstraint, _state.getTopEquation().getRenaming())));
     return false;
   }
 
@@ -85,7 +81,7 @@ public final class DeductionAlterConstraint extends DeductionStep {
   public ProofState tryApply(Optional<OutputModule> module) {
     Equation oldEquation = _state.getTopEquation().getEquation();
     Equation newEquation = new Equation(oldEquation.getLhs(), oldEquation.getRhs(), _newConstraint);
-    return _state.replaceTopEquation(_state.getTopEquation().replace(newEquation, _renaming,
+    return _state.replaceTopEquation(_state.getTopEquation().replace(newEquation,
                                                                      _state.getLastUsedIndex()+1));
   }
 
@@ -93,14 +89,14 @@ public final class DeductionAlterConstraint extends DeductionStep {
   public String commandDescription() {
     Printer printer = PrinterFactory.createParseablePrinter(_pcontext.getTRS());
     printer.add("alter constraint ");
-    printer.add(printer.makePrintable(_newConstraint, _renaming));
+    printer.add(printer.makePrintable(_newConstraint, _state.getTopEquation().getRenaming()));
     return printer.toString();
   }
 
   @Override
   public void explain(OutputModule module) {
     module.println("We apply ALTER to replace the constraint of %a by %a.",
-      _equ.getName(), Printer.makePrintable(_newConstraint, _renaming));
+      _equ.getName(), Printer.makePrintable(_newConstraint, _state.getTopEquation().getRenaming()));
   }
 }
 

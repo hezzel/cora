@@ -50,7 +50,7 @@ public class CommandHypothesis extends HypothesisCommandInherit {
     if (hypopair == null) return null;
 
     // get EquationPosition and Substitution
-    Renaming hypoRenaming = hypopair.fst().getRenamingCopy();
+    Renaming hypoRenaming = hypopair.fst().getRenaming();
     Pair<EquationPosition,Substitution> restpair = readCommandRemainder(hypoRenaming, input);
     if (restpair == null) return null;
     return DeductionHypothesis.createStep(_proof, Optional.of(_module), hypopair.fst(),

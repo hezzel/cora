@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -30,10 +30,17 @@ public class Hypothesis implements PrintableObject {
   private Renaming _varNaming;
   private int _index;
 
+  /**
+   * Creates the hypothesis.
+   *
+   * WARNING: the naring becomes the property of the current Hypothesis ,so should in principle be
+   * created for it, or already be immutable!  If modifiable, it may not be modified by some other
+   * class afterwards.
+   */
   public Hypothesis(Equation equation, int index, Renaming naming) {
     _equation = equation;
     _index = index;
-    _varNaming = naming.copy();
+    _varNaming = naming.makeImmutable();
   }
 
   /** Returns the underlying equation. */
@@ -51,9 +58,9 @@ public class Hypothesis implements PrintableObject {
     return "H" + getIndex();
   }
 
-  /** Returns a copy of the Renaming that determines how to print the equation. */
-  public MutableRenaming getRenamingCopy() {
-    return _varNaming.copy();
+  /** Returns the (unmodifiable) Renaming that determines how to print the equation. */
+  public Renaming getRenaming() {
+    return _varNaming;
   }
 
   /** Adds the current hypothesis to the given printer. */

@@ -30,17 +30,17 @@ public final class DeductionPostulate extends DeductionStep {
   private DeductionPostulate(ProofState state, ProofContext context, Equation equ, Renaming ren) {
     super(state, context);
     _equation = equ;
-    _renaming = ren;
+    _renaming = ren.makeImmutable();
   }
  
   /**
-   * Returns an Optional to be in line with other deduction steps, even though there is (at this
-   * time) no way for the step creation to fail.
+   * Creates a postulate deduction step with (currently) no possibility of returning null.
+   * The renaming is copied, so it is safe to change afterwards.
    */
   public static DeductionPostulate createStep(PartialProof proof, Optional<OutputModule> module,
                                               Equation equ, Renaming ren) {
     ProofState state = proof.getProofState();
-    return new DeductionPostulate(proof.getProofState(), proof.getContext(), equ, ren);
+    return new DeductionPostulate(proof.getProofState(), proof.getContext(), equ, ren.copy());
   }
 
   @Override

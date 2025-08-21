@@ -303,8 +303,8 @@ class DeductionHdeleteTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     Substitution subst = TermFactory.createEmptySubstitution();
-    subst.extend(h8.getRenamingCopy().getReplaceable("c"),
-      (Variable)pp.getProofState().getTopEquation().getRenamingCopy().getReplaceable("y"));
+    subst.extend(h8.getRenaming().getReplaceable("c"),
+      (Variable)pp.getProofState().getTopEquation().getRenaming().getReplaceable("y"));
     DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
                                                         EquationPosition.parse("L3"), subst);
     assertTrue(step.commandDescription().equals("hdelete H8 L3 with [a := y, b := x, c := y]"));

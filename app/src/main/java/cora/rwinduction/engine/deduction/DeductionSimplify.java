@@ -101,7 +101,7 @@ public final class DeductionSimplify extends DeductionStep {
   public String commandDescription() {
     Printer printer = PrinterFactory.createParseablePrinter(_pcontext.getTRS());
     printer.add("simplify ", _ruleName, " ", _helper.queryPosition(), " with ",
-      _helper.substitutionPrintable(_equ.getRenamingCopy()));
+      _helper.substitutionPrintable(_equ.getRenaming()));
     return printer.toString();
   }
 
@@ -116,7 +116,7 @@ public final class DeductionSimplify extends DeductionStep {
         _equ.getName());
     }
     module.println(" with rule %a and substitution %a.",
-      _ruleName, _helper.substitutionPrintable(_equ.getRenamingCopy()));
+      _ruleName, _helper.substitutionPrintable(_equ.getRenaming()));
   }
 }
 

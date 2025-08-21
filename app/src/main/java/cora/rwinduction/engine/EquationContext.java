@@ -29,8 +29,8 @@ import cora.io.OutputModule;
  * An EquationContext couples an Equation with up to 2 meta-terms that keep track of the equation's
  * history, for the sake of future commands.  Moreover, since users need to be able to refer to
  * specific variables in the interactive prover, we also store a naming for the variables inside the
- * equation, so they are always printed in the same way (and an EquationContext implements the
- * PrintableObject class to control its own printing).  Finally, we keep track of a unique index
+ * equation context, so they are always printed in the same way (and an EquationContext implements
+ * the PrintableObject class to control its own printing).  Finally, we keep track of a unique index
  * that will refer to this equation within the proof (and corresponding name)
  *
  * An EquationContext is an immutable structure.
@@ -45,8 +45,10 @@ public class EquationContext implements PrintableObject {
   /**
    * Creates the equation context (leftgr, equation, rightgr), with the given renaming and index
    * (and name E<index>).  Note that the Renaming should contain ALL variables and meta-variables
-   * occurring free in the leftgr, rightgr, and the equation, or an Exception will be thrown.  A
-   * local copy of the Renaming will be made, so modifying it afterwards is safe.
+   * occurring free in leftgr, rightgr, and the equation, or an Exception will be thrown.
+   *
+   * A local copy of the Renaming will be made (and modified), so it does not matter if another
+   * object changes naming afterwards.
    */
   public EquationContext(Term leftgr, Equation equation, Term rightgr, int index, Renaming naming) {
     _equation = equation;
@@ -66,8 +68,10 @@ public class EquationContext implements PrintableObject {
   /**
    * Creates the equation context (•, equation, •), with the given renaming and index (and name
    * E<index>).  Note that the Renaming should contain ALL variables and meta-variables occurring
-   * free in the Equation, or an Exception will be thrown.  A local copy of the Renaming will be
-   * made, so modifying it afterwards is safe.
+   * free in the Equation, or an Exception will be thrown.
+   *
+   * A local copy of the Renaming will be made (and modified), so it does not matter if another
+   * object changes naming afterwards.
    */
   public EquationContext(Equation equation, int index, Renaming naming) {
     _equation = equation;
@@ -108,31 +112,7 @@ public class EquationContext implements PrintableObject {
   }
 
   /**
-   * Private constructor, only called by our own methods.  This does not copy the Renaming,
-   * but does limit its domain and check that it satisfies the requirements.
-   */
-  private EquationContext(Optional<Term> leftgr, Optional<Term> rightgr, Equation equation,
-                          int index, MutableRenaming naming) {
-    _equation = equation;
-    _leftGeq = leftgr;
-    _rightGeq = rightgr;
-    _index = index;
-    _varNaming = naming;
-    // limit the domain
-    ArrayList<ReplaceableList> lst = new ArrayList<ReplaceableList>(5);
-    lst.add(_equation.getLhs().freeReplaceables());
-    lst.add(_equation.getRhs().freeReplaceables());
-    lst.add(_equation.getConstraint().freeReplaceables());
-    leftgr.ifPresent( t -> lst.add(t.freeReplaceables()) );
-    rightgr.ifPresent( t -> lst.add(t.freeReplaceables()) );
-    naming.limitDomain(lst.toArray(ReplaceableList[]::new));
-    // do checks
-    checkReplaceableNaming();
-    checkIndex();
-  }
-
-  /**
-   * Helper function for the constructor.  This ensures that the domain for _varNaming contains all
+   * Helper function for the constructors.  This ensures that the domain for _varNaming contains all
    * the (meta-)variables occurring in this Equation, and throws an IllegalArgumentException if any
    * are missing.
    */
@@ -201,12 +181,11 @@ public class EquationContext implements PrintableObject {
   }
 
   /**
-   * Returns the Renaming to be used for printing the current equation context (or its equation
-   * in isolation).  It is allowed to modify this Renaming; doing so will not affect the
-   * EquationContext, as a copy is returned.
+   * Returns the (unmodifiable) Renaming to be used for printing the current equation context (or
+   * its equation in isolation).
    */
-  public MutableRenaming getRenamingCopy() {
-    return _varNaming.copy();
+  public Renaming getRenaming() {
+    return _varNaming;
   }
 
   /**
@@ -217,15 +196,16 @@ public class EquationContext implements PrintableObject {
    * will cause an IllegalArgumentException to be thrown.
    */
   public EquationContext replace(Equation eq, int index) {
-    return new EquationContext(_leftGeq, _rightGeq, eq, index, _varNaming.copy());
+    return new EquationContext(_leftGeq, eq, _rightGeq, index, _varNaming);
   }
 
   /**
    * Returns the EquationContext with the same "greater" restrictions on the left and right, but
-   * with the given new Renaming, equation and index.
+   * with the given new Renaming, equation and index.  Note that a copy of the renaming will be
+   * made; it will not become the property of the new equation context.
    */
   public EquationContext replace(Equation eq, Renaming naming, int index) {
-    return new EquationContext(_leftGeq, _rightGeq, eq, index, naming.copy());
+    return new EquationContext(_leftGeq, eq, _rightGeq, index, naming);
   }
 
   /** Prints the equation context to the given printer. */

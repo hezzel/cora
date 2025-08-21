@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.Optional;
 
 import charlie.util.FixedList;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
 import charlie.terms.Variable;
@@ -79,7 +80,7 @@ class DeductionCaseTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof pp = setupProof("iter(x,i,z) = iter(x+1,i-1,z*i) | i > 0", module);
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term t = CoraInputReader.readTerm("i > x", renaming, trs);
     DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertTrue(step.commandDescription().equals("case i > x"));
@@ -101,7 +102,7 @@ class DeductionCaseTest {
     PartialProof pp = setupProof("iter(x,i,z)", "iter(x,i1,z1)", "iter(x-1,i1+1,z1*i)",
       "i > 0 ∧ i1 = i+1 ∧ z1 = z+i", "iter(x,z,i)", module);
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term t = CoraInputReader.readTerm("i1 - z", renaming, trs);
     DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertTrue(step.commandDescription().equals("case i1 - z"));
@@ -128,7 +129,7 @@ class DeductionCaseTest {
     PartialProof pp = setupProof("append(xs, ys)", "append(x, xs)", "append(y, ys)",
       "true", "append(ys, xs)", module);
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term t = (Variable)renaming.getReplaceable("xs");
     DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertTrue(step.commandDescription().equals("case xs"));
@@ -147,7 +148,7 @@ class DeductionCaseTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof pp = setupProof("g(x) = g((| y, true |)) | y > 0", module);
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term t = (Variable)renaming.getReplaceable("x");
     DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertTrue(step.commandDescription().equals("case x"));
@@ -163,7 +164,7 @@ class DeductionCaseTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof pp = setupProof("h(x)", "h(x)", "h((| y, zs |))", "y > 0", "h(x)", module);
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term t = (Variable)renaming.getReplaceable("x");
     DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertTrue(step.commandDescription().equals("case x"));
@@ -182,7 +183,7 @@ class DeductionCaseTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof pp = setupProof("append(x) = append(y)", module);
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term t = CoraInputReader.readTerm("isempty(x)", renaming, trs);
     assertTrue(DeductionCase.createStep(pp, o, t) == null);
     assertTrue(module.toString().equals("Cannot do case analysis on isempty(x): this is a " +
@@ -195,7 +196,7 @@ class DeductionCaseTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof pp = setupProof("append(x) = append(y)", module);
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term t = CoraInputReader.readTerm("size(x) + 2", renaming, trs);
     assertTrue(DeductionCase.createStep(pp, o, t) == null);
     assertTrue(module.toString().equals("Cannot do case analysis on size(x) + 2: this is an " +
@@ -220,7 +221,7 @@ class DeductionCaseTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof pp = setupProof("iter(x,i,z) = iter(x+1,i-1,z*i) | i > 0", module);
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term t = CoraInputReader.readTerm("i - xx", renaming, trs);
     DeductionCase step = DeductionCase.createStep(pp, o, t);
     assertTrue(step.commandDescription().equals("case i - xx"));
@@ -233,7 +234,7 @@ class DeductionCaseTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof pp = setupProof("f(x) = f(y) | x = y", module);
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term t = (Variable)renaming.getReplaceable("x");
     assertTrue(DeductionCase.createStep(pp, o, t) == null);
     assertTrue(module.toString().equals(
@@ -245,7 +246,7 @@ class DeductionCaseTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof pp = setupProof("map(F, nil) = map(F, append(nil, nil))", module);
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term t = (Variable)renaming.getReplaceable("F");
     assertTrue(DeductionCase.createStep(pp, o, t) == null);
     assertTrue(module.toString().equals(
@@ -257,7 +258,7 @@ class DeductionCaseTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof pp = setupProof("append(append(x, y), z) = append(x, append(y, z))", module);
     Optional<OutputModule> o = Optional.of(module);
-    MutableRenaming renaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term t = CoraInputReader.readTerm("append(x, y)", renaming, trs);
     assertTrue(DeductionCase.createStep(pp, o, t) == null);
     assertTrue(module.toString().equals(

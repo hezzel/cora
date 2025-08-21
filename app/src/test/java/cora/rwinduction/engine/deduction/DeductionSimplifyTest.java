@@ -167,7 +167,7 @@ class DeductionSimplifyTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Settings.smtSolver = new MySimpleSolver();
     Renaming rulenaming = pp.getContext().getRenaming("O6");
-    Renaming eqnaming = pp.getProofState().getTopEquation().getRenamingCopy();
+    Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
 
     Substitution subst = TermFactory.createEmptySubstitution();
     Replaceable x = rulenaming.getReplaceable("x");
@@ -266,7 +266,7 @@ class DeductionSimplifyTest {
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     EquationContext ec = pp.getProofState().getTopEquation();
     assertTrue(ec.toString().equals("E2: (• , 0 ≈ 0 | x < 0 , •)"));
-    assertTrue(ec.getRenamingCopy().getReplaceable("z") == null);
+    assertTrue(ec.getRenaming().getReplaceable("z") == null);
   }
 }
 

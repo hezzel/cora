@@ -34,22 +34,22 @@ import cora.rwinduction.engine.*;
  */
 public final class DeductionAlterDefinitions extends DeductionStep {
   private ArrayList<Term> _definitions;
-  private MutableRenaming _updatedRenaming;
-
-  /** Creates the step, claiming both arguments as its own property. */
-  private DeductionAlterDefinitions(ProofState state, ProofContext context,
-                                    ArrayList<Term> defs, MutableRenaming naming) {
-    super(state, context);
-    _definitions = defs;
-    _updatedRenaming = naming;
-  }
+  private Renaming _updatedRenaming;
 
   /**
-   * This returns the renaming that will be used for the result of the step.
-   * This renaming is the property of the current object, and may not be altered.
+   * Creates the step, claiming both arguments as its own property.
+   * (So neither defs nor naming should be changed afterwards, or this class will be affected.)
    */
+  private DeductionAlterDefinitions(ProofState state, ProofContext context,
+                                    ArrayList<Term> defs, Renaming naming) {
+    super(state, context);
+    _definitions = defs;
+    _updatedRenaming = naming.makeImmutable();
+  }
+
+  /** This returns the (immutable) renaming that will be used for the result of the step. */
   Renaming queryUpdatedRenaming() {
-    return _updatedRenaming.makeImmutable();
+    return _updatedRenaming;
   }
 
   /**
@@ -64,7 +64,7 @@ public final class DeductionAlterDefinitions extends DeductionStep {
                                                 ArrayList<Pair<Pair<Variable,String>,Term>> defs) {
     ProofState state = proof.getProofState();
     Equation eq = getTopEquation(state, module);
-    MutableRenaming renaming = state.getTopEquation().getRenamingCopy();
+    MutableRenaming renaming = state.getTopEquation().getRenaming().copy();
 
     ArrayList<Term> d = new ArrayList<Term>();
     if (defs.size() == 0) {

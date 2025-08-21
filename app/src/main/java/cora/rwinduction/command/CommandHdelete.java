@@ -18,7 +18,7 @@ package cora.rwinduction.command;
 import java.util.Optional;
 
 import charlie.util.Pair;
-import charlie.terms.replaceable.MutableRenaming;
+import charlie.terms.replaceable.Renaming;
 import charlie.terms.Substitution;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationPosition;
@@ -48,7 +48,7 @@ public class CommandHdelete extends HypothesisCommandInherit {
     Pair<Hypothesis,Boolean> hypopair = readHypothesis(input);
     if (hypopair == null) return null;
     // get EquationPosition and Substitution
-    MutableRenaming hypoRenaming = hypopair.fst().getRenamingCopy();
+    Renaming hypoRenaming = hypopair.fst().getRenaming();
     Pair<EquationPosition,Substitution> restpair = readCommandRemainder(hypoRenaming, input);
     if (restpair == null) return null;
     return DeductionHdelete.createStep(_proof, Optional.of(_module), hypopair.fst(),
