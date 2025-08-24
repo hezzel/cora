@@ -74,7 +74,8 @@ class DeductionAlterConstraintTest {
     Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term newc = CoraInputReader.readTerm("(z > 0 ∨ z < 0) ∧ i <= x - 1", renaming,
                                          pp.getContext().getTRS());
-    DeductionAlterConstraint dac = DeductionAlterConstraint.createStep(pp, o, newc);
+    DeductionAlterGeneraliseConstraint dac =
+      DeductionAlterGeneraliseConstraint.createAlterStep(pp, o, newc);
     assertTrue(dac.commandDescription().equals(
       "alter constraint (z > 0 \\/ z < 0) /\\ i <= x - 1"));
     MySmtSolver mysolver = new MySmtSolver(true);
@@ -102,12 +103,39 @@ class DeductionAlterConstraintTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term newc = CoraInputReader.readTerm("z != 0", renaming, pp.getContext().getTRS());
-    DeductionAlterConstraint dac = DeductionAlterConstraint.createStep(pp, o, newc);
+    DeductionAlterGeneraliseConstraint dac =
+      DeductionAlterGeneraliseConstraint.createAlterStep(pp, o, newc);
     MySmtSolver mysolver = new MySmtSolver(false);
     Settings.smtSolver = mysolver;
     assertFalse(dac.verify(o));
-    assertTrue(module.toString().equals("It is not obvious if this usage of alteration is " +
+    assertTrue(module.toString().equals("It is not obvious if this usage of alter is " +
       "permitted: I could not prove that x > i ∧ z ≠ 0 ⟺  z ≠ 0.\n\n"));
+  }
+
+  @Test
+  public void testGeneralise() {
+    PartialProof pp = setupProof("iter(x, i, z) = iter(i, z, x) | x > i");
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
+    Term newc = CoraInputReader.readTerm("x >= i", renaming, pp.getContext().getTRS());
+    DeductionAlterGeneraliseConstraint dac =
+      DeductionAlterGeneraliseConstraint.createGeneraliseStep(pp, o, newc);
+    Settings.smtSolver = new MySmtSolver(false);
+    assertFalse(dac.verify(o));
+    dac.explain(module);
+    assertTrue(module.toString().equals("It is not obvious if this usage of generalise is " +
+      "permitted: I could not prove that x > i ⇒ x ≥ i.\n\n" +
+      "We apply GENERALISE to replace the constraint of E1 by x ≥ i.\n\n"));
+
+    MySmtSolver mysolver = new MySmtSolver(true);
+    Settings.smtSolver = mysolver;
+    assertTrue(dac.verifyAndExecute(pp, o));
+    assertTrue(mysolver._question.equals("(i2 >= i1) or (i1 >= i2)\n"));
+    assertTrue(pp.getProofState().getEquations().size() == 1);
+    assertTrue(pp.getProofState().getTopEquation().getIndex() == 2);
+    assertTrue(pp.getProofState().getTopEquation().toString().equals(
+      "E2: (• , iter(x, i, z) ≈ iter(i, z, x) | x ≥ i , •)"));
   }
 
   @Test
@@ -117,9 +145,9 @@ class DeductionAlterConstraintTest {
     Optional<OutputModule> o = Optional.of(module);
     Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term newc = CoraInputReader.readTerm("x > i ∧ z != y", renaming, pp.getContext().getTRS());
-    assertTrue(DeductionAlterConstraint.createStep(pp, o, newc) == null);
+    assertTrue(DeductionAlterGeneraliseConstraint.createGeneraliseStep(pp, o, newc) == null);
     assertTrue(module.toString().equals("Fresh occurrence of y is not allowed in this " +
-      "application of the ALTER command (use alter ADD to add new variables to the " +
+      "application of the GENERALISE command (use ALTER ADD to add new variables to the " +
       "constraint).\n\n"));
   }
 }

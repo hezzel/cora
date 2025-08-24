@@ -71,6 +71,7 @@ class DeductionAlterDefinitionsTest {
     Term yvalue = CoraInputReader.readTerm("x * 12 - 3", renaming, pp.getContext().getTRS());
     Variable z = TheoryFactory.createVar("z", TypeFactory.boolSort);
     Term zvalue = CoraInputReader.readTerm("y1 > 0", renaming, pp.getContext().getTRS());
+    Variable a = TheoryFactory.createVar("a", TypeFactory.intSort);
     defs.add(new Pair<Pair<Variable,String>,Term>(new Pair<Variable,String>(y, "y2"), yvalue));
     defs.add(new Pair<Pair<Variable,String>,Term>(new Pair<Variable,String>(z, "z"), zvalue));
     DeductionAlterDefinitions step = DeductionAlterDefinitions.createStep(pp, o, defs);
