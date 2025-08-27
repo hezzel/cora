@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import charlie.util.Pair;
 import charlie.util.FixedList;
+import charlie.util.LookupMap;
 import charlie.types.TypeFactory;
 import charlie.parser.lib.*;
 import charlie.parser.Parser.*;
@@ -135,6 +136,29 @@ public class EquationParser {
   }
 
   /**
+   * If the given parsing status starts with a variable environment -- so something like
+   * { F :: a → b, x :: Int } -- then we read past this, and store the declared variables into the
+   * renaming.  If it does not start with that, we do nothing.
+   */
+  private static void readEnvironment(ParsingStatus status, MutableRenaming renaming) {
+    if (!status.peekNext().getName().equals(CoraTokenData.BRACEOPEN)) return;
+    LookupMap<ParserDeclaration> env = CoraParser.readEnvironment(status);
+    for (ParserDeclaration decl : env.values()) {
+      Variable x = TermFactory.createVar(decl.name(), decl.type());
+      if (!renaming.setName(x, decl.name())) {
+        throw ParsingException.create(decl.token(), "Unexpected variable ", decl.name(),
+          "in environment: I could not use this as a variable name (is it already in use " +
+          "as a function symbol name?)");
+      }
+      if (decl.extra() != 0) {
+        throw ParsingException.create(decl.token(), "Unexpected meta-variable ", decl.name(),
+          "in environment: for now, rewriting induction only considers applicative terms, " +
+          "so meta-variables with arity are not permitted.");
+      }
+    }
+  }
+
+  /**
    * This reads an Equation of the form a ≈ b | c from the given string, using the given Renaming
    * for the variables (this Renaming may be expanded if additional variables occur in
    * equation).  The ParsingStatus is advanced until after the equation.
@@ -143,6 +167,7 @@ public class EquationParser {
    * @throws charlie.parser.lib.ParsingException
    */
   public static Equation parseEquation(ParsingStatus status, MutableRenaming renaming, TRS trs) {
+    readEnvironment(status, renaming);
     Token tok = status.peekNext();
     ParserTerm left, right = null, constr = null;
     left = CoraParser.readTerm(status);
