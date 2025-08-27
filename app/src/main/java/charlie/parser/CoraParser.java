@@ -901,6 +901,15 @@ public class CoraParser {
   }
 
   /**
+   * This function reads an environment from the given parsing status, and returns the declarations
+   * that occur in it.  The ParsingStatus is advanced to the point just after the environment.
+   */
+  public static LookupMap<ParserDeclaration> readEnvironment(ParsingStatus status) {
+    CoraParser parser = new CoraParser(status);
+    return parser.readEnvironment();
+  }
+
+  /**
    * Reads a rule from the given string.
    * @throws ParsingException
    */

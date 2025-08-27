@@ -25,7 +25,7 @@ import charlie.printer.PrinterFactory;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 
-/** This deduction step handles the "generalise drop constraint" command syntax. */
+/** This deduction step handles the "generalise drop <constraint>" command syntax. */
 public final class DeductionGeneraliseDrop extends DeductionStep {
   private Term _newConstraint;
   private Term _dropped;
