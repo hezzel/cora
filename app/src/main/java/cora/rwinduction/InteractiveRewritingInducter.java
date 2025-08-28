@@ -110,6 +110,7 @@ public class InteractiveRewritingInducter {
     clst.registerDeductionCommand(new CommandHdelete());
     clst.registerDeductionCommand(new CommandAlter());
     clst.registerDeductionCommand(new CommandPostulate());
+    clst.registerDeductionCommand(new CommandGeneralise());
     clst.registerDeductionCommand(new CommandSkip());
 
     return clst;

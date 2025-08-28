@@ -23,6 +23,7 @@ import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.ParsedLine;
+import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
@@ -44,8 +45,11 @@ public class ReplInputter implements Inputter {
   public ReplInputter(CmdList cmds) {
     try {
       _terminal = TerminalBuilder.terminal();
+      DefaultParser parser = new DefaultParser();
+      parser.setEscapeChars(null);
       _lineReader = LineReaderBuilder.builder().terminal(_terminal)
         .completer(new ParameterCompleter(cmds))
+        .parser(parser)
         .build();
       _backup = null;
     }
