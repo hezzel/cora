@@ -32,7 +32,10 @@ public class RewritingInductionProof implements ProofObject {
   }
 
   public Answer queryAnswer() {
-    if (_finalState.isFinalState() && _terminationProof != null) return Answer.YES;
+    if (_finalState.isFinalState() && _terminationProof != null) {
+      if (_finalState.isContradictionState()) return Answer.NO;
+      else return Answer.YES;
+    }
     return Answer.MAYBE;
   }
 
