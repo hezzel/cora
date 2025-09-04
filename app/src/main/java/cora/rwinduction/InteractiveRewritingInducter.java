@@ -338,7 +338,12 @@ public class InteractiveRewritingInducter {
   /** Helper function for proveEquivalence */
   private void printCurrentState() {
     if (_proof.isFinal()) {
-      _output.println("All goals have been successfully removed!");
+      if (_proof.getProofState().isContradictionState()) {
+        _output.println("A contradiction have been derived!");
+      }
+      else {
+        _output.println("All goals have been successfully removed!");
+      }
       _output.println("To complete the proof, you still need to verify that a suitable ordering " +
         "exists.  You can do this using the :check command.  Other useful environment commands " +
         "can use include:");

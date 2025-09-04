@@ -15,11 +15,16 @@
 
 package cora.rwinduction.engine.deduction;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import charlie.util.Pair;
+import charlie.types.Base;
 import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
+import charlie.terms.Value;
+import charlie.terms.TheoryFactory;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 
@@ -91,7 +96,10 @@ public final class DeductionDisproveSemi extends DeductionStep {
   private static FunctionSymbol findSemiConstructor(ProofContext context,
                                                     Type otype, int numargs, FunctionSymbol h) {
     int oar = otype.queryArity();
-    for (FunctionSymbol f : context.getTRS().queryAlphabet().getSymbols()) {
+    HashSet<FunctionSymbol> set = new HashSet<FunctionSymbol>();
+    set.addAll(TheoryFactory.queryAllCalculationSymbols());
+    set.addAll(context.getTRS().queryAlphabet().getSymbols());
+    for (FunctionSymbol f : set) {
       // check: f != h
       if (f == h) continue;
       // compute n knowing that IF f(a1,...,an) :: otype, then arity(f) = n + arity(otype),
@@ -105,6 +113,10 @@ public final class DeductionDisproveSemi extends DeductionStep {
       // check: the type of f(a1,...,an) is indeed otype
       for (int i = 0; i < n; i++) t = t.subtype(2);
       if (t.equals(otype)) return f;
+    }
+    if (otype instanceof Base b && otype.isTheoryType()) {
+      if (h != null && h instanceof Value v) return TheoryFactory.getNewValue(b, Set.of(v));
+      else return TheoryFactory.getNewValue(b, Set.of());
     }
     return null;
   }

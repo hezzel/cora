@@ -63,9 +63,13 @@ class DeductionDisproveSemiTest {
     Variable h = TermFactory.createVar("H", CoraInputReader.readType("Int -> list -> list"));
     renaming.setName(h, "H");
     Variable a = TermFactory.createVar("A", CoraInputReader.readType("Int -> Int -> Int"));
-    Variable b = TermFactory.createVar("b", CoraInputReader.readType("Int -> Int -> Int"));
     renaming.setName(a, "A");
+    Variable b = TermFactory.createVar("b", CoraInputReader.readType("Int -> Int -> Int"));
     renaming.setName(b, "B");
+    Variable u = TermFactory.createVar("u", CoraInputReader.readType("Int"));
+    renaming.setName(u, "u");
+    Variable v = TermFactory.createVar("u", CoraInputReader.readType("Int"));
+    renaming.setName(v, "v");
     Term le = CoraInputReader.readTermAndUpdateNaming(left, renaming, trs);
     Term ri = CoraInputReader.readTermAndUpdateNaming(right, renaming, trs);
     Term co = CoraInputReader.readTermAndUpdateNaming(constr, renaming, trs);
@@ -168,9 +172,24 @@ class DeductionDisproveSemiTest {
     Term rhs = pp.getProofState().getTopEquation().getEquation().getRhs();
     Pair<FunctionSymbol,FunctionSymbol> pair =
       DeductionDisproveSemi.checkDifferentSemiconstructors(lhs, rhs, pp.getContext());
-    System.out.println(pair.fst());
-    System.out.println(pair.snd());
-    assertTrue(false);
+    assertTrue(!pair.fst().equals(pair.snd()));
+    assertTrue(pair.fst().toCalculationSymbol() != null);
+    assertTrue(pair.snd().toCalculationSymbol() != null);
+    assertTrue(pair.fst().queryType().toString().equals("Int → Int → Int"));
+  }
+
+  @Test
+  public void testNeedValue() {
+    PartialProof pp = setupProof("u", "v", "true");
+    TRS trs = pp.getContext().getTRS();
+    Term lhs = pp.getProofState().getTopEquation().getEquation().getLhs();
+    Term rhs = pp.getProofState().getTopEquation().getEquation().getRhs();
+    Pair<FunctionSymbol,FunctionSymbol> pair =
+      DeductionDisproveSemi.checkDifferentSemiconstructors(lhs, rhs, pp.getContext());
+    assertTrue(!pair.fst().equals(pair.snd()));
+    assertTrue(pair.fst().isValue());
+    assertTrue(pair.snd().isValue());
+    assertTrue(pair.fst().queryType().toString().equals("Int"));
   }
 
   @Test
