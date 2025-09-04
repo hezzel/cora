@@ -104,6 +104,8 @@ class ProofStateTest {
     assertTrue(state4.getLastUsedIndex() == 7);
     assertTrue(state4.getEquations().size() == 3);
     assertTrue(state4.getTopEquation() == eq3);
+    assertTrue(state4.getIncompleteEquations().isEmpty());
+    state4 = state4.setIncomplete(7);
     ProofState state5 = state4.deleteTopEquation();
     assertTrue(state5.getEquations().size() == 2);
     assertTrue(state5.getLastUsedIndex() == 7);
@@ -134,6 +136,67 @@ class ProofStateTest {
     state = state.addHypothesis(new Hypothesis(hypo.fst(), 17, hypo.snd()));
     assertTrue(state.getHypothesisByName("H2").toString().equals("H2: sum1(x + y) ≈ y * sum1(x)"));
     assertTrue(state.getHypothesisByName("H9") == null);
+  }
+
+  @Test
+  public void testIncomplete() {
+    TRS trs = setupTRS();
+    ProofState state1 = setupProofState(trs);
+    assertTrue(state1.getLastUsedIndex() == 1);
+    EquationContext eq2 =
+      EquationParser.parseEquationData("sum1(x) -><- iter(x, 0, 0) | x > 0", trs, 2);
+    EquationContext eq3 = EquationParser.parseEquationData("0 -><- iter(x, 0, 0) | x = 0", trs, 3);
+    EquationContext eq4 =
+      EquationParser.parseEquationData("x + sum1(x-1) -><- iter(x, 0, 0) | x > 0", trs, 4);
+    
+    // { 1 }: nothing incomplete
+    assertTrue(state1.getIncompleteEquations().isEmpty());
+    // { 1, 2}: nothing incomplete
+    ProofState state2 = state1.addEquation(eq2);
+    assertTrue(state2.getIncompleteEquations().isEmpty());
+    // { 1*, 2 }: 1 is incomplete
+    ProofState state3 = state2.setIncomplete(1);
+    assertTrue(state3.getIncompleteEquations().size() == 1);
+    assertTrue(state3.getIncompleteEquations().contains(1));
+    // replace 2 by 3: since 3 is newly added to an incomplete proof state, it is now also incomplete
+    ProofState state4 = state3.replaceTopEquation(eq3);
+    assertTrue(state4.getIncompleteEquations().size() == 2);
+    assertTrue(state4.getIncompleteEquations().contains(1));
+    assertTrue(state4.getIncompleteEquations().contains(3));
+    // replace 3 by 2 again: now 2 is also marked as incomplete!
+    ProofState state5 = state3.replaceTopEquation(eq2);
+    assertTrue(state5.getIncompleteEquations().size() == 2);
+    assertTrue(state5.getIncompleteEquations().contains(1));
+    assertTrue(state5.getIncompleteEquations().contains(2));
+    // delete both the incomplete ones, and we're complete again
+    ProofState state6 = state5.deleteTopEquation().replaceTopEquation(List.of());
+    assertTrue(state6.getIncompleteEquations().isEmpty());
+    // get back to { 2, 1* }
+    ProofState state7 = new ProofState(FixedList.of(eq2, state1.getTopEquation()),
+                                       state3.getHypotheses(), state3.getOrderingRequirements(),
+                                       state3.getIncompleteEquations(), 2);
+    // add 3: both 1 and 3 are now incomplete
+    ProofState state8 = state7.addEquation(eq3);
+    assertTrue(state8.getIncompleteEquations().size() == 2);
+    assertTrue(state8.getIncompleteEquations().contains(1));
+    assertTrue(state8.getIncompleteEquations().contains(3));
+    // remove 3 again; 1 is still incomplete
+    ProofState state9 = state8.deleteTopEquation();
+    assertTrue(state9.getIncompleteEquations().size() == 1);
+    assertTrue(state9.getIncompleteEquations().contains(1));
+    // replace 1 by equation 4; this does not help us, the new one is still incomplete
+    ProofState state10 = state9.replaceTopEquation(eq4);
+    assertTrue(state10.getIncompleteEquations().size() == 1);
+    assertTrue(state10.getIncompleteEquations().contains(4));
+    // set 4 as incomplete; this has no effect
+    assertTrue(state10.setIncomplete(4) == state10);
+    // remove 4: we're complete, even though 2 is still in there
+    ProofState state11 = state10.deleteTopEquation();
+    assertTrue(state11.getIncompleteEquations().isEmpty());
+    assertFalse(state11.isFinalState());
+    // and if we add something new, then it's still complete
+    ProofState state12 = state11.addEquation(eq3);
+    assertTrue(state12.getIncompleteEquations().isEmpty());
   }
 }
 

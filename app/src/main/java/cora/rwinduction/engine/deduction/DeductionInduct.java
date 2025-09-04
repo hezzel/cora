@@ -74,7 +74,8 @@ public final class DeductionInduct extends DeductionStep {
     FixedList<EquationContext> newEquations = ecbuilder.build();
     FixedList<Hypothesis> newHypotheses = _state.getHypotheses().append(hypothesis);
 
-    return new ProofState(newEquations, newHypotheses, _state.getOrderingRequirements(), index);
+    return new ProofState(newEquations, newHypotheses, _state.getOrderingRequirements(),
+                          _state.getIncompleteEquations(), index);
   }
 
   @Override

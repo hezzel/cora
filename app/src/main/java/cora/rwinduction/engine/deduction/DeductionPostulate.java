@@ -50,8 +50,9 @@ public final class DeductionPostulate extends DeductionStep {
 
   @Override
   public ProofState tryApply(Optional<OutputModule> module) {
-    EquationContext n = new EquationContext(_equation, _state.getLastUsedIndex() + 1, _renaming);
-    return _state.addEquation(n);
+    int newIndex = _state.getLastUsedIndex() + 1;
+    EquationContext n = new EquationContext(_equation, newIndex, _renaming);
+    return _state.addEquation(n).setIncomplete(newIndex);
   }
 
   @Override

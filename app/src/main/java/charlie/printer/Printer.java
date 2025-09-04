@@ -143,6 +143,8 @@ public abstract class Printer {
   public abstract String symbNot();
   public abstract String symbImplies();
   public abstract String symbIff();
+  public abstract String symbTop();
+  public abstract String symbBottom();
 
   public abstract String symbEmptySet();
   public abstract String symbUnion();

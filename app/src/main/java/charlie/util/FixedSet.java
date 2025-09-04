@@ -81,6 +81,13 @@ public class FixedSet<T> implements Iterable<T> {
   public Stream<T> parallelStream() { return _myset.parallelStream(); }
   public int size() { return _myset.size(); }
   public Stream<T> stream() { return _myset.stream(); }
+  public String toString() { return _myset.toString(); }
+  
+  public FixedSet<T> add(T element) {
+    Set<T> ret = _myset instanceof TreeSet ? new TreeSet<T>(_myset) : new HashSet<T>(_myset);
+    ret.add(element);
+    return new FixedSet<T>(ret);
+  }
   
   private class ImmutableIterator<T> implements Iterator<T> {
     Iterator<T> _mine;
