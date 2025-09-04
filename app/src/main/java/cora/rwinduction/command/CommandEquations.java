@@ -73,7 +73,9 @@ public class CommandEquations extends Command {
       if (full) _module.println("%a", ec);
       else {
         _module.nextColumn("%a:", ec.getName());
-        _module.println("%a", ec.getEquation().makePrintableWith(ec.getRenaming()));
+        _module.nextColumn("%a", ec.getEquation().makePrintableWith(ec.getRenaming()));
+        if (state.getIncompleteEquations().contains(ec.getIndex())) _module.println("(INCOMPLETE)");
+        else _module.println();
       }
     }
     _module.endTable();

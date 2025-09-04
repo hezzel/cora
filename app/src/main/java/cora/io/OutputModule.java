@@ -147,7 +147,7 @@ public class OutputModule {
    * codes should be supported in any implementation of OutputModule:
    *   %{ruleArrow}, %{typeArrow}, %{mapsto}, %{thickArrow}, %{longArrow}, %{downArrow},
    *   %{revRuleArrow}
-   *   %{vdash}, %{Vdash}, %{forall}, %{exists}, %{and}, %{or}, %{not}, %{implies}
+   *   %{vdash}, %{Vdash}, %{forall}, %{exists}, %{and}, %{or}, %{not}, %{implies}, %{top}, %{bot}
    *   %{emptyset}, %{union}, %{subterm}, %{subtermeq}, %{supterm}, %{suptermeq},
    *   %{sqSupset}, %{sqSupseteq}, %{succ}, %{succeq}, %{greater}, %{smaller}, %{geq}, %{leq},
    *   %{distinct}, %{approx},

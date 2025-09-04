@@ -42,6 +42,8 @@ public class AsciiPrinter extends Printer {
   public String symbNot()             { return "not "; }
   public String symbImplies()         { return "=>"; }
   public String symbIff()             { return "<=>"; }
+  public String symbTop()             { return "true"; }
+  public String symbBottom()          { return "false"; }
 
   public String symbEmptySet()        { return "{}"; }
   public String symbUnion()           { return "UNION"; }

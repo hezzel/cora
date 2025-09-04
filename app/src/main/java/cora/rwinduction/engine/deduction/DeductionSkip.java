@@ -50,7 +50,7 @@ public final class DeductionSkip extends DeductionStep {
     neweqs.add(oldeqs.get(oldeqs.size()-1));
     for (int i = 0; i < oldeqs.size()-1; i++) neweqs.add(oldeqs.get(i));
     return new ProofState(neweqs.build(), _state.getHypotheses(), _state.getOrderingRequirements(),
-                          _state.getLastUsedIndex());
+                          _state.getIncompleteEquations(), _state.getLastUsedIndex());
   }
 
   @Override

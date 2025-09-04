@@ -96,8 +96,9 @@ public final class DeductionGeneraliseDrop extends DeductionStep {
   public ProofState tryApply(Optional<OutputModule> module) {
     Equation oldEquation = _state.getTopEquation().getEquation();
     Equation newEquation = new Equation(oldEquation.getLhs(), oldEquation.getRhs(), _newConstraint);
-    return _state.replaceTopEquation(_state.getTopEquation().replace(newEquation,
-                                                                     _state.getLastUsedIndex()+1));
+    int newIndex = _state.getLastUsedIndex()+1;
+    return _state.replaceTopEquation(_state.getTopEquation().replace(newEquation, newIndex))
+                 .setIncomplete(newIndex);
   }
 
   @Override

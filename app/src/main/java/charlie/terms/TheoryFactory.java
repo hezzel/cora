@@ -15,6 +15,8 @@
 
 package charlie.terms;
 
+import java.util.Set;
+import java.util.HashSet;
 import charlie.types.*;
 import charlie.terms.CalculationSymbol.Kind;
 import charlie.terms.CalculationSymbol.Associativity;
@@ -199,5 +201,72 @@ public class TheoryFactory {
   public static final Value zeroValue = new IntegerValue(0);
   /** The value for the empty string */
   public static final Value emptyStringValue = new StringValue("");
+
+  /** This returns the set of all calculation symbols that are currently supported. */
+  public static HashSet<CalculationSymbol> queryAllCalculationSymbols() {
+    HashSet<CalculationSymbol> set = new HashSet<CalculationSymbol>();
+    set.add(plusSymbol);
+    set.add(timesSymbol);
+    set.add(minusSymbol);
+    set.add(divSymbol);
+    set.add(modSymbol);
+    set.add(andSymbol);
+    set.add(orSymbol);
+    set.add(notSymbol);
+    set.add(iffSymbol);
+    set.add(xorSymbol);
+    set.add(greaterSymbol);
+    set.add(smallerSymbol);
+    set.add(geqSymbol);
+    set.add(leqSymbol);
+    set.add(intEqualSymbol);
+    set.add(intDistinctSymbol);
+    set.add(stringEqualSymbol);
+    set.add(stringDistinctSymbol);
+    return set;
+  }
+
+  /** This returns an IntegerValue not included in the given set. */
+  public static Value getNewIntValue(Set<Value> exclude) {
+    if (!exclude.contains(zeroValue)) return zeroValue;
+    for (int i = 1; ; i++) {
+      for (int j = 1; j > -2; j -= 2) {
+        Value v = new IntegerValue(i * j);
+        if (!exclude.contains(v)) return v;
+      }
+    }
+  }
+
+  public static Value getNewStringValue(Set<Value> exclude) {
+    if (!exclude.contains(emptyStringValue)) return emptyStringValue;
+    for (int i = 1; ; i++) {
+      StringBuilder builder = new StringBuilder();
+      int k = i;
+      while (k > 0) {
+        builder.append( (char)((k-1) % 26 + 'a') );
+        if (k <= 26) break;
+        k = (k - 1) / 26;
+      }
+      Value v = new StringValue(builder.toString());
+      if (!exclude.contains(v)) return v;
+    }
+  }
+
+  /**
+   * This returns a value of the given sort which does not occur in exclude, provided one exists
+   * (for infinite sorts, like Int or String, one always exists).  If there is no such value then
+   * null is returned instead.  Note that if sort is not a theory sort, then null is always
+   * returned.
+   */
+  public static Value getNewValue(Base sort, Set<Value> exclude) {
+    if (sort.equals(TypeFactory.boolSort)) {
+      if (!exclude.contains(trueValue)) return trueValue;
+      if (!exclude.contains(falseValue)) return falseValue;
+      return null;
+    }
+    if (sort.equals(TypeFactory.intSort)) return getNewIntValue(exclude);
+    if (sort.equals(TypeFactory.stringSort)) return getNewStringValue(exclude);
+    return null;
+  }
 }
 

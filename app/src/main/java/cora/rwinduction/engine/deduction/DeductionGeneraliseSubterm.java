@@ -154,7 +154,8 @@ public final class DeductionGeneraliseSubterm extends DeductionStep {
    */
   @Override
   public ProofState tryApply(Optional<OutputModule> module) {
-    return _state.replaceTopEquation(makeNewEquationContext());
+    EquationContext ec = makeNewEquationContext();
+    return _state.replaceTopEquation(ec).setIncomplete(ec.getIndex());
   }
 
   @Override

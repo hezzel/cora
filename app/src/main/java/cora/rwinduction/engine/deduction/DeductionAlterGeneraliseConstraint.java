@@ -123,8 +123,11 @@ public final class DeductionAlterGeneraliseConstraint extends DeductionStep {
   public ProofState tryApply(Optional<OutputModule> module) {
     Equation oldEquation = _state.getTopEquation().getEquation();
     Equation newEquation = new Equation(oldEquation.getLhs(), oldEquation.getRhs(), _newConstraint);
-    return _state.replaceTopEquation(_state.getTopEquation().replace(newEquation,
-                                                                     _state.getLastUsedIndex()+1));
+    int newIndex = _state.getLastUsedIndex()+1;
+    ProofState ret =
+      _state.replaceTopEquation(_state.getTopEquation().replace(newEquation, newIndex));
+    if (!_alters) ret = ret.setIncomplete(newIndex);
+    return ret;
   }
 
   @Override
