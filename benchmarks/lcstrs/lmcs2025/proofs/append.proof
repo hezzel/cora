@@ -1,0 +1,54 @@
+GOAL E1: (* , rev(append(xs, ys), nil) [=] append(rev(ys, nil), rev(xs, nil)) , *)
+induct
+case xs
+simplify O1 L1 with [ys := ys]
+simplify O3 R2 with [ys := nil]
+skip
+alter rename xs1 := a
+alter rename xs2 := as
+simplify O2 L1 with [x := a, xs := as, ys := ys]
+simplify O4 L with [x := a, xs := append(as, ys), ys := nil]
+simplify O4 R2 with [x := a, xs := as, ys := nil]
+postulate append(zs, nil) [=] zs
+induct
+skip
+skip
+hdelete H12^{-1} L with [zs := rev(ys, nil)]
+case zs
+simplify O1 L with [ys := nil]
+delete
+simplify O2 L with [x := zs1, xs := zs2, ys := nil]
+semiconstructor
+delete
+hdelete H12 L with [zs := zs2]
+postulate rev(xs, ys) [=] append(rev(xs, nil), ys)
+postulate append(append(xs, ys), zs) [=] append(xs, append(ys, zs))
+induct
+case xs
+simplify O1 L1 with [ys := ys]
+simplify O1 R with [ys := append(ys, zs)]
+delete
+simplify O2 L1 with [x := xs1, xs := xs2, ys := ys]
+simplify O2 L with [x := xs1, xs := append(xs2, ys), ys := zs]
+simplify O2 R with [x := xs1, xs := xs2, ys := append(ys, zs)]
+semiconstructor
+delete
+hdelete H21 L with [xs := xs2, ys := ys, zs := zs]
+induct
+case xs
+simplify O3 L with [ys := ys]
+simplify O3 R1 with [ys := nil]
+simplify O1 R with [ys := ys]
+delete
+alter rename xs1 := x
+alter rename xs2 := xs
+simplify O4 L with [x := x, xs := xs, ys := ys]
+simplify O4 R1 with [x := x, xs := xs, ys := nil]
+hypothesis H20 R1 with [xs := xs, ys := cons(x, nil)]
+hypothesis H21 R with [xs := rev(xs, nil), ys := cons(x, nil), zs := ys]
+simplify O2 R2 with [x := x, xs := nil, ys := ys]
+simplify O1 R2.2 with [ys := ys]
+hdelete H20 L with [xs := xs, ys := cons(x, ys)]
+hypothesis H20 L with [xs := append(as, ys), ys := cons(a, nil)]
+hypothesis H1 L1 with [xs := as, ys := ys]
+hypothesis H21 L with [xs := rev(ys, nil), ys := rev(as, nil), zs := cons(a, nil)]

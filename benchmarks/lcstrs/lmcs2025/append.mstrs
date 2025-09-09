@@ -1,0 +1,9 @@
+nil :: list
+cons :: Int -> list -> list
+append :: list -> list -> list
+append(nil, ys) -> ys
+append(cons(x, xs), ys) -> cons(x, append(xs, ys))
+rev :: list -> list -> list
+rev(nil, ys) -> ys
+rev(cons(x, xs), ys) -> rev(xs, cons(x, ys))
+

@@ -47,6 +47,16 @@ public class TheoryFactory {
     return new Var(name, type);
   }
 
+  /** Create a non-binder boolean variable with the given name. */
+  public static Variable createBoolVar(String name) {
+    return new Var(name, TypeFactory.boolSort);
+  }
+
+  /** Create a non-binder integer variable with the given name. */
+  public static Variable createIntVar(String name) {
+    return new Var(name, TypeFactory.intSort);
+  }
+
   /** Create an Integer Value */
   public static Value createValue(int n) {
     return new IntegerValue(n);

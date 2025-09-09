@@ -1,0 +1,9 @@
+G :: (Int -> Int) -> Int -> Int -> Int
+G(f, n, x) -> G(f, n-1, f(x)) | n > 0
+G(f, n, x) -> x               | n ≤ 0
+
+H :: (Int -> Int) -> Int -> Int -> Int -> Int
+H(f, n, m, x) -> H(f, n-1, m, f(x)) | n > 0
+H(f, n, m, x) -> H(f, m-1, n, f(x)) | m > 0
+H(f, n, m, x) -> x                  | n ≤ 0 ∧ m ≤ 0
+
