@@ -56,17 +56,19 @@ public class RewritingInductionProof implements ProofObject {
       }
     }
     if (_finalState.isFinalState()) {
+      String txt = "All equations have been removed, so the proof is complete: the original " +
+        "equations are inductive theorems";
+      if (_finalState.isContradictionState()) txt = "A contradiction has been obtained, so we " +
+        "have seen that the original equations are not all inductive theorems";
       if (_terminationProof == null || _terminationProof.queryAnswer() != ProofObject.Answer.YES) {
-        module.println("All equations have been removed, so the proof is complete: the original " +
-          "equations are inductive theorems, provided the underlying ordering requirements can " +
-          "be satisfied.  Unfortunately, the existence of a suitable ordering has not yet been " +
+        module.println(txt + ", provided the underlying ordering requirements can be " +
+          "satisfied.  Unfortunately, the existence of a suitable ordering has not yet been " +
           "proved.");
       }
       else {
-        module.println("All equations have been removed, so the proof is complete: the original " +
-          "equations are inductive theorems.  The existence of a suitable bounding pair is " +
-          "guaranteed by the termination of the corresponding term rewriting systems, as " +
-          "is demonstrated below.");
+        module.println(txt + ".  The existence of a suitable bounding pair is guaranteed by " +
+          "the termination of the corresponding term rewriting systems, as is demonstrated " +
+          "below.");
         _terminationProof.justify(module);
       }
     }

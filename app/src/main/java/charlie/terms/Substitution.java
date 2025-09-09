@@ -56,6 +56,13 @@ public interface Substitution {
   boolean replace(Replaceable key, Term value);
 
   /**
+   * This replaces each mapping [x:=s] by [x := s delta], and moreover extends the substitution
+   * with all mappings [y:=t] in delta where y does not yet occur in our domain.  That is, if we
+   * are γ, then this results in the substitution γ δ.
+   */
+  void substitute(Substitution delta);
+
+  /**
    * Returns the set of replaceables which are mapped to a term, including those which are mapped
    * to themselves.
    */

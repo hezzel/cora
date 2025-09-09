@@ -266,5 +266,37 @@ public class SubstitutionTest {
     domain = gamma.domain();
     assertTrue(domain.size() == 1);
   }
+
+  @Test
+  public void testSubstitute() {
+    Variable x = TermFactory.createVar("x", baseType("Int"));
+    Variable y = TermFactory.createVar("y", baseType("Int"));
+    Variable z = TermFactory.createVar("z", baseType("Int"));
+    Variable a = TermFactory.createVar("a", baseType("Int"));
+    Variable b = TermFactory.createVar("b", baseType("Int"));
+    FunctionSymbol f = TermFactory.createConstant("f", TypeFactory.createArrow(
+                                                    baseType("Int"), arrowType("Int", "Int")));
+    Term one = TheoryFactory.createValue(1);
+    Term two = TheoryFactory.createValue(2);
+    Substitution gamma = new Subst();
+    gamma.extend(x, f.apply(y).apply(z));                     // γ(x) = f(y, z)
+    gamma.extend(y, f.apply(z).apply(f.apply(one).apply(a))); // γ(y) = f(z, f(1, a))
+    Substitution delta = new Subst();
+    delta.extend(y, two);                                     // δ(y) = 2
+    delta.extend(z, f.apply(x).apply(one));                   // δ(z) = f(x, 1)
+    delta.extend(b, a);                                       // δ(b) = a
+    gamma.substitute(delta);
+    assertTrue(gamma.domain().size() == 4);
+    assertTrue(gamma.domain().contains(x));
+    assertTrue(gamma.domain().contains(y));
+    assertTrue(gamma.domain().contains(z));
+    assertTrue(gamma.domain().contains(b));
+    assertFalse(gamma.domain().contains(a));
+    assertTrue(gamma.getReplacement(x).toString().equals("f(2, f(x, 1))"));
+    assertTrue(gamma.getReplacement(y).toString().equals("f(f(x, 1), f(1, a))"));
+    assertTrue(gamma.getReplacement(z).toString().equals("f(x, 1)"));
+    assertTrue(gamma.getReplacement(b).toString().equals("a"));
+    assertTrue(delta.getReplacement(z).toString().equals("f(x, 1)"));
+  }
 }
 

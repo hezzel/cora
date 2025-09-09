@@ -1,0 +1,20 @@
+GOAL E1: (* , recdown(f, n, i, a) [=] tailup(f, n, i, a) , *)
+induct
+case i < n
+simplify O2 L with [F := f, a := a, i := i, n := n]
+simplify O4 R with [F := f, a := a, i := i, n := n]
+skip
+simplify O1 L with [F := f, a := a, i := i, n := n]
+simplify O3 R with [F := f, a := a, i := i, n := n]
+delete
+calc
+hypothesis H1 L2 with [a := a, f := f, i := i1, n := n]
+induct
+case i <= n
+simplify O4 L2 with [F := f, a := a, i := i1, n := n]
+simplify O4 R with [F := f, a := f(n, a), i := i, n := n1]
+skip
+simplify O3 L2 with [F := f, a := a, i := i1, n := n]
+simplify O3 R with [F := f, a := f(n, a), i := i, n := n1]
+eq-delete
+calc

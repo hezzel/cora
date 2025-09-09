@@ -16,8 +16,7 @@
 package cora.rwinduction.command;
 
 import cora.io.OutputModule;
-import cora.rwinduction.engine.DeductionStep;
-import cora.rwinduction.engine.deduction.DeductionDisproveSemi;
+import cora.rwinduction.engine.deduction.DeductionDisprove;
 
 public class CommandDisprove extends SingularDeductionCommandInherit {
   @Override
@@ -32,8 +31,8 @@ public class CommandDisprove extends SingularDeductionCommandInherit {
   }
 
   @Override
-  protected DeductionStep createStep() {
-    return DeductionDisproveSemi.createStep(_proof, optionalModule());
+  protected DeductionDisprove createStep() {
+    return DeductionDisprove.createStep(_proof, optionalModule());
   }
 }
 

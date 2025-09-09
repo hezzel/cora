@@ -51,7 +51,7 @@ final class Var extends LeafTermInherit implements Variable, MetaVariable {
   /** Create a non-binder variable without a name; a name will be automatically generated. */
   Var(Type type) {
     super(type);
-    _name = "X{" + COUNTER + "}";
+    _name = "X";
     _index = COUNTER;
     COUNTER++;
     setVariables(new ReplaceableList(this));

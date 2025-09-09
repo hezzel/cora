@@ -106,6 +106,18 @@ class Subst implements Substitution {
     return overriding;
   }
 
+  /** This creates the combined substitution <us> <delta>. */
+  public void substitute(Substitution delta) {
+    for (Replaceable x : _mapping.keySet()) {
+      _mapping.put(x, _mapping.get(x).substitute(delta));
+    }
+    for (Replaceable y : delta.domain()) {
+      if (!_mapping.containsKey(y)) {
+        _mapping.put(y, delta.get(y));
+      }
+    }
+  }
+
   /** Returns the set of variables which are mapped to something (possibly themselves). */
   public Set<Replaceable> domain() {
     return _mapping.keySet();
@@ -114,5 +126,10 @@ class Subst implements Substitution {
   /** Remove the given key/value pair. */
   public void delete(Replaceable key) {
     _mapping.remove(key);
+  }
+
+  /** Purely for debugging purposes! */
+  public String toString() {
+    return _mapping.toString();
   }
 }
