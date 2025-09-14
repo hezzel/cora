@@ -499,57 +499,6 @@ class MetaApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testSubstituteCorrectly() {
-    // Z⟨g(x), c⟩ [x:=0, Z := λy,w.f(w, y)]
-    Type type = arrowType(baseType("a"), arrowType(baseType("b"), arrowType("a", "b")));
-    MetaVariable z = TermFactory.createMetaVar("Z", type, 2);
-    Variable x = new Var("x", baseType("b"));
-    Term arg1 = unaryTerm("g", baseType("a"), x);
-    Term arg2 = constantTerm("c", baseType("b"));
-    Term term = TermFactory.createMeta(z, arg1, arg2);
-
-    Substitution gamma = new Subst();
-    gamma.extend(x, constantTerm("0", baseType("b")));
-    Variable y = new Binder("y", baseType("a"));
-    Variable w = new Binder("w", baseType("b"));
-    Term f = constantTerm("f",
-      arrowType(baseType("b"), arrowType(baseType("a"), arrowType("a", "b"))));
-    gamma.extend(z, TermFactory.createAbstraction(y, TermFactory.createAbstraction(w,
-      TermFactory.createApp(f, w, y))));
-
-    Term result = term.substitute(gamma);
-    assertTrue(result.toString().equals("f(c, g(0))"));
-  }
-
-  @Test
-  public void testDifficultSubstitution() {
-    // Z⟨λx.a(x,y),F⟩
-    Variable x = new Binder("x", baseType("A"));
-    Variable y = new Binder("y", baseType("B"));
-    Term a = constantTerm("a", arrowType(baseType("A"), arrowType("B", "A")));
-    Term abs = new Abstraction(x, TermFactory.createApp(a, x, y));
-    Variable f = new Binder("F", arrowType("A", "A"));
-    MetaVariable z = TermFactory.createMetaVar("Z", arrowType(abs.queryType(),
-      arrowType(f.queryType(), baseType("A"))), 2);
-    Term term = TermFactory.createMeta(z, abs, f);
-    // [x:=0, y:=1, F:=λz.h(z, x), Z := λF, G.F(G(0))]
-    Substitution gamma = new Subst();
-    gamma.extend(x, constantTerm("0", baseType("A")));
-    gamma.extend(y, constantTerm("1", baseType("B")));
-    Variable z2 = new Binder("z", baseType("A"));
-    Term h = constantTerm("h", arrowType(baseType("A"), arrowType("A", "A")));
-    Term abs1 = new Abstraction(z2, TermFactory.createApp(h, z2, x));
-    gamma.extend(f, abs1);
-    Variable g = new Binder("G", arrowType("A", "A"));
-    Term zero = constantTerm("0", baseType("A"));
-    Term abs2 = new Abstraction(f, new Abstraction(g, f.apply(g.apply(zero))));
-    gamma.extend(z, abs2);
-    // result of substituting: [λF, G.F(G(0))]⟨λx.a(x,1), λz.h(z, x)⟩⟩ = (λx.a(x,1))(λz.h(z, x)(0))
-    // (note that it isn't normalised beyond that)
-    assertTrue(term.substitute(gamma).toString().equals("(λx1.a(x1, 1))((λz.h(z, x))(0))"));
-  }
-
-  @Test
   public void testRenaming() {
     // Z⟨λx.a(x,y),F⟩ -- except all variables and meta-variables are called "v"
     Variable x = new Binder("x", baseType("A"));

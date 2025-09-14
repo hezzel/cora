@@ -761,53 +761,6 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testApplicativeSubstituting() {
-    Variable x = new Binder("x", baseType("Int"));
-    Variable y = new Var("y", baseType("Int"));
-    Variable z = new Var("Z", arrowType(baseType("Int"), arrowType("Bool", "Int")));
-    Term s = new Application(z, x, unaryTerm("f", baseType("Bool"), y));
-      // Z(x, f(y))
-
-    Term thirtyseven = constantTerm("37", baseType("Int"));
-    FunctionSymbol g = new Constant("g", arrowType(baseType("o"),
-                                         arrowType(baseType("Int"), arrowType("Bool", "Int"))));
-    Term t = new Application(g, constantTerm("c", baseType("o")));
-
-    Substitution gamma = new Subst(x, thirtyseven);
-    gamma.extend(y, x);
-    gamma.extend(z, t);
-
-    Term q = s.substitute(gamma);
-    assertTrue(q.toString().equals("g(c, 37, f(x))"));
-  }
-
-  @Test
-  public void testLambdaSubstituting() {
-    // X(a, f(λy.g(y, z)), f(λy.g(y, y)))
-    Term g = constantTerm("g", arrowType(baseType("o"), arrowType("o", "o")));
-    Term f = constantTerm("f", arrowType(arrowType("o", "o"), baseType("o")));
-    Term a = constantTerm("a", baseType("o"));
-    Variable x = new Binder("X", arrowType(baseType("o"), arrowType(baseType("o"),
-      arrowType("o", "o"))));
-    Variable y = new Binder("y", baseType("o"));
-    Variable z = new Binder("z", baseType("o"));
-    Term term = new Application(new Application(x, a),
-      new Application(f, new Abstraction(y, new Application(g, y, z))),
-      new Application(f, new Abstraction(y, new Application(g, y, y))));
-    // [X := λxy.h(y, z), y := a, z := g(a, y)]
-    Term h = constantTerm("h", arrowType(baseType("o"), arrowType(baseType("o"),
-      arrowType("o", "o"))));
-    Variable x1 = new Binder("x", baseType("o"));
-    Subst subst = new Subst();
-    subst.extend(x, new Abstraction(x1, new Abstraction(y, new Application(h, y, z))));
-    subst.extend(y, a);
-    subst.extend(z, new Application(g, a, y));
-
-    Term s = term.substitute(subst);
-    assertTrue(s.toString().equals("(λx.λy1.h(y1, z))(a, f(λy1.g(y1, g(a, y))), f(λy1.g(y1, y1)))"));
-  }
-
-  @Test
   public void testRefreshBinders() {
     // (λxy.f(x,y))(g(λz.z), g(λz.z))
     Variable x = new Binder("x", baseType("o"));

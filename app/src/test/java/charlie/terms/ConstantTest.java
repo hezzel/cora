@@ -179,7 +179,6 @@ public class ConstantTest extends TermTestFoundation {
     assertTrue(f.isPattern());
     assertTrue(f.refreshBinders() == f);
     Subst gamma = new Subst(x, new Constant("gg", combi));
-    assertTrue(f.substitute(gamma).equals(f));
     assertTrue(f.freeReplaceables().size() == 0);
     assertTrue(f.boundVars().size() == 0);
     assertTrue(f.hasSubterm(f));

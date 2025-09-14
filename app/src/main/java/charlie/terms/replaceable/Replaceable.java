@@ -22,8 +22,10 @@ import charlie.types.Type;
  * A Replaceable is an object with an index, arity and type.  In particular, this is an object that
  * can be substituted, as well as renamed.
  *
- * Within Cora, a replaceable must necessarily be either a (binder or free) variable or a
- * meta-variable.  These instances are defined in the cora.terms package.
+ * Although Replaceable is not *explicitly* sealed, this is only done to avoid a massive circular
+ * dependency.  In practice, we do require that the only instances of Replaceable are instances of
+ * either Variable or MetaVariable.  These two interfaces are defined in the cora.terms package.
+ * Creating any other instance will cause problems, in particular with TermFactory::makeTerm.
  */
 public interface Replaceable extends Comparable<Replaceable> {
   public enum Kind { BINDER, BASEVAR, METAVAR }

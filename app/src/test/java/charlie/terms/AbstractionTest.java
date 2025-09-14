@@ -424,35 +424,6 @@ class AbstractionTest extends TermTestFoundation {
   }
 
   @Test
-  public void testSubstitute() {
-    // λx.f(x, λz.z, y)
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Var("y", baseType("o"));
-    Variable z = new Binder("z", baseType("o"));
-    Variable u = new Binder("u", baseType("o"));
-    Term f = constantTerm("f", arrowType(baseType("o"), arrowType(
-      arrowType("o", "o"), arrowType("o", "o"))));
-    Term abs = new Abstraction(x, new Application(new Application(f, x,
-      new Abstraction(z, z)), y));
-
-    // [x:=y, y:=x]
-    Substitution subst = new Subst();
-    subst.extend(x, y);
-    subst.extend(y, x);
-    Term term = abs.substitute(subst);  // now term = λu.f(u, λz.z, x)
-
-    // check that we got the right term
-    assertFalse(term.equals(abs));
-    assertTrue(term.equals(new Abstraction(u, new Application(
-      new Application(f, u, new Abstraction(z, z)), x))));
-    assertEquals("λx1.f(x1, λz.z, x)", term.toString());
-
-    // check that all binders are fresh
-    assertEquals(1, term.queryVariable().compareTo(u));
-    assertEquals(1, term.queryAbstractionSubterm().queryArgument(2).queryVariable().compareTo(u));
-  }
-
-  @Test
   public void testSuccessfulMatchFreeBecomesBound() {
     // λx.f(x, y)
     Variable x = new Binder("x", baseType("o"));

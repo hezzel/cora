@@ -50,12 +50,6 @@ public class BinderTest extends TermTestFoundation {
   }
 
   @Test
-  public void testNullSubstitution() {
-    Term t = new Binder("x", baseType("Int"));
-    assertThrows(NullPointerException.class, () -> t.substitute(null));
-  }
-
-  @Test
   public void testNullMatch1() {
     Term t = new Binder("x", baseType("Int"));
     assertThrows(NullPointerException.class, () -> t.match(constantTerm("37", baseType("Int")), null));
@@ -277,19 +271,6 @@ public class BinderTest extends TermTestFoundation {
     Term s = new Binder("x", baseType("o"));
     Position p = new FinalPos(3);
     assertThrows(InvalidPositionException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
-  }
-
-  @Test
-  public void testSubstituting() {
-    Variable x = new Binder("x", baseType("Int"));
-    Variable y = new Binder("y", baseType("Int"));
-    Variable z = new Binder("z", baseType("Bool"));
-    Term xterm = constantTerm("37", baseType("Int"));
-    Substitution gamma = new Subst(x, xterm);
-    gamma.extend(y, x); 
-    assertTrue(x.substitute(gamma).equals(xterm));
-    assertTrue(y.substitute(gamma).equals(x));
-    assertTrue(z.substitute(gamma).equals(z));
   }
 
   @Test

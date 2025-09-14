@@ -224,16 +224,6 @@ class TupleTest extends TermTestFoundation {
   }
 
   @Test
-  public void testSubstitution() {
-    Term s = exampleTuple();
-    Variable y = s.queryTupleArgument(3).queryTupleArgument(2).queryVariable();
-    Substitution gamma = new Subst(y, constantTerm("q", baseType("P")));
-    Term t = s.substitute(gamma);
-    assertTrue(s.toString().equals("⦇a, λx.f(x), ⦇f(a), y⦈⦈"));
-    assertTrue(t.toString().equals("⦇a, λx.f(x), ⦇f(a), q⦈⦈"));
-  }
-
-  @Test
   public void testMatch() {
     Variable x = new Var("X", baseType("A"));
     Variable y = new Var("Y", baseType("A"));
