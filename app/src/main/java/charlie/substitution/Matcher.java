@@ -18,6 +18,7 @@ package charlie.substitution;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import charlie.util.UserException;
+import charlie.terms.replaceable.Replaceable;
 import charlie.terms.MetaVariable;
 import charlie.terms.Term;
 import charlie.terms.Variable;
@@ -54,18 +55,18 @@ public class Matcher {
     else if (pattern.isMetaApplication()) {
       return extendMatchWithMeta(pattern, instance, subst);
     }
-/*
-    else if (term.isConstant()) return term;
-    else if (term.isApplication()) {
-      return applyToApplication(term.queryHead(), term.queryArguments());
+    else if (pattern.isConstant()) {
+      return checkMatchWithConstant(pattern, instance);
+    }
+    else if (pattern.isApplication()) {
+      return extendMatchWithApplication(pattern, instance, subst);
     }   
-    else if (term.isTuple()) {
-      return applyToTuple(term.queryTupleArguments());
+    else if (pattern.isTuple()) {
+      return extendMatchWithTuple(pattern, instance, subst);
     }   
-    else if (term.isAbstraction()) {
-      return applyToAbstraction(term.queryVariable(), term.queryAbstractionSubterm());
+    else if (pattern.isAbstraction()) {
+      return extendMatchWithAbstraction(pattern, instance, subst);
     }   
-*/
     else throw new IllegalArgumentException("Matcher::extendMatch called with a term that does " +
       "not have any of the standard term shapes!");
   }
@@ -140,5 +141,90 @@ public class Matcher {
     }
     return ret;
   }
+
+  private static MatchFailure checkMatchWithConstant(Term symbol, Term instance) {
+    if (symbol.equals(instance)) return null;
+    return new MatchFailure("Constant ", symbol, " is not instantiated by ", instance, ".");
+  }
+
+  private static MatchFailure extendMatchWithApplication(Term pattern, Term instance,
+                                                         MutableSubstitution gamma) {
+    if (!instance.isApplication()) {
+      return new MatchFailure("The term ", instance, " does not instantiate ", pattern, " as it " +
+        "is not an application.");
+    }
+    if (instance.numberArguments() < pattern.numberArguments()) {
+      return new MatchFailure("The term ", instance, " does not instantiate ", pattern, " as it " +
+        "has too few arguments.");
+    }
+    int i = instance.numberArguments();
+    int j = pattern.numberArguments();
+    for (; j > 0; i--, j--) {
+      Term patsub = pattern.queryArgument(j);
+      Term inssub = instance.queryArgument(i);
+      MatchFailure warning = extendMatch(patsub, inssub, gamma);
+      if (warning != null) return warning;
+    }
+    return extendMatch(pattern.queryHead(), instance.queryImmediateHeadSubterm(i), gamma);
+  }
+
+  private static MatchFailure extendMatchWithTuple(Term tuple, Term instance,
+                                                   MutableSubstitution gamma) {
+    if (!instance.isTuple()) {
+      return new MatchFailure("The term ", instance, " does not instantiate ", tuple,
+        " as it is not a tuple term.");
+    }
+    if (tuple.numberTupleArguments() != instance.numberTupleArguments()) {
+      return new MatchFailure("The term ", instance, " does not instantiate ", tuple,
+        " as the tuple sizes are not the same.");
+    }   
+    for (int i = 1; i <= tuple.numberTupleArguments(); i++) {
+      MatchFailure warning = extendMatch(tuple.queryTupleArgument(i),
+                                         instance.queryTupleArgument(i), gamma);
+      if (warning != null) return warning;
+    }
+    return null;
+  }
+
+  /**
+   * Updates γ so that abs gamma =α instance if possible, and returns a MatchFailure describing
+   * the reason for impossibility if not.  Note that:
+   * (λx.s)γ =α t   iff
+   * λz.(s ([x:=z] ∪ (γ \ {x}))) =α t where z is fresh     iff
+   * t = λy.t' and y ∉ FV( s ([x:=z] ∪ (γ \ {x})) ) \ {z} and (s ([x:=z] ∪ (γ \ {x}))) [z:=y] =α t'
+   * iff (since z is fresh) all the following hold:
+   * - t = λy.t'
+   * - y ∉ FV( γ(a) ) for any a ∈ FV(s) \ {x}
+   * - s ([x:=y] ∪ (γ \ {x})) =α t'
+   */
+  public static MatchFailure extendMatchWithAbstraction(Term pattern, Term instance,
+                                                        MutableSubstitution gamma) {
+    if (!instance.isAbstraction()) {
+      return new MatchFailure("Abstraction ", pattern, " is not instantiated by ", instance, ".");
+    }
+    Variable x = pattern.queryVariable();
+    Variable y = instance.queryVariable();
+
+    Term backup = gamma.get(x);
+    if (backup == null) gamma.extend(x, y);
+    else gamma.replace(x, y);
+    MatchFailure ret =
+      extendMatch(pattern.queryAbstractionSubterm(), instance.queryAbstractionSubterm(), gamma);
+    if (backup == null) gamma.delete(x);
+    else gamma.replace(x, backup);
+
+    if (ret != null) return ret;
+
+    for (Replaceable z : pattern.freeReplaceables()) {
+      Term gammaz = gamma.get(z);
+      if (gammaz != null && gammaz.freeReplaceables().contains(y)) {
+        return new MatchFailure("Abstraction ", pattern, " is not instantiated by ", instance,
+          " because the induced mapping [", z, " := ", gammaz, "] contains the binder variable of ",
+          instance, ".");
+      }
+    }
+    return null;
+  }
+
 }
 
