@@ -30,6 +30,7 @@ import charlie.terms.TermFactory;
 public class Matcher {
   public static class MatchFailure extends UserException {
     public MatchFailure(Object ...args) { super(args); }
+    public String toString() { return getMessage(); }
   }
 
   /**

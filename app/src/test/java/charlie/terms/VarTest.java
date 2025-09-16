@@ -46,20 +46,6 @@ public class VarTest extends TermTestFoundation {
   }
 
   @Test
-  public void testNullMatch1() {
-    Term t = new Var("x", baseType("Int"));
-    assertThrows(NullPointerException.class,
-      () -> t.match(constantTerm("37", baseType("Int")), null));
-  }
-
-  @Test
-  public void testNullMatch2() {
-    Term t = new Var("x", baseType("Int"));
-    Substitution subst = new Subst();
-    assertThrows(NullPointerException.class, () -> t.match(null, subst));
-  }
-
-  @Test
   public void testBaseVariableApplication() {
     Term t = new Var("x", baseType("Int"));
     assertThrows(TypingException.class, () -> t.apply(t)); }
@@ -225,55 +211,6 @@ public class VarTest extends TermTestFoundation {
     Term s = new Var("x", baseType("o"));
     Position p = new FinalPos(1);
     assertThrows(InvalidPositionException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
-  }
-
-  @Test
-  public void testMatchingNoMappingBinder() {
-    Variable x = new Var("x", baseType("a"));
-    Term t = twoArgVarTerm();
-    Subst gamma = new Subst();
-    assertTrue(x.match(t, gamma) == null);
-    assertTrue(gamma.get(x).equals(t));
-    assertTrue(gamma.domain().size() == 1);
-  }
-
-  @Test
-  public void testMatchingNoMappingNonBinder() {
-    Variable x = new Var("x", baseType("a"));
-    Term t = twoArgVarTerm();
-    Subst gamma = new Subst();
-    assertTrue(x.match(t, gamma) == null);
-    assertTrue(gamma.get(x).equals(t));
-    assertTrue(gamma.domain().size() == 1);
-  }
-
-  @Test
-  public void testMatchingExistingMapping() {
-    Variable x = new Var("x", baseType("a"));
-    Term t = twoArgVarTerm();
-    Subst gamma = new Subst(x, t);
-    assertTrue(x.match(t, gamma) == null);
-    assertTrue(gamma.get(x).equals(t));
-    assertTrue(gamma.domain().size() == 1);
-  }
-
-  @Test
-  public void testMatchingConflictingMapping() {
-    Variable x = new Var("x", baseType("a"));
-    Term t = twoArgVarTerm();
-    Term q = new Var("y", baseType("a"));
-    Subst gamma = new Subst(x, q);
-    assertTrue(x.match(t, gamma) != null);
-    assertTrue(gamma.get(x).equals(q));
-    assertTrue(gamma.domain().size() == 1);
-  }
-
-  @Test
-  public void testMatchingBadType() {
-    Variable x = new Var("x", baseType("a"));
-    Term t = constantTerm("u", baseType("b"));
-    Subst gamma = new Subst();
-    assertTrue(x.match(t, gamma) != null);
   }
 }
 
