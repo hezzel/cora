@@ -83,8 +83,8 @@ public class Matcher {
       return null;
     }   
     if (previous.equals(instance)) return null;
-    return new MatchFailure("Variable ", x, " is mapped both to ", previous, " and to ",
-                            instance, ".");
+    return new MatchFailure(x.isBinderVariable() ? "Binder variable " : "Variable ",
+                            x, " is mapped both to ", previous, " and to ", instance, ".");
   }
 
   private static MatchFailure extendMatchWithMeta(Term metaApp, Term instance,
