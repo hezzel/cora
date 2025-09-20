@@ -317,7 +317,7 @@ public interface Term {
    * renamed as needed to avoid distinct (meta-)variables having the same name.
    *
    * NOTE: this is only meant as a default, for unit testing and debugging.  For player-visible
-   * output, a suitable TermPrinters should be used.
+   * output, a suitable TermPrinter should be used.
    */
   String toString();
 
@@ -326,14 +326,6 @@ public interface Term {
    * Equality is modulo alpha (but this is only relevant for higher-order rewriting with lambdas).
    */
   boolean equals(Term term);
-
-  /**
-   * Returns a hashcode consistent with alpha-equality, using the given mapping mu (and assuming
-   * the term to be compared has a similar mapping xi for the corresponding bound variables, and
-   * k = mu.size()+1).
-   * Here, mu is allowed to be null, which will be treated the same as an empty map.
-   */
-  int hashCode(Map<Variable,Integer> mu);
 
   /* ======== the following functions are intended for internal use in the terms package ======== */
 
@@ -354,4 +346,12 @@ public interface Term {
 
   /** Determines the =_α^{μ,ξ,k} relation as described in the documentation. */
   boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k);
+
+  /**
+   * Returns a hashcode consistent with alpha-equality, using the given mapping mu (and assuming
+   * the term to be compared has a similar mapping xi for the corresponding bound variables, and
+   * k = mu.size()+1).
+   * Here, mu is allowed to be null, which will be treated the same as an empty map.
+   */
+  int hashCode(Map<Variable,Integer> mu);
 }
