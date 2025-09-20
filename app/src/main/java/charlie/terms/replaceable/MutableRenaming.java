@@ -131,7 +131,7 @@ public class MutableRenaming implements Renaming {
   }
 
   /** Puts a wrapper around the current Renaming to make it immutable. */
-  public ImmutableRenaming makeImmutable() {
+  public Renaming makeImmutable() {
     return new ImmutableRenaming(this);
   }
 
