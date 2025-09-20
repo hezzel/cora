@@ -112,36 +112,18 @@ final class Binder extends LeafTermInherit implements Variable {
       "meta-variable applications");
   }
 
-  /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */
-  public Term substitute(Substitution gamma) {
-    if (gamma == null) throw new NullPointerException("Substitution in Binder::substitute");
-    return gamma.getReplacement(this);
-  }
-
-  /** 
-   * This method updates gamma by adding the extension from x to the given other term, if x is not
-   * yet mapped to anything.
-   * If this works, then null is returned.
-   * If x is already mapped to the given other term, then nothing is done but null is returned.
-   * If x is mapped to a different term, then an explanation of the match failure is returned.
-   * If other or gamma is null, then a NullPointerException is thrown instead.
+  /**
+   * Returns renaming[this], or returns an error if that's not a variable of the same type.
+   * (If renaming is not set for this binder, then the binder is returned unmodified.)
    */
-  public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullPointerException("Other term in Binder::match");
-    if (gamma == null) throw new NullPointerException("Substitution in Binder::match");
-
-    Term previous = gamma.get(this);
-    
-    if (previous == null) {
-      if (!other.queryType().equals(queryType())) {
-        return "Binder " + _name + " has a different type from " + other.toString() + ".";
-      }
-      gamma.extend(this, other);
-      return null;
-    }   
-    else if (previous.equals(other)) return null;
-    else return "Binder " + _name + " mapped both to " + previous.toString() + " and to " +
-      other.toString() + ".";
+  public Variable renameAndRefreshBinders(Map<Variable,Variable> renaming) {
+    Variable ret = renaming.get(this);
+    if (ret == null) return this;
+    if (!ret.queryType().equals(queryType())) {
+      throw new TypingException("Called renameAndRefreshBinders mapping variable ", this,
+        " of type ", queryType(), " to ", ret, " of type ", ret.queryType(), ".");
+    }
+    return ret;
   }
 
   /**

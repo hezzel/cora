@@ -3,6 +3,7 @@ package cora.termination.dependency_pairs.processors;
 import charlie.reader.CoraInputReader;
 import charlie.terms.Term;
 import charlie.terms.Variable;
+import charlie.substitution.Matcher;
 import charlie.trs.TRS;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.DPGenerator;
@@ -123,6 +124,8 @@ public class ChainingProcessorTest {
     DP qDP = q.getDPList().getFirst();
     Term expectedRhsArg = CoraInputReader.readTerm("3*(y-1)", trs);
     Term actualRhsArg = qDP.rhs().queryArgument(2);
-    assertTrue(expectedRhsArg.equalsModuloRenaming(actualRhsArg));
+    // they're equal modulo renaming
+    assertTrue(Matcher.match(expectedRhsArg, actualRhsArg) != null &&
+               Matcher.match(actualRhsArg, expectedRhsArg) != null);
   }
 }

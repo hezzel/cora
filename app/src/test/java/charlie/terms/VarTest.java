@@ -75,7 +75,10 @@ public class VarTest extends TermTestFoundation {
     assertTrue(s.isApplicative());
     assertTrue(s.isClosed());
     assertFalse(s.isGround());
-    assertTrue(s.refreshBinders() == s);
+    TreeMap<Variable,Variable> map = new TreeMap<Variable,Variable>();
+    assertTrue(s.renameAndRefreshBinders(map) == s);
+    map.put(x, new Var("y", baseType("o")));
+    assertTrue(s.renameAndRefreshBinders(map) == s);
     assertFalse(x.isBinderVariable());
     Variable z = new Var("z", arrowType("o", "o"));
     assertFalse(z.isFirstOrder());

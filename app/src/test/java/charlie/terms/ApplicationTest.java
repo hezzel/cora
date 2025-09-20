@@ -772,7 +772,9 @@ public class ApplicationTest extends TermTestFoundation {
     Term abs = new Abstraction(x, new Abstraction(y, new Application(f, x, y)));
     Term term = new Application(abs, new Application(g, zz), new Application(g, zz));
 
-    Term t = term.refreshBinders();
+    TreeMap<Variable,Variable> map = new TreeMap<Variable,Variable>();
+    map.put(y, new Var("y", baseType("o")));
+    Term t = term.renameAndRefreshBinders(map);
     assertTrue(t.equals(term));
     Variable a = t.queryVariable();
     Variable b = t.queryHead().queryAbstractionSubterm().queryVariable();

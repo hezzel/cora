@@ -18,6 +18,8 @@ import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
+import charlie.substitution.MutableSubstitution;
+import charlie.substitution.Matcher;
 import charlie.trs.TRS;
 import cora.io.OutputModule;
 import cora.config.Settings;
@@ -210,7 +212,7 @@ public class ChainingProcessor implements Processor {
     Term dp1Rhs = dp1.rhs();
     Term dp2Lhs = dp2.lhs();
 
-    Substitution matcher = dp2Lhs.match(dp1Rhs);
+    MutableSubstitution matcher = Matcher.match(dp2Lhs, dp1Rhs);
     if (matcher == null) {
       return Optional.empty();
     }
@@ -225,8 +227,8 @@ public class ChainingProcessor implements Processor {
         return Optional.empty();
       }
     }
-    Term resultRhs = dp2.rhs().substitute(matcher);
-    Term dp2ConstraintSubst = dp2.constraint().substitute(matcher);
+    Term resultRhs = matcher.substitute(dp2.rhs());
+    Term dp2ConstraintSubst = matcher.substitute(dp2.constraint());
     Term resultConstraint = TermFactory.createApp(TheoryFactory.andSymbol,
       dp1.constraint(), dp2ConstraintSubst);
     Set<Variable> resultTheoryVars = new LinkedHashSet<>(dp1.lvars());

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 import charlie.util.NullStorageException;
 import charlie.util.Pair;
@@ -46,7 +47,7 @@ class Application extends TermInherit {
     ReplaceableList frees = calculateFreeReplaceablesForSubterms(args, _head.freeReplaceables());
     ReplaceableList bounds = _head.boundVars();
     if (bounds.size() > 0 && !bounds.getOverlap(frees).isEmpty()) {
-      _head = _head.refreshBinders();
+      _head = _head.renameAndRefreshBinders(new TreeMap<Variable,Variable>());
       bounds = _head.boundVars();
     }
     _args = new ArrayList<Term>();
@@ -361,48 +362,22 @@ class Application extends TermInherit {
   }
 
   /**
-   * This method replaces each variable x in the term by gamma(x) (or leaves x alone if x is not
-   * in the domain of gamma); the result is returned.
+   * This method yields a copy with all binders in the renaming's mapping renamed, and the
+   * binders in lambdas below this term refreshed.
    */
-  public Term substitute(Substitution gamma) {
-    Term h = _head.substitute(gamma);
-    if (h == null) throw new NullStorageException("Application",
-      "Substituting " + _head.toString() + " results in null!");
-
-    List<Term> args = new ArrayList<Term>(_args);
+  public Term renameAndRefreshBinders(Map<Variable,Variable> renaming) {
+    Term head = _head.renameAndRefreshBinders(renaming);
+    ArrayList<Term> args = new ArrayList<Term>(_args);
+    boolean changed = head != _head;
     for (int i = 0; i < args.size(); i++) {
-      Term t = args.get(i).substitute(gamma);
-      if (t == null) throw new NullStorageException("Application",
-        "Substituting " + args.get(i).toString() + " results in null!");
-      args.set(i, t);
-    }
-
-    return new Application(h, args);
-  }
-
-  /**
-   * This method either extends gamma so that <this term> gamma = other and returns null, or
-   * returns a string describing why other is not an instance of gamma.
-   * Whether null is returned, gamma is likely to be extended (although without overriding)
-   * by this function.
-   */
-  public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullPointerException("Argument term in Application::match");
-    if (!other.isApplication()) {
-      return other.toString() + " does not instantiate " + toString() + " (not an application).";
+      Term other = args.get(i).renameAndRefreshBinders(renaming);
+      if (other != args.get(i)) {
+        changed = true;
+        args.set(i, other);
+      }   
     }   
-    if (other.numberArguments() < _args.size()) {
-      return other.toString() + " does not instantiate " + toString() + " (too few arguments).";
-    }   
-    int i = other.numberArguments();
-    int j = numberArguments();
-    for (; j > 0; i--, j--) {
-      Term mysub = queryArgument(j);
-      Term hissub = other.queryArgument(i);
-      String warning = mysub.match(hissub, gamma);
-      if (warning != null) return warning;
-    }   
-    return _head.match(other.queryImmediateHeadSubterm(i), gamma);
+    if (!changed) return this;
+    return new Application(head, args);
   }
 
   /** This method verifies equality to another Term. */

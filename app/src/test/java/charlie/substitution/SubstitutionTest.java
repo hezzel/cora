@@ -274,7 +274,7 @@ public class SubstitutionTest {
   }
 
   @Test
-  public void testSubstitute() {
+  public void testCombine() {
     Variable x = TermFactory.createVar("x", type("Int"));
     Variable y = TermFactory.createVar("y", type("Int"));
     Variable z = TermFactory.createVar("z", type("Int"));
@@ -290,7 +290,7 @@ public class SubstitutionTest {
     delta.extend(y, two);                                     // δ(y) = 2
     delta.extend(z, f.apply(x).apply(one));                   // δ(z) = f(x, 1)
     delta.extend(b, a);                                       // δ(b) = a
-    gamma.substitute(delta);
+    gamma.combine(delta);
     assertTrue(gamma.domain().size() == 4);
     assertTrue(gamma.domain().contains(x));
     assertTrue(gamma.domain().contains(y));
@@ -337,7 +337,7 @@ public class SubstitutionTest {
     MutableSubstitution subst = new MutableSubstitution();
     subst.extend(x, y); 
     subst.extend(y, x); 
-    Term term = subst.apply(abs);  // now term = λu.f(u, λz.z, x)
+    Term term = subst.substitute(abs);  // now term = λu.f(u, λz.z, x)
 
     // check that we got the right term
     assertFalse(term.equals(abs));
@@ -363,9 +363,9 @@ public class SubstitutionTest {
     Term xterm = constantTerm("37", type("Int"));
     MutableSubstitution gamma = new MutableSubstitution(x, xterm);
     gamma.extend(y, x); 
-    assertTrue(gamma.apply(x).equals(xterm));
-    assertTrue(gamma.apply(y).equals(x));
-    assertTrue(gamma.apply(z).equals(z));
+    assertTrue(gamma.substitute(x).equals(xterm));
+    assertTrue(gamma.substitute(y).equals(x));
+    assertTrue(gamma.substitute(z).equals(z));
   }
 
   @Test
@@ -383,7 +383,7 @@ public class SubstitutionTest {
     gamma.extend(y, x);
     gamma.extend(z, t);
 
-    Term q = gamma.apply(s);
+    Term q = gamma.substitute(s);
     assertTrue(q.toString().equals("g(c, 37, f(x))"));
   }
 
@@ -408,7 +408,7 @@ public class SubstitutionTest {
     subst.extend(y, a);
     subst.extend(z, g.apply(List.of(a, y)));
 
-    Term s = subst.apply(term);
+    Term s = subst.substitute(term);
     assertTrue(s.toString().equals("(λx.λy1.h(y1, z))(a, f(λy1.g(y1, g(a, y))), f(λy1.g(y1, y1)))"));
   }
 
@@ -433,7 +433,7 @@ public class SubstitutionTest {
     subst.extend(y, a);
     subst.extend(z, g.apply(List.of(a, y)));
 
-    Term s = subst.apply(term);
+    Term s = subst.substitute(term);
     assertTrue(s.toString().equals("h(f(λy1.g(y1, g(a, y))), z, f(λy1.g(y1, y1)))"));
   }
 
@@ -455,7 +455,7 @@ public class SubstitutionTest {
     Term h = constantTerm("h", type("A -> A -> A"));
     Term abs1 = TermFactory.createAbstraction(z2, TermFactory.createApp(h, z2, x));
     gamma.extend(f, abs1);
-    assertTrue(gamma.apply(term).toString().equals("Z⟨λx1.a(x1, 1), λz.h(z, x)⟩"));
+    assertTrue(gamma.substitute(term).toString().equals("Z⟨λx1.a(x1, 1), λz.h(z, x)⟩"));
     // now try [x:=0, y:=1, F:=λz.h(z, x), Z := λF, G.F(G(0))]
     Variable g = TermFactory.createBinder("G", type("A -> A"));
     Term zero = constantTerm("0", type("A"));
@@ -464,7 +464,7 @@ public class SubstitutionTest {
     gamma.extend(z, abs2);
     // result of substituting: [λF, G.F(G(0))]⟨λx.a(x,1), λz.h(z, x)⟩⟩ = (λx.a(x,1))(λz.h(z, x)(0))
     // (note that it isn't normalised beyond that)
-    assertTrue(gamma.apply(term).toString().equals("(λx1.a(x1, 1))((λz.h(z, x))(0))"));
+    assertTrue(gamma.substitute(term).toString().equals("(λx1.a(x1, 1))((λz.h(z, x))(0))"));
   }
 
   @Test
@@ -477,7 +477,7 @@ public class SubstitutionTest {
     Term fa = constantTerm("f", type("N -> M")).apply(a);
     Term s = TermFactory.createTuple(a, abs, TermFactory.createTuple(fa, y));
     Substitution gamma = new MutableSubstitution(y, constantTerm("q", type("P")));
-    Term t = gamma.apply(s);
+    Term t = gamma.substitute(s);
     assertTrue(t.toString().equals("⦇a, λx.f(x), ⦇f(a), q⦈⦈"));
   }
 }

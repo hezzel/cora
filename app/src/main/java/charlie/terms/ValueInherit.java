@@ -84,18 +84,9 @@ public abstract class ValueInherit extends LeafTermInherit implements Value {
                               "meta-variable applications (or terms headed by one)");
   }
 
-  /** Returns the current value unmodified (there is nothing to substitute in a value). */
-  public Term substitute(Substitution gamma) {
+  /** Returns the value unmodified, because there are no binders in it. */
+  public Value renameAndRefreshBinders(Map<Variable,Variable> renaming) {
     return this;
-  }
-
-  /**
-   * This method checks that other is the same value. If so, null is returned, otherwise a
-   * description of the instantiation failure.
-   */
-  public String match(Term other, Substitution gamma) {
-    if (equals(other)) return null;
-    return "value " + toString() + " is not instantiated by " + other.toString() + ".";
   }
 
   /** f =_α^{μ,ξ,k} t if and only if f and t are the same value. */

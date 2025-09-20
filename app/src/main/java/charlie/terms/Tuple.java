@@ -240,35 +240,21 @@ public class Tuple extends TermInherit {
   }
 
   /**
-   * Substitutes the tuple by substituting all its components and wrapping the results in a
-   * tuple again.
+   * Refreshes all binders in the Tuple, while simultaneously renaming all binders in the
+   * given renaming to the corresponding mapped renaming.
    */
-  @Override
-  public Term substitute(Substitution gamma) {
-    return new Tuple(_components.stream().map(t -> t.substitute(gamma)).toList());
-  }
-
-  /**
-   * This method either extends gamma so that <this term> gamma = other and returns null, or
-   * returns a string describing why other is not an instance of gamma.
-   * Whether null is returned, gamma is likely to be extended (although without overriding)
-   * by this function.
-   */
-  @Override
-  public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullPointerException("Argument term in Application::match");
-    if (!other.isTuple()) {
-      return other.toString() + " does not instantiate " + toString() + " (not a tuple term).";
+  public Term renameAndRefreshBinders(Map<Variable,Variable> renaming) {
+    ArrayList<Term> parts = new ArrayList<Term>(_components);
+    boolean changed = false;
+    for (int i = 0; i < parts.size(); i++) {
+      Term other = parts.get(i).renameAndRefreshBinders(renaming);
+      if (other != parts.get(i)) {
+        changed = true;
+        parts.set(i, other);
+      }
     }
-    if (_components.size() != other.numberTupleArguments()) {
-      return other.toString() + " does not instantiate " + this.toString() + " (mismatch on the " +
-        "tuple sizes).";
-    }
-    for (int i = 0; i < _components.size(); i++) {
-      String warning = _components.get(i).match(other.queryTupleArgument(i+1), gamma);
-      if (warning != null) return warning;
-    }
-    return null;
+    if (!changed) return this;
+    return new Tuple(parts);
   }
 
   /** Determines the =_α^{μ,ξ,k} relation as described in the documentation. */

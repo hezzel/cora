@@ -25,6 +25,8 @@ import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
+import charlie.substitution.Substitution;
+import charlie.substitution.MutableSubstitution;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
 import charlie.theorytranslation.TermAnalyser;
@@ -33,8 +35,6 @@ import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 
 public final class DeductionCase extends DeductionStep {
-  // note that multiple copies of ExtraInfo may share the same substitution and renaming; this is
-  // treated as a read-only resource
   private record ExtraInfo(Substitution subst, Term constraint, Renaming renaming) {}
   private Term _term;
   private ArrayList<ExtraInfo> _cases;
@@ -85,8 +85,9 @@ public final class DeductionCase extends DeductionStep {
       return false;
     }
     Term notcaseterm = TheoryFactory.notSymbol.apply(caseterm);
-    ret.add(new ExtraInfo(TermFactory.createEmptySubstitution(), caseterm, renaming));
-    ret.add(new ExtraInfo(TermFactory.createEmptySubstitution(), notcaseterm, renaming));
+    Substitution empty = new MutableSubstitution();
+    ret.add(new ExtraInfo(empty, caseterm, renaming));
+    ret.add(new ExtraInfo(empty, notcaseterm, renaming));
     return true;
   }
 
@@ -108,7 +109,7 @@ public final class DeductionCase extends DeductionStep {
     Term greater = TermFactory.createApp(TheoryFactory.greaterSymbol, caseterm, zero);
     Term equal = TermFactory.createApp(TheoryFactory.intEqualSymbol, caseterm, zero);
     Term smaller = TermFactory.createApp(TheoryFactory.smallerSymbol, caseterm, zero);
-    Substitution empty = TermFactory.createEmptySubstitution();
+    Substitution empty = new MutableSubstitution();
     ret.add(new ExtraInfo(empty, greater, renaming));
     ret.add(new ExtraInfo(empty, equal, renaming));
     ret.add(new ExtraInfo(empty, smaller, renaming));
@@ -154,7 +155,7 @@ public final class DeductionCase extends DeductionStep {
         args.add(x);
         t = t.subtype(2);
       }
-      Substitution subst = TermFactory.createEmptySubstitution();
+      MutableSubstitution subst = new MutableSubstitution();
       subst.extend(caseterm, c.apply(args));
       ret.add(new ExtraInfo(subst, TheoryFactory.trueValue, ren));
     }
@@ -179,7 +180,7 @@ public final class DeductionCase extends DeductionStep {
       Variable x = pcontext.getVariableNamer().chooseDerivative(caseterm, ren, sub);
       parts.add(x);
     }
-    Substitution subst = TermFactory.createEmptySubstitution();
+    MutableSubstitution subst = new MutableSubstitution();
     subst.extend(caseterm, TermFactory.createTuple(parts));
     ret.add(new ExtraInfo(subst, TheoryFactory.trueValue, ren));
   }
@@ -216,11 +217,11 @@ public final class DeductionCase extends DeductionStep {
     for (ExtraInfo info : _cases) {
       Optional<Term> leftGeq = ec.getLeftGreaterTerm();
       Optional<Term> rightGeq = ec.getRightGreaterTerm();
-      if (!leftGeq.isEmpty()) leftGeq = Optional.of(leftGeq.get().substitute(info.subst()));
-      if (!rightGeq.isEmpty()) rightGeq = Optional.of(rightGeq.get().substitute(info.subst()));
-      Term lhs = ec.getEquation().getLhs().substitute(info.subst());
-      Term rhs = ec.getEquation().getRhs().substitute(info.subst());
-      Term constraint = ec.getEquation().getConstraint().substitute(info.subst());
+      if (!leftGeq.isEmpty()) leftGeq = Optional.of(info.subst().substitute(leftGeq.get()));
+      if (!rightGeq.isEmpty()) rightGeq = Optional.of(info.subst().substitute(rightGeq.get()));
+      Term lhs = info.subst().substitute(ec.getEquation().getLhs());
+      Term rhs = info.subst().substitute(ec.getEquation().getRhs());
+      Term constraint = info.subst().substitute(ec.getEquation().getConstraint());
       constraint = TheoryFactory.createConjunction(constraint, info.constraint());
       replacements.add(new EquationContext(leftGeq, new Equation(lhs, rhs, constraint),
         rightGeq, index, info.renaming()));

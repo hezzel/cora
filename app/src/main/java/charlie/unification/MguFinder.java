@@ -20,7 +20,7 @@ import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.TermFactory;
 import charlie.terms.Variable;
-import charlie.terms.Substitution;
+import charlie.substitution.MutableSubstitution;
 
 /**
  * Finds the most general unifier (MGU) of two terms.
@@ -37,8 +37,8 @@ public class MguFinder {
   /**
    * The partial result of the finder.
    */
-  private final Substitution _partialMgu =
-    TermFactory.createEmptySubstitution();
+  private final MutableSubstitution _partialMgu =
+    new MutableSubstitution();
 
   /**
    * The constructor is private and only accessible inside the class.
@@ -51,19 +51,18 @@ public class MguFinder {
    */
   private boolean eliminateVariable(Variable x, Term t) {
     if (t.vars().contains(x)) return false;
-    Substitution sub = TermFactory.createEmptySubstitution();
-    sub.extend(x, t);
+    MutableSubstitution sub = new MutableSubstitution(x, t);
     /* Update remaining equations. */
     for (var iter = _equations.listIterator();
          iter.hasNext();) {
       var equ = iter.next();
       iter.set(new Pair<>(
-        equ.fst().substitute(sub),
-        equ.snd().substitute(sub)));
+        sub.substitute(equ.fst()),
+        sub.substitute(equ.snd())));
     }
     /* Update the partial result. */
     for (var y : _partialMgu.domain()) {
-      _partialMgu.replace(y, _partialMgu.get(y).substitute(sub));
+      _partialMgu.replace(y, sub.substitute(_partialMgu.get(y)));
     }
     _partialMgu.extend(x, t);
     return true;
@@ -111,7 +110,7 @@ public class MguFinder {
    * The method for unification, publicly accessible.
    * @return an MGU of t1 and t2 if unifiable, and null otherwise.
    */
-  public static Substitution mgu(Term t1, Term t2) {
+  public static MutableSubstitution mgu(Term t1, Term t2) {
     if (!t1.isApplicative() || !t2.isApplicative()) {
       throw new IllegalArgumentException("Currently unable to unify inapplicative terms.");
     }

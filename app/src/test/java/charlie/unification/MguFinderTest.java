@@ -72,7 +72,7 @@ class MguFinderTest {
     var y = read("y", renaming, trs);
     var sub = MguFinder.mgu(x1, y);
     assertEquals(sub.domain().size(), 1);
-    assertEquals(x1.substitute(sub), y.substitute(sub));
+    assertEquals(sub.substitute(x1), sub.substitute(y));
   }
 
   @Test
@@ -105,8 +105,8 @@ class MguFinderTest {
     var x = read("x", renaming, trs);
     var y = read("y", renaming, trs);
     var a = read("a", renaming, trs);
-    assertEquals(x.substitute(sub), a);
-    assertEquals(y.substitute(sub), a);
+    assertEquals(sub.substitute(x), a);
+    assertEquals(sub.substitute(y), a);
   }
 
   @Test
@@ -131,9 +131,9 @@ class MguFinderTest {
     var b = read("b", renaming, trs);
     var y = read("y", renaming, trs);
     var fa = read("f(a)", renaming, trs);
-    assertEquals(F.substitute(sub), ga);
-    assertEquals(x.substitute(sub), b);
-    assertEquals(y.substitute(sub), fa);
+    assertEquals(sub.substitute(F), ga);
+    assertEquals(sub.substitute(x), b);
+    assertEquals(sub.substitute(y), fa);
   }
 
   @Test
@@ -147,13 +147,13 @@ class MguFinderTest {
     var fygx = read("f(y, g(x))", renaming, trs);
     var sub = MguFinder.mgu(fxz, fygx);
     assertEquals(sub.domain().size(), 2);
-    assertEquals(fxz.substitute(sub), fygx.substitute(sub));
+    assertEquals(sub.substitute(fxz), sub.substitute(fygx));
 
     var z = read("z", renaming, trs);
     var g = read("g", renaming, trs);
-    assertEquals(z.substitute(sub).queryHead(), g);
-    assertEquals(z.substitute(sub).numberArguments(), 1);
-    assertTrue(z.substitute(sub).queryArgument(1).isVariable());
+    assertEquals(sub.substitute(z).queryHead(), g);
+    assertEquals(sub.substitute(z).numberArguments(), 1);
+    assertTrue(sub.substitute(z).queryArgument(1).isVariable());
   }
 
   @Test

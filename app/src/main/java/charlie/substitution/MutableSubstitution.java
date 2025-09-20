@@ -119,9 +119,9 @@ public class MutableSubstitution implements Substitution {
    * with all mappings [y:=t] in delta where y does not yet occur in our domain.  That is, if we
    * are γ, then this results in the substitution γ δ.
    */
-  public void substitute(Substitution delta) {
+  public void combine(Substitution delta) {
     for (Replaceable x : _mapping.keySet()) {
-      _mapping.put(x, delta.apply(_mapping.get(x)));
+      _mapping.put(x, delta.substitute(_mapping.get(x)));
     }
     for (Replaceable y : delta.domain()) {
       if (!_mapping.containsKey(y)) {
@@ -141,28 +141,28 @@ public class MutableSubstitution implements Substitution {
   }
 
   /** Applies the current substitution to the given term and returns the result. */
-  public Term apply(Term term) {
+  public Term substitute(Term term) {
     if (term.isVariable()) return getReplacement(term.queryVariable());
     else if (term.isConstant()) return term;
     else if (term.isMetaApplication()) {
-      return applyToMetaApplication(term.queryMetaVariable(), term.queryMetaArguments());
+      return substituteMetaApplication(term.queryMetaVariable(), term.queryMetaArguments());
     }
     else if (term.isApplication()) {
-      return applyToApplication(term.queryHead(), term.queryArguments());
+      return substituteApplication(term.queryHead(), term.queryArguments());
     }
     else if (term.isTuple()) {
-      return applyToTuple(term.queryTupleArguments());
+      return substituteTuple(term.queryTupleArguments());
     }
     else if (term.isAbstraction()) {
-      return applyToAbstraction(term.queryVariable(), term.queryAbstractionSubterm());
+      return substituteAbstraction(term.queryVariable(), term.queryAbstractionSubterm());
     }
-    else throw new IllegalArgumentException("Substitution::apply called with a term that does " +
-      "not have any of the standard term shapes!");
+    else throw new IllegalArgumentException("Substitution::substitute called with a term that " +
+      "does not have any of the standard term shapes!");
   }
 
-  private Term applyToMetaApplication(MetaVariable z, ArrayList<Term> args) {
+  private Term substituteMetaApplication(MetaVariable z, ArrayList<Term> args) {
     // set the args to the substituted arguments
-    for (int i = 0; i < args.size(); i++) args.set(i, apply(args.get(i)));
+    for (int i = 0; i < args.size(); i++) args.set(i, substitute(args.get(i)));
     // if we're not substituting Z, then just create a new meta-application with the updated args
     Term value = _mapping.get(z);
     if (value == null) return TermFactory.createMeta(z, args);
@@ -178,25 +178,25 @@ public class MutableSubstitution implements Substitution {
       value = value.queryAbstractionSubterm();
       delta.replace(x, args.get(i));
     }   
-    return delta.apply(value);
+    return delta.substitute(value);
   }
 
-  private Term applyToApplication(Term head, ArrayList<Term> args) {
-    head = apply(head);
-    for (int i = 0; i < args.size(); i++) args.set(i, apply(args.get(i)));
+  private Term substituteApplication(Term head, ArrayList<Term> args) {
+    head = substitute(head);
+    for (int i = 0; i < args.size(); i++) args.set(i, substitute(args.get(i)));
     return head.apply(args);
   }
 
-  private Term applyToTuple(ArrayList<Term> args) {
-    for (int i = 0; i < args.size(); i++) args.set(i, apply(args.get(i)));
+  private Term substituteTuple(ArrayList<Term> args) {
+    for (int i = 0; i < args.size(); i++) args.set(i, substitute(args.get(i)));
     return TermFactory.createTuple(args);
   }
 
-  private Term applyToAbstraction(Variable binder, Term subterm) {
+  private Term substituteAbstraction(Variable binder, Term subterm) {
     Variable freshvar = TermFactory.createBinder(binder.queryName(), binder.queryType());
     Term previous = _mapping.get(binder);
     _mapping.put(binder, freshvar);
-    Term subtermSubstitute = apply(subterm);
+    Term subtermSubstitute = substitute(subterm);
     if (previous == null) _mapping.remove(binder);
     else _mapping.put(binder, previous);
     return TermFactory.createAbstraction(freshvar, subtermSubstitute);

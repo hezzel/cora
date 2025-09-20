@@ -622,18 +622,58 @@ class MetaApplicationTest extends TermTestFoundation {
 
   @Test
   public void testRefreshBinders() {
-    // Z⟨λx.x, λx.x⟩
+    // Z⟨λx.x, λx.x, y⟩
     Variable x = new Binder("x", baseType("o"));
+    Variable y = new Binder("y", baseType("b"));
+    Variable y2 = new Binder("y", baseType("b"));
     Term xx = new Abstraction(x, x);
     MetaVariable z = TermFactory.createMetaVar("Z", arrowType(arrowType("o", "o"),
-      arrowType(arrowType("o", "o"), baseType("a"))), 2);
-    Term term = TermFactory.createMeta(z, xx, xx);
-    Term t = term.refreshBinders();
-    assertTrue(t.equals(term));
+      arrowType(arrowType("o", "o"), arrowType("b", "a"))), 3);
+    Term term = TermFactory.createMeta(z, List.of(xx, xx, y));
+
+    // for now, the binders are the same
+    assertTrue(term.queryMetaArgument(1).queryVariable() ==
+               term.queryMetaArgument(2).queryVariable());
+
+    TreeMap<Variable,Variable> map = new TreeMap<Variable,Variable>();
+
+    map.put(y, y2);
+    Term t = term.renameAndRefreshBinders(map);
+    assertTrue(map.size() == 1);
+    assertTrue(map.get(y) == y2);
+    assertFalse(t.equals(term));
+    assertTrue(t.toString().equals(term.toString()));
     assertTrue(t.queryMetaVariable() == z);
+    assertTrue(t.queryMetaArgument(1).equals(term.queryMetaArgument(1)));
+    assertTrue(term.queryMetaArgument(2).equals(t.queryMetaArgument(1)));
+    assertTrue(t.queryMetaArgument(3) == y2);
     Variable x1 = t.queryMetaArgument(1).queryVariable();
     Variable x2 = t.queryMetaArgument(2).queryVariable();
     assertTrue(x1 != x2);
+    assertTrue(x1 != term.queryMetaArgument(1).queryVariable());
+    map.remove(y);
+
+    map.put(x, y2);
+    t = term.renameAndRefreshBinders(map);
+    assertTrue(map.size() == 1);
+    assertTrue(map.get(x) == y2);
+    assertTrue(t.equals(term));
+    assertTrue(t.queryMetaVariable() == z);
+    assertTrue(t.queryMetaArgument(1).equals(term.queryMetaArgument(1)));
+    assertTrue(term.queryMetaArgument(2).equals(t.queryMetaArgument(1)));
+    assertTrue(t.queryMetaArgument(3) == y);
+    x1 = t.queryMetaArgument(1).queryVariable();
+    x2 = t.queryMetaArgument(2).queryVariable();
+    assertTrue(x1 != term.queryMetaArgument(1).queryVariable());
+    assertTrue(x1 != t.queryMetaArgument(2).queryVariable());
+    assertTrue(x1 != y2);
+    map.remove(x);
+
+    map.put(x, y);
+    t = term.renameAndRefreshBinders(map);
+    assertTrue(map.size() == 1);
+    assertTrue(map.get(x) == y);
+    assertTrue(t.queryMetaArgument(1).queryVariable() != y);
   }
 
   @Test

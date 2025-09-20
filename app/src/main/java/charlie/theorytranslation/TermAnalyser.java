@@ -19,7 +19,12 @@ import java.util.Random;
 
 import charlie.types.Type;
 import charlie.types.TypeFactory;
-import charlie.terms.*;
+import charlie.terms.Term;
+import charlie.terms.Variable;
+import charlie.terms.Value;
+import charlie.terms.TheoryFactory;
+import charlie.substitution.Substitution;
+import charlie.substitution.MutableSubstitution;
 import charlie.smt.*;
 import charlie.smt.SmtSolver.Answer;
 
@@ -85,7 +90,7 @@ public class TermAnalyser {
     translator.require(t);
     return switch (solver.checkSatisfiability(translator.queryProblem())) {
       case Answer.YES(Valuation val) -> {
-          Substitution ret = TermFactory.createEmptySubstitution();
+          MutableSubstitution ret = new MutableSubstitution();
           for (Variable x : t.vars()) {
             if (x.queryType().equals(TypeFactory.boolSort)) {
               BVar bvar = translator.getBVar(x);

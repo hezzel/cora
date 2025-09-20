@@ -18,7 +18,11 @@ package cora.reduction;
 import java.util.ArrayList;
 import java.util.Map;
 import charlie.types.Type;
-import charlie.terms.*;
+import charlie.terms.Term;
+import charlie.terms.Variable;
+import charlie.substitution.Substitution;
+import charlie.substitution.MutableSubstitution;
+import charlie.substitution.Matcher;
 import charlie.trs.Rule;
 import charlie.theorytranslation.TermAnalyser;
 import cora.config.Settings;
@@ -54,12 +58,12 @@ class RuleReducer implements ReduceObject {
     int k = findHeadAdditions(t);
     if (k == -1 || n < k) return false;
     Term head = t.queryImmediateHeadSubterm(n-k);
-    Substitution subst = _rule.queryLeftSide().match(head);
+    Substitution subst = Matcher.match(_rule.queryLeftSide(), head);
     if (subst == null) return false;
     for (Variable x : _rule.queryConstraint().vars()) {
       if (subst.get(x) != null && !subst.get(x).isValue()) return false;
     }
-    Term csub = _rule.queryConstraint().substitute(subst);
+    Term csub = subst.substitute(_rule.queryConstraint());
     if (csub.isGround()) return TermAnalyser.evaluate(csub).getBool();
     else return TermAnalyser.satisfy(csub, Settings.smtSolver) instanceof TermAnalyser.Result.YES;
   }
@@ -73,14 +77,14 @@ class RuleReducer implements ReduceObject {
     int k = findHeadAdditions(t);
     if (k == -1 || n < k) return null;
     Term head = t.queryImmediateHeadSubterm(n-k);
-    Substitution subst = _rule.queryLeftSide().match(head);
+    MutableSubstitution subst = Matcher.match(_rule.queryLeftSide(), head);
     if (subst == null) return null;
 
     // check the constraint and rhs variables
     for (Variable x : _rule.queryConstraint().vars()) {
       if (subst.get(x) != null && !subst.get(x).isValue()) return null;
     }
-    Term csub = _rule.queryConstraint().substitute(subst);
+    Term csub = subst.substitute(_rule.queryConstraint());
     if (csub.isGround()) {
       if (!TermAnalyser.evaluate(csub).getBool()) return null;
     }
@@ -101,7 +105,7 @@ class RuleReducer implements ReduceObject {
 
     ArrayList<Term> args = new ArrayList<Term>();
     for (int i = n-k+1; i <= n; i++) args.add(t.queryArgument(i));
-    Term righthead = _rule.queryRightSide().substitute(subst);
+    Term righthead = subst.substitute(_rule.queryRightSide());
     return righthead.apply(args);
   }
 

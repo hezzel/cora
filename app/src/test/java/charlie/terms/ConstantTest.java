@@ -177,15 +177,13 @@ public class ConstantTest extends TermTestFoundation {
     assertTrue(f.queryRoot().equals(f));
     assertFalse(f.isFirstOrder());
     assertTrue(f.isPattern());
-    assertTrue(f.refreshBinders() == f);
-    Subst gamma = new Subst(x, new Constant("gg", combi));
+    assertTrue(f.renameAndRefreshBinders(new TreeMap<Variable,Variable>()) == f);
     assertTrue(f.freeReplaceables().size() == 0);
     assertTrue(f.boundVars().size() == 0);
     assertTrue(f.hasSubterm(f));
     Term aa = new Constant("g", a);
     assertTrue(aa.isFirstOrder());
     assertTrue(aa.isPattern());
-    assertTrue(f.refreshBinders() == f);
     String s = null;
     assertFalse(f.equals(s));
     assertFalse(f.hasSubterm(aa));
@@ -234,8 +232,6 @@ public class ConstantTest extends TermTestFoundation {
 
     assertFalse(f.equals(fa));
     assertTrue(fa.equals(g.apply(new Constant("aa", a))));
-
-    assertTrue(f.match(g) != null);
   }
 
   @Test

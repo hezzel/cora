@@ -19,7 +19,7 @@ import java.util.Optional;
 
 import charlie.util.Pair;
 import charlie.terms.replaceable.Renaming;
-import charlie.terms.Substitution;
+import charlie.substitution.Substitution;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.Hypothesis;

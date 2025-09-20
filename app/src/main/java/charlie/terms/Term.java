@@ -313,33 +313,11 @@ public interface Term {
   Term apply(Term other);
 
   /**
-   * This method replaces each variable x in the term by gamma(x) (or leaves x alone if x is not
-   * in the domain of gamma), and similarly replaces Z⟨s1,...,sk⟩ with gamma(Z) = λx1...xk.t by
-   * t[x1:=s1 gamma,...,xk:=sk gamma]; the result is returned.
-   * The original term remains unaltered.  Gamma may be *temporarily* altered to apply the
-   * substitution, but is the same at the end of the function as at the start.
-   * Note that the result of substituting is a term where all binders in lambdas are freshly
-   * generated.
-   */
-  Term substitute(Substitution gamma);
-
-  /**
-   * This method either extends gamma so that <this term> gamma = other and returns null, or
-   * returns a string describing why other is not an instance of gamma.
-   * Whether or not null is returned, gamma is likely to be extended (although without overriding)
-   * by this function.
-   */
-  String match(Term other, Substitution gamma);
-
-  /**
-   * This method returns the substitution gamma such that <this term> gamma = other, if such a
-   * substitution exists; if it does not, then null is returned instead.
-   */
-  Substitution match(Term other);
-
-  /**
    * Provides a string representation of the current term.  Here, variables and meta-variables are
    * renamed as needed to avoid distinct (meta-)variables having the same name.
+   *
+   * NOTE: this is only meant as a default, for unit testing and debugging.  For player-visible
+   * output, a suitable TermPrinters should be used.
    */
   String toString();
 
@@ -350,38 +328,30 @@ public interface Term {
   boolean equals(Term term);
 
   /**
-   * Returns whether this term and other are equal up to a renaming of the free variables.
-   *
-   * @param other term to check for equality up to renaming of free variables
-   * @return whether this term and other are equal up to a renaming of the free variables
-   * @throws NullPointerException if term is the null reference
-   */
-  boolean equalsModuloRenaming(Term other);
-
-  /* ======== the following functions are intended for internal use in the terms package ======== */
-
-  /**
-   * Replaces all the binders in lambdas by fresh variables.
-   * (This method is mostly intended for internal use in the terms package, to guarantee that all
-   * terms are well-behaved.)
-   */
-  Term refreshBinders();
-
-  /**
-   * Returns the set of all variables that occur bound in the current term, cast as Replaceables.
-   * This is efficient, as it returns a cached set.
-   * It is meant for package-intenral use only.  Use vars() or mvars() outside the package.
-   */
-  ReplaceableList boundVars();
-
-  /** Determines the =_α^{μ,ξ,k} relation as described in the documentation. */
-  boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k);
-
-  /**
    * Returns a hashcode consistent with alpha-equality, using the given mapping mu (and assuming
    * the term to be compared has a similar mapping xi for the corresponding bound variables, and
    * k = mu.size()+1).
    * Here, mu is allowed to be null, which will be treated the same as an empty map.
    */
   int hashCode(Map<Variable,Integer> mu);
+
+  /* ======== the following functions are intended for internal use in the terms package ======== */
+
+  /**
+   * Replaces all the binders in lambdas by fresh variables.  Here, Map must be mutable.
+   * (This method is mostly intended for internal use in the terms package, to guarantee that all
+   * terms are well-behaved.  If you want to rename variables in general, it is better to use a
+   * Substitution.)
+   */
+  Term renameAndRefreshBinders(Map<Variable,Variable> renaming);
+
+  /**
+   * Returns the set of all variables that occur bound in the current term, cast as Replaceables.
+   * This is efficient, as it returns a cached set.
+   * It is meant for package-internal use only.  Use vars() or mvars() outside the package.
+   */
+  ReplaceableList boundVars();
+
+  /** Determines the =_α^{μ,ξ,k} relation as described in the documentation. */
+  boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k);
 }

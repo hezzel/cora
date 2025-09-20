@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,8 +18,7 @@ package cora.reduction;
 import java.util.List;
 import charlie.terms.Term;
 import charlie.terms.Variable;
-import charlie.terms.TermFactory;
-import charlie.terms.Substitution;
+import charlie.substitution.MutableSubstitution;
 
 /** This class implements the beta rule scheme. */
 class BetaReducer implements ReduceObject {
@@ -34,9 +33,9 @@ class BetaReducer implements ReduceObject {
     Term a = head.queryAbstractionSubterm();
     Variable x = head.queryVariable();
     Term b = args.get(0);
-    Substitution gamma = TermFactory.createEmptySubstitution();
+    MutableSubstitution gamma = new MutableSubstitution();
     gamma.extend(x, b);
-    Term newhead = a.substitute(gamma);
+    Term newhead = gamma.substitute(a);
     if (args.size() == 1) return newhead;
     return newhead.apply(args.subList(1, args.size()));
   }

@@ -405,7 +405,7 @@ class AbstractionTest extends TermTestFoundation {
   public void testRefreshBinders() {
     // λx.f(x, λz.z, y)
     Variable x = new Binder("x", baseType("o"));
-    Variable y = new Var("y", baseType("o"));
+    Variable y = new Binder("y", baseType("o"));
     Variable z = new Binder("z", baseType("o"));
     Variable u = new Binder("u", baseType("o"));
     Term f = constantTerm("f", arrowType(baseType("o"), arrowType(
@@ -413,14 +413,21 @@ class AbstractionTest extends TermTestFoundation {
     Term abs = new Abstraction(x, new Application(new Application(f, x,
       new Abstraction(z, z)), y));
 
-    Term s = abs.refreshBinders();
+    TreeMap<Variable,Variable> map = new TreeMap<Variable,Variable>();
+    Term s = abs.renameAndRefreshBinders(map);
     assertTrue(s.equals(abs));
     assertEquals(s.toString(), abs.toString());
     Variable a = s.queryVariable();
     Variable b = s.queryAbstractionSubterm().queryArgument(2).queryVariable();
+    Variable c = s.queryAbstractionSubterm().queryArgument(3).queryVariable();
     assertEquals(1, a.compareTo(u));
     assertEquals(1, b.compareTo(u));
+    assertTrue(c == y);
     assertFalse(a.equals(b));
+    map.put(y, new Binder("y2", baseType("o")));
+    Term t = abs.renameAndRefreshBinders(map);
+    assertFalse(abs.equals(t));
+    assertTrue(t.toString().equals("λx.f(x, λz.z, y2)"));
   }
 
   @Test

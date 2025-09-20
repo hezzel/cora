@@ -82,7 +82,6 @@ public class BinderTest extends TermTestFoundation {
     assertFalse(s.isApplicative());
     assertFalse(s.isClosed());
     assertFalse(s.isGround());
-    assertTrue(s.refreshBinders() == s);
     assertTrue(x.isBinderVariable());
     assertTrue(x.queryIndex() != other.queryIndex());
     Variable z = new Binder("z", arrowType("o", "o"));
@@ -94,6 +93,22 @@ public class BinderTest extends TermTestFoundation {
     assertTrue(x.compareTo(x) == 0);
     assertTrue(x.compareTo(z) == -1);
     assertTrue(x.compareTo(new Var("y", baseType("o"))) == 1);
+  }
+
+  @Test
+  public void testRefreshBinders() {
+    Variable x = new Binder("x", baseType("o"));
+    Variable other = new Binder("x", baseType("o"));
+    TreeMap<Variable,Variable> map = new TreeMap<Variable,Variable>();
+    assertTrue(x.renameAndRefreshBinders(map) == x);
+    map.put(x, other);
+    assertTrue(x.renameAndRefreshBinders(map) == other);
+    map.put(x, new Binder("x", baseType("a")));
+    assertThrows(TypingException.class, () -> x.renameAndRefreshBinders(map));
+    map.put(other, x);
+    Variable y = new Var("y", baseType("o"));
+    map.put(x, y);
+    assertTrue(x.renameAndRefreshBinders(map) == y);
   }
 
   @Test

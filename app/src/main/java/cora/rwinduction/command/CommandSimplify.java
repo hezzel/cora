@@ -24,7 +24,7 @@ import charlie.util.FixedList;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
-import charlie.terms.Substitution;
+import charlie.substitution.Substitution;
 import charlie.trs.Rule;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationPosition;

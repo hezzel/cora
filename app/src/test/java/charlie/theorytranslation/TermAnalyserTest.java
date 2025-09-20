@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import charlie.types.TypeFactory;
 import charlie.terms.*;
+import charlie.substitution.Substitution;
 
 public class TermAnalyserTest {
   @Test

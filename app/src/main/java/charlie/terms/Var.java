@@ -121,38 +121,6 @@ final class Var extends LeafTermInherit implements Variable, MetaVariable {
     return this;
   }
 
-  /** @return gamma(x) if the current variable is x and x in dom(gamma), otherwise just x */
-  public Term substitute(Substitution gamma) {
-    if (gamma == null) throw new NullPointerException("Substitution in Var::substitute");
-    return gamma.getReplacement(this);
-  }
-
-  /** 
-   * This method updates gamma by adding the extension from x to the given other term, if x is not
-   * yet mapped to anything.
-   * If this works, then null is returned.
-   * If x is already mapped to the given other term, then nothing is done but null is returned.
-   * If x is mapped to a different term, then an explanation of the match failure is returned.
-   * If other or gamma is null, then a NullPointerException is thrown instead.
-   */
-  public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullPointerException("Matched term in Var::match");
-    if (gamma == null) throw new NullPointerException("Substitution in Var::match");
-
-    Term previous = gamma.get(this);
-    
-    if (previous == null) {
-      if (!other.queryType().equals(queryType())) {
-        return "Variable " + _name + " has a different type from " + other.toString() + ".";
-      }
-      gamma.extend(this, other);
-      return null;
-    }   
-    else if (previous.equals(other)) return null;
-    else return "Variable " + _name + " mapped both to " + previous.toString() + " and to " +
-      other.toString() + ".";
-  }
-
   /** Two variables are equal if and only if they are the same object. */
   public boolean equals(Variable other) {
     return other == this;
@@ -161,6 +129,11 @@ final class Var extends LeafTermInherit implements Variable, MetaVariable {
   /** We are equal to another replaceable if and only if it is the same as us. */
   public boolean equals(Replaceable other) {
     return other == this;
+  }
+
+  /** This function replaces binders, so doesn't do anything with a non-binder variable! */
+  public Var renameAndRefreshBinders(Map<Variable,Variable> renaming) {
+    return this;
   }
 
   /** Alpha-equality of a non-binder variable to another variable holds iff they are the same. */

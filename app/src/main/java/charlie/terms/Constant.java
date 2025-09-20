@@ -120,19 +120,9 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
                                             "meta-variable applications (or terms headed by one)");
   }
 
-  /** Returns the current constant unmodified (there is nothing to substitute in a constant). */
-  public Term substitute(Substitution gamma) {
+  /** There are no binders to rename in function symbol, so this returns the constant unmodified. */
+  public FunctionSymbol renameAndRefreshBinders(Map<Variable,Variable> renaming) {
     return this;
-  }
-
-  /**
-   * This method checks that other is the same constant. If so, null is returned, otherwise a
-   * description of the instantiation failure.
-   */
-  public String match(Term other, Substitution gamma) {
-    if (other == null) throw new NullPointerException("Other term in Constant::match");
-    if (equals(other)) return null;
-    return "constant " + _name + " is not instantiated by " + other.toString() + ".";
   }
 
   /** f =_α^{μ,ξ,k} t if and only if f and t are the same constant. */

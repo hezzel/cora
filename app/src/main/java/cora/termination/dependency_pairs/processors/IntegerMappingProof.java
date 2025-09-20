@@ -23,6 +23,7 @@ import java.util.Map;
 import charlie.util.Pair;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
+import charlie.substitution.MutableSubstitution;
 import cora.io.OutputModule;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.Problem;
@@ -89,12 +90,12 @@ class IntegerMappingProof extends ProcessorProofObject {
    * this returns t[x_1^f:=s1,...,x_n^f:=sn].
    */
   private Term instantiateCandidate(Term candidate, Term term) {
-    Substitution subst = TermFactory.createEmptySubstitution();
+    MutableSubstitution subst = new MutableSubstitution();
     FunctionSymbol f = term.queryRoot();
     for (int varL = 0; varL < f.queryArity(); varL ++) {
       subst.extend(_argvars.get(f).get(varL), term.queryArgument(varL + 1));
     }
-    return candidate.substitute(subst);
+    return subst.substitute(candidate);
   }
 
   /** Helper function for justify: prints which DPs are oriented (and why). */
