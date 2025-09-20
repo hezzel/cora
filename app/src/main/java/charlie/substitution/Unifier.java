@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2025 Cynthia Kop & Liye Guo
+ Copyright 2025 Cynthia Kop and Liye Guo
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,52 +13,42 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.unification;
+package charlie.substitution;
 
 import java.util.LinkedList;
 import charlie.util.Pair;
 import charlie.terms.Term;
 import charlie.terms.TermFactory;
 import charlie.terms.Variable;
-import charlie.substitution.MutableSubstitution;
 
 /**
- * Finds the most general unifier (MGU) of two terms.
- * Implements the unification algorithm in
+ * The goal of unification is to find the most general unifier of two terms.
+ * This code implements and adapts the unification algorithm for lambda-free higher-order terms in
  * Suzan Erven, "Higher Order Non-termination: Finding Loops by Unfolding in Cora".
  */
-public class MguFinder {
-  /**
-   * Each equation is a pair of terms to be unified.
-   * The linked list is used as a stack (LIFO).
-   */
-  private final LinkedList<Pair<Term, Term>> _equations =
-    new LinkedList<>();
-  /**
-   * The partial result of the finder.
-   */
-  private final MutableSubstitution _partialMgu =
-    new MutableSubstitution();
+public class Unifier {
+  /** Each equation is a pair of terms to be unified. The linked list is used as a stack (LIFO). */
+  private final LinkedList<Pair<Term, Term>> _equations;
+  /** The partial result of the finder. */
+  private final MutableSubstitution _partialMgu;
+
+  /** The constructor is private and only accessible inside the class. */
+  private Unifier() {
+    _equations = new LinkedList<>();
+    _partialMgu = new MutableSubstitution();;
+  }
 
   /**
-   * The constructor is private and only accessible inside the class.
-   */
-  private MguFinder() {}
-
-  /**
-   * Performs Variable Elimination.
+   * Performs Variable Elimination by replacing x by t in every remaining equations.
    * @return false if x occurs in t, and true otherwise.
    */
   private boolean eliminateVariable(Variable x, Term t) {
     if (t.vars().contains(x)) return false;
     MutableSubstitution sub = new MutableSubstitution(x, t);
     /* Update remaining equations. */
-    for (var iter = _equations.listIterator();
-         iter.hasNext();) {
-      var equ = iter.next();
-      iter.set(new Pair<>(
-        sub.substitute(equ.fst()),
-        sub.substitute(equ.snd())));
+    for (var iter = _equations.listIterator(); iter.hasNext(); ) {
+      Pair<Term,Term> equ = iter.next();
+      iter.set(new Pair<Term,Term>(sub.substitute(equ.fst()), sub.substitute(equ.snd())));
     }
     /* Update the partial result. */
     for (var y : _partialMgu.domain()) {
@@ -69,25 +59,25 @@ public class MguFinder {
   }
 
   /**
-   * Performs Term Reduction.
+   * Performs Term Reduction by splitting up applications on both sides and requiring that if
+   * l = a l1 ... ln and r = b r1 ... rn, then a = b, l1 = r1, ..., ln = rn by adding those
+   * equalities to _equations.  Note that this also works if a or b is an application (but not
+   * both).
    * @param l and r must be applications.
    */
   private void reduceTerm(Term l, Term r) {
     int i = l.numberArguments();
     int j = r.numberArguments();
     while (i > 0 && j > 0) {
-      _equations.push(new Pair<>(
-        l.queryArgument(i--),
-        r.queryArgument(j--)));
+      _equations.push(new Pair<Term,Term>(l.queryArgument(i--), r.queryArgument(j--)));
     }
-    _equations.push(new Pair<>(
-      l.queryImmediateHeadSubterm(i),
-      r.queryImmediateHeadSubterm(j)));
+    _equations.push(new Pair<Term,Term>(l.queryImmediateHeadSubterm(i),
+                                        r.queryImmediateHeadSubterm(j)));
   }
 
   /**
    * Performs one unification step.
-   * @return whether l and r are unifiable.
+   * @return true if we succeeded, false if l and r are definitely not unifiable.
    */
   private boolean unify(Term l, Term r) {
     if (l.isVariable() || r.isVariable()) {
@@ -114,16 +104,17 @@ public class MguFinder {
     if (!t1.isApplicative() || !t2.isApplicative()) {
       throw new IllegalArgumentException("Currently unable to unify inapplicative terms.");
     }
-    MguFinder finder = new MguFinder();
-    finder._equations.push(new Pair<>(t1, t2));
-    while (!finder._equations.isEmpty()) {
-      var equ = finder._equations.pop();
+    Unifier unifier = new Unifier();
+    unifier._equations.push(new Pair<>(t1, t2));
+    while (!unifier._equations.isEmpty()) {
+      var equ = unifier._equations.pop();
       Term l = equ.fst();
       Term r = equ.snd();
-      if (!l.queryType().equals(r.queryType()) || !finder.unify(l, r)) {
+      if (!l.queryType().equals(r.queryType()) || !unifier.unify(l, r)) {
         return null;
       }
     }
-    return finder._partialMgu;
+    return unifier._partialMgu;
   }
 }
+

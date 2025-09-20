@@ -27,7 +27,7 @@ import charlie.trs.TRS;
 import charlie.trs.TrsFactory;
 import charlie.trs.TrsProperties;
 import charlie.theorytranslation.TermAnalyser;
-import charlie.unification.MguFinder;
+import charlie.substitution.Unifier;
 import cora.config.Settings;
 
 /** Finds the critical peaks of an LCSTRS. */
@@ -56,7 +56,7 @@ public class CriticalPeaksFinder {
                                           Rule source, Rule target) {
     // Find subst so that (f l1 ... lk) subst = (f t1 ... tk) subst
     var taLhs = target.queryLeftSide();
-    var subst = MguFinder.mgu(taLhs, subterm.queryImmediateHeadSubterm(taLhs.numberArguments()));
+    var subst = Unifier.mgu(taLhs, subterm.queryImmediateHeadSubterm(taLhs.numberArguments()));
     if (subst == null) return;
 
     // We require that all constraint-variables of both source and target are instantiated by

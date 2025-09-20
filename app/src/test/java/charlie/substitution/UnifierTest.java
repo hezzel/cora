@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.unification;
+package charlie.substitution;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,7 +25,7 @@ import charlie.terms.TermFactory;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 
-class MguFinderTest {
+class UnifierTest {
   private Term read(String desc, MutableRenaming renaming, TRS trs) {
     return CoraInputReader.readTermAndUpdateNaming(desc, renaming, trs);
   }
@@ -40,10 +40,10 @@ class MguFinderTest {
     var fx = read("f(x)", renaming, trs);
     var f = read("f", renaming, trs);
     var x = read("x", renaming, trs);
-    assertNull(MguFinder.mgu(f, x));
+    assertNull(Unifier.mgu(f, x));
 
     var gy = read("G(y)", renaming, trs);
-    assertNull(MguFinder.mgu(fx, gy));
+    assertNull(Unifier.mgu(fx, gy));
   }
 
   @Test
@@ -54,7 +54,7 @@ class MguFinderTest {
 
     var fx = read("f(x)", renaming, trs);
     var x = read("x", renaming, trs);
-    assertNull(MguFinder.mgu(x, fx));
+    assertNull(Unifier.mgu(x, fx));
   }
 
   @Test
@@ -66,11 +66,11 @@ class MguFinderTest {
     read("f(x)", renaming, trs);
     var x1 = read("x", renaming, trs);
     var x2 = read("x", renaming, trs);
-    assertTrue(MguFinder.mgu(x1, x2).domain().isEmpty());
+    assertTrue(Unifier.mgu(x1, x2).domain().isEmpty());
 
     read("f(y)", renaming, trs);
     var y = read("y", renaming, trs);
-    var sub = MguFinder.mgu(x1, y);
+    var sub = Unifier.mgu(x1, y);
     assertEquals(sub.domain().size(), 1);
     assertEquals(sub.substitute(x1), sub.substitute(y));
   }
@@ -84,10 +84,10 @@ class MguFinderTest {
 
     var f1 = read("f", renaming, trs);
     var f2 = read("f", renaming, trs);
-    assertTrue(MguFinder.mgu(f1, f2).domain().isEmpty());
+    assertTrue(Unifier.mgu(f1, f2).domain().isEmpty());
 
     var g = read("g", renaming, trs);
-    assertNull(MguFinder.mgu(f1, g));
+    assertNull(Unifier.mgu(f1, g));
   }
 
   @Test
@@ -99,7 +99,7 @@ class MguFinderTest {
 
     var fxa = read("f(x, a)", renaming, trs);
     var fay = read("f(a, y)", renaming, trs);
-    var sub = MguFinder.mgu(fxa, fay);
+    var sub = Unifier.mgu(fxa, fay);
     assertEquals(sub.domain().size(), 2);
 
     var x = read("x", renaming, trs);
@@ -122,7 +122,7 @@ class MguFinderTest {
     read("h(F)", renaming, trs);
     var Fxfa = read("F(x, f(a))", renaming, trs);
     var gaby = read("g(a, b, y)", renaming, trs);
-    var sub = MguFinder.mgu(Fxfa, gaby);
+    var sub = Unifier.mgu(Fxfa, gaby);
     assertEquals(sub.domain().size(), 3);
 
     var F = read("F", renaming, trs);
@@ -145,7 +145,7 @@ class MguFinderTest {
 
     var fxz = read("f(x, z)", renaming, trs);
     var fygx = read("f(y, g(x))", renaming, trs);
-    var sub = MguFinder.mgu(fxz, fygx);
+    var sub = Unifier.mgu(fxz, fygx);
     assertEquals(sub.domain().size(), 2);
     assertEquals(sub.substitute(fxz), sub.substitute(fygx));
 
@@ -166,6 +166,6 @@ class MguFinderTest {
 
     var fxb = read("f(x, b)", renaming, trs);
     var fax = read("f(a, x)", renaming, trs);
-    assertNull(MguFinder.mgu(fxb, fax));
+    assertNull(Unifier.mgu(fxb, fax));
   }
 }
