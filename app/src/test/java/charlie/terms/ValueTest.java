@@ -16,6 +16,7 @@
 package charlie.terms;
 
 import java.util.ArrayList;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -65,7 +66,7 @@ public class ValueTest extends TermTestFoundation {
     assertTrue(v.toString().equals("-37"));
     assertTrue(b.toString().equals("true"));
     assertTrue(s.toString().equals("\"Hello\\nworld\""));
-    assertTrue(b.refreshBinders() == b);
+    assertTrue(b.renameAndRefreshBinders(new TreeMap<Variable,Variable>()) == b);
     assertTrue(v.apply(new ArrayList<Term>()) == v);
   }
 

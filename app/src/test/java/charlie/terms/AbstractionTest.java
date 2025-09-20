@@ -405,7 +405,7 @@ class AbstractionTest extends TermTestFoundation {
   public void testRefreshBinders() {
     // λx.f(x, λz.z, y)
     Variable x = new Binder("x", baseType("o"));
-    Variable y = new Var("y", baseType("o"));
+    Variable y = new Binder("y", baseType("o"));
     Variable z = new Binder("z", baseType("o"));
     Variable u = new Binder("u", baseType("o"));
     Term f = constantTerm("f", arrowType(baseType("o"), arrowType(
@@ -413,205 +413,21 @@ class AbstractionTest extends TermTestFoundation {
     Term abs = new Abstraction(x, new Application(new Application(f, x,
       new Abstraction(z, z)), y));
 
-    Term s = abs.refreshBinders();
+    TreeMap<Variable,Variable> map = new TreeMap<Variable,Variable>();
+    Term s = abs.renameAndRefreshBinders(map);
     assertTrue(s.equals(abs));
     assertEquals(s.toString(), abs.toString());
     Variable a = s.queryVariable();
     Variable b = s.queryAbstractionSubterm().queryArgument(2).queryVariable();
+    Variable c = s.queryAbstractionSubterm().queryArgument(3).queryVariable();
     assertEquals(1, a.compareTo(u));
     assertEquals(1, b.compareTo(u));
+    assertTrue(c == y);
     assertFalse(a.equals(b));
-  }
-
-  @Test
-  public void testSubstitute() {
-    // λx.f(x, λz.z, y)
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Var("y", baseType("o"));
-    Variable z = new Binder("z", baseType("o"));
-    Variable u = new Binder("u", baseType("o"));
-    Term f = constantTerm("f", arrowType(baseType("o"), arrowType(
-      arrowType("o", "o"), arrowType("o", "o"))));
-    Term abs = new Abstraction(x, new Application(new Application(f, x,
-      new Abstraction(z, z)), y));
-
-    // [x:=y, y:=x]
-    Substitution subst = new Subst();
-    subst.extend(x, y);
-    subst.extend(y, x);
-    Term term = abs.substitute(subst);  // now term = λu.f(u, λz.z, x)
-
-    // check that we got the right term
-    assertFalse(term.equals(abs));
-    assertTrue(term.equals(new Abstraction(u, new Application(
-      new Application(f, u, new Abstraction(z, z)), x))));
-    assertEquals("λx1.f(x1, λz.z, x)", term.toString());
-
-    // check that all binders are fresh
-    assertEquals(1, term.queryVariable().compareTo(u));
-    assertEquals(1, term.queryAbstractionSubterm().queryArgument(2).queryVariable().compareTo(u));
-  }
-
-  @Test
-  public void testSuccessfulMatchFreeBecomesBound() {
-    // λx.f(x, y)
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    Constant f = new Constant("f", arrowType(baseType("o"), arrowType("o", "o")));
-    Term term = new Abstraction(x, new Application(f, x, y));
-
-    // λy.f(y, g(a))
-    Term a = new Constant("a", baseType("o"));
-    Term g = new Constant("g", arrowType("o", "o"));
-    Term m = new Abstraction(y, new Application(f, y, g.apply(a)));
-
-    Substitution gamma = new Subst();
-    assertNull(term.match(m, gamma));
-    assertNull(gamma.get(x));
-    assertTrue(gamma.get(y).equals(g.apply(a)));
-  }
-
-  @Test
-  public void testSuccessfulMatchSameBinder() {
-    // λx.f(x, f(x, y))
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    Constant f = new Constant("f", arrowType(baseType("o"), arrowType("o", "o")));
-    Term term = new Abstraction(x, new Application(f, x, new Application(f, x, y)));
-
-    // λx.f(x, f(x, a))
-    Term a = new Constant("a", baseType("o"));
-    Term m = new Abstraction(x, new Application(f, x, new Application(f, x, a)));
-
-    Substitution gamma = new Subst();
-    assertTrue(term.match(m, gamma) == null);
-    assertTrue(gamma.get(x) == null);
-    assertTrue(gamma.get(y).equals(a));
-  }
-
-  @Test
-  public void testMatchSwitchVariables() {
-    // λy.λx.f(x, z(y))
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    Variable z = new Var("z", arrowType("o", "o"));
-    Constant f = new Constant("f", arrowType(baseType("o"), arrowType("o", "o")));
-    Term term = new Abstraction(y, new Abstraction(x, new Application(f, z.apply(y))));
-
-    // λx.λy.f(y, f(a, x))
-    Term a = new Constant("a", baseType("o"));
-    Term m = new Abstraction(x, new Abstraction(y, new Application(f,
-      new Application(f, a, x))));
-
-    Substitution gamma = new Subst();
-    assertTrue(term.match(m, gamma) == null);
-    assertTrue(gamma.get(x) == null);
-    assertTrue(gamma.get(y) == null);
-    assertTrue(gamma.get(z).equals(f.apply(a)));
-  }
-
-  @Test
-  public void testMatchNonAbstractionFails() {
-    // λx.f(x, y)
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    Constant f = new Constant("f", arrowType(baseType("o"), arrowType("o", "o")));
-    Term term = new Abstraction(x, new Application(f, x, y));
-
-    // Z
-    Term z = new Var("Z", arrowType("o", "o"));
-
-    Substitution gamma = new Subst();
-    assertTrue(term.match(z, gamma) != null);
-  }
-
-  @Test
-  public void testDoNotInstantiateBinder() {
-    // λx.x
-    Variable x = new Binder("x", baseType("o"));
-    Term term = new Abstraction(x, x);
-
-    // λx.y
-    Variable y = new Binder("y", baseType("o"));
-    Term m = new Abstraction(x, y);
-
-    Substitution gamma = new Subst();
-    assertTrue(term.match(m, gamma) != null);
-  }
-
-  @Test
-  public void testDoNotInstantiateWithBinder() {
-    // λx.y
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    Term term = new Abstraction(x, y);
-
-    // λx.x
-    Term m = new Abstraction(x, x);
-
-    Substitution gamma = new Subst();
-    assertTrue(term.match(m, gamma) != null);
-  }
-
-  @Test
-  public void testMatchBinderVariableMayNotOccurDeeperInRange() {
-    // λx.f(x, y)
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    Constant f = new Constant("f", arrowType(baseType("o"), arrowType("o", "o")));
-    Term term = new Abstraction(x, new Application(f, x, y));
-
-    // λz.f(z, g(z))
-    Variable z = new Binder("z", baseType("o"));
-    Constant g = new Constant("g", arrowType("o", "o"));
-    Term m = new Abstraction(z, new Application(f, z, new Application(g, z)));
-
-    Substitution gamma = new Subst();
-    assertTrue(term.match(m, gamma) != null);
-  }
-
-  @Test
-  public void testMatchWithMetaApplication() {
-    // λx.g(F⟨z,x⟩)
-    Variable x = new Binder("x", baseType("o"));
-    Variable z = new Binder("z", baseType("o"));
-    MetaVariable f =
-      TermFactory.createMetaVar("F", arrowType(baseType("o"), arrowType("o", "o")), 2);
-    Term g = constantTerm("g", arrowType("o", "o"));
-    Term term = new Abstraction(x, g.apply(TermFactory.createMeta(f, z, x)));
-
-    // λy.g(h(a(y), z))
-    Variable y = new Binder("y", baseType("o"));
-    Term a = constantTerm("a", arrowType("o", "o"));
-    Term h = constantTerm("h", arrowType(baseType("o"), arrowType("o", "o")));
-    Term m = new Abstraction(y, g.apply(new Application(h, a.apply(y), z)));
-
-    Substitution gamma = new Subst();
-    gamma.extend(z, z);
-    assertNull(term.match(m, gamma));
-    assertNull(gamma.get(x));
-    assertNull(gamma.get(y));
-    assertSame(gamma.get(z), z);
-    assertEquals("λz.λy.h(a(y), z)", gamma.get(f).toString());
-  }
-
-  @Test
-  public void testMatchWithPartialMetaApplication() {
-    // λx.λy.F[x]
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    MetaVariable f = TermFactory.createMetaVar("Z", arrowType("o", "o"), 1);
-    Term term = new Abstraction(x, new Abstraction(y, TermFactory.createMeta(f, x)));
-
-    // λx.λy.h(x, z)
-    Variable z = new Binder("z", baseType("o"));
-    Term h = constantTerm("h", arrowType(baseType("o"), arrowType("o", "o")));
-    Term m1 = new Abstraction(x, new Abstraction(y, new Application(h, x, z)));
-    // λx.λy.h(x, y)
-    Term m2 = new Abstraction(x, new Abstraction(y, new Application(h, x, y)));
-
-    assertNull(term.match(m1, new Subst()));
-    assertNotNull(term.match(m2, new Subst()));
+    map.put(y, new Binder("y2", baseType("o")));
+    Term t = abs.renameAndRefreshBinders(map);
+    assertFalse(abs.equals(t));
+    assertTrue(t.toString().equals("λx.f(x, λz.z, y2)"));
   }
 
   @Test

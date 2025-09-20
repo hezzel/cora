@@ -28,6 +28,7 @@ import charlie.util.FixedList;
 import charlie.types.Type;
 import charlie.terms.replaceable.*;
 import charlie.terms.*;
+import charlie.substitution.MutableSubstitution;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import charlie.smt.Valuation;
@@ -289,7 +290,7 @@ class DeductionDisproveTest {
     PartialProof pp = setupProof("A(x, C(y))", "B(x, 5) + C(z)", "x + y + z = 0");
     Term left = pp.getProofState().getTopEquation().getEquation().getLhs();
     Term right = pp.getProofState().getTopEquation().getEquation().getRhs();
-    ArrayList<Substitution> arr = new ArrayList<Substitution>();
+    ArrayList<MutableSubstitution> arr = new ArrayList<MutableSubstitution>();
     Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
@@ -322,7 +323,7 @@ class DeductionDisproveTest {
     PartialProof pp = setupProof("A(x, D(y, true))", "B(x, 5) + C(z)", "x + y + z = 0");
     Term left = pp.getProofState().getTopEquation().getEquation().getLhs();
     Term right = pp.getProofState().getTopEquation().getEquation().getRhs();
-    ArrayList<Substitution> arr = new ArrayList<Substitution>();
+    ArrayList<MutableSubstitution> arr = new ArrayList<MutableSubstitution>();
     Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);

@@ -26,6 +26,7 @@ import charlie.terms.position.Position;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
+import charlie.substitution.MutableSubstitution;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import charlie.smt.Truth;
@@ -85,7 +86,7 @@ class DeductionSimplifyTest {
     Settings.smtSolver = solver;
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2", pos,
-                                                 TermFactory.createEmptySubstitution());
+                                                 new MutableSubstitution());
     assertTrue(step.commandDescription().equals("simplify O2 L1 with [x := z]"));
     step.explain(module);
     assertTrue(module.toString().equals("We apply SIMPLIFICATION to E1 with rule O2 and " +
@@ -97,7 +98,7 @@ class DeductionSimplifyTest {
   public void testStepImmutable() {
     PartialProof pp = setupProof("sum1(z) = iter(z, 0, 0) | z >= 0");
     OutputModule module = OutputModule.createUnitTestModule();
-    Substitution empty = TermFactory.createEmptySubstitution();
+    MutableSubstitution empty = new MutableSubstitution();
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O4",
                                                           EquationPosition.TOPRIGHT, empty);
     empty.extend(TermFactory.createVar("u", CoraInputReader.readType("Int")),
@@ -114,7 +115,7 @@ class DeductionSimplifyTest {
     OutputModule module = OutputModule.createUnitTestModule();
     MySmtSolver solver = new MySmtSolver(true);
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O3",
-                       EquationPosition.TOPRIGHT, TermFactory.createEmptySubstitution());
+                       EquationPosition.TOPRIGHT, new MutableSubstitution());
     assertTrue(step.verify(Optional.of(module)));
     assertTrue(step.execute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
@@ -132,7 +133,7 @@ class DeductionSimplifyTest {
     Settings.smtSolver = solver;
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2", pos,
-                                                 TermFactory.createEmptySubstitution());
+                                                 new MutableSubstitution());
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E2: (• , z + sum1(z - 1) + 0 ≈ iter(z, 0, 0) | z > 0 , •)"));
@@ -146,7 +147,7 @@ class DeductionSimplifyTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Settings.smtSolver = new MySimpleSolver();
 
-    Substitution subst = TermFactory.createEmptySubstitution();
+    MutableSubstitution subst = new MutableSubstitution();
     Replaceable x = pp.getContext().getRenaming("O6").getReplaceable("x");
     Replaceable y = pp.getContext().getRenaming("O6").getReplaceable("y");
     subst.extend(x, TheoryFactory.createValue(-1));
@@ -169,7 +170,7 @@ class DeductionSimplifyTest {
     Renaming rulenaming = pp.getContext().getRenaming("O6");
     Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
 
-    Substitution subst = TermFactory.createEmptySubstitution();
+    MutableSubstitution subst = new MutableSubstitution();
     Replaceable x = rulenaming.getReplaceable("x");
     Replaceable y = rulenaming.getReplaceable("y");
     subst.extend(x, (Variable)eqnaming.getReplaceable("z"));
@@ -189,9 +190,9 @@ class DeductionSimplifyTest {
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
     assertTrue(DeductionSimplify.createStep(pp, Optional.of(module), "O3", EquationPosition.TOPLEFT,
-                                            TermFactory.createEmptySubstitution()) == null);
+                                            new MutableSubstitution()) == null);
     assertTrue(module.toString().equals(
-      "The rule does not apply due to failed matching (matching debug info says constant sum2 " +
+      "The rule does not apply due to failed matching (matching debug info says: Constant sum2 " +
       "is not instantiated by sum1.)\n\n"));
   }
 
@@ -202,7 +203,7 @@ class DeductionSimplifyTest {
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1.2"));
-    Substitution empty = TermFactory.createEmptySubstitution();
+    MutableSubstitution empty = new MutableSubstitution();
     assertTrue(DeductionSimplify.createStep(pp, Optional.of(module), "O3", pos, empty) == null);
     assertTrue(module.toString().equals("No such position: L1.2.\n\n"));
   }
@@ -214,7 +215,7 @@ class DeductionSimplifyTest {
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O6",
-                  EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution());
+                  EquationPosition.TOPLEFT, new MutableSubstitution());
     assertFalse(step.verify(Optional.of(module)));
     assertTrue(module.toString().equals(
       "Not enough information given: " +
@@ -230,7 +231,7 @@ class DeductionSimplifyTest {
     MySmtSolver solver = new MySmtSolver(true);
     Settings.smtSolver = solver;
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2",
-                  EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution());
+                  EquationPosition.TOPLEFT, new MutableSubstitution());
     assertFalse(step.verify(Optional.of(module)));
     assertTrue(module.toString().equals("The rule does not apply: " +
       "constraint variable x is instantiated by z + 1, which is not a value, " +
@@ -248,7 +249,7 @@ class DeductionSimplifyTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Settings.smtSolver = new MySimpleSolver();
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2",
-      EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution());
+      EquationPosition.TOPLEFT, new MutableSubstitution());
     assertFalse(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(module.toString().equals(
       "The rule does not apply: I could not prove that z ≥ 0 ⊨ z > 0.\n\n"));
@@ -262,7 +263,7 @@ class DeductionSimplifyTest {
     MySmtSolver solver = new MySmtSolver(false);
     Settings.smtSolver = solver;
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O7",
-      EquationPosition.TOPRIGHT, TermFactory.createEmptySubstitution());
+      EquationPosition.TOPRIGHT, new MutableSubstitution());
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     EquationContext ec = pp.getProofState().getTopEquation();
     assertTrue(ec.toString().equals("E2: (• , 0 ≈ 0 | x < 0 , •)"));

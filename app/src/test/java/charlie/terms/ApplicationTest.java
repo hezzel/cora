@@ -761,53 +761,6 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testApplicativeSubstituting() {
-    Variable x = new Binder("x", baseType("Int"));
-    Variable y = new Var("y", baseType("Int"));
-    Variable z = new Var("Z", arrowType(baseType("Int"), arrowType("Bool", "Int")));
-    Term s = new Application(z, x, unaryTerm("f", baseType("Bool"), y));
-      // Z(x, f(y))
-
-    Term thirtyseven = constantTerm("37", baseType("Int"));
-    FunctionSymbol g = new Constant("g", arrowType(baseType("o"),
-                                         arrowType(baseType("Int"), arrowType("Bool", "Int"))));
-    Term t = new Application(g, constantTerm("c", baseType("o")));
-
-    Substitution gamma = new Subst(x, thirtyseven);
-    gamma.extend(y, x);
-    gamma.extend(z, t);
-
-    Term q = s.substitute(gamma);
-    assertTrue(q.toString().equals("g(c, 37, f(x))"));
-  }
-
-  @Test
-  public void testLambdaSubstituting() {
-    // X(a, f(λy.g(y, z)), f(λy.g(y, y)))
-    Term g = constantTerm("g", arrowType(baseType("o"), arrowType("o", "o")));
-    Term f = constantTerm("f", arrowType(arrowType("o", "o"), baseType("o")));
-    Term a = constantTerm("a", baseType("o"));
-    Variable x = new Binder("X", arrowType(baseType("o"), arrowType(baseType("o"),
-      arrowType("o", "o"))));
-    Variable y = new Binder("y", baseType("o"));
-    Variable z = new Binder("z", baseType("o"));
-    Term term = new Application(new Application(x, a),
-      new Application(f, new Abstraction(y, new Application(g, y, z))),
-      new Application(f, new Abstraction(y, new Application(g, y, y))));
-    // [X := λxy.h(y, z), y := a, z := g(a, y)]
-    Term h = constantTerm("h", arrowType(baseType("o"), arrowType(baseType("o"),
-      arrowType("o", "o"))));
-    Variable x1 = new Binder("x", baseType("o"));
-    Subst subst = new Subst();
-    subst.extend(x, new Abstraction(x1, new Abstraction(y, new Application(h, y, z))));
-    subst.extend(y, a);
-    subst.extend(z, new Application(g, a, y));
-
-    Term s = term.substitute(subst);
-    assertTrue(s.toString().equals("(λx.λy1.h(y1, z))(a, f(λy1.g(y1, g(a, y))), f(λy1.g(y1, y1)))"));
-  }
-
-  @Test
   public void testRefreshBinders() {
     // (λxy.f(x,y))(g(λz.z), g(λz.z))
     Variable x = new Binder("x", baseType("o"));
@@ -819,7 +772,9 @@ public class ApplicationTest extends TermTestFoundation {
     Term abs = new Abstraction(x, new Abstraction(y, new Application(f, x, y)));
     Term term = new Application(abs, new Application(g, zz), new Application(g, zz));
 
-    Term t = term.refreshBinders();
+    TreeMap<Variable,Variable> map = new TreeMap<Variable,Variable>();
+    map.put(y, new Var("y", baseType("o")));
+    Term t = term.renameAndRefreshBinders(map);
     assertTrue(t.equals(term));
     Variable a = t.queryVariable();
     Variable b = t.queryHead().queryAbstractionSubterm().queryVariable();
@@ -868,111 +823,6 @@ public class ApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testNullMatch() {
-    Term t = twoArgFuncTerm();
-    Substitution subst = new Subst();
-    assertThrows(NullPointerException.class, () -> t.match(null, subst));
-  }
-
-  @Test
-  public void testFirstOrderMatching() {
-    Type ii = baseType("Int");
-    Variable x = new Var("x", ii);
-    Variable y = new Var("y", ii);
-    Variable z = new Binder("z", ii);
-    Type ty = arrowType(ii, arrowType(ii, ii));
-    FunctionSymbol plus = new Constant("plus", ty);
-    FunctionSymbol f = new Constant("f", ty);
-
-    Term pattern1 = new Application(f, x, new Application(plus, y, z));
-    Term pattern2 = new Application(f, x, new Application(plus, y, x));
-    Term pattern3 = new Application(f, x, new Application(plus, y, y));
-    Term pattern4 = new Application(plus, x, new Application(f, y, z));
-
-    Term a = new Application(f, constantTerm("37", ii), z);
-    Term combi = new Application(f, a, new Application(plus, y, a));
-
-    Substitution subst1 = new Subst();
-    Substitution subst2 = new Subst();
-    Substitution subst3 = new Subst();
-    Substitution subst4 = new Subst();
-
-    assertTrue(pattern1.match(combi, subst1) == null);
-    assertTrue(pattern2.match(combi, subst2) == null);
-    assertTrue(pattern3.match(combi, subst3) != null);
-    assertTrue(pattern4.match(combi, subst4) != null);
-
-    assertTrue(subst1.domain().size() == 3);
-    assertTrue(subst1.get(x).equals(a));
-    assertTrue(subst1.get(y).equals(y));
-    assertTrue(subst1.get(z).equals(a));
-
-    assertTrue(subst2.domain().size() == 2);
-    assertTrue(subst2.get(x).equals(a));
-    assertTrue(subst2.get(y).equals(y));
-  }
-
-  @Test
-  public void testBasicVarTermMatching() {
-    Variable x = new Binder("x", baseType("Int"));
-    Variable z = new Binder("Z", arrowType(baseType("Int"), arrowType("Int", "Int")));
-    Term three = constantTerm("3", baseType("Int"));
-    Term four = constantTerm("4", baseType("Int"));
-    Type intintint = arrowType(baseType("Int"), arrowType("Int", "Int"));
-    FunctionSymbol g = new Constant("g", intintint);
-    FunctionSymbol h = new Constant("h", arrowType(baseType("Int"), intintint));
-    Term pattern = new Application(z, three, x);
-    Term fx = unaryTerm("f", baseType("Int"), x);
-    List<Term> args = new ArrayList<Term>();
-    args.add(fx);
-    args.add(three);
-    args.add(fx);
-    Term s = new Application(h, args);
-    Term t = new Application(g, four, three);
-
-    // Z(3, x) is asked to match with h(f(x), 3, f(x))
-    // This should map Z to h(f(x)) and x to f(x)
-    Substitution gamma = pattern.match(s);
-    Substitution delta = pattern.match(t);
-
-    assertTrue(gamma != null);
-    assertTrue(delta == null);
-
-    assertTrue(gamma.get(x).equals(fx));
-    assertTrue(gamma.get(z).equals(new Application(h, fx)));
-    assertTrue(gamma.domain().size() == 2);
-  }
-
-  @Test
-  public void testNonLinearMatching() {
-    Variable x = new Binder("x", arrowType("o", "o"));
-    Term a = constantTerm("a", baseType("o"));
-    Term b = constantTerm("b", baseType("o"));
-    Type ooo = arrowType(baseType("o"), arrowType("o", "o"));
-    FunctionSymbol f = new Constant("f", ooo);
-    FunctionSymbol g = new Constant("g", arrowType("o", "o"));
-    FunctionSymbol h = new Constant("h", ooo);
-    Term pattern = new Application(f, new Application(x, a), new Application(x, b));
-      // f(x(a), x(b))
-
-    Term s = new Application(f, new Application(g, a), new Application(g, b));
-    Term t = new Application(f, new Application(h, a, a), new Application(h, a, b));
-    Term q = new Application(f, new Application(h, a, a), new Application(h, b, b));
-    Term u = new Application(f, a, b);
-
-    Substitution gamma = pattern.match(s);
-    assertTrue(gamma != null);
-    assertTrue(gamma.get(x).equals(g));
-
-    Substitution delta = pattern.match(t);
-    assertTrue(delta != null);
-    assertTrue(delta.get(x).equals(new Application(h, a)));
-
-    assertTrue(pattern.match(q) == null);
-    assertTrue(pattern.match(u) == null);
-  }
-
-  @Test
   public void testVarTermEquality() {
     Variable x = new Binder("x", baseType("o"));
     Variable y = new Var("y", arrowType(baseType("o"), arrowType("o", "o")));
@@ -999,34 +849,6 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(s5.hashCode(mu) != s6.hashCode(mu));
     mu.put(x2, 3);
     assertTrue(s5.hashCode(mu) == s6.hashCode(mu));
-  }
-
-  @Test
-  public void testOnlySemiPattern() {
-    // F⟨x⟩(a, Y) matched against both h(g(x), a, b) and h(g(x), b, a)
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Var("Y", baseType("o"));
-    Term a = constantTerm("a", baseType("o"));
-    Term b = constantTerm("b", baseType("o"));
-    Term g = constantTerm("g", arrowType("o", "o"));
-    Type oooo = arrowType(baseType("o"), arrowType(baseType("o"), arrowType("o", "o")));
-    Term h = constantTerm("h", oooo);
-    MetaVariable f = TermFactory.createMetaVar("F", oooo, 1); 
-    Term term = new Application(TermFactory.createMeta(f, x), a, y); 
-
-    Term m1 = new Application(h.apply(g.apply(x)), a, b); 
-    Term m2 = new Application(h.apply(g.apply(x)), b, a); 
-
-    Substitution subst = new Subst();
-    subst.extend(x, x); 
-    assertTrue(term.match(m1, subst) == null);
-    assertTrue(subst.get(x) == x); 
-    assertTrue(subst.get(y) == b); 
-    assertTrue(subst.get(f).equals(new Abstraction(x, h.apply(g.apply(x)))));
-
-    subst = new Subst();
-    subst.extend(x, x); 
-    assertTrue(term.match(m2, subst) != null);
   }
 
   @Test

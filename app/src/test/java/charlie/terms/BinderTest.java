@@ -50,25 +50,6 @@ public class BinderTest extends TermTestFoundation {
   }
 
   @Test
-  public void testNullSubstitution() {
-    Term t = new Binder("x", baseType("Int"));
-    assertThrows(NullPointerException.class, () -> t.substitute(null));
-  }
-
-  @Test
-  public void testNullMatch1() {
-    Term t = new Binder("x", baseType("Int"));
-    assertThrows(NullPointerException.class, () -> t.match(constantTerm("37", baseType("Int")), null));
-  }
-
-  @Test
-  public void testNullMatch2() {
-    Term t = new Binder("x", baseType("Int"));
-    Substitution subst = new Subst();
-    assertThrows(NullPointerException.class, () -> t.match(null, subst));
-  }
-
-  @Test
   public void testBaseVariableApplication() {
     Term t = new Binder("x", baseType("Int"));
     assertThrows(TypingException.class, () -> t.apply(t));
@@ -101,7 +82,6 @@ public class BinderTest extends TermTestFoundation {
     assertFalse(s.isApplicative());
     assertFalse(s.isClosed());
     assertFalse(s.isGround());
-    assertTrue(s.refreshBinders() == s);
     assertTrue(x.isBinderVariable());
     assertTrue(x.queryIndex() != other.queryIndex());
     Variable z = new Binder("z", arrowType("o", "o"));
@@ -113,6 +93,22 @@ public class BinderTest extends TermTestFoundation {
     assertTrue(x.compareTo(x) == 0);
     assertTrue(x.compareTo(z) == -1);
     assertTrue(x.compareTo(new Var("y", baseType("o"))) == 1);
+  }
+
+  @Test
+  public void testRefreshBinders() {
+    Variable x = new Binder("x", baseType("o"));
+    Variable other = new Binder("x", baseType("o"));
+    TreeMap<Variable,Variable> map = new TreeMap<Variable,Variable>();
+    assertTrue(x.renameAndRefreshBinders(map) == x);
+    map.put(x, other);
+    assertTrue(x.renameAndRefreshBinders(map) == other);
+    map.put(x, new Binder("x", baseType("a")));
+    assertThrows(TypingException.class, () -> x.renameAndRefreshBinders(map));
+    map.put(other, x);
+    Variable y = new Var("y", baseType("o"));
+    map.put(x, y);
+    assertTrue(x.renameAndRefreshBinders(map) == y);
   }
 
   @Test
@@ -277,68 +273,6 @@ public class BinderTest extends TermTestFoundation {
     Term s = new Binder("x", baseType("o"));
     Position p = new FinalPos(3);
     assertThrows(InvalidPositionException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
-  }
-
-  @Test
-  public void testSubstituting() {
-    Variable x = new Binder("x", baseType("Int"));
-    Variable y = new Binder("y", baseType("Int"));
-    Variable z = new Binder("z", baseType("Bool"));
-    Term xterm = constantTerm("37", baseType("Int"));
-    Substitution gamma = new Subst(x, xterm);
-    gamma.extend(y, x); 
-    assertTrue(x.substitute(gamma).equals(xterm));
-    assertTrue(y.substitute(gamma).equals(x));
-    assertTrue(z.substitute(gamma).equals(z));
-  }
-
-  @Test
-  public void testMatchingNoMappingBinder() {
-    Variable x = new Binder("x", baseType("a"));
-    Term t = twoArgVarTerm();
-    Subst gamma = new Subst();
-    assertTrue(x.match(t, gamma) == null);
-    assertTrue(gamma.get(x).equals(t));
-    assertTrue(gamma.domain().size() == 1);
-  }
-
-  @Test
-  public void testMatchingNoMappingNonBinder() {
-    Variable x = new Binder("x", baseType("a"));
-    Term t = twoArgVarTerm();
-    Subst gamma = new Subst();
-    assertTrue(x.match(t, gamma) == null);
-    assertTrue(gamma.get(x).equals(t));
-    assertTrue(gamma.domain().size() == 1);
-  }
-
-  @Test
-  public void testMatchingExistingMapping() {
-    Variable x = new Binder("x", baseType("a"));
-    Term t = twoArgVarTerm();
-    Subst gamma = new Subst(x, t);
-    assertTrue(x.match(t, gamma) == null);
-    assertTrue(gamma.get(x).equals(t));
-    assertTrue(gamma.domain().size() == 1);
-  }
-
-  @Test
-  public void testMatchingConflictingMapping() {
-    Variable x = new Binder("x", baseType("a"));
-    Term t = twoArgVarTerm();
-    Term q = new Binder("y", baseType("a"));
-    Subst gamma = new Subst(x, q);
-    assertTrue(x.match(t, gamma) != null);
-    assertTrue(gamma.get(x).equals(q));
-    assertTrue(gamma.domain().size() == 1);
-  }
-
-  @Test
-  public void testMatchingBadType() {
-    Variable x = new Binder("x", baseType("a"));
-    Term t = constantTerm("u", baseType("b"));
-    Subst gamma = new Subst();
-    assertTrue(x.match(t, gamma) != null);
   }
 }
 

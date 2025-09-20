@@ -224,48 +224,6 @@ class TupleTest extends TermTestFoundation {
   }
 
   @Test
-  public void testSubstitution() {
-    Term s = exampleTuple();
-    Variable y = s.queryTupleArgument(3).queryTupleArgument(2).queryVariable();
-    Substitution gamma = new Subst(y, constantTerm("q", baseType("P")));
-    Term t = s.substitute(gamma);
-    assertTrue(s.toString().equals("⦇a, λx.f(x), ⦇f(a), y⦈⦈"));
-    assertTrue(t.toString().equals("⦇a, λx.f(x), ⦇f(a), q⦈⦈"));
-  }
-
-  @Test
-  public void testMatch() {
-    Variable x = new Var("X", baseType("A"));
-    Variable y = new Var("Y", baseType("A"));
-    Term tuple = new Tuple(x, y, x);
-
-    Term a = constantTerm("a", baseType("A"));
-    Term b = constantTerm("b", baseType("A"));
-    Term c = constantTerm("c", baseType("A"));
-    Substitution gamma;
-    Term m;
-
-    gamma = new Subst();
-    assertTrue(tuple.match(a, gamma).equals(
-      "a does not instantiate ⦇X, Y, X⦈ (not a tuple term)."));
-
-    m = new Tuple(a, new Tuple(b, a));
-    gamma = new Subst();
-    assertTrue(tuple.match(m, gamma).equals(
-      "⦇a, ⦇b, a⦈⦈ does not instantiate ⦇X, Y, X⦈ (mismatch on the tuple sizes)."));
-
-    m = new Tuple(a, b, c);
-    gamma = new Subst();
-    assertTrue(tuple.match(m, gamma).equals("Variable X mapped both to a and to c."));
-
-    m = new Tuple(a, b, a);
-    gamma = new Subst();
-    assertTrue(tuple.match(m, gamma) == null);
-    assertTrue(gamma.get(x) == a);
-    assertTrue(gamma.get(y) == b);
-  }
-
-  @Test
   public void testEquality() throws PositionFormatException {
     Term a = exampleTuple();
     Term b = exampleTuple();

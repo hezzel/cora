@@ -24,7 +24,7 @@ import java.util.Optional;
 import charlie.util.FixedList;
 import charlie.terms.Term;
 import charlie.terms.TermPrinter;
-import charlie.terms.TermFactory;
+import charlie.substitution.MutableSubstitution;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -131,10 +131,10 @@ class DeductionContextTest {
     Optional<OutputModule> o = Optional.of(module);
     Settings.setStrategy(Settings.Strategy.Full);
     DeductionSimplify simpl = DeductionSimplify.createStep(pp, o, "O8",
-      EquationPosition.TOPLEFT, TermFactory.createEmptySubstitution());
+      EquationPosition.TOPLEFT, new MutableSubstitution());
     assertTrue(simpl.verifyAndExecute(pp, o));
     simpl = DeductionSimplify.createStep(pp, o, "O8",
-      EquationPosition.TOPRIGHT, TermFactory.createEmptySubstitution());
+      EquationPosition.TOPRIGHT, new MutableSubstitution());
     assertTrue(simpl.verifyAndExecute(pp, o));
     assertTrue(DeductionContext.createStep(pp, o, true) == null);
     assertTrue(module.toString().equals("The semiconstructor rule can only be applied if both " +
