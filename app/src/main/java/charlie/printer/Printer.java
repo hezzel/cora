@@ -30,7 +30,10 @@ import charlie.terms.position.PositionPrinter;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
-import charlie.terms.*;
+import charlie.terms.Term;
+import charlie.terms.TermPrinter;
+import charlie.terms.TermFactory;
+import charlie.substitution.Substitution;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 

@@ -18,15 +18,16 @@ package cora.confluence;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import charlie.terms.*;
 import charlie.terms.position.Position;
 import charlie.terms.position.FinalPos;
+import charlie.terms.*;
+import charlie.substitution.MutableSubstitution;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.trs.TrsFactory;
 import charlie.trs.TrsProperties;
 import charlie.theorytranslation.TermAnalyser;
-import charlie.unification.MguFinder;
+import charlie.substitution.Unifier;
 import cora.config.Settings;
 
 /** Finds the critical peaks of an LCSTRS. */
@@ -55,7 +56,7 @@ public class CriticalPeaksFinder {
                                           Rule source, Rule target) {
     // Find subst so that (f l1 ... lk) subst = (f t1 ... tk) subst
     var taLhs = target.queryLeftSide();
-    var subst = MguFinder.mgu(taLhs, subterm.queryImmediateHeadSubterm(taLhs.numberArguments()));
+    var subst = Unifier.mgu(taLhs, subterm.queryImmediateHeadSubterm(taLhs.numberArguments()));
     if (subst == null) return;
 
     // We require that all constraint-variables of both source and target are instantiated by
@@ -72,19 +73,19 @@ public class CriticalPeaksFinder {
 
     // the combined constraint must be satisfiable for this to give a critical pair
     var con = TheoryFactory.createConjunction(
-      target.queryConstraint().substitute(subst),
-      source.queryConstraint().substitute(subst));
+      subst.substitute(target.queryConstraint()),
+      subst.substitute(source.queryConstraint()));
     var result = TermAnalyser.satisfy(con, Settings.smtSolver);
     if (result instanceof TermAnalyser.Result.NO) return;
 
     // all requirements are satisfied; compute the critical pair
     var lhs = source.queryLeftSide().replaceSubterm(
       position.append(new FinalPos(subterm.numberArguments() - taLhs.numberArguments())),
-      target.queryRightSide()).substitute(subst);
-    var rhs = source.queryRightSide().substitute(subst);
+      subst.substitute(target.queryRightSide()));
+    var rhs = subst.substitute(source.queryRightSide());
     if (_nontrivial && lhs.equals(rhs)) return;
 
-    var top = source.queryLeftSide().substitute(subst);
+    var top = subst.substitute(source.queryLeftSide());
     _cps.add(new CriticalPeak(top, lhs, rhs, con));
   }
 
@@ -157,14 +158,14 @@ public class CriticalPeaksFinder {
    * variables, not meta-variables.)
    */
   private static Rule renameRule(Rule rule) {
-    var subst = TermFactory.createEmptySubstitution();
+    MutableSubstitution subst = new MutableSubstitution();
     for (var x : rule.queryAllReplaceables()) {
       subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }
     return TrsFactory.createRule(
-      rule.queryLeftSide().substitute(subst),
-      rule.queryRightSide().substitute(subst),
-      rule.queryConstraint().substitute(subst));
+      subst.substitute(rule.queryLeftSide()),
+      subst.substitute(rule.queryRightSide()),
+      subst.substitute(rule.queryConstraint()));
   }
 
   /**

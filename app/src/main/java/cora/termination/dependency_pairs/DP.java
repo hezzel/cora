@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -19,6 +19,7 @@ import charlie.types.TypePrinter;
 import charlie.terms.position.PositionPrinter;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
+import charlie.substitution.MutableSubstitution;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
 import charlie.printer.PrinterFactory;
@@ -97,13 +98,13 @@ public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars)
    * @return a DP that is structurally equivalent to the present one but uses fresh variables
    */
   public DP getRenamed() {
-    Substitution subst = TermFactory.createEmptySubstitution();
+    MutableSubstitution subst = new MutableSubstitution();
     for (Variable x : getAllVariables()) {
       subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }
-    Term newLhs = this.lhs.substitute(subst);
-    Term newRhs = this.rhs.substitute(subst);
-    Term newConstraint = this.constraint.substitute(subst);
+    Term newLhs = subst.substitute(this.lhs);
+    Term newRhs = subst.substitute(this.rhs);
+    Term newConstraint = subst.substitute(this.constraint);
     Set<Variable> newTheoryVars = new LinkedHashSet<>();
     for (Variable x : this.lvars) {
       Term y = subst.get(x);

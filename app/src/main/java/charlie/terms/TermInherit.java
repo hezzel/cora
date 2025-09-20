@@ -104,7 +104,7 @@ abstract class TermInherit implements Term {
       ReplaceableList vs = sub.boundVars();
       if (vs.size() > 0) {
         if (!vs.getOverlap(avoid).isEmpty()) {
-          sub = sub.refreshBinders();
+          sub = sub.renameAndRefreshBinders(new TreeMap<Variable,Variable>());
           vs = sub.boundVars();
         }
         if (include.size() == 0) include = vs;
@@ -176,16 +176,6 @@ abstract class TermInherit implements Term {
       if (x.queryReplaceableKind() == Replaceable.Kind.METAVAR) return false;
     }
     return true;
-  }
-
-  /**
-   * This creates a fresh substitution for matching and calls match(other, subst) with it.  Note
-   * that this retuns null if and only if match(other,subst) does NOT return null.
-   */
-  public final Substitution match(Term other) {
-    Substitution gamma = new Subst();
-    if (match(other, gamma) == null) return gamma;
-    return null;
   }
 
   /** Helper function to return the current classname for use in Exceptions. */
@@ -279,11 +269,6 @@ abstract class TermInherit implements Term {
     return null;
   }
 
-  /** Returns the present term with all binder-variables replaced by fresh ones. */
-  public final Term refreshBinders() {
-    return substitute(new Subst());
-  }
-
   /** Applies the current term (with functional type) to other. */
   public final Term apply(Term other) {
     ArrayList<Term> args = new ArrayList<Term>();
@@ -306,16 +291,6 @@ abstract class TermInherit implements Term {
     TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
     TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
     return alphaEquals(other, mu, xi, 1);
-  }
-
-  /**
-   * Returns whether this term and other are equal up to a renaming of the free variables.
-   * <p>
-   * Implementation note: default implementation checks whether the terms mutually match.
-   * More efficient solutions are conceivable.
-   */
-  public final boolean equalsModuloRenaming(Term other) {
-    return null != this.match(other) && null != other.match(this);
   }
 
   /** This method verifies equality to another Java object. */

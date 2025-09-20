@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 
 import charlie.types.*;
 import charlie.terms.*;
+import charlie.substitution.MutableSubstitution;
 import charlie.smt.*;
 import charlie.trs.TrsProperties.*;
 import charlie.theorytranslation.TermSmtTranslator;
@@ -101,7 +102,7 @@ public class IntegerMappingProcessor implements Processor {
       Term root = lhs.queryRoot();
       // let subst be the substitution such that, if left = f l1 ... ln and li is a variable of
       // theory sort, then subst[li] = x_i^f
-      Substitution subst = TermFactory.createEmptySubstitution();
+      MutableSubstitution subst = new MutableSubstitution();
       for (int i = 1; i <= lhs.numberArguments(); i++) {
         Term argi = lhs.queryArgument(i);
         if (argi.isVariable() && argi.queryType().isTheoryType() && argi.queryType().isBaseType()) {
@@ -119,7 +120,7 @@ public class IntegerMappingProcessor implements Processor {
         for (Variable x : s.vars()) {
           if (subst.get(x) == null) { ok = false; break; }
         }
-        if (ok) _candidates.get(root).add(s.substitute(subst));
+        if (ok) _candidates.get(root).add(subst.substitute(s));
       }
     }
   }
@@ -188,12 +189,12 @@ public class IntegerMappingProcessor implements Processor {
    * this returns t[x_1^f:=s1,...,x_n^f:=sn].
    */
   private Term instantiateCandidate(Term candidate, Term term) {
-    Substitution subst = TermFactory.createEmptySubstitution();
+    MutableSubstitution subst = new MutableSubstitution();
     FunctionSymbol f = term.queryRoot();
     for (int varL = 0; varL < f.queryArity(); varL ++) {
       subst.extend(_fnToFreshVar.get(f).get(varL), term.queryArgument(varL + 1));
     }
-    return candidate.substitute(subst);
+    return subst.substitute(candidate);
   }
 
   /**

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -20,6 +20,7 @@ import charlie.util.NullStorageException;
 import charlie.util.Pair;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
+import charlie.substitution.MutableSubstitution;
 import charlie.trs.TrsProperties.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
@@ -82,7 +83,7 @@ class ApproximateReducer {
    * purposes.)
    */
   static DP rename(DP dp) {
-    Substitution subst = TermFactory.createEmptySubstitution();
+    MutableSubstitution subst = new MutableSubstitution();
     for (Variable x : dp.lhs().vars()) {
       if (subst.get(x) == null) subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }
@@ -92,9 +93,9 @@ class ApproximateReducer {
     for (Variable x : dp.constraint().vars()) {
       if (subst.get(x) == null) subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }
-    Term newleft = dp.lhs().substitute(subst);
-    Term newright = dp.rhs().substitute(subst);
-    Term newconstraint = dp.constraint().substitute(subst);
+    Term newleft = subst.substitute(dp.lhs());
+    Term newright = subst.substitute(dp.rhs());
+    Term newconstraint = subst.substitute(dp.constraint());
 
     TreeSet<Variable> theory = new TreeSet<>();
     for (Variable x : dp.lvars()) {

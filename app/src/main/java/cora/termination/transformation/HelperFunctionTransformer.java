@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -36,6 +36,7 @@ import charlie.types.Type;
 import charlie.terms.position.*;
 import charlie.terms.replaceable.ReplaceableList;
 import charlie.terms.*;
+import charlie.substitution.Substitution;
 import charlie.trs.*;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
@@ -221,8 +222,7 @@ public class HelperFunctionTransformer {
           Variable x = TermFactory.createVar(varname, replacement.queryType().subtype(1));
           replacement = replacement.apply(x);
         }
-        Substitution subst = TermFactory.createEmptySubstitution();
-        subst.extend(arg, replacement);
+        Substitution subst = Substitution.of(arg, replacement);
         ret.add(subst);
       }
     }
@@ -238,9 +238,9 @@ public class HelperFunctionTransformer {
         Rule rule = rules.get(i);
         Term lhs = rule.queryLeftSide();
         Term rhs = rule.queryRightSide();
-        Term lhssubst = lhs.substitute(subst);
+        Term lhssubst = subst.substitute(lhs);
         if (!lhssubst.equals(lhs)) {
-          Term rhssubst = rhs.substitute(subst);
+          Term rhssubst = subst.substitute(rhs);
           rules.add(TrsFactory.createRule(lhssubst, rhssubst, rule.queryConstraint()));
         }
       }

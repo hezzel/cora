@@ -29,6 +29,7 @@ import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
+import charlie.substitution.MutableSubstitution;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
@@ -290,11 +291,11 @@ public class CommandParsingStatus {
    * status may or may not be advanced.  While the keys must all occur in keyNames, it is allowed
    * for the values to contain some fresh variables, for which mappings will be added to valueNames.
    */
-  public Substitution readSubstitution(TRS trs, Renaming keyNames,
-                                       MutableRenaming valueNames, OutputModule module) {
+  public MutableSubstitution readSubstitution(TRS trs, Renaming keyNames,
+                                              MutableRenaming valueNames, OutputModule module) {
     // We make a ParsingStatus with *no* error tolerance.  This is important to avoice hanging.
     ParsingStatus status = makeStatus();
-    Substitution ret = null;
+    MutableSubstitution ret = null;
     try { ret = parseSubstitution(status, trs, keyNames, valueNames, module); }
     catch (ParsingException e) { printErrorText(module, e); }
 
@@ -314,12 +315,12 @@ public class CommandParsingStatus {
    * (But a ParsingStatus created by the RIParser has this property.)
    * In the case of success, a Substitution is returned; otherwise null.
    */
-  private Substitution parseSubstitution(ParsingStatus status, TRS trs,
-                                         Renaming keyNames,
-                                         MutableRenaming valueNames,
-                                         OutputModule module) {
+  private MutableSubstitution parseSubstitution(ParsingStatus status, TRS trs,
+                                                Renaming keyNames,
+                                                MutableRenaming valueNames,
+                                                OutputModule module) {
     status.expect(CoraTokenData.METAOPEN, "substitution opening bracket [");
-    Substitution subst = TermFactory.createEmptySubstitution();
+    MutableSubstitution subst = new MutableSubstitution();
     boolean first = true;
     while (status.readNextIf(CoraTokenData.METACLOSE) == null) {
       if (first) first = false;

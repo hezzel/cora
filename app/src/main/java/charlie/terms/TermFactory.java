@@ -192,10 +192,5 @@ public class TermFactory {
     throw new IllegalArgumentException("Given replaceable " + x.queryName() + " which is " +
       "neither a term nor a higher meta-variable!");
   }
-
-  /** Creates an empty substitution. */
-  public static Substitution createEmptySubstitution() {
-    return new Subst();
-  }
 }
 

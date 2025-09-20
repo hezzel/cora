@@ -18,7 +18,7 @@ package cora.rwinduction.engine.deduction;
 import java.util.Optional;
 import charlie.terms.Term;
 import charlie.terms.Variable;
-import charlie.terms.Substitution;
+import charlie.substitution.Substitution;
 import charlie.printer.Printer;
 import charlie.theorytranslation.TermAnalyser;
 import cora.config.Settings;

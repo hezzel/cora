@@ -24,6 +24,9 @@ import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
+import charlie.substitution.Substitution;
+import charlie.substitution.MutableSubstitution;
+import charlie.substitution.Matcher;
 import charlie.trs.Rule;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
@@ -51,7 +54,7 @@ class ConstrainedReductionHelper {
   private ArrayList<Pair<Variable,Term>> _definitions;
   private Renaming _renaming;
   private EquationPosition _position;
-  private Substitution _substitution;
+  private MutableSubstitution _substitution;
   private String _kind;
   private DeductionAlterDefinitions _preAlter;
 
@@ -106,11 +109,11 @@ class ConstrainedReductionHelper {
   }
 
   /**
-   * This returns the substitution that underlies the current object.  Outside objects should not
+   * This returns the substitution that underlies the current object.  Outside objects cannot
    * change this substitution.
    */
   Substitution querySubstitution() {
-    return _substitution;
+    return _substitution.makeImmutable();
   }
 
   /**
@@ -162,10 +165,10 @@ class ConstrainedReductionHelper {
       return false;
     }
 
-    String problem = _left.match(s, _substitution);
+    Matcher.MatchFailure problem = Matcher.extendMatch(_left, s, _substitution);
     if (problem != null) {
       m.ifPresent(o -> o.println("The " + _kind + " does not apply due to failed matching " +
-        "(matching debug info says %a)", problem));
+        "(matching debug info says: %a)", problem));
       return false;
     }
 
@@ -198,7 +201,7 @@ class ConstrainedReductionHelper {
       Term t = pair.snd();
       if (_substitution.get(x) != null) continue;
       if (!allSubstituted(t)) continue;
-      Term tgamma = t.substitute(_substitution);
+      Term tgamma = _substitution.substitute(t);
 
       Term replacement = replaceByExistingClause(tgamma, equEqualities);
       if (replacement == null) replacement = replaceByCalculation(tgamma);
@@ -235,7 +238,7 @@ class ConstrainedReductionHelper {
                                  sd, pos));
       return false;
     }
-    if (_right.match(othersub, _substitution) != null) {
+    if (Matcher.extendMatch(_right, othersub, _substitution) != null) {
       m.ifPresent(o -> o.println("The induction hypothesis does not match the %a-hand side " +
         "of the equation.", sd));
       return false;
@@ -319,7 +322,7 @@ class ConstrainedReductionHelper {
       if (_substitution.get(x) != null) continue;
       Term t = pair.snd();
       if (!allSubstituted(t)) continue;
-      Term tgamma = t.substitute(_substitution);
+      Term tgamma = _substitution.substitute(t);
 
       Variable y =
         _proof.getContext().getVariableNamer().chooseDerivativeOrSameNaming(x, renaming,
@@ -426,7 +429,7 @@ class ConstrainedReductionHelper {
   /** This checks if equationConstraint ⇒ _constraint _substitution is valid. */
   private boolean checkImplication(Term equationConstraint, Renaming eqrenaming,
                                    Optional<OutputModule> module, SmtSolver solver) {
-    Term substitutedconstr = _constraint.substitute(_substitution);
+    Term substitutedconstr = _substitution.substitute(_constraint);
     TermSmtTranslator translator = new TermSmtTranslator();
     translator.requireImplication(equationConstraint, substitutedconstr);
     if (solver.checkValidity(translator.queryProblem())) return true;
@@ -473,7 +476,7 @@ class ConstrainedReductionHelper {
    * constraint.)
    */
   Pair<Equation,Renaming> reduce() {
-    Term substituted = _right.substitute(_substitution);
+    Term substituted = _substitution.substitute(_right);
     Equation equation = _proof.getProofState().getTopEquation().getEquation();
     Equation ret = equation.replaceSubterm(_position, substituted);
     Renaming renaming;

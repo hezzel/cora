@@ -19,7 +19,7 @@ import java.util.List;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.TermFactory;
-import charlie.terms.Substitution;
+import charlie.substitution.Substitution;
 
 /** This class implements the eta-shortening rule scheme. */
 class EtaReducer implements ReduceObject {

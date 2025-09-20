@@ -23,7 +23,15 @@ import charlie.util.Pair;
 import charlie.types.Base;
 import charlie.types.Type;
 import charlie.terms.replaceable.*;
-import charlie.terms.*;
+import charlie.terms.Term;
+import charlie.terms.Variable;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.CalculationSymbol;
+import charlie.terms.Value;
+import charlie.terms.TermFactory;
+import charlie.terms.TheoryFactory;
+import charlie.substitution.Substitution;
+import charlie.substitution.MutableSubstitution;
 import charlie.printer.Printer;
 import charlie.smt.*;
 import charlie.theorytranslation.TermAnalyser;
@@ -66,7 +74,7 @@ public abstract class DeductionDisprove extends DeductionStep {
         return new DeductionDisproveFOTheory(state, context);
       }
       else {
-        ArrayList<Substitution> possible = new ArrayList<Substitution>();
+        ArrayList<MutableSubstitution> possible = new ArrayList<MutableSubstitution>();
         Renaming renaming = state.getTopEquation().getRenaming();
         if (!addPossibleSubstitutions(left, right, context, possible, renaming, m)) return null;
         return new DeductionDisproveHOTheory(state, context, possible);
@@ -219,7 +227,7 @@ public abstract class DeductionDisprove extends DeductionStep {
    * Default rather than private only for the sake of unit testing (this is quite complex code).
    */
   static boolean addPossibleSubstitutions(Term left, Term right, ProofContext context,
-                                          ArrayList<Substitution> options,
+                                          ArrayList<MutableSubstitution> options,
                                           Renaming renaming,
                                           Optional<OutputModule> module) {
     ArrayList<Variable> variables = getHOVars(left, right);
@@ -229,7 +237,7 @@ public abstract class DeductionDisprove extends DeductionStep {
     // iteratively generate all possible combinations
     ArrayList<Integer> current = new ArrayList<Integer>();
     for (int i = 0; i < variables.size(); i++) current.add(0);
-    Substitution subst = TermFactory.createEmptySubstitution();
+    MutableSubstitution subst = new MutableSubstitution();
     for (int pos = 0; pos >= 0; ) {
       if (pos == variables.size()) {
         options.add(subst.copy());
@@ -321,8 +329,8 @@ class DeductionDisproveFOTheory extends DeductionDisprove {
         Printer.makePrintable(makeConstraint(), _equ.getRenaming()));
     }
     else {
-      Value l = TermAnalyser.evaluate(_equ.getEquation().getLhs().substitute(_substitution));
-      Value r = TermAnalyser.evaluate(_equ.getEquation().getRhs().substitute(_substitution));
+      Value l = TermAnalyser.evaluate(_substitution.substitute(_equ.getEquation().getLhs()));
+      Value r = TermAnalyser.evaluate(_substitution.substitute(_equ.getEquation().getRhs()));
       Renaming renaming = _equ.getRenaming();
       module.println("We apply DISPROVE to %a, which succeeds because under the substitution %a, " +
         "the constraint %a evaluates to true, while the sides of the equation can be calculated " +
@@ -336,12 +344,12 @@ class DeductionDisproveFOTheory extends DeductionDisprove {
 class DeductionDisproveHOTheory extends DeductionDisprove {
   // each of the possibilities, when applied to left- and right-hand side of the equation, rsults
   // in first-order theory terms
-  private ArrayList<Substitution> _possibilities;
-  private Substitution _success;
+  private ArrayList<MutableSubstitution> _possibilities;
+  private MutableSubstitution _success;
 
   /** possibilities must be non-empty */
   DeductionDisproveHOTheory(ProofState state, ProofContext context,
-                            ArrayList<Substitution> possibilities) {
+                            ArrayList<MutableSubstitution> possibilities) {
     super(state, context);
     _possibilities = possibilities;
     _success = null;
@@ -354,7 +362,7 @@ class DeductionDisproveHOTheory extends DeductionDisprove {
     switch (TermAnalyser.satisfy(constr, Settings.smtSolver)) {
       case TermAnalyser.Result.YES(Substitution subst):
         _success = _possibilities.get(subst.get(choice).toValue().getInt());
-        _success.substitute(subst);
+        _success.combine(subst);
         _success.delete(choice);
         for (Replaceable x : subst.domain()) {
           if (!_equ.getEquation().getLhs().freeReplaceables().contains(x) &&
@@ -379,8 +387,8 @@ class DeductionDisproveHOTheory extends DeductionDisprove {
     Term disjunction = null;
     for (int i = 0; i < _possibilities.size(); i++) {
       Term choiceisi = TheoryFactory.createEquality(choice, TheoryFactory.createValue(i));
-      Term lgammai = left.substitute(_possibilities.get(i));
-      Term rgammai = right.substitute(_possibilities.get(i));
+      Term lgammai = _possibilities.get(i).substitute(left);
+      Term rgammai = _possibilities.get(i).substitute(right);
       Term unequal = TheoryFactory.notSymbol.apply(TheoryFactory.createEquality(lgammai, rgammai));
       Term combi = TheoryFactory.createConjunction(choiceisi, unequal);
       if (disjunction == null) disjunction = combi;
@@ -401,8 +409,8 @@ class DeductionDisproveHOTheory extends DeductionDisprove {
         "satisfiable.", _equ.getName(), Printer.makePrintable(makeConstraint(choice), renaming));
     }
     else {
-      Value l = TermAnalyser.evaluate(_equ.getEquation().getLhs().substitute(_success));
-      Value r = TermAnalyser.evaluate(_equ.getEquation().getRhs().substitute(_success));
+      Value l = TermAnalyser.evaluate(_success.substitute(_equ.getEquation().getLhs()));
+      Value r = TermAnalyser.evaluate(_success.substitute(_equ.getEquation().getRhs()));
       Renaming renaming = _equ.getRenaming();
       module.println("We apply DISPROVE to %a, which succeeds because under the substitution %a, " +
         "the constraint %a evaluates to true, while the sides of the equation can be calculated " +

@@ -25,6 +25,9 @@ import charlie.terms.position.PositionFormatException;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
+import charlie.substitution.Substitution;
+import charlie.substitution.MutableSubstitution;
+import charlie.substitution.Matcher;
 import charlie.trs.Rule;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
@@ -133,7 +136,7 @@ abstract class ReductionCommandInherit extends DeductionCommand {
                                         EquationPosition.Side side, Term term) {
     Printer printer = PrinterFactory.createParseablePrinter(_proof.getContext().getTRS());
     term.visitSubterms( (s,p) -> {
-      if (leftOfReducer.match(s) != null) {
+      if (Matcher.match(leftOfReducer, s) != null) {
         EquationPosition pos = new EquationPosition(side, p);
         pos.print(printer);
         suggestions.add(new TabSuggestion(printer.toString(), "position"));
@@ -156,7 +159,7 @@ abstract class ReductionCommandInherit extends DeductionCommand {
 
     Substitution subst;
     if (arg != null && !arg.equals("with")) arg = input.nextWord();
-    if (arg == null) subst = TermFactory.createEmptySubstitution();
+    if (arg == null) subst = new MutableSubstitution();
     else if (!arg.equals("with")) {
       _module.println("Unexpected argument at position %a: expected \"with\" or end of command, " +
         "but got %a.", input.previousPosition(), arg);
