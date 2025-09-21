@@ -53,7 +53,9 @@ class DeductionSimplifyTest {
       "tmp :: Int -> Int\n" +
       "tmp(x) -> 0\n" +
       "sum3 :: Int -> Int\n" +
-      "sum3(x) -> iter(x, i, z) | c0 = 0 ∧ c1 = 0 ∧ i = c0 ∧ z = c1\n");
+      "sum3(x) -> iter(x, i, z) | c0 = 0 ∧ c1 = 0 ∧ i = c0 ∧ z = c1\n" +
+      "pointless :: Int -> Int -> Int\n" +
+      "pointless(x, y) -> pointless(x+y, y-1) | y > 0 ∧ x = x");
   }
 
   public PartialProof setupProof(String eqdesc) {
@@ -181,6 +183,21 @@ class DeductionSimplifyTest {
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getTopEquation().toString().equals("E2: (• , z ≈ 7 | z = 7 , •)"));
     assertTrue(step.commandDescription().equals("simplify O6 L with [x := z, y := 1]"));
+  }
+
+  @Test
+  public void testPointlessVariableInRuleConstraint() {
+    PartialProof pp = setupProof("pointless(x, y) = x + y | y > 3");
+    OutputModule module = OutputModule.createUnitTestModule();
+    MySmtSolver solver = new MySmtSolver(true);
+    Settings.smtSolver = solver;
+    DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O9",
+                                                          EquationPosition.TOPLEFT,
+                                                          new MutableSubstitution());
+    assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
+    assertTrue(solver._question.equals("(3 >= i1) or ((i1 >= 1) and (i2 = i2))\n"));
+    assertTrue(pp.getProofState().getTopEquation().toString().equals(
+      "E2: (• , pointless(x + y, y - 1) ≈ x + y | y > 3 , •)"));
   }
 
   @Test

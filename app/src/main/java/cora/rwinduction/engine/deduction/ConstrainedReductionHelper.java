@@ -402,24 +402,26 @@ class ConstrainedReductionHelper {
 
   /**
    * This function goes over all the variables in _constraint, and verifies that they are all
-   * mapped either to values by the substitution, or to variables in the constraint of the
-   * equation.  If this is not the case, an error message is printed and false returned.
+   * mapped either to values or variables by the substitution.
+   * If this is not the case, an error message is printed and false returned.
+   * (Note that it is technically required that they are mapped to variables in the constraint of
+   * the equation, but by a pre-alter we could always x = x to the constraint of the equation, so
+   * this extension is fine.)
    */
   private boolean checkConstraintVariables(Term equationConstraint, Renaming equationNaming,
                                            Optional<OutputModule> module) {
     for (Variable x : _constraint.vars()) {
-      Term t = _substitution.getReplacement(x);
+      Term t = _substitution.get(x);
+      if (t == null) {
+        module.ifPresent(o -> o.println("The " + _kind + " does not apply: constraint variable " +
+          "%a is not mapped to anything.", _renaming.getName(x)));
+        return false;
+      }
       if (t.isValue()) continue;
-      if (!t.isVariable() || !equationConstraint.freeReplaceables().contains(t.queryVariable())) {
-        if (!_substitution.domain().contains(x)) {
-          module.ifPresent(o -> o.println("The " + _kind + " does not apply: constraint variable " +
-            "%a is not mapped to anything.", _renaming.getName(x)));
-        }
-        else {
-          module.ifPresent(o -> o.println("The " + _kind + " does not apply: constraint variable " +
-            "%a is instantiated by %a, which is not a value, nor a variable in the constraint of " +
-            "the equation.", _renaming.getName(x), Printer.makePrintable(t, equationNaming)));
-        }
+      if (!t.isVariable()) { //|| !equationConstraint.freeReplaceables().contains(t.queryVariable())) {
+        module.ifPresent(o -> o.println("The " + _kind + " does not apply: constraint variable " +
+          "%a is instantiated by %a, which is not a value, nor a variable in the constraint of " +
+          "the equation.", _renaming.getName(x), Printer.makePrintable(t, equationNaming)));
         return false;
       }
     }

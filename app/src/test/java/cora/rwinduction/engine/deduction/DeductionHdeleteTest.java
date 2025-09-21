@@ -292,6 +292,7 @@ class DeductionHdeleteTest {
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
                EquationPosition.parse("L3"), new MutableSubstitution());
+    Settings.smtSolver = new MySmtSolver(false);
     assertFalse(step.verify(Optional.of(module)));
     assertTrue(module.toString().equals("The induction hypothesis does not apply: " +
       "constraint variable c is not mapped to anything.\n\n"));
