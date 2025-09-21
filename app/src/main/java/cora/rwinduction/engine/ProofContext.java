@@ -40,6 +40,8 @@ public class ProofContext {
   private final HashMap<Type,Set<FunctionSymbol>> _constructors =
     new HashMap<Type,Set<FunctionSymbol>>();
   private final HashMap<FunctionSymbol,Integer> _arities = new HashMap<FunctionSymbol,Integer>();
+  private final HashMap<FunctionSymbol,Set<String>> _rulesBySymbol =
+    new HashMap<FunctionSymbol,Set<String>>();
   private VariableNamer _namer;
 
   /**
@@ -71,7 +73,12 @@ public class ProofContext {
       if (rule.queryLeftSide().isFunctionalTerm()) {
         FunctionSymbol f = rule.queryLeftSide().queryRoot();
         if (!_arities.containsKey(f)) _arities.put(f, rule.queryLeftSide().numberArguments());
+        if (!_rulesBySymbol.containsKey(f)) _rulesBySymbol.put(f, new HashSet<String>());
+        _rulesBySymbol.get(f).add(name);
       }
+    }
+    for (FunctionSymbol f : _rulesBySymbol.keySet()) {
+      _rulesBySymbol.put(f, Collections.unmodifiableSet(_rulesBySymbol.get(f)));
     }
   }
 
@@ -181,6 +188,13 @@ public class ProofContext {
     if (_arities.containsKey(symbol)) return _arities.get(symbol);
     if (symbol.isTheorySymbol() && !symbol.isValue()) return symbol.queryArity();
     return symbol.queryArity() + 1;
+  }
+
+  /**
+   * This returns a set of all rule names headed by the given symbol, or null if there are none.
+   */
+  public Set<String> queryRuleNamesByFunction(FunctionSymbol symbol) {
+    return _rulesBySymbol.get(symbol);
   }
 
   /** This returns a class for deduction rules to consistently name their variables. */

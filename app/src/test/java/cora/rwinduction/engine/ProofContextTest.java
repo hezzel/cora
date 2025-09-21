@@ -76,6 +76,26 @@ class ProofContextTest {
   }
 
   @Test
+  public void testRulesBySymbol() {
+    TRS trs = setupTRS();
+    ProofContext context = new ProofContext(trs, lst -> new MutableRenaming(Set.of()));
+    assertTrue(context.queryRuleNamesByFunction(trs.lookupSymbol("o")) == null);
+    assertTrue(context.queryRuleNamesByFunction(trs.lookupSymbol("something")) == null);
+    assertTrue(context.queryRuleNamesByFunction(TheoryFactory.plusSymbol) == null);
+    Set<String> set = context.queryRuleNamesByFunction(trs.lookupSymbol("add"));
+    assertTrue(set.size() == 2);
+    assertTrue(set.contains("O6"));
+    assertTrue(set.contains("O7"));
+    set = context.queryRuleNamesByFunction(trs.lookupSymbol("iter"));
+    assertTrue(set.size() == 2);
+    assertTrue(set.contains("O4"));
+    assertTrue(set.contains("O5"));
+    set = context.queryRuleNamesByFunction(trs.lookupSymbol("partial"));
+    assertTrue(set.size() == 1);
+    assertTrue(set.contains("O8"));
+  }
+
+  @Test
   public void testVariableNamer() {
     TRS trs = setupTRS();
     TermPrinter printer = new TermPrinter(Set.of());

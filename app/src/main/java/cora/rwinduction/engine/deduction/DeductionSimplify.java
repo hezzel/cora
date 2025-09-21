@@ -45,8 +45,7 @@ public final class DeductionSimplify extends DeductionStep {
   /**
    * Creates a simplification step for the given information, checking that there is indeed a
    * match but NOT that the constraint is satisfied or that no new variables are created.
-   * The substitution will not be altered, and does not become the property of the step; it is
-   * safe to change afterwards.
+   * The substitution will not be stored; it is safe to change afterwards.
    */
   public static DeductionSimplify createStep(PartialProof proof, Optional<OutputModule> m,
                                              String ruleName, EquationPosition pos,

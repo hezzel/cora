@@ -170,6 +170,21 @@ public class EquationContext implements PrintableObject {
     return _rightGeq;
   }
 
+  /** Returns the left-hand side of the equation. */
+  public Term getLhs() {
+    return _equation.getLhs();
+  }
+
+  /** Returns the right-hand side of the equation. */
+  public Term getRhs() {
+    return _equation.getRhs();
+  }
+
+  /** Returns the constraint of the equation. */
+  public Term getConstraint() {
+    return _equation.getConstraint();
+  }
+
   /** Returns the index this equation context has within the proof. */
   public int getIndex() {
     return _index;
