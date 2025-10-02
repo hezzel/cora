@@ -29,7 +29,8 @@ import cora.rwinduction.engine.*;
 
 /** The deduction command for simplifying an equation with an induction hypothesis */
 public final class DeductionHypothesis extends DeductionStep {
-  private ConstrainedReductionHelper _helper;
+  private ConstrainedSimplifier _simplifier;
+  private EquationPosition _position;
   private String _hypothesisName;
   private boolean _inversed;
   private ArrayList<OrdReq> _requirements;
@@ -37,10 +38,11 @@ public final class DeductionHypothesis extends DeductionStep {
 
   /** Private constructor, called (only) by createStep */
   private DeductionHypothesis(ProofState state, ProofContext context, String hypoName,
-                            boolean inverse, ConstrainedReductionHelper h,
+                            boolean inverse, ConstrainedSimplifier s, EquationPosition pos,
                             EquationContext result, ArrayList<OrdReq> reqs) {
     super(state, context);
-    _helper = h;
+    _simplifier = s;
+    _position = pos;
     _hypothesisName = hypoName;
     _inversed = inverse;
     _result = result;
@@ -59,33 +61,29 @@ public final class DeductionHypothesis extends DeductionStep {
                                                Hypothesis hypo, boolean inverse,
                                                EquationPosition pos, Substitution subst) {
     Equation hequ = hypo.getEquation();
-    Term left = inverse ? hequ.getRhs() : hequ.getLhs();
-    Term right = inverse ? hequ.getLhs() : hequ.getRhs();
 
-    ConstrainedReductionHelper helper =
-      new ConstrainedReductionHelper(left, right, hequ.getConstraint(), hypo.getRenaming(),
-                                     "induction hypothesis", proof, pos, subst);
+    ConstrainedSimplifier simpl =
+      new ConstrainedSimplifier(inverse ? hequ.getRhs() : hequ.getLhs(),
+                                inverse ? hequ.getLhs() : hequ.getRhs(),
+                                hequ.getConstraint(), hypo.getRenaming(), subst);
+
     EquationContext original = proof.getProofState().getTopEquation();
-    if (!helper.extendSubstitutionBasic(m)) return null;
-    helper.extendSubstitutionWithConstraintDefinitions();
-    if (!helper.checkEverythingSubstituted(m)) return null;
-
-    Pair<Equation,Renaming> neweqdata = helper.reduce();
-    Equation neweq = neweqdata.fst();
-    Renaming newrenaming = neweqdata.snd();
+    if (!simpl.matchSubterm(original.getEquation(), pos, m, "induction hypothesis")) return null;
+    simpl.matchEqualitiesInConstraint(original.getConstraint());
+    if (!simpl.checkEverythingSubstituted(m)) return null;
+    Equation neweq = original.getEquation().replaceSubterm(pos, simpl.queryReduct());
     ArrayList<OrdReq> requirements = new ArrayList<OrdReq>();
 
-    if (!checkOrderingRequirements(original, pos, neweq, newrenaming, requirements)) {
+    if (!checkOrderingRequirements(original, pos, neweq, requirements)) {
       m.ifPresent(o -> o.println("The hypothesis cannot be applied, as it would cause an " +
         "obviously unsatisfiable ordering requirement to be imposed."));
       return null;
     }
     int id = proof.getProofState().getLastUsedIndex() + 1;
-    EquationContext result = new EquationContext(original.getLeftGreaterTerm(), neweq,
-                                                 original.getRightGreaterTerm(), id, newrenaming);
+    EquationContext result = original.replace(neweq, id);
     return new DeductionHypothesis(proof.getProofState(), proof.getContext(),
                                    hypo.getName() + (inverse ? "^{-1}" : ""),
-                                   inverse, helper, result, requirements);
+                                   inverse, simpl, pos, result, requirements);
   }
 
   /**
@@ -96,7 +94,8 @@ public final class DeductionHypothesis extends DeductionStep {
    */
   private static boolean checkOrderingRequirements(EquationContext original,
                                                    EquationPosition pos, Equation neweq,
-                                                   Renaming newrenaming, ArrayList<OrdReq> reqs) {
+                                                   ArrayList<OrdReq> reqs) {
+    Renaming renaming = original.getRenaming();
     // • is greater than anything, so if • occurs on both sides, there's nothing to require
     if (original.getLeftGreaterTerm().isEmpty() && original.getRightGreaterTerm().isEmpty()) {
       return true;
@@ -128,7 +127,7 @@ public final class DeductionHypothesis extends DeductionStep {
     Term lgamma = original.getEquation().querySubterm(pos);
     Term phi = neweq.getConstraint();
     // in both cases, s' ≽ q must hold, so if we don't have s = q, let's require s' ≻ q
-    if (!sequalq) reqs.add(new OrdReq(sprime, q, phi, newrenaming));
+    if (!sequalq) reqs.add(new OrdReq(sprime, q, phi, renaming));
     // if case [A] is possible, then go for that
     if (!sprime.equals(lgamma)) { // since s' ≽ C[lγ] ≽ lγ, this implies s' ≻ lγ directly
       if (!sequalq) return true;  // we have already required s' ≻ q ≽ rγ
@@ -137,7 +136,7 @@ public final class DeductionHypothesis extends DeductionStep {
     // otherwise, go for case [B]; note that this can only occur if C is the empty context, so
     // rγ = q
     if (tprime.equals(q)) return false;
-    reqs.add(new OrdReq(tprime, q, phi, newrenaming));
+    reqs.add(new OrdReq(tprime, q, phi, renaming));
     return true;
   }
 
@@ -154,10 +153,11 @@ public final class DeductionHypothesis extends DeductionStep {
     // it needs to be an innermost step if we're using innermost strategy
     if ( (Settings.queryRewritingStrategy().equals(Settings.Strategy.Innermost) ||
           Settings.queryRewritingStrategy().equals(Settings.Strategy.CallByValue)) &&
-         !_helper.checkInnermost()) return false;
+         !_simplifier.checkSemiConstructorSubstitution(_pcontext)) return false;
     // the constraint implication should be satisfied
-    if (_helper.constraintIsTrue()) return true;
-    return _helper.checkConstraintGoodForReduction(module, Settings.smtSolver);
+    if (_simplifier.constraintIsTrue()) return true;
+    return _simplifier.canReduceCtermWithConstraint(_equ.getConstraint(), Settings.smtSolver,
+                                          _equ.getRenaming(), module, "induction hypothesis");
   }
 
   @Override
@@ -170,15 +170,15 @@ public final class DeductionHypothesis extends DeductionStep {
   @Override
   public String commandDescription() {
     Printer printer = PrinterFactory.createParseablePrinter(_pcontext.getTRS());
-    printer.add("hypothesis ", _hypothesisName, " ", _helper.queryPosition(), " with ",
-      _helper.substitutionPrintable(_equ.getRenaming()));
+    printer.add("hypothesis ", _hypothesisName, " ", _position, " with ",
+      _simplifier.substitutionPrintable(_equ.getRenaming()));
     return printer.toString();
   }
 
   @Override
   public void explain(OutputModule module) {
     module.print("We apply HYPOTHESIS to %a with induction hypothesis %a and substitution %a.  ",
-      _equ.getName(), _hypothesisName, _helper.substitutionPrintable(_equ.getRenaming()));
+      _equ.getName(), _hypothesisName, _simplifier.substitutionPrintable(_equ.getRenaming()));
     if (_requirements.size() == 0) {
       module.println("This does not cause any new ordering requirements to be imposed.");
     }

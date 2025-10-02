@@ -333,7 +333,7 @@ class DeductionHypothesisTest {
     assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
                        EquationPosition.TOPLEFT, new MutableSubstitution()) == null);
     assertTrue(module.toString().equals("The induction hypothesis does not apply due to failed " +
-      "matching (matching debug info says: The term x__1 does not instantiate sum1(x__2) as it " +
+      "matching (matching debug info says: The term x does not instantiate sum1(x) as it " +
       "is not an application.)" +
       "\n\n"));
   }

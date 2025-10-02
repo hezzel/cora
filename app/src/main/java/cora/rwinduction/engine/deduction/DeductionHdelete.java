@@ -156,19 +156,6 @@ public final class DeductionHdelete extends DeductionStep {
   }
 
   /**
-   * Helper function for createStep: this sets up the constrained reduction helper for the given
-   * hypothesis (and direction).
-   */
-  private static ConstrainedReductionHelper setupHelper(Hypothesis hypo, boolean inverse,
-                                    PartialProof proof, EquationPosition pos, Substitution subst) {
-    Equation hequ = hypo.getEquation();
-    Term left = inverse ? hequ.getRhs() : hequ.getLhs();
-    Term right = inverse ? hequ.getLhs() : hequ.getRhs();
-    return new ConstrainedReductionHelper(left, right, hequ.getConstraint(), hypo.getRenaming(),
-                                          "induction hypothesis", proof, pos, subst);
-  }
-
-  /**
    * This returns whether the left-hand side and right-hand side of the given equation have the same
    * context around position pos.
    */
