@@ -251,8 +251,7 @@ class DeductionSimplifyTest {
                   EquationPosition.TOPLEFT, new MutableSubstitution());
     assertFalse(step.verify(Optional.of(module)));
     assertTrue(module.toString().equals("The rule does not apply: " +
-      "constraint variable x is instantiated by z + 1, which is not a value, " +
-      "nor a variable in the constraint of the equation.\n\n"));
+      "constraint variable x is instantiated by z + 1, which is not a value or variable.\n\n"));
     assertTrue(solver._question == null);
     // we CAN execute it even if we shouldn't, though!
     assertTrue(step.execute(pp, Optional.of(module)));

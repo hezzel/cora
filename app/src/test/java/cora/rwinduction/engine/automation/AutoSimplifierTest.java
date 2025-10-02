@@ -52,7 +52,9 @@ class AutoSimplifierTest {
       "cons :: Int -> list -> list\n" +
       "append :: list -> list -> list\n" +
       "append(nil, z) -> z\n" +
-      "append(cons(x, y), z) -> cons(x, append(y, z))\n");
+      "append(cons(x, y), z) -> cons(x, append(y, z))\n" +
+      "suc :: Int -> Int\n" +
+      "suc -> [+](1)\n");
   }
 
   public PartialProof setupProof(String eqdesc) {
@@ -114,6 +116,14 @@ class AutoSimplifierTest {
     assertTrue(solver3._question.equals("(i1 >= 3) or (0 >= i2) or (0 >= i2)\n"));
     assertTrue(solver4._question.equals("(i1 >= 3) or (0 >= i2) or (i2 >= 1)\n"));
     assertTrue(step.commandDescription().equals("simplify O2 R with [x := y]"));
+  }
+
+  @Test
+  public void testFindHeadSimplification() {
+    PartialProof pp = setupProof("sum1(suc(x)) = sum2(y) | x + 1 = y");
+    Settings.smtSolver = null;
+    DeductionStep step = AutoSimplifier.createSingleStep(pp);
+    assertTrue(step.commandDescription().equals("simplify O8 L1.*1 with []"));
   }
 }
 

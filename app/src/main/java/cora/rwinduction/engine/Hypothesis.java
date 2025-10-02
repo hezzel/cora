@@ -17,6 +17,7 @@ package cora.rwinduction.engine;
 
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
+import charlie.terms.Term;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
 import charlie.printer.PrinterFactory;
@@ -46,6 +47,21 @@ public class Hypothesis implements PrintableObject {
   /** Returns the underlying equation. */
   public Equation getEquation() {
     return _equation;
+  }
+
+  /** Shorthand for getEquation().getLhs() */
+  public Term getLhs() {
+    return _equation.getLhs();
+  }
+
+  /** Shorthand for getEquation().getRhs() */
+  public Term getRhs() {
+    return _equation.getRhs();
+  }
+
+  /** Shorthand for getEquation().getConstraint() */
+  public Term getConstraint() {
+    return _equation.getConstraint();
   }
 
   /** Returns the index this hypothesis has within the proof. */

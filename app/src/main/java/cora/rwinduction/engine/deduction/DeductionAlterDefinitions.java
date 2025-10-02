@@ -78,6 +78,7 @@ public final class DeductionAlterDefinitions extends DeductionStep {
       if (!checkMapping(x, name, value, renaming, module)) return null;
       if (!renaming.setName(x, name)) {
         module.ifPresent(o -> o.println("Invalid variable name: " + name));
+        return null;
       }
       d.add(TheoryFactory.createEquality(x, value));
     }

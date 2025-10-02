@@ -16,10 +16,11 @@
 package cora.rwinduction.engine.automation;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Optional;
+import java.util.function.Function;
 import charlie.util.Pair;
-import charlie.terms.position.Position;
-import charlie.terms.position.FinalPos;
+import charlie.terms.position.*;
 import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;
 import charlie.substitution.MutableSubstitution;
@@ -37,34 +38,49 @@ public final class AutoSimplifier {
   public static DeductionSimplify createSingleStep(PartialProof proof) {
     EquationContext ec = proof.getProofState().getTopEquation();
     for (Pair<Term,Position> pair : ec.getLhs().querySubterms()) {
-      DeductionSimplify step = findHeadSimplification(pair.fst(), EquationPosition.Side.Left,
-                                                      pair.snd(), proof);
+      DeductionSimplify step =
+        createSingleStepAtPosition(proof, EquationPosition.Side.Left, pair.snd(), pair.fst());
       if (step != null) return step;
     }
     for (Pair<Term,Position> pair : ec.getRhs().querySubterms()) {
-      DeductionSimplify step = findHeadSimplification(pair.fst(), EquationPosition.Side.Right,
-                                                      pair.snd(), proof);
+      DeductionSimplify step =
+        createSingleStepAtPosition(proof, EquationPosition.Side.Right, pair.snd(), pair.fst());
       if (step != null) return step;
     }
     return null;
   }
 
   /**
+   * Helper function for createSingleStep: given that the top equation has sub at position side.pos,
+   * this tries to find a single step to apply on sub.  If successful, the step is returned; if not,
+   * null is returned instead.
+   */
+  private static DeductionSimplify createSingleStepAtPosition(PartialProof proof,
+                                                              EquationPosition.Side side,
+                                                              Position pos, Term sub) {
+    Function<Integer,EquationPosition> positionMaker = i ->
+      i > 0 ? new EquationPosition(side, pos.append(new FinalPos(i)))
+            : new EquationPosition(side, pos);
+    return findHeadSimplification(sub, positionMaker, proof);
+  }
+
+  /**
    * This function checks if there is any rule that can be used to simplify s at the head, and if
    * so, returns it.  If there is not, then null is returned instead.  Note that this may involve
    * multiple calls to the SMT solver.
+   *
+   * The posMaker argument should return, given a chopcount c, p*i, where p is the position in the
+   * top equation where s can be found.
    */
-  private static DeductionSimplify findHeadSimplification(Term s, EquationPosition.Side side,
-                                                          Position pos, PartialProof proof) {
+  private static DeductionSimplify findHeadSimplification(Term s, Function<Integer,EquationPosition>
+                                                          posMaker, PartialProof proof) {
     if (!s.isFunctionalTerm()) return null;
     ProofContext context = proof.getContext();
     FunctionSymbol f = s.queryRoot();
     int n = s.numberArguments();
     int k = context.queryRuleArity(f);
     if (n < k) return null;
-    EquationPosition ep;
-    if (n > k) ep = new EquationPosition(side, pos.append(new FinalPos(n - k)));
-    else ep = new EquationPosition(side, pos);
+    EquationPosition ep = posMaker.apply(n - k);
     MutableSubstitution empty = new MutableSubstitution();
     Optional<OutputModule> m = Optional.empty();
     for (String rulename : context.queryRuleNamesByFunction(s.queryRoot())) {
@@ -72,6 +88,55 @@ public final class AutoSimplifier {
       if (attempt != null && attempt.verify(m)) return attempt;
     }
     return null;
+  }
+
+  /**
+   * This function takes the current proof states, and applies Simplify and Calc steps until none
+   * apply any longer.  The list of all steps done is returned.
+   */
+  public static ArrayList<DeductionStep> simplifyFully(PartialProof proof) {
+    EquationContext ec = proof.getProofState().getTopEquation();
+    ArrayList<DeductionStep> ret = new ArrayList<DeductionStep>();
+    simplifyFully(proof, ec.getLhs(), EquationPosition.Side.Left, new LinkedList<Integer>(), ret);
+    simplifyFully(proof, ec.getRhs(), EquationPosition.Side.Right, new LinkedList<Integer>(), ret);
+    return ret;
+  }
+
+  /**
+   * Helper function for simplifyFully.  Given that the [side] side of the equation, at position
+   * [pos], is s, and that all subterms to the left of this position have already been normalised,
+   * this adds the steps to [steps] to also normalise s, and applies these steps to the proof.  It
+   * also returns the updated term s.
+   * Note that this may involve many calls to the SMT solver.
+   */
+  private static Term simplifyFully(PartialProof proof, Term s, EquationPosition.Side side,
+                                    LinkedList<Integer> pos, ArrayList<DeductionStep> steps) {
+    /*
+    while (true) {
+      // first simplify the arguments and replace s accordingly
+      int count = steps.size();
+      ArrayList<Term> args = new ArrayList<Term>(s.numberArguments());
+      for (int i = 1; i <= s.numberArguments(); i++) {
+        pos.add(i);
+        args.add(simplifyFully(proof, s.queryArgument(i), side, pos, steps));
+        pos.removeLast();
+      }
+      if (steps.size() != count) s = s.queryHead().apply(args);
+  
+      // try reducing at the head!
+      DeductionSimplify step = findHeadSimplification(s, i -> makePos(side, pos, i), proof);
+      if (step == null || !step.execute(Optional.empty(proof))) return s;
+      s = step.queryReplacementSubterm();
+    }
+    */
+    return null;
+  }
+
+  private static EquationPosition makePos(EquationPosition.Side side, LinkedList<Integer> main,
+                                          int chop) {
+    Position p = new FinalPos(chop);
+    while (!main.isEmpty()) p = new ArgumentPos(main.removeLast(), p);
+    return new EquationPosition(side, p);
   }
 }
 
