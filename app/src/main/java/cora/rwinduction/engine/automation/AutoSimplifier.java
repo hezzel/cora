@@ -18,6 +18,8 @@ package cora.rwinduction.engine.automation;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import charlie.util.Pair;
 import charlie.terms.position.*;
@@ -58,32 +60,31 @@ public final class AutoSimplifier {
   private static DeductionSimplify createSingleStepAtPosition(PartialProof proof,
                                                               EquationPosition.Side side,
                                                               Position pos, Term sub) {
+    if (!sub.isFunctionalTerm()) return null;
     Function<Integer,EquationPosition> positionMaker = i ->
       i > 0 ? new EquationPosition(side, pos.append(new FinalPos(i)))
             : new EquationPosition(side, pos);
-    return findHeadSimplification(sub, positionMaker, proof);
+    return findHeadSimplification(proof, sub.queryRoot(), sub.numberArguments(), positionMaker);
   }
 
   /**
-   * This function checks if there is any rule that can be used to simplify s at the head, and if
-   * so, returns it.  If there is not, then null is returned instead.  Note that this may involve
-   * multiple calls to the SMT solver.
+   * Given that the top equation, at position side.pos, has a subterm f(s1...sn) with n =
+   * numberArguments, this function tries to find a DeductionSimplify step that can be applied at
+   * that position or at its head.  Note that this may involve multiple calls to the SMT-solver.
+   *
+   * If such a step can be found it is returned; if not, null is returned.
    *
    * The posMaker argument should return, given a chopcount c, p*i, where p is the position in the
    * top equation where s can be found.
    */
-  private static DeductionSimplify findHeadSimplification(Term s, Function<Integer,EquationPosition>
-                                                          posMaker, PartialProof proof) {
-    if (!s.isFunctionalTerm()) return null;
-    ProofContext context = proof.getContext();
-    FunctionSymbol f = s.queryRoot();
-    int n = s.numberArguments();
-    int k = context.queryRuleArity(f);
-    if (n < k) return null;
-    EquationPosition ep = posMaker.apply(n - k);
+  private static DeductionSimplify findHeadSimplification(PartialProof proof, FunctionSymbol f,
+                              int numberArguments, Function<Integer,EquationPosition> posMaker) {
+    int k = proof.getContext().queryRuleArity(f);
+    if (numberArguments < k) return null;
+    EquationPosition ep = posMaker.apply(numberArguments - k);
     MutableSubstitution empty = new MutableSubstitution();
     Optional<OutputModule> m = Optional.empty();
-    for (String rulename : context.queryRuleNamesByFunction(s.queryRoot())) {
+    for (String rulename : proof.getContext().queryRuleNamesByFunction(f)) {
       DeductionSimplify attempt = DeductionSimplify.createStep(proof, m, rulename, ep, empty);
       if (attempt != null && attempt.verify(m)) return attempt;
     }
@@ -111,7 +112,6 @@ public final class AutoSimplifier {
    */
   private static Term simplifyFully(PartialProof proof, Term s, EquationPosition.Side side,
                                     LinkedList<Integer> pos, ArrayList<DeductionStep> steps) {
-    /*
     while (true) {
       // first simplify the arguments and replace s accordingly
       int count = steps.size();
@@ -121,15 +121,15 @@ public final class AutoSimplifier {
         args.add(simplifyFully(proof, s.queryArgument(i), side, pos, steps));
         pos.removeLast();
       }
-      if (steps.size() != count) s = s.queryHead().apply(args);
-  
-      // try reducing at the head!
-      DeductionSimplify step = findHeadSimplification(s, i -> makePos(side, pos, i), proof);
-      if (step == null || !step.execute(Optional.empty(proof))) return s;
-      s = step.queryReplacementSubterm();
+      if (!s.isFunctionalTerm()) {
+        if (steps.size() == count) return s;
+        return s.queryHead().apply(args);
+      }
+      DeductionSimplify step = findHeadSimplification(proof, s.queryRoot(), s.numberArguments(),
+                                                      i -> makePos(side, pos, i));
+      if (step == null || !step.execute(proof, Optional.empty())) return s.queryHead().apply(args);
+      s = proof.getProofState().getTopEquation().getEquation().querySubterm(makePos(side, pos, 0));
     }
-    */
-    return null;
   }
 
   private static EquationPosition makePos(EquationPosition.Side side, LinkedList<Integer> main,
