@@ -15,11 +15,7 @@
 
 package cora.rwinduction.engine.automation;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.function.Function;
 import charlie.util.Pair;
 import charlie.terms.position.*;
@@ -30,6 +26,7 @@ import charlie.trs.Rule;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 import cora.rwinduction.engine.deduction.DeductionSimplify;
+import cora.rwinduction.engine.deduction.DeductionCalc;
 
 /** This class automates finding a single simplification step that can be applied. */
 public final class AutoSimplifier {
@@ -84,7 +81,9 @@ public final class AutoSimplifier {
     EquationPosition ep = posMaker.apply(numberArguments - k);
     MutableSubstitution empty = new MutableSubstitution();
     Optional<OutputModule> m = Optional.empty();
-    for (String rulename : proof.getContext().queryRuleNamesByFunction(f)) {
+    Set<String> names = proof.getContext().queryRuleNamesByFunction(f);
+    if (names == null) return null;
+    for (String rulename : names) {
       DeductionSimplify attempt = DeductionSimplify.createStep(proof, m, rulename, ep, empty);
       if (attempt != null && attempt.verify(m)) return attempt;
     }
@@ -125,17 +124,40 @@ public final class AutoSimplifier {
         if (steps.size() == count) return s;
         return s.queryHead().apply(args);
       }
-      DeductionSimplify step = findHeadSimplification(proof, s.queryRoot(), s.numberArguments(),
-                                                      i -> makePos(side, pos, i));
+      DeductionStep step;
+      if (s.queryRoot().toCalculationSymbol() != null && s.queryType().isBaseType()) {
+        step = findCalculation(proof, side, pos, args);
+      }
+      else step = findHeadSimplification(proof, s.queryRoot(), s.numberArguments(),
+                                        i -> makePos(side, pos, i));
       if (step == null || !step.execute(proof, Optional.empty())) return s.queryHead().apply(args);
+      steps.add(step);
+      System.out.println("Executed " + step + "; now equation = " + proof.getProofState().getTopEquation());
       s = proof.getProofState().getTopEquation().getEquation().querySubterm(makePos(side, pos, 0));
     }
+  }
+
+  /**
+   * Helper function for simplifyFully: if a calculation symbol applied to (fully simplified) args
+   * can be calculated at the root, then the corresponding reduction step is returned; otherwise
+   * null.
+   */
+  private static DeductionCalc findCalculation(PartialProof proof, EquationPosition.Side side,
+                                               LinkedList<Integer> pos, ArrayList<Term> args) {
+    for (Term term : args) {
+      if (!term.isValue() && !term.isVariable()) return null;
+    }
+    Optional<OutputModule> empty = Optional.empty();
+    DeductionCalc ret = DeductionCalc.createStep(proof, empty, List.of(makePos(side, pos, 0)));
+    if (ret == null || !ret.verify(empty)) return null;
+    return ret;
   }
 
   private static EquationPosition makePos(EquationPosition.Side side, LinkedList<Integer> main,
                                           int chop) {
     Position p = new FinalPos(chop);
-    while (!main.isEmpty()) p = new ArgumentPos(main.removeLast(), p);
+    Iterator<Integer> iterator = main.descendingIterator();
+    while (iterator.hasNext()) p = new ArgumentPos(iterator.next(), p);
     return new EquationPosition(side, p);
   }
 }

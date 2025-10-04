@@ -31,6 +31,7 @@ import charlie.reader.CoraInputReader;
 import charlie.smt.Valuation;
 import charlie.smt.SmtProblem;
 import charlie.smt.SmtSolver;
+import charlie.smt.FixedAnswerValidityChecker;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
@@ -58,14 +59,6 @@ class DeductionAlterConstraintTest {
       lst -> printer.generateUniqueNaming(lst));
   }
 
-  private class MySmtSolver implements SmtSolver {
-    private boolean _answer;
-    String _question;
-    public MySmtSolver(boolean answer) { _answer = answer; _question = null; }
-    public Answer checkSatisfiability(SmtProblem problem) { assertTrue(false); return null; }
-    public boolean checkValidity(SmtProblem prob) { _question = prob.toString(); return _answer; }
-  }
-
   @Test
   public void testPureEquivalence() {
     PartialProof pp = setupProof("iter(x, i, z) = iter(i, z, x) | x > i ∧ z != 0");
@@ -78,7 +71,7 @@ class DeductionAlterConstraintTest {
       DeductionAlterGeneraliseConstraint.createAlterStep(pp, o, newc);
     assertTrue(dac.commandDescription().equals(
       "alter constraint (z > 0 \\/ z < 0) /\\ i <= x - 1"));
-    MySmtSolver mysolver = new MySmtSolver(true);
+    FixedAnswerValidityChecker mysolver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = mysolver;
     assertTrue(dac.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
@@ -89,7 +82,7 @@ class DeductionAlterConstraintTest {
     dac.explain(module);
     assertTrue(module.toString().equals(
       "We apply ALTER to replace the constraint of E1 by (z > 0 ∨ z < 0) ∧ i ≤ x - 1.\n\n"));
-    assertTrue(mysolver._question.equals(
+    assertTrue(mysolver.queryQuestion(0).equals(
       // x ≤ i ∨ z = 0 ∨ ( (z ≥ 1 ∨ z + 1 ≤ 0) ∧ i + 1 ≤ x )
       "(i2 >= i1) or (i3 = 0) or (((i3 >= 1) or (0 >= 1 + i3)) and (i1 >= 1 + i2))\n" +
       // ( z ≤ 0 ∧ z ≥ 0 ) ∨ i ≥ x ∨ ( x ≥ i + 1 ∧ z != 0 )
@@ -105,7 +98,7 @@ class DeductionAlterConstraintTest {
     Term newc = CoraInputReader.readTerm("z != 0", renaming, pp.getContext().getTRS());
     DeductionAlterGeneraliseConstraint dac =
       DeductionAlterGeneraliseConstraint.createAlterStep(pp, o, newc);
-    MySmtSolver mysolver = new MySmtSolver(false);
+    FixedAnswerValidityChecker mysolver = new FixedAnswerValidityChecker(false);
     Settings.smtSolver = mysolver;
     assertFalse(dac.verify(o));
     assertTrue(module.toString().equals("It is not obvious if this usage of alter is " +
@@ -121,17 +114,17 @@ class DeductionAlterConstraintTest {
     Term newc = CoraInputReader.readTerm("x >= i", renaming, pp.getContext().getTRS());
     DeductionAlterGeneraliseConstraint dac =
       DeductionAlterGeneraliseConstraint.createGeneraliseStep(pp, o, newc);
-    Settings.smtSolver = new MySmtSolver(false);
+    Settings.smtSolver = new FixedAnswerValidityChecker(false);
     assertFalse(dac.verify(o));
     dac.explain(module);
     assertTrue(module.toString().equals("It is not obvious if this usage of generalise is " +
       "permitted: I could not prove that x > i ⇒ x ≥ i.\n\n" +
       "We apply GENERALISE to replace the constraint of E1 by x ≥ i.\n\n"));
 
-    MySmtSolver mysolver = new MySmtSolver(true);
+    FixedAnswerValidityChecker mysolver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = mysolver;
     assertTrue(dac.verifyAndExecute(pp, o));
-    assertTrue(mysolver._question.equals("(i2 >= i1) or (i1 >= i2)\n"));
+    assertTrue(mysolver.queryQuestion(0).equals("(i2 >= i1) or (i1 >= i2)\n"));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().getIndex() == 2);
     assertTrue(pp.getProofState().getTopEquation().toString().equals(

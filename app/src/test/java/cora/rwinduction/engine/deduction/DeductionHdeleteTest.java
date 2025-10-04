@@ -30,7 +30,7 @@ import charlie.substitution.MutableSubstitution;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import charlie.smt.SmtProblem;
-import charlie.smt.SmtSolver;
+import charlie.smt.FixedAnswerValidityChecker;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
@@ -88,14 +88,6 @@ class DeductionHdeleteTest {
     return pp;
   }
 
-  private class MySmtSolver implements SmtSolver {
-    private boolean _answer;
-    String _question;
-    public MySmtSolver(boolean answer) { _answer = answer; _question = null; }
-    public Answer checkSatisfiability(SmtProblem problem) { assertTrue(false); return null; }
-    public boolean checkValidity(SmtProblem prob) { _question = prob.toString(); return _answer; }
-  }
-
   private PartialProof setupProof(String leftgr, String lhs, String rhs, String constr,
                                   String rightgr, String hypodesc) {
     TRS trs = setupTRS();
@@ -116,14 +108,14 @@ class DeductionHdeleteTest {
                             EquationPosition.TOPLEFT, new MutableSubstitution());
     assertTrue(step.commandDescription().equals("hdelete H8^{-1} L with [y := x]"));
     assertTrue(module.toString().equals(""));
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(module.toString().equals(""));
     assertTrue(pp.getProofState().isFinalState());
     assertTrue(pp.getProofState().getHypotheses().size() == 1);
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
-    assertTrue(solver._question.equals("(0 >= i1) or (i1 >= 2)\n")); // x > 0 => x > 1
+    assertTrue(solver.queryQuestion(0).equals("(0 >= i1) or (i1 >= 2)\n")); // x > 0 => x > 1
   }
 
   @Test
@@ -147,7 +139,7 @@ class DeductionHdeleteTest {
                             EquationPosition.parse("L1"), new MutableSubstitution());
     assertTrue(step.commandDescription().equals("hdelete H8 L1 with [a := x, b := y]"));
     assertTrue(module.toString().equals(""));
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(module.toString().equals(""));
@@ -213,7 +205,7 @@ class DeductionHdeleteTest {
                EquationPosition.parse("L2*1"), new MutableSubstitution());
     assertTrue(step.commandDescription().equals("hdelete H8 L2.*1 with []"));
     assertTrue(module.toString().equals(""));
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(module.toString().equals(""));
@@ -292,7 +284,7 @@ class DeductionHdeleteTest {
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
                EquationPosition.parse("L3"), new MutableSubstitution());
-    Settings.smtSolver = new MySmtSolver(false);
+    Settings.smtSolver = new FixedAnswerValidityChecker(false);
     assertFalse(step.verify(Optional.of(module)));
     assertTrue(module.toString().equals("The induction hypothesis does not apply: " +
       "constraint variable c is not mapped to anything.\n\n"));
@@ -310,11 +302,11 @@ class DeductionHdeleteTest {
     DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
                                                         EquationPosition.parse("L3"), subst);
     assertTrue(step.commandDescription().equals("hdelete H8 L3 with [a := y, b := x, c := y]"));
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(module.toString().equals(""));
-    assertTrue(solver._question.equals("(i1 # i2) or ((i2 >= i2) and (i2 >= i1))\n"));
+    assertTrue(solver.queryQuestion(0).equals("(i1 # i2) or ((i2 >= i2) and (i2 >= i1))\n"));
   }
 }
 

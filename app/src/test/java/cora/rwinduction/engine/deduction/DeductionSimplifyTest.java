@@ -32,6 +32,7 @@ import charlie.reader.CoraInputReader;
 import charlie.smt.Truth;
 import charlie.smt.SmtProblem;
 import charlie.smt.SmtSolver;
+import charlie.smt.FixedAnswerValidityChecker;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
@@ -65,14 +66,6 @@ class DeductionSimplifyTest {
                             lst -> printer.generateUniqueNaming(lst));
   }
 
-  private class MySmtSolver implements SmtSolver {
-    private boolean _answer;
-    String _question;
-    public MySmtSolver(boolean answer) { _answer = answer; _question = null; }
-    public Answer checkSatisfiability(SmtProblem problem) { assertTrue(false); return null; }
-    public boolean checkValidity(SmtProblem prob) { _question = prob.toString(); return _answer; }
-  }
-
   private class MySimpleSolver implements SmtSolver {
     public Answer checkSatisfiability(SmtProblem problem) { assertTrue(false); return null; }
     public boolean checkValidity(SmtProblem prob) {
@@ -84,7 +77,7 @@ class DeductionSimplifyTest {
   public void testCreateStep() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(z) + 0 = iter(z, 0, 0) | z < 0");
     OutputModule module = OutputModule.createUnitTestModule();
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker();
     Settings.smtSolver = solver;
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2", pos,
@@ -93,7 +86,8 @@ class DeductionSimplifyTest {
     step.explain(module);
     assertTrue(module.toString().equals("We apply SIMPLIFICATION to E1 with rule O2 and " +
       "substitution [x := z].\n\n"));
-    assertTrue(solver._question == null); // it doesn't get called when just creating the step
+    // it doesn't get called when just creating the step
+    assertTrue(solver.queryNumberQuestions() == 0);
   }
 
   @Test
@@ -115,7 +109,7 @@ class DeductionSimplifyTest {
   public void testSimplifyUnconstrained() {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0");
     OutputModule module = OutputModule.createUnitTestModule();
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker();
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O3",
                        EquationPosition.TOPRIGHT, new MutableSubstitution());
     assertTrue(step.verify(Optional.of(module)));
@@ -123,7 +117,7 @@ class DeductionSimplifyTest {
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E2: (• , sum1(x) ≈ iter(x, 0, 0) | x > 0 , •)"));
     assertTrue(pp.getDeductionHistory().get(0) == step);
-    assertTrue(solver._question == null); // it doesn't get called for unconstrained rules
+    assertTrue(solver.queryNumberQuestions() == 0); // it doesn't get called for unconstrained rules
     assertTrue(module.toString().equals(""));
   }
 
@@ -131,7 +125,7 @@ class DeductionSimplifyTest {
   public void testSimplifyConstrained() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(z) + 0 = iter(z, 0, 0) | z > 0");
     OutputModule module = OutputModule.createUnitTestModule();
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1"));
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2", pos,
@@ -139,7 +133,7 @@ class DeductionSimplifyTest {
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E2: (• , z + sum1(z - 1) + 0 ≈ iter(z, 0, 0) | z > 0 , •)"));
-    assertTrue(solver._question.equals("(0 >= i1) or (i1 >= 1)\n"));
+    assertTrue(solver.queryQuestion(0).equals("(0 >= i1) or (i1 >= 1)\n"));
     assertTrue(module.toString().equals(""));
   }
 
@@ -189,13 +183,13 @@ class DeductionSimplifyTest {
   public void testPointlessVariableInRuleConstraint() {
     PartialProof pp = setupProof("pointless(x, y) = x + y | y > 3");
     OutputModule module = OutputModule.createUnitTestModule();
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O9",
                                                           EquationPosition.TOPLEFT,
                                                           new MutableSubstitution());
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
-    assertTrue(solver._question.equals("(3 >= i1) or ((i1 >= 1) and (i2 = i2))\n"));
+    assertTrue(solver.queryQuestion(0).equals("(3 >= i1) or ((i1 >= 1) and (i2 = i2))\n"));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E2: (• , pointless(x + y, y - 1) ≈ x + y | y > 3 , •)"));
   }
@@ -204,7 +198,7 @@ class DeductionSimplifyTest {
   public void testSimplifyNoMatch() {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0");
     OutputModule module = OutputModule.createUnitTestModule();
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
     assertTrue(DeductionSimplify.createStep(pp, Optional.of(module), "O3", EquationPosition.TOPLEFT,
                                             new MutableSubstitution()) == null);
@@ -217,7 +211,7 @@ class DeductionSimplifyTest {
   public void testSimplifyBadPosition() throws PositionFormatException {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0");
     OutputModule module = OutputModule.createUnitTestModule();
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
     EquationPosition pos = new EquationPosition(EquationPosition.Side.Left, Position.parse("1.2"));
     MutableSubstitution empty = new MutableSubstitution();
@@ -229,7 +223,7 @@ class DeductionSimplifyTest {
   public void testMissingVariablesFromSubstitution() {
     PartialProof pp = setupProof("input = 7");
     OutputModule module = OutputModule.createUnitTestModule();
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker();
     Settings.smtSolver = solver;
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O6",
                   EquationPosition.TOPLEFT, new MutableSubstitution());
@@ -237,7 +231,7 @@ class DeductionSimplifyTest {
     assertTrue(module.toString().equals(
       "Not enough information given: " +
       "I could not determine the substitution to be used for x, y.\n\n"));
-    assertTrue(solver._question == null);
+    assertTrue(solver.queryNumberQuestions() == 0);
   }
 
   @Test
@@ -245,14 +239,14 @@ class DeductionSimplifyTest {
     Settings.setStrategy(Settings.Strategy.Full);
     PartialProof pp = setupProof("sum1(z + 1) = iter(z + 1, 0, 0) | z ≥ 0");
     OutputModule module = OutputModule.createUnitTestModule();
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O2",
                   EquationPosition.TOPLEFT, new MutableSubstitution());
     assertFalse(step.verify(Optional.of(module)));
     assertTrue(module.toString().equals("The rule does not apply: " +
       "constraint variable x is instantiated by z + 1, which is not a value or variable.\n\n"));
-    assertTrue(solver._question == null);
+    assertTrue(solver.queryNumberQuestions() == 0);
     // we CAN execute it even if we shouldn't, though!
     assertTrue(step.execute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
@@ -276,7 +270,7 @@ class DeductionSimplifyTest {
   public void testOnlyNeededVariablesAfterSimplify() {
     PartialProof pp = setupProof("0 = tmp(z) | x < 0");
     OutputModule module = OutputModule.createUnitTestModule();
-    MySmtSolver solver = new MySmtSolver(false);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(false);
     Settings.smtSolver = solver;
     DeductionSimplify step = DeductionSimplify.createStep(pp, Optional.of(module), "O7",
       EquationPosition.TOPRIGHT, new MutableSubstitution());

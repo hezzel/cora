@@ -27,7 +27,7 @@ import charlie.terms.TermPrinter;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import charlie.smt.SmtProblem;
-import charlie.smt.SmtSolver;
+import charlie.smt.FixedAnswerValidityChecker;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
@@ -55,19 +55,8 @@ class DeductionEqdeleteTest {
       lst -> printer.generateUniqueNaming(lst));
   }
 
-  class MySmtSolver implements SmtSolver {
-    boolean _valid;
-    String _storage;
-    MySmtSolver(boolean answer) { _valid = answer; _storage = null; }
-    public Answer checkSatisfiability(SmtProblem problem) { return new Answer.NO(); }
-    public boolean checkValidity(SmtProblem problem) {
-      _storage = problem.toString();
-      return _valid;
-    }
-  }
-
   private OutputModule _module;
-  private MySmtSolver _solver;
+  private FixedAnswerValidityChecker _solver;
 
   private void testSuccess(String eqdesc) {
     PartialProof pp = setupProof(eqdesc);
@@ -78,7 +67,7 @@ class DeductionEqdeleteTest {
       System.out.println(_module.toString());
       assertTrue(false, "Step is unsuccessful when it shouldn't be.");
     }
-    _solver = new MySmtSolver(true);
+    _solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = _solver;
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 1);
@@ -93,7 +82,7 @@ class DeductionEqdeleteTest {
   @Test
   public void testSuccessfulDeleteOneArgument() {
     testSuccess("g(x) = g(y) | x = y");
-    assertTrue(_solver._storage.equals("(i1 # i2) or (i1 = i2)\n"));
+    assertTrue(_solver.queryQuestion(0).equals("(i1 # i2) or (i1 = i2)\n"));
     assertTrue(_module.toString().equals("We observe that x = y ⊨ x = y, and may therefore " +
       "apply EQ-DELETION to remove E2 from the proof state.\n\n"));
   }
@@ -101,7 +90,7 @@ class DeductionEqdeleteTest {
   @Test
   public void testSuccessfulDeleteTwoArguments() {
     testSuccess("f(3, g(x)) = f(x, g(17)) | true");
-    assertTrue(_solver._storage.equals("false or ((3 = i1) and (i1 = 17))\n"));
+    assertTrue(_solver.queryQuestion(0).equals("false or ((3 = i1) and (i1 = 17))\n"));
     assertTrue(_module.toString().equals("We observe that true ⊨ 3 = x ∧ x = 17, and may " +
       "therefore apply EQ-DELETION to remove E2 from the proof state.\n\n"));
   }
@@ -189,7 +178,7 @@ class DeductionEqdeleteTest {
     _module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(_module);
     DeductionEqdelete step = DeductionEqdelete.createStep(pp, o);
-    _solver = new MySmtSolver(false);
+    _solver = new FixedAnswerValidityChecker(false);
     Settings.smtSolver = _solver;
     assertFalse(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getEquations().size() == 2);

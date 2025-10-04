@@ -30,7 +30,7 @@ import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import charlie.smt.SmtProblem;
-import charlie.smt.SmtSolver;
+import charlie.smt.FixedAnswerValidityChecker;
 import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
 import cora.rwinduction.engine.*;
@@ -193,14 +193,6 @@ class ConstrainedSimplifierTest {
       "mapped to anything.\n\n"));
   }
 
-  private class MySmtSolver implements SmtSolver {
-    private boolean _answer;
-    String _question;
-    public MySmtSolver(boolean answer) { _answer = answer; _question = null; }
-    public Answer checkSatisfiability(SmtProblem problem) { assertTrue(false); return null; }
-    public boolean checkValidity(SmtProblem prob) { _question = prob.toString(); return _answer; }
-  }
-
   @Test
   public void testConstraintSatisfaction() {
     PartialProof pp = setupProof("sum1(z) + 0 = iter(z, 0, 0) | z < 0");
@@ -216,17 +208,23 @@ class ConstrainedSimplifierTest {
     ConstrainedSimplifier simp = new ConstrainedSimplifier(left,right,constraint,renaming,subst);
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     assertTrue(simp.canReduceCtermWithConstraint(
       pp.getProofState().getTopEquation().getConstraint(), solver, eqnaming, o, "XX"));
     assertTrue(module.toString().equals(""));
-    assertTrue(solver._question.equals("(i1 >= 0) or ((6 >= 0) and (i1 # 0))\n"));
+    assertTrue(solver.queryQuestion(0).equals("(i1 >= 0) or ((6 >= 0) and (i1 # 0))\n"));
+    assertTrue(solver.queryNumberQuestions() == 1);
 
-    solver = new MySmtSolver(false);
+    solver = new FixedAnswerValidityChecker();
+    solver.setDefaultAnswer(false);
     assertFalse(simp.canReduceCtermWithConstraint(
       pp.getProofState().getTopEquation().getConstraint(), solver, eqnaming, o, "XX"));
     assertTrue(module.toString().equals(
       "The XX does not apply: I could not prove that z < 0 ⊨ 7 > 0 nor z < 0 ⊨ z ≠ 0.\n\n"));
+    assertTrue(solver.queryNumberQuestions() == 3);
+    assertTrue(solver.queryQuestion(0).equals("(i1 >= 0) or ((6 >= 0) and (i1 # 0))\n"));
+    assertTrue(solver.queryQuestion(1).equals("(i1 >= 0) or (6 >= 0)\n"));
+    assertTrue(solver.queryQuestion(2).equals("(i1 >= 0) or (i1 # 0)\n"));
   }
 
   @Test
@@ -241,10 +239,10 @@ class ConstrainedSimplifierTest {
       rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("O1"), subst);
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     assertFalse(simp.canReduceCtermWithConstraint(
       pp.getProofState().getTopEquation().getConstraint(), solver, eqnaming, o, "XXX"));
-    assertTrue(solver._question == null);
+    assertTrue(solver.queryNumberQuestions() == 0);
     assertTrue(module.toString().equals("The XXX does not apply: constraint variable x is " +
       "instantiated by z + 0, which is not a value or variable.\n\n"));
   }

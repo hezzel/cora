@@ -31,7 +31,7 @@ import charlie.substitution.MutableSubstitution;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import charlie.smt.SmtProblem;
-import charlie.smt.SmtSolver;
+import charlie.smt.FixedAnswerValidityChecker;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
@@ -85,14 +85,6 @@ class DeductionHypothesisTest {
     return pp;
   }
 
-  private class MySmtSolver implements SmtSolver {
-    private boolean _answer;
-    String _question;
-    public MySmtSolver(boolean answer) { _answer = answer; _question = null; }
-    public Answer checkSatisfiability(SmtProblem problem) { assertTrue(false); return null; }
-    public boolean checkValidity(SmtProblem prob) { _question = prob.toString(); return _answer; }
-  }
-
   private PartialProof setupProof(String leftgr, String lhs, String rhs, String constr,
                                   String rightgr, String hypodesc) {
     TRS trs = setupTRS();
@@ -113,7 +105,7 @@ class DeductionHypothesisTest {
                             EquationPosition.TOPLEFT, new MutableSubstitution());
     assertTrue(step.commandDescription().equals("hypothesis H8 L with [z := x]"));
     assertTrue(module.toString().equals(""));
-    MySmtSolver solver = new MySmtSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(module.toString().equals(""));
@@ -126,7 +118,7 @@ class DeductionHypothesisTest {
     assertTrue(module.toString().equals("We apply HYPOTHESIS to E19 with induction hypothesis H8 " +
       "and substitution [z := x].  This does not cause any new ordering requirements to be " +
       "imposed.\n\n"));
-    assertTrue(solver._question.equals("(0 >= i1) or (i1 >= 0)\n"));
+    assertTrue(solver.queryQuestion(0).equals("(0 >= i1) or (i1 >= 0)\n"));
   }
 
   private Variable getVariable(String name, Renaming renaming) {
@@ -146,7 +138,7 @@ class DeductionHypothesisTest {
                             EquationPosition.parse("R2"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8 R2 with [y := 0, z := x]"));
     assertTrue(module.toString().equals(""));
-    Settings.smtSolver = new MySmtSolver(true);
+    Settings.smtSolver = new FixedAnswerValidityChecker(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(module.toString().equals(""));
     assertTrue(pp.getProofState().getEquations().size() == 1);
@@ -173,7 +165,7 @@ class DeductionHypothesisTest {
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
                             EquationPosition.TOPRIGHT, subst);
     assertTrue(step.commandDescription().equals("hypothesis H8^{-1} R with [a := 1, z := x]"));
-    Settings.smtSolver = new MySmtSolver(true);
+    Settings.smtSolver = new FixedAnswerValidityChecker(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
     assertTrue(pp.getProofState().getEquations().get(0).toString().equals(
@@ -196,7 +188,7 @@ class DeductionHypothesisTest {
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
                             EquationPosition.parse("L1"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L1 with [y := x, z := 12]"));
-    Settings.smtSolver = new MySmtSolver(true);
+    Settings.smtSolver = new FixedAnswerValidityChecker(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 1);
     assertTrue(pp.getProofState().getEquations().get(0).toString().equals(
@@ -219,7 +211,7 @@ class DeductionHypothesisTest {
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
                             EquationPosition.parse("L"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L with [y := x, z := 12]"));
-    Settings.smtSolver = new MySmtSolver(true);
+    Settings.smtSolver = new FixedAnswerValidityChecker(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 2);
     assertTrue(pp.getProofState().getEquations().get(0).toString().equals(
@@ -242,7 +234,7 @@ class DeductionHypothesisTest {
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
                             EquationPosition.parse("R"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8 R with [y := x, z := 7]"));
-    Settings.smtSolver = new MySmtSolver(true);
+    Settings.smtSolver = new FixedAnswerValidityChecker(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 2);
     assertTrue(pp.getProofState().getEquations().get(0).toString().equals(
@@ -262,6 +254,7 @@ class DeductionHypothesisTest {
     MutableSubstitution subst = new MutableSubstitution();
     subst.extend(getVariable("z", pp.getProofState().getHypotheses().get(0).getRenaming()),
                  TheoryFactory.createValue(12));
+    Settings.smtSolver = new FixedAnswerValidityChecker(true);
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
                             EquationPosition.parse("L1"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L1 with [y := x, z := 12]"));
@@ -357,7 +350,7 @@ class DeductionHypothesisTest {
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
                            EquationPosition.TOPRIGHT, new MutableSubstitution());
     assertTrue(module.toString().equals(""));
-    Settings.smtSolver = new MySmtSolver(false);
+    Settings.smtSolver = new FixedAnswerValidityChecker(false, false);
     assertFalse(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(module.toString().equals("The induction hypothesis does not apply: I could not " +
       "prove that x > 0 ⊨ x ≥ 0.\n\n"));

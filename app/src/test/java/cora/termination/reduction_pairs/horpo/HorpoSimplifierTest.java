@@ -241,123 +241,102 @@ public class HorpoSimplifierTest {
         "![y ≻{theory} y + x | x ≤ 0 { y x }])\n"));
   }
 
-  private class FakeSolver implements SmtSolver {
-    private ArrayList<String> _requests;
-    private boolean[] _answers;
-    int _index;
-    public FakeSolver(boolean ...answers) {
-      _requests = new ArrayList<String>();
-      _answers = answers;
-      _index = 0;
-    }
-    // return the next stored answer
-    public boolean checkValidity(SmtProblem problem) {
-      _requests.add(problem.queryCombinedConstraint().toString());
-      return _answers[_index++];
-    }
-    // this shouldn't be getting called at all
-    public SmtSolver.Answer checkSatisfiability(SmtProblem problem) {
-      assertTrue(false);
-      return null;
-    }
-  }
-
   @Test
   public void testGreaterDown() {
-    FakeSolver solver = new FakeSolver(true, false);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true, false);
     Settings.smtSolver = solver;
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x+1", "Int", "x-1", "Int", "Int",
                                                         "x >= -4", HRelation.GREATERTHEORY, "");
     assertTrue(pair.fst().toString().equals("[x + 1 ≻{theory} x - 1 | x ≥ -4 { x }]\n"));
     assertTrue(pair.snd().toString().equals("[x + 1 ≻{theory} x - 1 | x ≥ -4 { x }] == [down]\n"));
-    assertTrue(solver._requests.size() == 2);
-    assertTrue(solver._requests.get(0).equals(
-      "(0 >= 5 + i1) or ((1 + i1 >= i1) and (1001 + i1 >= 0))"));
+    assertTrue(solver.queryNumberQuestions() == 2);
+    assertTrue(solver.queryQuestion(0).equals(
+      "(0 >= 5 + i1) or ((1 + i1 >= i1) and (1001 + i1 >= 0))\n"));
       // x ≥ -4 ⇒ x + 1 > x - 1 ∧ x + 1 ≥ -1000
-    assertTrue(solver._requests.get(1).equals(
-      "(0 >= 5 + i1) or ((i1 >= 3 + i1) and (999 >= i1))"));
+    assertTrue(solver.queryQuestion(1).equals(
+      "(0 >= 5 + i1) or ((i1 >= 3 + i1) and (999 >= i1))\n"));
       // x ≥ -4 ⇒ x + 1 < x - 1 ∧ x + 1 ≤ 1000
   }
 
   @Test
   public void testGreaterNeither() {
-    FakeSolver solver = new FakeSolver(false, false);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(false, false);
     Settings.smtSolver = solver;
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x+y", "Int", "y", "Int", "Int",
                                                         "x > y", HRelation.GREATERTHEORY, "");
     assertTrue(pair.fst().toString().equals("[x + y ≻{theory} y | x > y { x y }]\n"));
     assertTrue(pair.snd().toString().equals("![x + y ≻{theory} y | x > y { x y }]\n"));
-    assertTrue(solver._requests.size() == 2);
-    assertTrue(solver._requests.get(0).equals(
-      "(i2 >= i1) or ((i1 + i2 >= 1 + i2) and (1000 + i1 + i2 >= 0))"));
+    assertTrue(solver.queryNumberQuestions() == 2);
+    assertTrue(solver.queryQuestion(0).equals(
+      "(i2 >= i1) or ((i1 + i2 >= 1 + i2) and (1000 + i1 + i2 >= 0))\n"));
       // x > y ⇒ x + y > y ∧ x + y ≥ -1000
-    assertTrue(solver._requests.get(1).equals(
-      "(i2 >= i1) or ((i2 >= 1 + i1 + i2) and (1000 >= i1 + i2))"));
+    assertTrue(solver.queryQuestion(1).equals(
+      "(i2 >= i1) or ((i2 >= 1 + i1 + i2) and (1000 >= i1 + i2))\n"));
       // x > y ⇒ x + y < y ∧ x + y ≤ 1000
   }
 
   @Test
   public void testGeqUp() {
-    FakeSolver solver = new FakeSolver(false, true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(false, true);
     Settings.smtSolver = solver;
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x+y", "Int", "y", "Int", "Int",
                                                            "x >= 0", HRelation.GEQTHEORY, "");
     assertTrue(pair.fst().toString().equals("[x + y ≽{theory} y | x ≥ 0 { x y }]\n"));
     assertTrue(pair.snd().toString().equals("[x + y ≽{theory} y | x ≥ 0 { x y }] == ![down]\n"));
-    assertTrue(solver._requests.size() == 2);
-    assertTrue(solver._requests.get(0).equals("(0 >= 1 + i1) or (i1 + i2 >= i2)"));
+    assertTrue(solver.queryNumberQuestions() == 2);
+    assertTrue(solver.queryQuestion(0).equals("(0 >= 1 + i1) or (i1 + i2 >= i2)\n"));
       // x ≥ 0 ⇒ x + y ≥ y
-    assertTrue(solver._requests.get(1).equals("(0 >= 1 + i1) or (i2 >= i1 + i2)"));
+    assertTrue(solver.queryQuestion(1).equals("(0 >= 1 + i1) or (i2 >= i1 + i2)\n"));
       // x ≥ 0 ⇒ y ≥ x + y
   }
 
   @Test
   public void testGeqBoth() {
-    FakeSolver solver = new FakeSolver(true, true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true, true);
     Settings.smtSolver = solver;
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x+y", "Int", "y", "Int", "Int",
                                                             "x = 0", HRelation.GEQTHEORY, "");
     assertTrue(pair.fst().toString().equals("[x + y ≽{theory} y | x = 0 { x y }]\n"));
     assertTrue(pair.snd().toString().equals("[x + y ≽{theory} y | x = 0 { x y }]\n"));
-    assertTrue(solver._requests.size() == 2);
-    assertTrue(solver._requests.get(0).equals("(i1 # 0) or (i1 + i2 >= i2)"));
+    assertTrue(solver.queryNumberQuestions() == 2);
+    assertTrue(solver.queryQuestion(0).equals("(i1 # 0) or (i1 + i2 >= i2)\n"));
       // x ≥ 0 ⇒ x + y ≥ y
-    assertTrue(solver._requests.get(1).equals("(i1 # 0) or (i2 >= i1 + i2)"));
+    assertTrue(solver.queryQuestion(1).equals("(i1 # 0) or (i2 >= i1 + i2)\n"));
       // x ≥ 0 ⇒ y ≥ x + y
   }
 
   @Test
   public void testGreaterWhenNotAllVariablesAreConstrained() {
-    FakeSolver solver = new FakeSolver(true, true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true, true);
     Settings.smtSolver = solver;
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x+y", "Int", "x", "Int", "Int",
                                                             "y = 0", HRelation.GEQTHEORY, "");
     assertTrue(pair.snd().toString().equals("![x + y ≽{theory} x | y = 0 { y }]\n"));
-    assertTrue(solver._requests.size() == 0);
+    assertTrue(solver.queryNumberQuestions() == 0);
   }
 
   @Test
   public void testBoolComparisonGeqTrue() {
-    FakeSolver solver = new FakeSolver(true);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x", "Bool", "x ∧ false", "Bool",
                                                          "Bool", "x", HRelation.GEQTHEORY, "");
     assertTrue(pair.snd().toString().equals("[x ≽{theory} x ∧ false | x { x }]\n"));
-    assertTrue(solver._requests.size() == 1);
+    assertTrue(solver.queryNumberQuestions() == 1);
     // x ⇒ x ∨ ¬(x ∧ false)
-    assertTrue(solver._requests.get(0).equals("!b1 or b1 or !b1 or true"));
+    assertTrue(solver.queryQuestion(0).equals("!b1 or b1 or !b1 or true\n"));
   }
 
   @Test
   public void testBoolComparisonGreaterFalse() {
-    FakeSolver solver = new FakeSolver(false);
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(false);
     Settings.smtSolver = solver;
     Pair<HorpoConstraintList,SmtProblem> pair = setupSimplify("x", "Bool", "x ∨ false", "Bool",
                                                      "Bool", "x", HRelation.GREATERTHEORY, "");
     assertTrue(pair.snd().toString().equals("![x ≻{theory} x ∨ false | x { x }]\n"));
-    assertTrue(solver._requests.size() == 1);
+    assertTrue(solver.queryNumberQuestions() == 1);
     // x ⇒ x ∧ ¬(x ∨ false)
-    assertTrue(solver._requests.get(0).equals("!b1 or (b1 and !b1 and true)"));
+    assertTrue(solver.queryQuestion(0).equals("!b1 or (b1 and !b1 and true)\n"));
   }
 
   @Test

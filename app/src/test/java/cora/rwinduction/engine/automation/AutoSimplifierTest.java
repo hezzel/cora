@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024-2025 Cynthia Kop
+ Copyright 2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -32,6 +32,7 @@ import charlie.reader.CoraInputReader;
 import charlie.smt.Truth;
 import charlie.smt.SmtProblem;
 import charlie.smt.SmtSolver;
+import charlie.smt.FixedAnswerValidityChecker;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
@@ -54,7 +55,10 @@ class AutoSimplifierTest {
       "append(nil, z) -> z\n" +
       "append(cons(x, y), z) -> cons(x, append(y, z))\n" +
       "suc :: Int -> Int\n" +
-      "suc -> [+](1)\n");
+      "suc -> [+](1)\n" +
+      "len :: list -> Int\n" +
+      "len(nil) -> 0\n" +
+      "len(cons(x,y)) -> 1 + len(y)\n");
   }
 
   public PartialProof setupProof(String eqdesc) {
@@ -75,46 +79,16 @@ class AutoSimplifierTest {
     assertTrue(step.commandDescription().equals("simplify O7 R with [x := y, y := x, z := z]"));
   }
 
-  /**
-   * Smt solver to be used for a single SMT validity check, which is then replaced by the next
-   * solver in the settings.
-   */
-  private class ReplacingSmtSolver implements SmtSolver {
-    private boolean _answer;
-    String _question;
-    private SmtSolver _next;
-
-    public ReplacingSmtSolver(boolean answer, SmtSolver next) {
-      _answer = answer;
-      _question = null;
-      _next = next;
-    }
-
-    public Answer checkSatisfiability(SmtProblem problem) {
-      assertTrue(false);
-      return null;
-    }
-
-    public boolean checkValidity(SmtProblem problem) {
-      _question = problem.toString();
-      Settings.smtSolver = _next;
-      return _answer;
-    }
-  }
-
   @Test
   public void testFindSimplificationWithSmt() {
     PartialProof pp = setupProof("sum1(x) = sum1(y) | x < 3 ∧ y > 0");
-    ReplacingSmtSolver solver4 = new ReplacingSmtSolver(true, null);
-    ReplacingSmtSolver solver3 = new ReplacingSmtSolver(false, solver4);
-    ReplacingSmtSolver solver2 = new ReplacingSmtSolver(false, solver3);
-    ReplacingSmtSolver solver1 = new ReplacingSmtSolver(false, solver2);
-    Settings.smtSolver = solver1;
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(false, false, false, true);
+    Settings.smtSolver = solver;
     DeductionStep step = AutoSimplifier.createSingleStep(pp);
-    assertTrue(solver1._question.equals("(i1 >= 3) or (0 >= i2) or (0 >= i1)\n"));
-    assertTrue(solver2._question.equals("(i1 >= 3) or (0 >= i2) or (i1 >= 1)\n"));
-    assertTrue(solver3._question.equals("(i1 >= 3) or (0 >= i2) or (0 >= i2)\n"));
-    assertTrue(solver4._question.equals("(i1 >= 3) or (0 >= i2) or (i2 >= 1)\n"));
+    assertTrue(solver.queryQuestion(0).equals("(i1 >= 3) or (0 >= i2) or (0 >= i1)\n"));
+    assertTrue(solver.queryQuestion(1).equals("(i1 >= 3) or (0 >= i2) or (i1 >= 1)\n"));
+    assertTrue(solver.queryQuestion(2).equals("(i1 >= 3) or (0 >= i2) or (0 >= i2)\n"));
+    assertTrue(solver.queryQuestion(3).equals("(i1 >= 3) or (0 >= i2) or (i2 >= 1)\n"));
     assertTrue(step.commandDescription().equals("simplify O2 R with [x := y]"));
   }
 
@@ -124,6 +98,24 @@ class AutoSimplifierTest {
     Settings.smtSolver = null;
     DeductionStep step = AutoSimplifier.createSingleStep(pp);
     assertTrue(step.commandDescription().equals("simplify O8 L1.*1 with []"));
+  }
+
+  @Test
+  public void testSimplifyFully() {
+    PartialProof pp = setupProof("sum1(iter(x, i, z)) = 1 + len(cons(i, y)) | x > i + 1");
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(false, true, false, true);
+    solver.setDefaultAnswer(false);
+    Settings.smtSolver = solver;
+    List<DeductionStep> steps = AutoSimplifier.simplifyFully(pp);
+    assertTrue(steps.size() == 7);
+    assertTrue(solver.queryNumberQuestions() == 6);
+    // x > i + 1 => i > x
+    assertTrue(solver.queryQuestion(0).equals("(1 + i2 >= i1) or (i2 >= 1 + i1)\n"));
+    // x > i + 1 => x >= i
+    assertTrue(solver.queryQuestion(1).equals("(1 + i2 >= i1) or (i1 >= i2)\n"));
+    // x > i + 1 /\ i1 = i + 1 /\ z1 = z + i => i1 > x
+    assertTrue(solver.queryQuestion(2).equals(
+      "(1 + i2 >= i1) or (i3 # 1 + i2) or (i4 # i5 + i2) or (i3 >= 1 + i1)\n"));
   }
 }
 
