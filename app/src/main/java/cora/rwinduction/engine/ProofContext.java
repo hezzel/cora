@@ -66,14 +66,14 @@ public class ProofContext {
       Rule rule = _trs.queryRule(i);
       Renaming renaming = renamingMaker.apply(List.of(
         rule.queryLeftSide(), rule.queryRightSide(), rule.queryConstraint())).makeImmutable();
-      String name = "O" + (i+1);
+      String name = "R" + (i+1);
       _ruleNames.add(name);
       _nameToRule.put(name, i);
       _ruleRenamings.add(renaming);
       if (rule.queryLeftSide().isFunctionalTerm()) {
         FunctionSymbol f = rule.queryLeftSide().queryRoot();
         if (!_arities.containsKey(f)) _arities.put(f, rule.queryLeftSide().numberArguments());
-        if (!_rulesBySymbol.containsKey(f)) _rulesBySymbol.put(f, new HashSet<String>());
+        if (!_rulesBySymbol.containsKey(f)) _rulesBySymbol.put(f, new TreeSet<String>());
         _rulesBySymbol.get(f).add(name);
       }
     }

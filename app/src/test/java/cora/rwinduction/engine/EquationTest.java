@@ -51,7 +51,7 @@ class EquationTest {
     Term right = CoraInputReader.readTermAndUpdateNaming("g(x,y)", renaming, trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > 0 ∧ y = 0", renaming, trs);
     Equation equation = new Equation(left, right, constraint);
-    EquationPosition pos = EquationPosition.parse("L1");
+    EquationPosition pos = EquationPosition.parse("l1");
     assertTrue(equation.querySubterm(pos).toString().equals("f(x)"));
     Term replacement = CoraInputReader.readTerm("g(3,y)", renaming, trs);
     Equation eq2 = equation.replaceSubterm(pos, replacement);
@@ -69,7 +69,7 @@ class EquationTest {
     Term right = CoraInputReader.readTermAndUpdateNaming("g(x,y)", renaming, trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("x > 0 ∧ y = 0", renaming, trs);
     Equation equation = new Equation(left, right, constraint);
-    EquationPosition pos = EquationPosition.parse("L1");
+    EquationPosition pos = EquationPosition.parse("l1");
     Term replacement = CoraInputReader.readTerm("h(3)", renaming, trs);
     assertThrows(TypingException.class, () -> equation.replaceSubterm(pos, replacement));
   }

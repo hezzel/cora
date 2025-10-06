@@ -84,15 +84,15 @@ class ProofContextTest {
     assertTrue(context.queryRuleNamesByFunction(TheoryFactory.plusSymbol) == null);
     Set<String> set = context.queryRuleNamesByFunction(trs.lookupSymbol("add"));
     assertTrue(set.size() == 2);
-    assertTrue(set.contains("O6"));
-    assertTrue(set.contains("O7"));
+    assertTrue(set.contains("R6"));
+    assertTrue(set.contains("R7"));
     set = context.queryRuleNamesByFunction(trs.lookupSymbol("iter"));
     assertTrue(set.size() == 2);
-    assertTrue(set.contains("O4"));
-    assertTrue(set.contains("O5"));
+    assertTrue(set.contains("R4"));
+    assertTrue(set.contains("R5"));
     set = context.queryRuleNamesByFunction(trs.lookupSymbol("partial"));
     assertTrue(set.size() == 1);
-    assertTrue(set.contains("O8"));
+    assertTrue(set.contains("R8"));
   }
 
   @Test

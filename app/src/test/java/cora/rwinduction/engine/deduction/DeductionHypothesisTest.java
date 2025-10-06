@@ -103,7 +103,7 @@ class DeductionHypothesisTest {
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
                             EquationPosition.TOPLEFT, new MutableSubstitution());
-    assertTrue(step.commandDescription().equals("hypothesis H8 L with [z := x]"));
+    assertTrue(step.commandDescription().equals("hypothesis H8 l with [z := x]"));
     assertTrue(module.toString().equals(""));
     FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
@@ -135,8 +135,8 @@ class DeductionHypothesisTest {
     subst.extend(getVariable("y", pp.getProofState().getHypotheses().get(0).getRenaming()),
                  TheoryFactory.createValue(0));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                            EquationPosition.parse("R2"), subst);
-    assertTrue(step.commandDescription().equals("hypothesis H8 R2 with [y := 0, z := x]"));
+                            EquationPosition.parse("r2"), subst);
+    assertTrue(step.commandDescription().equals("hypothesis H8 r2 with [y := 0, z := x]"));
     assertTrue(module.toString().equals(""));
     Settings.smtSolver = new FixedAnswerValidityChecker(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
@@ -164,7 +164,7 @@ class DeductionHypothesisTest {
                  TheoryFactory.createValue(1));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
                             EquationPosition.TOPRIGHT, subst);
-    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} R with [a := 1, z := x]"));
+    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} r with [a := 1, z := x]"));
     Settings.smtSolver = new FixedAnswerValidityChecker(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
@@ -186,8 +186,8 @@ class DeductionHypothesisTest {
     subst.extend(getVariable("z", pp.getProofState().getHypotheses().get(0).getRenaming()),
                  TheoryFactory.createValue(12));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                            EquationPosition.parse("L1"), subst);
-    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L1 with [y := x, z := 12]"));
+                            EquationPosition.parse("l1"), subst);
+    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} l1 with [y := x, z := 12]"));
     Settings.smtSolver = new FixedAnswerValidityChecker(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 1);
@@ -209,8 +209,8 @@ class DeductionHypothesisTest {
     subst.extend(getVariable("z", pp.getProofState().getHypotheses().get(0).getRenaming()),
                  TheoryFactory.createValue(12));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                            EquationPosition.parse("L"), subst);
-    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L with [y := x, z := 12]"));
+                            EquationPosition.parse("l"), subst);
+    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} l with [y := x, z := 12]"));
     Settings.smtSolver = new FixedAnswerValidityChecker(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 2);
@@ -232,8 +232,8 @@ class DeductionHypothesisTest {
     subst.extend(getVariable("z", pp.getProofState().getHypotheses().get(0).getRenaming()),
                  TheoryFactory.createValue(7));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                            EquationPosition.parse("R"), subst);
-    assertTrue(step.commandDescription().equals("hypothesis H8 R with [y := x, z := 7]"));
+                            EquationPosition.parse("r"), subst);
+    assertTrue(step.commandDescription().equals("hypothesis H8 r with [y := x, z := 7]"));
     Settings.smtSolver = new FixedAnswerValidityChecker(true);
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 2);
@@ -256,8 +256,8 @@ class DeductionHypothesisTest {
                  TheoryFactory.createValue(12));
     Settings.smtSolver = new FixedAnswerValidityChecker(true);
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                            EquationPosition.parse("L1"), subst);
-    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L1 with [y := x, z := 12]"));
+                            EquationPosition.parse("l1"), subst);
+    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} l1 with [y := x, z := 12]"));
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 1);
     assertTrue(pp.getProofState().getEquations().size() == 1);
@@ -277,8 +277,8 @@ class DeductionHypothesisTest {
     OutputModule module = OutputModule.createUnitTestModule();
     MutableSubstitution subst = new MutableSubstitution();
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                                                       EquationPosition.parse("L"), subst);
-    assertTrue(step.commandDescription().equals("hypothesis H8 L with [x := x]"));
+                                                       EquationPosition.parse("l"), subst);
+    assertTrue(step.commandDescription().equals("hypothesis H8 l with [x := x]"));
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 1);
     step.explain(module);
@@ -295,8 +295,8 @@ class DeductionHypothesisTest {
     OutputModule module = OutputModule.createUnitTestModule();
     MutableSubstitution subst = new MutableSubstitution();
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                                                       EquationPosition.parse("L2"), subst);
-    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} L2 with [z := x]"));
+                                                       EquationPosition.parse("l2"), subst);
+    assertTrue(step.commandDescription().equals("hypothesis H8^{-1} l2 with [z := x]"));
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
     step.explain(module);
@@ -364,7 +364,7 @@ class DeductionHypothesisTest {
     OutputModule module = OutputModule.createUnitTestModule();
     MutableSubstitution subst = new MutableSubstitution();
     assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                            EquationPosition.parse("R2"), subst) == null);
+                            EquationPosition.parse("r2"), subst) == null);
     assertTrue(subst.domain().size() == 0);
     assertTrue(module.toString().equals("Not enough information given: I could not determine " +
       "the substitution to be used for y, a.\n\n"));

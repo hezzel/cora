@@ -78,12 +78,12 @@ class ConstrainedSimplifierTest {
   @Test
   public void testMissingAndMatchSides() {
     PartialProof pp = setupProof("sum2(u) = iter(u, 0, 0)");
-    Rule rule = pp.getContext().getRule("O3");
+    Rule rule = pp.getContext().getRule("R3");
     MutableSubstitution subst = new MutableSubstitution();
-    subst.extend(pp.getContext().getRenaming("O3").getReplaceable("i"),
-                 CoraInputReader.readTerm("0", pp.getContext().getRenaming("O3"), _trs));
+    subst.extend(pp.getContext().getRenaming("R3").getReplaceable("i"),
+                 CoraInputReader.readTerm("0", pp.getContext().getRenaming("R3"), _trs));
     ConstrainedSimplifier simp = new ConstrainedSimplifier(rule.queryLeftSide(),
-      rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("O3"), subst);
+      rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("R3"), subst);
     assertTrue(simp.queryMissingReplaceables().toString().equals("[x, y, z, a]"));
     assertTrue(simp.matchLeft(pp.getProofState().getTopEquation().getLhs()) == null);
     assertTrue(subst.domain().size() == 1);
@@ -92,19 +92,19 @@ class ConstrainedSimplifierTest {
     assertTrue(simp.matchRight(pp.getProofState().getTopEquation().getRhs()) == null);
     assertTrue(simp.queryMissingReplaceables().toString().equals("[a]"));
     assertTrue(simp.querySubstitution().domain().size() == 4);
-    assertTrue(simp.querySubstitution().get(pp.getContext().getRenaming("O3").getReplaceable("y"))
+    assertTrue(simp.querySubstitution().get(pp.getContext().getRenaming("R3").getReplaceable("y"))
       == pp.getProofState().getTopEquation().getRenaming().getReplaceable("u"));
   }
 
   @Test
   public void testMatchFailure() {
     PartialProof pp = setupProof("sum2(z) = iter(z, 0, 0) | z < 0");
-    Rule rule = pp.getContext().getRule("O3");
+    Rule rule = pp.getContext().getRule("R3");
     MutableSubstitution subst = new MutableSubstitution();
-    subst.extend(pp.getContext().getRenaming("O3").getReplaceable("x"),
-                 CoraInputReader.readTerm("0", pp.getContext().getRenaming("O3"), _trs));
+    subst.extend(pp.getContext().getRenaming("R3").getReplaceable("x"),
+                 CoraInputReader.readTerm("0", pp.getContext().getRenaming("R3"), _trs));
     ConstrainedSimplifier simp = new ConstrainedSimplifier(rule.queryLeftSide(),
-      rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("O3"), subst);
+      rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("R3"), subst);
     assertTrue(simp.matchLeft(pp.getProofState().getTopEquation().getLhs()).toString().equals(
       "Variable x is mapped both to 0 and to z."));
   }
@@ -138,10 +138,10 @@ class ConstrainedSimplifierTest {
   @Test
   public void testOnlyCalculations() {
     PartialProof pp = setupProof("sum2(u) = iter(u, 0, 0)");
-    Rule rule = pp.getContext().getRule("O3");
+    Rule rule = pp.getContext().getRule("R3");
     // sum2(x) -> iter(y, i, z) | i = 0 ∧ i + 1 = a ∧ y = x ∧ z = a - 1
     ConstrainedSimplifier simp = new ConstrainedSimplifier(rule.queryLeftSide(),
-      rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("O3"), null);
+      rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("R3"), null);
     simp.matchLeft(pp.getProofState().getTopEquation().getLhs());
     assertTrue(simp.matchEqualitiesInConstraint(
       pp.getProofState().getTopEquation().getConstraint()));
@@ -156,10 +156,10 @@ class ConstrainedSimplifierTest {
   @Test
   public void testAddDefinitionsToSubstitution() {
     PartialProof pp = setupProof("sum2(u) = iter(u, 0, 0)");
-    Rule rule = pp.getContext().getRule("O3");
+    Rule rule = pp.getContext().getRule("R3");
     // sum2(x) -> iter(y, i, z) | i = 0 ∧ i + 1 = a ∧ y = x ∧ z = a - 1
     ConstrainedSimplifier simp = new ConstrainedSimplifier(rule.queryLeftSide(),
-      rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("O3"), null);
+      rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("R3"), null);
     simp.matchLeft(pp.getProofState().getTopEquation().getLhs());
 
     MutableRenaming renaming = pp.getProofState().getTopEquation().getRenaming().copy();
@@ -230,13 +230,13 @@ class ConstrainedSimplifierTest {
   @Test
   public void testConstraintVariableMappedToComplexTerm() {
     PartialProof pp = setupProof("sum1(z) = 0 + sum1(z) | z < 0");
-    Rule rule = pp.getContext().getRule("O1");
+    Rule rule = pp.getContext().getRule("R1");
     MutableSubstitution subst = new MutableSubstitution();
     Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
-    subst.extend(pp.getContext().getRenaming("O1").getReplaceable("x"),
+    subst.extend(pp.getContext().getRenaming("R1").getReplaceable("x"),
                  CoraInputReader.readTerm("z + 0", eqnaming, _trs));
     ConstrainedSimplifier simp = new ConstrainedSimplifier(rule.queryLeftSide(),
-      rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("O1"), subst);
+      rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("R1"), subst);
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
@@ -250,10 +250,10 @@ class ConstrainedSimplifierTest {
   @Test
   public void testSemiSubstitution() {
     PartialProof pp = setupProof("sum2(sum2(0)) = 0");
-    Rule rule = pp.getContext().getRule("O3");
+    Rule rule = pp.getContext().getRule("R3");
     Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
     ConstrainedSimplifier simp = new ConstrainedSimplifier(rule.queryLeftSide(),
-      rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("O3"), null);
+      rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("R3"), null);
     assertTrue(simp.matchLeft(pp.getProofState().getTopEquation().getLhs()) == null);
     assertFalse(simp.checkSemiConstructorSubstitution(pp.getContext()));
     simp.replaceSubstitution(new MutableSubstitution());

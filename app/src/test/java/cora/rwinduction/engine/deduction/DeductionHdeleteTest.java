@@ -106,7 +106,7 @@ class DeductionHdeleteTest {
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
                             EquationPosition.TOPLEFT, new MutableSubstitution());
-    assertTrue(step.commandDescription().equals("hdelete H8^{-1} L with [y := x]"));
+    assertTrue(step.commandDescription().equals("hdelete H8^{-1} l with [y := x]"));
     assertTrue(module.toString().equals(""));
     FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
@@ -136,8 +136,8 @@ class DeductionHdeleteTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
-                            EquationPosition.parse("L1"), new MutableSubstitution());
-    assertTrue(step.commandDescription().equals("hdelete H8 L1 with [a := x, b := y]"));
+                            EquationPosition.parse("l1"), new MutableSubstitution());
+    assertTrue(step.commandDescription().equals("hdelete H8 l1 with [a := x, b := y]"));
     assertTrue(module.toString().equals(""));
     FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
@@ -155,7 +155,7 @@ class DeductionHdeleteTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
-               EquationPosition.parse("R2"), new MutableSubstitution()) == null);
+               EquationPosition.parse("r2"), new MutableSubstitution()) == null);
     assertTrue(module.toString().equals("The left-hand side of the equation does not have a " +
       "position 2.\n\n"));
   }
@@ -167,7 +167,7 @@ class DeductionHdeleteTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
-               EquationPosition.parse("R2"), new MutableSubstitution()) == null);
+               EquationPosition.parse("r2"), new MutableSubstitution()) == null);
     assertTrue(module.toString().equals("The induction hypothesis does not match the " +
       "left-hand side of the equation.\n\n"));
   }
@@ -179,7 +179,7 @@ class DeductionHdeleteTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
-               EquationPosition.parse("R2"), new MutableSubstitution()) == null);
+               EquationPosition.parse("r2"), new MutableSubstitution()) == null);
     assertTrue(module.toString().equals(
       "The two sides have different contexts: 13 + [] versus 12 + [].\n\n"));
   }
@@ -190,7 +190,7 @@ class DeductionHdeleteTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
-               EquationPosition.parse("R1"), new MutableSubstitution()) == null);
+               EquationPosition.parse("r1"), new MutableSubstitution()) == null);
     assertTrue(module.toString().equals("The induction hypothesis does not match the " +
       "left-hand side of the equation.\n\n"));
   }
@@ -202,8 +202,8 @@ class DeductionHdeleteTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
-               EquationPosition.parse("L2*1"), new MutableSubstitution());
-    assertTrue(step.commandDescription().equals("hdelete H8 L2.*1 with []"));
+               EquationPosition.parse("l2*1"), new MutableSubstitution());
+    assertTrue(step.commandDescription().equals("hdelete H8 l2.*1 with []"));
     assertTrue(module.toString().equals(""));
     FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
@@ -220,7 +220,7 @@ class DeductionHdeleteTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
-               EquationPosition.parse("L2*1"), new MutableSubstitution()) == null);
+               EquationPosition.parse("l2*1"), new MutableSubstitution()) == null);
     assertTrue(module.toString().equals(
       "The two sides have different contexts: x + [](1) versus x + [](2).\n\n"));
   }
@@ -259,9 +259,9 @@ class DeductionHdeleteTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
-               EquationPosition.parse("L3"), new MutableSubstitution());
+               EquationPosition.parse("l3"), new MutableSubstitution());
     assertTrue(step.commandDescription().equals(
-      "hdelete H8^{-1} L3 with [a := x, b := y, c := z]"));
+      "hdelete H8^{-1} l3 with [a := x, b := y, c := z]"));
   }
 
   @Test
@@ -271,7 +271,7 @@ class DeductionHdeleteTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
-               EquationPosition.parse("L3"), new MutableSubstitution()) == null);
+               EquationPosition.parse("l3"), new MutableSubstitution()) == null);
     assertTrue(module.toString().equals(
       "The induction hypothesis does not match the right-hand side of the equation.\n\n"));
   }
@@ -283,7 +283,7 @@ class DeductionHdeleteTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, true,
-               EquationPosition.parse("L3"), new MutableSubstitution());
+               EquationPosition.parse("l3"), new MutableSubstitution());
     Settings.smtSolver = new FixedAnswerValidityChecker(false);
     assertFalse(step.verify(Optional.of(module)));
     assertTrue(module.toString().equals("The induction hypothesis does not apply: " +
@@ -300,8 +300,8 @@ class DeductionHdeleteTest {
     subst.extend(h8.getRenaming().getReplaceable("c"),
       (Variable)pp.getProofState().getTopEquation().getRenaming().getReplaceable("y"));
     DeductionHdelete step = DeductionHdelete.createStep(pp, Optional.of(module), h8, false,
-                                                        EquationPosition.parse("L3"), subst);
-    assertTrue(step.commandDescription().equals("hdelete H8 L3 with [a := y, b := x, c := y]"));
+                                                        EquationPosition.parse("l3"), subst);
+    assertTrue(step.commandDescription().equals("hdelete H8 l3 with [a := y, b := x, c := y]"));
     FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = solver;
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));

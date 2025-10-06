@@ -77,28 +77,28 @@ class CommandHypothesisTest {
   @Test
   public void testGoodStepWithoutSubstitution() {
     OutputModule module = OutputModule.createUnicodeModule(_trs);
-    DeductionHypothesis step = createStep(module, "hypothesis H12 L.2");
-    assertTrue(step.toString().equals("hypothesis H12 L2 with [x := x]"));
+    DeductionHypothesis step = createStep(module, "hypothesis H12 l.2");
+    assertTrue(step.toString().equals("hypothesis H12 l2 with [x := x]"));
   }
 
   @Test
   public void testGoodInverseStepOnOtherSide() {
     OutputModule module = OutputModule.createUnicodeModule(_trs);
-    DeductionHypothesis step = createStep(module, "hypothesis H12-inverse R");
-    assertTrue(step.toString().equals("hypothesis H12^{-1} R with [x := x + 0]"));
+    DeductionHypothesis step = createStep(module, "hypothesis H12-inverse r");
+    assertTrue(step.toString().equals("hypothesis H12^{-1} r with [x := x + 0]"));
   }
 
   @Test
   public void testGoodInverseStepWithSubstitution() {
     OutputModule module = OutputModule.createUnicodeModule(_trs);
-    DeductionHypothesis step = createStep(module, "hypothesis H29^{-1} L.2 with [y := 17]");
-    assertTrue(step.toString().equals("hypothesis H29^{-1} L2 with [x := x, y := 17]"));
+    DeductionHypothesis step = createStep(module, "hypothesis H29^{-1} l.2 with [y := 17]");
+    assertTrue(step.toString().equals("hypothesis H29^{-1} l2 with [x := x, y := 17]"));
   }
 
   @Test
   public void testNonExistingHypothesis() {
     OutputModule module = OutputModule.createUnicodeModule(_trs);
-    assertTrue(createStep(module, "hypothesis H19 R.2") == null);
+    assertTrue(createStep(module, "hypothesis H19 r.2") == null);
     assertTrue(module.toString().equals("No such induction hypothesis: H19.\n\n"));
   }
 
@@ -140,11 +140,11 @@ class CommandHypothesisTest {
   public void testSuggestionsGivenHypothesis() {
     ArrayList<Command.TabSuggestion> suggestions = getSuggestions("H12-inverse");
     assertTrue(suggestions.size() == 2);
-    assertTrue(suggestions.get(0).text().equals("L2"));
-    assertTrue(suggestions.get(1).text().equals("R"));
+    assertTrue(suggestions.get(0).text().equals("l2"));
+    assertTrue(suggestions.get(1).text().equals("r"));
     suggestions = getSuggestions("H29");
     assertTrue(suggestions.size() == 1);
-    assertTrue(suggestions.get(0).text().equals("L"));
+    assertTrue(suggestions.get(0).text().equals("l"));
     assertTrue(getSuggestions("H29-inverse").size() == 0);
     assertTrue(getSuggestions("H17").size() == 0);
   }

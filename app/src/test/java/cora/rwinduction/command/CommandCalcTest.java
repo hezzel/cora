@@ -50,30 +50,30 @@ class CommandCalcTest {
   @Test
   public void testTwoLegalPositions() {
     OutputModule module = OutputModule.createUnitTestModule();
-    DeductionStep step = createStep(module, "calc L1 R1");
+    DeductionStep step = createStep(module, "calc l1 r1");
     step.explain(module);
     assertTrue(module.toString().equals("We use ALTER to add x1 = x + 1 ∧ x2 = x - 4 to the " +
-      "constraint, and then use CALC at positions L1 and R1.\n\n"));
+      "constraint, and then use CALC at positions l1 and r1.\n\n"));
   }
 
   @Test
   public void testBadInvocation() {
     OutputModule module = OutputModule.createUnitTestModule();
-    assertTrue(createStep(module, "calc L1 LR R1") == null);
-    assertTrue(module.toString().equals("Illegal position LR (character 1): position index " +
-      "should be an integer, but instead is [R].\n\n"));
+    assertTrue(createStep(module, "calc l1 lr r1") == null);
+    assertTrue(module.toString().equals("Illegal position lr (character 1): position index " +
+      "should be an integer, but instead is [r].\n\n"));
   }
 
   @Test
   public void testUnsuitablePositions() {
     OutputModule module = OutputModule.createUnitTestModule();
-    // R4 does not exist
-    assertTrue(createStep(module, "calc L1 R4") == null);
-    // L2.1 exists, but is not calculatable
-    assertTrue(createStep(module, "calc L2.1 R1") == null);
+    // r4 does not exist
+    assertTrue(createStep(module, "calc l1 r4") == null);
+    // l2.1 exists, but is not calculatable
+    assertTrue(createStep(module, "calc l2.1 r1") == null);
 
-    assertTrue(module.toString().equals("No such position: R4.\n\nThe subterm x at " +
-      "position L2.1 is not calculatable: it should be a first-order theory term.\n\n"));
+    assertTrue(module.toString().equals("No such position: r4.\n\nThe subterm x at " +
+      "position l2.1 is not calculatable: it should be a first-order theory term.\n\n"));
   }
 }
 

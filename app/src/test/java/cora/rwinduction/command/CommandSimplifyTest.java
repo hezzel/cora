@@ -79,39 +79,39 @@ class CommandSimplifyTest {
   @Test
   public void testGoodStepWithoutSubstitution() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    DeductionSimplify step = createStep(module, "simplify O5 R.2");
-    assertTrue(step.toString().equals("simplify O5 R2 with [x := z]"));
+    DeductionSimplify step = createStep(module, "simplify R5 r.2");
+    assertTrue(step.toString().equals("simplify R5 r2 with [x := z]"));
   }
 
   @Test
   public void testGoodStepWithSubstitution() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    DeductionSimplify step = createStep(module, "simplify O1 with [x:=z]");
-    assertTrue(step.toString().equals("simplify O1 L with [x := z]"));
+    DeductionSimplify step = createStep(module, "simplify R1 with [x:=z]");
+    assertTrue(step.toString().equals("simplify R1 l with [x := z]"));
   }
 
   @Test
   public void testNonExistingRule() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createStep(module, "simplify R19 R.2") == null);
+    assertTrue(createStep(module, "simplify R19 r.2") == null);
     assertTrue(module.toString().equals("No such rule: R19\n\n"));
 
     module = OutputModule.createUnicodeModule(trs);
-    assertFalse(execute(module, "simplify 5 R.2"));
+    assertFalse(execute(module, "simplify 5 r.2"));
     assertTrue(module.toString().equals("No such rule: 5\n\n"));
   }
 
   @Test
   public void testBadPosition() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createStep(module, "simplify O5 L1.2.3.2 with [x:=1]") == null);
-    assertTrue(module.toString().equals("No such position: L1.2.3.2.\n\n"));
+    assertTrue(createStep(module, "simplify R5 l1.2.3.2 with [x:=1]") == null);
+    assertTrue(module.toString().equals("No such position: l1.2.3.2.\n\n"));
   }
 
   @Test
   public void testBadSubstitution() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createStep(module, "simplify O5 R.2 with [x:=1]") == null);
+    assertTrue(createStep(module, "simplify R5 r.2 with [x:=1]") == null);
     assertTrue(module.toString().equals(
       "The rule does not apply due to failed matching (matching debug info says: " +
       "Variable x is mapped both to 1 and to z.)\n\n"));
@@ -120,7 +120,7 @@ class CommandSimplifyTest {
   @Test
   public void testOmitWith() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertFalse(execute(module, "simplify O5 R.2 [x:=z]"));
+    assertFalse(execute(module, "simplify R5 r.2 [x:=z]"));
     assertTrue(module.toString().equals("Unexpected argument at position 17: expected \"with\" " +
       "or end of command, but got [x:=z].\n\n"));
   }
@@ -128,7 +128,7 @@ class CommandSimplifyTest {
   @Test
   public void testTextAfterSubstitution() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    assertTrue(createStep(module, "simplify O1 with [x:=z] o") == null);
+    assertTrue(createStep(module, "simplify R1 with [x:=z] o") == null);
     assertTrue(module.toString().equals("Unexpected argument at position 25: " +
       "expected end of command.\n\n"));
   }
@@ -154,31 +154,31 @@ class CommandSimplifyTest {
 
   @Test
   public void testSuggestionsGivenRule() {
-    ArrayList<Command.TabSuggestion> suggestions = getSuggestions("O2");
+    ArrayList<Command.TabSuggestion> suggestions = getSuggestions("R2");
     assertTrue(suggestions.size() == 1);
-    assertTrue(suggestions.get(0).text().equals("L"));
-    suggestions = getSuggestions("O5");
+    assertTrue(suggestions.get(0).text().equals("l"));
+    suggestions = getSuggestions("R5");
     assertTrue(suggestions.size() == 1);
-    assertTrue(suggestions.get(0).text().equals("R2"));
-    assertTrue(getSuggestions("O6").size() == 0); // different root symbol
-    assertTrue(getSuggestions("O3").size() == 0); // same root symbol, but no match
+    assertTrue(suggestions.get(0).text().equals("r2"));
+    assertTrue(getSuggestions("R6").size() == 0); // different root symbol
+    assertTrue(getSuggestions("R3").size() == 0); // same root symbol, but no match
   }
 
   @Test
   public void testSuggestionsGivenRuleAndWith() {
-    ArrayList<Command.TabSuggestion> suggestions = getSuggestions("O2 with");
+    ArrayList<Command.TabSuggestion> suggestions = getSuggestions("R2 with");
     assertTrue(suggestions.size() == 1);
     assertTrue(suggestions.get(0).text() == null);
     assertTrue(suggestions.get(0).category().equals("substitution"));
-    suggestions = getSuggestions("O2 with [aa");
+    suggestions = getSuggestions("R2 with [aa");
     assertTrue(suggestions.size() == 1);
     assertTrue(suggestions.get(0).text() == null);
     assertTrue(suggestions.get(0).category().equals("substitution"));
-    suggestions = getSuggestions("O2 R12.34 with [aa");
+    suggestions = getSuggestions("R2 r12.34 with [aa");
     assertTrue(suggestions.size() == 1);
     assertTrue(suggestions.get(0).text() == null);
     assertTrue(suggestions.get(0).category().equals("substitution"));
-    suggestions = getSuggestions("O2 R12.34 with");
+    suggestions = getSuggestions("R2 r12.34 with");
     assertTrue(suggestions.size() == 1);
     assertTrue(suggestions.get(0).category().equals("substitution"));
   }
@@ -186,13 +186,13 @@ class CommandSimplifyTest {
   @Test
   public void testSuggetionsGivenSubstitution() {
     ArrayList<Command.TabSuggestion> suggestions;
-    suggestions = getSuggestions("O2 R12.34 with [aa]");
+    suggestions = getSuggestions("R2 r12.34 with [aa]");
     assertTrue(suggestions.size() == 1);
     assertTrue(suggestions.get(0).text() == null);
     assertTrue(suggestions.get(0).category().equals("end of command"));
-    suggestions = getSuggestions("O2 R12.34 [aa]");
+    suggestions = getSuggestions("R2 r12.34 [aa]");
     assertTrue(suggestions.size() == 0);
-    suggestions = getSuggestions("O2 with [aa]");
+    suggestions = getSuggestions("R2 with [aa]");
     assertTrue(suggestions.size() == 1);
     assertTrue(suggestions.get(0).category().equals("end of command"));
   }

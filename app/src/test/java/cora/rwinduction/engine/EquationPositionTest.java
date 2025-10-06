@@ -29,28 +29,28 @@ class EquationPositionTest {
     assertTrue(pos.equals(EquationPosition.TOPLEFT));
     assertFalse(pos.equals(EquationPosition.TOPRIGHT));
 
-    pos = EquationPosition.parse("L");
+    pos = EquationPosition.parse("l");
     assertTrue(pos.equals(EquationPosition.TOPLEFT));
     assertFalse(pos.equals(EquationPosition.TOPRIGHT));
 
-    pos = EquationPosition.parse("R");
+    pos = EquationPosition.parse("r");
     assertTrue(pos.equals(EquationPosition.TOPRIGHT));
     assertFalse(pos.equals(EquationPosition.TOPLEFT));
 
-    pos = EquationPosition.parse("Lε");
+    pos = EquationPosition.parse("lε");
     assertTrue(pos.equals(EquationPosition.TOPLEFT));
 
-    pos = EquationPosition.parse("R.");
+    pos = EquationPosition.parse("r.");
     assertTrue(pos.equals(EquationPosition.TOPRIGHT));
   }
 
   @Test
   public void testParseWithPosition() throws PositionFormatException {
-    EquationPosition pos = EquationPosition.parse("L.1.2.ε");
+    EquationPosition pos = EquationPosition.parse("l.1.2.ε");
     assertTrue(pos.querySide() == EquationPosition.Side.Left);
     assertTrue(pos.queryPosition().toString().equals("1.2"));
 
-    pos = EquationPosition.parse("R.3");
+    pos = EquationPosition.parse("r.3");
     assertTrue(pos.querySide() == EquationPosition.Side.Right);
     assertTrue(pos.queryPosition().toString().equals("3"));
 
@@ -65,7 +65,7 @@ class EquationPositionTest {
     assertTrue(pos.querySide() == EquationPosition.Side.Left);
     assertTrue(pos.queryPosition().toString().equals("1.2.☆3"));
 
-    pos = EquationPosition.parse("R*5");
+    pos = EquationPosition.parse("r*5");
     assertTrue(pos.querySide() == EquationPosition.Side.Right);
     assertTrue(pos.queryPosition().toString().equals("☆5"));
   }

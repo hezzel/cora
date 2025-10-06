@@ -72,11 +72,11 @@ class AutoSimplifierTest {
   public void testFindSimplificationWithoutSmt() {
     PartialProof pp = setupProof("append(append(nil, x), cons(y, z)) = append(cons(y, x), z)");
     DeductionStep step = AutoSimplifier.createSingleStep(pp);
-    assertTrue(step.commandDescription().equals("simplify O6 L1 with [z := x]"));
+    assertTrue(step.commandDescription().equals("simplify R6 l1 with [z := x]"));
     Optional<OutputModule> o = Optional.of(OutputModule.createUnitTestModule());
     assertTrue(step.execute(pp, o));
     step = AutoSimplifier.createSingleStep(pp);
-    assertTrue(step.commandDescription().equals("simplify O7 R with [x := y, y := x, z := z]"));
+    assertTrue(step.commandDescription().equals("simplify R7 r with [x := y, y := x, z := z]"));
   }
 
   @Test
@@ -89,7 +89,7 @@ class AutoSimplifierTest {
     assertTrue(solver.queryQuestion(1).equals("(i1 >= 3) or (0 >= i2) or (i1 >= 1)\n"));
     assertTrue(solver.queryQuestion(2).equals("(i1 >= 3) or (0 >= i2) or (0 >= i2)\n"));
     assertTrue(solver.queryQuestion(3).equals("(i1 >= 3) or (0 >= i2) or (i2 >= 1)\n"));
-    assertTrue(step.commandDescription().equals("simplify O2 R with [x := y]"));
+    assertTrue(step.commandDescription().equals("simplify R2 r with [x := y]"));
   }
 
   @Test
@@ -97,7 +97,7 @@ class AutoSimplifierTest {
     PartialProof pp = setupProof("sum1(suc(x)) = sum2(y) | x + 1 = y");
     Settings.smtSolver = null;
     DeductionStep step = AutoSimplifier.createSingleStep(pp);
-    assertTrue(step.commandDescription().equals("simplify O8 L1.*1 with []"));
+    assertTrue(step.commandDescription().equals("simplify R8 l1.*1 with []"));
   }
 
   @Test

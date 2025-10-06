@@ -130,10 +130,10 @@ class DeductionContextTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     Settings.setStrategy(Settings.Strategy.Full);
-    DeductionSimplify simpl = DeductionSimplify.createStep(pp, o, "O8",
+    DeductionSimplify simpl = DeductionSimplify.createStep(pp, o, "R8",
       EquationPosition.TOPLEFT, new MutableSubstitution());
     assertTrue(simpl.verifyAndExecute(pp, o));
-    simpl = DeductionSimplify.createStep(pp, o, "O8",
+    simpl = DeductionSimplify.createStep(pp, o, "R8",
       EquationPosition.TOPRIGHT, new MutableSubstitution());
     assertTrue(simpl.verifyAndExecute(pp, o));
     assertTrue(DeductionContext.createStep(pp, o, true) == null);

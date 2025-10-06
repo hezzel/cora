@@ -51,7 +51,7 @@ public class EquationPosition implements PrintableObject {
 
   @Override
   public void print(Printer printer) {
-    String s = switch (_side) { case Left -> "L"; case Right -> "R"; };
+    String s = switch (_side) { case Left -> "l"; case Right -> "r"; };
     if (_position.isEmpty()) printer.add(s);
     else if (_position.isFinal()) printer.add(s, ".", _position);
     else printer.add(s, _position);
@@ -84,12 +84,12 @@ public class EquationPosition implements PrintableObject {
    */
   public static EquationPosition parse(String desc) throws PositionFormatException {
     desc = desc.trim();
-    if (desc.equals("") || desc.equals("L")) return TOPLEFT;
-    if (desc.equals("R")) return TOPRIGHT;
+    if (desc.equals("") || desc.equals("l")) return TOPLEFT;
+    if (desc.equals("r")) return TOPRIGHT;
     Side side = Side.Left;
     int extra = 0;
-    if (desc.charAt(0) == 'L') { desc = desc.substring(1); extra = 1; }
-    else if (desc.charAt(0) == 'R') { desc = desc.substring(1); side = Side.Right; extra = 1; }
+    if (desc.charAt(0) == 'l') { desc = desc.substring(1); extra = 1; }
+    else if (desc.charAt(0) == 'r') { desc = desc.substring(1); side = Side.Right; extra = 1; }
     try {
       Position pos = Position.parse(desc);
       return new EquationPosition(side, pos);
