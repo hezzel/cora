@@ -17,7 +17,6 @@ package cora.rwinduction.engine.deduction;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import charlie.util.Pair;
 import charlie.terms.position.Position;
 import charlie.terms.position.ArgumentPos;
 import charlie.terms.position.FinalPos;
@@ -54,48 +53,6 @@ public final class DeductionHdelete extends DeductionStep {
     _position = pos;
     _hypothesisName = hypoName;
     _inversed = inverse;
-  }
-
-  /**
-   * This returns null if s and t are the same, and otherwise a list of tuples (p,s|_p,t|_p) where
-   * s|_p and t|_p are different.  Specifically, the positions in this list are in the order
-   * p_n, p_{n-1}, ..., p_0 where p_0 = ε and each p_{i+1} is one position deeper than p_i, and
-   * the contexts s[?]_{p_i} and t[?]_{p_i} are the same.
-   */
-  public static ArrayList<Pair<Position,Pair<Term,Term>>> contextDifferences(Term s, Term t) {
-    ArrayList<Pair<Position,Pair<Term,Term>>> ret = null;
-    // If the heads are not the same, we clearly are not part of a context surrounding a difference
-    // (as we only consider argument contexts, not head contexts), so return [(ε,(s,t))].
-    if (!s.queryHead().equals(t.queryHead()) || s.numberArguments() != t.numberArguments()) {
-      ret = new ArrayList<Pair<Position,Pair<Term,Term>>>();
-      ret.add(new Pair<Position,Pair<Term,Term>>(Position.empty, new Pair<Term,Term>(s,t)));
-      return ret;
-    }
-    int n = s.numberArguments();
-    // We have f(s1,...,sn) and f(t1,...,tn); find the first argument i where si != ti.
-    int i = 1;
-    for (; i <= n; i++) {
-      ret = contextDifferences(s.queryArgument(i), t.queryArgument(i));
-      if (ret != null) break;
-    }
-    // They don't differ anywhere? Then the terms are the same, so return null.
-    if (ret == null) return ret;
-    // If they differ in more than one spot, return [(ε,(s,t))] again.
-    for (int j = i+1; j <= n; j++) {
-      if (!s.queryArgument(j).equals(t.queryArgument(j))) {
-        ret = new ArrayList<Pair<Position,Pair<Term,Term>>>();
-        ret.add(new Pair<Position,Pair<Term,Term>>(Position.empty, new Pair<Term,Term>(s,t)));
-        return ret;
-      }
-    }
-    // If they only differ in one spot, then we are part of a suitable context!  The list is now
-    // [(pn,pairn) ,..., (p1,pair1)]; replace it by [(i pn,pairn), ..., (i p1,pair1), (ε,(s,t))].
-    for (int j = 0; j < ret.size(); j++) {
-      ret.set(j, new Pair<Position,Pair<Term,Term>>(new ArgumentPos(i, ret.get(j).fst()),
-                                                    ret.get(j).snd()));
-    }
-    ret.add(new Pair<Position,Pair<Term,Term>>(Position.empty, new Pair<Term,Term>(s,t)));
-    return ret;
   }
 
   /**

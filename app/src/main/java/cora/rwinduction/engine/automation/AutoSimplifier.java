@@ -132,7 +132,6 @@ public final class AutoSimplifier {
                                         i -> makePos(side, pos, i));
       if (step == null || !step.execute(proof, Optional.empty())) return s.queryHead().apply(args);
       steps.add(step);
-      System.out.println("Executed " + step + "; now equation = " + proof.getProofState().getTopEquation());
       s = proof.getProofState().getTopEquation().getEquation().querySubterm(makePos(side, pos, 0));
     }
   }

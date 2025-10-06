@@ -31,8 +31,8 @@ import cora.rwinduction.engine.*;
 /**
  * This class represents a derived deduction rule: EQ-DELETE takes an equation of the form
  * C[s1,...,sn] = C[t1,...,tn] | φ where all si and ti are values or variables and φ implies
- * that each si = ti.  The command ALTER to replace each si by ti, and then uses DELETE to remove
- * the equation.
+ * that each si = ti.  The deduction step combines a command ALTER to replace each si by ti,
+ * followed by DELETE to remove the equation.
  */
 public final class DeductionEqdelete extends DeductionStep {
   private Term _required;
