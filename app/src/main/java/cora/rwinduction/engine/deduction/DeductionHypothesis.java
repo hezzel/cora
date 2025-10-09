@@ -141,6 +141,18 @@ public final class DeductionHypothesis extends DeductionStep {
   }
 
   /**
+   * This returns the number of ordering requirements the application of this hypothesis imposes.
+   */
+  public int queryRequirementCount() {
+    return _requirements.size();
+  }
+
+  /** For 0 ≤ index < queryRequirementCount(), this returns the given ordering requirement. */
+  public OrdReq queryRequirement(int index) {
+    return _requirements.get(index);
+  }
+
+  /**
    * This function checks if we can indeed apply the induction hypothesis in the direction l → r | φ
    * with the substitution γ to the equation C[lγ]_p ≈ t | ψ, with data as given by step.  Note
    * that, for a step to be created, it is already given that l γ is indeed the subterm at the given
@@ -153,7 +165,11 @@ public final class DeductionHypothesis extends DeductionStep {
     // it needs to be an innermost step if we're using innermost strategy
     if ( (Settings.queryRewritingStrategy().equals(Settings.Strategy.Innermost) ||
           Settings.queryRewritingStrategy().equals(Settings.Strategy.CallByValue)) &&
-         !_simplifier.checkSemiConstructorSubstitution(_pcontext)) return false;
+         !_simplifier.checkSemiConstructorSubstitution(_pcontext)) {
+      module.ifPresent(o -> o.println("This step cannot be applied due to the innermost " +
+        "evaluation strategy."));
+      return false;
+    }
     // the constraint implication should be satisfied
     if (_simplifier.constraintIsTrue()) return true;
     return _simplifier.canReduceCtermWithConstraint(_equ.getConstraint(), Settings.smtSolver,
