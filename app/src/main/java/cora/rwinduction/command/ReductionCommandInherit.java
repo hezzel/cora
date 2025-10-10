@@ -55,7 +55,8 @@ abstract class ReductionCommandInherit extends DeductionCommand {
   
   @Override
   public FixedList<String> callDescriptor() {
-    return FixedList.of(_commandName + " " + _reducibleKind,
+    return FixedList.of(_commandName,
+                        _commandName + " " + _reducibleKind,
                         _commandName + " " + _reducibleKind + " <position>",
                         _commandName + " " + _reducibleKind + " with <substitution>",
                         _commandName + " " + _reducibleKind + " <position> with <substitution>");
@@ -70,6 +71,7 @@ abstract class ReductionCommandInherit extends DeductionCommand {
     // no arguments => they haven't yet given the kind
     if (parts.length == 0 || parts[0].equals("")) {
       addTabSuggestionsForKind(symbols, ret);
+      ret.add(endOfCommandSuggestion());
       return ret;
     }
 

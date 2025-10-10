@@ -24,6 +24,7 @@ import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.Hypothesis;
 import cora.rwinduction.engine.deduction.DeductionHypothesis;
+import cora.rwinduction.engine.automation.AutoHypothesis;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command hypothesis (simplification with an element of H). */
@@ -45,6 +46,9 @@ public class CommandHypothesis extends HypothesisCommandInherit {
 
   @Override
   protected DeductionHypothesis createStep(CommandParsingStatus input) {
+    // automatic case: no arguments given
+    if (input.commandEnded()) return AutoHypothesis.createHypothesisStep(_proof, _module);
+
     // get induction hypothesis and inverse status
     Pair<Hypothesis,Boolean> hypopair = readHypothesis(input);
     if (hypopair == null) return null;

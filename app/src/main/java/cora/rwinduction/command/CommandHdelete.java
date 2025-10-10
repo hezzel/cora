@@ -24,6 +24,7 @@ import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.Hypothesis;
 import cora.rwinduction.engine.deduction.DeductionHdelete;
+import cora.rwinduction.engine.automation.AutoDeleter;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command hdelete. */
@@ -44,6 +45,8 @@ public class CommandHdelete extends HypothesisCommandInherit {
 
   @Override
   protected DeductionHdelete createStep(CommandParsingStatus input) {
+    // handle no-arguments case
+    if (input.commandEnded()) return AutoDeleter.createHdeleteStep(_proof, Optional.of(_module));
     // get induction hypothesis and inverse status
     Pair<Hypothesis,Boolean> hypopair = readHypothesis(input);
     if (hypopair == null) return null;

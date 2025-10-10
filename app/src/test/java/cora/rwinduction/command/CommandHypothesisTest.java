@@ -129,11 +129,13 @@ class CommandHypothesisTest {
   @Test
   public void testSuggestionEmpty() {
     ArrayList<Command.TabSuggestion> suggestions = getSuggestions("");
-    assertTrue(suggestions.size() == 2);
+    assertTrue(suggestions.size() == 3);
     suggestions = getSuggestions("     ");
-    assertTrue(suggestions.size() == 2);
+    assertTrue(suggestions.size() == 3);
     assertTrue(suggestions.get(0).text().equals("H12-inverse"));
     assertTrue(suggestions.get(1).text().equals("H29"));
+    assertTrue(suggestions.get(2).text() == null);
+    assertTrue(suggestions.get(2).category().equals("end of command"));
   }
 
   @Test

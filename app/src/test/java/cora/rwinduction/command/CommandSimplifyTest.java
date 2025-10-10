@@ -147,9 +147,9 @@ class CommandSimplifyTest {
   @Test
   public void testSuggestionEmpty() {
     ArrayList<Command.TabSuggestion> suggestions = getSuggestions("");
-    assertTrue(suggestions.size() == 5);  // the rules for add, sum1, sum2
+    assertTrue(suggestions.size() == 6);  // empty, and the rules for add, sum1, sum2
     suggestions = getSuggestions("     ");
-    assertTrue(suggestions.size() == 5);
+    assertTrue(suggestions.size() == 6);
   }
 
   @Test

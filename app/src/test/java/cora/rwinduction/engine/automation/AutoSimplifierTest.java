@@ -71,11 +71,11 @@ class AutoSimplifierTest {
   @Test
   public void testFindSimplificationWithoutSmt() {
     PartialProof pp = setupProof("append(append(nil, x), cons(y, z)) = append(cons(y, x), z)");
-    DeductionStep step = AutoSimplifier.createSingleStep(pp);
+    OutputModule module = OutputModule.createUnitTestModule();
+    DeductionStep step = AutoSimplifier.createSingleStep(pp, module);
     assertTrue(step.commandDescription().equals("simplify R6 l1 with [z := x]"));
-    Optional<OutputModule> o = Optional.of(OutputModule.createUnitTestModule());
-    assertTrue(step.execute(pp, o));
-    step = AutoSimplifier.createSingleStep(pp);
+    assertTrue(step.execute(pp, Optional.of(module)));
+    step = AutoSimplifier.createSingleStep(pp, module);
     assertTrue(step.commandDescription().equals("simplify R7 r with [x := y, y := x, z := z]"));
   }
 
@@ -84,19 +84,21 @@ class AutoSimplifierTest {
     PartialProof pp = setupProof("sum1(x) = sum1(y) | x < 3 ∧ y > 0");
     FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(false, false, false, true);
     Settings.smtSolver = solver;
-    DeductionStep step = AutoSimplifier.createSingleStep(pp);
+    OutputModule module = OutputModule.createUnitTestModule();
+    DeductionStep step = AutoSimplifier.createSingleStep(pp, module);
     assertTrue(solver.queryQuestion(0).equals("(i1 >= 3) or (0 >= i2) or (0 >= i1)\n"));
     assertTrue(solver.queryQuestion(1).equals("(i1 >= 3) or (0 >= i2) or (i1 >= 1)\n"));
     assertTrue(solver.queryQuestion(2).equals("(i1 >= 3) or (0 >= i2) or (0 >= i2)\n"));
     assertTrue(solver.queryQuestion(3).equals("(i1 >= 3) or (0 >= i2) or (i2 >= 1)\n"));
     assertTrue(step.commandDescription().equals("simplify R2 r with [x := y]"));
+    assertTrue(module.toString().equals(""));
   }
 
   @Test
   public void testFindHeadSimplification() {
     PartialProof pp = setupProof("sum1(suc(x)) = sum2(y) | x + 1 = y");
     Settings.smtSolver = null;
-    DeductionStep step = AutoSimplifier.createSingleStep(pp);
+    DeductionStep step = AutoSimplifier.createSingleStep(pp, OutputModule.createUnitTestModule());
     assertTrue(step.commandDescription().equals("simplify R8 l1.*1 with []"));
   }
 

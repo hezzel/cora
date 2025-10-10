@@ -33,8 +33,9 @@ public final class AutoSimplifier {
   /**
    * This either creates a pre-verified simplify step for some position in the top equation and
    * rule, or null if there is no simplify rule that can be applied.
+   * In the latter case, a messge is given on the output module.
    */
-  public static DeductionSimplify createSingleStep(PartialProof proof) {
+  public static DeductionSimplify createSingleStep(PartialProof proof, OutputModule module) {
     EquationContext ec = proof.getProofState().getTopEquation();
     for (Pair<Term,Position> pair : ec.getLhs().querySubterms()) {
       DeductionSimplify step =
@@ -46,6 +47,7 @@ public final class AutoSimplifier {
         createSingleStepAtPosition(proof, EquationPosition.Side.Right, pair.snd(), pair.fst());
       if (step != null) return step;
     }
+    module.println("I could not find any simplification step to apply.");
     return null;
   }
 

@@ -23,6 +23,8 @@ import charlie.terms.Term;
 import charlie.substitution.MutableSubstitution;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
+import cora.rwinduction.engine.deduction.DeductionDelete;
+import cora.rwinduction.engine.deduction.DeductionEqdelete;
 import cora.rwinduction.engine.deduction.DeductionHdelete;
 
 /**
@@ -143,6 +145,29 @@ public final class AutoDeleter {
       }
     }
     // I went through all the hypotheses and still did not return! ==> There are no good ones.
+    return null;
+  }
+
+  /**
+   * This finds an application of hdelete, delete or eq-delete that works, if any is applicable.
+   * No messages are given.  If no suitable application can be found, then null is returned.
+   */
+  public static DeductionStep tryDeleteTopEquation(PartialProof proof) {
+    EquationContext ec = proof.getProofState().getTopEquation();
+    Optional<OutputModule> empty = Optional.empty();
+
+    // try deletion
+    DeductionStep step = DeductionDelete.createStep(proof, empty);
+    if (step != null && step.verify(empty)) return step;
+
+    // try deleting with an induction hypothesis
+    step = createHdeleteStep(proof, empty);
+    if (step != null) return step;
+
+    // finally, try eq-delete
+    step = DeductionEqdelete.createStep(proof, empty);
+    if (step != null && step.verify(empty)) return step;
+
     return null;
   }
 }

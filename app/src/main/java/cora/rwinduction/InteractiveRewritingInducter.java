@@ -95,6 +95,7 @@ public class InteractiveRewritingInducter {
     clst.registerEnvironmentCommand(new CommandSave());
     clst.registerEnvironmentCommand(new CommandCheck());
 
+    clst.registerEnvironmentCommand(new CommandAuto());
     clst.registerEnvironmentCommand(new CommandUndo());
     clst.registerEnvironmentCommand(new CommandRedo());
 

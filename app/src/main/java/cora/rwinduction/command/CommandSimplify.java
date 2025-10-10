@@ -29,6 +29,7 @@ import charlie.trs.Rule;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.deduction.DeductionSimplify;
+import cora.rwinduction.engine.automation.AutoSimplifier;
 import cora.rwinduction.parser.CommandParsingStatus;
 
 /** The syntax for the deduction command simplify. */
@@ -67,6 +68,9 @@ public class CommandSimplify extends ReductionCommandInherit {
 
   @Override
   protected DeductionSimplify createStep(CommandParsingStatus input) {
+    // if no arguments are given, we auto simplify
+    if (input.commandEnded()) return AutoSimplifier.createSingleStep(_proof, _module);
+
     // get ruleName (which is a valid rule)
     String ruleName = readRuleName(input);
     if (ruleName == null) return null;
