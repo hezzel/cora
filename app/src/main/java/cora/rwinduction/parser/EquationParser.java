@@ -118,9 +118,9 @@ public class EquationParser {
     status.expect(CoraTokenData.BRACKETCLOSE, "closing bracket");
     Optional<Term> lg, rg;
     if (leftgr == null) lg = Optional.empty();
-    else lg = Optional.of(CoraInputReader.readTermAndUpdateNaming(leftgr, pair.snd(), trs));
+    else lg = Optional.of(CoraInputReader.readTermAndUpdateNaming(leftgr, pair.snd(), trs, null));
     if (rightgr == null) rg = Optional.empty();
-    else rg = Optional.of(CoraInputReader.readTermAndUpdateNaming(rightgr, pair.snd(), trs));
+    else rg = Optional.of(CoraInputReader.readTermAndUpdateNaming(rightgr, pair.snd(), trs, null));
     return new EquationContext(lg, pair.fst(), rg, index, pair.snd());
   }
 
@@ -179,16 +179,16 @@ public class EquationParser {
       left = args.get(0);
       right = args.get(1);
     }
-    Term l = CoraInputReader.readTermAndUpdateNaming(left, renaming, trs);
+    Term l = CoraInputReader.readTermAndUpdateNaming(left, renaming, trs, null);
     if (right == null) {
       throw ParsingException.create(tok, "Unexpected equation: I expected a form " +
         "\"a -><- b (| c)?\" but only found one term: ",
         Printer.makePrintable(l, renaming), ".");
     }
     if (status.readNextIf(CoraTokenData.MID) != null) constr = CoraParser.readTerm(status);
-    Term r = CoraInputReader.readTermAndUpdateNaming(right, renaming, trs);
+    Term r = CoraInputReader.readTermAndUpdateNaming(right, renaming, trs, l.queryType());
     Term constraint = constr == null ? TheoryFactory.createValue(true)
-                              : CoraInputReader.readTermAndUpdateNaming(constr, renaming, trs);
+      : CoraInputReader.readTermAndUpdateNaming(constr, renaming, trs, TypeFactory.boolSort);
     checkEquation(tok, l, r, constraint, renaming);
     return new Equation(l, r, constraint);
   }

@@ -51,6 +51,12 @@ public record LambdaPos(Position tail) implements Position {
     return tail.queryChopCount();
   }
 
+  public int compareTo(Position other) {
+    if (other.isFinal()) return 1;
+    if (other instanceof LambdaPos(Position t)) return this.tail.compareTo(t);
+    return - other.queryHead();
+  }
+
   public int queryHead() {
     return 0;
   }

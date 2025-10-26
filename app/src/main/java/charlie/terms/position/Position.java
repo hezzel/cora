@@ -15,6 +15,9 @@
 
 package charlie.terms.position;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+
 /**
  * Positions are a tool to refer to a specific location in a term.
  *
@@ -46,9 +49,10 @@ package charlie.terms.position;
  * </ul></p>
  *
  * <b>Note:</b> all instances of Position must (and can be expected to) be immutable.
+ * Positions are ordered in lexicograph order, with final positions coming before non-final ones.
  */
 
-public sealed interface Position permits
+public sealed interface Position extends Comparable<Position> permits
   FinalPos, ArgumentPos, LambdaPos, MetaPos {
 
   /** Returns whether this position and other are the same list. */
@@ -141,6 +145,32 @@ public sealed interface Position permits
     }
 
     return ret;
+  }
+
+  /**
+   * This translates the given list of integers into a position (in linear time), by considering
+   * positive integers as ArgumentPos, negative integers as MetaPos, and 0 as LambdaPos.  Note that
+   * this will only create full positions, not partial positions.
+   */
+  public static Position of(LinkedList<Integer> indexes) {
+    return of(indexes, empty);
+  }
+
+  /**
+   * This translates the given list of integers into a position (in linear time), by considering
+   * positive integers as ArgumentPos, negative integers as MetaPos, and 0 as LambdaPos.  Then
+   * ending is appended to the result.
+   */
+  public static Position of(LinkedList<Integer> indexes, Position ending) {
+    Position p = ending;
+    Iterator<Integer> iterator = indexes.descendingIterator();
+    while (iterator.hasNext()) {
+      int k = iterator.next();
+      if (k > 0) p = new ArgumentPos(k, p);
+      else if (k < 0) p = new MetaPos(-k, p);
+      else p = new LambdaPos(p);
+    }
+    return p;
   }
 }
 

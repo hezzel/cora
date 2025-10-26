@@ -29,9 +29,15 @@ public final class AutomaticProver {
    * of deleting.
    */
   public static ArrayList<DeductionStep> handleBasics(PartialProof proof) {
+    // simplify as far as we can
     ArrayList<DeductionStep> ret = AutoSimplifier.simplifyFully(proof);
+    // if we can finish off by deleting, do so
     DeductionStep step = AutoDeleter.tryDeleteTopEquation(proof);
-    if (step != null && step.execute(proof, Optional.empty())) ret.add(step);
+    if (step != null && step.execute(proof, Optional.empty())) {
+      ret.add(step);
+      return ret;
+    }
+    // TODO: context
     return ret;
   }
 }

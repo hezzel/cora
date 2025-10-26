@@ -17,6 +17,7 @@ package charlie.terms.position;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
 
 import charlie.util.NullStorageException;
 
@@ -208,6 +209,40 @@ public class PositionTest {
     assertThrows(PositionFormatException.class, () -> Position.parse("1..254"));
     assertThrows(PositionFormatException.class, () -> Position.parse("5.1@.3"));
     assertThrows(PositionFormatException.class, () -> Position.parse("1.254.3.."));
+  }
+
+  @Test
+  public void testComparisonBetweenKinds() throws PositionFormatException {
+    Position emptyPos = Position.parse("ε");
+    Position finalPos = Position.parse("*3");
+    Position metaPos = Position.parse("-1.3");
+    Position lambdaPos = Position.parse("0");
+    Position argPos = Position.parse("1.2");
+    List<Position> posses = List.of(emptyPos, finalPos, metaPos, lambdaPos, argPos);
+    for (int i = 0; i < posses.size(); i++) {
+      assertTrue(posses.get(i).compareTo(posses.get(i)) == 0);
+      for (int j = i + 1; j < posses.size(); j++) {
+        assertTrue(posses.get(i).compareTo(posses.get(j)) < 0,
+                   "comparing " + posses.get(i) + " with " + posses.get(j));
+        assertTrue(posses.get(j).compareTo(posses.get(i)) > 0,
+                   "comparing " + posses.get(j) + " with " + posses.get(i));
+      }
+    }
+  }
+
+  @Test
+  public void testComparisonWithingKinds() {
+    Position tail1 = new ArgumentPos(1, Position.empty);
+    Position tail2 = new ArgumentPos(2, Position.empty);
+    Position meta1 = new MetaPos(1, tail1), meta2 = new MetaPos(1, tail2);
+    Position lamb1 = new LambdaPos(tail1), lamb2 = new LambdaPos(tail2);
+    Position arg1 = new ArgumentPos(5, tail1), arg2 = new ArgumentPos(5, tail2);
+    assertTrue(meta1.compareTo(meta2) < 0);
+    assertTrue(meta2.compareTo(meta1) > 0);
+    assertTrue(lamb1.compareTo(lamb2) < 0);
+    assertTrue(lamb2.compareTo(lamb1) > 0);
+    assertTrue(arg1.compareTo(arg2) < 0);
+    assertTrue(arg2.compareTo(arg1) > 0);
   }
 }
 

@@ -347,12 +347,16 @@ public class CoraInputReader extends TermTyper {
    *
    * Any variable identifiers that occur in the parser term but which are not yet in the given
    * renaming, will be added to the renaming.
+   *
+   * The given type "expected" is the type that the term should have if one is known; if not,
+   * null may be supplied.
    */
-  public static Term readTermAndUpdateNaming(ParserTerm pt, MutableRenaming naming, TRS trs) {
+  public static Term readTermAndUpdateNaming(ParserTerm pt, MutableRenaming naming, TRS trs,
+                                             Type expected) {
     ErrorCollector collector = new ErrorCollector();
     SymbolData data = setupSymbolData(trs, naming);
     CoraInputReader reader = new CoraInputReader(data, collector);
-    Term ret = reader.makeTerm(pt, null, true);
+    Term ret = reader.makeTerm(pt, expected, true);
     if (ret != null) updateRenaming(naming, ret, collector);
     throwIfErrors(collector);
     return ret;

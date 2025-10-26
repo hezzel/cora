@@ -38,13 +38,13 @@ public abstract class DeductionCommand extends Command {
     super();
   }
 
-  protected boolean run(CommandParsingStatus input) {
+  protected final boolean run(CommandParsingStatus input) {
     DeductionStep step = createStep(input);
     if (step == null) return false;
     return step.verifyAndExecute(_proof, optionalModule());
   }
 
-  public boolean executeWithoutVerification(CommandParsingStatus input) {
+  public final boolean executeWithoutVerification(CommandParsingStatus input) {
     DeductionStep step = createStep(input);
     if (step == null) return false;
     return step.execute(_proof, optionalModule());

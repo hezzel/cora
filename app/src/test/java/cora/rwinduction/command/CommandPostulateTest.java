@@ -117,8 +117,8 @@ class CommandPostulateTest {
     CommandParsingStatus status = new CommandParsingStatus("postulate sum1(x) -><- x + 12 | x > 0");
     status.nextWord();
     assertFalse(cmd.run(status));
-    assertTrue(module.toString().equals("Parsing error at position 11: Left-hand side of " +
-      "equation (sum1(x)) has type result while right-hand side (x + 12) has type Int!\n\n"));
+    assertTrue(module.toString().equals("Parsing error at position 24: Type error: expected term " +
+      "of type result, but got x + 12 of type Int.\n\n"));
     assertTrue(status.currentPosition() == 11);
   }
 }

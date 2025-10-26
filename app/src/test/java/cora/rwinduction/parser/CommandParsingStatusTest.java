@@ -297,7 +297,7 @@ class CommandParsingStatusTest {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     assertTrue(status.readSubstitution(trs, keys, values, module) == null);
     assertTrue(status.commandEnded());
-    assertTrue(module.toString().equals("Ill-typed substitution: z has type Bool but is mapped " +
-      "to a term sum(3) of type Int.\n\n"));
+    assertTrue(module.toString().equals("Parsing error at position 24: Type error: expected " +
+      "term of type Bool, but got sum(3) of type Int.\n\n"));
   }
 }

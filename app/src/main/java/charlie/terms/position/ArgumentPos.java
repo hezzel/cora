@@ -57,6 +57,13 @@ public record ArgumentPos(int index, Position tail) implements Position {
     return tail.queryChopCount();
   }
 
+  public int compareTo(Position other) {
+    if (other.isFinal()) return 1;
+    int c = this.index - other.queryHead();
+    if (c != 0) return c;
+    return this.tail.compareTo(other.queryTail());
+  }
+
   public int queryHead() {
     return index;
   }

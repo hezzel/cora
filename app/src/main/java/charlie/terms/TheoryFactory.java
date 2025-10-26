@@ -16,7 +16,7 @@
 package charlie.terms;
 
 import java.util.Set;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import charlie.types.*;
 import charlie.terms.CalculationSymbol.Kind;
 import charlie.terms.CalculationSymbol.Associativity;
@@ -213,8 +213,8 @@ public class TheoryFactory {
   public static final Value emptyStringValue = new StringValue("");
 
   /** This returns the set of all calculation symbols that are currently supported. */
-  public static HashSet<CalculationSymbol> queryAllCalculationSymbols() {
-    HashSet<CalculationSymbol> set = new HashSet<CalculationSymbol>();
+  public static LinkedHashSet<CalculationSymbol> queryAllCalculationSymbols() {
+    LinkedHashSet<CalculationSymbol> set = new LinkedHashSet<CalculationSymbol>();
     set.add(plusSymbol);
     set.add(timesSymbol);
     set.add(minusSymbol);

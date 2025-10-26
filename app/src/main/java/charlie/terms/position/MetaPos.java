@@ -57,6 +57,13 @@ public record MetaPos(int index, Position tail) implements Position {
     return tail.queryChopCount();
   }
 
+  public int compareTo(Position pos) {
+    if (pos.isFinal()) return 1;
+    int c = this.queryHead() - pos.queryHead();
+    if (c != 0) return c;
+    return this.tail.compareTo(pos.queryTail());
+  }
+
   public int queryHead() {
     return - index;
   }

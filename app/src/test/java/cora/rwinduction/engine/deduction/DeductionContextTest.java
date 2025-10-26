@@ -22,6 +22,8 @@ import java.util.Set;
 import java.util.Optional;
 
 import charlie.util.FixedList;
+import charlie.terms.position.PositionFormatException;
+import charlie.terms.position.Position;
 import charlie.terms.Term;
 import charlie.terms.TermPrinter;
 import charlie.substitution.MutableSubstitution;
@@ -98,6 +100,7 @@ class DeductionContextTest {
     assertTrue(pp.getProofState().getEquations().size() == 2);
     assertTrue(pp.getProofState().getEquations().get(1).toString().equals(
       "E4: ([+](sum1(x)) , sum1(x) ≈ sum2(y + 1) | x = y + 1 , [+](sum2(y + 1)))"));
+    assertTrue(pp.getProofState().getIncompleteEquations().isEmpty());
     assertTrue(pp.getCommandHistory().size() == 2);
     assertTrue(pp.getCommandHistory().get(1).equals("semiconstructor"));
     step.explain(module);
@@ -113,19 +116,19 @@ class DeductionContextTest {
     assertTrue(DeductionContext.createStep(pp, o, true) == null);
     assertTrue(module.toString().equals("The semiconstructor rule can only be applied if both " +
       "sides of the equation have a form f s1 ... sn, with f a function symbol and n < ar(f).  " +
-      "(Use \"application\" for the more general form, which does, however, lose " +
-      "completeness.)\n\n"));
+      "(Use \"context\" for the more general form, which does, however, lose completeness in " +
+      "this case.)\n\n"));
     module = OutputModule.createUnitTestModule();
     o = Optional.of(module);
     DeductionContext step = DeductionContext.createStep(pp, o, false);
     assertTrue(step.verifyAndExecute(pp, o));
     step.explain(module);
-    assertTrue(module.toString().equals("We apply APPLICATION to E2, splitting the immediate " +
-      "arguments into separate equations.\n\n"));
+    assertTrue(module.toString().equals("We apply CONTEXT to E2, splitting the immediate " +
+      "arguments into separate equations.  We lose the completeness flag.\n\n"));
   }
 
   @Test
-  public void testCreateFailedStepWithVariables() {
+  public void testCreateStepWithVariables() {
     PartialProof pp = setupProof("@(F, sum1(x)) = @(F, sum2(x))");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
@@ -139,11 +142,15 @@ class DeductionContextTest {
     assertTrue(DeductionContext.createStep(pp, o, true) == null);
     assertTrue(module.toString().equals("The semiconstructor rule can only be applied if both " +
       "sides of the equation have a form f s1 ... sn, with f a function symbol and n < ar(f).  " +
-      "(Use \"application\" for the more general form, which does, however, lose " +
-      "completeness.)\n\n"));
+      "(Use \"context\" for the more general form, which does, however, lose completeness in " +
+      "this case.)\n\n"));
     DeductionContext step = DeductionContext.createStep(pp, o, false);
     assertTrue(step.verify(o));
-    assertTrue(step.commandDescription().equals("application"));
+    assertTrue(step.commandDescription().equals("context"));
+    assertFalse(step.isComplete());
+    assertTrue(pp.getProofState().getIncompleteEquations().isEmpty());
+    assertTrue(step.execute(pp, o));
+    assertTrue(pp.getProofState().getIncompleteEquations().contains(5));
   }
 
   @Test
@@ -155,8 +162,143 @@ class DeductionContextTest {
     assertTrue(DeductionContext.createStep(pp, o, false) == null);
     assertTrue(module.toString().equals(
       "The semiconstructor rule cannot be applied, because the two sides of the equation do not " +
-      "have the same head.\n\nThe application rule cannot be applied, because the two sides of " +
+      "have the same head.\n\nThe context rule cannot be applied, because the two sides of " +
       "the equation do not have the same head.\n\n"));
+  }
+
+  @Test
+  public void testCreateCompleteStepWithPositions() throws PositionFormatException {
+    PartialProof pp = setupProof("append(cons(sum1(x), y)) = append(cons(sum2(z), nil)) | x = z");
+    List<Position> positions = List.of(Position.parse("1.1"), Position.parse("1.2"));
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    DeductionContext step = DeductionContext.createStep(pp, o, positions);
+    assertTrue(step.isComplete());
+    assertTrue(step.commandDescription().equals("context 1.1 1.2"));
+    assertTrue(step.verifyAndExecute(pp, o));
+    assertTrue(pp.getProofState().getIncompleteEquations().isEmpty());
+    assertTrue(pp.getProofState().getEquations().size() == 3);
+    assertTrue(pp.getProofState().getEquations().get(1).toString().equals(
+      "E3: (• , y ≈ nil | x = z , •)"));
+    assertTrue(pp.getProofState().getEquations().get(2).toString().equals(
+      "E4: (• , sum1(x) ≈ sum2(z) | x = z , •)"));
+    step.explain(module);
+    assertTrue(module.toString().equals("We apply CONTEXT to E2, splitting the immediate " +
+      "arguments into separate equations.  We preserve the completeness flag.\n\n"));
+  }
+
+  @Test
+  public void testCreateIncompleteStepWithPositions() throws PositionFormatException {
+    PartialProof pp = setupProof(
+      "{ F :: Int -> list -> list } append(F(sum1(x), y)) = append(F(sum2(z), nil)) | x = z");
+    List<Position> positions = List.of(Position.parse("1.1"), Position.parse("1.2"));
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    DeductionContext step = DeductionContext.createStep(pp, o, positions);
+    assertFalse(step.isComplete());
+    assertTrue(step.commandDescription().equals("context 1.1 1.2"));
+    assertTrue(step.verifyAndExecute(pp, o));
+    assertTrue(pp.getProofState().getIncompleteEquations().size() == 2);
+    assertTrue(pp.getProofState().getEquations().size() == 3);
+    step.explain(module);
+    assertTrue(module.toString().equals("We apply CONTEXT to E2, splitting the immediate " +
+      "arguments into separate equations.  We lose the completeness flag.\n\n"));
+  }
+
+  @Test
+  public void testCompletenessIrrelevant() throws PositionFormatException {
+    PartialProof pp = setupProof("{ F :: list -> list } F(cons(x, cons(y, nil))) = " +
+      "F(cons(a, cons(b, nil))) | x + y = a + b");
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    DeductionContext step = DeductionContext.createStep(pp, o, false);
+    assertTrue(step.verifyAndExecute(pp, o));
+    List<Position> positions = List.of(Position.parse("1"), Position.parse("2.1"));
+    step = DeductionContext.createStep(pp, o, positions);
+    assertTrue(step.isComplete());
+    step.explain(module);
+    assertTrue(module.toString().equals("We apply CONTEXT to E3, splitting the immediate " +
+      "arguments into separate equations.\n\n"));
+  }
+
+  @Test
+  public void testCreateStepWhereSomePositionDoesNotExist() throws PositionFormatException {
+    PartialProof pp = setupProof(
+      "{ F :: Int -> list -> list } append(F(sum1(x), y)) = append(F(sum2(z), y)) | x = z");
+    List<Position> positions = List.of(Position.parse("1.1"), Position.parse("1.2.1"));
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    assertTrue(DeductionContext.createStep(pp, o, positions) == null);
+    assertTrue(module.toString().equals("There is no position 1.2.1: the subterm at position " +
+      "1.2 has no arguments!\n\n"));
+  }
+
+  @Test
+  public void testCreateStepWithPartialPosition() throws PositionFormatException {
+    PartialProof pp = setupProof("append(cons(sum1(x), y)) = append(cons(sum2(z), y)) | x = z");
+    List<Position> positions = List.of(Position.parse("1.*1"));
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    assertTrue(DeductionContext.createStep(pp, o, positions) == null);
+    assertTrue(module.toString().equals("The context rule cannot be applied with a partial " +
+      "position 1.☆1.\n\n"));
+  }
+
+  @Test
+  public void testCreateStepWithNonParallelPositions() throws PositionFormatException {
+    PartialProof pp = setupProof("append(cons(sum1(x), y)) = append(cons(sum2(z), y)) | x = z");
+    List<Position> positions = List.of(Position.parse("1.1"), Position.parse("1"));
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    assertTrue(DeductionContext.createStep(pp, o, positions) == null);
+    assertTrue(module.toString().equals("The given positions are not parallel.\n\n"));
+  }
+
+  @Test
+  public void testCreateStepWithIncorrectlyOrderedPositions() throws PositionFormatException {
+    PartialProof pp = setupProof("append(cons(sum1(x), y)) = append(cons(sum2(z), nil)) | x = z");
+    List<Position> positions = List.of(Position.parse("1.2"), Position.parse("1.1"));
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    DeductionStep step = DeductionContext.createStep(pp, o, positions);
+    assertTrue(step.commandDescription().equals("context 1.2 1.1"));
+    assertTrue(step.verifyAndExecute(pp, o));
+    // the one at the first given position is the top equation
+    assertTrue(pp.getProofState().getTopEquation().toString().equals(
+      "E4: (• , y ≈ nil | x = z , •)"));
+  }
+
+  @Test
+  public void testCreateStepWithDifferentContextAboveBox() throws PositionFormatException {
+    PartialProof pp = setupProof(
+      "{ F :: Int -> list -> list } append(F(sum1(x), y)) = append(cons(sum2(z), y)) | x = z");
+    List<Position> positions = List.of(Position.parse("1.2"), Position.parse("1.1"));
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    assertTrue(DeductionContext.createStep(pp, o, positions) == null);
+    assertTrue(module.toString().equals("The context rule is not applicable, since the subterms " +
+      "at position 1 have different head terms (F and cons).\n\n"));
+  }
+
+  @Test
+  public void testCreateStepWithDifferentContextParallelToBox() throws PositionFormatException {
+    PartialProof pp = setupProof("append(cons(sum1(x), y)) = append(cons(sum2(z), nil)) | x = z");
+    List<Position> positions = List.of(Position.parse("1.1"));
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    assertTrue(DeductionContext.createStep(pp, o, positions) == null);
+    assertTrue(module.toString().equals("The subterms at position 1.2 are not the same.\n\n"));
+  }
+
+  @Test
+  public void testCreateStepWithLambdaPosition() throws PositionFormatException {
+    PartialProof pp = setupProof("append(cons(sum1(x), y)) = append(cons(sum2(z), nil)) | x = z");
+    List<Position> positions = List.of(Position.parse("1.0"), Position.parse("1.1"));
+    OutputModule module = OutputModule.createUnitTestModule();
+    Optional<OutputModule> o = Optional.of(module);
+    assertTrue(DeductionContext.createStep(pp, o, positions) == null);
+    assertTrue(module.toString().equals("Unexpected position: 1.0.  This does not represent a " +
+      "position in a fully applicative term.\n\n"));
   }
 }
 

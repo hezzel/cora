@@ -104,7 +104,7 @@ public class InteractiveRewritingInducter {
     clst.registerDeductionCommand(new CommandCalc());
     clst.registerDeductionCommand(new CommandCase());
     clst.registerDeductionCommand(new CommandSemiconstructor());
-    clst.registerDeductionCommand(new CommandApplication());
+    clst.registerDeductionCommand(new CommandContext());
     clst.registerDeductionCommand(new CommandInduct());
     clst.registerDeductionCommand(new CommandHypothesis());
     clst.registerDeductionCommand(new CommandEqdelete());
@@ -347,7 +347,7 @@ public class InteractiveRewritingInducter {
       }
       _output.println("To complete the proof, you still need to verify that a suitable ordering " +
         "exists.  You can do this using the :check command.  Other useful environment commands " +
-        "can use include:");
+        "include:");
       _output.startTable();
       _output.println(":undo -- to go back to the previous proof state");
       _output.println(":quit -- to end the proof process without termination check");

@@ -30,7 +30,8 @@ public class CommandSemiconstructor extends SingularDeductionCommandInherit {
   public void printHelp(OutputModule module) {
     module.println("Use this deduction rule to split an equation f s1 ... sn %{approx} " +
       "f t1 ... tn | constr into the n equations si %{approx} ti | constr, if f is a " +
-      "constructor, or its arity is greater than n.");
+      "constructor, or its arity is greater than n.  This ensures that completeness of the " +
+      "proof state is preserved.");
   }
   
   @Override

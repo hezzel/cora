@@ -57,6 +57,13 @@ public record FinalPos(int chopcount) implements Position {
     return chopcount;
   }
 
+  public int compareTo(Position other) {
+    return switch(other) {
+      case FinalPos(int c) -> this.chopcount - c;
+      default -> -1;
+    };
+  }
+
   public int queryHead() {
     throw new IndexOutOfBoundsException("Calling queryHead() on FinalPos!");
   }

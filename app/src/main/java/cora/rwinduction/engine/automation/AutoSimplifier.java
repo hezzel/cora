@@ -156,10 +156,7 @@ public final class AutoSimplifier {
 
   private static EquationPosition makePos(EquationPosition.Side side, LinkedList<Integer> main,
                                           int chop) {
-    Position p = new FinalPos(chop);
-    Iterator<Integer> iterator = main.descendingIterator();
-    while (iterator.hasNext()) p = new ArgumentPos(iterator.next(), p);
-    return new EquationPosition(side, p);
+    return new EquationPosition(side, Position.of(main, new FinalPos(chop)));
   }
 }
 

@@ -331,12 +331,7 @@ public class CommandParsingStatus {
       String varname = vartok.getText();
       Replaceable x = keyNames.getReplaceable(varname);
       if (x == null) { status.storeError(vartok, "No such variable: " + varname); return null; }
-      Term term = CoraInputReader.readTermAndUpdateNaming(pterm, valueNames, trs);
-      if (!x.queryType().equals(term.queryType())) {
-        module.println("Ill-typed substitution: %a has type %a but is mapped to a term %a of " +
-          "type %a.", varname, x.queryType(), term, term.queryType());
-        return null;
-      }
+      Term term = CoraInputReader.readTermAndUpdateNaming(pterm, valueNames, trs, x.queryType());
       subst.extend(x, term);
     }
     return subst;
