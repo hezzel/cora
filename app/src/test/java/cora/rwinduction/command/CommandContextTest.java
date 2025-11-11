@@ -101,17 +101,19 @@ class CommandContextTest {
     CommandContext cmd = new CommandContext();
     cmd.storeContext(pp, module);
     ArrayList<Command.TabSuggestion> arr = cmd.suggestNext("");
-    assertTrue(arr.size() == 5);
+    assertTrue(arr.size() == 6);
     assertTrue(arr.get(0).text() == null);
     assertTrue(arr.get(0).category().equals("end of command"));
-    assertTrue(arr.get(1).text().equals("1"));
-    assertTrue(arr.get(1).category().equals("position"));
-    assertTrue(arr.get(2).text().equals("2.1"));
+    assertTrue(arr.get(1).text().equals("safe"));
+    assertTrue(arr.get(1).category().equals("keyword"));
+    assertTrue(arr.get(2).text().equals("1"));
     assertTrue(arr.get(2).category().equals("position"));
-    assertTrue(arr.get(3).text().equals("2.2"));
+    assertTrue(arr.get(3).text().equals("2.1"));
     assertTrue(arr.get(3).category().equals("position"));
-    assertTrue(arr.get(4).text().equals("2"));
+    assertTrue(arr.get(4).text().equals("2.2"));
     assertTrue(arr.get(4).category().equals("position"));
+    assertTrue(arr.get(5).text().equals("2"));
+    assertTrue(arr.get(5).category().equals("position"));
   }
 
   @Test
@@ -128,6 +130,18 @@ class CommandContextTest {
     assertTrue(arr.get(1).category().equals("position"));
     assertTrue(arr.get(2).text().equals("2"));
     assertTrue(arr.get(2).category().equals("position"));
+  }
+
+  @Test
+  public void testSuggestionsSafeGiven() {
+    OutputModule module = OutputModule.createUnitTestModule();
+    PartialProof pp = setupProof(module, "f(f(x, y), x + 3) -><- f(g(x, y), f(x-1, z) + 4) | true");
+    CommandContext cmd = new CommandContext();
+    cmd.storeContext(pp, module);
+    ArrayList<Command.TabSuggestion> arr = cmd.suggestNext("safe");
+    assertTrue(arr.size() == 1);
+    assertTrue(arr.get(0).text() == null);
+    assertTrue(arr.get(0).category().equals("end of command"));
   }
 }
 

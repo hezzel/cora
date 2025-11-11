@@ -35,10 +35,10 @@ public final class DeductionDelete extends DeductionStep {
  
   public static DeductionDelete createStep(PartialProof proof, Optional<OutputModule> module) {
     ProofState state = proof.getProofState();
-    Equation eq = DeductionStep.getTopEquation(state, module);
-    if (eq == null) return null;
+    EquationContext ec = DeductionStep.getTopEquation(state, module);
+    if (ec == null) return null;
     // option 1: both sides are equal
-    if (eq.getLhs().equals(eq.getRhs())) {
+    if (ec.getLhs().equals(ec.getRhs())) {
       return new DeductionDelete(state, proof.getContext(), true);
     }
     // option 2: we will have to check the constraint

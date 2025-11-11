@@ -16,6 +16,7 @@
 package cora.rwinduction.engine.deduction;
 
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.Optional;
 import charlie.terms.position.Position;
 import charlie.terms.position.ArgumentPos;
@@ -63,24 +64,50 @@ public final class DeductionHdelete extends DeductionStep {
   public static DeductionHdelete createStep(PartialProof proof, Optional<OutputModule> m,
                                             Hypothesis hypo, boolean inverse,
                                             EquationPosition pos, Substitution subst) {
-    Equation original = getTopEquation(proof.getProofState(), m);
+    EquationContext original = getTopEquation(proof.getProofState(), m);
     if (original == null) return null;
 
     ConstrainedSimplifier simpl =
       new ConstrainedSimplifier(inverse ? hypo.getRhs() : hypo.getLhs(),
                                 inverse ? hypo.getLhs() : hypo.getRhs(),
                                 hypo.getConstraint(), hypo.getRenaming(), subst);
-    if (!simpl.matchSubterm(original, pos, m, "induction hypothesis")) return null;
-    if (!matchRightSubterm(original, pos, simpl, m)) return null;
+    if (!simpl.matchSubterm(original.getEquation(), pos, m, "induction hypothesis")) return null;
+    if (!matchRightSubterm(original.getEquation(), pos, simpl, m)) return null;
     simpl.matchEqualitiesInConstraint(original.getConstraint());
     Position p = pos.queryPosition();
-    if (!sameContexts(original, p)) {
-      m.ifPresent(o -> printBadContextError(proof.getProofState().getTopEquation(), p, o));
+    if (!sameContexts(original.getEquation(), p)) {
+      m.ifPresent(o -> printBadContextError(original, p, o));
       return null;
     }
-    if (!resultingOrderingRequirementOK(proof.getProofState().getTopEquation(), p, m)) return null;
+    if (!resultingOrderingRequirementOK(original, p, m)) return null;
     return new DeductionHdelete(proof.getProofState(), proof.getContext(),
                                 hypo.getName() + (inverse ? "^{-1}" : ""), inverse, pos, simpl);
+  }
+
+  /**
+   * This function checks if the equation context (leftbound, left = right, rightbound) | constraint
+   * is H-deletable at the root, and if so, returns true.  Otherwise, false is returned. (However, a
+   * false does not necessarily mean that it is impossible, it's also possible that we simply
+   * couldn't find the right substitution automatically.)
+   */
+  public static boolean checkApplicability(Optional<Term> leftbound, Term left, Term right,
+                                           Optional<Term> rightbound, Term constraint,
+                                           Hypothesis hypo, boolean inverse) {
+    // check if bounds are satisfied; this is an easy syntactic check
+    if (leftbound.isPresent() && leftbound.get().equals(left) &&
+        rightbound.isPresent() && rightbound.get().equals(right)) return false;
+    // the rest is delegated to the simplifier!
+    ConstrainedSimplifier simpl =
+      new ConstrainedSimplifier(inverse ? hypo.getRhs() : hypo.getLhs(),
+                                inverse ? hypo.getLhs() : hypo.getRhs(),
+                                hypo.getConstraint(), hypo.getRenaming(), null);
+    if (simpl.matchLeft(left) != null) return false;
+    if (simpl.matchRight(right) != null) return false;
+    simpl.matchEqualitiesInConstraint(constraint);
+    if (simpl.constraintIsTrue()) return true;
+    MutableRenaming renaming = new MutableRenaming(Set.of());
+    return simpl.canReduceCtermWithConstraint(constraint, Settings.smtSolver, renaming,
+                                              Optional.empty(), "induction hypothesis");
   }
 
   /**

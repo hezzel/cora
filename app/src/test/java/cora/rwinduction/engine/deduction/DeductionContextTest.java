@@ -17,15 +17,20 @@ package cora.rwinduction.engine.deduction;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.Optional;
 
 import charlie.util.FixedList;
+import charlie.util.Pair;
 import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
+import charlie.terms.Variable;
 import charlie.terms.TermPrinter;
+import charlie.terms.TermFactory;
 import charlie.substitution.MutableSubstitution;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
@@ -300,5 +305,44 @@ class DeductionContextTest {
     assertTrue(module.toString().equals("Unexpected position: 1.0.  This does not represent a " +
       "position in a fully applicative term.\n\n"));
   }
+
+  @Test
+  public void testDifferences() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "end :: Int -> Tree\n" +
+      "cons :: Tree -> Tree -> Tree\n" +
+      "merge :: Tree -> Tree -> Tree\n" +
+      "merge(x, y) -> cons(x, y)\n"
+    );
+    MutableRenaming renaming = new MutableRenaming(trs.queryFunctionSymbolNames());
+    Variable f = TermFactory.createVar("F", CoraInputReader.readType("Tree -> Tree -> Tree"));
+    renaming.setName(f, "F");
+    Term s = CoraInputReader.readTermAndUpdateNaming("cons(cons(cons(end(1), end(2)), " +
+      "cons(end(3), merge(end(4), end(5)))), cons(end(6), y))", renaming, trs);
+    Term t = CoraInputReader.readTermAndUpdateNaming("cons(cons(cons(end(1), end(i)), " +
+      "F(end(3), cons(end(4), end(5)))), cons(y, end(7)))", renaming, trs);
+    ArrayList<Position> posses = new ArrayList<Position>();
+    ArrayList<Pair<Term,Term>> pairs = new ArrayList<Pair<Term,Term>>();
+    DeductionContext.storeDifferences(s, t, new ProofContext(trs, lst -> renaming), posses, pairs);
+    assertTrue(posses.size() == 4);
+    assertTrue(pairs.size() == 4);
+
+    assertTrue(posses.get(0).toString().equals("1.1.2.1"));
+    assertTrue(pairs.get(0).fst().toString().equals("2"));
+    assertTrue(pairs.get(0).snd().toString().equals("i"));
+
+    assertTrue(posses.get(1).toString().equals("1.2"));
+    assertTrue(pairs.get(1).fst().toString().equals("cons(end(3), merge(end(4), end(5)))"));
+    assertTrue(pairs.get(1).snd().toString().equals("F(end(3), cons(end(4), end(5)))"));
+
+    assertTrue(posses.get(2).toString().equals("2.1"));
+    assertTrue(pairs.get(2).fst().toString().equals("end(6)"));
+    assertTrue(pairs.get(2).snd().toString().equals("y"));
+
+    assertTrue(posses.get(3).toString().equals("2.2"));
+    assertTrue(pairs.get(3).fst().toString().equals("y"));
+    assertTrue(pairs.get(3).snd().toString().equals("end(7)"));
+  }
+
 }
 

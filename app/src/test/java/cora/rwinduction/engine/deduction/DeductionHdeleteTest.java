@@ -115,7 +115,7 @@ class DeductionHdeleteTest {
     assertTrue(pp.getProofState().isFinalState());
     assertTrue(pp.getProofState().getHypotheses().size() == 1);
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
-    assertTrue(solver.queryQuestion(0).equals("(0 >= i1) or (i1 >= 2)\n")); // x > 0 => x > 1
+    assertTrue(solver.queryQuestion(0).equals("(0 >= i1) or (i1 >= 2)")); // x > 0 => x > 1
   }
 
   @Test
@@ -306,7 +306,65 @@ class DeductionHdeleteTest {
     Settings.smtSolver = solver;
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(module.toString().equals(""));
-    assertTrue(solver.queryQuestion(0).equals("(i1 # i2) or ((i2 >= i2) and (i2 >= i1))\n"));
+    assertTrue(solver.queryQuestion(0).equals("(i1 # i2) or ((i2 >= i2) and (i2 >= i1))"));
+  }
+
+  @Test
+  public void testApplicabilitySuccess() {
+    PartialProof pp = setupProof("sum1(x) = sum2(y) | x = z ∧ z = y",
+                                 "sum2(b) = sum1(a) | a = c ∧ c = b");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
+    Settings.smtSolver = solver;
+    Term left = pp.getProofState().getTopEquation().getLhs();
+    Term right = pp.getProofState().getTopEquation().getRhs();
+    Term constr = pp.getProofState().getTopEquation().getConstraint();
+    assertTrue(DeductionHdelete.checkApplicability(Optional.empty(), left, right,
+      Optional.of(right), constr, h8, true));
+    assertTrue(solver.queryNumberQuestions() == 1);
+    assertTrue(solver.queryQuestion(0).equals(
+      "(i1 # i2) or (i2 # i3) or ((i1 = i2) and (i2 = i3))"));
+  }
+
+  @Test
+  public void testApplicabilityFailureDueToBounds() {
+    PartialProof pp = setupProof("sum1(x) = sum2(y) | x = z ∧ z = y",
+                                 "sum1(a) = sum2(b) | a = c ∧ c = b");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    Settings.smtSolver = null;
+    Term left = pp.getProofState().getTopEquation().getLhs();
+    Term right = pp.getProofState().getTopEquation().getRhs();
+    Term constr = pp.getProofState().getTopEquation().getConstraint();
+    assertFalse(DeductionHdelete.checkApplicability(Optional.of(left), left, right,
+      Optional.of(right), constr, h8, false));
+  }
+
+  @Test
+  public void testApplicabilityFailureDueToConstraintVariables() {
+    PartialProof pp = setupProof("sum1(x) = sum2(y)",
+                                 "sum1(a) = sum2(a) | a = c ∧ c = b");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    Settings.smtSolver = null;
+    Term left = pp.getProofState().getTopEquation().getLhs();
+    Term right = pp.getProofState().getTopEquation().getRhs();
+    Term constr = pp.getProofState().getTopEquation().getConstraint();
+    assertFalse(DeductionHdelete.checkApplicability(Optional.empty(), left, right,
+      Optional.empty(), constr, h8, false));
+  }
+
+  @Test
+  public void testApplicabilityFailureDueToInvalidConstraint() {
+    PartialProof pp = setupProof("sum1(x) = sum2(y) | y > x",
+                                 "sum1(a) = sum2(b) | a > b");
+    Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
+    FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(false);
+    Settings.smtSolver = solver;
+    Term left = pp.getProofState().getTopEquation().getLhs();
+    Term right = pp.getProofState().getTopEquation().getRhs();
+    Term constr = pp.getProofState().getTopEquation().getConstraint();
+    assertFalse(DeductionHdelete.checkApplicability(Optional.of(left), left, right,
+      Optional.empty(), constr, h8, false));
+    assertTrue(solver.queryNumberQuestions() == 1);
   }
 }
 

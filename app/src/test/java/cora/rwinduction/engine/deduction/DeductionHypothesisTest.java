@@ -118,7 +118,7 @@ class DeductionHypothesisTest {
     assertTrue(module.toString().equals("We apply HYPOTHESIS to E19 with induction hypothesis H8 " +
       "and substitution [z := x].  This does not cause any new ordering requirements to be " +
       "imposed.\n\n"));
-    assertTrue(solver.queryQuestion(0).equals("(0 >= i1) or (i1 >= 0)\n"));
+    assertTrue(solver.queryQuestion(0).equals("(0 >= i1) or (i1 >= 0)"));
   }
 
   private Variable getVariable(String name, Renaming renaming) {

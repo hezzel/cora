@@ -88,17 +88,16 @@ public final class DeductionContext extends DeductionStep {
       module.ifPresent(o -> o.println("At least one position should be given to CONTEXT."));
       return null;
     }
-    if (positions.size() == 0 && positions.get(0).isEmpty()) {
+    if (positions.size() == 1 && positions.get(0).isEmpty()) {
       module.ifPresent(o -> o.println("Cannot use CONTEXT with the empty position: " +
         "the step would have no effect."));
       return null;
     }
 
-    Equation eq = getTopEquation(proof.getProofState(), module);
+    EquationContext ec = getTopEquation(proof.getProofState(), module);
     ArrayList<Pair<Integer,Position>> posses = getSorted(positions);
     TreeMap<Integer,Pair<Term,Term>> info = new TreeMap<Integer,Pair<Term,Term>>();
-    Renaming renaming = proof.getProofState().getTopEquation().getRenaming();
-    int chk = checkPositions(eq.getLhs(), eq.getRhs(), renaming, posses, module, info,
+    int chk = checkPositions(ec.getLhs(), ec.getRhs(), ec.getRenaming(), posses, module, info,
                              new LinkedList<Integer>(), proof.getContext());
     if (chk == 0) return null;
     ArrayList<Pair<Term,Term>> pairs = new ArrayList<Pair<Term,Term>>();
@@ -249,23 +248,23 @@ public final class DeductionContext extends DeductionStep {
                                             Optional<OutputModule> module,
                                             boolean shouldBeComplete) {
     ProofState state = proof.getProofState();
-    Equation eq = DeductionStep.getTopEquation(state, module);
-    if (eq == null) return null;
+    EquationContext ec = DeductionStep.getTopEquation(state, module);
+    if (ec == null) return null;
 
     String name = shouldBeComplete ? "semiconstructor" : "context";
 
-    if (!eq.getLhs().queryHead().equals(eq.getRhs().queryHead())) {
+    if (!ec.getLhs().queryHead().equals(ec.getRhs().queryHead())) {
       module.ifPresent(o -> o.println("The " + name + " rule cannot be applied, because the " +
         "two sides of the equation do not have the same head."));
       return null;
     }
-    if (eq.getLhs().numberArguments() != eq.getRhs().numberArguments()) {
+    if (ec.getLhs().numberArguments() != ec.getRhs().numberArguments()) {
       module.ifPresent(o -> o.println("The " + name + " rule cannot be applied, because the " +
         "two sides of the equation do not have the same number of arguments."));
       return null;
     }
 
-    boolean isComplete = checkCompleteness(eq, proof.getContext());
+    boolean isComplete = checkCompleteness(ec.getEquation(), proof.getContext());
     if (shouldBeComplete && !isComplete) {
       module.ifPresent(o -> o.println("The semiconstructor rule can only be applied if both " +
         "sides of the equation have a form f s1 ... sn, with f a function symbol and n < ar(f).  " +
@@ -276,7 +275,7 @@ public final class DeductionContext extends DeductionStep {
 
     return new DeductionContext(state, proof.getContext(), isComplete);
   }
-
+ 
   /**
    * Helper function for createStep: this checks if we really have an application of SEMICONSTRUCTOR
    * or one that we will consider CONTEXT.
@@ -288,6 +287,50 @@ public final class DeductionContext extends DeductionStep {
     int n = left.numberArguments();
     int k = pcontext.queryRuleArity(f);
     return n < k;
+  }
+
+  /** 
+   * This function edits the two lists, posses and pairs, by adding p into posses and (s|_p,t|_p)
+   * into pairs, where p is any of the parallel positions so that s|_p and t|_p are distinct and
+   * the terms without the given positions are maximal semi-constructor contexts.
+   *
+   * That is, we find all positions p, in lexicographical ordering, so that the positions above p
+   * have the same semi-constructor shape in s and t, and so that s|_p != t|_p, and s|_p and t|_p
+   * do not themselves have the same semi-constructor shape.
+   *
+   * We only consider argument contexts, not head contexts.
+   */
+  public static void storeDifferences(Term s, Term t, ProofContext context, ArrayList<Position>
+                                      posses, ArrayList<Pair<Term,Term>> pairs) {
+    // If the heads are not the same, we clearly are not part of a context surrounding a difference
+    // (as we only consider argument contexts, not head contexts), so store [(ε,(s,t))].
+    if (!s.queryHead().equals(t.queryHead()) || s.numberArguments() != t.numberArguments()) {
+      posses.add(Position.empty);
+      pairs.add(new Pair<Term,Term>(s,t));
+      return;
+    }
+    // similarly, if we're not a semi-constructor context, we must return either [(ε,(s,t))] (if
+    // s and t are unequal) or [] (if they are equal)
+    if (!s.isFunctionalTerm() || s.numberArguments() >= context.queryRuleArity(s.queryRoot())) {
+      if (!s.equals(t)) {
+        posses.add(Position.empty);
+        pairs.add(new Pair<Term,Term>(s,t));
+      }
+      return;
+    }
+    // otherwise, recursively descend into the children and detect differences there
+    int n = s.numberArguments();
+    int k = posses.size();
+    for (int i = 1; i <= n; i++) {
+      storeDifferences(s.queryArgument(i), t.queryArgument(i), context, posses, pairs);
+      if (posses.size() > k) {
+        for (int j = k; j < posses.size(); j++) {
+          // update the position to be in the current terms, not the subterms
+          posses.set(j, new ArgumentPos(i, posses.get(j)));
+        }
+        k = posses.size();
+      }
+    }
   }
 
   /**

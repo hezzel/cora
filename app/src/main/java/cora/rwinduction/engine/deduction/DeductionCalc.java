@@ -171,18 +171,18 @@ public final class DeductionCalc extends DeductionStep {
    */
   public static DeductionCalc createStep(PartialProof proof, Optional<OutputModule> m,
                                          List<EquationPosition> posses) {
-    Equation eq = getTopEquation(proof.getProofState(), m);
-    if (eq == null) return null;
-    MutableRenaming renaming = proof.getProofState().getTopEquation().getRenaming().copy();
-    HashMap<Term,Variable> definedVars = CalcHelper.breakupConstraint(eq.getConstraint());
-    ChangeablePair pair = new ChangeablePair(eq.getLhs(), eq.getRhs());
+    EquationContext ec = getTopEquation(proof.getProofState(), m);
+    if (ec == null) return null;
+    MutableRenaming renaming = ec.getRenaming().copy();
+    HashMap<Term,Variable> definedVars = CalcHelper.breakupConstraint(ec.getConstraint());
+    ChangeablePair pair = new ChangeablePair(ec.getLhs(), ec.getRhs());
     Term constraint = TheoryFactory.trueValue;
     HashMap<String,Variable> newvars = new HashMap<String,Variable>();
 
     List<Term> replacements = new ArrayList<Term>();
     for (EquationPosition pos : posses) {
-      Term newconstr = tryComputing(pos, pair, definedVars, newvars, replacements, renaming, eq, m,
-                                    proof);
+      Term newconstr = tryComputing(pos, pair, definedVars, newvars, replacements, renaming,
+                                    ec.getEquation(), m, proof);
       if (newconstr == null) return null; // error message has already been printed
       constraint = TheoryFactory.createConjunction(constraint, newconstr);
     }

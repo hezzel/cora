@@ -16,61 +16,22 @@
 package cora.rwinduction.engine.automation;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import charlie.util.Pair;
 import charlie.terms.position.Position;
 import charlie.terms.position.ArgumentPos;
 import charlie.terms.Term;
+import charlie.terms.TheoryFactory;
+import charlie.substitution.Substitution;
+import charlie.theorytranslation.TermAnalyser;
+import cora.config.Settings;
+import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
+import cora.rwinduction.engine.deduction.DeductionContext;
 
 /** This class automates finding the best CONTEXT step that can be applied on the top equation. */
 public final class AutoContexter {
-  /** 
-   * This function edits the two lists, posses and pairs, by adding p into posses and (s|_p,t|_p)
-   * into pairs, where p is any of the parallel positions so that s|_p and t|_p are distinct and
-   * the terms without the given positions are maximal semi-constructor contexts.
-   *
-   * That is, we find all positions p, in lexicographical ordering, so that the positions above p
-   * refer have the same semi-constructor shape in s and t, so that s|_p != t|_p, and s|_p and t|_p
-   * do not themselves have the same semi-constructor shape.
-   *
-   * We only consider argument contexts, not head contexts.
-   */
-  public static void storeDifferences(Term s, Term t, ProofContext context, ArrayList<Position>
-                                      posses, ArrayList<Pair<Term,Term>> pairs) {
-    // If the heads are not the same, we clearly are not part of a context surrounding a difference
-    // (as we only consider argument contexts, not head contexts), so return [(ε,(s,t))].
-    if (!s.queryHead().equals(t.queryHead()) || s.numberArguments() != t.numberArguments()) {
-      posses.add(Position.empty);
-      pairs.add(new Pair<Term,Term>(s,t));
-      return;
-    }
-    // similarly, if we're not a semi-constructor context, we must return either [(ε,(s,t))] (if
-    // s and t are unequal) or [] (if they are equal)
-    if (!s.isFunctionalTerm() || s.numberArguments() >= context.queryRuleArity(s.queryRoot())) {
-      if (!s.equals(t)) {
-        posses.add(Position.empty);
-        pairs.add(new Pair<Term,Term>(s,t));
-      }
-      return;
-    }
-    // otherwise, recursively descend into the children and detect differences there
-    int n = s.numberArguments();
-    int k = posses.size();
-    for (int i = 1; i <= n; i++) {
-      storeDifferences(s.queryArgument(i), t.queryArgument(i), context, posses, pairs);
-      if (posses.size() > k) {
-        for (int j = k; j < posses.size(); j++) {
-          // update the position to be in the current terms, not the subterms
-          posses.set(j, new ArgumentPos(i, posses.get(j)));
-        }
-        k = posses.size();
-      }
-    }
-  }
-
   /**
-   * This function automatically finds a semi-constructor context for the top equation if this can
-   * be done; if not, false is returned.
    * If it is possible, then this context step is added to steps, followed by any disprove,
    * eq-delete and hdelete steps that can be done to either find a contradiction in the proof state,
    * or immediately eliminate a resulting equation.  Hence, any remaining equations resulting from
@@ -78,18 +39,98 @@ public final class AutoContexter {
    *
    * All returned steps are immediately executed on the proof.
    */
+/*
   public static boolean makeSemiContext(PartialProof proof, ArrayList<DeductionStep> steps) {
-    EquationContext ec = proof.getProofState().getTopEquation();
+    // find what we can do with each position
+    ArrayList<Pair<Position,Substitution>> disprovable =
+      new ArrayList<Pair<Position,Substitution>>();
+    ArrayList<Pair<Position,Pair<Hypothesis,Boolean>>> hdeletable =
+      new ArrayList<Pair<Position,Pair<Hypothesis,Boolean>>>();
+    ArrayList<Position> eqdeletable, tricky, rest;
+    eqdeletable = new ArrayList<Position>();
+    tricky = new ArrayList<Position>();
+    rest = new ArrayList<Position>();
+    boolean complete = !proof.getProofState().getIncompleteEquations().contains(ec.getIndex());
+    categorise(posses, pairs, ec.getConstraint(), complete, proof,
+               ec.getLeftGreaterTerm(), ec.getRightGreaterTerm(),
+               disprovable, eqdeletable, hdeletable, tricky, rest);
 
-    ArrayList<Position> posses = new ArrayList<Position>();
-    ArrayList<Pair<Term,Term>> pairs = new ArrayList<Pair<Term,Term>>();
-    storeDifferences(ec.getLhs(), ec.getRhs(), proof.getContext(), posses, pairs);
-    if (posses.size() == 0) return false;   // they should be using DELETE instead!
-    if (posses.size() == 1 && posses.get(0).isEmpty()) return false;
-    // a non-empty context has been found!
+    // make the context step
+    Optional<OutputModule> eps = Optional.empty();
+    ArrayList<Position> orderedPosses = new ArrayList<Position>();
+    for (int i = 0; i < disprovable.size(); i++) orderedPosses.add(disprovable.get(i).fst());
+    for (int i = 0; i < eqdeletable.size(); i++) orderedPosses.add(eqdeletable.get(i));
+    for (int i = 0; i < hdeletable.size(); i++) orderedPosses.add(hdeletable.get(i).fst());
+    for (int i = 0; i < tricky.size(); i++) orderedPosses.add(tricky.get(i));
+    for (int i = 0; i < rest.size(); i++) orderedPosses.add(rest.get(i));
+    DeductionStep step = DeductionContext.createStep(proof, eps, orderedPosses);
+    if (step == null) return false;
+    if (!step.execute(proof, eps)) return false;
+    steps.add(step);
 
-    // TODO
-    return false;
+    // make the other steps
+    for (int i = 0; i < disprovable.size(); i++) {
+      if (disprovable.get(i).snd() == null) step = DeductionDisproveRoot.createStep(proof, eps);
+      else step = DeductionDisproveTheory.createStep(proof, eps, disprovable.get(i).snd());
+      if (step == null || !step.execute(proof, eps)) return false;
+      steps.add(step);
+    }
+    for (int i = 0; i < eqdeletable.size(); i++) {
+      step = DeductionEqdelete.createStep(proof, eps);
+      if (step == null || !step.execute(proof, eps)) return false;
+      steps.add(step);
+    }
+    for (int i = 0; i < hdeletable.size(); i++) {
+      step = DeductionHdelete.createStep(proof, eps, hdeletable.get(i).snd().fst(), hdeletable.get(i).snd().snd());
+      if (step == null || !step.execute(proof, eps)) return false;
+      steps.add(step);
+    }
+
+    return true;
   }
+*/
+
+  /**
+   * This goes over all elements of posses/pairs into storage, and stores them in one of the five
+   * categories.
+   *
+   * If disprovable is non-empty and the first element is a theory pair, then the corresponding
+   * substitution is returned.  Otherwise, null is returned.
+   */
+/*
+  private static void categorise(ArrayList<Position> posses, ArrayList<Pair<Term,Term>> pairs,
+                                 Term constraint, boolean complete, PartialProof proof,
+                                 Optional<Term> leftbound, Optional<Term> rightbound,
+                                 ArrayList<Pair<Position,Substitution>> disprovable,
+                                 ArrayList<Position> eqdeletable,
+                                 ArrayList<Pair<Position,Pair<Hypothesis,Boolean>>> hdeletable,
+                                 ArrayList<Position> tricky,
+                                 ArrayList<Position> rest) {
+    for (int i = 0; i < posses.size(); i++) {
+      Position p = posses.get(i);
+      Term left = pairs.get(i).fst();
+      Term right = pairs.get(i).snd();
+
+      // for first-order theory terms, we can handle several cases at once
+      if (left.isTheoryTerm() && right.isTheoryTerm() && left.isFirstOrder() &&
+          right.isFirstOrder()) {
+        checkFOTheoryDisprove(p, left, right, constraint, complete, disprovable, eqdeletable, tricky);
+        return;
+      }
+      // ohterwise, we try disprove, eqdelete and hdelete separately
+      if (tryDisprove(left, right, constraint, p, complete, proof.getContext(), disprovable,
+                      tricky)) return;
+      if (tryComplexEqdelete(left, right, constraint, p, eqdeletable)) return;
+      Pair<Hypothesis,Boolean> pair = AutoDeleter.tryHdeleteAtTop(proof.getProofState(), left,
+                                                     right, constraint, leftbound, rightbound);
+      if (pair != null) {
+        hdeletable.add(new Pair<Position,Pair<Hypothesis,Boolean>>(p, pair));
+        return;
+      }
+      if (left.isTheoryTerm() && right.isTheoryTerm()) tricky.add(p);
+      else rest.add(p);
+    }
+  }
+*/
 }
 

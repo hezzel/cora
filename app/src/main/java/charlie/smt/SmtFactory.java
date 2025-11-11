@@ -33,6 +33,9 @@ public class SmtFactory {
    * hence are only to be used for SATISFIABILITY problems (as it is certainly not valid that
    * lower ≤ var ≤ higher for all possible assignments to var).  Moreover, they will be removed if
    * you call problem.clear().  
+   *
+   * Watch out: the name is only useful for debugging and printing purposes -- it does NOT identify
+   * the variable!
    */
   public static IVar createIntegerVariable(SmtProblem problem, String name, int lower, int higher) {
     IVar ret = problem.createIntegerVariable(name);

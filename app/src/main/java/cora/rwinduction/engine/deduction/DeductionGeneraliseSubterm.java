@@ -62,12 +62,12 @@ public final class DeductionGeneraliseSubterm extends DeductionStep {
                                                       String newvarname) {
     ProofState state = proof.getProofState();
     ProofContext context = proof.getContext();
-    Equation eq = getTopEquation(state, module);
-    if (eq == null) return null;
+    EquationContext ec = getTopEquation(state, module);
+    if (ec == null) return null;
 
-    ArrayList<Position> leftPosses = getSubtermPositions(eq.getLhs(), subterm);
-    ArrayList<Position> rightPosses = getSubtermPositions(eq.getRhs(), subterm);
-    ArrayList<Position> constrPosses = getSubtermPositions(eq.getConstraint(), subterm);
+    ArrayList<Position> leftPosses = getSubtermPositions(ec.getLhs(), subterm);
+    ArrayList<Position> rightPosses = getSubtermPositions(ec.getRhs(), subterm);
+    ArrayList<Position> constrPosses = getSubtermPositions(ec.getConstraint(), subterm);
     
     if (leftPosses.isEmpty() && rightPosses.isEmpty() && constrPosses.isEmpty()) {
       module.ifPresent(o -> o.println("No such subterm in the equation: %a",
@@ -88,9 +88,9 @@ public final class DeductionGeneraliseSubterm extends DeductionStep {
       return null;
     }
 
-    Term left = replacePositions(eq.getLhs(), leftPosses, x);
-    Term right = replacePositions(eq.getRhs(), rightPosses, x);
-    Term cstr = replacePositions(eq.getConstraint(), constrPosses, x);
+    Term left = replacePositions(ec.getLhs(), leftPosses, x);
+    Term right = replacePositions(ec.getRhs(), rightPosses, x);
+    Term cstr = replacePositions(ec.getConstraint(), constrPosses, x);
 
     return new DeductionGeneraliseSubterm(state, context, subterm, x, renaming, left, right, cstr);
   }

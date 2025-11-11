@@ -107,14 +107,14 @@ public final class DeductionCalcAll extends DeductionStep {
 
   public static DeductionCalcAll createStep(PartialProof proof, Optional<OutputModule> m,
                                             Side side) {
-    Equation eq = getTopEquation(proof.getProofState(), m);
-    if (eq == null) return null;
-    MutableRenaming renaming = proof.getProofState().getTopEquation().getRenaming().copy();
-    HashMap<Term,Variable> definedVars = CalcHelper.breakupConstraint(eq.getConstraint());
+    EquationContext ec = getTopEquation(proof.getProofState(), m);
+    if (ec == null) return null;
+    MutableRenaming renaming = ec.getRenaming().copy();
+    HashMap<Term,Variable> definedVars = CalcHelper.breakupConstraint(ec.getConstraint());
     VariableNamer namer = proof.getContext().getVariableNamer();
 
-    Term left = eq.getLhs();
-    Term right = eq.getRhs();
+    Term left = ec.getLhs();
+    Term right = ec.getRhs();
     ReplacementInfo info = new ReplacementInfo();
     if (side == Side.Left || side == Side.Both) {
       left = doCalculations(left, definedVars, renaming, info, namer, null);
@@ -127,7 +127,7 @@ public final class DeductionCalcAll extends DeductionStep {
       return null;
     }
 
-    Term constraint = buildConstraint(eq.getConstraint(), info);
+    Term constraint = buildConstraint(ec.getConstraint(), info);
     Equation neweq = new Equation(left, right, constraint);
     return new DeductionCalcAll(proof.getProofState(), proof.getContext(),
                                 neweq, renaming, info.count, side);

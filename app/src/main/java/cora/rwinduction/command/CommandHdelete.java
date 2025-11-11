@@ -23,6 +23,7 @@ import charlie.substitution.Substitution;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.Hypothesis;
+import cora.rwinduction.engine.DeductionStep;
 import cora.rwinduction.engine.deduction.DeductionHdelete;
 import cora.rwinduction.engine.automation.AutoDeleter;
 import cora.rwinduction.parser.CommandParsingStatus;
@@ -44,7 +45,7 @@ public class CommandHdelete extends HypothesisCommandInherit {
   }
 
   @Override
-  protected DeductionHdelete createStep(CommandParsingStatus input) {
+  protected DeductionStep createStep(CommandParsingStatus input) {
     // handle no-arguments case
     if (input.commandEnded()) return AutoDeleter.createHdeleteStep(_proof, Optional.of(_module));
     // get induction hypothesis and inverse status

@@ -28,8 +28,8 @@ import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import charlie.smt.Valuation;
-import charlie.smt.SmtProblem;
-import charlie.smt.SmtSolver;
+import charlie.smt.SmtSolver.Answer;
+import charlie.smt.ProgrammableSmtSolver;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
@@ -93,32 +93,15 @@ class DeductionDeleteTest {
     testDeleteEquation("sum1(x) -><- sum1(x) | x = 0");
   }
 
-  class MySmtSolver implements SmtSolver {
-    Answer _answer;
-    String _storage;
-    MySmtSolver(Answer a) { _answer = a; _storage = null; }
-    public Answer checkSatisfiability(SmtProblem problem) {
-      _storage = problem.toString();
-      return _answer;
-    }
-    public boolean checkValidity(SmtProblem problem) {
-      _storage = "Validity: " + problem.toString();
-      return _answer instanceof Answer.NO;
-    }
-  }
-
   @Test
   public void testDeleteBecauseUnsatisfiable() {
-    MySmtSolver solver = new MySmtSolver(new SmtSolver.Answer.NO());
-    Settings.smtSolver = solver;
+    Settings.smtSolver = new ProgrammableSmtSolver("(i1 >= 1) and (0 >= 1 + i1)", new Answer.NO());
     testDeleteEquation("sum1(x) -><- sum2(x) | x > 0 ∧ x < 0");
-    assertTrue(solver._storage.equals("(i1 >= 1) and (0 >= 1 + i1)\n"));
   }
 
   @Test
   public void testOmitOutputModule() {
-    MySmtSolver solver = new MySmtSolver(new SmtSolver.Answer.NO());
-    Settings.smtSolver = solver;
+    Settings.smtSolver = new ProgrammableSmtSolver("i1 >= 1 + i1", new Answer.NO());
     TRS trs = setupTRS();
     TermPrinter printer = new TermPrinter(Set.of());
     PartialProof pp = new PartialProof(trs,
@@ -131,8 +114,7 @@ class DeductionDeleteTest {
     assertTrue(step.verifyAndExecute(pp, oo));
     step = DeductionDelete.createStep(pp, oo);
     assertTrue(step.verifyAndExecute(pp, oo));
-    solver = new MySmtSolver(new SmtSolver.Answer.MAYBE("something"));
-    Settings.smtSolver = solver;
+    Settings.smtSolver = new ProgrammableSmtSolver("i1 >= 0", new Answer.MAYBE("something"));
     step = DeductionDelete.createStep(pp, oo);
     assertFalse(step.verify(oo));
     assertTrue(step.execute(pp, oo));
@@ -141,10 +123,9 @@ class DeductionDeleteTest {
 
   @Test
   public void testNoDeleteBecauseMaybeSatisfiable() {
-    MySmtSolver solver = new MySmtSolver(new SmtSolver.Answer.MAYBE("Solver doesn't know."));
-    Settings.smtSolver = solver;
+    Settings.smtSolver = new ProgrammableSmtSolver("(i1 >= 1) and (0 >= 1 + i1)",
+                                                   new Answer.MAYBE("Solver doesn't know."));
     String output = testFailToDeleteEquation("sum1(x) -><- sum2(x) | x > 0 ∧ x < 0");
-    assertTrue(solver._storage.equals("(i1 >= 1) and (0 >= 1 + i1)\n"));
     assertTrue(output.equals("The DELETE rule is not obviously applicable: the left- and " +
       "right-hand side are not the same, and checking satisfiability returns MAYBE (Solver " +
       "doesn't know.)\n\n"));
@@ -155,10 +136,9 @@ class DeductionDeleteTest {
     Valuation val = new Valuation();
     val.setInt(1, 4);
     val.setInt(2, 3);
-    MySmtSolver solver = new MySmtSolver(new SmtSolver.Answer.YES(val));
-    Settings.smtSolver = solver;
+    Settings.smtSolver = new ProgrammableSmtSolver("(i1 >= 1 + i2) and (1 + i2 >= i1)",
+                                                   new Answer.YES(val));
     String output = testFailToDeleteEquation("sum1(x) -><- sum2(x) | x > y ∧ x ≤ y+1");
-    assertTrue(solver._storage.equals("(i1 >= 1 + i2) and (1 + i2 >= i1)\n"));
     assertTrue(output.equals("The DELETE rule is not applicable: the left- and right-hand side " +
       "are not the same, and the constraint is satisfiable using substitution [x := 4, y := 3]." +
       "\n\n"));
@@ -166,7 +146,7 @@ class DeductionDeleteTest {
 
   @Test
   public void testHistory() {
-    MySmtSolver solver = new MySmtSolver(new SmtSolver.Answer.NO());
+    Settings.smtSolver = null;
     PartialProof pp = setupProof("sum1(x) -><- sum2(x) | x > 0 ∧ x < 0");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
@@ -174,7 +154,6 @@ class DeductionDeleteTest {
     assertTrue(step.commandDescription().equals("delete"));
     assertTrue(module.toString().equals(""));
     step.explain(module);
-    assertTrue(solver._storage == null);
     assertTrue(module.toString().equals("We apply DELETION to E2 because the constraint is " +
       "unsatisfiable.  Thus, we may remove this equation from the proof state.\n\n"));
   }

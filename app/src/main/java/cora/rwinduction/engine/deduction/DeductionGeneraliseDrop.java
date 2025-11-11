@@ -60,9 +60,9 @@ public final class DeductionGeneraliseDrop extends DeductionStep {
   public static DeductionGeneraliseDrop createStep(PartialProof proof,
                                                   Optional<OutputModule> module, Term dropme) {
     ProofState state = proof.getProofState();
-    Equation eq = getTopEquation(state, module);
-    if (eq == null) return null;
-    ArrayList<Term> originalComponents = split(eq.getConstraint());
+    EquationContext ec = getTopEquation(state, module);
+    if (ec == null) return null;
+    ArrayList<Term> originalComponents = split(ec.getConstraint());
     ArrayList<Term> remove = split(dropme);
     for (Term todrop : remove) {
       boolean found = false;
@@ -74,7 +74,7 @@ public final class DeductionGeneraliseDrop extends DeductionStep {
       }
       if (!found) {
         module.ifPresent(o -> o.println("No such subterm in the constraint: %a.",
-          Printer.makePrintable(todrop, state.getTopEquation().getRenaming())));
+          Printer.makePrintable(todrop, ec.getRenaming())));
         return null;
       }
     }

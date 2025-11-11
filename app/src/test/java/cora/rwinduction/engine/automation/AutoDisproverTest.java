@@ -31,9 +31,7 @@ import charlie.substitution.Substitution;
 import charlie.substitution.MutableSubstitution;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
-import charlie.smt.Valuation;
-import charlie.smt.SmtProblem;
-import charlie.smt.SmtSolver;
+import charlie.smt.*;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
@@ -58,20 +56,6 @@ class AutoDisproveTest {
       "append(cons(x, xs), ys) -> cons(x, append(xs, ys))\n");
   }
 
-  class MySmtSolver implements SmtSolver {
-    Answer _answer;
-    ArrayList<String> _storage;
-    MySmtSolver(Answer a) { _answer = a; _storage = new ArrayList<String>(); }
-    public Answer checkSatisfiability(SmtProblem problem) {
-      _storage.add(problem.toString());
-      return _answer;
-    }
-    public boolean checkValidity(SmtProblem problem) {
-      _storage.add("Validity: " + problem.toString());
-      return _answer instanceof Answer.NO;
-    }
-  }
-
   @Test
   public void testFirstOrderSat() {
     TRS trs = setupTRS();
@@ -83,14 +67,12 @@ class AutoDisproveTest {
     Optional<OutputModule> o = Optional.of(module);
     Valuation val = new Valuation();
     val.setInt(1, 4);
-    MySmtSolver solver = new MySmtSolver(new MySmtSolver.Answer.YES(val));
-    Settings.smtSolver = solver;
+    Settings.smtSolver = new ProgrammableSmtSolver(
+      "(i1 >= 3) and (4 >= i1) and (3 # i1)", new SmtSolver.Answer.YES(val));
     Substitution subst =
       AutoDisprover.findContradictingTheorySubstitution(left, right, constraint, o, renaming);
     assertTrue(subst.domain().size() == 1);
     assertTrue(subst.get(renaming.getReplaceable("y")).equals(left));
-    assertTrue(solver._storage.size() == 1);
-    assertTrue(solver._storage.get(0).equals("(i1 >= 3) and (4 >= i1) and (3 # i1)\n"));
     assertTrue(module.toString().equals(""));
   }
 
@@ -104,8 +86,8 @@ class AutoDisproveTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
 
-    MySmtSolver solver = new MySmtSolver(new MySmtSolver.Answer.NO());
-    Settings.smtSolver = solver;
+    Settings.smtSolver = new ProgrammableSmtSolver("(i1 >= 3) and (3 >= i1) and (3 # i1)",
+                                                   new SmtSolver.Answer.NO());
     assertTrue(AutoDisprover.findContradictingTheorySubstitution(left, right, constraint,
                o, renaming) == null);
     assertTrue(module.toString().equals("DISPROVE cannot be applied because y > 2 ∧ y < 4 ∧ " +
@@ -113,7 +95,8 @@ class AutoDisproveTest {
 
     module = OutputModule.createUnitTestModule();
     o = Optional.of(module);
-    Settings.smtSolver = new MySmtSolver(new MySmtSolver.Answer.MAYBE("test solver!"));
+    Settings.smtSolver = new ProgrammableSmtSolver("(i1 >= 3) and (3 >= i1) and (3 # i1)",
+                                                   new SmtSolver.Answer.MAYBE("test solver!"));
     assertTrue(AutoDisprover.findContradictingTheorySubstitution(left, right, constraint,
                o, renaming) == null);
     assertTrue(module.toString().equals("Failed to apply DISPROVE, because the SMT solver " +
@@ -144,6 +127,19 @@ class AutoDisproveTest {
     assertTrue(elems.contains("X__1 * X__2"));
     assertTrue(elems.contains("-X"));
   }
+  
+  class NoSolver implements SmtSolver {
+    private ArrayList<String> _storage;
+    public NoSolver() { _storage = new ArrayList<String>(); }
+    public Answer checkSatisfiability(SmtProblem problem) {
+      _storage.add(problem.toString());
+      return new Answer.NO();
+    }
+    public boolean checkValidity(SmtProblem problem) {
+      assertTrue(false, "Asked for validity in NoSolver");
+      return false;
+    }
+  }
 
   @Test
   public void testCombinations() {
@@ -161,7 +157,7 @@ class AutoDisproveTest {
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
 
-    MySmtSolver solver = new MySmtSolver(new MySmtSolver.Answer.NO());
+    NoSolver solver = new NoSolver();
     Settings.smtSolver = solver;
     assertTrue(AutoDisprover.findContradictingTheorySubstitution(left, right, constraint, o,
                                                                  renaming) == null);
@@ -220,16 +216,14 @@ class AutoDisproveTest {
     Valuation val = new Valuation();
     val.setInt(1, 0);
     val.setInt(2, 3);
-    MySmtSolver solver = new MySmtSolver(new MySmtSolver.Answer.YES(val));
-    Settings.smtSolver = solver;
+    Settings.smtSolver =
+      new ProgrammableSmtSolver("(i1 # 0) and (1 + i1 # i1)", new SmtSolver.Answer.YES(val));
 
     Substitution substitution =
       AutoDisprover.findContradictingTheorySubstitution(left, right, constraint, o, renaming);
     assertTrue(substitution.domain().size() == 2);
     assertTrue(substitution.get(renaming.getReplaceable("A")).toString().equals("[+]"));
     assertTrue(substitution.get(renaming.getReplaceable("x")).toString().equals("0"));
-    assertTrue(solver._storage.size() == 1);
-    assertTrue(solver._storage.get(0).equals("(i1 # 0) and (1 + i1 # i1)\n"));
   }
 
   public PartialProof setupProof(String left, String right, String constr) {
@@ -270,8 +264,8 @@ class AutoDisproveTest {
     Valuation val = new Valuation();
     val.setInt(1, 0);
     val.setInt(2, 3);
-    MySmtSolver solver = new MySmtSolver(new MySmtSolver.Answer.YES(val));
-    Settings.smtSolver = solver;
+    Settings.smtSolver =
+      new ProgrammableSmtSolver("(i1 # 5) and (1 + i1 # i1)", new SmtSolver.Answer.YES(val));
     DeductionStep step = AutoDisprover.createStep(pp, o);
     assertTrue(step.verify(o));
     step.explain(module);
@@ -285,7 +279,7 @@ class AutoDisproveTest {
     PartialProof pp = setupProof("C(x)", "C(y)", "x = y");
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
-    Settings.smtSolver = new MySmtSolver(new MySmtSolver.Answer.NO());
+    Settings.smtSolver = new NoSolver();
     assertTrue(AutoDisprover.createTheoryStep(pp, o) == null);
     assertTrue(module.toString().equals("No substitution could be found that makes x = y true " +
       "and C(x) ≠ C(y).  If such a substitution does exist, please supply it manually.\n\n"));
@@ -309,7 +303,7 @@ class AutoDisproveTest {
     Valuation val = new Valuation();
     val.setInt(1, 1);
     val.setInt(2, 2);
-    Settings.smtSolver = new MySmtSolver(new MySmtSolver.Answer.YES(val));
+    Settings.smtSolver = new ProgrammableSmtSolver("i1 # i2", new SmtSolver.Answer.YES(val));
     DeductionStep step = AutoDisprover.createStep(pp, o);
     assertTrue(step.commandDescription().equals("disprove theory with [u := 1, v := 2]"));
   }

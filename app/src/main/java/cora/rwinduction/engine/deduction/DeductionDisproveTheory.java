@@ -48,17 +48,17 @@ public class DeductionDisproveTheory extends DeductionStep {
                                                    Substitution subst) {
     ProofState state = proof.getProofState();
     ProofContext context = proof.getContext();
-    Equation equation = getTopEquation(proof.getProofState(), m); 
-    if (equation == null) return null;
+    EquationContext ec = getTopEquation(proof.getProofState(), m); 
+    if (ec == null) return null;
 
-    if (state.getIncompleteEquations().contains(state.getTopEquation().getIndex())) {
+    if (state.getIncompleteEquations().contains(ec.getIndex())) {
       m.ifPresent(o -> o.println("DISPROVE can only be applied on complete equation contexts."));
       return null;
     }
 
-    Term left = subst.substitute(equation.getLhs());
-    Term right = subst.substitute(equation.getRhs());
-    Term constr = subst.substitute(equation.getConstraint());
+    Term left = subst.substitute(ec.getLhs());
+    Term right = subst.substitute(ec.getRhs());
+    Term constr = subst.substitute(ec.getConstraint());
     if (!left.isGround() || !right.isGround() || !constr.isGround() || !constr.isTheoryTerm()) {
       m.ifPresent(o -> o.println("The substitution does not map all variables in the equation " +
         "to ground theory terms."));

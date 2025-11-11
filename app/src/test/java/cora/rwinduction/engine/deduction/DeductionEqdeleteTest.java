@@ -22,7 +22,9 @@ import java.util.Set;
 import java.util.Optional;
 
 import charlie.util.FixedList;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
+import charlie.terms.TermFactory;
 import charlie.terms.TermPrinter;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -82,7 +84,7 @@ class DeductionEqdeleteTest {
   @Test
   public void testSuccessfulDeleteOneArgument() {
     testSuccess("g(x) = g(y) | x = y");
-    assertTrue(_solver.queryQuestion(0).equals("(i1 # i2) or (i1 = i2)\n"));
+    assertTrue(_solver.queryQuestion(0).equals("(i1 # i2) or (i1 = i2)"));
     assertTrue(_module.toString().equals("We observe that x = y ⊨ x = y, and may therefore " +
       "apply EQ-DELETION to remove E2 from the proof state.\n\n"));
   }
@@ -90,7 +92,7 @@ class DeductionEqdeleteTest {
   @Test
   public void testSuccessfulDeleteTwoArguments() {
     testSuccess("f(3, g(x)) = f(x, g(17)) | true");
-    assertTrue(_solver.queryQuestion(0).equals("false or ((3 = i1) and (i1 = 17))\n"));
+    assertTrue(_solver.queryQuestion(0).equals("false or ((3 = i1) and (i1 = 17))"));
     assertTrue(_module.toString().equals("We observe that true ⊨ 3 = x ∧ x = 17, and may " +
       "therefore apply EQ-DELETION to remove E2 from the proof state.\n\n"));
   }
@@ -184,6 +186,49 @@ class DeductionEqdeleteTest {
     assertTrue(pp.getProofState().getEquations().size() == 2);
     assertTrue(_module.toString().equals("The EQ-DELETION rule is not obviously applicable: " +
       "I could not prove that x > 2 ⊨ x = 3.\n\n"));
+  }
+
+  @Test
+  public void testCheckApplicabilityBadForm() {
+    TRS trs = setupTRS();
+    MutableRenaming renaming = new MutableRenaming(trs.queryFunctionSymbolNames());
+    renaming.setName(TermFactory.createVar(CoraInputReader.readType("Int -> Unit -> Unit")), "H");
+    Term left = CoraInputReader.readTermAndUpdateNaming("f(x, f(x, y))", renaming, trs);
+    Term right = CoraInputReader.readTermAndUpdateNaming("f(x, H(3, y))", renaming, trs);
+    Term constraint = CoraInputReader.readTermAndUpdateNaming("x = 3", renaming, trs);
+    Settings.smtSolver = null;
+    assertFalse(DeductionEqdelete.checkApplicability(left, right, constraint));
+  }
+
+  @Test
+  public void testCheckApplicabilityBadConstraint() {
+    TRS trs = setupTRS();
+    MutableRenaming renaming = new MutableRenaming(trs.queryFunctionSymbolNames());
+    renaming.setName(TermFactory.createVar(CoraInputReader.readType("Int -> Unit -> Unit")), "H");
+    Term left = CoraInputReader.readTermAndUpdateNaming("f(x, f(x, y))", renaming, trs);
+    Term right = CoraInputReader.readTermAndUpdateNaming("f(z, f(u, y))", renaming, trs);
+    Term constraint = CoraInputReader.readTermAndUpdateNaming("x > z", renaming, trs);
+    _solver = new FixedAnswerValidityChecker(false);
+    Settings.smtSolver = _solver;
+    assertFalse(DeductionEqdelete.checkApplicability(left, right, constraint));
+    assertTrue(_solver.queryNumberQuestions() == 1);
+    assertTrue(_solver.queryQuestion(0).equals("(i2 >= i1) or ((i1 = i2) and (i1 = i3))"));
+  }
+
+  @Test
+  public void testCheckApplicabilityGoodConstraint() {
+    TRS trs = setupTRS();
+    MutableRenaming renaming = new MutableRenaming(trs.queryFunctionSymbolNames());
+    renaming.setName(TermFactory.createVar(CoraInputReader.readType("Int -> Unit -> Unit")), "H");
+    Term left = CoraInputReader.readTermAndUpdateNaming("f(x, f(x, y))", renaming, trs);
+    Term right = CoraInputReader.readTermAndUpdateNaming("f(z, f(u, y))", renaming, trs);
+    Term constraint = CoraInputReader.readTermAndUpdateNaming("x = z ∧ u = z", renaming, trs);
+    _solver = new FixedAnswerValidityChecker(true);
+    Settings.smtSolver = _solver;
+    assertTrue(DeductionEqdelete.checkApplicability(left, right, constraint));
+    assertTrue(_solver.queryNumberQuestions() == 1);
+    assertTrue(_solver.queryQuestion(0).equals(
+      "(i1 # i2) or (i3 # i2) or ((i1 = i2) and (i1 = i3))"));
   }
 }
 

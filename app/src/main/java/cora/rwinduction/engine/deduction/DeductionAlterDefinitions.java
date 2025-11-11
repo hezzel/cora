@@ -63,8 +63,9 @@ public final class DeductionAlterDefinitions extends DeductionStep {
                                                 Optional<OutputModule> module,
                                                 ArrayList<Pair<Pair<Variable,String>,Term>> defs) {
     ProofState state = proof.getProofState();
-    Equation eq = getTopEquation(state, module);
-    MutableRenaming renaming = state.getTopEquation().getRenaming().copy();
+    EquationContext ec = getTopEquation(state, module);
+    if (ec == null) return null;
+    MutableRenaming renaming = ec.getRenaming().copy();
 
     ArrayList<Term> d = new ArrayList<Term>();
     if (defs.size() == 0) {

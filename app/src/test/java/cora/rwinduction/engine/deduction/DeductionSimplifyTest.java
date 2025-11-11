@@ -133,7 +133,7 @@ class DeductionSimplifyTest {
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E2: (• , z + sum1(z - 1) + 0 ≈ iter(z, 0, 0) | z > 0 , •)"));
-    assertTrue(solver.queryQuestion(0).equals("(0 >= i1) or (i1 >= 1)\n"));
+    assertTrue(solver.queryQuestion(0).equals("(0 >= i1) or (i1 >= 1)"));
     assertTrue(module.toString().equals(""));
   }
 
@@ -189,7 +189,7 @@ class DeductionSimplifyTest {
                                                           EquationPosition.TOPLEFT,
                                                           new MutableSubstitution());
     assertTrue(step.verifyAndExecute(pp, Optional.of(module)));
-    assertTrue(solver.queryQuestion(0).equals("(3 >= i1) or ((i1 >= 1) and (i2 = i2))\n"));
+    assertTrue(solver.queryQuestion(0).equals("(3 >= i1) or ((i1 >= 1) and (i2 = i2))"));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E2: (• , pointless(x + y, y - 1) ≈ x + y | y > 3 , •)"));
   }

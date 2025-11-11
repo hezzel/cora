@@ -320,8 +320,10 @@ public class InteractiveRewritingInducter {
           "commands.", cmdname);
           break;
         }
-        else if (_proof.isFinal() && !cmd.isEnvironmentCommand()) {
-          _output.println("As there are no goals left, only environment commands can be executed.");
+        else if (_proof.isFinal() && !cmd.isEnvironmentCommand() &&
+                 !cmd.queryName().equals("undo")) {
+          _output.println("As there are no goals left, only environment commands (and undo) can " +
+            "be executed.");
           break;
         }
         else if (!cmd.execute(status)) break;
@@ -346,10 +348,9 @@ public class InteractiveRewritingInducter {
         _output.println("All goals have been successfully removed!");
       }
       _output.println("To complete the proof, you still need to verify that a suitable ordering " +
-        "exists.  You can do this using the :check command.  Other useful environment commands " +
-        "include:");
+        "exists.  You can do this using the :check command.  Other useful commands include:");
       _output.startTable();
-      _output.println(":undo -- to go back to the previous proof state");
+      _output.println("undo -- to go back to the previous proof state");
       _output.println(":quit -- to end the proof process without termination check");
       _output.println(":ordering -- to see the current ordering requirements");
       _output.println(":rules -- to see the current rules (these must also be oriented)");

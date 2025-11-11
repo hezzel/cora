@@ -251,10 +251,10 @@ public class HorpoSimplifierTest {
     assertTrue(pair.snd().toString().equals("[x + 1 ≻{theory} x - 1 | x ≥ -4 { x }] == [down]\n"));
     assertTrue(solver.queryNumberQuestions() == 2);
     assertTrue(solver.queryQuestion(0).equals(
-      "(0 >= 5 + i1) or ((1 + i1 >= i1) and (1001 + i1 >= 0))\n"));
+      "(0 >= 5 + i1) or ((1 + i1 >= i1) and (1001 + i1 >= 0))"));
       // x ≥ -4 ⇒ x + 1 > x - 1 ∧ x + 1 ≥ -1000
     assertTrue(solver.queryQuestion(1).equals(
-      "(0 >= 5 + i1) or ((i1 >= 3 + i1) and (999 >= i1))\n"));
+      "(0 >= 5 + i1) or ((i1 >= 3 + i1) and (999 >= i1))"));
       // x ≥ -4 ⇒ x + 1 < x - 1 ∧ x + 1 ≤ 1000
   }
 
@@ -268,10 +268,10 @@ public class HorpoSimplifierTest {
     assertTrue(pair.snd().toString().equals("![x + y ≻{theory} y | x > y { x y }]\n"));
     assertTrue(solver.queryNumberQuestions() == 2);
     assertTrue(solver.queryQuestion(0).equals(
-      "(i2 >= i1) or ((i1 + i2 >= 1 + i2) and (1000 + i1 + i2 >= 0))\n"));
+      "(i2 >= i1) or ((i1 + i2 >= 1 + i2) and (1000 + i1 + i2 >= 0))"));
       // x > y ⇒ x + y > y ∧ x + y ≥ -1000
     assertTrue(solver.queryQuestion(1).equals(
-      "(i2 >= i1) or ((i2 >= 1 + i1 + i2) and (1000 >= i1 + i2))\n"));
+      "(i2 >= i1) or ((i2 >= 1 + i1 + i2) and (1000 >= i1 + i2))"));
       // x > y ⇒ x + y < y ∧ x + y ≤ 1000
   }
 
@@ -284,9 +284,9 @@ public class HorpoSimplifierTest {
     assertTrue(pair.fst().toString().equals("[x + y ≽{theory} y | x ≥ 0 { x y }]\n"));
     assertTrue(pair.snd().toString().equals("[x + y ≽{theory} y | x ≥ 0 { x y }] == ![down]\n"));
     assertTrue(solver.queryNumberQuestions() == 2);
-    assertTrue(solver.queryQuestion(0).equals("(0 >= 1 + i1) or (i1 + i2 >= i2)\n"));
+    assertTrue(solver.queryQuestion(0).equals("(0 >= 1 + i1) or (i1 + i2 >= i2)"));
       // x ≥ 0 ⇒ x + y ≥ y
-    assertTrue(solver.queryQuestion(1).equals("(0 >= 1 + i1) or (i2 >= i1 + i2)\n"));
+    assertTrue(solver.queryQuestion(1).equals("(0 >= 1 + i1) or (i2 >= i1 + i2)"));
       // x ≥ 0 ⇒ y ≥ x + y
   }
 
@@ -299,9 +299,9 @@ public class HorpoSimplifierTest {
     assertTrue(pair.fst().toString().equals("[x + y ≽{theory} y | x = 0 { x y }]\n"));
     assertTrue(pair.snd().toString().equals("[x + y ≽{theory} y | x = 0 { x y }]\n"));
     assertTrue(solver.queryNumberQuestions() == 2);
-    assertTrue(solver.queryQuestion(0).equals("(i1 # 0) or (i1 + i2 >= i2)\n"));
+    assertTrue(solver.queryQuestion(0).equals("(i1 # 0) or (i1 + i2 >= i2)"));
       // x ≥ 0 ⇒ x + y ≥ y
-    assertTrue(solver.queryQuestion(1).equals("(i1 # 0) or (i2 >= i1 + i2)\n"));
+    assertTrue(solver.queryQuestion(1).equals("(i1 # 0) or (i2 >= i1 + i2)"));
       // x ≥ 0 ⇒ y ≥ x + y
   }
 
@@ -324,7 +324,7 @@ public class HorpoSimplifierTest {
     assertTrue(pair.snd().toString().equals("[x ≽{theory} x ∧ false | x { x }]\n"));
     assertTrue(solver.queryNumberQuestions() == 1);
     // x ⇒ x ∨ ¬(x ∧ false)
-    assertTrue(solver.queryQuestion(0).equals("!b1 or b1 or !b1 or true\n"));
+    assertTrue(solver.queryQuestion(0).equals("!b1 or b1 or !b1 or true"));
   }
 
   @Test
@@ -336,7 +336,7 @@ public class HorpoSimplifierTest {
     assertTrue(pair.snd().toString().equals("![x ≻{theory} x ∨ false | x { x }]\n"));
     assertTrue(solver.queryNumberQuestions() == 1);
     // x ⇒ x ∧ ¬(x ∨ false)
-    assertTrue(solver.queryQuestion(0).equals("!b1 or (b1 and !b1 and true)\n"));
+    assertTrue(solver.queryQuestion(0).equals("!b1 or (b1 and !b1 and true)"));
   }
 
   @Test

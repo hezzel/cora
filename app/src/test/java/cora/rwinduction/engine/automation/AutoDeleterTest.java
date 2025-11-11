@@ -17,6 +17,7 @@ package cora.rwinduction.engine.automation;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.Optional;
@@ -26,8 +27,10 @@ import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
-import charlie.substitution.MutableSubstitution;
+import charlie.substitution.*;
 import charlie.trs.TRS;
+import charlie.smt.Valuation;
+import charlie.smt.SmtSolver;
 import charlie.reader.CoraInputReader;
 import charlie.smt.SmtProblem;
 import charlie.smt.FixedAnswerValidityChecker;
@@ -117,8 +120,8 @@ class AutoDeleterTest {
     assertTrue(pp.getProofState().isFinalState());
     assertTrue(pp.getProofState().getHypotheses().size() == 3);
     assertTrue(pp.getProofState().getOrderingRequirements().size() == 0);
-    assertTrue(solver.queryQuestion(0).equals("(i1 # i2) or (i1 = 1 + i2)\n"));
-    assertTrue(solver.queryQuestion(1).equals("(i1 # i2) or (i1 = i2)\n")); // y1 = y2 => y1 = y2
+    assertTrue(solver.queryQuestion(0).equals("(i1 # i2) or (i1 = 1 + i2)"));
+    assertTrue(solver.queryQuestion(1).equals("(i1 # i2) or (i1 = i2)")); // y1 = y2 => y1 = y2
   }
 
   @Test
@@ -139,7 +142,7 @@ class AutoDeleterTest {
     assertTrue(step.toString().equals("hdelete H1^{-1} l1 with [a := x, b := y, c := z]"));
     assertTrue(solver.queryNumberQuestions() == 1);
     assertTrue(solver.queryQuestion(0).equals(
-      "(i1 # 1 + i2) or (i2 # 1 + i3) or ((i2 = 1 + i3) and (i1 = 1 + i2))\n"));
+      "(i1 # 1 + i2) or (i2 # 1 + i3) or ((i2 = 1 + i3) and (i1 = 1 + i2))"));
   }
 
   @Test
@@ -151,7 +154,7 @@ class AutoDeleterTest {
     DeductionStep step = AutoDeleter.createHdeleteStep(pp, Optional.empty());
     assertTrue(step.toString().equals("hdelete H1 l1 with [i := a, x := 2, z := q]"));
     assertTrue(solver.queryNumberQuestions() == 1);
-    assertTrue(solver.queryQuestion(0).equals("(i1 >= 0) or (1 >= i1)\n"));
+    assertTrue(solver.queryQuestion(0).equals("(i1 >= 0) or (1 >= i1)"));
   }
 
   @Test
@@ -183,10 +186,52 @@ class AutoDeleterTest {
     PartialProof pp = setupProof("sum1(sum2(x)) = sum1(sum2(x))", "sum2(x) = sum2(x)");
     Settings.smtSolver = null;
     OutputModule module = OutputModule.createUnitTestModule();
-    assertTrue(AutoDeleter.createHdeleteStep(pp, Optional.of(module)) == null);
+    assertTrue(AutoDeleter.createHdeleteStep(pp, Optional.of(module)).toString().equals("delete"));
     assertTrue(module.toString().equals("The left- and right-hand side of the equation are the " +
-      "same.  Use DELETE instead!\n\n"));
+      "same.  I am using DELETE instead.\n\n"));
   }
 
+  class MySmtSolver implements SmtSolver {
+    ArrayList<Answer> _answers;
+    ArrayList<String> _storage;
+    MySmtSolver(Answer ...answers) {
+      _answers = new ArrayList<Answer>();
+      for (Answer a : answers) _answers.add(a);
+      _storage = new ArrayList<String>();
+    }
+    public Answer checkSatisfiability(SmtProblem problem) {
+      _storage.add(problem.toString());
+      return _answers.get(_storage.size()-1);
+    }
+    public boolean checkValidity(SmtProblem problem) {
+      _storage.add("Validity: " + problem.toString());
+      return _answers.get(_storage.size()-1) instanceof Answer.NO;
+    }
+  }
+
+  @Test
+  public void testFOTheory() {
+    TRS trs = setupTRS();
+    MutableRenaming renaming = new MutableRenaming(trs.queryFunctionSymbolNames());
+    Term left = CoraInputReader.readTermAndUpdateNaming("x + 1", renaming, trs);
+    Term right = CoraInputReader.readTermAndUpdateNaming("y + 1", renaming, trs);
+    Term constr1 = CoraInputReader.readTermAndUpdateNaming("x = y", renaming, trs);
+    Term constr2 = CoraInputReader.readTermAndUpdateNaming("x >= y", renaming, trs);
+    MySmtSolver solver = new MySmtSolver(new SmtSolver.Answer.NO());
+    Settings.smtSolver = solver;
+    assertTrue(AutoDeleter.seekFODisproveOrEqdelete(left, right, constr1)
+               instanceof AutoDeleter.EqdeleteStep);
+    assertTrue(solver._storage.size() == 1);
+    assertTrue(solver._storage.get(0).equals("(i1 = i2) and (i1 # i2)\n"));
+    Valuation valuation = new Valuation();
+    valuation.setInt(0, 1);
+    valuation.setInt(1, 2);
+    solver = new MySmtSolver(new SmtSolver.Answer.YES(valuation));
+    Settings.smtSolver = solver;
+    assertTrue(AutoDeleter.seekFODisproveOrEqdelete(left, right, constr2)
+               instanceof AutoDeleter.DisproveTheoryStep);
+    assertTrue(solver._storage.size() == 1);
+    assertTrue(solver._storage.get(0).equals("(i1 >= i2) and (i1 # i2)\n"));
+  }
 }
 

@@ -47,5 +47,9 @@ public interface Renaming {
    * cannot cause alterations to either it or the underlying Renaming.
    */
   Renaming makeImmutable();
+
+  static MutableRenaming createEmptyRenaming(Set<String> avoid) {
+    return new MutableRenaming(avoid);
+  }
 }
 

@@ -86,10 +86,10 @@ class AutoSimplifierTest {
     Settings.smtSolver = solver;
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionStep step = AutoSimplifier.createSingleStep(pp, module);
-    assertTrue(solver.queryQuestion(0).equals("(i1 >= 3) or (0 >= i2) or (0 >= i1)\n"));
-    assertTrue(solver.queryQuestion(1).equals("(i1 >= 3) or (0 >= i2) or (i1 >= 1)\n"));
-    assertTrue(solver.queryQuestion(2).equals("(i1 >= 3) or (0 >= i2) or (0 >= i2)\n"));
-    assertTrue(solver.queryQuestion(3).equals("(i1 >= 3) or (0 >= i2) or (i2 >= 1)\n"));
+    assertTrue(solver.queryQuestion(0).equals("(i1 >= 3) or (0 >= i2) or (0 >= i1)"));
+    assertTrue(solver.queryQuestion(1).equals("(i1 >= 3) or (0 >= i2) or (i1 >= 1)"));
+    assertTrue(solver.queryQuestion(2).equals("(i1 >= 3) or (0 >= i2) or (0 >= i2)"));
+    assertTrue(solver.queryQuestion(3).equals("(i1 >= 3) or (0 >= i2) or (i2 >= 1)"));
     assertTrue(step.commandDescription().equals("simplify R2 r with [x := y]"));
     assertTrue(module.toString().equals(""));
   }
@@ -112,12 +112,12 @@ class AutoSimplifierTest {
     assertTrue(steps.size() == 7);
     assertTrue(solver.queryNumberQuestions() == 6);
     // x > i + 1 => i > x
-    assertTrue(solver.queryQuestion(0).equals("(1 + i2 >= i1) or (i2 >= 1 + i1)\n"));
+    assertTrue(solver.queryQuestion(0).equals("(1 + i2 >= i1) or (i2 >= 1 + i1)"));
     // x > i + 1 => x >= i
-    assertTrue(solver.queryQuestion(1).equals("(1 + i2 >= i1) or (i1 >= i2)\n"));
+    assertTrue(solver.queryQuestion(1).equals("(1 + i2 >= i1) or (i1 >= i2)"));
     // x > i + 1 /\ i1 = i + 1 /\ z1 = z + i => i1 > x
     assertTrue(solver.queryQuestion(2).equals(
-      "(1 + i2 >= i1) or (i3 # 1 + i2) or (i4 # i5 + i2) or (i3 >= 1 + i1)\n"));
+      "(1 + i2 >= i1) or (i3 # 1 + i2) or (i4 # i5 + i2) or (i3 >= 1 + i1)"));
   }
 }
 

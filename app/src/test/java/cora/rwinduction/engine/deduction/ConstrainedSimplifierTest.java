@@ -212,7 +212,7 @@ class ConstrainedSimplifierTest {
     assertTrue(simp.canReduceCtermWithConstraint(
       pp.getProofState().getTopEquation().getConstraint(), solver, eqnaming, o, "XX"));
     assertTrue(module.toString().equals(""));
-    assertTrue(solver.queryQuestion(0).equals("(i1 >= 0) or ((6 >= 0) and (i1 # 0))\n"));
+    assertTrue(solver.queryQuestion(0).equals("(i1 >= 0) or ((6 >= 0) and (i1 # 0))"));
     assertTrue(solver.queryNumberQuestions() == 1);
 
     solver = new FixedAnswerValidityChecker();
@@ -222,9 +222,9 @@ class ConstrainedSimplifierTest {
     assertTrue(module.toString().equals(
       "The XX does not apply: I could not prove that z < 0 ⊨ 7 > 0 nor z < 0 ⊨ z ≠ 0.\n\n"));
     assertTrue(solver.queryNumberQuestions() == 3);
-    assertTrue(solver.queryQuestion(0).equals("(i1 >= 0) or ((6 >= 0) and (i1 # 0))\n"));
-    assertTrue(solver.queryQuestion(1).equals("(i1 >= 0) or (6 >= 0)\n"));
-    assertTrue(solver.queryQuestion(2).equals("(i1 >= 0) or (i1 # 0)\n"));
+    assertTrue(solver.queryQuestion(0).equals("(i1 >= 0) or ((6 >= 0) and (i1 # 0))"));
+    assertTrue(solver.queryQuestion(1).equals("(i1 >= 0) or (6 >= 0)"));
+    assertTrue(solver.queryQuestion(2).equals("(i1 >= 0) or (i1 # 0)"));
   }
 
   @Test

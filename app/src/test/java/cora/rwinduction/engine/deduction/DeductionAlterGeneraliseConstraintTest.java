@@ -37,7 +37,7 @@ import cora.io.OutputModule;
 import cora.rwinduction.parser.EquationParser;
 import cora.rwinduction.engine.*;
 
-class DeductionAlterConstraintTest {
+class DeductionAlterGeneraliseConstraintTest {
   private TRS setupTRS() {
     return CoraInputReader.readTrsFromString(
       "sum1 :: Int -> Int\n" +
@@ -86,7 +86,7 @@ class DeductionAlterConstraintTest {
       // x ≤ i ∨ z = 0 ∨ ( (z ≥ 1 ∨ z + 1 ≤ 0) ∧ i + 1 ≤ x )
       "(i2 >= i1) or (i3 = 0) or (((i3 >= 1) or (0 >= 1 + i3)) and (i1 >= 1 + i2))\n" +
       // ( z ≤ 0 ∧ z ≥ 0 ) ∨ i ≥ x ∨ ( x ≥ i + 1 ∧ z != 0 )
-      "((0 >= i3) and (i3 >= 0)) or (i2 >= i1) or ((i1 >= 1 + i2) and (i3 # 0))\n"));
+      "((0 >= i3) and (i3 >= 0)) or (i2 >= i1) or ((i1 >= 1 + i2) and (i3 # 0))"));
   }
 
   @Test
@@ -124,7 +124,7 @@ class DeductionAlterConstraintTest {
     FixedAnswerValidityChecker mysolver = new FixedAnswerValidityChecker(true);
     Settings.smtSolver = mysolver;
     assertTrue(dac.verifyAndExecute(pp, o));
-    assertTrue(mysolver.queryQuestion(0).equals("(i2 >= i1) or (i1 >= i2)\n"));
+    assertTrue(mysolver.queryQuestion(0).equals("(i2 >= i1) or (i1 >= i2)"));
     assertTrue(pp.getProofState().getEquations().size() == 1);
     assertTrue(pp.getProofState().getTopEquation().getIndex() == 2);
     assertTrue(pp.getProofState().getTopEquation().toString().equals(

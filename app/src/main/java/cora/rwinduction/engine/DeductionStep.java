@@ -134,12 +134,12 @@ public abstract class DeductionStep {
    * in the given proof state, or null if the proof state is already final.  If the module is set,
    * then an appropriate error message will be printed in the latter case.
    */
-  public static Equation getTopEquation(ProofState state, Optional<OutputModule> module) {
+  public static EquationContext getTopEquation(ProofState state, Optional<OutputModule> module) {
     if (state.isFinalState()) {
       module.ifPresent( o -> o.println("The proof is already complete.") );
       return null;
     }
-    return state.getTopEquation().getEquation();
+    return state.getTopEquation();
   }
 }
 

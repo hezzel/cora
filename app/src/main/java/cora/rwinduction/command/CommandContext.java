@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Optional;
 import charlie.util.FixedList;
+import charlie.util.Pair;
 import charlie.terms.position.PositionFormatException;
 import charlie.terms.position.Position;
 import charlie.terms.Term;
@@ -26,6 +27,7 @@ import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
 import cora.io.OutputModule;
 import cora.rwinduction.parser.CommandParsingStatus;
+import cora.rwinduction.engine.EquationContext;
 import cora.rwinduction.engine.deduction.DeductionContext;
 
 /** The syntax for the deduction command CONTEXT. */
@@ -37,7 +39,7 @@ public class CommandContext extends DeductionCommand {
 
   @Override
   public FixedList<String> callDescriptor() {
-    return FixedList.of(":context", "context <position_1> ... <position_n>");
+    return FixedList.of("context", "context <position_1> ... <position_n>", "context safe");
   }
   
   @Override
@@ -45,13 +47,14 @@ public class CommandContext extends DeductionCommand {
     module.println("Use this deduction rule without any arguments to split an equation " +
       "f s1 ... sn = f t1 ... tn | constr into the n equations si = ti | constr, regardless of " +
       "whether f is a function symbol or variable.");
-    module.println("Use the deduction rule with arguments to split an equation C[s1,...,sn] = " +
-      "C[t1,...,tn] | constr into the n equations si = ti | constr, where the arguments indicate " +
-      "the positions of the subterms si/ti.");
-    module.println("(Using this command typically loses completeness of the proof state, " +
-      "although completeness is preserved automatically if possible.  If you wish to be sure " +
-      "that completeness is preserved, use semiconstructor (perhaps combined with deletion) " +
-      "instead.)");
+    module.println("Use the deduction rule with position arguments to split an equation " +
+      "C[s1,...,sn] = C[t1,...,tn] | constr into the n equations si = ti | constr, where the " +
+      "arguments indicate the positions of the subterms si/ti.");
+    module.println("Using this command typically loses completeness of the proof state, although " +
+      "completeness is preserved automatically if possible.  If you wish to be sure that " +
+      "completeness is preserved, use semiconstructor (perhaps combined with deletion) instead, " +
+      "or use the final syntax of the context command: giving the argument \"safe\" chooses a " +
+      "maximal semi-constructor context, which will preserve completeness.");
   }
   
   @Override
@@ -64,8 +67,16 @@ public class CommandContext extends DeductionCommand {
 
   private ArrayList<Position> readPositions(CommandParsingStatus input) {
     ArrayList<Position> posses = new ArrayList<Position>();
+    String word = input.nextWord();
+    if (word != null && word.equals("safe")) {
+      if (!input.commandEnded()) {
+        _module.println("Unexpected argument at positin %a: expected end of command.",
+          input.currentPosition());
+        return null;
+      }
+      return safePositions();
+    }
     while (true) {
-      String word = input.nextWord();
       if (word == null) return posses;
       try { posses.add(Position.parse(word)); }
       catch (PositionFormatException e) {
@@ -73,15 +84,37 @@ public class CommandContext extends DeductionCommand {
           e.queryExplanation());
         return null;
       }
+      word = input.nextWord();
     }
+  }
+
+  private ArrayList<Position> safePositions() {
+    EquationContext ec = _proof.getProofState().getTopEquation();
+    ArrayList<Position> posses = new ArrayList<Position>();
+
+    DeductionContext.storeDifferences(ec.getLhs(), ec.getRhs(), _proof.getContext(), posses,
+                                      new ArrayList<Pair<Term,Term>>());
+
+    if (posses.size() == 0) {
+      _module.println("Both sides are the same; please use DELETE instead.");
+      return null;
+    }
+    if (posses.size() == 1 && posses.get(0).isEmpty()) {
+      _module.println("No SEMICONSTRUCTOR step can be applied.");
+      return null;
+    }
+
+    return posses;
   }
 
   /** Tab suggestions for this command are the positions that both sides share. */
   @Override
   public ArrayList<TabSuggestion> suggestNext(String args) {
-    HashSet<Position> given = readPositionsInText(args.split(" "));
     ArrayList<TabSuggestion> ret = new ArrayList<TabSuggestion>();
     ret.add(endOfCommandSuggestion());
+    if (args.equals("")) ret.add(new TabSuggestion("safe", "keyword"));
+    else if (args.equals("safe")) return ret;
+    HashSet<Position> given = readPositionsInText(args.split(" "));
     Term lhs = _proof.getProofState().getTopEquation().getLhs();
     Term rhs = _proof.getProofState().getTopEquation().getRhs();
     Printer printer = PrinterFactory.createParseablePrinter(_proof.getContext().getTRS());

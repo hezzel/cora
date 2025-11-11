@@ -72,12 +72,12 @@ public class DeductionDisproveRoot extends DeductionStep {
   public static DeductionDisproveRoot createStep(PartialProof proof, Optional<OutputModule> m) {
     ProofState state = proof.getProofState();
     ProofContext context = proof.getContext();
-    Equation equation = getTopEquation(proof.getProofState(), m); 
-    if (equation == null) return null;
-    Term left = equation.getLhs();
-    Term right = equation.getRhs();
+    EquationContext ec = getTopEquation(proof.getProofState(), m); 
+    if (ec == null) return null;
+    Term left = ec.getLhs();
+    Term right = ec.getRhs();
     
-    if (state.getIncompleteEquations().contains(state.getTopEquation().getIndex())) {
+    if (state.getIncompleteEquations().contains(ec.getIndex())) {
       m.ifPresent(o -> o.println("DISPROVE can only be applied on complete equation contexts."));
       return null;
     }

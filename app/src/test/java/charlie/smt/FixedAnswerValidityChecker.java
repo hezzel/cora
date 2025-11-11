@@ -51,7 +51,7 @@ public class FixedAnswerValidityChecker implements SmtSolver {
 
   public boolean checkValidity(SmtProblem problem) {
     int k = _questions.size();
-    _questions.add(problem.toString());
+    _questions.add(problem.toString().strip());
     if (k < _answers.length) return _answers[k];
     if (_defaultAnswer != 0) return _defaultAnswer > 0;
     assertTrue(false, "The FixedAnswerValidityChecker was asked for an answer " + (k+1) +

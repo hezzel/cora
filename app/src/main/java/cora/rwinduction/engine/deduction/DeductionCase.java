@@ -49,9 +49,9 @@ public final class DeductionCase extends DeductionStep {
   public static DeductionCase createStep(PartialProof proof,
                                          Optional<OutputModule> module, Term caseterm) {
     ProofState state = proof.getProofState();
-    Equation eq = DeductionStep.getTopEquation(state, module);
-    if (eq == null) return null;
-    Renaming renaming = state.getTopEquation().getRenaming();
+    EquationContext ec = DeductionStep.getTopEquation(state, module);
+    if (ec == null) return null;
+    Renaming renaming = ec.getRenaming();
     ArrayList<ExtraInfo> ret = new ArrayList<ExtraInfo>();
 
     if (caseterm.queryType().equals(TypeFactory.boolSort)) {

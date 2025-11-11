@@ -18,6 +18,7 @@ package cora.rwinduction.engine.deduction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import charlie.util.Pair;
 import charlie.terms.position.Position;
 import charlie.terms.replaceable.Renaming;
@@ -37,27 +38,47 @@ import cora.rwinduction.engine.*;
 public final class DeductionEqdelete extends DeductionStep {
   private Term _required;
 
-  private DeductionEqdelete(ProofState state, ProofContext context,
-                            ArrayList<Pair<Term,Term>> equalParts) {
+  private DeductionEqdelete(ProofState state, ProofContext context, Term required) {
     super(state, context);
-    _required = TheoryFactory.createValue(true);
-    for (Pair<Term,Term> pair : equalParts) {
-      Term c = TheoryFactory.createEquality(pair.fst(), pair.snd());
-      _required = TheoryFactory.createConjunction(_required, c);
-    }
+    _required = required;
   }
  
   public static DeductionEqdelete createStep(PartialProof proof, Optional<OutputModule> module) {
     ProofState state = proof.getProofState();
-    Equation eq = DeductionStep.getTopEquation(state, module);
-    if (eq == null) return null;
+    EquationContext ec = DeductionStep.getTopEquation(state, module);
+    if (ec == null) return null;
+    Term req =
+      createMainStep(ec.getLhs(), ec.getRhs(), ec.getConstraint(), module, ec.getRenaming());
+    if (req == null) return null;
 
-    ArrayList<Pair<Term,Position>> posLeft = getSubtermInfo(eq.getLhs());
-    ArrayList<Pair<Term,Position>> posRight = getSubtermInfo(eq.getRhs());
+    return new DeductionEqdelete(state, proof.getContext(), req);
+  }
+
+  /**
+   * This function checks if the equation left = right | constraint is eq-deletable.
+   */
+  public static boolean checkApplicability(Term left, Term right, Term constraint) {
+    Renaming renaming = Renaming.createEmptyRenaming(Set.of());
+    Term requirement = createMainStep(left, right, constraint, Optional.empty(), renaming);
+    if (requirement == null) return false;
+    TermSmtTranslator translator = new TermSmtTranslator();
+    translator.requireImplication(constraint, requirement);
+    return Settings.smtSolver.checkValidity(translator.queryProblem());
+  }
+
+  /**
+   * Helper function for both createStep and checkApplicability: this verifies that left and right
+   * both have a form C[s1,...,sn] = C[t1,...,tn] with all si/ti variables or values.  If so, the
+   * constraint s1 = t1 ∧ ... ∧ sn = tn is returned.  If not, null is returned and an appropriate
+   * message given on the output module.
+   */
+  private static Term createMainStep(Term left, Term right, Term constraint,
+                                     Optional<OutputModule> module, Renaming renaming) {
+    ArrayList<Pair<Term,Position>> posLeft = getSubtermInfo(left);
+    ArrayList<Pair<Term,Position>> posRight = getSubtermInfo(right);
 
     if (!checkSamePositions(posLeft, posRight, module)) return null;
 
-    Renaming renaming = state.getTopEquation().getRenaming();
     ArrayList<Pair<Term,Term>> parts = new ArrayList<Pair<Term,Term>>();
 
     int k = posLeft.size();
@@ -76,7 +97,7 @@ public final class DeductionEqdelete extends DeductionStep {
       return null;
     }
 
-    return new DeductionEqdelete(state, proof.getContext(), parts);
+    return createEqualityConstraint(parts);
   }
 
   /**
@@ -188,6 +209,16 @@ public final class DeductionEqdelete extends DeductionStep {
 
     parts.add(new Pair<Term,Term>(left, right));
     return true;
+  }
+
+  /** Creates the constraint that s1 = t1 ∧ ... ∧ sn = tn, if parts = [(s1,t1),...,(sn,tn)] */
+  private static Term createEqualityConstraint(ArrayList<Pair<Term,Term>> parts) {
+    Term ret = TheoryFactory.createValue(true);
+    for (Pair<Term,Term> pair : parts) {
+      Term c = TheoryFactory.createEquality(pair.fst(), pair.snd());
+      ret = TheoryFactory.createConjunction(ret, c);
+    }
+    return ret;
   }
 
   /**

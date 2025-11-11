@@ -332,9 +332,8 @@ class ConstrainedSimplifier {
   }
 
   /**
-   * Writing C[s]_pos ≈ t | ψ for the given equation, where p is the underlying position, this
-   * method extends the underlying substitution γ to a substitution δ so that _left δ = s, if
-   * possible.
+   * Writing C[s]_pos ≈ t | ψ for the given equation, this method extends the underlying
+   * substitution γ to a substitution δ so that _left δ = s, if possible.
    * 
    * If this is not possible, then an appropriate error message is given on m and false is
    * returned -- but it might still be the case that _substitution has been changed.  If it is

@@ -24,9 +24,7 @@ import java.util.Set;
 import charlie.util.FixedList;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
-import charlie.smt.Valuation;
-import charlie.smt.SmtProblem;
-import charlie.smt.SmtSolver;
+import charlie.smt.*;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.EquationContext;
@@ -83,26 +81,13 @@ class CommandDisproveTest {
     assertTrue(module.toString().equals("Both sides have the same root symbol.\n\n"));
   }
 
-  class SatisfiabilitySayer implements SmtSolver {
-    boolean _answer;
-    SatisfiabilitySayer(boolean a) { _answer = a; }
-    public Answer checkSatisfiability(SmtProblem problem) {
-      if (_answer) return new Answer.YES(new Valuation());
-      else return new Answer.NO();
-    }
-    public boolean checkValidity(SmtProblem problem) {
-      return !_answer;
-    }
-  }
-
   @Test
   public void testAutomaticTheory() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Settings.smtSolver = new SatisfiabilitySayer(true);
+    Settings.smtSolver =
+      new ProgrammableSmtSolver("i1 + i2 # 1 + i2", new SmtSolver.Answer.YES(new Valuation()));
     DeductionStep step =
       createStep(module, "{ F :: Int -> Int } F(x) = 1 + x | true", "disprove theory");
-    assertTrue(step.commandDescription().equals("disprove theory with [F := [+](4242), x := 4242]"));
-    step = createStep(module, "{ F :: Int -> Int } F(x) = 1 + x | true", "disprove theory");
     assertTrue(step.commandDescription().equals("disprove theory with [F := [+](4242), x := 4242]"));
   }
 
@@ -117,7 +102,7 @@ class CommandDisproveTest {
   @Test
   public void testLegalTheoryWith() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Settings.smtSolver = new SatisfiabilitySayer(true);
+    Settings.smtSolver = null;
     DeductionStep step =
       createStep(module, "{ F :: Int -> Int } F(x) = 1 + x | true",
                          "disprove theory with [F := [*](0),x := 3]");
@@ -127,7 +112,7 @@ class CommandDisproveTest {
   @Test
   public void testMissingVariable() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Settings.smtSolver = new SatisfiabilitySayer(true);
+    Settings.smtSolver = null;
     assertTrue(createStep(module, "{ F :: Int -> Int } F(x) = 1 + x | true",
                                   "disprove theory with [F := [*](0)]") == null);
     assertTrue(module.toString().equals("The substitution should map ALL variables of the " +
@@ -137,7 +122,7 @@ class CommandDisproveTest {
   @Test
   public void testNonTheoryMapping() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Settings.smtSolver = new SatisfiabilitySayer(true);
+    Settings.smtSolver = null;
     assertTrue(createStep(module, "{ x :: Int } x = y | x > 0 ∧ y > 0",
                                   "disprove theory with [x := 1, y := double(1)]") == null);
     assertTrue(module.toString().equals("Illegal mapping [y := double(1)]: the substitution " +
@@ -147,7 +132,7 @@ class CommandDisproveTest {
   @Test
   public void testNonGroundMapping() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    Settings.smtSolver = new SatisfiabilitySayer(true);
+    Settings.smtSolver = null;
     assertTrue(createStep(module, "{ x :: Int } x = y | x > 0 ∧ y > 0",
                                   "disprove theory with [x := 1, y := 1 + z]") == null);
     assertTrue(module.toString().equals("Illegal mapping [y := 1 + z]: the substitution " +

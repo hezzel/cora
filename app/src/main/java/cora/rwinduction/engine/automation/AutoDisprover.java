@@ -78,7 +78,8 @@ public final class AutoDisprover {
    * In case of failure, null is returned and an appropriate message printd on the output module.
    *
    * If an output module is given, then the renaming should contain the variables used in l, r
-   * and c, as it may be used for error messages.
+   * and c, as it may be used for error messages.  If none is given, the renaming is allowed to be
+   * null.
    */
   public static Substitution findContradictingTheorySubstitution(Term l, Term r, Term c,
                                        Optional<OutputModule> module, Renaming renaming) {
@@ -99,6 +100,8 @@ public final class AutoDisprover {
   /**
    * This method handles the case for findContradictingTheorySubstitution where both sides are
    * first-order terms: the SMT solver should be able to verify or discard this case on its own.
+   *
+   * Note that if module if empty, then renaming is allowed to be null.
    */
   public static Substitution findBaseSubstitution(Term l, Term r, Term c,
                         Optional<OutputModule> module, Renaming renaming) {
