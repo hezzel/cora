@@ -102,7 +102,7 @@ public class TheoryArgumentsProcessor implements Processor {
           if (!goodvars.contains(x)) { badindexes.add(j); break; }
         }
       }
-      for (int j : badindexes) _targs.get(f).remove(j);
+      for (int j : badindexes) _targs.get(g).remove(j);
     }
   }
 
