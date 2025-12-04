@@ -19,6 +19,8 @@ import charlie.parser.lib.ParsingException;
 import charlie.terms.Term;
 import charlie.trs.TRS;
 import charlie.reader.*;
+import charlie.smt.*;
+import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.io.ProofObject;
 import cora.reduction.Reducer;
@@ -42,6 +44,7 @@ public class App {
       Request req = parameters.queryRequest();
       TRS trs = readTRS(parameters.querySingleFile());
       OutputModule om = parameters.queryOutputModule(trs);
+      testSmtSolver();
       ProofObject pobject = executeRequest(req, trs, parameters.queryModuleInput(), om);
       if (pobject == null) System.exit(1);
       System.out.println(pobject.printAnswer());
@@ -92,6 +95,29 @@ public class App {
     int i = filename.lastIndexOf('.');
     if (i >= 0) return filename.substring(i+1).toLowerCase();
     return "";
+  }
+
+  /** This gives a warning if the SMT-solver does not work properly. */
+  private static void testSmtSolver() {
+    SmtProblem problem = new SmtProblem();
+    // x * 3 = 9
+    IntegerExpression x = problem.createIntegerVariable("x");
+    problem.require(SmtFactory.createEqual(SmtFactory.createMultiplication(3, x),
+                                           SmtFactory.createValue(9)));
+    switch (Settings.smtSolver.checkSatisfiability(problem)) {
+      case SmtSolver.Answer.YES(Valuation val): return;
+      case SmtSolver.Answer.NO():
+        System.out.println("WARNING: the SMT-solver has very unexpected behaviour, claiming " +
+          "that there is no solution for the problem x * 3 = 9.");
+        return;
+      case SmtSolver.Answer.MAYBE(String reason):
+        System.out.println("WARNING: the SMT-solver does not appear to be set up correctly.  " +
+          "Asking for a solution for the very simple problem [x * 3 = 9] yields the error [" +
+          reason + "].");
+        System.out.println("You can manually set an SMT-solver by invoking Cora with the " +
+          "parameter --solver (invoke cora without arguments for further instructions).");
+        System.out.println();
+    }
   }
 
   /**

@@ -300,7 +300,7 @@ public class Parameters {
       str.append("            " + entry.getKey() + " : " + entry.getValue())
         .append(System.lineSeparator());
     }
-    str.append("    -s | --solver  [<solver>]   Request the given SMT solver to be used." +
+    str.append("    -s | --solver  [<solver>]   Request the given SMT solver to be used.  " +
       "Note that this solver should be installed on your local computer.")
       .append(System.lineSeparator());
     str.append("        The following SMT solvers are supported.")
