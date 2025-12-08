@@ -156,8 +156,8 @@ class ApproximateReducer {
       Term to = pair.snd();
 
       // CASE 1: from is a base-type theory term whose variables are all instantiated by ground
-      // theory terms ==> to must either be its value, or have the same either shape (in which case
-      // we fall through to case 6)
+      // theory terms ==> to must either be its value, or have the same shape (in which case we
+      // fall through to case 6)
       if (from.isTheoryTerm() && from.queryType().isBaseType() &&
           allVarsInTheory(from.vars(), dp1.lvars())) {
         if (!to.isTheoryTerm()) return false;
@@ -185,12 +185,15 @@ class ApproximateReducer {
       // may be applied => we assume that it can reduce to anything
       if (ruleArity.containsKey(f) && ruleArity.get(f) <= from.numberArguments()) continue;
 
-      // CASE 5: from is a base-type theory term (whose root symbol is not a defined symbol), but
+      // CASE 5: from is headed by a calculation symbol; then we allow it to reduce to any value
+      if (f.isTheorySymbol() && from.queryType().isBaseType() && to.isValue()) continue;
+
+      // CASE 6: from is a base-type theory term (whose root symbol is not a defined symbol), but
       // not necessarily instantiated to a _ground_ theory term -- then it can in principle reduce
       // to any value
       if (from.isTheoryTerm() && (to.isValue() || to.isVariable())) continue;
 
-      // CASE 6: from is a term f s1 ... sn that isn't going to be reduced at the root, and to is a
+      // CASE 7: from is a term f s1 ... sn that isn't going to be reduced at the root, and to is a
       // functional term as well ==> then to should have the same form f t1 ... tn with each si γ
       // reducing to ti δ
       if (to.isFunctionalTerm()) {
@@ -202,7 +205,7 @@ class ApproximateReducer {
         continue;
       }
 
-      // CASE 7: in the only remaining case, from is a term f s1 ... sn (with n < arity(f)) and to
+      // CASE 8: in the only remaining case, from is a term f s1 ... sn (with n < arity(f)) and to
       // is a var term F t1 ... tm. While this should not really happen (since it means that the
       // left-hand side of dp2 is not a pattern), let's account for it anyway
       if (to.numberArguments() > from.numberArguments()) return false;
