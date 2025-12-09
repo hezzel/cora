@@ -61,7 +61,6 @@ public class ProcessCaller {
     if (!exited) {
       // we did not finish within the timeout
       process.destroy();
-      Runtime.getRuntime().exit(1);
       return null;
     }
 
@@ -84,7 +83,7 @@ public class ProcessCaller {
    * string and returns it.
    */
   public Optional<String> getResultAsString() throws IOException, InterruptedException,
-    ExecutionException {
+                                                        ExecutionException {
     Process process = callProcess();
     if (process == null) return Optional.empty();
     process.onExit().get();
