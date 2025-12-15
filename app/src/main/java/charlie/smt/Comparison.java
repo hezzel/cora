@@ -52,9 +52,9 @@ abstract sealed class Comparison extends Constraint permits Geq0, Is0, Neq0 {
   protected boolean checkSimplified() {
     if (!_expr.isSimplified()) return false;
     return switch (_expr) {
-      case IValue _ -> false;
-      case CMult _ -> false;
-      case Multiplication _ -> false;
+      case IValue i -> false;
+      case CMult c -> false;
+      case Multiplication m -> false;
       case Addition a -> {
         if (a.queryChild(a.numChildren()) instanceof CMult c) {
           yield c.queryConstant() > 0 &&
@@ -122,23 +122,23 @@ abstract sealed class Comparison extends Constraint permits Geq0, Is0, Neq0 {
    */
   public int compareTo(Constraint other) {
     return switch (other) {
-      case Falsehood _ -> 1;
-      case Truth _ -> 1;
-      case BVar _ -> 1;
-      case NBVar _ -> 1;
+      case Falsehood f -> 1;
+      case Truth t -> 1;
+      case BVar x -> 1;
+      case NBVar x -> 1;
       case Comparison comp -> {
         int cmp = _expr.compareTo(comp._expr);
         if (cmp != 0) yield cmp * 2;
         yield switch (this) {
-          case Is0 _ -> (other instanceof Is0) ? 0 : -1;
-          case Neq0 _ -> (other instanceof Neq0) ? 0 : 1;
-          case Geq0 _ -> (other instanceof Is0) ? 1 : (other instanceof Geq0) ? 0 : -1;
+          case Is0 i -> (other instanceof Is0) ? 0 : -1;
+          case Neq0 n -> (other instanceof Neq0) ? 0 : 1;
+          case Geq0 g -> (other instanceof Is0) ? 1 : (other instanceof Geq0) ? 0 : -1;
         };
       }
-      case Junction _ -> -1;
-      case Iff _ -> -1;
-      case EqS _ -> -1;
-      case UneqS _ -> -1;
+      case Junction j -> -1;
+      case Iff i -> -1;
+      case EqS e -> -1;
+      case UneqS u -> -1;
     };
   }
 }

@@ -68,10 +68,9 @@ class SMTLibResponseHandler {
     SExpression value = null;
 
     switch (expr) {
-      case SExpression.Symbol _:
-      case SExpression.Numeral _:
-      case SExpression.StringConstant _:
-        return; // nothing to do
+      case SExpression.Symbol x: return;
+      case SExpression.Numeral x: return;
+      case SExpression.StringConstant x: return;
       case SExpression.SExpList(List<SExpression> lst):
         if (lst.size() == 3 && lst.get(0) instanceof SExpression.Symbol(String symb) &&
           symb.equals("=")) {

@@ -91,14 +91,14 @@ class HorpoSimplifier {
    */
   private boolean sameTypeStructure(Type a, Type b) {
     return switch (a) {
-      case Base _, Product _ -> switch (b) {
-        case Base _, Product _ -> true;
-        case Arrow _ -> false;
-      };
       case Arrow(Type in1, Type out1) -> switch (b) {
-        case Base _, Product _ -> false;
         case Arrow(Type in2, Type out2) ->
           sameTypeStructure(in1, in2) && sameTypeStructure(out1, out2);
+        default -> false;
+      };
+      default -> switch (b) {
+        case Arrow(Type in2, Type out2) -> false;
+        default -> true;
       };
     };
   }

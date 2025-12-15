@@ -59,8 +59,8 @@ public final class BVar extends Constraint {
 
   public int compareTo(Constraint other) {
     return switch (other) {
-      case Falsehood _ -> 1;
-      case Truth _ -> 1;
+      case Falsehood f -> 1;
+      case Truth t -> 1;
       case BVar x -> _index - x._index;
       case NBVar x -> {
         int ret = _index - x.queryIndex();

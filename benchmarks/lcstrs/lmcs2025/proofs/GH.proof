@@ -1,9 +1,9 @@
 GOAL E1: (* , G(f, k, x) [=] H(f, n, m, x) | k =_Int n + m , *)
 case k >= 0
-simplify O2 L with [f := f, n := k, x := x]
+simplify R2 l with [f := f, n := k, x := x]
 case n <= 0
-simplify O3 R with [f := f, m := m, n := n, x := x]
-calc
+simplify R3 r with [f := f, m := m, n := n, x := x]
+calc r2
 case n1 > 0
-simplify O5 R with [f := f, m := m, n := n1, x := f(x)]
-disprove
+simplify R5 r with [f := f, m := m, n := n1, x := f(x)]
+disprove theory with [f := [+](1), k := -5, m := -6, n := 1, n1 := 0, x := 0]

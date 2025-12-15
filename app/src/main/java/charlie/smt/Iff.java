@@ -43,10 +43,10 @@ public final class Iff extends Constraint {
     int c = _left.compareTo(_right);
     if (c >= 0) return false;
     return switch (_left) {
-      case Falsehood _ -> false;
-      case Truth _ -> false;
+      case Falsehood f -> false;
+      case Truth t -> false;
       case BVar x -> !(_right instanceof NBVar y && x.queryIndex() == y.queryIndex());
-      case Comparison _ -> c <= -2;
+      case Comparison o -> c <= -2;
       default -> true;
     };
   }
@@ -116,8 +116,8 @@ public final class Iff extends Constraint {
 
   public int compareTo(Constraint other) {
     return switch (other) {
-      case EqS _ -> -1;
-      case UneqS _ -> -1;
+      case EqS e -> -1;
+      case UneqS u -> -1;
       case Iff iff -> {
         int c = _left.compareTo(iff._left);
         if (c == 0) c = _right.compareTo(iff._right);

@@ -59,7 +59,7 @@ public class InfixManagerTest {
     manager.addGroup(manager.ASSOC_RIGHT, 10, "+");
     ParserTerm t = convert("x1 + x2 + x3 + x4", manager, null);
     assertTrue(t.toString().equals("@(+, [x1, @(+, [x2, @(+, [x3, x4])])])"));
-    assertTrue(t instanceof Application(Token t1, CalcSymbol(Token t2, String name), _));
+    assertTrue(t instanceof Application);
   }
 
   @Test

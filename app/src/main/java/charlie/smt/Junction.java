@@ -92,11 +92,11 @@ abstract sealed class Junction extends Constraint permits Conjunction, Disjuncti
 
   public int compareTo(Constraint other) {
     return switch (other) {
-      case Falsehood _ -> 1;
-      case Truth _ -> 1;
-      case BVar _ -> 1;
-      case NBVar _ -> 1;
-      case Comparison _ -> 1;
+      case Falsehood f -> 1;
+      case Truth t -> 1;
+      case BVar x -> 1;
+      case NBVar x -> 1;
+      case Comparison c -> 1;
       case Junction junc -> {
         int c = symbol().compareTo(junc.symbol());
         if (c == 0) c = _children.size() - junc.numChildren();
@@ -106,9 +106,9 @@ abstract sealed class Junction extends Constraint permits Conjunction, Disjuncti
         }
         yield c;
       }
-      case Iff _ -> -1; 
-      case EqS _ -> -1; 
-      case UneqS _ -> -1; 
+      case Iff i -> -1; 
+      case EqS e -> -1; 
+      case UneqS u -> -1; 
     };  
   }
 }

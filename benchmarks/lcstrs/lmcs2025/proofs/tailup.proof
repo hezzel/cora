@@ -1,20 +1,21 @@
 GOAL E1: (* , recdown(f, n, i, a) [=] tailup(f, n, i, a) , *)
 induct
 case i < n
-simplify O2 L with [F := f, a := a, i := i, n := n]
-simplify O4 R with [F := f, a := a, i := i, n := n]
-skip
-simplify O1 L with [F := f, a := a, i := i, n := n]
-simplify O3 R with [F := f, a := a, i := i, n := n]
-delete
-calc
-hypothesis H1 L2 with [a := a, f := f, i := i1, n := n]
+simplify R2 l with [F := f, a := a, i := i, n := n]
+calc l2.3
+simplify R4 r with [F := f, a := a, i := n, m := i]
+calc r2
+hypothesis H1 l2 with [a := a, f := f, i := i1, n := n]
 induct
 case i <= n
-simplify O4 L2 with [F := f, a := a, i := i1, n := n]
-simplify O4 R with [F := f, a := f(n, a), i := i, n := n1]
-skip
-simplify O3 L2 with [F := f, a := a, i := i1, n := n]
-simplify O3 R with [F := f, a := f(n, a), i := i, n := n1]
+simplify R4 l2 with [F := f, a := a, i := n, m := i1]
+calc l2.2
+simplify R4 r with [F := f, a := f(n, a), i := n1, m := i]
+calc r2
+hdelete H9 l with [a := f(n, a), f := f, i := i, i1 := i1, n := n1, n1 := n2]
+simplify R3 l2 with [F := f, a := a, i := n, m := i1]
+simplify R3 r with [F := f, a := f(n, a), i := n1, m := i]
 eq-delete
-calc
+simplify R1 l with [F := f, a := a, i := i, n := n]
+simplify R3 r with [F := f, a := a, i := n, m := i]
+delete

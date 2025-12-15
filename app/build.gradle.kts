@@ -10,8 +10,6 @@ repositories {
 
 dependencies {
     // Development dependencies
-    implementation("org.jetbrains:annotations:24.0.0")
-    implementation("com.google.guava:guava:33.2.1-jre")
     implementation("org.jline:jline:3.26.1")
 
     // Testing dependencies
@@ -19,18 +17,27 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
 application {
     // Define the main class for the application.
     mainClass.set("cora.App")
 
     //Sets the application DefaultJVMArgs
-    applicationDefaultJvmArgs = listOf("--enable-preview")
+    applicationDefaultJvmArgs = listOf()
 }
 
 tasks {
     // Compiler options with preview java features enabled
     val COMPILER_OPTIONS =
-        listOf("--enable-preview", "-Xlint:preview", "-Xlint:deprecation", "-Xlint:unchecked")
+        listOf("-Xlint:deprecation", "-Xlint:unchecked")
 
     withType<JavaCompile>() {
         options.compilerArgs = COMPILER_OPTIONS;
@@ -40,11 +47,9 @@ tasks {
     named<Test>("test") {
         // Use JUnit Platform for unit tests.
         useJUnitPlatform()
-        jvmArgs = listOf("--enable-preview")
     }
 
     named<JavaExec>("run") {
-        jvmArgs = listOf("--enable-preview")
         standardInput = System.`in`
     }
 }

@@ -84,8 +84,12 @@ public class TermAnalyserTest {
       case TermAnalyser.Result.YES(Substitution subst):
         assertTrue(subst.get(x).toValue().getInt() + subst.get(y).toValue().getInt() > 12);
         break;
-      case TermAnalyser.Result.NO _: assertTrue(false);
-      case TermAnalyser.Result.MAYBE _: assertTrue(false);
+      case TermAnalyser.Result.NO():
+        assertTrue(false);
+        break;
+      case TermAnalyser.Result.MAYBE(String reason):
+        assertTrue(false);
+        break;
     }
   }
 }

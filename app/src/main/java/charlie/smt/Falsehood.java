@@ -31,7 +31,7 @@ public final class Falsehood extends Constraint {
 
   public int compareTo(Constraint other) {
     return switch (other) {
-      case Falsehood _ -> 0;
+      case Falsehood f -> 0;
       default -> -1;
     };
   }

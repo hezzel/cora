@@ -31,8 +31,8 @@ public final class Truth extends Constraint {
 
   public int compareTo(Constraint other) {
     return switch (other) {
-      case Falsehood _ -> 1;
-      case Truth _ -> 0;
+      case Falsehood f -> 1;
+      case Truth t -> 0;
       default -> -1;
     };
   }

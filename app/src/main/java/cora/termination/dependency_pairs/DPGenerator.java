@@ -127,7 +127,8 @@ public class DPGenerator {
    */
   private Type generateDpType(Type ty) {
     return switch(ty) {
-      case Base(_), Product(_) -> _dpSort;
+      case Base(String name) -> _dpSort;
+      case Product p -> _dpSort;
       case Arrow(Type left, Type right) -> TypeFactory.createArrow(left, generateDpType(right));
     };
   }
