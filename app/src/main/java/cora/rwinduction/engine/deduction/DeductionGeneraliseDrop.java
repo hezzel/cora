@@ -104,7 +104,7 @@ public final class DeductionGeneraliseDrop extends DeductionStep {
   @Override
   public String commandDescription() {
     Printer printer = PrinterFactory.createParseablePrinter(_pcontext.getTRS());
-    printer.add("generalise drop");
+    printer.add("generalise drop ");
     printer.add(printer.makePrintable(_dropped, _state.getTopEquation().getRenaming()));
     return printer.toString();
   }
