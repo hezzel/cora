@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -27,10 +27,11 @@ public class PlainTermPrinter extends TermPrinter {
     super(avoid);
   }
 
-  protected String queryTupleOpenBracket() { return "(|"; }
-  protected String queryTupleCloseBracket() { return "|)"; }
+  @Override
   protected String queryLambda() { return "\\"; }
+  @Override
   protected String queryMetaOpenBracket() { return "["; }
+  @Override
   protected String queryMetaCloseBracket() { return "]"; }
 
   protected String queryCalculationName(Kind symbolkind, String defaultName,

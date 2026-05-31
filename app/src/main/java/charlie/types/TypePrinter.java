@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024--2025 Cynthia Kop
+ Copyright 2024--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -23,6 +23,34 @@ import charlie.util.FixedList;
  * to use unicode symbols, ascii-art, html, print smt-style or whatever is needed.
  */
 public class TypePrinter {
+  private static boolean DEFAULT_UNICODE = true;
+  private boolean _unicodeArrows;
+
+  /**
+   * Create a type printer which either uses the unicode arrow → (if supportUnicode = true), or an
+   * ascii arrow -> (if supportUnicode = false).
+   */
+  public TypePrinter(boolean supportUnicode) {
+    _unicodeArrows = supportUnicode;
+  }
+
+  /**
+   * The default type printer, which is used in particular by Type::toString() and consequently
+   * produces a lot of debug output or IDEA program traces, and which is used in unit testing,
+   * supports unicode (that is, the default arrow is →).  If you do not want this, this function
+   * sets the default to non-unicode instead.
+   */
+  public static void disableDefaultUnicode() {
+    DEFAULT_UNICODE = false;
+  }
+
+  /**
+   * Constructor for use within the charlie.types packages.  This creates a default type printer.
+   */
+  TypePrinter() {
+    _unicodeArrows = DEFAULT_UNICODE;
+  }
+
   /**
    * Returns a string representation of the given type (using the other print method).
    * This is only supplied as a public access function, and is not meant to be overridden.
@@ -104,6 +132,9 @@ public class TypePrinter {
    * printArrowType are left unmasked.
    * The default functionality is a unicode arrow.
    */
-  protected String queryArrowSymbol() { return "→"; }
+  protected String queryArrowSymbol() {
+    if (_unicodeArrows) return "→";
+    else return "->";
+  }
 }
 

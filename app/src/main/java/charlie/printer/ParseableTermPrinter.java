@@ -38,7 +38,7 @@ public class ParseableTermPrinter extends TermPrinter {
 
   public ParseableTermPrinter(Set<String> avoid) {
     super(avoid);
-    _typePrinter = new PlainTypePrinter();
+    _typePrinter = new TypePrinter(false);
   }
 
   @Override

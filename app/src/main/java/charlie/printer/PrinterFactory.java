@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2025 Cynthia Kop
+ Copyright 2025--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -24,7 +24,7 @@ import charlie.trs.TRS;
 public class PrinterFactory {
   /** This creates a printer with Unicode style (pure text, but unicode symbols are allowed). */
   public static Printer createUnicodePrinter(TRS trs) {
-    TypePrinter ty = new TypePrinter();
+    TypePrinter ty = new TypePrinter(true);
     PositionPrinter po = new PositionPrinter();
     TermPrinter te = new TermPrinter(trs.queryFunctionSymbolNames());
     return new UnicodePrinter(ty, po, te);
@@ -32,7 +32,7 @@ public class PrinterFactory {
 
   /** This creates a printer with Plain style (pure text, no unicode). */
   public static Printer createPlainPrinter(TRS trs) {
-    TypePrinter ty = new PlainTypePrinter();
+    TypePrinter ty = new TypePrinter(false);
     PositionPrinter po = new PlainPositionPrinter();
     TermPrinter te = new PlainTermPrinter(trs.queryFunctionSymbolNames());
     return new AsciiPrinter(ty, po, te);
@@ -40,7 +40,7 @@ public class PrinterFactory {
 
   /** This creates a printer with plain output that is designed to be parsed. */
   public static Printer createParseablePrinter(TRS trs) {
-    TypePrinter ty = new PlainTypePrinter();
+    TypePrinter ty = new TypePrinter(false);
     PositionPrinter po = new PlainPositionPrinter();
     TermPrinter te = new ParseableTermPrinter(trs.queryFunctionSymbolNames());
     return new ParseablePrinter(ty, po, te);
@@ -54,7 +54,8 @@ public class PrinterFactory {
    * showing to the user.
    */
   public static Printer createPrinterNotForUserOutput() {
-    return new UnicodePrinter(new TypePrinter(), new PositionPrinter(), new TermPrinter(Set.of()));
+    return new UnicodePrinter(new TypePrinter(true), new PositionPrinter(),
+                              new TermPrinter(Set.of()));
   }
 
   /**
@@ -63,7 +64,7 @@ public class PrinterFactory {
    * generated using this printer will show indexes.)
    */
   public static Printer createDebugPrinter() {
-    return new AsciiPrinter(new PlainTypePrinter(), new PlainPositionPrinter(),
+    return new AsciiPrinter(new TypePrinter(false), new PlainPositionPrinter(),
                             new DebugTermPrinter());
   }
 }

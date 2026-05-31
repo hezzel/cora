@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 import charlie.types.Type;
+import charlie.types.TypePrinter;
 import charlie.terms.position.Position;
 import charlie.terms.Term;
 import charlie.trs.Rule;
@@ -36,7 +37,7 @@ public class PlainPrintersTest {
 
   @Test
   public void testPrintType() {
-    PlainTypePrinter p = new PlainTypePrinter();
+    TypePrinter p = new TypePrinter(false);
     Type type = CoraInputReader.readType("a → (Int -> Bool) → bb");
     assertTrue(p.print(type).equals("a -> (Int -> Bool) -> bb"));
   }
