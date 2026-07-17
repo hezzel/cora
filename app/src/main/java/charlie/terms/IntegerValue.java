@@ -33,8 +33,8 @@ class IntegerValue extends ValueInherit {
     _value = i;
   }
 
-  /** Convenience constructor for the common case of a small (Java int) value. */
-  IntegerValue(int i) {
+  /** Convenience constructor for the common case of a small (Java long) value. */
+  IntegerValue(long i) {
     this(BigInteger.valueOf(i));
   }
 
@@ -57,10 +57,6 @@ class IntegerValue extends ValueInherit {
 
   public int hashCode(Map<Variable,Integer> mu) {
     return _value.hashCode();
-  }
-
-  public int getInt() {
-    return _value.intValueExact();
   }
 
   public BigInteger getInteger() {

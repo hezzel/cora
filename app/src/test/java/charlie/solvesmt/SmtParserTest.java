@@ -18,6 +18,7 @@ package charlie.solvesmt;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.math.BigInteger;
 import java.util.List;
 
 import charlie.solvesmt.SExpression;
@@ -26,11 +27,11 @@ public class SmtParserTest {
   @Test
   public void testReadNumeral() {
     switch (SmtParser.readExpressionFromString("123")) {
-      case SExpression.Numeral(java.math.BigInteger n): assertTrue(n.intValueExact() == 123); break;
+      case SExpression.Numeral(BigInteger n): assertTrue(n.intValueExact() == 123); break;
       default: assertTrue(false);
     }
     switch (SmtParser.readExpressionFromString("0")) {
-      case SExpression.Numeral(java.math.BigInteger n): assertTrue(n.intValueExact() == 0); break;
+      case SExpression.Numeral(BigInteger n): assertTrue(n.intValueExact() == 0); break;
       default: assertTrue(false);
     }
     // this should probably give an error in the future, but for now we allow it as an identifier

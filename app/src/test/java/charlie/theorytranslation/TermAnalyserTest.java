@@ -18,6 +18,7 @@ package charlie.theorytranslation;
 import charlie.solvesmt.ProcessSmtSolver;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.math.BigInteger;
 
 import charlie.types.TypeFactory;
 import charlie.terms.*;
@@ -82,7 +83,8 @@ public class TermAnalyserTest {
     Term c = TheoryFactory.greaterSymbol.apply(t).apply(TheoryFactory.createValue(12));
     switch (TermAnalyser.satisfy(c, new ProcessSmtSolver())) {
       case TermAnalyser.Result.YES(Substitution subst):
-        assertTrue(subst.get(x).toValue().getInt() + subst.get(y).toValue().getInt() > 12);
+        assertTrue(subst.get(x).toValue().getInteger().add(subst.get(y).toValue().getInteger())
+          .compareTo(BigInteger.valueOf(12)) > 0);
         break;
       case TermAnalyser.Result.NO():
         assertTrue(false);

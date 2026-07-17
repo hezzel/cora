@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -53,8 +53,9 @@ public final class Geq0 extends Comparison {
       BigInteger b = k.queryValue();
       if (a.compareTo(BigInteger.ONE) > 0) {
         // a x ≥ -b <==> x ≥ CEIL(-b/a)
-        BigInteger v = b.signum() < 0 ? b.negate().add(a).subtract(BigInteger.ONE).divide(a).negate()
-                                      : b.divide(a);
+        BigInteger v = b.signum() < 0 // ? -((-b + a - 1) / a) : b / a
+                        ? b.negate().add(a).subtract(BigInteger.ONE).divide(a).negate()
+                        : b.divide(a);
         if (v.signum() == 0) e = c.queryChild();
         else e = new Addition(new IValue(v), c.queryChild());
       }

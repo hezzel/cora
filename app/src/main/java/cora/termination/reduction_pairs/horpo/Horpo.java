@@ -33,8 +33,8 @@ import java.util.*;
  * This class represents an implementation of Constrained Horpo: the question whether s! ≻ t! or
  * s! ≽ t!, where u! represents the normal form of u with respect to only the calculation rules.
  * We fix values to be minimal with respect to the precedence.
- * For now, we do not yet support the f* mechanism, meta-variables, tuples or abstractions, but
- * these are planned to be included in the future.
+ * For now, we do not yet support the f* mechanism, meta-variables or abstractions, but these are
+ * planned to be included in the future.
  */
 public class Horpo implements ReductionPair {
   private boolean _strong;

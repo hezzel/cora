@@ -57,10 +57,6 @@ class BooleanValue extends ValueInherit {
     throw new InappropriatePatternDataException("BooleanValue", "getString", "string values");
   }
 
-  public int getInt() {
-    throw new InappropriatePatternDataException("BooleanValue", "getInt", "integer values");
-  }
-
   public java.math.BigInteger getInteger() {
     throw new InappropriatePatternDataException("BooleanValue", "getInteger", "integer values");
   }

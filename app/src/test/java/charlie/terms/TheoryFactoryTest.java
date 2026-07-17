@@ -25,22 +25,22 @@ public class TheoryFactoryTest {
   public void testIntegerValues() {
     TreeSet<Value> set = new TreeSet<Value>();
     Value v = TheoryFactory.getNewIntValue(set);
-    assertTrue(v.getInt() == 0);
+    assertTrue(v.getInteger().intValueExact() == 0);
     set.add(v);
     v = TheoryFactory.getNewIntValue(set);
-    assertTrue(v.getInt() == 1);
+    assertTrue(v.getInteger().intValueExact() == 1);
     set.add(v);
     v = TheoryFactory.getNewIntValue(set);
-    assertTrue(v.getInt() == -1);
+    assertTrue(v.getInteger().intValueExact() == -1);
     set.add(v);
     v = TheoryFactory.getNewIntValue(set);
-    assertTrue(v.getInt() == 2);
+    assertTrue(v.getInteger().intValueExact() == 2);
     set.add(v);
     v = TheoryFactory.getNewIntValue(set);
-    assertTrue(v.getInt() == -2);
+    assertTrue(v.getInteger().intValueExact() == -2);
     set.add(v);
     v = TheoryFactory.getNewIntValue(set);
-    assertTrue(v.getInt() == 3);
+    assertTrue(v.getInteger().intValueExact() == 3);
   }
 
   @Test

@@ -48,9 +48,8 @@ public final class Modulo extends IntegerExpression {
 
   private static BigInteger evaluateFor(BigInteger n, BigInteger d) {
     if (d.signum() == 0) return BigInteger.ZERO; // let's just make dividing by 0 return 0
-    BigInteger abs_n = n.abs();
     BigInteger abs_d = d.abs();
-    BigInteger ret = abs_n.remainder(abs_d);
+    BigInteger ret = n.abs().remainder(abs_d);
     if (n.signum() >= 0 || ret.signum() == 0) return ret;
     return abs_d.subtract(ret);
   }
@@ -78,8 +77,8 @@ public final class Modulo extends IntegerExpression {
     switch (_denominator) {
       case IValue k:
         if (n instanceof IValue i) return new IValue(evaluateFor(i.queryValue(), k.queryValue()));
-        if (k.queryValue().equals(BigInteger.ONE) || k.queryValue().equals(BigInteger.valueOf(-1)))
-          return new IValue(BigInteger.ZERO);
+        if (k.queryValue().equals(BigInteger.ONE) ||
+            k.queryValue().equals(BigInteger.valueOf(-1))) return new IValue(BigInteger.ZERO);
         if (k.queryValue().signum() < 0) { // a mod -b = a mod b
           return new Modulo(n, k.multiply(-1));
         }
