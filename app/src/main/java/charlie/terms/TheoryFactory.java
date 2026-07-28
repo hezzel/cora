@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2022-2024 Cynthia Kop
+ Copyright 2022-2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,6 +15,7 @@
 
 package charlie.terms;
 
+import java.math.BigInteger;
 import java.util.Set;
 import java.util.LinkedHashSet;
 import charlie.types.*;
@@ -58,12 +59,12 @@ public class TheoryFactory {
   }
 
   /** Create an Integer Value */
-  public static Value createValue(int n) {
+  public static Value createValue(long n) {
     return new IntegerValue(n);
   }
 
   /** Create an Integer Value from an arbitrary-precision integer */
-  public static Value createValue(java.math.BigInteger n) {
+  public static Value createValue(BigInteger n) {
     return new IntegerValue(n);
   }
 
@@ -213,7 +214,7 @@ public class TheoryFactory {
   /** The value for falsehood */
   public static final Value falseValue = new BooleanValue(false);
   /** The value for 0 */
-  public static final Value zeroValue = new IntegerValue(0);
+  public static final Value zeroValue = new IntegerValue(BigInteger.ZERO);
   /** The value for the empty string */
   public static final Value emptyStringValue = new StringValue("");
 
@@ -244,8 +245,8 @@ public class TheoryFactory {
   /** This returns an IntegerValue not included in the given set. */
   public static Value getNewIntValue(Set<Value> exclude) {
     if (!exclude.contains(zeroValue)) return zeroValue;
-    for (int i = 1; ; i++) {
-      for (int j = 1; j > -2; j -= 2) {
+    for (long i = 1; ; i++) {
+      for (long j = 1; j > -2; j -= 2) {
         Value v = new IntegerValue(i * j);
         if (!exclude.contains(v)) return v;
       }
@@ -254,9 +255,9 @@ public class TheoryFactory {
 
   public static Value getNewStringValue(Set<Value> exclude) {
     if (!exclude.contains(emptyStringValue)) return emptyStringValue;
-    for (int i = 1; ; i++) {
+    for (long i = 1; ; i++) {
       StringBuilder builder = new StringBuilder();
-      int k = i;
+      long k = i;
       while (k > 0) {
         builder.append( (char)((k-1) % 26 + 'a') );
         if (k <= 26) break;

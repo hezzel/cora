@@ -48,7 +48,7 @@ public class IntegerMappingProcessor implements Processor {
   }
 
   /**
-   * For a DPP problem {@code dpp}, returns a mapping of each f# : A1 ⇒ ... ⇒ An ⇒ DP_SORT
+   * For a DP problem {@code dpp}, returns a mapping of each f# : A1 ⇒ ... ⇒ An ⇒ DP_SORT
    * in heads(P) to the list of fresh variables [x1 : A1, ..., xn : An].
    */
   private Map<FunctionSymbol, List<Variable>> computeFreshVars(Problem dpp) {

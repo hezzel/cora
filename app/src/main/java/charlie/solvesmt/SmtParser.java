@@ -94,7 +94,8 @@ class SmtParser {
       try { return new SExpression.Numeral(new BigInteger(tok.getText())); }
       catch (NumberFormatException e) {
         return new SExpression.Symbol(tok.getText());
-          // not a plain integer (e.g. a hex/binary literal); do what we can to avoid an error
+          // should not happen given that we are using BigIntegers, but avoid the error here (and
+          // make it recognisable what the response was) because not all assignments are needed
       }
     }
     tok = _status.readNextIf(SmtTokenData.STRING);

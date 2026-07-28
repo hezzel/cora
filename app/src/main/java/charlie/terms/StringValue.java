@@ -93,10 +93,6 @@ class StringValue extends ValueInherit {
     return _value.hashCode();
   }
 
-  public int getInt() {
-    throw new InappropriatePatternDataException("StringValue", "getInt", "integer values");
-  }
-
   public java.math.BigInteger getInteger() {
     throw new InappropriatePatternDataException("StringValue", "getInteger", "integer values");
   }

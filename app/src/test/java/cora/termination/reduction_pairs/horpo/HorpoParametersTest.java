@@ -15,11 +15,11 @@
 
 package cora.termination.reduction_pairs.horpo;
 
-import java.math.BigInteger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import charlie.util.Pair;

@@ -15,6 +15,7 @@
 
 package charlie.printer;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -277,6 +278,7 @@ public abstract class Printer {
       case UserException e: add(e.makeArray()); break;
       case String s: _builder.append(s); break;
       case Integer i: _builder.append(i.toString()); break;
+      case BigInteger i: _builder.append(i.toString()); break;
       case Type y: _typePrinter.print(y, _builder); break;
       case Position p: _posPrinter.print(p, _builder); break;
       case Rule r: printRule(r, null); break;

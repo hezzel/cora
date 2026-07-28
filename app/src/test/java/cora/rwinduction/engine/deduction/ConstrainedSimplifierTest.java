@@ -17,6 +17,7 @@ package cora.rwinduction.engine.deduction;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Function;
@@ -147,9 +148,12 @@ class ConstrainedSimplifierTest {
       pp.getProofState().getTopEquation().getConstraint()));
     var gamma = simp.querySubstitution();
     assertTrue(gamma.domain().size() == 4);
-    assertTrue(gamma.get(simp.queryRenaming().getReplaceable("i")).toValue().getInt() == 0);
-    assertTrue(gamma.get(simp.queryRenaming().getReplaceable("a")).toValue().getInt() == 1);
-    assertTrue(gamma.get(simp.queryRenaming().getReplaceable("z")).toValue().getInt() == 0);
+    assertTrue(gamma.get(simp.queryRenaming().getReplaceable("i")).toValue().getInteger()
+      .equals(BigInteger.ZERO));
+    assertTrue(gamma.get(simp.queryRenaming().getReplaceable("a")).toValue().getInteger()
+      .equals(BigInteger.ONE));
+    assertTrue(gamma.get(simp.queryRenaming().getReplaceable("z")).toValue().getInteger()
+      .intValueExact() == 0);
     assertTrue(!gamma.domain().contains(simp.queryRenaming().getReplaceable("y")));
   }
 

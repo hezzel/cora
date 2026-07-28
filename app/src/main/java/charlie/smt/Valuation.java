@@ -81,7 +81,7 @@ public class Valuation {
 
   /** Convenience overload of {@link #setInt(int, BigInteger)} for a small (Java int) value. */
   public void setInt(int index, int value) {
-    setInt(index, BigInteger.valueOf(value));
+    _iVarValues.put(index, BigInteger.valueOf(value));
   }
 
   /** Set a String variable to the given value. */

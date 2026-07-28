@@ -48,9 +48,8 @@ public final class Modulo extends IntegerExpression {
 
   private static BigInteger evaluateFor(BigInteger n, BigInteger d) {
     if (d.signum() == 0) return BigInteger.ZERO; // let's just make dividing by 0 return 0
-    BigInteger abs_n = n.abs();
     BigInteger abs_d = d.abs();
-    BigInteger ret = abs_n.remainder(abs_d);
+    BigInteger ret = n.abs().remainder(abs_d);
     if (n.signum() >= 0 || ret.signum() == 0) return ret;
     return abs_d.subtract(ret);
   }

@@ -122,10 +122,10 @@ public final class Addition extends IntegerExpression {
     }
 
     IntegerExpression p, n;
-    if (pos.size() == 0) p = new IValue(0);
+    if (pos.size() == 0) p = new IValue(BigInteger.ZERO);
     else if (pos.size() == 1) p = pos.get(0);
     else p = new Addition(pos);
-    if (neg.size() == 0) n = new IValue(0);
+    if (neg.size() == 0) n = new IValue(BigInteger.ZERO);
     else if (neg.size() == 1) n = neg.get(0);
     else n = new Addition(neg);
 
@@ -146,12 +146,12 @@ public final class Addition extends IntegerExpression {
       if (child instanceof IValue k && k.queryValue().signum() == 0) return;
       if (i == 0) continue;
       IntegerExpression childmain = switch(child) {
-        case IValue k -> new IValue(1);
+        case IValue k -> new IValue(BigInteger.ONE);
         case CMult m -> m.queryChild();
         default -> child;
       };
       IntegerExpression prevmain = switch(_children.get(i-1)) {
-        case IValue k -> new IValue(1);
+        case IValue k -> new IValue(BigInteger.ONE);
         case CMult m -> m.queryChild();
         default -> _children.get(i-1);
       };
