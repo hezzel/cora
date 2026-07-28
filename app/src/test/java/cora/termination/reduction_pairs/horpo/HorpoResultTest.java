@@ -15,6 +15,7 @@
 
 package cora.termination.reduction_pairs.horpo;
 
+import java.math.BigInteger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,7 +70,7 @@ public class HorpoResultTest {
       Rule r = trs.queryRule(i);
       problem.requireEither(new OrderingRequirement(r, OrderingRequirement.Relation.Strict), i * 2);
     }
-    HorpoParameters param = new HorpoParameters(100,
+    HorpoParameters param = new HorpoParameters(BigInteger.valueOf(100),
       new TreeSet<FunctionSymbol>(trs.queryAlphabet().getSymbols()), filter, smt);
     HorpoConstraintList lst = new HorpoConstraintList(new TermPrinter(Set.of()), smt);
     Valuation valuation = new Valuation();
@@ -143,7 +144,7 @@ public class HorpoResultTest {
       Rule r = trs.queryRule(i);
       problem.requireEither(new OrderingRequirement(r, OrderingRequirement.Relation.Strict), i * 2);
     }
-    HorpoParameters param = new HorpoParameters(3,
+    HorpoParameters param = new HorpoParameters(BigInteger.valueOf(3),
       new TreeSet<FunctionSymbol>(trs.queryAlphabet().getSymbols()), filter, smt);
     HorpoConstraintList lst = new HorpoConstraintList(new TermPrinter(Set.of()), smt);
     Valuation valuation = new Valuation();

@@ -15,6 +15,8 @@
 
 package charlie.smt;
 
+import java.math.BigInteger;
+
 public final class IVar extends IntegerExpression {
   private int _index;
   private String _name;
@@ -41,7 +43,7 @@ public final class IVar extends IntegerExpression {
     return _name;
   }
 
-  public int evaluate(Valuation val) {
+  public BigInteger evaluate(Valuation val) {
     if (val == null) throw new SmtEvaluationException(this);
     else return val.queryIntAssignment(_index);
   }

@@ -16,6 +16,7 @@
 package charlie.solvesmt;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,10 +91,10 @@ class SmtParser {
   public SExpression readExpression() {
     Token tok = _status.readNextIf(SmtTokenData.NUMERAL);
     if (tok != null) {
-      try { return new SExpression.Numeral(Integer.parseInt(tok.getText())); }
+      try { return new SExpression.Numeral(new BigInteger(tok.getText())); }
       catch (NumberFormatException e) {
         return new SExpression.Symbol(tok.getText());
-          // likely a bigint or something, do what we can to avoid an unnecessary error
+          // not a plain integer (e.g. a hex/binary literal); do what we can to avoid an error
       }
     }
     tok = _status.readNextIf(SmtTokenData.STRING);

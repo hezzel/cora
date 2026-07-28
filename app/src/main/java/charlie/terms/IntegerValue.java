@@ -15,44 +15,55 @@
 
 package charlie.terms;
 
+import java.math.BigInteger;
 import java.util.Map;
 import charlie.types.TypeFactory;
 
 /**
  * IntegerValues are the function symbols 0, 1, 2, ..., -1, -2, ...
  * They are theory symbols, and specifically correspond to the elements of the mathematical set
- * Z of integer numbers.
+ * Z of integer numbers.  Since Z is unbounded, the value is stored as an arbitrary-precision
+ * BigInteger.
  */
 class IntegerValue extends ValueInherit {
-  private final int _value;
+  private final BigInteger _value;
 
-  IntegerValue(int i) {
+  IntegerValue(BigInteger i) {
     super(TypeFactory.intSort);
     _value = i;
   }
 
+  /** Convenience constructor for the common case of a small (Java int) value. */
+  IntegerValue(int i) {
+    this(BigInteger.valueOf(i));
+  }
+
   /** Returns the string representation of this integer. */
   public String queryName() {
-    return "" + _value;
+    return _value.toString();
   }
 
   /** Returns the standard string representation of the symbol. */
   public String toUniqueString() {
-    return "" + _value;
+    return _value.toString();
   }
 
   public boolean equals(FunctionSymbol symbol) {
     if (symbol == null) return false;
     if (!symbol.isValue()) return false;
     if (!symbol.queryType().equals(TypeFactory.intSort)) return false;
-    return symbol.toValue().getInt() == _value;
+    return symbol.toValue().getInteger().equals(_value);
   }
 
   public int hashCode(Map<Variable,Integer> mu) {
-    return _value;
+    return _value.hashCode();
   }
 
   public int getInt() {
+    return _value.intValueExact();
+  }
+
+  public BigInteger getInteger() {
     return _value;
   }
 

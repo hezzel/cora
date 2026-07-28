@@ -171,7 +171,7 @@ public class TermSmtTranslator {
     }
     if (t.isValue()) {
       Value v = t.toValue();
-      if (v.isIntegerValue()) return new Exp.I(SmtFactory.createValue(v.getInt()));
+      if (v.isIntegerValue()) return new Exp.I(SmtFactory.createValue(v.getInteger()));
       if (v.isStringValue()) return new Exp.S(SmtFactory.createValue(v.getString()));
       if (v.isBooleanValue()) return new Exp.B(SmtFactory.createValue(v.getBool()));
       throw new UnsupportedTheoryException("Failed to translate term ", t, " to SMT: this is a " +

@@ -15,6 +15,7 @@
 
 package cora.termination.reduction_pairs.horpo;
 
+import java.math.BigInteger;
 import charlie.util.Pair;
 import charlie.types.*;
 import charlie.terms.replaceable.Replaceable;
@@ -286,7 +287,7 @@ class HorpoSimplifier {
 
     Constraint downProblem, upProblem;
     if (rel == HRelation.GREATERTHEORY) {
-      IntegerExpression eMM = SmtFactory.createValue(-_parameters.queryIntegerBound());
+      IntegerExpression eMM = SmtFactory.createValue(_parameters.queryIntegerBound().negate());
       downProblem = SmtFactory.createConjunction(  // l > r ∧ l ≥ -M
         SmtFactory.createGreater(el, er), SmtFactory.createGeq(el, eMM) );
       eMM = SmtFactory.createValue(_parameters.queryIntegerBound());

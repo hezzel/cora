@@ -406,7 +406,7 @@ public class TermPrinter {
     boolean brackets = arg.isFunctionalTerm() && arg.queryRoot().toCalculationSymbol() != null;
     if (!brackets && arg.isValue()) {
       Value v = arg.toValue();
-      if (v.isIntegerValue() && v.getInt() < 0) brackets = true;
+      if (v.isIntegerValue() && v.getInteger().signum() < 0) brackets = true;
     }
     builder.append(queryCalculationName(rootsymb.queryKind(), rootsymb.queryName(),
                                         rootsymb.queryType()));
@@ -446,10 +446,10 @@ public class TermPrinter {
         rootname = "-";
         right = right.queryArgument(1);
       }
-      else if (right.isValue() && right.toValue().getInt() < 0) {
+      else if (right.isValue() && right.toValue().getInteger().signum() < 0) {
         rootkind = CalculationSymbol.Kind.MINUS;
         rootname = "-";
-        right = new IntegerValue(-right.toValue().getInt());
+        right = new IntegerValue(right.toValue().getInteger().negate());
       }
     }
 

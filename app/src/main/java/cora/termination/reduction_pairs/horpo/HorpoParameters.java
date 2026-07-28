@@ -15,6 +15,7 @@
 
 package cora.termination.reduction_pairs.horpo;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.TreeMap;
@@ -35,7 +36,7 @@ class HorpoParameters {
   private final TreeMap<FunctionSymbol,IVar> _precedence;
   private final TreeMap<FunctionSymbol,TreeMap<Integer,IVar>> _permutation;
   private final BVar _down;
-  private final int _M;
+  private final BigInteger _M;
 
   /**
    * This sets up a set of HorpoParameters by generating boolean and integer variables in the SMT
@@ -43,13 +44,13 @@ class HorpoParameters {
    * for N_f, because we implicitly assume that N_f is the maximum arity of any function symbol,
    * and since the set is finite, such number always exists.
    */
-  HorpoParameters(int bound, TreeSet<FunctionSymbol> allsymbols, ArgumentFilter regards,
+  HorpoParameters(BigInteger bound, TreeSet<FunctionSymbol> allsymbols, ArgumentFilter regards,
                   SmtProblem problem) {
     _problem = problem;
     _precedence = new TreeMap<FunctionSymbol,IVar>();
     _permutation = new TreeMap<FunctionSymbol,TreeMap<Integer,IVar>>();
     _down = _problem.createBooleanVariable("down");
-    _M = bound > 0 ? bound : 1;
+    _M = bound.signum() > 0 ? bound : BigInteger.ONE;
     setupPrecedence(allsymbols);
     setupPermutation(allsymbols, regards);
   }
@@ -159,7 +160,7 @@ class HorpoParameters {
    *
    * This is the value the HorpoParameters were initialised with.
    */
-  int queryIntegerBound() {
+  BigInteger queryIntegerBound() {
     return _M;
   }
 
@@ -188,12 +189,12 @@ class HorpoParameters {
   public ArrayList<SymbolData> getSymbolData(Valuation valuation) {
     ArrayList<SymbolData> info = new ArrayList<SymbolData>();
     for (FunctionSymbol symbol : _precedence.keySet()) {
-      int p = valuation.queryAssignment(_precedence.get(symbol));
+      int p = valuation.queryAssignment(_precedence.get(symbol)).intValueExact();
       TreeSet<Integer> one = new TreeSet<Integer>();
       TreeMap<Integer,Integer> other = new TreeMap<Integer,Integer>();
       for (int i = 1; i <= symbol.queryArity(); i++) {
         IVar x = _permutation.get(symbol).get(i);
-        int value = valuation.queryAssignment(x);
+        int value = valuation.queryAssignment(x).intValueExact();
         if (value == 1) one.add(i);
         else if (value > 1) other.put(value, i);
       }

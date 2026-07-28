@@ -15,6 +15,7 @@
 
 package cora.termination.reduction_pairs.horpo;
 
+import java.math.BigInteger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,7 +62,7 @@ public class HorpoSimplifierTest {
     HorpoConstraintList lst = makeList(trs, smt);
     ArgumentFilter filter = new ArgumentFilter(smt);
     TreeSet<FunctionSymbol> funcs = new TreeSet<FunctionSymbol>(trs.queryAlphabet().getSymbols());
-    HorpoParameters param = new HorpoParameters(1000, funcs, filter, smt);
+    HorpoParameters param = new HorpoParameters(BigInteger.valueOf(1000), funcs, filter, smt);
     HorpoSimplifier simplifier = new HorpoSimplifier(param, lst, filter);
     Term term = CoraInputReader.readTerm("Q(" + l + ", " + r + ", y, " + phi + ")", trs);
     Term left = term.queryArgument(1);
@@ -103,7 +104,7 @@ public class HorpoSimplifierTest {
     HorpoConstraintList lst = makeList(trs, smt);
     ArgumentFilter filter = new ArgumentFilter(smt);
     TreeSet<FunctionSymbol> funcs = new TreeSet<FunctionSymbol>(trs.queryAlphabet().getSymbols());
-    HorpoParameters param = new HorpoParameters(1000, funcs, filter, smt);
+    HorpoParameters param = new HorpoParameters(BigInteger.valueOf(1000), funcs, filter, smt);
     HorpoSimplifier simplifier = new HorpoSimplifier(param, lst, filter);
     Term left = trs.queryRule(0).queryLeftSide().queryArgument(1);
     Term right = trs.queryRule(0).queryRightSide().queryArgument(1);

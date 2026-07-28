@@ -15,6 +15,7 @@
 
 package charlie.solvesmt;
 
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -22,8 +23,8 @@ import java.util.List;
  * It is very possible that more options will be added in the future, so treat with caution.
  */
 sealed interface SExpression {
-  public record Numeral(int num) implements SExpression {
-    public String toString() { return "" + num; }
+  public record Numeral(BigInteger num) implements SExpression {
+    public String toString() { return num.toString(); }
   }
   public record StringConstant(String text) implements SExpression {
     public String toString() { return "" + text.replace("\"", "\"\""); }

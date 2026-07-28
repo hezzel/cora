@@ -15,20 +15,27 @@
 
 package charlie.smt;
 
+import java.math.BigInteger;
+
 public final class IValue extends IntegerExpression {
-  private int _k;
+  private BigInteger _k;
 
   /** The constructor is hidden, since IntegerExpressions should be made through the SmtFactory. */
-  IValue(int i) {
+  IValue(BigInteger i) {
     _k = i;
     _simplified = true;
   }
 
-  public int queryValue() {
+  /** Convenience constructor for a small (Java int) value. */
+  IValue(int i) {
+    this(BigInteger.valueOf(i));
+  }
+
+  public BigInteger queryValue() {
     return _k;
   }
 
-  public int evaluate(Valuation val) {
+  public BigInteger evaluate(Valuation val) {
     return _k;
   }
 
@@ -36,28 +43,28 @@ public final class IValue extends IntegerExpression {
     return this;
   }
 
-  public IntegerExpression add(int value) {
-    return new IValue(value + _k);
+  public IntegerExpression add(BigInteger value) {
+    return new IValue(value.add(_k));
   }
 
-  public IntegerExpression multiply(int value) {
-    return new IValue(value * _k);
+  public IntegerExpression multiply(BigInteger value) {
+    return new IValue(value.multiply(_k));
   }
 
   public void addToSmtString(StringBuilder builder) {
-    if (_k >= 0) builder.append("" + _k);
-    else builder.append("(- " + (-_k) + ")");
+    if (_k.signum() >= 0) builder.append(_k.toString());
+    else builder.append("(- " + _k.negate() + ")");
   }
 
   public int compareTo(IntegerExpression other) {
     return switch (other) {
-      case IValue v -> _k - v.queryValue();
+      case IValue v -> _k.compareTo(v.queryValue());
       default -> -1;
     };
   }
 
   public int hashCode() {
-    return 7 * _k;
+    return 7 * _k.hashCode();
   }
 }
 

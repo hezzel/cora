@@ -209,7 +209,7 @@ class AccessibilityProofObject implements ProofObject {
   AccessibilityProofObject(Valuation solution, TreeMap<String,IVar> sortVariables) {
     _sorts = new ArrayList<Pair<String,Integer>>();
     sortVariables.forEach( (x, v) -> {
-      _sorts.add(new Pair<String,Integer>(x, solution.queryAssignment(v)));
+      _sorts.add(new Pair<String,Integer>(x, solution.queryAssignment(v).intValueExact()));
     });
     Collections.sort(_sorts, new Comparator<Pair<String,Integer>>() {
       public int compare(Pair<String,Integer> p1, Pair<String,Integer> p2) {

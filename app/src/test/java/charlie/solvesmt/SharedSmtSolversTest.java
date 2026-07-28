@@ -97,8 +97,9 @@ public class SharedSmtSolversTest {
     Answer a = solver.checkSatisfiability(problem);
     if (a instanceof Answer.YES(Valuation v)) {
       assertTrue(v.queryAssignment(x));
-      assertTrue(v.queryAssignment(z) < 0);
-      assertTrue(v.queryAssignment(y) > 12 || v.queryAssignment(y) == v.queryAssignment(z));
+      assertTrue(v.queryAssignment(z).signum() < 0);
+      assertTrue(v.queryAssignment(y).compareTo(java.math.BigInteger.valueOf(12)) > 0 ||
+                 v.queryAssignment(y).equals(v.queryAssignment(z)));
     }
     else assertTrue(false);
   }

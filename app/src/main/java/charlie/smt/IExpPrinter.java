@@ -15,6 +15,8 @@
 
 package charlie.smt;
 
+import java.math.BigInteger;
+
 /**
  * IExpPrinters are used in the overall output process of the tool.  This class provides a default
  * implementation, but is meant to be inherited.  You can for instance instantiate the IExpPrinter
@@ -126,7 +128,7 @@ public class IExpPrinter {
    * neither basic nor a multiplication.
    */
   protected void printCMult(CMult c, StringBuilder builder) {
-    if (c.queryConstant() == -1) {
+    if (c.queryConstant().equals(BigInteger.valueOf(-1))) {
       builder.append("-");
       if (c.queryChild() instanceof IVar x) printVar(x, builder);
       else {

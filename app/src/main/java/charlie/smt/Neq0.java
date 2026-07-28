@@ -15,11 +15,13 @@
 
 package charlie.smt;
 
+import java.math.BigInteger;
+
 public final class Neq0 extends Comparison {
   Neq0(IntegerExpression expr) { super(expr); }
   Neq0(IntegerExpression left, IntegerExpression right) { super(left, right); }
   public Is0 negate() { return new Is0(_expr); }
-  protected boolean evaluate(int num) { return num != 0; }
+  protected boolean evaluate(BigInteger num) { return num.signum() != 0; }
   protected String symbol() { return "distinct"; }
   public int hashCode() { return 17 * _expr.hashCode() + 6; }
 }

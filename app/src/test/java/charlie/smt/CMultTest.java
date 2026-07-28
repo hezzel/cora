@@ -35,7 +35,7 @@ public class CMultTest {
       new CMult(1,
       new CMult(3,
       new Multiplication(new IValue(3), new IValue(-5)))));
-    assertTrue(minus.evaluate() == 90);
+    assertTrue(minus.evaluate().intValueExact() == 90);
   }
 
   @Test

@@ -144,7 +144,7 @@ public class SubtermProcessor implements Processor {
     Valuation v = valuation;  // local variables referenced from a lambda expression must be effectively final
     fSharpMap.forEach(
       (f, ivar) -> {
-        nu.put(f, v.queryAssignment(ivar));
+        nu.put(f, v.queryAssignment(ivar).intValueExact());
       });
     for (int index = 0; index < originalDPs.size(); index++) {
       DP dp = originalDPs.get(index);

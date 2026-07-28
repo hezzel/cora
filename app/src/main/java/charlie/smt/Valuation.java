@@ -15,6 +15,7 @@
 
 package charlie.smt;
 
+import java.math.BigInteger;
 import java.util.TreeSet;
 import java.util.TreeMap;
 
@@ -25,13 +26,13 @@ import java.util.TreeMap;
  */
 public class Valuation {
   private TreeSet<Integer> _trueBVars;
-  private TreeMap<Integer,Integer> _iVarValues;
+  private TreeMap<Integer,BigInteger> _iVarValues;
   private TreeMap<Integer,String> _sVarValues;
 
   /** Creates a new valuation with all booleans set to false, and no integer/string values set. */
   public Valuation() {
     _trueBVars = new TreeSet<Integer>();
-    _iVarValues = new TreeMap<Integer,Integer>();
+    _iVarValues = new TreeMap<Integer,BigInteger>();
     _sVarValues = new TreeMap<Integer,String>();
   }
 
@@ -41,9 +42,9 @@ public class Valuation {
   }
 
   /** Returns the valuation for the integer variable with the given index */
-  public int queryIntAssignment(int index) {
+  public BigInteger queryIntAssignment(int index) {
     if (_iVarValues.containsKey(index)) return _iVarValues.get(index);
-    else return 4242;
+    else return BigInteger.valueOf(4242);
   }
 
   /** Returns the valuation for the string variable with the given index */
@@ -58,7 +59,7 @@ public class Valuation {
   }
 
   /** Returns the valuation for the given integer variable */
-  public int queryAssignment(IVar x) {
+  public BigInteger queryAssignment(IVar x) {
     return queryIntAssignment(x.queryIndex());
   }
 
@@ -74,8 +75,13 @@ public class Valuation {
   }
 
   /** Set an integer variable to the given value. */
-  public void setInt(int index, int value) {
+  public void setInt(int index, BigInteger value) {
     _iVarValues.put(index, value);
+  }
+
+  /** Convenience overload of {@link #setInt(int, BigInteger)} for a small (Java int) value. */
+  public void setInt(int index, int value) {
+    setInt(index, BigInteger.valueOf(value));
   }
 
   /** Set a String variable to the given value. */

@@ -26,6 +26,7 @@ import cora.termination.reduction_pairs.*;
 import cora.termination.reduction_pairs.horpo.HorpoConstraintList.HRelation;
 import cora.termination.reduction_pairs.horpo.HorpoConstraintList.HorpoRequirement;
 
+import java.math.BigInteger;
 import java.util.*;
 
 /**
@@ -72,7 +73,7 @@ public class Horpo implements ReductionPair {
 
   /** Main access function: start a HORPO proof to generate a suitable reduction pair. */
   public ReductionPairProofObject solve(OrderingProblem problem, SmtProblem smt) {
-    int bound = computeIntegerVariableBound(problem);
+    BigInteger bound = computeIntegerVariableBound(problem);
     TreeSet<FunctionSymbol> symbols = getFunctionSymbols(problem);
     ArgumentFilter filter = problem.queryArgumentFilter();
     HorpoParameters param = new HorpoParameters(bound, symbols, filter, smt);
@@ -130,24 +131,23 @@ public class Horpo implements ReductionPair {
    * a lambda-expression must be effectively final, so it is necessary to wrap our very much
    * non-final variable in a class.
    */
-  private class IntWrapper { int num; IntWrapper(int n) { num = n; } }
+  private class BigWrapper { BigInteger num; BigWrapper(BigInteger n) { num = n; } }
 
   /**
-   * Returns twice the largest integer value occurring in the given OrderingProblem, or 1000 if
-   * that is bigger.
+   * Returns twice the largest absolute integer value occurring in the given OrderingProblem, or
+   * 1000 if that is bigger.
    */
-  private int computeIntegerVariableBound(OrderingProblem problem) {
-    IntWrapper wrapper = new IntWrapper(500);
+  private BigInteger computeIntegerVariableBound(OrderingProblem problem) {
+    BigWrapper wrapper = new BigWrapper(BigInteger.valueOf(500));
     for (Term term : getAllTerms(problem)) {
       term.visitSubterms( (s,p) -> {
         if (s.isValue() && s.queryType().equals(TypeFactory.intSort)) {
-          Value value = s.toValue();
-          if (value.getInt() > wrapper.num) wrapper.num = value.getInt();
-          if (- value.getInt() > wrapper.num) wrapper.num = - value.getInt();
+          BigInteger abs = s.toValue().getInteger().abs();
+          if (abs.compareTo(wrapper.num) > 0) wrapper.num = abs;
         }
       });
     }
-    return wrapper.num * 2;
+    return wrapper.num.multiply(BigInteger.TWO);
   }
 
   /**

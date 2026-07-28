@@ -97,6 +97,10 @@ class StringValue extends ValueInherit {
     throw new InappropriatePatternDataException("StringValue", "getInt", "integer values");
   }
 
+  public java.math.BigInteger getInteger() {
+    throw new InappropriatePatternDataException("StringValue", "getInteger", "integer values");
+  }
+
   public String getString() {
     return _value;
   }

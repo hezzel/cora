@@ -17,13 +17,14 @@ package charlie.smt;
 
 import charlie.util.Pair;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 /** Not a public class on purpose: use Constraint, or use Geq0, Is0 or Neq0 directly. */
 abstract sealed class Comparison extends Constraint permits Geq0, Is0, Neq0 {
   protected IntegerExpression _expr;
 
-  protected abstract boolean evaluate(int num);
+  protected abstract boolean evaluate(BigInteger num);
   protected abstract String symbol();
   public abstract Constraint negate();
 
@@ -57,7 +58,7 @@ abstract sealed class Comparison extends Constraint permits Geq0, Is0, Neq0 {
       case Multiplication m -> false;
       case Addition a -> {
         if (a.queryChild(a.numChildren()) instanceof CMult c) {
-          yield c.queryConstant() > 0 &&
+          yield c.queryConstant().signum() > 0 &&
                 (a.numChildren() > 2 || !(a.queryChild(1) instanceof IValue));
         }
         else yield true;
@@ -73,18 +74,20 @@ abstract sealed class Comparison extends Constraint permits Geq0, Is0, Neq0 {
   public Constraint simplify() {
     if (_simplified) return this;
     IntegerExpression e = _expr;
-    if (e instanceof CMult c && c.queryConstant() != 0) e = c.queryChild();
+    if (e instanceof CMult c && c.queryConstant().signum() != 0) e = c.queryChild();
     if (e instanceof Multiplication m) return simplifyMultiplication(m);
     e = e.simplify();
     if (e instanceof CMult c) e = c.queryChild();
     if (e instanceof Multiplication m) return simplifyMultiplication(m);
     if (e instanceof IValue v) return (evaluate(v.queryValue())) ? new Truth() : new Falsehood();
     if (e instanceof Addition a && a.queryChild(a.numChildren()) instanceof CMult c &&
-        c.queryConstant() < 0) e = e.negate();
+        c.queryConstant().signum() < 0) e = e.negate();
     if (e instanceof Addition a && a.queryChild(a.numChildren()) instanceof CMult c &&
         a.numChildren() == 2 && a.queryChild(1) instanceof IValue i) {
-      int k = i.queryValue();
-      if (k % c.queryConstant() == 0) e = c.queryChild().add(k / c.queryConstant());
+      BigInteger k = i.queryValue();
+      if (k.remainder(c.queryConstant()).signum() == 0) {
+        e = c.queryChild().add(k.divide(c.queryConstant()));
+      }
       else if (this instanceof Is0) return new Falsehood();
       else return new Truth();
     }

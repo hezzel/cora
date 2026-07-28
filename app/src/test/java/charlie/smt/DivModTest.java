@@ -43,8 +43,8 @@ public class DivModTest {
     // tests whether divide and modulo follow the definitions by Boute
     for (int num = -5; num <= 5; num++) {
       for (int denom = -3; denom <= 3; denom++) {
-        int d = (new Division(new IValue(num), new IValue(denom))).evaluate();
-        int m = (new Modulo(new IValue(num), new IValue(denom))).evaluate();
+        int d = (new Division(new IValue(num), new IValue(denom))).evaluate().intValueExact();
+        int m = (new Modulo(new IValue(num), new IValue(denom))).evaluate().intValueExact();
         String situation = "" + num + " / " + denom + " = " + d + " and " +
                                 num + " % " + denom + " = " + m;
         if (denom == 0) {

@@ -365,7 +365,7 @@ public class IntegerMappingProcessor implements Processor {
     List<DP> remainingDPs = new ArrayList<DP>();
     intMap.forEach(
       (f, ivar) -> {
-        candFun.put(f, _candidates.get(f).get(result.queryAssignment(ivar)));
+        candFun.put(f, _candidates.get(f).get(result.queryAssignment(ivar).intValueExact()));
       }); 
     for (int index = 0; index < originalDPs.size(); index++) {
       DP dp = originalDPs.get(index);

@@ -15,6 +15,7 @@
 
 package charlie.parser;
 
+import java.math.BigInteger;
 import charlie.util.FixedList;
 import charlie.util.LookupMap;
 import charlie.types.Type;
@@ -74,8 +75,8 @@ public interface Parser {
     public String toString() { return istrue ? "TRUE" : "FALSE"; }
     public boolean hasErrors() { return false; }
   }
-  public record IntVal(Token token, int value) implements ParserTerm {
-    public String toString() { return "" + value; }
+  public record IntVal(Token token, BigInteger value) implements ParserTerm {
+    public String toString() { return value.toString(); }
     public boolean hasErrors() { return false; }
   }
   public record StringVal(Token token, String escapedvalue) implements ParserTerm {

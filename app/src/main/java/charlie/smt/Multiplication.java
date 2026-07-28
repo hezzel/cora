@@ -15,6 +15,7 @@
 
 package charlie.smt;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -63,9 +64,11 @@ public final class Multiplication extends IntegerExpression {
     return _children.get(index-1);
   }
 
-  public int evaluate(Valuation val) {
-    int ret = 1;
-    for (int i = 0; i < _children.size() && ret != 0; i++) ret *= _children.get(i).evaluate(val);
+  public BigInteger evaluate(Valuation val) {
+    BigInteger ret = BigInteger.ONE;
+    for (int i = 0; i < _children.size() && ret.signum() != 0; i++) {
+      ret = ret.multiply(_children.get(i).evaluate(val));
+    }
     return ret;
   }
 
@@ -90,18 +93,18 @@ public final class Multiplication extends IntegerExpression {
    * these are multiplied together and returned.  Multiplications in the simplifications of from
    * are expanded.
    */
-  private int addSimplifiedChildren(ArrayList<IntegerExpression> from,
-                                    ArrayList<IntegerExpression> to) {
-    int constant = 1;
+  private BigInteger addSimplifiedChildren(ArrayList<IntegerExpression> from,
+                                           ArrayList<IntegerExpression> to) {
+    BigInteger constant = BigInteger.ONE;
     for (IntegerExpression child : from) {
       IntegerExpression c = child.simplify();
-      if (c instanceof IValue k) constant *= k.queryValue();
+      if (c instanceof IValue k) constant = constant.multiply(k.queryValue());
       else if (c instanceof CMult cm) {
-        constant *= cm.queryConstant();
+        constant = constant.multiply(cm.queryConstant());
         to.add(cm.queryChild());
       }
       else if (c instanceof Multiplication m) {
-        constant *= addSimplifiedChildren(m._children, to);
+        constant = constant.multiply(addSimplifiedChildren(m._children, to));
       }
       else to.add(c);
     }
@@ -111,7 +114,7 @@ public final class Multiplication extends IntegerExpression {
   public IntegerExpression simplify() {
     if (_simplified) return this;
     ArrayList<IntegerExpression> todo = new ArrayList<IntegerExpression>();
-    int constant = addSimplifiedChildren(_children, todo);
+    BigInteger constant = addSimplifiedChildren(_children, todo);
     Collections.sort(todo);
     if (todo.size() == 0) return new IValue(constant);
     if (todo.size() == 1) return todo.get(0).multiply(constant);

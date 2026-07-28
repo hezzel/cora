@@ -79,6 +79,14 @@ public class CoraTermsParsingTest {
     term = readTerm("0", true, "");
     assertTrue(term instanceof IntVal);
     assertTrue(term.toString().equals("0"));
+    // The Int sort models the unbounded integers Z, so values beyond the 32-bit and 64-bit ranges
+    // parse fine (the old int-based parser overflowed Integer.parseInt on these).
+    term = readTerm("2147483648", true, "");  // Integer.MAX_VALUE + 1
+    assertTrue(term instanceof IntVal);
+    assertTrue(term.toString().equals("2147483648"));
+    term = readTerm("123456789123456789123456789", true, "");
+    assertTrue(term instanceof IntVal);
+    assertTrue(term.toString().equals("123456789123456789123456789"));
   }
 
   @Test
@@ -89,6 +97,9 @@ public class CoraTermsParsingTest {
     term = readTerm("-1", true, "");
     assertTrue(term instanceof IntVal);
     assertTrue(term.toString().equals("-1"));
+    term = readTerm("-2147483648", true, "");  // i32::MIN, unrepresentable by the old int parser
+    assertTrue(term instanceof IntVal);
+    assertTrue(term.toString().equals("-2147483648"));
   }
 
   @Test
@@ -99,10 +110,6 @@ public class CoraTermsParsingTest {
     term = readTerm("017", true, "1:1: Illegal integer constant: 017.\n");
     assertTrue(term instanceof IntVal);
     assertTrue(term.toString().equals("17"));
-    term = readTerm("123456789123456789", true,
-      "1:1: Cannot parse integer constant: 123456789123456789\n");
-    assertTrue(term instanceof Identifier);
-    assertTrue(term.toString().equals("123456789123456789"));
   }
 
   @Test

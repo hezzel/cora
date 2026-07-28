@@ -62,6 +62,11 @@ public class TheoryFactory {
     return new IntegerValue(n);
   }
 
+  /** Create an Integer Value from an arbitrary-precision integer */
+  public static Value createValue(java.math.BigInteger n) {
+    return new IntegerValue(n);
+  }
+
   /** Create a Boolean Value */
   public static Value createValue(boolean b) {
     return new BooleanValue(b);

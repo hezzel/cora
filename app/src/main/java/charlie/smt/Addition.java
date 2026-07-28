@@ -15,6 +15,7 @@
 
 package charlie.smt;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -56,21 +57,21 @@ public final class Addition extends IntegerExpression {
    * Adds a constant to the addition and returns the result.  If the Addition was simplified, then
    * so is the result.
    */
-  public IntegerExpression add(int constant) {
-    if (constant == 0) return this;
+  public IntegerExpression add(BigInteger constant) {
+    if (constant.signum() == 0) return this;
     if (_children.size() == 0) return new IValue(constant);
     if (_children.get(0) instanceof IValue k) {
-      if (k.queryValue() == -constant) {
+      if (k.queryValue().equals(constant.negate())) {
         if (_children.size() == 2) return _children.get(1);
         else return new Addition(_children.subList(1, _children.size()));
       }
       if (_simplified) {
         ArrayList<IntegerExpression> ret = new ArrayList<IntegerExpression>(_children);
-        ret.set(0, new IValue(k.queryValue() + constant));
+        ret.set(0, new IValue(k.queryValue().add(constant)));
         return new Addition(ret, true);
       }
       else {
-        _children.set(0, new IValue(k.queryValue() + constant));
+        _children.set(0, new IValue(k.queryValue().add(constant)));
         Addition ret = new Addition(_children);
         _children.set(0, k);
         return ret;
@@ -100,19 +101,19 @@ public final class Addition extends IntegerExpression {
     ArrayList<IntegerExpression> pos = new ArrayList<IntegerExpression>();
     ArrayList<IntegerExpression> neg = new ArrayList<IntegerExpression>();
 
-    int constant = 0;
+    BigInteger constant = BigInteger.ZERO;
     for (IntegerExpression e : _children) {
-      if (e instanceof IValue k) constant += k.queryValue();
+      if (e instanceof IValue k) constant = constant.add(k.queryValue());
     }
 
-    if (constant > 0) pos.add(new IValue(constant));
-    else if (constant < 0) neg.add(new IValue(-constant));
+    if (constant.signum() > 0) pos.add(new IValue(constant));
+    else if (constant.signum() < 0) neg.add(new IValue(constant.negate()));
 
     for (int i = 0; i < _children.size(); i++) {
       switch (_children.get(i)) {
         case IValue k: continue;
         case CMult cm:
-          if (cm.queryConstant() >= 0) pos.add(cm);
+          if (cm.queryConstant().signum() >= 0) pos.add(cm);
           else neg.add(cm.multiply(-1));
           break;
         default:
@@ -131,9 +132,9 @@ public final class Addition extends IntegerExpression {
     return new Pair<IntegerExpression,IntegerExpression>(p, n);
   }
 
-  public int evaluate(Valuation val) {
-    int ret = 0;
-    for (int i = 0; i < _children.size(); i++) ret += _children.get(i).evaluate(val);
+  public BigInteger evaluate(Valuation val) {
+    BigInteger ret = BigInteger.ZERO;
+    for (int i = 0; i < _children.size(); i++) ret = ret.add(_children.get(i).evaluate(val));
     return ret;
   }
 
@@ -142,7 +143,7 @@ public final class Addition extends IntegerExpression {
     for (int i = 0; i < _children.size(); i++) {
       IntegerExpression child = _children.get(i);
       if (!child.isSimplified()) return;
-      if (child instanceof IValue k && k.queryValue() == 0) return;
+      if (child instanceof IValue k && k.queryValue().signum() == 0) return;
       if (i == 0) continue;
       IntegerExpression childmain = switch(child) {
         case IValue k -> new IValue(1);
@@ -169,36 +170,38 @@ public final class Addition extends IntegerExpression {
       if (c instanceof Addition a) todo.addAll(a._children);
       else todo.add(c);
     }
-    // store the children into a treemap so we can count duplicates, but merge the contants directly
-    TreeMap<IntegerExpression,Integer> counts = new TreeMap<IntegerExpression,Integer>();
-    int constant = 0;
+    // store the children into a treemap so we can count duplicates (i.e. accumulate the coefficient
+    // of each distinct sub-expression), but merge the constants directly.  The accumulated
+    // coefficients are themselves values, so they are tracked as BigIntegers to avoid overflow.
+    TreeMap<IntegerExpression,BigInteger> counts = new TreeMap<IntegerExpression,BigInteger>();
+    BigInteger constant = BigInteger.ZERO;
     for (IntegerExpression c : todo) {
       IntegerExpression main;
-      int num;
-      if (c instanceof IValue k) { constant += k.queryValue(); continue; }
+      BigInteger num;
+      if (c instanceof IValue k) { constant = constant.add(k.queryValue()); continue; }
       else if (c instanceof CMult cm) { main = cm.queryChild(); num = cm.queryConstant(); }
-      else { main = c; num = 1; }
-      Integer current = counts.get(main);
+      else { main = c; num = BigInteger.ONE; }
+      BigInteger current = counts.get(main);
       if (current == null) counts.put(main, num);
-      else counts.put(main, num + current);
+      else counts.put(main, num.add(current));
     }
     // read them out
     ArrayList<IntegerExpression> ret = new ArrayList<IntegerExpression>();
-    if (constant != 0) ret.add(new IValue(constant));
-    for (Map.Entry<IntegerExpression,Integer> entry : counts.entrySet()) {
-      int k = entry.getValue();
-      if (k == 1) ret.add(entry.getKey());
-      else if (k != 0) ret.add(new CMult(k, entry.getKey()));
+    if (constant.signum() != 0) ret.add(new IValue(constant));
+    for (Map.Entry<IntegerExpression,BigInteger> entry : counts.entrySet()) {
+      BigInteger k = entry.getValue();
+      if (k.equals(BigInteger.ONE)) ret.add(entry.getKey());
+      else if (k.signum() != 0) ret.add(new CMult(k, entry.getKey()));
     }
     // return the result
-    if (ret.size() == 0) return new IValue(0);
+    if (ret.size() == 0) return new IValue(BigInteger.ZERO);
     if (ret.size() == 1) return ret.get(0);
     return new Addition(ret, true);
   }
 
-  public IntegerExpression multiply(int constant) {
-    if (constant == 0) return new IValue(0);
-    if (constant == 1) return this;
+  public IntegerExpression multiply(BigInteger constant) {
+    if (constant.signum() == 0) return new IValue(BigInteger.ZERO);
+    if (constant.equals(BigInteger.ONE)) return this;
     ArrayList<IntegerExpression> cs = new ArrayList<IntegerExpression>();
     for (int i = 0; i < _children.size(); i++) cs.add(_children.get(i).multiply(constant));
     return new Addition(cs, _simplified);

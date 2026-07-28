@@ -22,7 +22,7 @@ public class IValueTest {
   @Test
   public void testBasics() {
     IValue x = new IValue(-3);
-    assertTrue(x.evaluate() == -3);
+    assertTrue(x.evaluate().intValueExact() == -3);
     assertTrue(x.toString().equals("-3"));
     assertTrue(x.toSmtString().equals("(- 3)"));
     assertTrue(x.multiply(5).equals(new IValue(-15)));

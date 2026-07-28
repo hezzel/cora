@@ -16,6 +16,7 @@
 package charlie.parser;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 import charlie.util.FixedList;
@@ -145,8 +146,8 @@ public class ITrsParser extends FirstOrderParser implements Parser {
     // INTEGER
     token = _status.readNextIf(ITrsTokenData.INTEGER);
     if (token == null) return null;
-    int x = 0;
-    try { x = Integer.parseInt(token.getText()); }
+    BigInteger x = BigInteger.ZERO;
+    try { x = new BigInteger(token.getText()); }
     catch (NumberFormatException ex) {
       _status.storeError(token, "Illegal integer: " + token.getText());
     }

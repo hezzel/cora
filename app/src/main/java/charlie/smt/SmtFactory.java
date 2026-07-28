@@ -15,6 +15,7 @@
 
 package charlie.smt;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import charlie.util.NullStorageException;
@@ -49,6 +50,10 @@ public class SmtFactory {
   }
 
   public static IntegerExpression createValue(int v) {
+    return new IValue(v);
+  }
+
+  public static IntegerExpression createValue(BigInteger v) {
     return new IValue(v);
   }
   

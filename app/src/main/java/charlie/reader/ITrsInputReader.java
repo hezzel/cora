@@ -16,6 +16,7 @@
 package charlie.reader;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
@@ -96,7 +97,7 @@ public class ITrsInputReader {
         ParserTerm s = terms.pop();
         switch (s) {
           case BoolVal(Token token, boolean istrue): continue;  // nothing to do
-          case IntVal(Token token, int value): continue;        // nothing to do
+          case IntVal(Token token, BigInteger value): continue; // nothing to do
           case Identifier(Token token, String name):
             checkFunctionalArities(token, name, FixedList.of(), vars, ret);
             continue;
@@ -208,7 +209,7 @@ public class ITrsInputReader {
     switch (term) {
       case BoolVal(Token token, boolean istrue):
         return boolNode();
-      case IntVal(Token token, int value):
+      case IntVal(Token token, BigInteger value):
         return intNode();
       case Identifier(Token token, String name):
         if (vars.containsKey(name)) return varTypeNode(name, rule);
@@ -330,7 +331,7 @@ public class ITrsInputReader {
     FunctionSymbol f;
 
     switch (term) {
-      case IntVal(Token t, int value):
+      case IntVal(Token t, BigInteger value):
         return TheoryFactory.createValue(value);
       case BoolVal(Token t, boolean isTrue):
         return TheoryFactory.createValue(isTrue);

@@ -15,6 +15,7 @@
 
 package cora.termination.reduction_pairs.horpo;
 
+import java.math.BigInteger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,9 +40,9 @@ public class HorpoParametersTest {
   @Test
   public void testBasics() {
     SmtProblem smt = new SmtProblem();
-    HorpoParameters horpo = new HorpoParameters(37, new TreeSet<FunctionSymbol>(),
+    HorpoParameters horpo = new HorpoParameters(BigInteger.valueOf(37), new TreeSet<FunctionSymbol>(),
                                                 new ArgumentFilter(smt), smt);
-    assertTrue(horpo.queryIntegerBound() == 37);
+    assertTrue(horpo.queryIntegerBound().equals(BigInteger.valueOf(37)));
     BVar x = horpo.getDirectionIsDownVariable();
     assertTrue(x.toString().equals("[down]"));
     assertTrue(x == horpo.getDirectionIsDownVariable());
@@ -59,7 +60,7 @@ public class HorpoParametersTest {
     set.add(g);
     set.add(minus);
     set.add(three);
-    HorpoParameters horpo = new HorpoParameters(40, set, new ArgumentFilter(prob), prob);
+    HorpoParameters horpo = new HorpoParameters(BigInteger.valueOf(40), set, new ArgumentFilter(prob), prob);
     assertTrue(prob.toString().equals(
       // precedence: 1 ≤ pred(h) ≤ 4 for h ∈ {f,g,minus}, and pred(3) = 0
       "[pred(-)] >= 1\n" +
@@ -91,7 +92,7 @@ public class HorpoParametersTest {
     TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
     set.add(f);
     set.add(g);
-    HorpoParameters horpo = new HorpoParameters(40, set, new ArgumentFilter(prob), prob);
+    HorpoParameters horpo = new HorpoParameters(BigInteger.valueOf(40), set, new ArgumentFilter(prob), prob);
     IVar fx = horpo.getPrecedence(f);
     IVar gx = horpo.getPrecedence(g);
     assertFalse(fx.equals(gx));
@@ -108,7 +109,7 @@ public class HorpoParametersTest {
     TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
     set.add(f);
     set.add(g);
-    HorpoParameters horpo = new HorpoParameters(40, set, new ArgumentFilter(prob), prob);
+    HorpoParameters horpo = new HorpoParameters(BigInteger.valueOf(40), set, new ArgumentFilter(prob), prob);
     IVar f1 = horpo.getPermutation(f, 1);
     IVar g1 = horpo.getPermutation(g, 1);
     assertTrue(g1 == horpo.getPermutation(g, 1));
@@ -129,7 +130,7 @@ public class HorpoParametersTest {
     set.add(h);
     set.add(three);
     set.add(TheoryFactory.createValue(4));
-    HorpoParameters horpo = new HorpoParameters(40, set, new ArgumentFilter(prob), prob);
+    HorpoParameters horpo = new HorpoParameters(BigInteger.valueOf(40), set, new ArgumentFilter(prob), prob);
     IVar x = horpo.getPrecedence(f);
     IVar y = horpo.getPrecedence(g);
     IVar z = horpo.getPrecedence(h);

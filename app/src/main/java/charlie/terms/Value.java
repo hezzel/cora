@@ -35,10 +35,18 @@ public interface Value extends FunctionSymbol {
   public boolean isStringValue();
 
   /**
-   * For integer values, this returns the underlying integer; for other values, it causes an
-   * InappropriatePatternDataException to be thrown.
+   * For integer values, this returns the underlying integer as a (potentially small) int; for
+   * other values, it causes an InappropriatePatternDataException to be thrown.  Note that the
+   * Int sort models the unbounded integers Z, so this may throw an ArithmeticException if the
+   * value does not fit in an int; use getInteger() when the value may be large.
    */
   public int getInt();
+
+  /**
+   * For integer values, this returns the underlying (arbitrary-precision) integer; for other
+   * values, it causes an InappropriatePatternDataException to be thrown.
+   */
+  public java.math.BigInteger getInteger();
 
   /**
    * For string values, this returns the underlying string; for other values, it causes an

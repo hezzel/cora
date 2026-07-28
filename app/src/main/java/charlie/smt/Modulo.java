@@ -15,6 +15,8 @@
 
 package charlie.smt;
 
+import java.math.BigInteger;
+
 public final class Modulo extends IntegerExpression {
   private IntegerExpression _numerator;
   private IntegerExpression _denominator;
@@ -40,17 +42,17 @@ public final class Modulo extends IntegerExpression {
    * (this is *not* the same as what _numerator % _denominator returns in Java when negative
    * values are concerned).
    */
-  public int evaluate(Valuation val) {
+  public BigInteger evaluate(Valuation val) {
     return evaluateFor(_numerator.evaluate(val), _denominator.evaluate(val));
   }
 
-  private static int evaluateFor(int n, int d) {
-    if (d == 0) return 0; // let's just make dividing by 0 return 0
-    int abs_n = n >= 0 ? n : - n;
-    int abs_d = d >= 0 ? d : - d;
-    int ret = abs_n % abs_d;
-    if (n >= 0 || ret == 0) return ret;
-    return abs_d - ret;
+  private static BigInteger evaluateFor(BigInteger n, BigInteger d) {
+    if (d.signum() == 0) return BigInteger.ZERO; // let's just make dividing by 0 return 0
+    BigInteger abs_n = n.abs();
+    BigInteger abs_d = d.abs();
+    BigInteger ret = abs_n.remainder(abs_d);
+    if (n.signum() >= 0 || ret.signum() == 0) return ret;
+    return abs_d.subtract(ret);
   }
 
   /**
@@ -61,10 +63,10 @@ public final class Modulo extends IntegerExpression {
     if (_numerator instanceof IValue && _denominator instanceof IValue) return;
     if (!_numerator.isSimplified() || !_denominator.isSimplified()) return;
     if (_denominator instanceof IValue k) {
-      _simplified = k.queryValue() != 1 && k.queryValue() >= 0;
+      _simplified = !k.queryValue().equals(BigInteger.ONE) && k.queryValue().signum() >= 0;
     }
     else if (_denominator instanceof CMult cm) {
-      _simplified = cm.queryConstant() >= 2;
+      _simplified = cm.queryConstant().compareTo(BigInteger.TWO) >= 0;
     }
     else _simplified = true;
   }
@@ -76,13 +78,16 @@ public final class Modulo extends IntegerExpression {
     switch (_denominator) {
       case IValue k:
         if (n instanceof IValue i) return new IValue(evaluateFor(i.queryValue(), k.queryValue()));
-        if (k.queryValue() == 1 || k.queryValue() == -1) return new IValue(0);
-        if (k.queryValue() < 0) { // a mod -b = a mod b
+        if (k.queryValue().equals(BigInteger.ONE) ||
+            k.queryValue().equals(BigInteger.valueOf(-1))) {
+          return new IValue(BigInteger.ZERO);
+        }
+        if (k.queryValue().signum() < 0) { // a mod -b = a mod b
           return new Modulo(n, k.multiply(-1));
         }
         return new Modulo(n, d);
       case CMult cm:
-        if (cm.queryConstant() < 0) {
+        if (cm.queryConstant().signum() < 0) {
           return new Modulo(n, cm.multiply(-1));
         }
       default:

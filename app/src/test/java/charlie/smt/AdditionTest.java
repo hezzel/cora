@@ -17,6 +17,7 @@ package charlie.smt;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.math.BigInteger;
 import java.util.List;
 import charlie.util.Pair;
 
@@ -111,7 +112,21 @@ public class AdditionTest {
   public void testLegalEvaluate() {
     IntegerExpression plus =
       new Addition(new IValue(3), new Addition(new IValue(12), new IValue(-2)));
-    assertTrue(plus.evaluate() == 13);
+    assertTrue(plus.evaluate().intValueExact() == 13);
+  }
+
+  @Test
+  public void testLargeCoefficientSimplifyDoesNotOverflow() {
+    // 2000000000 * x + 2000000000 * x = 4000000000 * x.  The accumulated coefficient 4000000000
+    // overflows a 32-bit int, so this exercises the BigInteger coefficient accumulation in
+    // simplify().
+    IVar x = new IVar(3);
+    BigInteger big = BigInteger.valueOf(2000000000L);
+    IntegerExpression simplified = new Addition(new CMult(big, x), new CMult(big, x)).simplify();
+    assertTrue(simplified.equals(new CMult(BigInteger.valueOf(4000000000L), x)));
+    Valuation val = new Valuation();
+    val.setInt(3, 1);
+    assertTrue(simplified.evaluate(val).equals(BigInteger.valueOf(4000000000L)));
   }
 
   @Test

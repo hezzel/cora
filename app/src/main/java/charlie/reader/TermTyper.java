@@ -15,6 +15,7 @@
 
 package charlie.reader;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 import charlie.util.FixedList;
@@ -85,7 +86,7 @@ class TermTyper {
    */
   protected Term makeTerm(ParserTerm pt, Type expectedType, boolean typeShouldBeDerivable) {
     switch (pt) {
-      case IntVal(Token t, int value):
+      case IntVal(Token t, BigInteger value):
         return confirmType(t, TheoryFactory.createValue(value), expectedType);
       case BoolVal(Token t, boolean isTrue):
         return confirmType(t, TheoryFactory.createValue(isTrue), expectedType);
@@ -499,14 +500,15 @@ class TermTyper {
     if (args.size() == 1) {
       Term child = targs.get(0);
       if (child.isValue()) {
-        return confirmType(token, TheoryFactory.createValue(-child.toValue().getInt()), expected);
+        return confirmType(token, TheoryFactory.createValue(child.toValue().getInteger().negate()),
+                           expected);
       }
       return confirmType(token, TheoryFactory.minusSymbol.apply(targs.get(0)), expected);
     }
     if (args.size() == 2) {
       Term a = targs.get(0);
       Term b = targs.get(1);
-      if (b.isValue()) b = TheoryFactory.createValue(-b.toValue().getInt());
+      if (b.isValue()) b = TheoryFactory.createValue(b.toValue().getInteger().negate());
       else b = TheoryFactory.minusSymbol.apply(b);
       return confirmType(token, TermFactory.createApp(TheoryFactory.plusSymbol, a, b), expected);
     }

@@ -115,11 +115,11 @@ class SMTLibResponseHandler {
       }
     }
     else if (kind == 2) {
-      if (result instanceof SExpression.Numeral(int i)) val.setInt(index, i);
+      if (result instanceof SExpression.Numeral(java.math.BigInteger i)) val.setInt(index, i);
       if (result instanceof SExpression.SExpList(List<SExpression> lst)) {
         if (lst.size() == 2 && lst.get(0) instanceof SExpression.Symbol(String name) &&
-          name.equals("-") && lst.get(1) instanceof SExpression.Numeral(int k)) {
-          val.setInt(index, -k);
+          name.equals("-") && lst.get(1) instanceof SExpression.Numeral(java.math.BigInteger k)) {
+          val.setInt(index, k.negate());
         }
       }
     }

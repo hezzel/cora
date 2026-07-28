@@ -17,6 +17,7 @@ package charlie.smt;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.math.BigInteger;
 import java.util.List;
 
 public class MultiplicationTest {
@@ -47,7 +48,16 @@ public class MultiplicationTest {
   public void testLegalEvaluate() {
     IntegerExpression prod =
       new Multiplication(new IValue(3), new Multiplication(new IValue(12), new IValue(-2)));
-    assertTrue(prod.evaluate() == -72);
+    assertTrue(prod.evaluate().intValueExact() == -72);
+  }
+
+  @Test
+  public void testLargeValueEvaluateDoesNotOverflow() {
+    // 3000000000 * 3000000000 = 9 * 10^18, which overflows a 32-bit int; BigInteger evaluation
+    // computes it exactly.
+    BigInteger big = BigInteger.valueOf(3000000000L);
+    IntegerExpression prod = new Multiplication(new IValue(big), new IValue(big));
+    assertTrue(prod.evaluate().equals(new BigInteger("9000000000000000000")));
   }
 
   @Test

@@ -16,6 +16,7 @@
 package charlie.parser;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
@@ -307,7 +308,7 @@ public class CoraParser {
     if ((token = _status.readNextIf(CoraTokenData.MINUS)) != null) {
       ParserTerm child = readMainTerm();
       if (child == null) return new CalcSymbol(token, MINUS);
-      if (child instanceof IntVal(Token t, int v)) return new IntVal(token, -v);
+      if (child instanceof IntVal(Token t, BigInteger v)) return new IntVal(token, v.negate());
       return new Application(token, new CalcSymbol(token, MINUS), FixedList.of(child));
     }
 
@@ -445,7 +446,7 @@ public class CoraParser {
     if (token.getName().equals(CoraTokenData.FALSE)) return new BoolVal(token, false);
     if (token.getName().equals(CoraTokenData.INTEGER)) {
       try {
-        int number = Integer.parseInt(token.getText());
+        BigInteger number = new BigInteger(token.getText());
         return new IntVal(token, number);
       }
       catch (NumberFormatException e) {

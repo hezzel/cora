@@ -16,10 +16,11 @@
 package charlie.smt;
 
 import java.lang.Comparable;
+import java.math.BigInteger;
 
 /**
  * An IntegerExpression is an expression built from integer values, addition, multiplication, etc.:
- * the symbols in the integer theory, yielding an int.
+ * the symbols in the integer theory, yielding an (arbitrary-precision) integer.
  *
  * IntegerExpressions can be expected to be immutable.
  */
@@ -45,7 +46,7 @@ public sealed abstract class IntegerExpression implements Comparable<IntegerExpr
    * This evaluates the current expression, taking the values for all variables from the given
    * valuation.
    */
-  public abstract int evaluate(Valuation val);
+  public abstract BigInteger evaluate(Valuation val);
 
   /** Adds the SMT description of the current expression to the given string builder. */
   public abstract void addToSmtString(StringBuilder builder);
@@ -85,33 +86,43 @@ public sealed abstract class IntegerExpression implements Comparable<IntegerExpr
    * This returns an integer expression obtained from adding the given constant to the current
    * expression.  If the current IntegerExpression is in simplifed form, then so is the result.
    */
-  public IntegerExpression add(int constant) {
-    if (constant == 0) return this;
+  public IntegerExpression add(BigInteger constant) {
+    if (constant.signum() == 0) return this;
     return new Addition(new IValue(constant), this);
+  }
+
+  /** Convenience overload of {@link #add(BigInteger)} for a small (Java int) constant. */
+  public final IntegerExpression add(int constant) {
+    return add(BigInteger.valueOf(constant));
   }
 
   /**
    * This returns an integer expression obtained from multiplying the current one by the given
    * constant.  If the current IntegerExpression is in simplified form, then so is the result.
    */
-  public IntegerExpression multiply(int constant) {
-    if (constant == 0) return new IValue(0);
-    if (constant == 1) return this;
+  public IntegerExpression multiply(BigInteger constant) {
+    if (constant.signum() == 0) return new IValue(BigInteger.ZERO);
+    if (constant.equals(BigInteger.ONE)) return this;
     return new CMult(constant, this);
+  }
+
+  /** Convenience overload of {@link #multiply(BigInteger)} for a small (Java int) constant. */
+  public final IntegerExpression multiply(int constant) {
+    return multiply(BigInteger.valueOf(constant));
   }
 
   /**
    * Assuming the current expression has no variables, this function evaluates it to its integer
    * value.  If there is a variable in it, an SmtEvaluationException will be thrown instead.
    */
-  public final int evaluate() { return evaluate(null); }
+  public final BigInteger evaluate() { return evaluate(null); }
 
   /**
    * This returns an integer expression obtained from multiplying the current one by -1.  If the
    * current IntegerExpression is in simplified form, then so is the result.
    */
   public final IntegerExpression negate() {
-    return multiply(-1);
+    return multiply(BigInteger.valueOf(-1));
   }
 
   public final String toString() {
