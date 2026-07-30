@@ -25,7 +25,6 @@ import charlie.util.FixedList;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
 import charlie.terms.TermFactory;
-import charlie.terms.TermPrinter;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import charlie.smt.SmtProblem;
@@ -52,10 +51,9 @@ class DeductionEqdeleteTest {
 
   public PartialProof setupProof(String eqdesc) {
     TRS trs = setupTRS();
-    TermPrinter printer = new TermPrinter(Set.of());
     return new PartialProof(trs,
       EquationParser.parseEquationList("j(x) = j(y) | x ≥ y ; " + eqdesc, trs),
-      lst -> printer.generateUniqueNaming(lst));
+      trs.createNameGenerator());
   }
 
   private OutputModule _module;

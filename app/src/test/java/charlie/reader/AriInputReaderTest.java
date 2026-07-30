@@ -102,7 +102,7 @@ public class AriInputReaderTest {
       "(rule (g (lambda ((x a)) (f (lambda ((x b)) x) (Z x)))) (Z A))\n";
     TRS trs = AriInputReader.readTrsFromString(str);
     assertTrue(trs.queryRuleCount() == 1);
-    assertTrue(trs.queryRule(0).toString().equals("g(λx.f(λx1.x1, Z⟨x⟩)) → Z⟨A⟩"));
+    assertTrue(trs.queryRule(0).toString().equals("g(λx.f(λx__1.x__1, Z⟨x⟩)) → Z⟨A⟩"));
   }
 
   @Test
@@ -115,7 +115,7 @@ public class AriInputReaderTest {
       "(rule (f (lambda ((v (-> o o))) (v I)) (lambda ((y o) (z o)) (v y z)) x) (v x I))\n";
     TRS trs = AriInputReader.readTrsFromString(str);
     assertTrue(trs.queryRuleCount() == 1);
-    assertTrue(trs.queryRule(0).toString().equals("f(λv1.v1(I), λy.λz.v⟨y, z⟩, x) → v⟨x, I⟩"));
+    assertTrue(trs.queryRule(0).toString().equals("f(λv__1.v__1(I), λy.λz.v⟨y, z⟩, x) → v⟨x, I⟩"));
   }
 
   @Test

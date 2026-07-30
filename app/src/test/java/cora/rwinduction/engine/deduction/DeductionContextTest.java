@@ -29,7 +29,6 @@ import charlie.terms.position.Position;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
 import charlie.terms.Variable;
-import charlie.terms.TermPrinter;
 import charlie.terms.TermFactory;
 import charlie.substitution.MutableSubstitution;
 import charlie.trs.Rule;
@@ -65,10 +64,9 @@ class DeductionContextTest {
 
   public PartialProof setupProof(String eqdesc) {
     TRS trs = setupTRS();
-    TermPrinter printer = new TermPrinter(Set.of());
     return new PartialProof(trs,
       EquationParser.parseEquationList("sum1(x) = sum2(x) | x ≥ 0 ; " + eqdesc, trs),
-      lst -> printer.generateUniqueNaming(lst));
+      trs.createNameGenerator());
   }
 
   @Test
@@ -323,7 +321,8 @@ class DeductionContextTest {
       "F(end(3), cons(end(4), end(5)))), cons(y, end(7)))", renaming, trs);
     ArrayList<Position> posses = new ArrayList<Position>();
     ArrayList<Pair<Term,Term>> pairs = new ArrayList<Pair<Term,Term>>();
-    DeductionContext.storeDifferences(s, t, new ProofContext(trs, lst -> renaming), posses, pairs);
+    DeductionContext.storeDifferences(s, t,
+      new ProofContext(trs, trs.createNameGenerator()), posses, pairs);
     assertTrue(posses.size() == 4);
     assertTrue(pairs.size() == 4);
 

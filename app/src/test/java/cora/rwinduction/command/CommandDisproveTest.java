@@ -53,7 +53,7 @@ class CommandDisproveTest {
   private DeductionStep createStep(OutputModule module, String equation, String txt) {
     CommandDisprove cmd = new CommandDisprove();
     PartialProof proof = new PartialProof(trs, EquationParser.parseEquationList(equation, trs),
-      lst -> module.generateUniqueNaming(lst));
+      module.queryNameGenerator());
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus(txt);
     status.nextWord(); // disprove
@@ -143,7 +143,7 @@ class CommandDisproveTest {
     CommandDisprove cmd = new CommandDisprove();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof proof = new PartialProof(trs, EquationParser.parseEquationList(eq, trs),
-      lst -> module.generateUniqueNaming(lst));
+      module.queryNameGenerator());
     cmd.storeContext(proof, module);
     return cmd.suggestNext(args);
   }

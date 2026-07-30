@@ -24,7 +24,6 @@ import java.util.Optional;
 import charlie.util.FixedList;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
-import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -61,10 +60,9 @@ class DeductionInductTest {
     Term co = CoraInputReader.readTermAndUpdateNaming(constr, renaming, trs);
     if (rightgr == null) rg = Optional.empty();
     else rg = Optional.of(CoraInputReader.readTermAndUpdateNaming(rightgr, renaming, trs));
-    TermPrinter printer = new TermPrinter(Set.of());
     return new PartialProof(trs,
       FixedList.of(new EquationContext(lg, new Equation(le, ri, co), rg, 11, renaming)),
-      lst -> printer.generateUniqueNaming(lst));
+      trs.createNameGenerator());
   }
 
   @Test

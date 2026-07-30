@@ -32,129 +32,32 @@ import charlie.terms.replaceable.MutableRenaming;
  * to use unicode symbols, ascii-art, html, print smt-style or whatever is needed.
  */
 public class TermPrinter {
-  private TreeSet<String> _blockedNames;  // the names that may not be used as variable names
+  private NameGenerator _nameGenerator;   // used to generate names for free (meta-)variables
 
   /**
    * Generates a TermPrinter.
-   * @param avoid names in this set will not be used as generated variable names in the default
-   *   functionality (this is intended to be used for instance by the symbols in the alphabet)
+   * @param generator Use this generator to generate names for free variables and meta-variables.
    */
-  public TermPrinter(Set<String> avoid) {
-    _blockedNames = new TreeSet<String>(avoid);
+  public TermPrinter(NameGenerator generator) {
+    _nameGenerator = generator;
   }
 
   /**
-   * Adds a single name to the list of names to avoid when generating variable names.  Note that
-   * this does not affect existing renamings, only new ones!
+   * This creates a term printer with a default name generator that does not consider the names of
+   * any function symbols (and thus, might inadvertently give a variable a name that is already used
+   * by a function symbol).  Only meant for use in unit testing and debugging (but also used in the
+   * default Term::toString() functionality, which exists for that purpose).
+   *
+   * In general, if you want to use the default term printing functionality, it is recommended to
+   * use the standard constructor and create the NameGenerator using TRS::createNameGenerator().
    */
-  public final void avoidAdditional(String name) {
-    _blockedNames.add(name);
+  public static TermPrinter createDebugTermPrinter() {
+    return new TermPrinter(new NameGenerator(Set.of()));
   }
 
-  /**
-   * Adds names to the list of strings to avoid when generating variable names.
-   * Note that this does not affect existing renamings (even if you have not generated any names
-   * with them yet), only ones that will be created after this function was called!
-   */
-  public final void avoidAdditional(Set<String> names) {
-    _blockedNames.addAll(names);
-  }
-  
-  /**
-   * This access function to generateUniqueNaming can be called with an arbitrary number of
-   * term arguments.
-   */
-  public final MutableRenaming generateUniqueNaming(Term ...terms) {
-    return generateUniqueNaming(Arrays.asList(terms));
-  }
-
-  /**
-   * When printing a term, both free and bound variables (as well as meta-variables) may be renamed
-   * in the string output.  This is because variables are not defined by their name, and therefore
-   * two distinct variables may have the same name, which could be very confusing (yet, printing
-   * variables by their index is generally not pleasant for human readers).
-   *
-   * This function generates a naming for all the free variables and meta-variables in the given
-   * set of terms.  Bound variables are not included, and should be handled in printAbstraction.
-   *
-   * Note that it is necessary to use generateUniqueNaming if you want to print multiple terms that
-   * may have some of the same variables, and you want the same variables to be printed with the
-   * same name in all of them: then you should generate a renaming that takes all these terms into
-   * account, and use this as an argument to the print function.
-   *
-   * To influence the chosen names, override the generateNames function.
-   */
-  public final MutableRenaming generateUniqueNaming(List<Term> terms) {
-    TreeMap<String,TreeSet<Replaceable>> existingNames = new TreeMap<String,TreeSet<Replaceable>>();
-    // group (meta-)variables by name, so we can see how often each name occurs
-    for (Term t : terms) {
-      for (Replaceable x : t.freeReplaceables()) {
-        String name = x.queryName();
-        if (!existingNames.containsKey(name)) {
-          TreeSet<Replaceable> tmp = new TreeSet<Replaceable>();
-          tmp.add(x);
-          existingNames.put(name, tmp);
-        }
-        else existingNames.get(name).add(x);
-      }
-    }
-    // to generate a new renaming that assigns them all distinct names, we first assign names for
-    // the replaceables whose name is already unique (since they can likely remain unchanged), and
-    // only then for the rest
-    MutableRenaming ret = new MutableRenaming(_blockedNames);
-    for (int i = 0; i < 2; i++) {
-      for (TreeSet<Replaceable> set : existingNames.values()) {
-        if (i == 0 && set.size() != 1) continue;
-        if (i == 1 && set.size() == 1) continue;
-        int counter = 0;
-        for (Replaceable x : set) {
-          counter++;
-          String name = generateName(x, n -> ret.isAvailable(n), counter, set.size());
-          ret.setName(x, name);
-          if (!name.equals(x.queryName())) ret.avoid(x.queryName());
-        }
-      }
-    }
-    return ret;
-  }
-
-  /**
-   * This function generates a name to be used for a free variable or meta-variable.  This might be
-   * its own name, a name that uses this name as a base, or something else entirely.
-   *
-   * @param available returns true if the given name is still unused (and not blocked)
-   * @param count,num: there are <num> free variables or meta-variables that have the same name as
-   *   the base, and in order of creation, this one has index <count> of them (so 1 ≤ count ≤ num)
-   *
-   * The default behaviour tries to keep names where possible, and if that is a bad choice
-   * (especially if the resulting name is not available) then it instead generates a name of the
-   * form name__count.
-   * Override to create different name choices.
-   */
-  protected String generateName(Replaceable x, Predicate<String> available, int count, int num) {
-    String base = x.queryName();
-    if (base.equals("")) base = "VAR";
-    else if (!isGoodNameStart(base.charAt(0))) base = "_" + base;
-    if (num == 1 && available.test(base)) return base;
-    String name = base + "__" + count;
-    if (available.test(name)) return name;
-    count = num;
-    do {
-      count++;
-      name = base + "__" + count;
-    } while (!available.test(name));
-    return name;
-  }
-
-  /**
-   * Helper function for the default implementation of generateName: returns false if it is likely
-   * to be confusing to use a variable name starting with the given letter, and true otherwise.
-   * This is quite arbitrary, so this is private functionality; if someone wants to override
-   * generateName, they can implement their own preferences!
-   */
-  private boolean isGoodNameStart(char c) {
-    if (c == '#' || c == '$' || c == '?') return true;
-    return c >= 'A' && c != '[' && c != ']';
+  /** Returns the NameGenerator that we are using to name free variables and meta-variables. */
+  public NameGenerator queryNameGenerator() {
+    return _nameGenerator;
   }
 
   /**
@@ -186,21 +89,20 @@ public class TermPrinter {
    * This is only supplied as a public access function, and is not meant to be overridden.
    */
   public final void print(Term term, StringBuilder builder) {
-    print(term, generateUniqueNaming(term), builder);
+    print(term, _nameGenerator.generateUniqueNaming(term), builder);
   }
 
   /**
    * Adds a string representation of the given term to the given string builder, using the given
-   * Renaming to print names for variables.  Note that the renaming should have been created
-   * specifically for this term (perhaps among others); if this is not the case, it is possible that
-   * some distinct variables will be printed with the same name.
+   * Renaming to print names for variables.  Note that the renaming should have every free
+   * (meta-)variable in term in its domain; if this is not the case, it is possible that some
+   * distinct variables will be printed with the same name.
    * This is only supplied as a public access function, and is not meant to be overridden.
    */
   public final void print(Term term, Renaming naming, StringBuilder builder) {
-    TreeSet<String> blocked = new TreeSet<String>(_blockedNames);
-    blocked.addAll(naming.range());
-    for (Replaceable x : naming.domain()) blocked.add(x.queryName());
-    MutableRenaming mren = new MutableRenaming(blocked);
+    MutableRenaming mren = _nameGenerator.generateUniqueNaming();
+    for (Replaceable r : naming.domain()) mren.avoid(r.queryName());
+    for (String m : naming.range()) mren.avoid(m);
     printRecursive(term, naming, mren, builder);
   }
 
@@ -498,30 +400,33 @@ public class TermPrinter {
    * Called by printRecursive() to print an abstraction.
    *
    * The default functionality prints LAMBDA <varname>.subterm, where LAMBDA is the symbol given by
-   * queryLambda().  To print the varname, the "available" function in the renaming is checked:
+   * queryLambda().  To print the varname, there are three options:
    *
-   * - if the variable's base name is still available in boundNaming, it becomes the varname
-   * - otherwise, the first <base_name>i with i ≥ 1 that is still available becomes the varname
-   *
-   * This name is added to boundNaming in order to print the subterm, but removed again before the
-   * function returns.
-   *
-   * Note: if a name already exists for the binder, this name is ignored (and restored at the end
-   * of the function).  Hence, there is no point in assigning names to bound variables at the start
-   * of the printing process.
+   * - if the variable does not occur in freeNaming or boundNaming yet, we use the underlying
+   *   NameGenerator to generate a new name for this bound variable, store it in boundNaming in
+   *   order to print the subterm, and then remove it again before the function returns
+   *   (in normal calls to print(), this is the only case that will typically occur)
+   * - if the variable occurs in freeNaming (but not in boundNaming), then we don't choose a new
+   *   name but simply use the existing choice
+   *   (due to the well-behavedness property this will typically only happen if someone calls print
+   *   with a renaming that has explicitly had mappings for the bound variables added, so we
+   *   respect their choice)
+   * - if the variable occurs in boundNaming, we also don't choose a new name but instead use the
+   *   existing mapping; the binder is also not removed from boundNaming afterwards
+   *   (due to the well-behavedness property this actually should never happen, but it might occur
+   *   due to shenanigans in inheriting classes)
    */
   protected void printAbstraction(Term term, Renaming freeNaming, MutableRenaming boundNaming,
                                   StringBuilder builder) {
     Variable binder = term.queryVariable();
-    String backup = boundNaming.getName(binder);
+    boolean remove = false;
 
-    // find varname
-    String bname = binder.queryName();
-    String name = bname;
-    for (int i = 1; !boundNaming.isAvailable(name); i++) {
-      name = bname + i;
+    String name = boundNaming.getName(binder);
+    if (name == null) name = freeNaming.getName(binder);
+    if (name == null) {
+      name = _nameGenerator.generateBoundName(boundNaming, binder);
+      remove = true;
     }
-    boundNaming.setName(binder, name);
 
     // print term
     builder.append(queryLambda());
@@ -530,8 +435,7 @@ public class TermPrinter {
     printRecursive(term.queryAbstractionSubterm(), freeNaming, boundNaming, builder);
 
     // restore naming
-    if (backup == null) boundNaming.unsetName(binder);
-    else boundNaming.setName(binder, backup);
+    if (remove) boundNaming.unsetName(binder);
   }
 
   /**

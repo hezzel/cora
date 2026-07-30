@@ -345,7 +345,7 @@ abstract class TermInherit implements Term {
 
   /** This method returns a string representation of the current term. */
   public final String toString() {
-    return (new TermPrinter(Set.of())).print(this);
+    return TermPrinter.createDebugTermPrinter().print(this);
   }
 
   // the following functions are all default implementations of interface functions, to be

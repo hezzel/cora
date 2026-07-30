@@ -38,7 +38,7 @@ class DeductionCalcAllTest {
   public PartialProof setupProof(String eqs) {
     return new PartialProof(trs,
       EquationParser.parseEquationList(eqs, trs),
-      lst -> new MutableRenaming(trs.queryFunctionSymbolNames()));
+      trs.createNameGenerator());
   }
 
   @Test

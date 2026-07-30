@@ -15,36 +15,49 @@
 
 package charlie.printer;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.Set;
-import java.util.function.Predicate;
 import charlie.terms.replaceable.Replaceable;
+import charlie.terms.replaceable.MutableRenaming;
+import charlie.terms.Variable;
+import charlie.terms.NameGenerator;
 
 /**
- * The DebugTermPrinter is a term printer that prints all replaceables by their actual index.
+ * The DebugNameGenerator is a NameGenerator that prints all replaceables by their actual index.
  * This makes it much easier to see when two variables are different, though it makes it harder to
  * predict what the variables will be called!
  */
-public class DebugTermPrinter extends ParseableTermPrinter {
-  public DebugTermPrinter() {
-    super(Set.of());
+public class DebugNameGenerator extends NameGenerator {
+  public DebugNameGenerator() {
+    super();
   }
 
-  /**
-   * This function generates the name <kindchar><name><index> for the given replaceable.  The
-   * "available" predicate, count and num are ignored, since this name should be inherently
-   * unique.
-   */
-  protected String generateName(Replaceable x, Predicate<String> available, int count, int num) {
+  @Override
+  protected String chooseNameForUniqueReplaceable(Replaceable r, String name) {
+    return freeName(r);
+  }
+
+  @Override
+  protected String chooseNameForAmbiguousReplaceable(Replaceable r, String name, int index) {
+    return freeName(r);
+  }
+
+  @Override
+  public String generateBoundName(MutableRenaming renaming, Variable binder) {
+    String name = boundName(binder);
+    renaming.setName(binder, name);
+    return name;
+  }
+
+  private String freeName(Replaceable x) {
     String start = switch(x.queryReplaceableKind()) {
-      case Replaceable.Kind.BINDER -> "B";
+      case Replaceable.Kind.BINDER -> "I";
       case Replaceable.Kind.BASEVAR -> "V";
       case Replaceable.Kind.METAVAR -> "M";
     };
     return start + x.queryName() + "." + x.queryIndex();
+  }
+
+  private String boundName(Replaceable x) {
+    return "B" + x.queryName() + "." + x.queryIndex();
   }
 }
 

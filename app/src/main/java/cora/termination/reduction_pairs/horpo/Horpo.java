@@ -77,7 +77,7 @@ public class Horpo implements ReductionPair {
     TreeSet<FunctionSymbol> symbols = getFunctionSymbols(problem);
     ArgumentFilter filter = problem.queryArgumentFilter();
     HorpoParameters param = new HorpoParameters(bound, symbols, filter, smt);
-    TermPrinter printer = new TermPrinter(getFunctionSymbolNames(symbols));
+    TermPrinter printer = new TermPrinter(new NameGenerator(getFunctionSymbolNames(symbols)));
     HorpoConstraintList lst = new HorpoConstraintList(printer, smt);
     TreeMap<Integer,BVar> choices = setupConstraintList(lst, problem, smt);
     // for Horpo, strong monotonicity just means regarding all arguments

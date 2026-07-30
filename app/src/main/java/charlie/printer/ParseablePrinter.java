@@ -58,8 +58,8 @@ public class ParseablePrinter extends AsciiPrinter{
   protected void printRule(Rule rho, Renaming renaming) {
     Set<Replaceable> replaceables;
     if (renaming == null) {
-      renaming = _termPrinter.generateUniqueNaming(rho.queryLeftSide(), rho.queryRightSide(),
-                                                   rho.queryConstraint());
+      renaming = _termPrinter.queryNameGenerator().generateUniqueNaming(
+        rho.queryLeftSide(), rho.queryRightSide(), rho.queryConstraint());
       replaceables = renaming.domain();
     }
     else replaceables = rho.queryAllReplaceables();

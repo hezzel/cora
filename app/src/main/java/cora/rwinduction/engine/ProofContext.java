@@ -16,7 +16,6 @@
 package cora.rwinduction.engine;
 
 import java.util.*;
-import java.util.function.Function;
 import charlie.util.FixedList;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
@@ -24,6 +23,7 @@ import charlie.terms.replaceable.Renaming;
 import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Variable;
+import charlie.terms.NameGenerator;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.util.Pair;
@@ -48,11 +48,11 @@ public class ProofContext {
    * Constructor: sets up a ProofContext with rules taken from the given TRS.
    * The TermPrinter is used for generating Renamings.
    */
-  public ProofContext(TRS initialSystem, Function<List<Term>,Renaming> renamingMaker) {
+  public ProofContext(TRS initialSystem, NameGenerator nameGenerator) {
     if (initialSystem == null) throw new NullStorageException("ProofContext", "initial TRS");
     _trs = initialSystem;
     int n = initialSystem.queryRuleCount();
-    createRuleInfo(renamingMaker);
+    createRuleInfo(nameGenerator);
     createConstructorInfo();
     _namer = new VariableNamer(createNamingInfo());
   }
@@ -61,11 +61,11 @@ public class ProofContext {
    * Helper function for the constructor: this names all the rules in the TRS, and generates a
    * Renaming for each of them.
    */
-  private void createRuleInfo(Function<List<Term>,Renaming> renamingMaker) {
+  private void createRuleInfo(NameGenerator nameGenerator) {
     for (int i = 0; i < _trs.queryRuleCount(); i++) {
       Rule rule = _trs.queryRule(i);
-      Renaming renaming = renamingMaker.apply(List.of(
-        rule.queryLeftSide(), rule.queryRightSide(), rule.queryConstraint())).makeImmutable();
+      Renaming renaming = nameGenerator.generateUniqueNaming(rule.queryLeftSide(),
+        rule.queryRightSide(), rule.queryConstraint()).makeImmutable();
       String name = "R" + (i+1);
       _ruleNames.add(name);
       _nameToRule.put(name, i);

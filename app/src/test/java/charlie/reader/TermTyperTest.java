@@ -386,7 +386,7 @@ public class TermTyperTest {
     Term t = readTerm("\\x :: a, y, z :: c.f(x,y,z)", null, true, null,
       "1:10: Cannot derive type of binder y from context; it should be denoted directly in the "+
         "abstraction.\n");
-    assertTrue(t.toString().equals("λx.λy1.λz.f(x, y, z)"));
+    assertTrue(t.toString().equals("λx.λy__1.λz.f(x, y, z)"));
     assertTrue(t.vars().size() == 1);
     assertTrue(t.queryType().toString().equals("a → o → c → d"));
   }
@@ -407,7 +407,7 @@ public class TermTyperTest {
     Term t = readTerm("λx.x", null, false, data,
       "1:2: Cannot derive type of binder x from context; it should be denoted directly " +
       "in the abstraction.\n");
-    assertTrue(t.toString().equals("λx1.x"));
+    assertTrue(t.toString().equals("λx__1.x"));
     assertTrue(t.queryType().toString().equals("o → a"));
   }
 
@@ -445,7 +445,7 @@ public class TermTyperTest {
     data.addMetaVariable(TermFactory.createMetaVar("x", type("a -> b"), 1));
     Term t = readTerm("λx::a.x[ x ]", null, true, data,
       "1:2: Ambiguous binder: this name has already been declared as a meta-variable.\n");
-    assertTrue(t.toString().equals("λx1.x⟨x1⟩"));
+    assertTrue(t.toString().equals("λx__1.x⟨x__1⟩"));
     assertTrue(t.queryType().toString().equals("a → b"));
     assertTrue(data.lookupMetaVariable("x").queryType().toString().equals("a → b"));
   }
@@ -454,7 +454,7 @@ public class TermTyperTest {
   public void testReadAbstractionWithDuplicateVariableName() {
     SymbolData data = generateSignature();
     Term t = readTerm("λx::a, y :: b, x :: c.x", null, false, data, "");
-    assertTrue(t.toString().equals("λx.λy.λx1.x1"));
+    assertTrue(t.toString().equals("λx.λy.λx__1.x__1"));
     assertTrue(t.queryType().toString().equals("a → b → c → c"));
     assertTrue(data.lookupVariable("x") == null);
   }

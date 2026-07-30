@@ -102,7 +102,8 @@ public class RuleReducerTest {
 
     Term instance = TermFactory.createApp(f, gterm, abs2);
     assertTrue(reducer.applicable(instance));
-    assertTrue(reducer.apply(instance).toString().equals("h(j(5, z), (λb.λc.true)(3, 3), λz1.z1)"));
+    assertTrue(reducer.apply(instance).toString().equals(
+      "h(j(5, z), (λb.λc.true)(3, 3), λz__1.z__1)"));
   }
 
   @Test

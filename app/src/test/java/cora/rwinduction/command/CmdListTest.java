@@ -40,7 +40,7 @@ class CmdListTest {
     _module = cora.io.OutputModule.createUnicodeModule(trs);
     PartialProof proof = new PartialProof(trs,
       cora.rwinduction.parser.EquationParser.parseEquationList("add(x,y) = x + y", trs),
-      lst -> _module.generateUniqueNaming(lst));
+      _module.queryNameGenerator());
   }
 
   private class MyCommand extends DeductionCommand {

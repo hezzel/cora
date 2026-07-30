@@ -109,7 +109,7 @@ class AbstractionTest extends TermTestFoundation {
       new Application(g, new Abstraction(x, x)),
       new Application(g, new Abstraction(x, new Application(f, x, x))))));
 
-    assertEquals("λx.f(x, f(g(λx1.x1), g(λx1.f(x1, x1))))", s.toString());
+    assertEquals("λx.f(x, f(g(λx__1.x__1), g(λx__1.f(x__1, x__1))))", s.toString());
     Variable x1 = s.queryVariable();
     Term body = s.queryAbstractionSubterm();
     Term abs1 = body.queryArgument(2).queryArgument(1).queryArgument(1);  // λx1.x1
@@ -162,7 +162,7 @@ class AbstractionTest extends TermTestFoundation {
     Term abs2 = new Abstraction(x2, x2);
     Term s = (new Application(g, abs2, new Application(h, x3, x3))).apply(abs1);
     Term main = new Abstraction(x3, s); // λx.g(λx.x, h(x, x), λx.f(x))
-    assertEquals("λx.g(λx1.x1, h(x, x), λx1.f(x1))", main.toString());
+    assertEquals("λx.g(λx__1.x__1, h(x, x), λx__1.f(x__1))", main.toString());
   }
 
   /* @return λx.f(x, λy.y) */
@@ -362,7 +362,7 @@ class AbstractionTest extends TermTestFoundation {
     Term term2 = term.replaceSubterm(Position.parse("0.1"), y);
     Term term3 = term.replaceSubterm(Position.parse("0"), x);
     assertTrue(term1.toString().equals("λx.f(x, h)"));
-    assertTrue(term2.toString().equals("λx.f(y, λy1.y1)"));
+    assertTrue(term2.toString().equals("λx.f(y, λy__1.y__1)"));
     assertTrue(term3.equals(new Abstraction(x, x)));
   }
 

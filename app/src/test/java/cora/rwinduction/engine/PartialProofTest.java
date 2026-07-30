@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import charlie.util.FixedList;
 import charlie.terms.Term;
-import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -57,9 +56,7 @@ class PartialProofTest {
   public void testAddUndoRedo() {
     TRS trs = setupTRS();
     EquationContext eq = EquationParser.parseEquationData("sum1(x) = sum2(x) | x ≥ 0", trs, 11);
-    TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
-    PartialProof proof =
-      new PartialProof(trs, FixedList.of(eq), lst -> printer.generateUniqueNaming(lst));
+    PartialProof proof = new PartialProof(trs, FixedList.of(eq), trs.createNameGenerator());
     ProofState state1 = proof.getProofState();
     assertTrue(state1.getEquations().size() == 1);
     assertTrue(state1.getTopEquation() == eq);
@@ -93,9 +90,7 @@ class PartialProofTest {
   public void testCommandHistory() {
     TRS trs = setupTRS();
     EquationContext eq = EquationParser.parseEquationData("sum1(x) = sum2(x) | x ≥ 0", trs, 3);
-    TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
-    PartialProof proof =
-      new PartialProof(trs, FixedList.of(eq), lst -> printer.generateUniqueNaming(lst));
+    PartialProof proof = new PartialProof(trs, FixedList.of(eq), trs.createNameGenerator());
     ProofState state1 = proof.getProofState();
     assertTrue(state1.getEquations().size() == 1);
     assertTrue(state1.getTopEquation() == eq);

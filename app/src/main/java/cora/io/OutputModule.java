@@ -20,6 +20,7 @@ import java.util.List;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
+import charlie.terms.NameGenerator;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.printer.Printer;
@@ -115,11 +116,19 @@ public class OutputModule {
   }
 
   /**
+   * This returns the name generator that we are currently using to generate names for the
+   * free variables and meta-variables in terms to be printed.
+   */
+  public final NameGenerator queryNameGenerator() {
+    return _printer.queryTermPrinter().queryNameGenerator();
+  }
+
+  /**
    * This uses the underlying Printer to generate a Renaming that takes all the variables (and
    * meta-variables) in the given terms into account.
    */
   public final MutableRenaming generateUniqueNaming(Term ...terms) {
-    return _printer.queryTermPrinter().generateUniqueNaming(terms);
+    return _printer.generateUniqueNaming(terms);
   }
 
   /**
@@ -127,7 +136,7 @@ public class OutputModule {
    * meta-variables) in the given terms into account.
    */
   public final MutableRenaming generateUniqueNaming(List<Term> terms) {
-    return _printer.queryTermPrinter().generateUniqueNaming(terms);
+    return _printer.generateUniqueNaming(terms);
   }
 
   /**

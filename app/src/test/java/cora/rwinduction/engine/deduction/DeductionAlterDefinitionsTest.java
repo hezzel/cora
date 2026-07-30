@@ -49,9 +49,8 @@ class DeductionAlterDefinitionsTest {
 
   public PartialProof setupProof(String eqdesc) {
     TRS trs = setupTRS();
-    TermPrinter printer = new TermPrinter(Set.of());
     return new PartialProof(trs, EquationParser.parseEquationList(eqdesc, trs),
-      lst -> printer.generateUniqueNaming(lst));
+      trs.createNameGenerator());
   }
 
   @Test

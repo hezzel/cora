@@ -57,7 +57,7 @@ class CommandSimplifyTest {
     EquationContext ec =
       EquationParser.parseEquationData("sum1(z) = add(y,sum2(z)) | z ≥ 0 ∧ y < 0", trs, 1);
     PartialProof proof = new PartialProof(trs, FixedList.of(ec),
-                                          lst -> module.generateUniqueNaming(lst));
+                                          module.queryNameGenerator());
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus(str);
     status.nextWord(); // simplify
@@ -69,7 +69,7 @@ class CommandSimplifyTest {
     EquationContext ec =
       EquationParser.parseEquationData("sum1(z) = add(y,sum2(z)) | z ≥ 0 ∧ y < 0", trs, 1);
     PartialProof proof = new PartialProof(trs, FixedList.of(ec),
-                                          lst -> module.generateUniqueNaming(lst));
+                                          module.queryNameGenerator());
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus(str);
     status.nextWord(); // simplify
@@ -139,7 +139,7 @@ class CommandSimplifyTest {
       EquationParser.parseEquationData("sum1(z) = add(y,sum2(z+1)) | z ≥ 0 ∧ y < 0", trs, 1);
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof proof = new PartialProof(trs, FixedList.of(ec),
-                                          lst -> module.generateUniqueNaming(lst));
+                                          module.queryNameGenerator());
     cmd.storeContext(proof, module);
     return cmd.suggestNext(args);
   }

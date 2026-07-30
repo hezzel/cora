@@ -210,7 +210,7 @@ public class CoraInputReaderTest {
   public void testCreateNonPatternRule() {
     Rule rule = CoraInputReader.readRule(
       "{ F :: [nat,nat] → nat } map(λx.F[X,Y[x]], cons(x, y)) -> cons(Y[x],y)", generateTRS());
-    assertTrue(rule.toString().equals("map(λx1.F⟨X, Y⟨x1⟩⟩, cons(x, y)) → cons(Y⟨x⟩, y)"));
+    assertTrue(rule.toString().equals("map(λx__1.F⟨X, Y⟨x__1⟩⟩, cons(x, y)) → cons(Y⟨x⟩, y)"));
   }
 
   @Test
@@ -528,8 +528,7 @@ public class CoraInputReaderTest {
     Term s = CoraInputReader.readTerm("f(x, h(0, y))", trs);
     Term t = CoraInputReader.readTerm("f(x, h(0, y))", trs);
     assertFalse(s.equals(t)); // different variables!
-    TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
-    MutableRenaming renaming = printer.generateUniqueNaming(s);
+    MutableRenaming renaming = trs.createNameGenerator().generateUniqueNaming(s);
     assertTrue(CoraInputReader.readTerm("f(x, h(0, y))", renaming, trs).equals(s));
 
     MutableRenaming newnaming = new MutableRenaming(trs.queryFunctionSymbolNames());

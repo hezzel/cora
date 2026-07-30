@@ -49,7 +49,7 @@ class DeductionSkipTest {
         (count > 0 ? "sum1(x) = sum2(x) | x ≥ 0 ; " : "") +
         (count > 1 ? "iter(x, i, z) = iter(x, 1+i, i+z+0) | i < x ; " : "") +
         (count > 2 ? "sum2(x+0) = 0 + sum1(x)" : ""), trs),
-      lst -> module.generateUniqueNaming(lst));
+      module.queryNameGenerator());
   }
 
   @Test

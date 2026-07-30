@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import charlie.util.FixedList;
 import charlie.terms.position.PositionFormatException;
-import charlie.terms.replaceable.MutableRenaming;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;
@@ -42,7 +41,7 @@ class DeductionCalcTest {
         "iter(x + y, x * 2, x / y) -><- iter(- y, u + 12, 17) | a = x + y ∧ x / y = u ∧ -y = z ; " +
         "iter(1 + (2 + 3), x * y + z, x + y) -><- x + y| x ≥ 0 ∧ u = x * y ;"
         , trs),
-      lst -> new MutableRenaming(trs.queryFunctionSymbolNames()));
+      trs.createNameGenerator());
   }
 
   @Test
@@ -196,7 +195,7 @@ class DeductionCalcTest {
     PartialProof proof = new PartialProof(trs,
       EquationParser.parseEquationList("iter(x + y, x * 2, z + x / y) = " +
                                        "iter(- y, a - 1, z + 17)", trs),
-      lst -> module.generateUniqueNaming(lst));
+      module.queryNameGenerator());
     DeductionCalc step = DeductionCalc.createStep(proof, o, List.of(
       EquationPosition.parse("l1"), EquationPosition.parse("l2"), EquationPosition.parse("l3"),
       EquationPosition.parse("r1"), EquationPosition.parse("r2"), EquationPosition.parse("r3")));

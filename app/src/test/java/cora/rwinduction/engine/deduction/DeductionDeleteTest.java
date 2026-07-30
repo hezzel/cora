@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import charlie.util.FixedList;
 import charlie.terms.Term;
-import charlie.terms.TermPrinter;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -50,10 +49,9 @@ class DeductionDeleteTest {
 
   public PartialProof setupProof(String eqdesc) {
     TRS trs = setupTRS();
-    TermPrinter printer = new TermPrinter(Set.of());
     return new PartialProof(trs,
       EquationParser.parseEquationList("sum1(x) = sum2(x) | x ≥ 0 ; " + eqdesc, trs),
-      lst -> printer.generateUniqueNaming(lst));
+      trs.createNameGenerator());
   }
 
   private void testDeleteEquation(String eqdesc) {
@@ -103,12 +101,11 @@ class DeductionDeleteTest {
   public void testOmitOutputModule() {
     Settings.smtSolver = new ProgrammableSmtSolver("i1 >= 1 + i1", new Answer.NO());
     TRS trs = setupTRS();
-    TermPrinter printer = new TermPrinter(Set.of());
     PartialProof pp = new PartialProof(trs,
       EquationParser.parseEquationList("sum1(x) = sum2(x) | x ≥ 0 ; " +
                                        "sum1(x) = sum1(x) | x > 0 ; " +
                                        "sum1(x) = sum2(x) | x > x", trs),
-      lst -> printer.generateUniqueNaming(lst));
+      trs.createNameGenerator());
     Optional<OutputModule> oo = Optional.empty();
     DeductionDelete step = DeductionDelete.createStep(pp, oo);
     assertTrue(step.verifyAndExecute(pp, oo));

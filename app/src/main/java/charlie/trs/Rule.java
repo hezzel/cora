@@ -197,8 +197,9 @@ public class Rule {
   /** Gives a string representation of the current rule (debug functionality). */
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    TermPrinter printer = new TermPrinter(Set.of());
-    Renaming renaming = printer.generateUniqueNaming(_left, _right, _constraint);
+    TermPrinter printer = TermPrinter.createDebugTermPrinter();
+    Renaming renaming =
+      printer.queryNameGenerator().generateUniqueNaming(_left, _right, _constraint);
     printer.print(_left, renaming, builder);
     builder.append(" → ");
     printer.print(_right, renaming, builder);

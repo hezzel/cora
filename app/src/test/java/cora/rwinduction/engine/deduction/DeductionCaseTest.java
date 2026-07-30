@@ -58,7 +58,7 @@ class DeductionCaseTest {
   public PartialProof setupProof(String eq, OutputModule module) {
     return new PartialProof(trs,
       EquationParser.parseEquationList(eq, trs),
-      lst -> module.generateUniqueNaming(lst));
+      module.queryNameGenerator());
   }
 
   public PartialProof setupProof(String leftgeq, String lhs, String rhs, String constr,
@@ -70,7 +70,7 @@ class DeductionCaseTest {
     Term co = CoraInputReader.readTermAndUpdateNaming(constr, renaming, trs);
     Term rg = CoraInputReader.readTermAndUpdateNaming(rightgeq, renaming, trs);
     EquationContext ec = new EquationContext(lg, new Equation(le, ri, co), rg, 5, renaming);
-    return new PartialProof(trs, FixedList.of(ec), lst -> module.generateUniqueNaming(lst));
+    return new PartialProof(trs, FixedList.of(ec), module.queryNameGenerator());
   }
 
   @Test

@@ -704,7 +704,7 @@ public class ApplicationTest extends TermTestFoundation {
 
     // replace f(y) by (λy.y)
     Term u = s.replaceSubterm(Position.parse("0.0.*1"), new Abstraction(y, y));
-    assertTrue(u.toString().equals("(λx.λy.(λy1.y1)(x))(a, b)"));
+    assertTrue(u.toString().equals("(λx.λy.(λy__1.y__1)(x))(a, b)"));
   }
 
   @Test
@@ -954,6 +954,6 @@ public class ApplicationTest extends TermTestFoundation {
     Term arg3 = new Abstraction(x4, new Abstraction(x3, new Application(g, x3, x4)));
     Term total = new Application(abs, (new Application(f, arg1, arg2)).apply(arg3));
     assertTrue(total.toString().equals(
-      "(λx1.x1)(f(g(x__1, x__2), λx1.g(x__2, x1), λx1.λx2.g(x2, x1)))"));
+      "(λx__3.x__3)(f(g(x__1, x__2), λx__3.g(x__2, x__3), λx__3.λx__4.g(x__4, x__3)))"));
   }
 }

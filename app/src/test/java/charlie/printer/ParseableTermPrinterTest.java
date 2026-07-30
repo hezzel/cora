@@ -22,6 +22,7 @@ import java.util.Set;
 import charlie.types.Type;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.Term;
+import charlie.terms.NameGenerator;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 
@@ -36,22 +37,22 @@ public class ParseableTermPrinterTest {
   @Test
   public void testPrintComplexTerm() {
     TRS trs = exampleTrs();
-    ParseableTermPrinter p = new ParseableTermPrinter(Set.of("z"));
+    ParseableTermPrinter p = new ParseableTermPrinter(new NameGenerator(Set.of("z")));
     Term term = CoraInputReader.readTerm("g(λx::Int→Int.f(Z⟨x⟩,y), p(1,true∧z))", trs);
     assertTrue(p.print(term).equals("g(\\x :: Int -> Int.f(Z[x], y), p(1, true /\\ z__1))"));
-    Renaming naming = p.generateUniqueNaming(term);
+    Renaming naming = p.queryNameGenerator().generateUniqueNaming(term);
     assertTrue(term.equals(CoraInputReader.readTerm(p.print(term), naming, trs)));
   }
 
   @Test
   public void testPrintConstraint() {
     TRS trs = exampleTrs();
-    ParseableTermPrinter p = new ParseableTermPrinter(Set.of("z"));
+    ParseableTermPrinter p = new ParseableTermPrinter(new NameGenerator(Set.of("z")));
     Term term = CoraInputReader.readTerm(
       "x % (9 - z) > y / 2 ∧ -x < y ∧ ¬(x ≥ y) ∧ (x ≤ y ∨ 1 / a(x) != 2)", trs);
     assertTrue(p.print(term).equals(
       "x % (9 - z__1) > y / 2 /\\ -x < y /\\ not (x >= y) /\\ (x <= y \\/ 1 / a(x) !=_Int 2)"));
-    Renaming naming = p.generateUniqueNaming(term);
+    Renaming naming = p.queryNameGenerator().generateUniqueNaming(term);
     assertTrue(term.equals(CoraInputReader.readTerm(p.print(term), naming, trs)));
   }
 }

@@ -51,7 +51,7 @@ class CommandEquationsTest {
     TRS trs = setupTRS();
     PartialProof proof = new PartialProof(trs, EquationParser.parseEquationList(
       "sum1(x) = sum2(x) | x ≥ 0 ; error = return(3)", trs),
-      lst -> module.generateUniqueNaming(lst));
+      module.queryNameGenerator());
     cmd.storeContext(proof, module);
     induct.storeContext(proof, module);
     induct.execute(new CommandParsingStatus(""));

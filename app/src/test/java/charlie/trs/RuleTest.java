@@ -323,7 +323,7 @@ public class RuleTest {
     Term left = TermFactory.createApp(f, x, y);
     Term right = TermFactory.createApp(g, y, TermFactory.createAbstraction(z, z));
     Rule rule = new Rule(left, right, x);
-    assertTrue(rule.toString().equals("f(x__1, x__2) → g(x__2, λx1.x1) | x__1"));
+    assertTrue(rule.toString().equals("f(x__1, x__2) → g(x__2, λx__3.x__3) | x__1"));
   }
 
   @Test

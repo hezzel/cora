@@ -60,10 +60,9 @@ class DeductionDisproveTheoryTest {
     Term le = CoraInputReader.readTermAndUpdateNaming(left, renaming, trs);
     Term ri = CoraInputReader.readTermAndUpdateNaming(right, renaming, trs);
     Term co = CoraInputReader.readTermAndUpdateNaming(constr, renaming, trs);
-    TermPrinter printer = new TermPrinter(Set.of());
     return new PartialProof(trs,
       FixedList.of(new EquationContext(new Equation(le, ri, co), 11, renaming)),
-      lst -> printer.generateUniqueNaming(lst));
+      trs.createNameGenerator());
   }
 
   @Test

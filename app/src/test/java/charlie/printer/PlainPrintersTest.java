@@ -23,6 +23,7 @@ import charlie.types.Type;
 import charlie.types.TypePrinter;
 import charlie.terms.position.Position;
 import charlie.terms.Term;
+import charlie.terms.NameGenerator;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -56,7 +57,7 @@ public class PlainPrintersTest {
   @Test
   public void testPrintComplexTerm() {
     TRS trs = exampleTrs();
-    PlainTermPrinter p = new PlainTermPrinter(Set.of("z"));
+    PlainTermPrinter p = new PlainTermPrinter(new NameGenerator(Set.of("z")));
     Term term = CoraInputReader.readTerm("g(λx::Int→Int.f(Z⟨x⟩,y), p(1,true∧z))", trs);
     assertTrue(p.print(term).equals("g(\\x.f(Z[x], y), p(1, true /\\ z__1))"));
   }
@@ -64,11 +65,35 @@ public class PlainPrintersTest {
   @Test
   public void testPrintConstraint() {
     TRS trs = exampleTrs();
-    PlainTermPrinter p = new PlainTermPrinter(Set.of("z"));
+    PlainTermPrinter p = new PlainTermPrinter(new NameGenerator(Set.of("z")));
     Term term = CoraInputReader.readTerm(
       "x % (9 - z) > y / 2 ∧ -x < y ∧ ¬(x ≥ y) ∧ (x ≤ y ∨ 1 / a(x) != 2)", trs);
     assertTrue(p.print(term).equals(
       "x % (9 - z__1) > y / 2 /\\ -x < y /\\ not (x >= y) /\\ (x <= y \\/ 1 / a(x) != 2)"));
+  }
+
+  @Test
+  public void testDebugPrinter() {
+    TRS trs = exampleTrs();
+    Term a = CoraInputReader.readTerm("x + 1", trs);
+    Term b = CoraInputReader.readTerm("x + 1", trs);
+    Printer p = PrinterFactory.createDebugPrinter();
+    p.add(a);
+    String as = p.toString();
+    p.clear();
+    p.add(b);
+    String bs = p.toString();
+    assertFalse(as.equals(bs));
+
+    Term c = CoraInputReader.readTerm("λx::Int.x", trs);
+    Term d = CoraInputReader.readTerm("λx::Int.x", trs);
+    p.clear();
+    p.add(c);
+    String cs = p.toString();
+    p.clear();
+    p.add(d);
+    String ds = p.toString();
+    assertFalse(cs.equals(ds));
   }
 }
 

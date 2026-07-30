@@ -57,7 +57,7 @@ class CommandAlterTest {
     EquationContext ec =
       EquationParser.parseEquationData("sum1(x) = add(y,sum2(z)) | z ≥ y", trs, 3);
     PartialProof proof = new PartialProof(trs, FixedList.of(ec),
-                                          lst -> module.generateUniqueNaming(lst));
+                                          module.queryNameGenerator());
     cmd.storeContext(proof, module);
     return cmd;
   }
@@ -254,7 +254,7 @@ class CommandAlterTest {
       EquationParser.parseEquationData("sum1(z) = add(y,add(z+1, v)) | z ≥ 0 ∧ y < 0", trs, 1);
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof proof = new PartialProof(trs, FixedList.of(ec),
-                                          lst -> module.generateUniqueNaming(lst));
+                                          module.queryNameGenerator());
     cmd.storeContext(proof, module);
     return cmd.suggestNext(args);
   }

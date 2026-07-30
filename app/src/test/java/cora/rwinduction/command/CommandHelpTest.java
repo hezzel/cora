@@ -35,7 +35,7 @@ class CommandHelpTest {
   private PartialProof createPP(OutputModule module) {
     return new PartialProof(trs,
       EquationParser.parseEquationList("sum1(x) = sum2(x) | x ≥ 0", trs),
-      lst -> module.generateUniqueNaming(lst));
+      module.queryNameGenerator());
   }
 
   private CmdList makeCmdList() {

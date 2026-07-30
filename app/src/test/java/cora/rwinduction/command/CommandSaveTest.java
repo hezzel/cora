@@ -55,8 +55,7 @@ class CommandSaveTest {
     FixedList<EquationContext> ecs =
       EquationParser.parseEquationList("sum1(x) = add(y,sum2(z)) | z ≥ y ; " +
                                        "sum2(z) = sum1(z)", trs);
-    PartialProof proof = new PartialProof(trs, ecs,
-                                          lst -> module.generateUniqueNaming(lst));
+    PartialProof proof = new PartialProof(trs, ecs, module.queryNameGenerator());
     cmd.storeContext(proof, module);
     CommandInduct induct = new CommandInduct();
     induct.storeContext(proof, module);

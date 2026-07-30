@@ -63,11 +63,6 @@ class AutomaticProverTest {
     return new EquationContext(lg, new Equation(ls, rs, co), rg, 19, renaming);
   }
 
-  private MutableRenaming makeNaming(TRS trs, List<Term> lst) {
-    TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
-    return printer.generateUniqueNaming(lst);
-  }
-
   private void addHypothesis(PartialProof proof, String hypodesc, int index) {
     TRS trs = proof.getContext().getTRS();
     var pair = EquationParser.parseEquation(hypodesc, trs);
@@ -80,7 +75,7 @@ class AutomaticProverTest {
     TRS trs = setupTRS();
     var pair = EquationParser.parseEquation(eqdesc, trs);
     PartialProof pp = new PartialProof(trs, FixedList.of(new EquationContext(pair.fst(), 19,
-      pair.snd())), lst -> makeNaming(trs, lst));
+      pair.snd())), trs.createNameGenerator());
     addHypothesis(pp, hypodesc, 1);
     return pp;
   }

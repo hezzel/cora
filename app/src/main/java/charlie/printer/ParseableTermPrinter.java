@@ -20,6 +20,7 @@ import charlie.types.Arrow;
 import charlie.types.Type;
 import charlie.types.TypePrinter;
 import charlie.terms.Variable;
+import charlie.terms.NameGenerator;
 import charlie.terms.TermPrinter;
 import charlie.terms.CalculationSymbol;
 import charlie.terms.CalculationSymbol.Kind;
@@ -31,13 +32,13 @@ import charlie.terms.CalculationSymbol.Kind;
 public class ParseableTermPrinter extends TermPrinter {
   private TypePrinter _typePrinter;
 
-  public ParseableTermPrinter(Set<String> avoid, TypePrinter typeprint) {
-    super(avoid);
+  public ParseableTermPrinter(NameGenerator generator, TypePrinter typeprint) {
+    super(generator);
     _typePrinter = typeprint;
   }
 
-  public ParseableTermPrinter(Set<String> avoid) {
-    super(avoid);
+  public ParseableTermPrinter(NameGenerator generator) {
+    super(generator);
     _typePrinter = new TypePrinter(false);
   }
 

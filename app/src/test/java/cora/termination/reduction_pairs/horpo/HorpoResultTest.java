@@ -72,7 +72,8 @@ public class HorpoResultTest {
     }
     HorpoParameters param = new HorpoParameters(BigInteger.valueOf(100),
       new TreeSet<FunctionSymbol>(trs.queryAlphabet().getSymbols()), filter, smt);
-    HorpoConstraintList lst = new HorpoConstraintList(new TermPrinter(Set.of()), smt);
+    HorpoConstraintList lst =
+      new HorpoConstraintList(new TermPrinter(trs.createNameGenerator()), smt);
     Valuation valuation = new Valuation();
     FunctionSymbol f = trs.lookupSymbol("f");
     FunctionSymbol g = trs.lookupSymbol("g");
@@ -146,7 +147,8 @@ public class HorpoResultTest {
     }
     HorpoParameters param = new HorpoParameters(BigInteger.valueOf(3),
       new TreeSet<FunctionSymbol>(trs.queryAlphabet().getSymbols()), filter, smt);
-    HorpoConstraintList lst = new HorpoConstraintList(new TermPrinter(Set.of()), smt);
+    HorpoConstraintList lst =
+      new HorpoConstraintList(new TermPrinter(trs.createNameGenerator()), smt);
     Valuation valuation = new Valuation();
     FunctionSymbol f = trs.lookupSymbol("f");
     FunctionSymbol g = trs.lookupSymbol("g");

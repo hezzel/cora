@@ -19,13 +19,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
-import java.util.function.Function;
 import charlie.util.FixedList;
 import charlie.util.NullStorageException;
 import charlie.util.Pair;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.Term;
-import charlie.terms.TermPrinter;
+import charlie.terms.NameGenerator;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import cora.io.ProofObject;
@@ -54,9 +53,9 @@ public class PartialProof {
    * printer.
    */
   public PartialProof(TRS initialSystem, FixedList<EquationContext> initialEquations,
-                      Function<List<Term>,Renaming> renamingMaker) {
+                      NameGenerator nameGenerator) {
     if (initialEquations == null) throw new NullStorageException("PartialProof", "initial eqs");
-    _pcontext = new ProofContext(initialSystem, renamingMaker);
+    _pcontext = new ProofContext(initialSystem, nameGenerator);
     _currentState = new ProofState(initialEquations);
     _aborted = false;
     _finished = null;

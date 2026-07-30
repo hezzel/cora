@@ -52,7 +52,7 @@ class CommandCaseTest {
   private DeductionCase createStep(OutputModule module, String str) {
     CommandCase cmd = new CommandCase();
     PartialProof proof = new PartialProof(trs, EquationParser.parseEquationList(
-      "iter(x, i, z) = add(x, y) | x > 0", trs), lst -> module.generateUniqueNaming(lst));
+      "iter(x, i, z) = add(x, y) | x > 0", trs), module.queryNameGenerator());
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus(str);
     status.nextWord(); // case

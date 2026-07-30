@@ -144,7 +144,7 @@ public class InteractiveRewritingInducter {
         proof = savefile.restore();
         break;
       case Either.Right(FixedList<EquationContext> eqs):
-        proof = new PartialProof(trs, eqs, lst -> outputter.generateUniqueNaming(lst));
+        proof = new PartialProof(trs, eqs, outputter.queryNameGenerator());
         clst.storeContext(proof, outputter);
         break;
     }

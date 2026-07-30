@@ -40,7 +40,7 @@ class CommandCalcTest {
     TRS trs = setupTRS();
     PartialProof proof = new PartialProof(trs,
       EquationParser.parseEquationList("f(x + 1, x + 3 * 7) -><- f(x-4,2)| true", trs),
-      lst -> module.generateUniqueNaming(lst));
+      module.queryNameGenerator());
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus(str);
     status.nextWord(); // :rules

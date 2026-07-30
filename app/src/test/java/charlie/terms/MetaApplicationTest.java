@@ -386,7 +386,7 @@ class MetaApplicationTest extends TermTestFoundation {
     Position pos = new MetaPos(1, new FinalPos(1));
     // replacement Z⟨(λx1.a)(x),c⟩(a)
     Term s = term.replaceSubterm(pos, replacement);
-    assertTrue(s.toString().equals("Z⟨(λx1.a)(x), c⟩(a)"));
+    assertTrue(s.toString().equals("Z⟨(λx__1.a)(x), c⟩(a)"));
   }
 
   @Test
@@ -510,7 +510,7 @@ class MetaApplicationTest extends TermTestFoundation {
     MetaVariable z = TermFactory.createMetaVar("x", arrowType(abs.queryType(),
       arrowType(f.queryType(), baseType("A"))), 2);
     Term term = TermFactory.createMeta(z, abs, f);
-    assertTrue(term.toString().equals("x__1⟨λx1.a(x1, x__3), x__2⟩"));
+    assertTrue(term.toString().equals("x__1⟨λx__4.a(x__4, x__3), x__2⟩"));
   }
 
   @Test
@@ -718,7 +718,7 @@ class MetaApplicationTest extends TermTestFoundation {
     MetaVariable z = TermFactory.createMetaVar("Z", arrowType(arrowType("a", "a"),
       arrowType("a", "a")), 2);
     Term term = TermFactory.createMeta(z, abs, x);
-    assertTrue(term.toString().equals("Z⟨λx1.x1, x⟩"));
+    assertTrue(term.toString().equals("Z⟨λx__1.x__1, x⟩"));
     assertFalse(term.queryMetaArgument(1).queryVariable().equals(
                   term.queryMetaArgument(2).queryVariable()));
   }

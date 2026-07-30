@@ -32,6 +32,7 @@ import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
+import charlie.terms.NameGenerator;
 import charlie.terms.TermPrinter;
 import charlie.terms.TermFactory;
 import charlie.substitution.Substitution;
@@ -73,12 +74,14 @@ public abstract class Printer {
   protected TypePrinter _typePrinter;
   protected TermPrinter _termPrinter;
   protected PositionPrinter _posPrinter;
+  protected NameGenerator _nameGenerator;
 
   protected Printer(TypePrinter typr, TermPrinter tepr, PositionPrinter popr) {
     _typePrinter = typr;
     _termPrinter = tepr;
     _posPrinter = popr;
     _builder = new StringBuilder();
+    _nameGenerator = _termPrinter.queryNameGenerator();
   }
 
   /** This returns the TypePrinter used for printing types in this OutputModule. */
@@ -98,15 +101,15 @@ public abstract class Printer {
    * meta-variables) in the given terms into account.
    */
   public final MutableRenaming generateUniqueNaming(Term ...terms) {
-    return _termPrinter.generateUniqueNaming(Arrays.asList(terms));
+    return _nameGenerator.generateUniqueNaming(Arrays.asList(terms));
   }
 
   /**
    * This uses the underlying TermPrinter to generate a Renaming that takes all the variables (and
    * meta-variables) in the given terms into account.
    */
-  public final MutableRenaming generateNaming(List<Term> terms) {
-    return _termPrinter.generateUniqueNaming(terms);
+  public final MutableRenaming generateUniqueNaming(List<Term> terms) {
+    return _nameGenerator.generateUniqueNaming(terms);
   }
 
   /**
@@ -256,7 +259,7 @@ public abstract class Printer {
       if (objects[i] instanceof Term t) terms.add(t);
       else if (objects[i] instanceof Replaceable r) terms.add(TermFactory.makeTerm(r));
     }   
-    Renaming renaming = _termPrinter.generateUniqueNaming(terms);
+    Renaming renaming = _nameGenerator.generateUniqueNaming(terms);
     for (int i = 0; i < objects.length; i++) {
       if (objects[i] instanceof Term t) objects[i] = new Pair<Term,Renaming>(t, renaming);
       else if (objects[i] instanceof Replaceable r) {
@@ -309,8 +312,8 @@ public abstract class Printer {
    */
   protected void printRule(Rule rho, Renaming renaming) {
     if (renaming == null) {
-      renaming = _termPrinter.generateUniqueNaming(rho.queryLeftSide(), rho.queryRightSide(),
-                                                   rho.queryConstraint());
+      renaming = _nameGenerator.generateUniqueNaming(rho.queryLeftSide(), rho.queryRightSide(),
+                                                     rho.queryConstraint());
     }
     _termPrinter.print(rho.queryLeftSide(), renaming, _builder);
     _builder.append(" " + symbRuleArrow() + " ");
@@ -425,7 +428,7 @@ public abstract class Printer {
         p._termPrinter.print(term, renaming, p._builder);
       }
       public String toString() {
-        return (new TermPrinter(Set.of())).print(term, renaming);
+        return TermPrinter.createDebugTermPrinter().print(term, renaming);
       }
     };
   }
@@ -447,7 +450,7 @@ public abstract class Printer {
         p.add(objects);
       }
       public String toString() {
-        TermPrinter pr = new TermPrinter(Set.of());
+        TermPrinter pr = TermPrinter.createDebugTermPrinter();
         StringBuilder builder = new StringBuilder();
         Object[] objects = e.makeArray();
         for (int i = 0; i < objects.length; i++) {

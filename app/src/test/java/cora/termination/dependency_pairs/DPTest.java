@@ -111,10 +111,9 @@ public class DPTest {
     DP dp2 = dp.getRenamed();
     assertTrue(dp2.lvars().size() == 3);
     assertFalse(dp.toString().equals(dp2.toString()));
-    TermPrinter printer = new TermPrinter(Set.of());
-    renaming = printer.generateUniqueNaming(dp.lhs(), dp.rhs(), dp.constraint(),
-      dp2.lhs(), dp2.rhs(), dp2.constraint());
     Printer pr = PrinterFactory.createUnicodePrinter(trs);
+    renaming = pr.queryTermPrinter().queryNameGenerator().generateUniqueNaming(dp.lhs(),
+      dp.rhs(), dp.constraint(), dp2.lhs(), dp2.rhs(), dp2.constraint());
     pr.add(dp.makePrintableWith(renaming), "\n", dp2.makePrintableWith(renaming));
     assertTrue(pr.toString().equals(
       "eval(x__1, y__1) ➡ eval(x__1 - 1, y__1) | x__1 > y__1 ∧ z__1 = z__1\n" +

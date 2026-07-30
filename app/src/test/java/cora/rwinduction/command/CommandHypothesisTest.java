@@ -56,7 +56,7 @@ class CommandHypothesisTest {
   private DeductionHypothesis createStep(OutputModule module, String str) {
     // set up a proof state with one equation and two hypotheses
     PartialProof proof = new PartialProof(_trs, EquationParser.parseEquationList(
-      "add(0, sum1(x)) = sum2(x + 0) | x > 0", _trs), lst -> module.generateUniqueNaming(lst));
+      "add(0, sum1(x)) = sum2(x + 0) | x > 0", _trs), module.queryNameGenerator());
     Pair<Equation,MutableRenaming> hypo = EquationParser.parseEquation("sum1(x) = sum2(x)", _trs);
     ProofState state =
       proof.getProofState().addHypothesis(new Hypothesis(hypo.fst(), 12, hypo.snd()));
@@ -114,7 +114,7 @@ class CommandHypothesisTest {
   private ArrayList<Command.TabSuggestion> getSuggestions(String args) {
     OutputModule module = OutputModule.createUnicodeModule(_trs);
     PartialProof proof = new PartialProof(_trs, EquationParser.parseEquationList(
-      "add(0, sum2(x)) = sum2(x + 0) | x > 0", _trs), lst -> module.generateUniqueNaming(lst));
+      "add(0, sum2(x)) = sum2(x + 0) | x > 0", _trs), module.queryNameGenerator());
     Pair<Equation,MutableRenaming> hypo = EquationParser.parseEquation("sum1(x) = sum2(x) | x != y", _trs);
     ProofState state =
       proof.getProofState().addHypothesis(new Hypothesis(hypo.fst(), 12, hypo.snd()));

@@ -57,7 +57,7 @@ class CommandPostulateTest {
     CommandPostulate cmd = new CommandPostulate();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof proof = new PartialProof(trs, EquationParser.parseEquationList(
-        "sum1(x) = add(y, sum2(z))", trs), lst -> module.generateUniqueNaming(lst));
+        "sum1(x) = add(y, sum2(z))", trs), module.queryNameGenerator());
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus("postulate sum1(x) = sum2(x)");
     status.nextWord();
@@ -74,7 +74,7 @@ class CommandPostulateTest {
     CommandPostulate cmd = new CommandPostulate();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof proof = new PartialProof(trs, EquationParser.parseEquationList(
-        "sum1(x) = add(y, sum2(z))", trs), lst -> module.generateUniqueNaming(lst));
+        "sum1(x) = add(y, sum2(z))", trs), module.queryNameGenerator());
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus(
       "postulate iter(x, y, z) -><- iter(z, yy, x) | x + z = y ∧ yy = y + 1 ; delete");
@@ -94,7 +94,7 @@ class CommandPostulateTest {
     CommandPostulate cmd = new CommandPostulate();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof proof = new PartialProof(trs, EquationParser.parseEquationList(
-        "sum1(x) = add(y, sum2(z))", trs), lst -> module.generateUniqueNaming(lst));
+        "sum1(x) = add(y, sum2(z))", trs), module.queryNameGenerator());
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus(
       "postulate iter(x, y, z) ->< iter(z, yy, x) | x + z = y ∧ yy = y + 1 ; delete");
@@ -112,7 +112,7 @@ class CommandPostulateTest {
     CommandPostulate cmd = new CommandPostulate();
     OutputModule module = OutputModule.createUnicodeModule(trs);
     PartialProof proof = new PartialProof(trs, EquationParser.parseEquationList(
-        "sum1(x) = add(y, sum2(z))", trs), lst -> module.generateUniqueNaming(lst));
+        "sum1(x) = add(y, sum2(z))", trs), module.queryNameGenerator());
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus("postulate sum1(x) -><- x + 12 | x > 0");
     status.nextWord();

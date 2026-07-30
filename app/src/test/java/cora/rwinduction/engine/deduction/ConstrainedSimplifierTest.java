@@ -52,9 +52,8 @@ class ConstrainedSimplifierTest {
 
   public PartialProof setupProof(String eqdesc) {
     TRS trs = setupTRS();
-    TermPrinter printer = new TermPrinter(trs.queryFunctionSymbolNames());
     return new PartialProof(trs, EquationParser.parseEquationList(eqdesc, trs),
-                            lst -> printer.generateUniqueNaming(lst));
+                            trs.createNameGenerator());
   }
 
   @Test

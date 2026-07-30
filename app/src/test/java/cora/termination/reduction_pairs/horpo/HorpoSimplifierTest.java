@@ -45,7 +45,7 @@ public class HorpoSimplifierTest {
   }
 
   private HorpoConstraintList makeList(TRS trs, SmtProblem smt) {
-    return new HorpoConstraintList(new TermPrinter(trs.queryFunctionSymbolNames()), smt);
+    return new HorpoConstraintList(new TermPrinter(trs.createNameGenerator()), smt);
   }
 
   /**

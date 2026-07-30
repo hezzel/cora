@@ -51,7 +51,7 @@ class ProofContextTest {
   @Test
   public void testConstructors() {
     TRS trs = setupTRS();
-    ProofContext context = new ProofContext(trs, lst -> new MutableRenaming(Set.of()));
+    ProofContext context = new ProofContext(trs, trs.createNameGenerator());
     assertTrue(context.getConstructors(CoraInputReader.readType("Int")).isEmpty());
     assertTrue(context.getConstructors(CoraInputReader.readType("Bool")).isEmpty());
     Set<FunctionSymbol> funcs = context.getConstructors(CoraInputReader.readType("nat"));
@@ -66,7 +66,7 @@ class ProofContextTest {
   @Test
   public void testRuleArity() {
     TRS trs = setupTRS();
-    ProofContext context = new ProofContext(trs, lst -> new MutableRenaming(Set.of()));
+    ProofContext context = new ProofContext(trs, trs.createNameGenerator());
     assertTrue(context.queryRuleArity(trs.lookupSymbol("o")) == 1);
     assertTrue(context.queryRuleArity(trs.lookupSymbol("something")) == 3);
     assertTrue(context.queryRuleArity(trs.lookupSymbol("add")) == 1);
@@ -79,7 +79,7 @@ class ProofContextTest {
   @Test
   public void testRulesBySymbol() {
     TRS trs = setupTRS();
-    ProofContext context = new ProofContext(trs, lst -> new MutableRenaming(Set.of()));
+    ProofContext context = new ProofContext(trs, trs.createNameGenerator());
     assertTrue(context.queryRuleNamesByFunction(trs.lookupSymbol("o")) == null);
     assertTrue(context.queryRuleNamesByFunction(trs.lookupSymbol("something")) == null);
     assertTrue(context.queryRuleNamesByFunction(TheoryFactory.plusSymbol) == null);
@@ -99,8 +99,7 @@ class ProofContextTest {
   @Test
   public void testVariableNamer() {
     TRS trs = setupTRS();
-    TermPrinter printer = new TermPrinter(Set.of());
-    ProofContext context = new ProofContext(trs, lst -> printer.generateUniqueNaming(lst));
+    ProofContext context = new ProofContext(trs, new NameGenerator(Set.of("f")));
     VariableNamer namer = context.getVariableNamer();
     assertTrue(namer.queryDefaultNaming(trs.lookupSymbol("sum1"), 1) == null);
     assertTrue(namer.queryDefaultNaming(trs.lookupSymbol("sum2"), 1).equals("x"));
@@ -123,8 +122,7 @@ class ProofContextTest {
     Alphabet alphabet = new Alphabet(Set.of(f));
     TRS trs = TrsFactory.createTrs(alphabet, List.of(rule), TrsFactory.MSTRS);
     // create a proof context, and see the variable namer it creates
-    TermPrinter printer = new TermPrinter(Set.of("f"));
-    ProofContext context = new ProofContext(trs, lst -> printer.generateUniqueNaming(lst));
+    ProofContext context = new ProofContext(trs, new NameGenerator(Set.of("f")));
     VariableNamer namer = context.getVariableNamer();
     // make sure those variables are still called x!
     assertTrue(namer.queryDefaultNaming(f, 1).equals("x"));

@@ -318,7 +318,7 @@ public class SubstitutionTest {
     assertFalse(term.equals(abs));
     assertTrue(term.equals(TermFactory.createAbstraction(u, f.apply(List.of(
       u, TermFactory.createAbstraction(z, z), x)))));
-    assertEquals("λx1.f(x1, λz.z, x)", term.toString());
+    assertEquals("λx__1.f(x__1, λz.z, x)", term.toString());
 
     // check that all binders are fresh
     assertEquals(1, term.queryVariable().compareTo(u));
@@ -384,7 +384,8 @@ public class SubstitutionTest {
     subst.extend(z, g.apply(List.of(a, y)));
 
     Term s = subst.applySubstitution(term);
-    assertTrue(s.toString().equals("(λx.λy1.h(y1, z))(a, f(λy1.g(y1, g(a, y))), f(λy1.g(y1, y1)))"));
+    assertTrue(s.toString().equals(
+      "(λx.λy__1.h(y__1, z))(a, f(λy__1.g(y__1, g(a, y))), f(λy__1.g(y__1, y__1)))"));
   }
 
   @Test
@@ -409,7 +410,7 @@ public class SubstitutionTest {
     subst.extend(z, g.apply(List.of(a, y)));
 
     Term s = subst.applySubstitution(term);
-    assertTrue(s.toString().equals("h(f(λy1.g(y1, g(a, y))), z, f(λy1.g(y1, y1)))"));
+    assertTrue(s.toString().equals("h(f(λy__1.g(y__1, g(a, y))), z, f(λy__1.g(y__1, y__1)))"));
   }
 
   @Test
@@ -430,7 +431,7 @@ public class SubstitutionTest {
     Term h = constantTerm("h", type("A -> A -> A"));
     Term abs1 = TermFactory.createAbstraction(z2, TermFactory.createApp(h, z2, x));
     gamma.extend(f, abs1);
-    assertTrue(gamma.applySubstitution(term).toString().equals("Z⟨λx1.a(x1, 1), λz.h(z, x)⟩"));
+    assertTrue(gamma.applySubstitution(term).toString().equals("Z⟨λx__1.a(x__1, 1), λz.h(z, x)⟩"));
     // now try [x:=0, y:=1, F:=λz.h(z, x), Z := λF, G.F(G(0))]
     Variable g = TermFactory.createBinder("G", type("A -> A"));
     Term zero = constantTerm("0", type("A"));
@@ -439,7 +440,7 @@ public class SubstitutionTest {
     gamma.extend(z, abs2);
     // result of substituting: [λF, G.F(G(0))]⟨λx.a(x,1), λz.h(z, x)⟩⟩ = (λx.a(x,1))(λz.h(z, x)(0))
     // (note that it isn't normalised beyond that)
-    assertTrue(gamma.applySubstitution(term).toString().equals("(λx1.a(x1, 1))((λz.h(z, x))(0))"));
+    assertTrue(gamma.applySubstitution(term).toString().equals("(λx__1.a(x__1, 1))((λz.h(z, x))(0))"));
   }
 
   public void testPolymorphicExtendWithEmptyTypeMapping() {

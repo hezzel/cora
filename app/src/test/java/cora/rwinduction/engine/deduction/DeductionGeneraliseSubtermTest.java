@@ -47,9 +47,8 @@ class DeductionGeneraliseSubtermTest {
 
   public PartialProof setupProof(String condesc) {
     TRS trs = setupTRS();
-    TermPrinter printer = new TermPrinter(Set.of());
     EquationContext context = EquationParser.parseEquationContext(condesc, 1, trs);
-    return new PartialProof(trs, FixedList.of(context), lst -> printer.generateUniqueNaming(lst));
+    return new PartialProof(trs, FixedList.of(context), trs.createNameGenerator());
   }
 
   @Test

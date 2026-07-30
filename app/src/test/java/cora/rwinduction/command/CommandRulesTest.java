@@ -53,7 +53,7 @@ class CommandRulesTest {
     TRS trs = setupTRS();
     EquationContext ec = EquationParser.parseEquationData("sum1(x) = sum2(x) | x ≥ 0", trs, 1);
     PartialProof proof = new PartialProof(trs, FixedList.of(ec),
-                                          lst -> module.generateUniqueNaming(lst));
+                                          module.queryNameGenerator());
     cmd.storeContext(proof, module);
     CommandParsingStatus status = new CommandParsingStatus(str);
     status.nextWord(); // :rules

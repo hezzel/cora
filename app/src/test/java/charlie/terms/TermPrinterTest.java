@@ -28,61 +28,6 @@ import charlie.terms.replaceable.MutableRenaming;
  */
 public class TermPrinterTest {
   @Test
-  public void testRenamingWithoutAvoidance() {
-    Type a = TypeFactory.createSort("a");
-    Type b = TypeFactory.createSort("b");
-    Type ab = TypeFactory.createArrow(a, b);
-    Variable x1 = new Var("x", a);
-    Variable x2 = new Var("x", a);
-    Variable x3 = new Binder("x", b);
-    MetaVariable mvar = TermFactory.createMetaVar("x", TypeFactory.createArrow(a, a), 1);
-    Term x4 = TermFactory.createMeta(mvar, TermFactory.createConstant("A", a));
-    Variable y = new Binder("y", b);
-    Variable z1 = new Binder("z", ab);
-    Variable z2 = new Var("z", ab);
-    TermPrinter printer = new TermPrinter(Set.of());
-    Renaming naming = printer.generateUniqueNaming(x1, x2, x3, x4, y, z1, z2);
-    assertTrue(naming.getName(x1).equals("x__2"));
-    assertTrue(naming.getName(x2).equals("x__3"));
-    assertTrue(naming.getName(x3).equals("x__4"));
-    assertTrue(naming.getName(mvar).equals("x__1"));  // meta-variables come before variables
-    assertTrue(naming.getName(y).equals("y"));
-    assertTrue(naming.getName(z1).equals("z__2"));  // binders come after non-binders
-    assertTrue(naming.getName(z2).equals("z__1"));
-  }
-
-  @Test
-  public void testBannedOverlap() {
-    TermPrinter printer = new TermPrinter(Set.of("x", "y__1", "z", "z__1", "u", "v__1"));
-    Type o = TypeFactory.defaultSort;
-    Variable x = new Var("x", o);
-    Variable y1 = new Var("y", o);
-    Variable y2 = new Var("y", o);
-    Variable z = new Binder("z", o);
-    Variable u1 = new Var("u", o);
-    Variable u2 = new Var("u", o);
-    Variable v = new Var("v", o);
-    Variable w = new Var("", o);
-    Variable a = new Var("17", o);
-    Variable b1 = new Var("b", o);
-    Variable b2 = new Var("b", o);
-    Variable b3 = new Var("b__1", o);
-    Renaming naming = printer.generateUniqueNaming(x, y1, y2, z, u1, u2, v, w, a, b1, b2, b3);
-    assertTrue(naming.getName(x).equals("x__1"));
-    assertTrue(naming.getName(y1).equals("y__3"));
-    assertTrue(naming.getName(y2).equals("y__2"));
-    assertTrue(naming.getName(z).equals("z__2"));
-    assertTrue(naming.getName(u1).equals("u__1"));
-    assertTrue(naming.getName(u2).equals("u__2"));
-    assertTrue(naming.getName(v).equals("v"));
-    assertTrue(naming.getName(w).equals("VAR"));
-    assertTrue(naming.getName(a).equals("_17"));
-    assertTrue(naming.getName(b1).equals("b__3"));
-    assertTrue(naming.getName(b2).equals("b__2"));
-    assertTrue(naming.getName(b3).equals("b__1"));
-  }
-
-  @Test
   public void testBoundVariableRenaming() {
     Type o = TypeFactory.defaultSort;
     Variable x = new Binder("x", o);
@@ -94,19 +39,21 @@ public class TermPrinterTest {
       TermFactory.createConstant("f", TypeFactory.createArrow(oo, TypeFactory.createArrow(oo, o)));
     Term term = TermFactory.createApp(f, abs1, abs2); // f(λx.x, λy.y)
 
-    TermPrinter printer = new TermPrinter(Set.of());
-    MutableRenaming naming = printer.generateUniqueNaming(term, x);
-    assertTrue(naming.getName(x).equals("x"));
-    assertTrue(naming.getName(y) == null);
-    assertFalse(naming.isAvailable("x"));
-    assertTrue(naming.isAvailable("y"));
+    NameGenerator generator = new NameGenerator(Set.of());
+    TermPrinter printer = new TermPrinter(generator);
+    MutableRenaming naming = generator.generateUniqueNaming(term, x);
     StringBuilder builder = new StringBuilder();
     printer.print(term, naming, builder);
     assertTrue(naming.getName(x).equals("x"));
     assertTrue(naming.getName(y) == null);
     assertFalse(naming.isAvailable("x"));
     assertTrue(naming.isAvailable("y"));
-    assertTrue(builder.toString().equals("f(λx1.x1, λy.y)"));
+    assertTrue(builder.toString().equals("f(λx.x, λy.y)"));
+    naming = new MutableRenaming(Set.of("y"));
+    naming.setName(x, "z");
+    assertTrue(printer.print(term, naming).equals("f(λz.z, λy.y)"));
+      // the name generator tells us what variable names to avoid, NOT the names blocked in the
+      // free renaming!
   }
 
   @Test
@@ -124,48 +71,15 @@ public class TermPrinterTest {
     Term main = (new Application(f, new Application(g, z2, u), z1)).apply(x);
     Term abs = new Abstraction(x, new Abstraction(y, new Abstraction(u, main)));
 
-    TermPrinter printer = new TermPrinter(Set.of());
-    MutableRenaming naming = printer.generateUniqueNaming(abs);
+    NameGenerator generator = new NameGenerator(Set.of());
+    TermPrinter printer = new TermPrinter(generator);
+    assertTrue(printer.print(abs).equals("λx.λy.λx__1.f(g(z__2, x__1), z__1, x)"));
 
-    StringBuilder builder = new StringBuilder();
-    printer.print(abs, naming, builder);
-    assertTrue(builder.toString().equals("λx.λy.λx1.f(g(z__2, x1), z__1, x)"));
+    MutableRenaming naming = new MutableRenaming(Set.of());
+    assertEquals("λx.λy.λx__1.f(g(z, x__1), z, x)", printer.print(abs, naming));
 
-    builder.setLength(0);
-    naming = new MutableRenaming(Set.of());
-    printer.print(abs, naming, builder);
-    assertEquals("λx.λy.λx1.f(g(z, x1), z, x)", builder.toString());
-
-    builder.setLength(0);
-    naming = printer.generateUniqueNaming(new Var("x", o));
-    printer.print(abs, naming, builder);
-    assertEquals("λx1.λy.λx2.f(g(z, x2), z, x1)", builder.toString());
-  }
-
-  @Test
-  public void testAvoidName() {
-    // create f(x, y) and a loose variable z
-    Type o = TypeFactory.createSort("o");
-    Variable x = new Var("x", o);
-    Variable y = new Var("y", o);
-    Variable z = new Var("z", o);
-    Constant f = new Constant("f", TypeFactory.createArrow(o, TypeFactory.createArrow(o, o)));
-    Term term = f.apply(x).apply(y);
-
-    TermPrinter printer = new TermPrinter(Set.of());
-    Renaming a = printer.generateUniqueNaming(term);
-    printer.avoidAdditional(Set.of("x", "z"));
-    Renaming b = printer.generateUniqueNaming(term);
-
-    assertTrue(printer.print(term, a).equals("f(x, y)"));
-    assertTrue(printer.print(term, b).equals("f(x__1, y)"));
-    assertTrue(printer.print(z, a).equals("z"));
-    assertTrue(printer.print(z, b).equals("z"));
-
-    printer.avoidAdditional("y");
-    assertTrue(printer.print(term, b).equals("f(x__1, y)"));
-    Renaming c = printer.generateUniqueNaming(term);
-    assertTrue(printer.print(term, c).equals("f(x__1, y__1)"));
+    naming = generator.generateUniqueNaming(new Var("x", o));
+    assertEquals("λx__1.λy.λx__2.f(g(z, x__2), z, x__1)", printer.print(abs, naming));
   }
 }
 

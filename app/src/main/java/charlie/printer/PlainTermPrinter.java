@@ -17,14 +17,15 @@ package charlie.printer;
 
 import java.util.Set;
 import charlie.types.Type;
+import charlie.terms.NameGenerator;
 import charlie.terms.TermPrinter;
 import charlie.terms.CalculationSymbol;
 import charlie.terms.CalculationSymbol.Kind;
 
 /** The PlainTermPrinter adapts the standard TermPrinter to avoid unicode symbols. */
 public class PlainTermPrinter extends TermPrinter {
-  public PlainTermPrinter(Set<String> avoid) {
-    super(avoid);
+  public PlainTermPrinter(NameGenerator generator) {
+    super(generator);
   }
 
   @Override

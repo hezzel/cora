@@ -156,7 +156,7 @@ public class SaveFile {
     ArrayList<String> commands = new ArrayList<String>();
     FixedList<EquationContext> eqs = readEquations(commands);
     if (eqs == null) return null;
-    PartialProof proof = new PartialProof(_trs, eqs, lst -> _output.generateUniqueNaming(lst));
+    PartialProof proof = new PartialProof(_trs, eqs, _output.queryNameGenerator());
     _cmds.storeContext(proof, _output);
     for (String cmd : commands) {
       if (!runCommand(cmd)) return null;

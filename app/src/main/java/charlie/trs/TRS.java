@@ -30,6 +30,7 @@ import charlie.util.FixedList;
 import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
+import charlie.terms.NameGenerator;
 import charlie.trs.TrsProperties.*;
 
 /**
@@ -258,6 +259,17 @@ public class TRS {
   public Set<String> queryFunctionSymbolNames() {
     return _alphabet.getSymbols().stream().map(FunctionSymbol::queryName)
                     .collect(Collectors.toSet());
+  }
+
+  /**
+   * Returns a default NameGenerator that can be used for this TRS (i.e., it will avoid using the
+   * name of any function symbol in our alphabet).
+   *
+   * If you want to use a custom NameGenerator, you can instead pass it queryFunctionSymbolNames()
+   * as argument.
+   */
+  public NameGenerator createNameGenerator() {
+    return new NameGenerator(queryFunctionSymbolNames());
   }
 
   /**

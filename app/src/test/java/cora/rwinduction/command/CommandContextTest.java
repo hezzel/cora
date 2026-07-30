@@ -41,7 +41,7 @@ class CommandContextTest {
   private PartialProof setupProof(OutputModule module, String equation) {
     TRS trs = setupTRS();
     return new PartialProof(trs, EquationParser.parseEquationList(equation, trs),
-      lst -> module.generateUniqueNaming(lst));
+      module.queryNameGenerator());
   }
 
   private DeductionContext createStep(PartialProof proof, OutputModule module, String str) {

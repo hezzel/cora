@@ -35,7 +35,6 @@ import charlie.trs.TRS;
 import charlie.trs.TrsFactory;
 import charlie.reader.CoraInputReader;
 
-/** Testing the two string comparison constraints */
 public class PrinterTest {
   private Type type(String txt) {
     return CoraInputReader.readType(txt);
@@ -145,17 +144,18 @@ public class PrinterTest {
       new UserException("term 1 = ", term1, ", term 2 = ", term2, ", type = ", type,
                         ", metavar = ", x3, ", lambda = ", lambda);
     renaming = new MutableRenaming(trs.queryFunctionSymbolNames());
-    renaming.setName(x1, "x1");
-    renaming.setName(x2, "x2");
+    renaming.setName(x1, "x__1");
+    renaming.setName(x2, "x__2");
     renaming.setName(x3, "X");
     renaming.setName(y1, "y");
     renaming.setName(z2, "z");
     PrintableObject po = printer.makePrintable(e, renaming);
-    assertTrue(po.toString().equals("term 1 = f(x1, y), term 2 = f(x2, z), type = a → b → a, " +
-                                    "metavar = X, lambda = λx3.x3"));
+    // term 1 = f(x1, y), term 2 = f(x2, z), type = a → b → a, metavar = X, lambda = λx.x
+    assertTrue(po.toString().equals("term 1 = f(x__1, y), term 2 = f(x__2, z), type = a → b → a, " +
+                                    "metavar = X, lambda = λx__3.x__3"));
     printer.add(po);
-    assertTrue(printer.toString().equals("term 1 = f(x1, y), term 2 = f(x2, z), type = a -> b -> " +
-                                         "a, metavar = X, lambda = \\x3.x3"));
+    assertTrue(printer.toString().equals("term 1 = f(x__1, y), term 2 = f(x__2, z), " +
+                                         "type = a -> b -> a, metavar = X, lambda = \\x__3.x__3"));
   }
 
   @Test
@@ -214,7 +214,7 @@ public class PrinterTest {
 
     assertTrue(printer.toString().equals("[]\n" +
       "[x__1 := f(a(x__1), x__2)]\n" +
-      "[x__1 := f(a(x__1), x__2), Z := λx1.f(x1, x__1)]"));
+      "[x__1 := f(a(x__1), x__2), Z := λx__3.f(x__3, x__1)]"));
   }
 
   @Test

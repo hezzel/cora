@@ -26,7 +26,7 @@ public class PrinterFactory {
   public static Printer createUnicodePrinter(TRS trs) {
     TypePrinter ty = new TypePrinter(true);
     PositionPrinter po = new PositionPrinter();
-    TermPrinter te = new TermPrinter(trs.queryFunctionSymbolNames());
+    TermPrinter te = new TermPrinter(trs.createNameGenerator());
     return new UnicodePrinter(ty, po, te);
   }
 
@@ -34,7 +34,7 @@ public class PrinterFactory {
   public static Printer createPlainPrinter(TRS trs) {
     TypePrinter ty = new TypePrinter(false);
     PositionPrinter po = new PlainPositionPrinter();
-    TermPrinter te = new PlainTermPrinter(trs.queryFunctionSymbolNames());
+    TermPrinter te = new PlainTermPrinter(trs.createNameGenerator());
     return new AsciiPrinter(ty, po, te);
   }
 
@@ -42,7 +42,7 @@ public class PrinterFactory {
   public static Printer createParseablePrinter(TRS trs) {
     TypePrinter ty = new TypePrinter(false);
     PositionPrinter po = new PlainPositionPrinter();
-    TermPrinter te = new ParseableTermPrinter(trs.queryFunctionSymbolNames());
+    TermPrinter te = new ParseableTermPrinter(trs.createNameGenerator());
     return new ParseablePrinter(ty, po, te);
   }
 
@@ -55,7 +55,7 @@ public class PrinterFactory {
    */
   public static Printer createPrinterNotForUserOutput() {
     return new UnicodePrinter(new TypePrinter(true), new PositionPrinter(),
-                              new TermPrinter(Set.of()));
+                              TermPrinter.createDebugTermPrinter());
   }
 
   /**
@@ -65,7 +65,7 @@ public class PrinterFactory {
    */
   public static Printer createDebugPrinter() {
     return new AsciiPrinter(new TypePrinter(false), new PlainPositionPrinter(),
-                            new DebugTermPrinter());
+                            new ParseableTermPrinter(new DebugNameGenerator()));
   }
 }
 
