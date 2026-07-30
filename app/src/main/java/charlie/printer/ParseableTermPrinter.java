@@ -72,10 +72,11 @@ public class ParseableTermPrinter extends TermPrinter {
       }
       case Kind.NOT -> "not ";
       case Kind.PLUS -> "+";
+      case Kind.MINUS -> "-";
       case Kind.TIMES -> "*";
       case Kind.DIV -> "/";
       case Kind.MOD -> "%";
-      case Kind.MINUS -> "-";
+      case Kind.NEGATE -> "~";
     };
   }
 

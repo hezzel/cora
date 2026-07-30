@@ -73,7 +73,7 @@ class ProofContextTest {
     assertTrue(context.queryRuleArity(trs.lookupSymbol("iter")) == 3);
     assertTrue(context.queryRuleArity(trs.lookupSymbol("partial")) == 1);
     assertTrue(context.queryRuleArity(TheoryFactory.plusSymbol) == 2);
-    assertTrue(context.queryRuleArity(TheoryFactory.minusSymbol) == 1);
+    assertTrue(context.queryRuleArity(TheoryFactory.negateSymbol) == 1);
   }
 
   @Test

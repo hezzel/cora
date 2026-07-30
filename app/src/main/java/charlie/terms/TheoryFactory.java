@@ -23,11 +23,11 @@ import charlie.terms.CalculationSymbol.Kind;
 import charlie.terms.CalculationSymbol.Associativity;
 
 /**
- * A factory only to create logical terms and symbols
+ * A factory only to create theory terms and symbols.
  *
  * Note: all theory symbols (values and calculation symbols) necessarily have a translation in
  * SMT.  Thus, when adding any function symbol here, also add them into the translator functionality
- * in smt.TermSmtTranslator and smt.TermAnalyser.
+ * in smt.TermSmtTranslator.
  */
 public class TheoryFactory {
   private static Type binaryIntOperatorType = TypeFactory.createArrow(TypeFactory.intSort,
@@ -129,15 +129,21 @@ public class TheoryFactory {
 
   /** The binary symbol for addition */
   public static final CalculationSymbol plusSymbol = new CalculationConstant("+",
-    binaryIntOperatorType, Kind.PLUS, Associativity.ASSOC_LEFT, CalculationSymbol.INFIX_PLUS);
+    binaryIntOperatorType, Kind.PLUS, Associativity.ASSOC_LEFT_INCLUSIVE,
+    CalculationSymbol.INFIX_PLUS);
+
+  /** The unary(!) symbol for subtraction */
+  public static final CalculationSymbol minusSymbol = new CalculationConstant("-",
+    binaryIntOperatorType, Kind.MINUS, Associativity.ASSOC_LEFT_INCLUSIVE,
+    CalculationSymbol.INFIX_PLUS);
 
   /** The binary symbol for multiplication */
   public static final CalculationSymbol timesSymbol = new CalculationConstant("*",
     binaryIntOperatorType, Kind.TIMES, Associativity.ASSOC_LEFT, CalculationSymbol.INFIX_TIMES);
   
-  /** The unary(!) symbol for integer negation */
-  public static final CalculationSymbol minusSymbol = new CalculationConstant("-",
-    TypeFactory.createArrow(TypeFactory.intSort, TypeFactory.intSort), Kind.MINUS,
+  /** The unary symbol for integer negation */
+  public static final CalculationSymbol negateSymbol = new CalculationConstant("~",
+    TypeFactory.createArrow(TypeFactory.intSort, TypeFactory.intSort), Kind.NEGATE,
     Associativity.NOT_INFIX, CalculationSymbol.INFIX_NONE);
 
   /** The binary symbol for division */
@@ -222,10 +228,11 @@ public class TheoryFactory {
   public static LinkedHashSet<CalculationSymbol> queryAllCalculationSymbols() {
     LinkedHashSet<CalculationSymbol> set = new LinkedHashSet<CalculationSymbol>();
     set.add(plusSymbol);
-    set.add(timesSymbol);
     set.add(minusSymbol);
+    set.add(timesSymbol);
     set.add(divSymbol);
     set.add(modSymbol);
+    set.add(negateSymbol);
     set.add(andSymbol);
     set.add(orSymbol);
     set.add(notSymbol);

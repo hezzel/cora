@@ -372,8 +372,6 @@ public class ReducerTest {
     Term term = reducer.reduce(term1);
     assertTrue(term.toString().equals("test1((λz.z + 7 - 2)(3))"));
     term = reducer.reduce(term);  // the first step is invisible: replacing +(7, -(2)) by +(7, -2)
-    assertTrue(term.toString().equals("test1((λz.z + 7 - 2)(3))"));
-    term = reducer.reduce(term);
     assertTrue(term.toString().equals("test1(3 + 7 - 2)"));
     term = reducer.reduce(term);
     assertTrue(term.toString().equals("test1(10 - 2)"));
@@ -386,8 +384,6 @@ public class ReducerTest {
     assertTrue(term == null);
 
     term = reducer.reduce(term2b);
-    assertTrue(term.toString().equals("test2(λz.z + 7 - 2)"));
-    term = reducer.reduce(term);
     assertTrue(term.toString().equals("test2(λz.z + 7 - 2)"));
     term = reducer.reduce(term);
     assertTrue(term.toString().equals("test1((λz.z + 7 - 2)(3))"));

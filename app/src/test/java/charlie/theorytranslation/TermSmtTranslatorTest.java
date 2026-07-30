@@ -62,11 +62,11 @@ public class TermSmtTranslatorTest {
   }
 
   @Test
-  public void testTranslateMinus() {
+  public void testTranslateNegate() {
     TermSmtTranslator tst = new TermSmtTranslator();
     // - x
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
-    Term t = TheoryFactory.minusSymbol.apply(x);
+    Term t = TheoryFactory.negateSymbol.apply(x);
     IntegerExpression e = tst.translateIntegerExpression(t);
     assertTrue(e instanceof CMult);
     assertTrue(e.toString().equals("-i1"));
@@ -94,11 +94,11 @@ public class TermSmtTranslatorTest {
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
     Term t = TheoryFactory.divSymbol.apply(TheoryFactory.createValue(3))
-      .apply(TheoryFactory.plusSymbol.apply(x).apply(TheoryFactory.minusSymbol.apply(
-      TheoryFactory.modSymbol.apply(TheoryFactory.createValue(4)).apply(y))));
+      .apply(TheoryFactory.minusSymbol.apply(x).apply(
+      TheoryFactory.modSymbol.apply(TheoryFactory.createValue(4)).apply(y)));
     IntegerExpression e = tst.translateIntegerExpression(t);
     assertTrue(e instanceof Division);
-    assertTrue(e.toString().equals("3 / (i1 + -(4 % i2))"));
+    assertTrue(e.toString().equals("3 / (i2 + -(4 % i1))"));
   }
 
   @Test
@@ -107,11 +107,10 @@ public class TermSmtTranslatorTest {
     // x - (-1 - y)
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
-    Term t = TheoryFactory.plusSymbol.apply(x).apply(TheoryFactory.minusSymbol.apply(
-      TheoryFactory.plusSymbol.apply(TheoryFactory.createValue(-1)).apply(
-      TheoryFactory.minusSymbol.apply(y))));
+    Term t = TheoryFactory.minusSymbol.apply(x).apply(
+      TheoryFactory.minusSymbol.apply(TheoryFactory.createValue(-1)).apply(y));
     IntegerExpression e = tst.translateIntegerExpression(t);
-    assertTrue(e.toString().equals("i1 + -(-1 + -i2)"));
+    assertTrue(e.toString().equals("i2 + 1 + i1"));
   }
 
   @Test

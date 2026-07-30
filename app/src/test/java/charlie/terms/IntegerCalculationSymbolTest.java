@@ -33,6 +33,16 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
     assertTrue(p.queryArity() == 2);
   }
 
+  public void testMinusBasics() {
+    CalculationSymbol p = TheoryFactory.minusSymbol;
+    assertTrue(p.queryType().toString().equals("Int → Int → Int"));
+    assertTrue(p.queryInfixPriority() == CalculationSymbol.INFIX_PLUS);
+    assertTrue(p.queryName().equals("-"));
+    assertTrue(p.toString().equals("[-]"));
+    assertTrue(p.toUniqueString().equals("+{Int → Int → Int}#calc"));
+    assertTrue(p.queryArity() == 2);
+  }
+
   @Test
   public void testTimesBasics() {
     CalculationSymbol t = TheoryFactory.timesSymbol;
@@ -45,13 +55,13 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
   }
 
   @Test
-  public void testMinusBasics() {
-    CalculationSymbol m = TheoryFactory.minusSymbol;
+  public void testNegateBasics() {
+    CalculationSymbol m = TheoryFactory.negateSymbol;
     assertTrue(m.queryType().toString().equals("Int → Int"));
     assertTrue(m.queryInfixPriority() == CalculationSymbol.INFIX_NONE);
-    assertTrue(m.queryName().equals("-"));
-    assertTrue(m.toString().equals("[-]"));
-    assertTrue(m.toUniqueString().equals("-{Int → Int}#calc"));
+    assertTrue(m.queryName().equals("~"));
+    assertTrue(m.toString().equals("[~]"));
+    assertTrue(m.toUniqueString().equals("~{Int → Int}#calc"));
     assertTrue(m.queryArity() == 1);
   }
 
@@ -104,13 +114,13 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
   }
 
   @Test
-  public void testSimpleMinusToString() {
-    CalculationSymbol f = TheoryFactory.minusSymbol;
-    assertTrue(f.toString().equals("[-]"));
+  public void testSimpleNegateToString() {
+    CalculationSymbol f = TheoryFactory.negateSymbol;
+    assertTrue(f.toString().equals("[~]"));
     Value v = new IntegerValue(3);
-    assertTrue(f.apply(v).toString().equals("-3"));
+    assertTrue(f.apply(v).toString().equals("~3"));
     Var x = new Var("x", TypeFactory.intSort);
-    assertTrue(f.apply(x).toString().equals("-x"));
+    assertTrue(f.apply(x).toString().equals("~x"));
   }
 
   @Test
@@ -118,47 +128,43 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
     CalculationSymbol f = TheoryFactory.minusSymbol;
     assertTrue(f.toString().equals("[-]"));
     Value v = new IntegerValue(-3);
-    assertTrue(f.apply(v).toString().equals("-(-3)"));
+    assertTrue(f.apply(v).toString().equals("[-](-3)"));
   }
 
   @Test
   public void testMinusWithComplexArgument() {
-    CalculationSymbol m = TheoryFactory.minusSymbol;
-    CalculationSymbol p = TheoryFactory.plusSymbol;
-    CalculationSymbol t = TheoryFactory.timesSymbol;
     Var x = new Var("x", TypeFactory.intSort);
     Var y = new Var("y", TypeFactory.intSort);
-    Term s = m.apply(p.apply(x).apply(y));
-    assertTrue(s.toString().equals("-(x + y)"));
-    s = m.apply(t.apply(x).apply(y));
-    assertTrue(s.toString().equals("-(x * y)"));
+    Term s = TheoryFactory.minusSymbol.apply(TheoryFactory.plusSymbol.apply(x).apply(y));
+    assertTrue(s.toString().equals("[-](x + y)"));
+    s = TheoryFactory.negateSymbol.apply(TheoryFactory.timesSymbol.apply(x).apply(y));
+    assertTrue(s.toString().equals("~(x * y)"));
   }
 
   @Test
   public void testPrintPlusNegativeValue() {
     Var x = new Var("x", TypeFactory.intSort);
     Term s = new Application(TheoryFactory.plusSymbol, x, new IntegerValue(-3));
-    assertTrue(s.toString().equals("x - 3"));
+    assertTrue(s.toString().equals("x + -3"));
   }
 
   @Test
-  public void testPrintPlusNegativeAddition() {
+  public void testPrintMinus() {
     Var x = new Var("x", TypeFactory.intSort);
     Var y = new Var("y", TypeFactory.intSort);
     Var z = new Var("z", TypeFactory.intSort);
     CalculationSymbol p = TheoryFactory.plusSymbol;
-    Term s = new Application(p, x, new Application(TheoryFactory.minusSymbol,
-      new Application(p, y, z)));
+    Term s = new Application(TheoryFactory.minusSymbol, x, new Application(p, y, z));
     assertTrue(s.toString().equals("x - (y + z)"));
   }
 
   @Test
-  public void testPrintPlusNegativeMultiplication() {
+  public void testPrintMinusMultiplication() {
     Var x = new Var("x", TypeFactory.intSort);
     Var y = new Var("y", TypeFactory.intSort);
     Var z = new Var("z", TypeFactory.intSort);
-    Term s = new Application(TheoryFactory.plusSymbol, x, new Application(TheoryFactory.minusSymbol,
-      new Application(TheoryFactory.timesSymbol, y, z)));
+    Term s = new Application(TheoryFactory.minusSymbol, x,
+      new Application(TheoryFactory.timesSymbol, y, z));
     assertTrue(s.toString().equals("x - y * z"));
   }
 
@@ -233,10 +239,10 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
     CalculationSymbol minus = TheoryFactory.minusSymbol;
     Term a = new Application(times, new IntegerValue(1), new Application(plus, x, y));
     Term b = new Application(plus, x, new IntegerValue(-3));
-    Term c = new Application(plus, y, minus.apply(new Application(times, x, new IntegerValue(0))));
+    Term c = new Application(minus, y, new Application(times, x, new IntegerValue(0)));
     Term d = new Application(plus, b, new Application(plus, c, z));
     Term s = new Application(times, a, d);
-    assertTrue(s.toString().equals("1 * (x + y) * (x - 3 + (y - x * 0 + z))"));
+    assertTrue(s.toString().equals("1 * (x + y) * (x + -3 + (y - x * 0 + z))"));
   }
 
   @Test

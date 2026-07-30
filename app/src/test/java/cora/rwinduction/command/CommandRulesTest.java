@@ -138,7 +138,7 @@ class CommandRulesTest {
     OutputModule module = OutputModule.createUnitTestModule();
     assertFalse(runCommand(module, ":rules [and]"));
     assertTrue(module.toString().equals(
-      "Parsing error at position 9: Expected infix symbol but got IDENTIFIER (and)\n\n"));
+      "Parsing error at position 9: Expected infix or prefix symbol but got IDENTIFIER (and)\n\n"));
   }
 }
 

@@ -179,14 +179,20 @@ public class TermSmtTranslator {
     }
     CalculationSymbol calc = getCalculationRoot(t);
     return switch (calc.queryKind()) {
-      case CalculationSymbol.Kind.MINUS -> {
-        assertArgumentCount(t, 1);
-        yield new Exp.I(SmtFactory.createNegation(translateIntegerExpression(t.queryArgument(1))));
-      }
       case CalculationSymbol.Kind.PLUS -> {
         assertArgumentCount(t, 2);
         yield new Exp.I(SmtFactory.createAddition(translateIntegerExpression(t.queryArgument(1)),
                                                   translateIntegerExpression(t.queryArgument(2))));
+      }
+      case CalculationSymbol.Kind.MINUS -> {
+        assertArgumentCount(t, 2);
+        IntegerExpression e = translateIntegerExpression(t.queryArgument(2));
+        yield new Exp.I(SmtFactory.createAddition(translateIntegerExpression(t.queryArgument(1)),
+                        translateIntegerExpression(t.queryArgument(2)).negate()));
+      }
+      case CalculationSymbol.Kind.NEGATE -> {
+        assertArgumentCount(t, 1);
+        yield new Exp.I(SmtFactory.createNegation(translateIntegerExpression(t.queryArgument(1))));
       }
       case CalculationSymbol.Kind.TIMES -> {
         assertArgumentCount(t, 2);

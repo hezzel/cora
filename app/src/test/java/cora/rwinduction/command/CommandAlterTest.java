@@ -80,7 +80,7 @@ class CommandAlterTest {
   public void testMultiStep() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     DeductionStep step = createStep(module, "alter add a = x + y, b = 0  , c = a + -b");
-    assertTrue(step.toString().equals("alter add a = x + y, b = 0, c = a - b"));
+    assertTrue(step.toString().equals("alter add a = x + y, b = 0, c = a + ~b"));
   }
 
   @Test
@@ -236,7 +236,7 @@ class CommandAlterTest {
   @Test
   public void testConstraint() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
-    DeductionStep step = createStep(module, "alter constraint y < z + -1");
+    DeductionStep step = createStep(module, "alter constraint y < z -1");
     assertTrue(step.toString().equals("alter constraint y < z - 1"));
   }
 

@@ -446,7 +446,7 @@ public class CoraTermsParsingTest {
   public void testMostlySimpleMinus() {
     ParserTerm t = readTerm("- (3+x)", true, "");
     assertTrue(t instanceof Application(Token tok, CalcSymbol m, FixedList<ParserTerm> args));
-    assertTrue(t.toString().equals("@(-, [@(+, [3, x])])"));
+    assertTrue(t.toString().equals("@(~, [@(+, [3, x])])"));
   }
 
   @Test
@@ -464,7 +464,7 @@ public class CoraTermsParsingTest {
   @Test
   public void testMinusBeforeAddition() {
     ParserTerm t = readTerm("- x + y", true, "");
-    assertTrue(t.toString().equals("@(+, [@(-, [x]), y])"));
+    assertTrue(t.toString().equals("@(+, [@(~, [x]), y])"));
   }
 
   @Test
@@ -608,7 +608,7 @@ public class CoraTermsParsingTest {
 
   @Test
   public void testFailToReadSingleSymbol() {
-    readSymbolFailure("[f]", "1:2: Expected infix symbol but got IDENTIFIER (f)\n",
+    readSymbolFailure("[f]", "1:2: Expected infix or prefix symbol but got IDENTIFIER (f)\n",
       "ERR(f)", "]");
     readSymbolFailure("[+ a", "1:4: Expected infix closing bracket ] but got IDENTIFIER (a).\n",
       "+", "a");

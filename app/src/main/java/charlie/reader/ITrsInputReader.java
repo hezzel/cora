@@ -348,12 +348,8 @@ public class ITrsInputReader {
         f = readSymbol(head);
         ArrayList<Term> targs = new ArrayList<Term>();
         // a special case for minus, which can be used both in unary and binary notation in the
-        // input, but is only supported in unary form within Cora
-        boolean minus = false;
-        if (f.equals(TheoryFactory.minusSymbol) && args.size() == 2) {
-          f = TheoryFactory.plusSymbol;
-          minus = true;
-        }
+        // input, which is mapped to two different symbols within Cora
+        if (f.equals(TheoryFactory.minusSymbol) && args.size() == 1) f = TheoryFactory.negateSymbol;
         Type type = f.queryType();
         for (ParserTerm s : args) {
           switch (type) {
@@ -365,7 +361,6 @@ public class ITrsInputReader {
               f.queryType().toString(), "of arity " + args.size());
           }
         }
-        if (minus) targs.set(1, TheoryFactory.minusSymbol.apply(targs.get(1)));
         return f.apply(targs);
       default:
         throw new UnexpectedPatternException("ITrsInputReader", "makeTerm",

@@ -326,10 +326,6 @@ public class TermPrinter {
    * <maybeleftopen>left<maybeleftclose><operator><mayberightopen>right<mayberightclose>
    * where <operator> is printed using printInfixOperator.
    *
-   * Moreover, if root is the PLUS symbol, and right is negative (so either a negative constant or
-   * a term with root symbol MINUS), then right is negated and the operator printed as MINUS
-   * instead.
-   *
    * Note that if you mostly like this default functionality and only want to change the way the
    * operator is printed, it suffices to override printInfixOperator.  However, this default
    * implementation ONLY prints brackets surrounding terms whose root symbol is a calculation
@@ -340,25 +336,14 @@ public class TermPrinter {
     CalculationSymbol.Kind rootkind = root.queryKind();
     String rootname = root.queryName();
 
-    // special case: replacing + by -
-    if (root.queryKind().equals(CalculationSymbol.Kind.PLUS)) {
-      if (right.isFunctionalTerm() && right.queryRoot().toCalculationSymbol() != null &&
-          right.queryRoot().toCalculationSymbol().queryKind().equals(CalculationSymbol.Kind.MINUS)) {
-        rootkind = CalculationSymbol.Kind.MINUS;
-        rootname = "-";
-        right = right.queryArgument(1);
-      }
-      else if (right.isValue() && right.toValue().getInteger().signum() < 0) {
-        rootkind = CalculationSymbol.Kind.MINUS;
-        rootname = "-";
-        right = new IntegerValue(right.toValue().getInteger().negate());
-      }
-    }
-
     int leftpriority = root.queryInfixPriority();
     int rightpriority = root.queryInfixPriority();
+
     if (root.queryAssociativity().equals(CalculationSymbol.Associativity.ASSOC_LEFT) &&
         left.isFunctionalTerm() && left.queryRoot().equals(root)) leftpriority--;
+    if (root.queryAssociativity().equals(CalculationSymbol.Associativity.ASSOC_LEFT_INCLUSIVE)) {
+        leftpriority--;
+    }
     if (root.queryAssociativity().equals(CalculationSymbol.Associativity.ASSOC_RIGHT) &&
         right.isFunctionalTerm() && right.queryRoot().equals(root)) rightpriority--;
     printInfixHelper(left, freeNaming, boundNaming, builder, leftpriority);

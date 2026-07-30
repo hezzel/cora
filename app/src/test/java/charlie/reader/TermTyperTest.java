@@ -732,7 +732,7 @@ public class TermTyperTest {
   @Test
   public void testMostlySimpleMinus() {
     Term t = readTerm("- (3+x)", null, true, null, "");
-    assertTrue(t.toString().equals("-(3 + x)"));
+    assertTrue(t.toString().equals("~(3 + x)"));
     assertTrue(t.queryType().toString().equals("Int"));
   }
 
@@ -781,9 +781,9 @@ public class TermTyperTest {
   @Test
   public void testMinusBeforeAddition() {
     Term t = readTerm("- x + y", "Int", true, null, "");
-    assertTrue(t.toString().equals("-x + y"));
+    assertTrue(t.toString().equals("~x + y"));
     assertTrue(t.queryRoot().toString().equals("[+]"));
-    assertTrue(t.queryArgument(1).queryRoot().toString().equals("[-]"));
+    assertTrue(t.queryArgument(1).queryRoot().toString().equals("[~]"));
   }
 
   @Test
@@ -795,20 +795,20 @@ public class TermTyperTest {
   }
 
   @Test
-  public void testReadSimpleMinusWithNegation() {
-    Term t = readTerm("x - y", null, true, null, "");
+  public void testReadSimplePlusWithNegation() {
+    Term t = readTerm("x + - y", null, true, null, "");
     // this becomes: x + -y
-    assertTrue(t.toString().equals("x - y"));
+    assertTrue(t.toString().equals("x + ~y"));
     assertTrue(t.queryRoot().toString().equals("[+]"));
-    assertTrue(t.queryArgument(2).queryRoot().toString().equals("[-]"));
+    assertTrue(t.queryArgument(2).queryRoot().toString().equals("[~]"));
   }
 
   @Test
   public void testReadSimpleMinusWithConstant() {
     Term t = readTerm("x - 3", null, true, null, "");
     assertTrue(t.toString().equals("x - 3"));
-    assertTrue(t.queryRoot().toString().equals("[+]"));
-    assertTrue(t.queryArgument(2).queryRoot().toString().equals("-3"));
+    assertTrue(t.queryRoot().toString().equals("[-]"));
+    assertTrue(t.queryArgument(2).queryRoot().toString().equals("3"));
   }
 
   @Test
@@ -817,7 +817,7 @@ public class TermTyperTest {
     assertTrue(t.toString().equals("x - 3 * 5 + 1 < -1 - y"));
     assertTrue(t.vars().size() == 2);
     assertTrue(t.queryArgument(1).queryArgument(1).toString().equals("x - 3 * 5"));
-    assertTrue(t.queryArgument(1).queryArgument(1).queryArgument(2).toString().equals("-(3 * 5)"));
+    assertTrue(t.queryArgument(1).queryArgument(1).queryArgument(2).toString().equals("3 * 5"));
   }
 
   @Test
@@ -839,26 +839,6 @@ public class TermTyperTest {
     Term t = readTerm("1 ++2", null, true, data,
       "1:4: Expected term, started by an identifier, LAMBDA, string or (, but got PLUS (+).\n");
     assertTrue(t == null);
-  }
-
-  @Test
-  public void testReadPrefixMinus() {
-    Term t = readTerm("[-]", null, true, null, "");
-    assertTrue(t.equals(TheoryFactory.minusSymbol));
-    t = readTerm("[-]", "Int → Bool → Int", true, null,
-      "1:2: Use of unary calculation symbol [-] with binary type: while a - b is allowed to " +
-      "occur in terms, this is considered syntactic sugar for a + (-b); it cannot be done in " +
-      "a partially applied way.  If you want to use binary subtraction, please encode it using " +
-      "a helper function symbol.\n");
-    assertTrue(t.queryType().toString().equals("Int → Bool → Int"));
-    t = readTerm("[-](3)", null, true, null, "");
-    assertTrue(t.toString().equals("-3"));
-    assertFalse(t.isApplication());
-    t = readTerm("[-](3, 4)", null, true, null, "");
-    assertTrue(t.toString().equals("3 - 4"));
-    t = readTerm("[-](3, 4, 5)", null, true, null,
-      "1:2: Arity error: [-] can be used either with 1 or 2 arguments, but here it occurs " +
-      "with 3.\n");
   }
 
   @Test

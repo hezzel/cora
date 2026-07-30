@@ -412,7 +412,7 @@ public class TrsTest {
     assertTrue(trs.queryRuleArity(alf.lookup("id")) == 1);
     assertTrue(trs.queryRuleArity(alf.lookup("add")) == -1);
     assertTrue(trs.queryRuleArity(TheoryFactory.plusSymbol) == 2);
-    assertTrue(trs.queryRuleArity(TheoryFactory.minusSymbol) == 1);
+    assertTrue(trs.queryRuleArity(TheoryFactory.minusSymbol) == 2);
     assertTrue(trs.queryRuleArity(TheoryFactory.timesSymbol) == -1);
   }
 

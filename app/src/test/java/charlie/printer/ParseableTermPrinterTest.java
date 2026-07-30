@@ -51,7 +51,7 @@ public class ParseableTermPrinterTest {
     Term term = CoraInputReader.readTerm(
       "x % (9 - z) > y / 2 ∧ -x < y ∧ ¬(x ≥ y) ∧ (x ≤ y ∨ 1 / a(x) != 2)", trs);
     assertTrue(p.print(term).equals(
-      "x % (9 - z__1) > y / 2 /\\ -x < y /\\ not (x >= y) /\\ (x <= y \\/ 1 / a(x) !=_Int 2)"));
+      "x % (9 - z__1) > y / 2 /\\ ~x < y /\\ not (x >= y) /\\ (x <= y \\/ 1 / a(x) !=_Int 2)"));
     Renaming naming = p.queryNameGenerator().generateUniqueNaming(term);
     assertTrue(term.equals(CoraInputReader.readTerm(p.print(term), naming, trs)));
   }

@@ -52,27 +52,25 @@ public class HorpoParametersTest {
   public void testSetup() {
     FunctionSymbol f = TermFactory.createConstant("f", type("Int -> Int"));
     FunctionSymbol g = TermFactory.createConstant("g", type("Int -> Int -> Int"));
-    FunctionSymbol minus = TheoryFactory.minusSymbol;
+    FunctionSymbol negate = TheoryFactory.negateSymbol;
     FunctionSymbol three = TheoryFactory.createValue(3);
     SmtProblem prob = new SmtProblem();
     TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
     set.add(f);
     set.add(g);
-    set.add(minus);
+    set.add(negate);
     set.add(three);
     HorpoParameters horpo = new HorpoParameters(BigInteger.valueOf(40), set, new ArgumentFilter(prob), prob);
     assertTrue(prob.toString().equals(
       // precedence: 1 ≤ pred(h) ≤ 4 for h ∈ {f,g,minus}, and pred(3) = 0
-      "[pred(-)] >= 1\n" +
-      "4 >= [pred(-)]\n" +
       "[zero] = 0\n" +
       "[pred(f)] >= 1\n" +
       "4 >= [pred(f)]\n" +
       "[pred(g)] >= 1\n" +
       "4 >= [pred(g)]\n" +
+      "[pred(~)] >= 1\n" +
+      "4 >= [pred(~)]\n" +
       // permutation: (¬regards{h,i} → π{h}(i) = 0) ∧ (regards{h,i} → π{h}(i) ≥ 1) ∧ π{h}(i) ≤ ar(h)
-      "[regards{-,1}] or ([pi{-}(1)] = 0)\n" +
-      "![regards{-,1}] or ([pi{-}(1)] = 1)\n" +
       "[regards{f,1}] or ([pi{f}(1)] = 0)\n" +
       "![regards{f,1}] or ([pi{f}(1)] = 1)\n" +
       "[regards{g,1}] or ([pi{g}(1)] = 0)\n" +
@@ -81,7 +79,9 @@ public class HorpoParametersTest {
       "[regards{g,2}] or ([pi{g}(2)] = 0)\n" +
       "![regards{g,2}] or ([pi{g}(2)] >= 1)\n" +
       "2 >= [pi{g}(2)]\n" +
-      "([pi{g}(2)] # [pi{g}(1)]) or ([pi{g}(2)] = 1)\n"));
+      "([pi{g}(2)] # [pi{g}(1)]) or ([pi{g}(2)] = 1)\n" +
+      "[regards{~,1}] or ([pi{~}(1)] = 0)\n" +
+      "![regards{~,1}] or ([pi{~}(1)] = 1)\n"));
   }
 
   @Test

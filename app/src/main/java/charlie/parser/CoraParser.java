@@ -40,6 +40,7 @@ public class CoraParser {
   public static final String TIMES = "*";
   public static final String DIV = "/";
   public static final String MOD = "%";
+  public static final String NEGATE = "~";
   public static final String GREATER = ">";
   public static final String SMALLER = "<";
   public static final String GEQ = "≥";
@@ -198,10 +199,10 @@ public class CoraParser {
 
   /**
    * singlesymbol = value
-   *              | infixsymbol (or NOT)
-   *              | NOT
+   *              | infixsymbol
+   *              | prefixsymbol
    *              | IDENTIFIER
-   *              | METAOPEN infixsymbol METACLOSE
+   *              | METAOPEN (infixsymbol|prefixsymbol) METACLOSE
    * 
    * Note that reading individual symbols is not needed for parsing a TRS, but may be useful for
    * other applications (there is a static access function for this method).
@@ -219,20 +220,18 @@ public class CoraParser {
     OperatorData data = tryReadInfixSymbol();
     if (data != null) return new CalcSymbol(data.token(), data.name());
 
-    // NOT
-    token = _status.readNextIf(CoraTokenData.NOT);
-    if (token != null) return new CalcSymbol(token, NOT);
+    // prefixsymbol
+    data = tryReadPrefixSymbol();
+    if (data != null) return new CalcSymbol(data.token(), data.name());
 
-    // METAOPEN infixsymbol METACLOSE
+    // METAOPEN (infixsymbol|prefixsymbol) METACLOSE
     if (_status.readNextIf(CoraTokenData.METAOPEN) != null) {
       token = _status.peekNext();
       data = tryReadInfixSymbol();
-      if (data == null && _status.readNextIf(CoraTokenData.NOT) != null) {
-        data = new OperatorData(token, NOT);
-      }
+      if (data == null) data = tryReadPrefixSymbol();
       if (data == null) {
-        _status.storeError(token, "Expected infix symbol but got " + token.getName() + " (" +
-          token.getText() + ")");
+        _status.storeError(token, "Expected infix or prefix symbol but got " + token.getName() +
+          " (" + token.getText() + ")");
         ParserTerm ret = new PErr(new Identifier(token, token.getText()));
         _status.nextToken();
         return ret;
@@ -291,7 +290,7 @@ public class CoraParser {
    *          | BRACKETOPEN term BRACKETCLOSE
    *          | METAOPEN infixsymbol METACLOSE
    *          | NOT mainterm
-   *          | MINUS mainterm
+   *          | (NEGATE|MINUS) mainterm
    */
   private ParserTerm readMainTerm() {
     ParserTerm ret = null;
@@ -304,12 +303,16 @@ public class CoraParser {
       return new Application(token, new CalcSymbol(token, NOT), FixedList.of(child));
     }
 
-    // MINUS mainterm
-    if ((token = _status.readNextIf(CoraTokenData.MINUS)) != null) {
+    // (NEGATE|MINUS) mainterm
+    if ((token = _status.readNextIf(CoraTokenData.NEGATE)) != null ||
+        (token = _status.readNextIf(CoraTokenData.MINUS)) != null) {
       ParserTerm child = readMainTerm();
-      if (child == null) return new CalcSymbol(token, MINUS);
+      if (child == null) {
+        if (token.getName().equals(CoraTokenData.NEGATE)) return new CalcSymbol(token, NEGATE);
+        return new CalcSymbol(token, MINUS);
+      }
       if (child instanceof IntVal(Token t, BigInteger v)) return new IntVal(token, v.negate());
-      return new Application(token, new CalcSymbol(token, MINUS), FixedList.of(child));
+      return new Application(token, new CalcSymbol(token, NEGATE), FixedList.of(child));
     }
 
     // value
@@ -329,13 +332,11 @@ public class CoraParser {
       }
     }
 
-    // METAOPEN infixsymbol METACLOSE
+    // METAOPEN (infixsymbol|prefixsymbol) METACLOSE
     else if (_status.readNextIf(CoraTokenData.METAOPEN) != null) {
       token = _status.peekNext();
       OperatorData data = tryReadInfixSymbol();
-      if (data == null && _status.readNextIf(CoraTokenData.NOT) != null) {
-        data = new OperatorData(token, NOT);
-      }
+      if (data == null) data = tryReadPrefixSymbol();
       if (data == null) {
         _status.storeError(token, "Expected infix symbol but got " + token.getName() + " (" +
           token.getText() + ")");
@@ -537,6 +538,17 @@ public class CoraParser {
     if (_status.readNextIf(CoraTokenData.UNEQUALINT) != null)     return new OperatorData(token, NEQINT);
     if (_status.readNextIf(CoraTokenData.UNEQUALSTRING) != null)  return new OperatorData(token, NEQSTRING);
     if (_status.readNextIf(CoraTokenData.UNEQUALBOOL) != null)    return new OperatorData(token, NEQBOOL);
+    return null;
+  }
+
+  /**
+   * If the next token is a prefix operator, this function reads it and returns the corresponding
+   * OperatorData.  If not, nothing is read and null is returned.
+   */
+  private OperatorData tryReadPrefixSymbol() {
+    Token token = _status.peekNext();
+    if (_status.readNextIf(CoraTokenData.NOT) != null)    return new OperatorData(token, NOT);
+    if (_status.readNextIf(CoraTokenData.NEGATE) != null)   return new OperatorData(token, NEGATE);
     return null;
   }
 

@@ -54,6 +54,7 @@ public class PlainTermPrinter extends TermPrinter {
       case Kind.DIV -> "/";
       case Kind.MOD -> "%";
       case Kind.MINUS -> "-";
+      case Kind.NEGATE -> "~";
     };
   }
 }

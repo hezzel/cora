@@ -34,6 +34,9 @@ import charlie.terms.*;
  *
  * This class is not public, and mostly meant for inheriting by for instance the CoraInputReader.
  * It is default to support unit testing.
+ *
+ * Note: for infix symbols, the names in the CoraParser are used, so this TermTyper does not
+ * automatically extend to other formats!
  */
 class TermTyper {
   /**
@@ -135,10 +138,10 @@ class TermTyper {
   private Term makeCalculationSymbol(Token token, String name, Type expected) {
     Term ret = switch (name) {
       case CoraParser.PLUS -> TheoryFactory.plusSymbol;
-      case CoraParser.MINUS -> TheoryFactory.minusSymbol;
       case CoraParser.TIMES -> TheoryFactory.timesSymbol;
       case CoraParser.DIV -> TheoryFactory.divSymbol;
       case CoraParser.MOD -> TheoryFactory.modSymbol;
+      case CoraParser.NEGATE -> TheoryFactory.negateSymbol;
       case CoraParser.GREATER -> TheoryFactory.greaterSymbol;
       case CoraParser.SMALLER -> TheoryFactory.smallerSymbol;
       case CoraParser.GEQ -> TheoryFactory.geqSymbol;
@@ -163,19 +166,15 @@ class TermTyper {
         else if (hasInputSort(TypeFactory.boolSort, expected)) yield TheoryFactory.xorSymbol;
         else yield TheoryFactory.intDistinctSymbol;
       }
+      case CoraParser.MINUS -> {
+        if (expected != null && expected.queryArity() == 1) yield TheoryFactory.negateSymbol;
+        else yield TheoryFactory.minusSymbol;
+      }
       default -> null;
     };
     if (ret == null) { // this shouldn't happen: it's been created by the CoraParser
       throw new UnexpectedPatternException("TermTyper", "makeCalculationSymbol",
                                            "one of the known infix symbols", name);
-    }
-    // special case: what if someone gives [-] and intends it to be binary?
-    if (expected != null && name.equals(CoraParser.MINUS) && expected.queryArity() == 2) {
-      storeError(token, "Use of unary calculation symbol [-] with binary type: while a - b is " +
-        "allowed to occur in terms, this is considered syntactic sugar for a + (-b); it cannot " +
-        "be done in a partially applied way.  If you want to use binary subtraction, please " +
-        "encode it using a helper function symbol.");
-      return TermFactory.createConstant("-", expected);
     }
     return confirmType(token, ret, expected);
   }
@@ -412,9 +411,10 @@ class TermTyper {
                                Type expected, boolean typeShouldBeDerivable) {
     switch (apphead) {
       case CalcSymbol(Token t, String name):
-        // minus can be used either with 1 or 2 arguments as syntactic sugar
-        if (name.equals(CoraParser.MINUS)) {
-          return makeMinusApplication(token, args, expected);
+        // NEGATE is a special case, because when passed a positive integer it just negates that
+        // integer rather than functioning as a function symbol
+        if (name.equals(CoraParser.NEGATE)) {
+          return makeNegateApplication(token, args, expected);
         }
         // = and != are overloaded function symbols, so their type needs to be derived from context
         if (name.equals(CoraParser.EQUALS) || name.equals(CoraParser.NEQ)) {
@@ -486,13 +486,13 @@ class TermTyper {
   }
 
   /**
-   * Turn a parserterm [-](args) into the corresponding term, and check that it matches the
-   * expected type.  This is a bit of a special case, because the minus can both be used in binary
-   * and unary form, and sometimes even to construct an integer.
-   * Here, args.size() 
+   * Turn a parserterm [~](args) into the corresponding term, and check that it matches the
+   * expected type.  This is a bit of a special case, because negation can be used either on
+   * positive integers to construct a negative integer, or on other expressions to actually
+   * construct a functional term.
    */
-  private Term makeMinusApplication(Token token, FixedList<ParserTerm> args, Type expected) {
-    if (args.size() == 0) return makeCalculationSymbol(token, CoraParser.MINUS, expected);
+  private Term makeNegateApplication(Token token, FixedList<ParserTerm> args, Type expected) {
+    if (args.size() == 0) return makeCalculationSymbol(token, CoraParser.NEGATE, expected);
     ArrayList<Term> targs = new ArrayList<Term>();
     for (int i = 0; i < args.size(); i++) {
       targs.add(makeTerm(args.get(i), TypeFactory.intSort, true));
@@ -500,25 +500,22 @@ class TermTyper {
     if (args.size() == 1) {
       Term child = targs.get(0);
       if (child.isValue()) {
-        return confirmType(token, TheoryFactory.createValue(child.toValue().getInteger().negate()),
-                           expected);
+        Value v = child.toValue();
+        if (v.isIntegerValue() && v.getInteger().signum() > 0) {
+          return confirmType(token,
+                             TheoryFactory.createValue(child.toValue().getInteger().negate()),
+                             expected);
+        }
       }
-      return confirmType(token, TheoryFactory.minusSymbol.apply(targs.get(0)), expected);
+      return confirmType(token, TheoryFactory.negateSymbol.apply(targs.get(0)), expected);
     }
-    if (args.size() == 2) {
-      Term a = targs.get(0);
-      Term b = targs.get(1);
-      if (b.isValue()) b = TheoryFactory.createValue(b.toValue().getInteger().negate());
-      else b = TheoryFactory.minusSymbol.apply(b);
-      return confirmType(token, TermFactory.createApp(TheoryFactory.plusSymbol, a, b), expected);
-    }
-    storeError(token, "Arity error: [-] can be used either with 1 or 2 arguments, but here it " +
+    storeError(token, "Arity error: [~] should be used with only 1 argument, but here it " +
       "occurs with " + args.size() + ".");
     Type type = expected == null ? TypeFactory.intSort : expected;
     for (int i = targs.size()-1; i >= 0; i--) {
       type = TypeFactory.createArrow(targs.get(i).queryType(), type);
     }
-    Term fakehead = TermFactory.createConstant("[-]", type);
+    Term fakehead = TermFactory.createConstant("[~]", type);
     return TermFactory.createApp(fakehead,targs);
   }
 

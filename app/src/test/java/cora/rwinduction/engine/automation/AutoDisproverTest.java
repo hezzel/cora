@@ -108,8 +108,9 @@ class AutoDisproveTest {
   public void testAllInstances() {
     Type otype = CoraInputReader.readType("Int -> Int -> Int");
     ArrayList<Term> instances = AutoDisprover.getAllInstances(otype);
-    assertTrue(instances.size() == 4);
+    assertTrue(instances.size() == 5);
     assertTrue(instances.contains(TheoryFactory.plusSymbol));
+    assertTrue(instances.contains(TheoryFactory.minusSymbol));
     assertTrue(instances.contains(TheoryFactory.timesSymbol));
     assertTrue(instances.contains(TheoryFactory.divSymbol));
     assertTrue(instances.contains(TheoryFactory.modSymbol));
@@ -117,15 +118,16 @@ class AutoDisproveTest {
     TreeSet<String> elems = new TreeSet<String>();
     for (Term t : instances) elems.add(t.toString());
     assertTrue(elems.contains("[+](X)"));
-    assertTrue(elems.contains("[-]"));
+    assertTrue(elems.contains("[-](X)"));
+    assertTrue(elems.contains("[~]"));
     assertTrue(elems.contains("[/](X)"));
     instances = AutoDisprover.getAllInstances(CoraInputReader.readType("Int"));
-    assertTrue(instances.size() == 5);
+    assertTrue(instances.size() == 6);
     elems.clear();
     for (Term t : instances) elems.add(t.toString());
     assertTrue(elems.contains("X__1 + X__2"));
     assertTrue(elems.contains("X__1 * X__2"));
-    assertTrue(elems.contains("-X"));
+    assertTrue(elems.contains("~X"));
   }
   
   class NoSolver implements SmtSolver {
@@ -164,16 +166,16 @@ class AutoDisproveTest {
     assertTrue(module.toString().equals("No substitution could be found that makes x + y + z = 0 " +
       "true and A(x, C(y)) ≠ B(x, 5) + C(z).  If such a substitution does exist, please supply " +
       "it manually.\n\n"));
-    assertTrue(solver._storage.size() == 80); // 4 * 5 * 4
+    assertTrue(solver._storage.size() == 150); // 5 * 6 * 5
     assertTrue(solver._storage.get(0).equals( // A := [+], C := [+](?), B := [+]
       "(i1 + i2 + i3 = 0) and (i1 + i4 + i2 # 5 + i1 + i4 + i3)\n"));
-    assertTrue(solver._storage.get(1).equals( // A := [+], C := [+](?), B := [*]
-      "(i1 + i2 + i3 = 0) and (i1 + i4 + i2 # i1 * 5 + i4 + i3)\n"));
-    assertTrue(solver._storage.get(2).equals( // A := [+], C := [+](?), B := [/]
+    assertTrue(solver._storage.get(1).equals( // A := [+], C := [+](?), B := [-]
+      "(i1 + i2 + i3 = 0) and (5 + i1 + i4 + i2 # i1 + i4 + i3)\n"));
+    assertTrue(solver._storage.get(3).equals( // A := [+], C := [+](?), B := [/]
       "(i1 + i2 + i3 = 0) and (i1 + i4 + i2 # i1 / 5 + i4 + i3)\n"));
-    assertTrue(solver._storage.get(4).equals( // A := [+], C := [*](?), B := [+]
+    assertTrue(solver._storage.get(10).equals( // A := [+], C := [*](?), B := [+]
       "(i1 + i2 + i3 = 0) and (i1 + i4 * i2 # 5 + i1 + i4 * i3)\n"));
-    assertTrue(solver._storage.get(29).equals( // A := [*], C := [-], B := [*]
+    assertTrue(solver._storage.get(87).equals( // A := [*], C := [~], B := [*]
       "(i1 + i2 + i3 = 0) and (i1 * -1 * i2 + i3 # i1 * 5)\n"));
   }
 

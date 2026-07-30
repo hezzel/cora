@@ -51,6 +51,7 @@ public class CoraTokenData {
   public static final String STRING         = "STRING";
   public static final String PLUS           = "PLUS";
   public static final String MINUS          = "MINUS";
+  public static final String NEGATE         = "NEGATE";
   public static final String TIMES          = "TIMES";
   public static final String DIV            = "DIV";
   public static final String MOD            = "MOD";
@@ -91,6 +92,7 @@ public class CoraTokenData {
     "\"([^\"\\\\]|(\\\\.))*\""                , STRING,
     "\\+"                                     , PLUS,
     "-"                                       , MINUS,
+    "~"                                       , NEGATE,
     "\\*"                                     , TIMES,
     ":"                                       , COLON,
     "/"                                       , DIV,
@@ -118,7 +120,7 @@ public class CoraTokenData {
     "Int"                                     , INTTYPE,
     "Bool"                                    , BOOLTYPE,
     "String"                                  , STRINGTYPE,
-    "([^\\s()\\[\\]⟨⟩\\{\\}\"',:λ%\\.\\|\\*\\+\\\\\\.><=!≠≥≤→∧∨¬⇔⊻/-]|)+" , IDENTIFIER,
+    "([^\\s()\\[\\]⟨⟩\\{\\}\"',:λ%\\.\\|\\*\\+\\\\\\.><=!≠≥≤→∧∨¬⇔⊻~/-]|)+" , IDENTIFIER,
       // identifiers are now built from any characters other than whitespace, brackets,
       // braces, quotes, colons, lambda, dot, mid, or the operators / relation symbols
       // *, %, -, +, >, =, !, ≠, <, ≥, ≤, /, \, ¬, →, ⇔, ⊻

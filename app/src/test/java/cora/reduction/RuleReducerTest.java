@@ -297,7 +297,7 @@ public class RuleReducerTest {
 
     Term term = sum.apply(TheoryFactory.createValue(5));
     assertTrue(reducer.applicable(term));
-    assertTrue(reducer.apply(term).toString().equals("5 + sum(5 - 1)"));
+    assertTrue(reducer.apply(term).toString().equals("5 + sum(5 + -1)"));
   }
 }
 
