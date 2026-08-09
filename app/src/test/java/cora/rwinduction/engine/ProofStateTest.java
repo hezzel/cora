@@ -56,7 +56,8 @@ class ProofStateTest {
     ProofState state2 = state1.addHypothesis(new Hypothesis(hypo.fst(), 2, hypo.snd()));
     Rule req = CoraInputReader.readRule("sum1(x) -> iter(x, 0, 0) | x > 0", trs);
     OrdReq r = new OrdReq(req.queryLeftSide(), req.queryRightSide(), req.queryConstraint(),
-                          hypo.snd());
+                          trs.createNameGenerator().generateUniqueNaming(req.queryLeftSide(),
+                          req.queryRightSide(), req.queryConstraint()));
     ProofState state3 = state2.addOrderingRequirement(r);
     assertTrue(state1.toString().equals(
       "Equations:\n" +

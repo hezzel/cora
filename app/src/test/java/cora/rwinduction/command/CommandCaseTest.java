@@ -77,9 +77,10 @@ class CommandCaseTest {
   public void testStepContainingFreshVariable() {
     OutputModule module = OutputModule.createUnicodeModule(trs);
     DeductionCase step = createStep(module, "case i - u > 0");
-    assertTrue(step.toString().equals("case i - u > 0"));
+    assertTrue(step.toString().equals("case i - ??u > 0"));
     assertFalse(step.verify(Optional.of(module)));
-    assertTrue(module.toString().equals("Unknown variable in case term: \"i - u > 0\".\n\n"));
+    assertTrue(module.toString().equals(
+      "Unknown variable ??u, in case term: \"i - ??u > 0\".\n\n"));
   }
 
   @Test

@@ -187,9 +187,9 @@ class DeductionCaseTest {
     Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     Term t = CoraInputReader.readTerm("i - xx", renaming, trs);
     DeductionCase step = DeductionCase.createStep(pp, o, t);
-    assertTrue(step.commandDescription().equals("case i - xx"));
+    assertTrue(step.commandDescription().equals("case i - ??xx"));
     assertFalse(step.verify(o));
-    assertTrue(module.toString().equals("Unknown variable in case term: \"i - xx\".\n\n"));
+    assertTrue(module.toString().equals("Unknown variable ??xx, in case term: \"i - ??xx\".\n\n"));
   }
 
   @Test

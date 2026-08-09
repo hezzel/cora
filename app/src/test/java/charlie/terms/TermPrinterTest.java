@@ -76,10 +76,10 @@ public class TermPrinterTest {
     assertTrue(printer.print(abs).equals("λx.λy.λx__1.f(g(z__2, x__1), z__1, x)"));
 
     MutableRenaming naming = new MutableRenaming(Set.of());
-    assertEquals("λx.λy.λx__1.f(g(z, x__1), z, x)", printer.print(abs, naming));
+    assertEquals("λx.λy.λx__1.f(g(??z, x__1), ??z, x)", printer.print(abs, naming));
 
     naming = generator.generateUniqueNaming(new Var("x", o));
-    assertEquals("λx__1.λy.λx__2.f(g(z, x__2), z, x__1)", printer.print(abs, naming));
+    assertEquals("λx__1.λy.λx__2.f(g(??z, x__2), ??z, x__1)", printer.print(abs, naming));
   }
 }
 

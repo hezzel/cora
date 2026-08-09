@@ -32,7 +32,7 @@ import charlie.smt.SmtSolver;
 import charlie.theorytranslation.TermSmtTranslator;
 import charlie.theorytranslation.TermAnalyser;
 import cora.io.OutputModule;
-import cora.rwinduction.engine.Equation;
+import cora.rwinduction.engine.EquationContext;
 import cora.rwinduction.engine.EquationPosition;
 import cora.rwinduction.engine.ProofContext;
 
@@ -340,9 +340,9 @@ class ConstrainedSimplifier {
    * possible, then those variable mappings that are needed for the left-hand side are included
    * in the substitution.
    */
-  boolean matchSubterm(Equation eq, EquationPosition pos,
+  boolean matchSubterm(EquationContext eq, EquationPosition pos,
                        Optional<OutputModule> m, String kind) {
-    Term s = eq.querySubterm(pos);
+    Term s = eq.getEquation().querySubterm(pos);
     if (s == null) {
       m.ifPresent(o -> o.println("No such position: %a.", pos));
       return false;
@@ -351,7 +351,8 @@ class ConstrainedSimplifier {
     Matcher.MatchFailure problem = Matcher.extendMatch(_left, s, _substitution);
     if (problem != null) {
       m.ifPresent(o -> o.println("The " + kind + " does not apply due to failed matching " +
-        "(matching debug info says: %a)", Printer.makePrintable(problem, _renaming)));
+        "(matching debug info says: %a)",
+        Printer.makePrintable(problem, _renaming, eq.getRenaming())));
       return false;
     }
 

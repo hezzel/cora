@@ -68,7 +68,7 @@ public final class DeductionHypothesis extends DeductionStep {
                                 hequ.getConstraint(), hypo.getRenaming(), subst);
 
     EquationContext original = proof.getProofState().getTopEquation();
-    if (!simpl.matchSubterm(original.getEquation(), pos, m, "induction hypothesis")) return null;
+    if (!simpl.matchSubterm(original, pos, m, "induction hypothesis")) return null;
     simpl.matchEqualitiesInConstraint(original.getConstraint());
     if (!simpl.checkEverythingSubstituted(m)) return null;
     Equation neweq = original.getEquation().replaceSubterm(pos, simpl.queryReduct());

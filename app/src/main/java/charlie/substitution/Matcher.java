@@ -16,6 +16,7 @@
 package charlie.substitution;
 
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.TreeSet;
 import charlie.util.UserException;
 import charlie.terms.replaceable.Replaceable;
@@ -26,8 +27,29 @@ import charlie.terms.*;
  */
 public class Matcher {
   public static class MatchFailure extends UserException {
-    public MatchFailure(Object ...args) { super(args); }
-    public String toString() { return getMessage(); }
+    private Set<Integer> _patterns, _instances;
+    public MatchFailure(Set<Integer> pats, Set<Integer> insts, Object ...args) {
+      super(args);
+      _patterns = pats;
+      _instances = insts;
+    }
+    public String toString() {
+      return getMessage();
+    }
+    /**
+     * This returns true if the given component (which should be between 0 and queryComponentCount()
+     * - 1) originates from the pattern used for matching.
+     */
+    public boolean originatesFromPattern(int componentID) {
+      return _patterns.contains(componentID);
+    }
+    /**
+     * This returns true if the given component (which should be between 0 and queryComponentCount()
+     * - 1) originates from the term originally given to the Matcher as instance.
+     */
+    public boolean originatesFromInstance(int componentID) {
+      return _instances.contains(componentID);
+    }
   }
 
   /**
@@ -73,12 +95,14 @@ public class Matcher {
       g = instance.queryRoot();
       if (symbol.match(g, gamma)) return null;
       else if (symbol.queryName().equals(g.queryName())) {
-        return new MatchFailure("Constant ", symbol, " (of type ", symbol.queryType(), ") is not " +
-          "instantiated by symbol ", g, " (of type ", g.queryType(), ").");
+        return new MatchFailure(Set.of(1, 3), Set.of(5, 7),
+          "Constant ", symbol, " (of type ", symbol.queryType(),
+          ") is not instantiated by symbol ", g, " (of type ", g.queryType(), ").");
       }
     }
     // fall-through for both the case that instance is not a symbol, and it has a different name
-    return new MatchFailure("Constant ", symbol, " is not instantiated by ", instance, ".");
+    return new MatchFailure(Set.of(1), Set.of(3),
+      "Constant ", symbol, " is not instantiated by ", instance, ".");
   }
 
 
@@ -89,7 +113,8 @@ public class Matcher {
     // if we have a previous mapping, x has to be mapped to the exact same thing now
     if (previous != null) {
       if (previous.equals(instance)) return null;
-      return new MatchFailure(x.isBinderVariable() ? "Binder variable " : "Variable ",
+      return new MatchFailure(Set.of(1), Set.of(3, 5),
+                              x.isBinderVariable() ? "Binder variable " : "Variable ",
                               x, " is mapped both to ", previous, " and to ", instance, ".");
     }
 
@@ -101,11 +126,13 @@ public class Matcher {
 
     // if not, we return an appropriate error message
     if (x.isMonomorphic()) {
-      return new MatchFailure("Variable ", x, " has a different type from ", instance, ".");
+      return new MatchFailure(Set.of(1), Set.of(3),
+        "Variable ", x, " has a different type from ", instance, ".");
     }
     else {
-      return new MatchFailure("Type ", x.queryType(), " of variable ", x, " cannot be " +
-        "matched to type ", instance.queryType(), " of instance ", instance, ".");
+      return new MatchFailure(Set.of(1, 3), Set.of(5, 7),
+        "Type ", x.queryType(), " of variable ", x, " cannot be matched to type ",
+          instance.queryType(), " of instance ", instance, ".");
     }
   }
 
@@ -123,7 +150,8 @@ public class Matcher {
     Term previous = gamma.get(metavar);
     if (previous != null) {
       if (previous.equals(ret)) return null;
-      return new MatchFailure("Meta-variable ", metavar, " is mapped to both " , previous, 
+      return new MatchFailure(Set.of(1), Set.of(3, 5),
+                              "Meta-variable ", metavar, " is mapped to both " , previous, 
                               " and to ", ret, ".");
     }
     // if the meta-variable is not yet mapped, check the type and add the mapping
@@ -132,8 +160,8 @@ public class Matcher {
       return null;
     }
     else {
-      return new MatchFailure("Cannot match ", metaApp, " against ", instance, 
-                              " as types do not match.");
+      return new MatchFailure(Set.of(1), Set.of(3),
+                     "Cannot match ", metaApp, " against ", instance, " as types do not match.");
     }   
   }
 
@@ -171,12 +199,12 @@ public class Matcher {
   private static MatchFailure extendMatchWithApplication(Term pattern, Term instance,
                                                          MutableSubstitution gamma) {
     if (!instance.isApplication()) {
-      return new MatchFailure("The term ", instance, " does not instantiate ", pattern, " as it " +
-        "is not an application.");
+      return new MatchFailure(Set.of(3), Set.of(1),
+        "The term ", instance, " does not instantiate ", pattern, " as it is not an application.");
     }
     if (instance.numberArguments() < pattern.numberArguments()) {
-      return new MatchFailure("The term ", instance, " does not instantiate ", pattern, " as it " +
-        "has too few arguments.");
+      return new MatchFailure(Set.of(3), Set.of(1), "The term ", instance,
+        " does not instantiate ", pattern, " as it has too few arguments.");
     }
     int i = instance.numberArguments();
     int j = pattern.numberArguments();
@@ -203,7 +231,8 @@ public class Matcher {
   public static MatchFailure extendMatchWithAbstraction(Term pattern, Term instance,
                                                         MutableSubstitution gamma) {
     if (!instance.isAbstraction()) {
-      return new MatchFailure("Abstraction ", pattern, " is not instantiated by ", instance, ".");
+      return new MatchFailure(Set.of(1), Set.of(3),
+        "Abstraction ", pattern, " is not instantiated by ", instance, ".");
     }
     
     // ensure that the type of x is mapped to the type of y, and replace γ by γ'=[x:=y] ∪ (γ \ {x})
@@ -212,7 +241,8 @@ public class Matcher {
     Term backup = gamma.get(x);
     if (backup == null) {
       if (!x.queryType().match(y.queryType(), gamma)) {
-        return new MatchFailure("Abstraction ", pattern, " is not instantiated by ", instance,
+        return new MatchFailure(Set.of(1, 5), Set.of(3, 7),
+          "Abstraction ", pattern, " is not instantiated by ", instance,
           " because the types of the abstraction variables do not match (", x.queryType(),
           " versus ", y.queryType(), ").");
       }
@@ -235,7 +265,8 @@ public class Matcher {
     for (Replaceable z : pattern.freeReplaceables()) {
       Term gammaz = gamma.get(z);
       if (gammaz != null && gammaz.freeReplaceables().contains(y)) {
-        return new MatchFailure("Abstraction ", pattern, " is not instantiated by ", instance,
+        return new MatchFailure(Set.of(1, 5), Set.of(3, 7),
+          "Abstraction ", pattern, " is not instantiated by ", instance,
           " because the induced mapping [", z, " := ", gammaz, "] contains the binder variable of ",
           instance, ".");
       }

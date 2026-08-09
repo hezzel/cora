@@ -70,7 +70,7 @@ public final class DeductionSimplify extends DeductionStep {
       rule.queryRightSide(), rule.queryConstraint(), context.getRenaming(ruleName), subst);
     EquationContext equ = proof.getProofState().getTopEquation();
 
-    if (!simpl.matchSubterm(equ.getEquation(), pos, m, "rule")) return null;
+    if (!simpl.matchSubterm(equ, pos, m, "rule")) return null;
     DeductionAlterDefinitions prealter = null;
     if (!constraintFullySubstituted(equ.getConstraint(), simpl.querySubstitution())) {
       MutableRenaming ren = equ.getRenaming().copy();

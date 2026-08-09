@@ -116,9 +116,8 @@ public class TermPrinter {
    * then it is looked up in freeNaming (as are all meta-variables).
    *
    * To define a custom TermPrinter, you can either override this method directly -- in which case
-   * there is no need to override any of the other methods in the class except perhaps
-   * generateName if you also wish to override the default variable name generation -- or directly
-   * override (some of) the functions it calls: these are the functions print<Something>.
+   * there is no need to override any of the other methods in the class -- or directly override
+   * (some of) the functions it calls: these are the functions print<Something>.
    */
   protected final void printRecursive(Term term, Renaming freeNaming, MutableRenaming boundNaming,
                                       StringBuilder builder) {
@@ -161,7 +160,7 @@ public class TermPrinter {
                                StringBuilder builder) {
     String name = boundNaming.getName(variable);
     if (name == null) name = freeNaming.getName(variable);
-    if (name == null) builder.append(variable.queryName());
+    if (name == null) builder.append("??" + variable.queryName());
     else builder.append(name);
   }
 
@@ -175,7 +174,7 @@ public class TermPrinter {
    */
   public void printReplaceable(Replaceable r, Renaming naming, StringBuilder builder) {
     String name = naming.getName(r);
-    if (name == null) builder.append(r.queryName());
+    if (name == null) builder.append("??" + r.queryName());
     else builder.append(name);
   }
 

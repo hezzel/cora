@@ -36,6 +36,7 @@ import charlie.terms.NameGenerator;
 import charlie.terms.TermPrinter;
 import charlie.terms.TermFactory;
 import charlie.substitution.Substitution;
+import charlie.substitution.Matcher;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 
@@ -433,6 +434,19 @@ public abstract class Printer {
     };
   }
 
+  public static PrintableObject makePrintableReplaceable(Replaceable r, Renaming renaming) {
+    return new PrintableObject() {
+      public void print(Printer p) {
+        p._termPrinter.printReplaceable(r, renaming, p._builder);
+      }
+      public String toString() {
+        StringBuilder builder = new StringBuilder();
+        TermPrinter.createDebugTermPrinter().printReplaceable(r, renaming, builder);
+        return builder.toString();
+      }
+    };
+  }
+
   /**
    * This creates a wrapper for a user exception where a fixed renaming is to be used for the terms
    * occuring in its components.
@@ -459,6 +473,32 @@ public abstract class Printer {
           else builder.append(objects[i].toString());
         }
         return builder.toString();
+      }
+    };
+  }
+  
+  /**
+   * This creates a wrapper for a MatchFailure, when we know the Renamings to be used for the
+   * pattern and instance of the match attempt.
+   */
+  public static PrintableObject makePrintable(Matcher.MatchFailure e, Renaming prn, Renaming irn) {
+    return new PrintableObject() {
+      public void print(Printer p) {
+        Object[] objects = e.makeArray();
+        for (int i = 0; i < objects.length; i++) {
+          Renaming rn = null;
+          if (e.originatesFromPattern(i)) rn = prn;
+          else if (e.originatesFromInstance(i)) rn = irn;
+          else continue;
+          if (objects[i] instanceof Term t) objects[i] = new Pair<Term,Renaming>(t, rn);
+          else if (objects[i] instanceof Replaceable r) {
+            objects[i] = new Pair<Replaceable,Renaming>(r, rn);
+          }
+        }
+        p.add(objects);
+      }
+      public String toString() {
+        return e.toString();
       }
     };
   }

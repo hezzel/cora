@@ -168,8 +168,10 @@ public final class DeductionCase extends DeductionStep {
             "not occur in the equation."));
         }
         else {
-          module.ifPresent(o -> o.println("Unknown %avariable in case term: \"%a\".",
-            x.queryReplaceableKind() == Replaceable.Kind.METAVAR ? "meta-" : "", _term));
+          module.ifPresent(o -> o.println("Unknown %avariable %a, in case term: \"%a\".",
+            x.queryReplaceableKind() == Replaceable.Kind.METAVAR ? "meta-" : "",
+            Printer.makePrintableReplaceable(x, renaming),
+            Printer.makePrintable(_term, renaming)));
         }
         return false;
       }

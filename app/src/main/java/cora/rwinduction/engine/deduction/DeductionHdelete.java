@@ -71,7 +71,7 @@ public final class DeductionHdelete extends DeductionStep {
       new ConstrainedSimplifier(inverse ? hypo.getRhs() : hypo.getLhs(),
                                 inverse ? hypo.getLhs() : hypo.getRhs(),
                                 hypo.getConstraint(), hypo.getRenaming(), subst);
-    if (!simpl.matchSubterm(original.getEquation(), pos, m, "induction hypothesis")) return null;
+    if (!simpl.matchSubterm(original, pos, m, "induction hypothesis")) return null;
     if (!matchRightSubterm(original.getEquation(), pos, simpl, m)) return null;
     simpl.matchEqualitiesInConstraint(original.getConstraint());
     Position p = pos.queryPosition();
