@@ -144,7 +144,7 @@ public class TheoryFactory {
   /** The unary symbol for integer negation */
   public static final CalculationSymbol negateSymbol = new CalculationConstant("~",
     TypeFactory.createArrow(TypeFactory.intSort, TypeFactory.intSort), Kind.NEGATE,
-    Associativity.NOT_INFIX, CalculationSymbol.INFIX_NONE);
+    Associativity.NOT_INFIX, CalculationSymbol.INFIX_UNARY);
 
   /** The binary symbol for division */
   public static final CalculationSymbol divSymbol = new CalculationConstant("/",
@@ -165,7 +165,7 @@ public class TheoryFactory {
   /** The unary calculation symbol for boolean negation */
   public static final CalculationSymbol notSymbol = new CalculationConstant("¬",
     TypeFactory.createArrow(TypeFactory.boolSort, TypeFactory.boolSort), Kind.NOT,
-    Associativity.NOT_INFIX, CalculationSymbol.INFIX_NONE);
+    Associativity.NOT_INFIX, CalculationSymbol.INFIX_UNARY);
 
   /** The binary calculation symbol for if and only if */
   public static final CalculationSymbol iffSymbol = new CalculationConstant("⇔",

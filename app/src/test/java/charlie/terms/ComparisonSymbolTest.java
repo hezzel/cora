@@ -29,7 +29,6 @@ public class ComparisonSymbolTest extends TermTestFoundation {
     assertTrue(s.queryInfixPriority() == CalculationSymbol.INFIX_COMPARISON);
     assertTrue(s.queryName().equals("≥"));
     assertTrue(s.toString().equals("[≥]"));
-    assertTrue(s.toUniqueString().equals("≥{Int → Int → Bool}#calc"));
     assertTrue(s.queryArity() == 2);
   }
 
@@ -40,7 +39,6 @@ public class ComparisonSymbolTest extends TermTestFoundation {
     assertTrue(s.queryInfixPriority() == CalculationSymbol.INFIX_COMPARISON);
     assertTrue(s.queryName().equals("≤"));
     assertTrue(s.toString().equals("[≤]"));
-    assertTrue(s.toUniqueString().equals("≤{Int → Int → Bool}#calc"));
     assertTrue(s.queryArity() == 2);
   }
 
@@ -49,7 +47,6 @@ public class ComparisonSymbolTest extends TermTestFoundation {
     CalculationSymbol s = TheoryFactory.greaterSymbol;
     assertTrue(s.queryName().equals(">"));
     assertTrue(s.toString().equals("[>]"));
-    assertTrue(s.toUniqueString().equals(">{Int → Int → Bool}#calc"));
   }
 
   @Test
@@ -57,7 +54,6 @@ public class ComparisonSymbolTest extends TermTestFoundation {
     CalculationSymbol s = TheoryFactory.smallerSymbol;
     assertTrue(s.queryName().equals("<"));
     assertTrue(s.toString().equals("[<]"));
-    assertTrue(s.toUniqueString().equals("<{Int → Int → Bool}#calc"));
   }
 
   @Test

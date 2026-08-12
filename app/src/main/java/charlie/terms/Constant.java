@@ -23,66 +23,26 @@ import charlie.types.TVarSet;
 import charlie.terms.replaceable.ReplaceableSet;
 
 /**
- * Constants are the default kind of FunctionSymbol.
+ * Constants are the default kind of FunctionSymbol, typically used for user-defined function
+ * symbols rather than in-built symbols or symbols specifically created for analysis.
+ *
  * They are called Constants because they can also be seen as constant terms.
  */
-class Constant extends LeafTermInherit implements FunctionSymbol {
-  private final String _name;
-
+class Constant extends FunctionSymbolInherit implements FunctionSymbol {
   /**
    * A constant is always identified by the combination of its name and its type.
    * Throws an error if the name or type is null, or if name is the empty string.
    */
   Constant(String name, Type type) {
-    super(type);
-    _name = name;
+    super(name, type, "");
     if (name == null) throw new NullStorageException("Constant", "name");
     if (name.equals("")) throw new IllegalArgumentException("Constant::constructor -- " +
       "Function Symbol created with empty name.");
-    setVariables(ReplaceableSet.EMPTY, TVarSet.of(type));
   }
 
-  /** Returns the name of the current user-defined symbol. */
-  public String queryName() {
-    return _name;
-  }
-
-  /** Returns the number of terms this constant may (at most) be applied to. */
-  public int queryArity() {
-    return queryType().queryArity();
-  }
-
-  /**
-   * Returns a string that uniquely identifies the function symbol (by combining its name and
-   * type).
-   */
-  public String toUniqueString() {
-    return _name + "{" + queryType().toString() + "}";
-  }
-
-  public boolean equals(FunctionSymbol symbol) {
-    if (symbol == null) return false;
-    if (!_name.equals(symbol.queryName())) return false;
-    if (symbol.isTheorySymbol()) return false;
-    return queryType().equals(symbol.queryType());
-  }
-
-  public int hashCode(Map<Variable,Integer> mu) {
-    return _name.hashCode();
-  }
-
-  /** @return true */
-  public boolean isConstant() { return true; }
-
-  /** @return true */
-  public boolean isFunctionalTerm() { return true; }
-
-  /** @return true */
-  public boolean isApplicative() { return true; }
-
-  /** @return true if the type of the constant is a level-0 type. */
-  public boolean isFirstOrder() {
-    return queryType().isZeroSort();
+  /** @return false, since at this time there is no need for user-defined symbols to be infix. */
+  public boolean isInfixSymbol() {
+    return false;
   }
 
   /** @return false, since theory symbols use a different class */
@@ -107,46 +67,6 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
 
   /** @return a new constant, with the current constant's type substituted */
   public FunctionSymbol substituteType(Type.ISubstitution typeMapping) {
-    return new Constant(_name, queryType().substitute(typeMapping));
-  }
-
-  /**
-   * @return true if the symbol's type can be instantiated so that we become equal to other, and in
-   * this case also updates the typeMapping accordingly.
-   * When false is returned, there may still be some updates to the typeMapping!
-   */
-  public boolean match(FunctionSymbol other, Type.MSubstitution typeMapping) {
-    if (other == null) return false;
-    if (!_name.equals(other.queryName())) return false;
-    if (other.isTheorySymbol()) return false;
-    return queryType().match(other.queryType(), typeMapping);
-  }
-
-  /** Returns the current symbol f, which is the root of the corresponding term f(). */
-  public FunctionSymbol queryRoot() {
-    return this;
-  }
-
-  /** Throws an error, because a constant is not a variable (or associated with one). */
-  public Variable queryVariable() {
-    throw new InappropriatePatternDataException("Constant", "queryVariable",
-                                                "variables or lambda-expressions");
-  }
-
-  /** Throws an error, because a constant is not a meta-application (or associated with one). */
-  public MetaVariable queryMetaVariable() {
-    throw new InappropriatePatternDataException("Constant", "queryMetaVariable",
-                                            "meta-variable applications (or terms headed by one)");
-  }
-
-  /** There are no binders to rename in function symbol, so this returns the constant unmodified. */
-  public FunctionSymbol renameAndRefreshBinders(Map<Variable,Variable> renaming) {
-    return this;
-  }
-
-  /** f =_α^{μ,ξ,k} t if and only if f and t are the same constant. */
-  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
-    if (!term.isConstant()) return false;
-    return equals(term.queryRoot());
+    return new Constant(queryName(), queryType().substitute(typeMapping));
   }
 }

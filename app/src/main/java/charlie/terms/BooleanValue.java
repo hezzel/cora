@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -19,44 +19,30 @@ import java.util.Map;
 import charlie.types.TypeFactory;
 
 /** BooleanValues are the function symbols true and false (which are both theory symbols). */
-class BooleanValue extends ValueInherit {
+final class BooleanValue extends ValueInherit {
   private final boolean _value;
 
   BooleanValue(boolean b) {
-    super(TypeFactory.boolSort);
+    super(b ? "true" : "false", TypeFactory.boolSort);
     _value = b;
   }
 
-  /** Returns the string representation of this boolean. */
-  public String queryName() {
-    if (_value) return "true";
-    else return "false";
-  }
-
-  /** Returns the standard string representation of the symbol. */
-  public String toUniqueString() {
-    return queryName();
-  }
-
-  public boolean equals(FunctionSymbol symbol) {
-    if (symbol == null) return false;
-    if (!symbol.isValue()) return false;
-    if (!symbol.queryType().equals(TypeFactory.boolSort)) return false;
-    return symbol.toValue().getBool() == _value;
-  }
-
+  @Override
   public int hashCode(Map<Variable,Integer> mu) {
     return _value ? 19 : 11;
   }
 
+  @Override
   public boolean getBool() {
     return _value;
   }
 
+  @Override
   public String getString() {
     throw new InappropriatePatternDataException("BooleanValue", "getString", "string values");
   }
 
+  @Override
   public java.math.BigInteger getInteger() {
     throw new InappropriatePatternDataException("BooleanValue", "getInteger", "integer values");
   }

@@ -34,6 +34,7 @@ import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
 import charlie.terms.NameGenerator;
 import charlie.terms.TermPrinter;
+import charlie.terms.TheoryPrinter;
 import charlie.terms.TermFactory;
 import charlie.substitution.Substitution;
 import charlie.substitution.Matcher;
@@ -429,7 +430,7 @@ public abstract class Printer {
         p._termPrinter.print(term, renaming, p._builder);
       }
       public String toString() {
-        return TermPrinter.createDebugTermPrinter().print(term, renaming);
+        return TheoryPrinter.DEBUGPRINTER.print(term, renaming);
       }
     };
   }
@@ -441,7 +442,7 @@ public abstract class Printer {
       }
       public String toString() {
         StringBuilder builder = new StringBuilder();
-        TermPrinter.createDebugTermPrinter().printReplaceable(r, renaming, builder);
+        TheoryPrinter.DEBUGPRINTER.printReplaceable(r, renaming, builder);
         return builder.toString();
       }
     };
@@ -464,7 +465,7 @@ public abstract class Printer {
         p.add(objects);
       }
       public String toString() {
-        TermPrinter pr = TermPrinter.createDebugTermPrinter();
+        TermPrinter pr = TheoryPrinter.DEBUGPRINTER;
         StringBuilder builder = new StringBuilder();
         Object[] objects = e.makeArray();
         for (int i = 0; i < objects.length; i++) {

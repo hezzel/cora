@@ -35,24 +35,26 @@ public class TermPrinter {
   private NameGenerator _nameGenerator;   // used to generate names for free (meta-)variables
 
   /**
+   * A default term printer that can be used for debugging and unit testing purposes.  This is used
+   * by the default toString() functionality in Term, which exists exactly for those two purposes.
+   *
+   * ### It is not meant to be used for anything else! ###
+   *
+   * In particular, this uses a default name generator that does not consider the names of any
+   * function symbols (and thus, might inadvertently give a variable a name that is already used by
+   * a function symbol).  It also does not respect user settings.
+   *
+   * Note that while the DEBUGPRINTER is not final, the main intention is that you set it at the
+   * start of the program (but can do so from a settings / debugging class).
+   */
+  public static TermPrinter DEBUGPRINTER = new TermPrinter(new NameGenerator(Set.of()));
+
+  /**
    * Generates a TermPrinter.
    * @param generator Use this generator to generate names for free variables and meta-variables.
    */
   public TermPrinter(NameGenerator generator) {
     _nameGenerator = generator;
-  }
-
-  /**
-   * This creates a term printer with a default name generator that does not consider the names of
-   * any function symbols (and thus, might inadvertently give a variable a name that is already used
-   * by a function symbol).  Only meant for use in unit testing and debugging (but also used in the
-   * default Term::toString() functionality, which exists for that purpose).
-   *
-   * In general, if you want to use the default term printing functionality, it is recommended to
-   * use the standard constructor and create the NameGenerator using TRS::createNameGenerator().
-   */
-  public static TermPrinter createDebugTermPrinter() {
-    return new TermPrinter(new NameGenerator(Set.of()));
   }
 
   /** Returns the NameGenerator that we are using to name free variables and meta-variables. */
@@ -123,19 +125,21 @@ public class TermPrinter {
                                       StringBuilder builder) {
     if (term.isVariable()) printVariable(term.queryVariable(), freeNaming, boundNaming, builder);
     else if (term.isVarTerm()) printVarTerm(term, freeNaming, boundNaming, builder);
-    else if (term.isValue()) printValue(term.toValue(), builder);
     else if (term.isConstant()) {
       FunctionSymbol root = term.queryRoot();
-      if (root.isTheorySymbol()) printSoloCalculationSymbol(root.toCalculationSymbol(), builder);
+      if (root.isInfixSymbol()) printSoloInfixSymbol(root, builder);
       else printConstant(root, builder);
     }
     else if (term.isFunctionalTerm()) {
       FunctionSymbol root = term.queryRoot();
-      if (!root.isTheorySymbol()) printFunctionalTerm(term, freeNaming, boundNaming, builder);
-      else if (term.queryType().isArrowType()) {
-        printPartialTheoryTerm(term, freeNaming, boundNaming, builder);
+      if (root.isInfixSymbol() && !term.queryType().isArrowType()) {
+        if (term.numberArguments() == 1) {
+          printPrefixTerm(term.queryRoot(), term.queryArgument(1),
+                          freeNaming, boundNaming, builder);
+        }
+        else printInfixTerm(term, freeNaming, boundNaming, builder);
       }
-      else printFullTheoryTerm(term, freeNaming, boundNaming, builder);
+      else printFunctionalTerm(term, freeNaming, boundNaming, builder);
     }
     else if (term.isAbstraction()) printAbstraction(term, freeNaming, boundNaming, builder);
     else if (term.isMetaApplication()) printMetaApplication(term, freeNaming, boundNaming, builder);
@@ -154,7 +158,7 @@ public class TermPrinter {
    *
    * The default implementation uses the name for the variable in boundNaming, or if that doesn't
    * exist, the name in freeNaming.  If there is no name set in either Renaming, then it uses the
-   * variable's base name.
+   * variable's base name, but marks it as undefined using ??.
    */
   protected void printVariable(Variable variable, Renaming freeNaming, MutableRenaming boundNaming,
                                StringBuilder builder) {
@@ -179,15 +183,13 @@ public class TermPrinter {
   }
 
   /**
-   * Called by printRecursive() to print a non-theory function symbol.
+   * Called by printRecursive() to print a standalone, non-infix function symbol.
    *
    * When using the default implementations of printFunctionalTerm and printApplication, it is also
-   * called to print the root symbol f of a functional term f(s1,...,sn).
+   * called to print the root symbol f of a functional term f(s1,...,sn), so long as f is non-infix.
+   *
    * (If you only want to use this function to print stand-alone constants, then override the
    * default implementation of printFunctionalTerm.)
-   *
-   * Note that theory function symbols are printed through either printValue or
-   * printSoloCalculationSymbol.
    *
    * The default functionality just prints the constant's name.
    */
@@ -196,29 +198,20 @@ public class TermPrinter {
   }
 
   /**
-   * Called by printRecursive() to print a (theory) value.
+   * Called by printRecursive() to print an infix symbol that is used standalone, and by the
+   * default implementations of printFunctionalTerm and printApplication also for an infix symbol
+   * that occurs as the root of a *partially applied* functional term [f](s1,...,sn) (with arity(f)
+   * ≥ n+1).  Fully applied terms [f](s1,...,sn) with [f] an infix symbol are handled through
+   * printInfixTerm.
    *
-   * The default functionality just prints the value's name.
+   * (If you only want to use this function to print stand-alone infix symbols, then override the
+   * default implementation of printFunctionalTerm.)
+   *
+   * The default functionality prints [name].
    */
-  protected void printValue(Value value, StringBuilder builder) {
-    builder.append(value.queryName());
-  }
-
-  /**
-   * Called by printRecursive() to print a calculation symbol (that is used stand-alone).
-   *
-   * When using the default implementations of printPartialTheoryTerm and printApplication, it is
-   * also called to print the root symbol f of a functional term f(s1,...,sn) if (a) that root
-   * symbol is a calculation symbol, and (b) the term is not fully applied (so: has higher type).
-   * (If you only want to use this function to print stand-alone calculation symbols, then override
-   * the default implementation of printPartialTheoryTerm.)
-   *
-   * The default functionality prints [name], where name is the name of the constant.
-   */
-  protected void printSoloCalculationSymbol(CalculationSymbol constant, StringBuilder builder) {
+  protected void printSoloInfixSymbol(FunctionSymbol constant, StringBuilder builder) {
     builder.append("[");
-    builder.append(queryCalculationName(constant.queryKind(), constant.queryName(),
-                                        constant.queryType()));
+    builder.append(constant.queryName());
     builder.append("]");
   }
 
@@ -235,13 +228,13 @@ public class TermPrinter {
   
   /**
    * Called by printRecursive() to print a standard functional term: an application whose head is a
-   * non-theory function symbol, and which takes at least 1 argument.
+   * function symbol, and which takes at least 1 argument.  This is NOT called for maximally applied
+   * infix symbols; these are printed using printInfixTerm.
    *
    * The default functionality just calls printApplication.
    *
-   * Note that functional terms whose root symbol is a theory symbol are printed either through
-   * printPartialTheoryTerm or printFullTheoryTerm, and that if n = 0, printConstant is called
-   * directly instead.
+   * Note that functional terms with no arguments are printed through printConstant or
+   * printSoloInfixSymbol instead.
    */
   protected void printFunctionalTerm(Term term, Renaming freeNaming, MutableRenaming boundNaming,
                                      StringBuilder builder) {
@@ -249,135 +242,66 @@ public class TermPrinter {
   }
 
   /**
-   * Called by printRecursive() to print a functional term of the form f(s1,...,sn) where (a) f is
-   * a calculation symbol, and (b) the term is of higher type, so not maximally applied.
+   * Called by printRecursive() to print a base-type functional term f(s) where f is marked as an
+   * infix symbol (so essentially, it is a prefix symbol).
    *
-   * The default functionality just calls printApplication.
+   * The default functionality simply prints f(s), so putting the arguments in brackets and not
+   * adding extra spaces.
    *
-   * Note that functional terms that are fully applied are printed through printFullTheoryTerm.
+   * Note that functional terms with an infix symbol as root but which are not fully applied
+   * are printed through printFunctionalTerm or (if they have no arguments) through
+   * printSoloInfixSymbol.  So a functional term f(s) with f an infix symbol but which does NOT have
+   * base type would by default be printed as [f](s) instead of f(s).
    */
-  protected void printPartialTheoryTerm(Term term, Renaming freeNaming, MutableRenaming boundNaming,
-                                        StringBuilder builder) {
-    printApplication(term, freeNaming, boundNaming, builder);
+  protected void printPrefixTerm(FunctionSymbol root, Term arg, Renaming freeNaming,
+                                 MutableRenaming boundNaming, StringBuilder builder) {
+    builder.append(root.queryName());
+    builder.append("(");
+    printRecursive(arg, freeNaming, boundNaming, builder);
+    builder.append(")");
   }
 
   /**
    * Called by printRecursive() to print a base-type functional term f(s1,...,sn) whose root symbol
-   * is a calculation symbol (which also implies that n ≥ 1).
+   * is an infix symbol, and which has n ≥ 2.
    *
-   * The default functionality calls either printUnaryCalculation() or printInfix(), depending on
-   * whether there are one or two arguments. (There are currently no calculation symbols in Cora
-   * that take more than two arguments, but if one such occurs, printApplication is called instead.)
+   * The default functionality prints s1 f ... f sn.  Each of the arguments si may be in brackets
+   * if the root of si itself is also an infix symbol; this is then decided by
+   * f.queryIncludeBrackets.  The printing of " f " itself is done through a call to
+   * printInfixOperator.
    *
-   * Note that functional terms with a calculation symbol as root but which are not fully applied
-   * are printed through printPartialTheoryTerm or (if they have no arguments) through
-   * printSoloCalculationSymbol.  Values are printed through printValue.
+   * Note that functional terms with an infix symbol as root but which are not fully applied
+   * are printed through printFunctionalTerm or (if they have no arguments) through
+   * printSoloInfixSymbol.
    */
-  protected void printFullTheoryTerm(Term term, Renaming freeNaming, MutableRenaming boundNaming,
-                                     StringBuilder builder) {
-    CalculationSymbol root = term.queryRoot().toCalculationSymbol();
+  protected void printInfixTerm(Term term, Renaming freeNaming, MutableRenaming boundNaming,
+                                StringBuilder builder) {
+    FunctionSymbol root = term.queryRoot();
 
-    if (term.numberArguments() == 0) {  // this shouldn't really happen, but just in case
-      printSoloCalculationSymbol(root, builder);
-    }
-    else if (term.numberArguments() == 1) {  // this happens for NOT and MINUS
-      printUnaryCalculation(root, term.queryArgument(1), freeNaming, boundNaming, builder);
-    }
-    else if (term.numberArguments() == 2 &&
-             root.queryAssociativity() != CalculationSymbol.Associativity.NOT_INFIX) {
-      printInfix(root, term.queryArgument(1), term.queryArgument(2), freeNaming, boundNaming,
-                 builder);
-    }
-    else { // this shouldn't really happen, but just in case
-      printApplication(term, freeNaming, boundNaming, builder);
-    }
-  }
-
-  /**
-   * Called by the default implementation of printFullTheoryTerm() for printing a base-type term
-   * f(s), where f is a calculation symbol.
-   *
-   * The default implementation prints either fs or f(s), depending on the shape of s.  Note that
-   * this assumes that functional terms are typically printed in a form g(a1,...,an) and therefore
-   * do not need brackets; override (or override printFullTheoryTerm or printTerm) if this is not
-   * the case.
-   */
-  protected void printUnaryCalculation(CalculationSymbol rootsymb, Term arg, Renaming freeNaming,
-                                       MutableRenaming boundNaming, StringBuilder builder) {
-    boolean brackets = arg.isFunctionalTerm() && arg.queryRoot().toCalculationSymbol() != null;
-    if (!brackets && arg.isValue()) {
-      Value v = arg.toValue();
-      if (v.isIntegerValue() && v.getInteger().signum() < 0) brackets = true;
-    }
-    builder.append(queryCalculationName(rootsymb.queryKind(), rootsymb.queryName(),
-                                        rootsymb.queryType()));
-    if (brackets) builder.append("(");
-    printRecursive(arg, freeNaming, boundNaming, builder);
-    if (brackets) builder.append(")");
-  }
-
-  /**
-   * Called by the default implementation of printFullTheoryTerm() for printing a base-type term
-   * f(left, right) where f is a calculation system that may be printed in infix notation.
-   *
-   * The default functionality determines whether left and right should have brackets based on the
-   * root symbol of left/right (if any) and the associativity of f, and then prints:
-   * <maybeleftopen>left<maybeleftclose><operator><mayberightopen>right<mayberightclose>
-   * where <operator> is printed using printInfixOperator.
-   *
-   * Note that if you mostly like this default functionality and only want to change the way the
-   * operator is printed, it suffices to override printInfixOperator.  However, this default
-   * implementation ONLY prints brackets surrounding terms whose root symbol is a calculation
-   * symbol; if this is undesirable, you should override the whole function instead.
-   */
-  protected void printInfix(CalculationSymbol root, Term left, Term right, Renaming freeNaming,
-                            MutableRenaming boundNaming, StringBuilder builder) {
-    CalculationSymbol.Kind rootkind = root.queryKind();
-    String rootname = root.queryName();
-
-    int leftpriority = root.queryInfixPriority();
-    int rightpriority = root.queryInfixPriority();
-
-    if (root.queryAssociativity().equals(CalculationSymbol.Associativity.ASSOC_LEFT) &&
-        left.isFunctionalTerm() && left.queryRoot().equals(root)) leftpriority--;
-    if (root.queryAssociativity().equals(CalculationSymbol.Associativity.ASSOC_LEFT_INCLUSIVE)) {
-        leftpriority--;
-    }
-    if (root.queryAssociativity().equals(CalculationSymbol.Associativity.ASSOC_RIGHT) &&
-        right.isFunctionalTerm() && right.queryRoot().equals(root)) rightpriority--;
-    printInfixHelper(left, freeNaming, boundNaming, builder, leftpriority);
-    printInfixOperator(rootkind, rootname, root.queryType(), builder);
-    printInfixHelper(right, freeNaming, boundNaming, builder, rightpriority);
-  }
-
-  /**
-   * Called by the default functionality for printInfix to print the given operator.
-   * Note that the operator may be any infix operator, but also MINUS (which is here used in a
-   * binary way).
-   */
-  protected void printInfixOperator(CalculationSymbol.Kind operatorkind, String operatorname,
-                                    Type operatortype, StringBuilder builder) {
-    builder.append(" ");
-    builder.append(queryCalculationName(operatorkind, operatorname, operatortype));
-    builder.append(" ");
-  }
-
-  /**
-   * This function prints the given argument to the string builder, putting it in brackets if it's
-   * a term with infix root of priority ≤ priority.
-   */
-  private void printInfixHelper(Term arg, Renaming freeNaming, MutableRenaming boundNaming,
-                                StringBuilder builder, int priority) {
-    boolean brackets = false;
-    if (arg.isFunctionalTerm()) {
-      CalculationSymbol root = arg.queryRoot().toCalculationSymbol();
-      if (root != null && root.queryInfixPriority() > 0) {
-        brackets = root.queryInfixPriority() <= priority;
+    for (int i = 1; i <= term.numberArguments(); i++) {
+      if (i > 1) printInfixOperator(root, i, builder);
+      Term sub = term.queryArgument(i);
+      boolean brackets = false;
+      if (sub.isFunctionalTerm() && sub.queryRoot().isInfixSymbol() &&
+          !sub.queryType().isArrowType()) {
+        brackets = root.queryIncludeBrackets(sub.queryRoot(), i);
       }
+      if (brackets) builder.append("(");
+      printRecursive(sub, freeNaming, boundNaming, builder);
+      if (brackets) builder.append(")");
     }
-    if (brackets) builder.append("(");
-    printRecursive(arg, freeNaming, boundNaming, builder);
-    if (brackets) builder.append(")");
+  }
+
+  /**
+   * Called by the default implementation of printInfixTerm to print the infix symbol f before
+   * argument index (so index is at least 2).
+   *
+   * By default this just prints " f ", where f is the name of the symbol.
+   */
+  protected void printInfixOperator(FunctionSymbol f, int index, StringBuilder builder) {
+    builder.append(" ");
+    builder.append(f.queryName());
+    builder.append(" ");
   }
 
   /**
@@ -492,13 +416,5 @@ public class TermPrinter {
    * change the closing bracket for a meta-application.
    */
   protected String queryMetaCloseBracket() { return "⟩"; }
-  /**
-   * If the default names of the in-built calculation symbols do not suit you, then you can override
-   * this to return a different name.
-   */
-  protected String queryCalculationName(CalculationSymbol.Kind kind, String defaultName,
-                                        Type operatorType) {
-    return defaultName;
-  }
 }
 

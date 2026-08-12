@@ -29,7 +29,7 @@ public class EqualSymbolsTest extends TermTestFoundation {
     assertTrue(s.queryInfixPriority() == CalculationSymbol.INFIX_COMPARISON);
     assertTrue(s.queryName().equals("="));
     assertTrue(s.toString().equals("[=]"));
-    assertTrue(s.toUniqueString().equals("={Int → Int → Bool}#calc"));
+    assertTrue(s.querySpecial().equals("calc"));
     assertTrue(s.queryArity() == 2);
   }
 
@@ -40,7 +40,6 @@ public class EqualSymbolsTest extends TermTestFoundation {
     assertTrue(s.queryInfixPriority() == CalculationSymbol.INFIX_COMPARISON);
     assertTrue(s.queryName().equals("≠"));
     assertTrue(s.toString().equals("[≠]"));
-    assertTrue(s.toUniqueString().equals("≠{Int → Int → Bool}#calc"));
     assertTrue(s.queryArity() == 2);
   }
 
@@ -51,7 +50,6 @@ public class EqualSymbolsTest extends TermTestFoundation {
     assertTrue(s.queryInfixPriority() == CalculationSymbol.INFIX_COMPARISON);
     assertTrue(s.queryName().equals("="));
     assertTrue(s.toString().equals("[=]"));
-    assertTrue(s.toUniqueString().equals("={String → String → Bool}#calc"));
     assertTrue(s.queryArity() == 2);
   }
 
@@ -62,7 +60,7 @@ public class EqualSymbolsTest extends TermTestFoundation {
     assertTrue(s.queryInfixPriority() == CalculationSymbol.INFIX_COMPARISON);
     assertTrue(s.queryName().equals("≠"));
     assertTrue(s.toString().equals("[≠]"));
-    assertTrue(s.toUniqueString().equals("≠{String → String → Bool}#calc"));
+    assertTrue(s.querySpecial().equals("calc"));
     assertTrue(s.queryArity() == 2);
   }
 

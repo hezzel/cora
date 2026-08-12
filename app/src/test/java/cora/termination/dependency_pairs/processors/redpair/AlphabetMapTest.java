@@ -116,9 +116,9 @@ class AlphabetMapTest {
     assertTrue(all.get(1).fst().fst() == plus);
     assertTrue(all.get(1).fst().snd() == 2);
     assertTrue(all.get(1).snd() == plus2);
-    assertTrue(all.get(2).fst().fst() == ff);
+    assertTrue(all.get(2).fst().fst() == f);
     assertTrue(all.get(2).fst().snd() == 1);
-    assertTrue(all.get(2).snd() == ff1);
+    assertTrue(all.get(2).snd() == f1);
     assertTrue(all.get(5).fst().fst() == g);
     assertTrue(all.get(5).fst().snd() == 0);
     assertTrue(all.get(5).snd() == g0);

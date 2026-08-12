@@ -206,7 +206,7 @@ public class ITrsInputReaderTest {
       ")";
     try { ITrsInputReader.readTrsFromString(str); }
     catch (ParsingException e) {
-      assertTrue(e.getMessage().equals("3:8: Illegal rule [¬y -> if(y, false, true)]: the " +
+      assertTrue(e.getMessage().equals("3:8: Illegal rule [¬(y) -> if(y, false, true)]: the " +
         "left-hand side is a theory term!\n"));
       return;
     }

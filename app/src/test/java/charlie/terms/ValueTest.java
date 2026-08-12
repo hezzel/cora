@@ -135,8 +135,9 @@ public class ValueTest extends TermTestFoundation {
   @Test
   public void testEscapedString() throws IncorrectStringException {
     StringValue v = StringValue.parseUserStringValue("\"this\\\\is\\nokay\\\"!\"");
-    assertTrue(v.toUniqueString().equals("\"this\\\\is\\nokay\\\"!\""));
+    assertTrue(v.querySpecial().equals("value"));
     assertTrue(v.getString().equals("this\\is\nokay\"!"));
+    assertTrue(v.queryName().equals("\"this\\\\is\\nokay\\\"!\""));
   }
 
   @Test

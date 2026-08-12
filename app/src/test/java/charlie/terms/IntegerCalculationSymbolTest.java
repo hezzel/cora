@@ -29,7 +29,7 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
     assertTrue(p.queryInfixPriority() == CalculationSymbol.INFIX_PLUS);
     assertTrue(p.queryName().equals("+"));
     assertTrue(p.toString().equals("[+]"));
-    assertTrue(p.toUniqueString().equals("+{Int → Int → Int}#calc"));
+    assertTrue(p.querySpecial().equals("calc"));
     assertTrue(p.queryArity() == 2);
   }
 
@@ -39,7 +39,6 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
     assertTrue(p.queryInfixPriority() == CalculationSymbol.INFIX_PLUS);
     assertTrue(p.queryName().equals("-"));
     assertTrue(p.toString().equals("[-]"));
-    assertTrue(p.toUniqueString().equals("+{Int → Int → Int}#calc"));
     assertTrue(p.queryArity() == 2);
   }
 
@@ -50,7 +49,6 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
     assertTrue(t.queryInfixPriority() == CalculationSymbol.INFIX_TIMES);
     assertTrue(t.queryName().equals("*"));
     assertTrue(t.toString().equals("[*]"));
-    assertTrue(t.toUniqueString().equals("*{Int → Int → Int}#calc"));
     assertTrue(t.queryArity() == 2);
   }
 
@@ -58,10 +56,9 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
   public void testNegateBasics() {
     CalculationSymbol m = TheoryFactory.negateSymbol;
     assertTrue(m.queryType().toString().equals("Int → Int"));
-    assertTrue(m.queryInfixPriority() == CalculationSymbol.INFIX_NONE);
+    assertTrue(m.queryInfixPriority() == CalculationSymbol.INFIX_UNARY);
     assertTrue(m.queryName().equals("~"));
     assertTrue(m.toString().equals("[~]"));
-    assertTrue(m.toUniqueString().equals("~{Int → Int}#calc"));
     assertTrue(m.queryArity() == 1);
   }
 
@@ -72,7 +69,6 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
     assertTrue(p.queryInfixPriority() == CalculationSymbol.INFIX_DIVMOD);
     assertTrue(p.queryName().equals("/"));
     assertTrue(p.toString().equals("[/]"));
-    assertTrue(p.toUniqueString().equals("/{Int → Int → Int}#calc"));
     assertTrue(p.queryArity() == 2);
   }
 
@@ -83,7 +79,6 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
     assertTrue(p.queryInfixPriority() == CalculationSymbol.INFIX_DIVMOD);
     assertTrue(p.queryName().equals("%"));
     assertTrue(p.toString().equals("[%]"));
-    assertTrue(p.toUniqueString().equals("%{Int → Int → Int}#calc"));
     assertTrue(p.queryArity() == 2);
   }
 
@@ -118,9 +113,9 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
     CalculationSymbol f = TheoryFactory.negateSymbol;
     assertTrue(f.toString().equals("[~]"));
     Value v = new IntegerValue(3);
-    assertTrue(f.apply(v).toString().equals("~3"));
+    assertTrue(f.apply(v).toString().equals("~(3)"));
     Var x = new Var("x", TypeFactory.intSort);
-    assertTrue(f.apply(x).toString().equals("~x"));
+    assertTrue(f.apply(x).toString().equals("~(x)"));
   }
 
   @Test

@@ -22,9 +22,8 @@ import charlie.types.TypeFactory;
  * StringValues are strings, which can be printed to the user when using a logically constrained
  * TRS as a kind of proramming language.
  */
-class StringValue extends ValueInherit {
+final class StringValue extends ValueInherit {
   private final String _value;
-  private final String _escapedValue;
 
   private static String makePrintable(String str) {
     return "\"" + str.replace("\\", "\\\\")
@@ -37,16 +36,14 @@ class StringValue extends ValueInherit {
    * presented as is; there should not be surrounding quotes or escape sequences in there.
    */
   StringValue(String str) {
-    super(TypeFactory.stringSort);
+    super(makePrintable(str), TypeFactory.stringSort);
     _value = str;
-    _escapedValue = makePrintable(str);
   }
 
   /** Helper constructor for parseUserStringValue */
   private StringValue(String str, String escaped) {
-    super(TypeFactory.stringSort);
+    super(escaped, TypeFactory.stringSort);
     _value = str;
-    _escapedValue = escaped;
   }
 
   /**
@@ -72,35 +69,22 @@ class StringValue extends ValueInherit {
     return new StringValue(ret.toString(), str);
   }
 
-  /** Returns the escaped string representation (with quotes) of this string. */
-  public String queryName() {
-    return _escapedValue;
-  }
-
-  /** Returns the standard string representation of the symbol. */
-  public String toUniqueString() {
-    return _escapedValue;
-  }
-
-  public boolean equals(FunctionSymbol symbol) {
-    if (symbol == null) return false;
-    if (!symbol.isValue()) return false;
-    if (!symbol.queryType().equals(TypeFactory.stringSort)) return false;
-    return symbol.toValue().queryName().equals(_escapedValue);
-  }
-
+  @Override
   public int hashCode(Map<Variable,Integer> mu) {
     return _value.hashCode();
   }
 
+  @Override
   public java.math.BigInteger getInteger() {
     throw new InappropriatePatternDataException("StringValue", "getInteger", "integer values");
   }
 
+  @Override
   public String getString() {
     return _value;
   }
 
+  @Override
   public boolean getBool() {
     throw new InappropriatePatternDataException("StringValue", "getBool", "boolean values");
   }

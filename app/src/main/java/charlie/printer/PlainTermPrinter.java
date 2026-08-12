@@ -18,12 +18,12 @@ package charlie.printer;
 import java.util.Set;
 import charlie.types.Type;
 import charlie.terms.NameGenerator;
-import charlie.terms.TermPrinter;
+import charlie.terms.TheoryPrinter;
 import charlie.terms.CalculationSymbol;
 import charlie.terms.CalculationSymbol.Kind;
 
 /** The PlainTermPrinter adapts the standard TermPrinter to avoid unicode symbols. */
-public class PlainTermPrinter extends TermPrinter {
+public class PlainTermPrinter extends TheoryPrinter {
   public PlainTermPrinter(NameGenerator generator) {
     super(generator);
   }
@@ -48,7 +48,7 @@ public class PlainTermPrinter extends TermPrinter {
       case Kind.LEQ -> "<=";
       case Kind.EQUALS -> "=";
       case Kind.NEQ -> "!=";
-      case Kind.NOT -> "not ";
+      case Kind.NOT -> "not";
       case Kind.PLUS -> "+";
       case Kind.TIMES -> "*";
       case Kind.DIV -> "/";

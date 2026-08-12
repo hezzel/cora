@@ -89,7 +89,7 @@ class DeductionCalcTest {
       EquationPosition.parse("r1")));
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
-      "E3: (• , iter(a, x * 2, u) ≈ iter(z, u + 12, 17) | a = x + y ∧ x / y = u ∧ ~y = z , •)"));
+      "E3: (• , iter(a, x * 2, u) ≈ iter(z, u + 12, 17) | a = x + y ∧ x / y = u ∧ ~(y) = z , •)"));
     step.explain(module);
     assertTrue(module.toString().equals("We use CALC at positions l1, l3 and r1.\n\n"));
   }
@@ -202,7 +202,7 @@ class DeductionCalcTest {
     assertTrue(step.verifyAndExecute(proof, o));
     assertTrue(proof.getProofState().getTopEquation().toString().equals(
       "E2: (• , iter(x1, x2, i1) ≈ iter(y1, a1, z1) | x1 = x + y ∧ x2 = x * 2 ∧ " +
-      "i1 = z + x / y ∧ y1 = ~y ∧ a1 = a - 1 ∧ z1 = z + 17 , •)"));
+      "i1 = z + x / y ∧ y1 = ~(y) ∧ a1 = a - 1 ∧ z1 = z + 17 , •)"));
   }
 }
 

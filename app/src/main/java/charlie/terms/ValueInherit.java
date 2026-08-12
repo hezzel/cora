@@ -23,86 +23,48 @@ import charlie.terms.replaceable.ReplaceableSet;
  * Values are constants of a theory sorts that cannot be rewritten; they are the representations of
  * the elements of the underlying sets.
  */
-public abstract class ValueInherit extends LeafTermInherit implements Value {
-  protected ValueInherit(Base mysort) {
-    super(mysort);
-    setVariables(ReplaceableSet.EMPTY, TVarSet.EMPTY);
+public abstract class ValueInherit extends FunctionSymbolInherit implements Value {
+  protected ValueInherit(String name, Base mysort) {
+    super(name, mysort, "value");
   }
 
   /** The type of a Value is always one of the theory sorts. */
-  public Base queryType() { return (Base)super.queryType(); }
+  @Override
+  public final Base queryType() { return (Base)super.queryType(); }
 
-  /** @return 0, since values cannot be applied. */
-  public int queryArity() { return 0; }
+  /** @return false, since constants cannot be infix */
+  public boolean isInfixSymbol() { return false; }
 
   /** @return true, since values are guaranteed to be theory symbols. */
-  public boolean isTheorySymbol() { return true; }
+  @Override
+  public final boolean isTheorySymbol() { return true; }
 
   /** @return true, since values are theory terms */
-  public boolean isTheoryTerm() { return true; }
+  @Override
+  public final boolean isTheoryTerm() { return true; }
 
   /** @return true */
-  public boolean isValue() { return true; }
-
-  /** @return true */
-  public boolean isConstant() { return true; }
-
-  /** @return true */
-  public boolean isFunctionalTerm() { return true; }
-
-  /** @return true */
-  public boolean isApplicative() { return true; }
-
-  /** @return true */
-  public boolean isFirstOrder() { return true; }
+  @Override
+  public final boolean isValue() { return true; }
 
   /** @return this */
-  public FunctionSymbol queryRoot() { return this; }
-
-  /** @return this */
-  public Value toValue() { return this; }
+  @Override
+  public final Value toValue() { return this; }
 
   /** @return null, since a value is not a calculation symbol */
-  public CalculationSymbol toCalculationSymbol() { return null; }
+  @Override
+  public final CalculationSymbol toCalculationSymbol() { return null; }
 
-  public boolean isIntegerValue() { return queryType().equals(TypeFactory.intSort); }
+  @Override
+  public final boolean isIntegerValue() { return queryType().equals(TypeFactory.intSort); }
 
-  public boolean isBooleanValue() { return queryType().equals(TypeFactory.boolSort); }
+  @Override
+  public final boolean isBooleanValue() { return queryType().equals(TypeFactory.boolSort); }
 
-  public boolean isStringValue() { return queryType().equals(TypeFactory.stringSort); }
-
-  /** Throws an error, because a value is not a variable (or associated with one). */
-  public Variable queryVariable() {
-    throw new InappropriatePatternDataException("ValueInherit", "queryVariable",
-                                                "variables or lambda-expressions");
-  }
-
-  /** Throws an error, because a value is not a meta-application (or associated with one). */
-  public MetaVariable queryMetaVariable() {
-    throw new InappropriatePatternDataException("ValueInherit", "queryMetaVariable",
-                              "meta-variable applications (or terms headed by one)");
-  }
-
-  /** Returns the value unmodified, because there are no binders in it. */
-  public Value renameAndRefreshBinders(Map<Variable,Variable> renaming) {
-    return this;
-  }
-
-  /** f =_α^{μ,ξ,k} t if and only if f and t are the same value. */
-  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
-    if (!term.isValue()) return false;
-    return equals(term.queryRoot());
-  }
+  @Override
+  public final boolean isStringValue() { return queryType().equals(TypeFactory.stringSort); }
 
   /** @return this, since a value is not polymorphic, so substituting has no effect */
-  public FunctionSymbol substituteType(Type.ISubstitution typeMapping) { return this; }
-
-  /**
-   * @return true if and only if the given instance is the same value, and does not change
-   * typeMapping since values are not polymorphic
-   */
-  public boolean match(FunctionSymbol instance, Type.MSubstitution subst) {
-    return equals(instance);
-  }
+  public final FunctionSymbol substituteType(Type.ISubstitution typeMapping) { return this; }
 }
 

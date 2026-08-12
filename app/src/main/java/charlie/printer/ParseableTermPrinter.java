@@ -21,7 +21,7 @@ import charlie.types.Type;
 import charlie.types.TypePrinter;
 import charlie.terms.Variable;
 import charlie.terms.NameGenerator;
-import charlie.terms.TermPrinter;
+import charlie.terms.TheoryPrinter;
 import charlie.terms.CalculationSymbol;
 import charlie.terms.CalculationSymbol.Kind;
 
@@ -29,7 +29,7 @@ import charlie.terms.CalculationSymbol.Kind;
  * The ParseableTermPrinter specifically prints terms in such a way that the result can be parsed
  * by the CoraInputReader again.  Beyond that, it is a plain printer; no unicode, just ascii.
  */
-public class ParseableTermPrinter extends TermPrinter {
+public class ParseableTermPrinter extends TheoryPrinter {
   private TypePrinter _typePrinter;
 
   public ParseableTermPrinter(NameGenerator generator, TypePrinter typeprint) {
@@ -70,7 +70,7 @@ public class ParseableTermPrinter extends TermPrinter {
             a.isBaseType()) yield "!=_" + _typePrinter.print(a);
         else yield "!=";  // shouldn't happen
       }
-      case Kind.NOT -> "not ";
+      case Kind.NOT -> "not";
       case Kind.PLUS -> "+";
       case Kind.MINUS -> "-";
       case Kind.TIMES -> "*";

@@ -42,7 +42,7 @@ public class HorpoConstraintListTest {
   }
 
   private HorpoConstraintList makeList(SmtProblem problem, TRS trs) {
-    return new HorpoConstraintList(TermPrinter.createDebugTermPrinter(), problem);
+    return new HorpoConstraintList(TermPrinter.DEBUGPRINTER, problem);
   }
 
   @Test

@@ -104,13 +104,13 @@ class UsableRulesTest {
     TRS trs = exampleTRS();
     Problem prob = (new DPGenerator(trs)).queryProblem(true, false);
     assertTrue(proc.isApplicable(prob));
-    assertTrue(proc.printUsableSymbols(prob).equals("(add,2) (fact,1) (id2,1) (id,1) (mul,2) "));
+    assertTrue(proc.printUsableSymbols(prob).equals("(add,2) (fact,1) (id,1) (id2,1) (mul,2) "));
     ProcessorProofObject po = proc.processDPP(prob);
     assertTrue(po.applicable());
     assertTrue(getMessage(trs, po).equals(
       "We obtain 8 usable rules (out of 8 rules in the input problem).\n\n"));
     // note that NOT all the original rules are usable: the id rule is actually adapted:
-    assertTrue(po.queryOutput().getRuleList().get(5).toString().equals("id(arg2) → id2(arg2)"));
+    assertTrue(po.queryOutput().getRuleList().get(4).toString().equals("id(arg2) → id2(arg2)"));
   }
 
   @Test
@@ -120,7 +120,7 @@ class UsableRulesTest {
     Problem prob = (new DPGenerator(trs)).queryProblem(true, false);
     prob = prob.removeDPs(Set.of(0, 1, 2, 3, 5, 6), true); // only leave the mul# -> id# rule
     assertTrue(proc.isApplicable(prob));
-    assertTrue(proc.printUsableSymbols(prob).equals("(add,2) (id2,1) (id,1) (mul,2) "));
+    assertTrue(proc.printUsableSymbols(prob).equals("(add,2) (id,1) (id2,1) (mul,2) "));
 
     ProcessorProofObject po = proc.processDPP(prob);
     assertTrue(po.queryOutput().getRuleList().size() == 6);

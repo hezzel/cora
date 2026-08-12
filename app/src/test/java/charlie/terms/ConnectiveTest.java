@@ -29,7 +29,6 @@ public class ConnectiveTest extends TermTestFoundation {
     assertTrue(a.queryInfixPriority() == CalculationSymbol.INFIX_ANDOR);
     assertTrue(a.queryName().equals("∧"));
     assertTrue(a.toString().equals("[∧]"));
-    assertTrue(a.toUniqueString().equals("∧{Bool → Bool → Bool}#calc"));
     assertTrue(a.queryArity() == 2);
   }
 
@@ -40,7 +39,6 @@ public class ConnectiveTest extends TermTestFoundation {
     assertTrue(o.queryInfixPriority() == CalculationSymbol.INFIX_ANDOR);
     assertTrue(o.queryName().equals("∨"));
     assertTrue(o.toString().equals("[∨]"));
-    assertTrue(o.toUniqueString().equals("∨{Bool → Bool → Bool}#calc"));
     assertTrue(o.queryArity() == 2);
   }
 
@@ -48,10 +46,9 @@ public class ConnectiveTest extends TermTestFoundation {
   public void testNotBasics() {
     CalculationSymbol o = TheoryFactory.notSymbol;
     assertTrue(o.queryType().toString().equals("Bool → Bool"));
-    assertTrue(o.queryInfixPriority() == CalculationSymbol.INFIX_NONE);
+    assertTrue(o.queryInfixPriority() == CalculationSymbol.INFIX_UNARY);
     assertTrue(o.queryName().equals("¬"));
     assertTrue(o.toString().equals("[¬]"));
-    assertTrue(o.toUniqueString().equals("¬{Bool → Bool}#calc"));
     assertTrue(o.queryArity() == 1);
   }
 
@@ -62,7 +59,6 @@ public class ConnectiveTest extends TermTestFoundation {
     assertTrue(o.queryInfixPriority() == CalculationSymbol.INFIX_IFF);
     assertTrue(o.queryName().equals("⇔"));
     assertTrue(o.toString().equals("[⇔]"));
-    assertTrue(o.toUniqueString().equals("⇔{Bool → Bool → Bool}#calc"));
     assertTrue(o.queryArity() == 2);
   }
 
@@ -73,7 +69,6 @@ public class ConnectiveTest extends TermTestFoundation {
     assertTrue(o.queryInfixPriority() == CalculationSymbol.INFIX_IFF);
     assertTrue(o.queryName().equals("⊻"));
     assertTrue(o.toString().equals("[⊻]"));
-    assertTrue(o.toUniqueString().equals("⊻{Bool → Bool → Bool}#calc"));
     assertTrue(o.queryArity() == 2);
   }
 
@@ -102,7 +97,7 @@ public class ConnectiveTest extends TermTestFoundation {
     CalculationSymbol f = TheoryFactory.notSymbol;
     assertTrue(f.toString().equals("[¬]"));
     Term v = new Var("x", TypeFactory.boolSort);
-    assertTrue(f.apply(v).toString().equals("¬x"));
+    assertTrue(f.apply(v).toString().equals("¬(x)"));
   }
 
   @Test
@@ -130,7 +125,7 @@ public class ConnectiveTest extends TermTestFoundation {
     CalculationSymbol f = TheoryFactory.notSymbol;
     Term v = new BooleanValue(true);
     Term s = f.apply(f.apply(v));
-    assertTrue(s.toString().equals("¬(¬true)"));
+    assertTrue(s.toString().equals("¬(¬(true))"));
   }
 
   @Test
@@ -161,7 +156,7 @@ public class ConnectiveTest extends TermTestFoundation {
     CalculationSymbol a = TheoryFactory.andSymbol;
     CalculationSymbol o = TheoryFactory.orSymbol;
     Term s = new Application(o, new Application(a, notx, y), new Application(a, y, notx));
-    assertTrue(s.toString().equals("(¬x ∧ y) ∨ (y ∧ ¬x)"));
+    assertTrue(s.toString().equals("(¬(x) ∧ y) ∨ (y ∧ ¬(x))"));
   }
 
   @Test

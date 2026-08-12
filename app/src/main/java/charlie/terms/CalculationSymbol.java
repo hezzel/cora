@@ -32,7 +32,7 @@ public interface CalculationSymbol extends FunctionSymbol {
   public static int INFIX_PLUS = 4;
   public static int INFIX_TIMES = 5;
   public static int INFIX_DIVMOD = 5;
-  public static int INFIX_NONE = 0;
+  public static int INFIX_UNARY = 6;
 
   /** Returns which of the in-built calculation symbols this represents. */
   public Kind queryKind();

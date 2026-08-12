@@ -127,7 +127,7 @@ class AutoDisproveTest {
     for (Term t : instances) elems.add(t.toString());
     assertTrue(elems.contains("X__1 + X__2"));
     assertTrue(elems.contains("X__1 * X__2"));
-    assertTrue(elems.contains("~X"));
+    assertTrue(elems.contains("~(X)"));
   }
   
   class NoSolver implements SmtSolver {

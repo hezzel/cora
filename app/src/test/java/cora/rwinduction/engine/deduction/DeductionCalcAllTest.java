@@ -71,7 +71,7 @@ class DeductionCalcAllTest {
       "of the equation where it is possible.\n\n"));
     assertTrue(step.execute(pp, o));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
-      "E2: (• , iter(a, a, u) ≈ iter(~y, u + 12, 17) | a = x + y ∧ x / y = u ∧ ~y = z , •)"));
+      "E2: (• , iter(a, a, u) ≈ iter(~(y), u + 12, 17) | a = x + y ∧ x / y = u ∧ ~(y) = z , •)"));
   }
 
   @Test
@@ -87,7 +87,7 @@ class DeductionCalcAllTest {
     assertTrue(step.execute(pp, o));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
       "E2: (• , iter(1 + 2, x, y) ≈ iter(y1, u1, z1) | " +
-      "y > 0 ∧ y1 = ~y ∧ u1 = u + 12 ∧ z1 = x / y , •)"));
+      "y > 0 ∧ y1 = ~(y) ∧ u1 = u + 12 ∧ z1 = x / y , •)"));
   }
 
   @Test
@@ -99,7 +99,7 @@ class DeductionCalcAllTest {
     DeductionCalcAll step = DeductionCalcAll.createStep(pp, o, Side.Both);
     assertTrue(step.verifyAndExecute(pp, o));
     assertTrue(pp.getProofState().getTopEquation().toString().equals(
-      "E2: (• , iter(a, x1, u) ≈ iter(17, z, u1) | a = x + y ∧ x / y = u ∧ ~y = z ∧ " +
+      "E2: (• , iter(a, x1, u) ≈ iter(17, z, u1) | a = x + y ∧ x / y = u ∧ ~(y) = z ∧ " +
       "x1 = x * (1 + (2 - 3)) ∧ u1 = 9 + u + 12 , •)"));
   }
 

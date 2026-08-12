@@ -55,7 +55,7 @@ public class PrinterFactory {
    */
   public static Printer createPrinterNotForUserOutput() {
     return new UnicodePrinter(new TypePrinter(true), new PositionPrinter(),
-                              TermPrinter.createDebugTermPrinter());
+                              TermPrinter.DEBUGPRINTER);
   }
 
   /**

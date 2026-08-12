@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -25,11 +25,11 @@ import charlie.types.TypeFactory;
  * Z of integer numbers.  Since Z is unbounded, the value is stored as an arbitrary-precision
  * BigInteger.
  */
-class IntegerValue extends ValueInherit {
+final class IntegerValue extends ValueInherit {
   private final BigInteger _value;
 
   IntegerValue(BigInteger i) {
-    super(TypeFactory.intSort);
+    super(i.toString(), TypeFactory.intSort);
     _value = i;
   }
 
@@ -38,35 +38,22 @@ class IntegerValue extends ValueInherit {
     this(BigInteger.valueOf(i));
   }
 
-  /** Returns the string representation of this integer. */
-  public String queryName() {
-    return _value.toString();
-  }
-
-  /** Returns the standard string representation of the symbol. */
-  public String toUniqueString() {
-    return _value.toString();
-  }
-
-  public boolean equals(FunctionSymbol symbol) {
-    if (symbol == null) return false;
-    if (!symbol.isValue()) return false;
-    if (!symbol.queryType().equals(TypeFactory.intSort)) return false;
-    return symbol.toValue().getInteger().equals(_value);
-  }
-
+  @Override
   public int hashCode(Map<Variable,Integer> mu) {
     return _value.hashCode();
   }
 
+  @Override
   public BigInteger getInteger() {
     return _value;
   }
 
+  @Override
   public String getString() {
     throw new InappropriatePatternDataException("IntegerValue", "getString", "string values");
   }
 
+  @Override
   public boolean getBool() {
     throw new InappropriatePatternDataException("IntegerValue", "getBool", "boolean values");
   }

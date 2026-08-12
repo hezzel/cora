@@ -726,7 +726,8 @@ public class TermTyperTest {
     assertTrue(t.isFunctionalTerm());
     assertTrue(t.queryRoot().isTheorySymbol());
     assertTrue(t.vars().size() == 1);
-    assertTrue(t.toString().equals("¬x"));
+    System.out.println(t);
+    assertTrue(t.toString().equals("¬(x)"));
   }
 
   @Test
@@ -745,8 +746,8 @@ public class TermTyperTest {
   @Test
   public void testBadBracketOmission() {
     Term t = readTerm("¬ x > 0", "Bool", true, null,
-      "1:1: Type error: expected term of type Int, but got ¬x of type Bool.\n");
-    assertTrue(t.toString().equals("¬x > 0"));
+      "1:1: Type error: expected term of type Int, but got ¬(x) of type Bool.\n");
+    assertTrue(t.toString().equals("¬(x) > 0"));
   }
 
   @Test
@@ -781,7 +782,7 @@ public class TermTyperTest {
   @Test
   public void testMinusBeforeAddition() {
     Term t = readTerm("- x + y", "Int", true, null, "");
-    assertTrue(t.toString().equals("~x + y"));
+    assertTrue(t.toString().equals("~(x) + y"));
     assertTrue(t.queryRoot().toString().equals("[+]"));
     assertTrue(t.queryArgument(1).queryRoot().toString().equals("[~]"));
   }
@@ -797,8 +798,8 @@ public class TermTyperTest {
   @Test
   public void testReadSimplePlusWithNegation() {
     Term t = readTerm("x + - y", null, true, null, "");
-    // this becomes: x + -y
-    assertTrue(t.toString().equals("x + ~y"));
+    // this becomes: x + (-y)
+    assertTrue(t.toString().equals("x + ~(y)"));
     assertTrue(t.queryRoot().toString().equals("[+]"));
     assertTrue(t.queryArgument(2).queryRoot().toString().equals("[~]"));
   }

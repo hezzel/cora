@@ -22,7 +22,7 @@ import charlie.types.TVarSet;
 import charlie.terms.replaceable.ReplaceableSet;
 
 /** A Constant that happens to be a Calculation Symbol. */
-public class CalculationConstant extends LeafTermInherit implements CalculationSymbol {
+public class CalculationConstant extends FunctionSymbolInherit implements CalculationSymbol {
   private Kind _kind;
   private Associativity _assoc;
   private int _priority;
@@ -30,102 +30,68 @@ public class CalculationConstant extends LeafTermInherit implements CalculationS
 
   CalculationConstant(String name, Type mytype, Kind mykind, Associativity assoc,
                       int infixPriority) {
-    super(mytype);
+    super(name, mytype, "calc");
     _name = name;
     _kind = mykind;
     _assoc = assoc;
     _priority = infixPriority;
-    setVariables(ReplaceableSet.EMPTY, TVarSet.EMPTY);
-  }
-
-  /** @return the kind of calculation symbol this is. */
-  public Kind queryKind() { return _kind; }
-
-  /** @return the associativity of the current symbol. */
-  public Associativity queryAssociativity() { return _assoc; }
-
-  /** @return the infix priority of the current symbol (or whatever if it is not infix). */
-  public int queryInfixPriority() { return _priority; }
-
-  /** @return the name of the current symbol. */
-  public String queryName() { return _name; }
-
-  /** @return a unique name for the current symbol. */
-  public String toUniqueString() { return _name + "{" + queryType().toString() + "}#calc"; }
-
-  /** @return true, since calculation symbols are guaranteed to be theory symbols. */
-  public boolean isTheorySymbol() { return true; }
-
-  /** @return true, since calculation symbols are theory terms */
-  public boolean isTheoryTerm() { return true; }
-
-  /** @return false */
-  public boolean isValue() { return false; }
-
-  /** @return true */
-  public boolean isConstant() { return true; }
-
-  /** @return true */
-  public boolean isFunctionalTerm() { return true; }
-
-  /** @return true */
-  public boolean isApplicative() { return true; }
-
-  /** @return true */
-  public boolean isFirstOrder() { return false; }
-
-  /** @return this */
-  public FunctionSymbol queryRoot() { return this; }
-
-  /** @return the arity of the type */
-  public int queryArity() { return queryType().queryArity(); }
-
-  /** @return this */
-  public CalculationSymbol toCalculationSymbol() { return this; }
-
-  /** @return this, since a calculation symbol is not polymorphic, so substituting has no effect */
-  public FunctionSymbol substituteType(Type.ISubstitution typeMapping) { return this; }
-
-  /** @return equals(other), since a calculation symbol is not polymorphic */
-  public boolean match(FunctionSymbol other, Type.MSubstitution subst) { return equals(other); }
-
-  /** Throws an error, because a calculation symbol is not a variable (or associated with one). */
-  public Variable queryVariable() {
-    throw new InappropriatePatternDataException("CalculationConstant" + _name, "queryVariable",
-                                                "variables or lambda-expressions");
   }
 
   /**
-   * Throws an error, because a calculation symbol is not a meta-application (or associated with
-   * one).
+   * @return true, since all calculation symbols we currently consider are typically presented in
+   * infix notation.
    */
-  public MetaVariable queryMetaVariable() {
-    throw new InappropriatePatternDataException("CalculationConstant" + _name, "queryMetaVariable",
-                                            "meta-variable applications (or terms headed by one)");
+  @Override
+  public boolean isInfixSymbol() { return true; }
+
+  /**
+   * Determines if we should print brackets around the term underneath by default, based on the
+   * priority and associativity.
+   */
+  @Override
+  public boolean queryIncludeBrackets(FunctionSymbol subroot, int argument) {
+    CalculationSymbol root = subroot.toCalculationSymbol();
+    if (root == null) return false;
+    if (root.equals(this)) {
+      if (_assoc.equals(Associativity.ASSOC_LEFT) ||
+          _assoc.equals(Associativity.ASSOC_LEFT_INCLUSIVE)) return argument != 1;
+      if (_assoc.equals(Associativity.ASSOC_RIGHT)) return argument != 2;
+    }
+    else if (root.queryInfixPriority() == _priority &&
+             _assoc.equals(Associativity.ASSOC_LEFT_INCLUSIVE)) return argument != 1;
+    return _priority >= root.queryInfixPriority();
   }
 
-  /** There are no binders to rename in function symbols, so this returns the symbol unmodified. */
-  public CalculationSymbol renameAndRefreshBinders(Map<Variable,Variable> renaming) {
-    return this;
-  }
+  /** @return the kind of calculation symbol this is. */
+  @Override
+  public Kind queryKind() { return _kind; }
 
-  /** f =_α^{μ,ξ,k} t if and only if f and t are the same value. */
-  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
-    if (!term.isConstant()) return false;
-    return equals(term.queryRoot());
-  }
+  /** @return the associativity of the current symbol. */
+  @Override
+  public Associativity queryAssociativity() { return _assoc; }
 
-  /** We are only equal to other calculation symbols of the same name and type. */
-  public boolean equals(FunctionSymbol other) {
-    if (other == null) return false;
-    if (!other.isTheorySymbol()) return false;
-    if (!queryType().equals(other.queryType())) return false;
-    return _name.equals(other.queryName());
-  }
+  /** @return the infix priority of the current symbol (or whatever if it is not infix). */
+  @Override
+  public int queryInfixPriority() { return _priority; }
 
-  /** For the hash code, we look at the name and type. */
-  public int hashCode(Map<Variable,Integer> mu) {
-    return queryType().hashCode() * 31 + _name.hashCode();
-  }
+  /** @return true, since calculation symbols are guaranteed to be theory symbols. */
+  @Override
+  public boolean isTheorySymbol() { return true; }
+
+  /** @return true, since calculation symbols are theory terms */
+  @Override
+  public boolean isTheoryTerm() { return true; }
+
+  /** @return false */
+  @Override
+  public boolean isValue() { return false; }
+
+  /** @return this */
+  @Override
+  public CalculationSymbol toCalculationSymbol() { return this; }
+
+  /** @return this, since a calculation symbol is not polymorphic, so substituting has no effect */
+  @Override
+  public FunctionSymbol substituteType(Type.ISubstitution typeMapping) { return this; }
 }
 

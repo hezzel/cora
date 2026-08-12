@@ -116,28 +116,28 @@ class URWrtRedPairProcessorTest {
       "![regards{quot2,1}] or [regards{quot,1}]\n" +
       "![regards{quot,2}] or [regards{quot2,2}]\n" +
       "![regards{quot2,2}] or [regards{quot,2}]\n" +
-      "![regards{sma#,1}] or [regards{sma#3,1}]\n" +
-      "![regards{sma#3,1}] or [regards{sma#,1}]\n" +
-      "![regards{sma#,2}] or [regards{sma#3,2}]\n" +
-      "![regards{sma#3,2}] or [regards{sma#,2}]\n" +
-      "![regards{sma#,3}] or [regards{sma#3,3}]\n" +
-      "![regards{sma#3,3}] or [regards{sma#,3}]\n" +
+      "![regards{s,1}] or [regards{s1,1}]\n" +
+      "![regards{s1,1}] or [regards{s,1}]\n" +
       "![regards{sma,1}] or [regards{sma3,1}]\n" +
       "![regards{sma3,1}] or [regards{sma,1}]\n" +
       "![regards{sma,2}] or [regards{sma3,2}]\n" +
       "![regards{sma3,2}] or [regards{sma,2}]\n" +
       "![regards{sma,3}] or [regards{sma3,3}]\n" +
       "![regards{sma3,3}] or [regards{sma,3}]\n" +
-      "![regards{start#,1}] or [regards{start#2,1}]\n" +
-      "![regards{start#2,1}] or [regards{start#,1}]\n" +
-      "![regards{start#,2}] or [regards{start#2,2}]\n" +
-      "![regards{start#2,2}] or [regards{start#,2}]\n" +
+      "![regards{sma#,1}] or [regards{sma#3,1}]\n" +
+      "![regards{sma#3,1}] or [regards{sma#,1}]\n" +
+      "![regards{sma#,2}] or [regards{sma#3,2}]\n" +
+      "![regards{sma#3,2}] or [regards{sma#,2}]\n" +
+      "![regards{sma#,3}] or [regards{sma#3,3}]\n" +
+      "![regards{sma#3,3}] or [regards{sma#,3}]\n" +
       "![regards{start,1}] or [regards{start2,1}]\n" +
       "![regards{start2,1}] or [regards{start,1}]\n" +
       "![regards{start,2}] or [regards{start2,2}]\n" +
       "![regards{start2,2}] or [regards{start,2}]\n" +
-      "![regards{s,1}] or [regards{s1,1}]\n" +
-      "![regards{s1,1}] or [regards{s,1}]\n" +
+      "![regards{start#,1}] or [regards{start#2,1}]\n" +
+      "![regards{start#2,1}] or [regards{start#,1}]\n" +
+      "![regards{start#,2}] or [regards{start#2,2}]\n" +
+      "![regards{start#2,2}] or [regards{start#,2}]\n" +
       // usable symbols for the dependency pairs
       "![regards{sma#3,1}]\n" +
       "![regards{sma#3,3}] or [usable_{quot2}]\n" +
@@ -211,18 +211,14 @@ class URWrtRedPairProcessorTest {
       "![regards{cons2,2}] or [regards{cons,2}]\n" +
       "![regards{id,1}] or [regards{id1,1}]\n" +
       "![regards{id1,1}] or [regards{id,1}]\n" +
-      "![regards{recurse#,1}] or [regards{recurse#1,1}]\n" +
-      "![regards{recurse#1,1}] or [regards{recurse#,1}]\n" +
       "![regards{recurse,1}] or [regards{recurse1,1}]\n" +
       "![regards{recurse1,1}] or [regards{recurse,1}]\n" +
-      "![regards{skipfold#,1}] or [regards{skipfold#4,1}]\n" +
-      "![regards{skipfold#4,1}] or [regards{skipfold#,1}]\n" +
-      "![regards{skipfold#,2}] or [regards{skipfold#4,2}]\n" +
-      "![regards{skipfold#4,2}] or [regards{skipfold#,2}]\n" +
-      "![regards{skipfold#,3}] or [regards{skipfold#4,3}]\n" +
-      "![regards{skipfold#4,3}] or [regards{skipfold#,3}]\n" +
-      "![regards{skipfold#,4}] or [regards{skipfold#4,4}]\n" +
-      "![regards{skipfold#4,4}] or [regards{skipfold#,4}]\n" +
+      "![regards{recurse#,1}] or [regards{recurse#1,1}]\n" +
+      "![regards{recurse#1,1}] or [regards{recurse#,1}]\n" +
+      "![regards{skip,1}] or [regards{skip2,1}]\n" +
+      "![regards{skip2,1}] or [regards{skip,1}]\n" +
+      "![regards{skip,2}] or [regards{skip2,2}]\n" +
+      "![regards{skip2,2}] or [regards{skip,2}]\n" +
       "![regards{skipfold,1}] or [regards{skipfold4,1}]\n" +
       "![regards{skipfold4,1}] or [regards{skipfold,1}]\n" +
       "![regards{skipfold,2}] or [regards{skipfold4,2}]\n" +
@@ -231,10 +227,14 @@ class URWrtRedPairProcessorTest {
       "![regards{skipfold4,3}] or [regards{skipfold,3}]\n" +
       "![regards{skipfold,4}] or [regards{skipfold4,4}]\n" +
       "![regards{skipfold4,4}] or [regards{skipfold,4}]\n" +
-      "![regards{skip,1}] or [regards{skip2,1}]\n" +
-      "![regards{skip2,1}] or [regards{skip,1}]\n" +
-      "![regards{skip,2}] or [regards{skip2,2}]\n" +
-      "![regards{skip2,2}] or [regards{skip,2}]\n" +
+      "![regards{skipfold#,1}] or [regards{skipfold#4,1}]\n" +
+      "![regards{skipfold#4,1}] or [regards{skipfold#,1}]\n" +
+      "![regards{skipfold#,2}] or [regards{skipfold#4,2}]\n" +
+      "![regards{skipfold#4,2}] or [regards{skipfold#,2}]\n" +
+      "![regards{skipfold#,3}] or [regards{skipfold#4,3}]\n" +
+      "![regards{skipfold#4,3}] or [regards{skipfold#,3}]\n" +
+      "![regards{skipfold#,4}] or [regards{skipfold#4,4}]\n" +
+      "![regards{skipfold#4,4}] or [regards{skipfold#,4}]\n" +
       "![regards{test,1}] or [regards{test1,1}]\n" +
       "![regards{test1,1}] or [regards{test,1}]\n" +
       "![regards{skipfold#4,2}]\n" +
@@ -324,38 +324,38 @@ class URWrtRedPairProcessorTest {
       "![regards{g3,2}] or [regards{g,2}]\n" +
       "![regards{g,3}] or [regards{g3,3}]\n" +
       "![regards{g3,3}] or [regards{g,3}]\n" +
-      "![regards{helper#,1}] or [regards{helper#1,1}]\n" +
-      "![regards{helper#1,1}] or [regards{helper#,1}]\n" +
-      "![regards{helper2#,1}] or [regards{helper2#2,1}]\n" +
-      "![regards{helper2#2,1}] or [regards{helper2#,1}]\n" +
-      "![regards{helper2#,2}] or [regards{helper2#2,2}]\n" +
-      "![regards{helper2#2,2}] or [regards{helper2#,2}]\n" +
-      "![regards{helper2,1}] or [regards{helper22,1}]\n" +
-      "![regards{helper22,1}] or [regards{helper2,1}]\n" +
-      "![regards{helper2,2}] or [regards{helper22,2}]\n" +
-      "![regards{helper22,2}] or [regards{helper2,2}]\n" +
-      "![regards{helper,1}] or [regards{helper1,1}]\n" +
-      "![regards{helper1,1}] or [regards{helper,1}]\n" +
-      "![regards{hh,1}] or [regards{hh1,1}]\n" +
-      "![regards{hh1,1}] or [regards{hh,1}]\n" +
-      "![regards{hh,1}] or [regards{hh2,1}]\n" +
-      "![regards{hh2,1}] or [regards{hh,1}]\n" +
-      "![regards{hh,2}] or [regards{hh2,2}]\n" +
-      "![regards{hh2,2}] or [regards{hh,2}]\n" +
       "![regards{h,1}] or [regards{h1,1}]\n" +
       "![regards{h1,1}] or [regards{h,1}]\n" +
       "![regards{h,1}] or [regards{h2,1}]\n" +
       "![regards{h2,1}] or [regards{h,1}]\n" +
       "![regards{h,2}] or [regards{h2,2}]\n" +
       "![regards{h2,2}] or [regards{h,2}]\n" +
-      "![regards{main#,1}] or [regards{main#2,1}]\n" +
-      "![regards{main#2,1}] or [regards{main#,1}]\n" +
-      "![regards{main#,2}] or [regards{main#2,2}]\n" +
-      "![regards{main#2,2}] or [regards{main#,2}]\n" +
+      "![regards{helper,1}] or [regards{helper1,1}]\n" +
+      "![regards{helper1,1}] or [regards{helper,1}]\n" +
+      "![regards{helper#,1}] or [regards{helper#1,1}]\n" +
+      "![regards{helper#1,1}] or [regards{helper#,1}]\n" +
+      "![regards{helper2,1}] or [regards{helper22,1}]\n" +
+      "![regards{helper22,1}] or [regards{helper2,1}]\n" +
+      "![regards{helper2,2}] or [regards{helper22,2}]\n" +
+      "![regards{helper22,2}] or [regards{helper2,2}]\n" +
+      "![regards{helper2#,1}] or [regards{helper2#2,1}]\n" +
+      "![regards{helper2#2,1}] or [regards{helper2#,1}]\n" +
+      "![regards{helper2#,2}] or [regards{helper2#2,2}]\n" +
+      "![regards{helper2#2,2}] or [regards{helper2#,2}]\n" +
+      "![regards{hh,1}] or [regards{hh1,1}]\n" +
+      "![regards{hh1,1}] or [regards{hh,1}]\n" +
+      "![regards{hh,1}] or [regards{hh2,1}]\n" +
+      "![regards{hh2,1}] or [regards{hh,1}]\n" +
+      "![regards{hh,2}] or [regards{hh2,2}]\n" +
+      "![regards{hh2,2}] or [regards{hh,2}]\n" +
       "![regards{main,1}] or [regards{main2,1}]\n" +
       "![regards{main2,1}] or [regards{main,1}]\n" +
       "![regards{main,2}] or [regards{main2,2}]\n" +
       "![regards{main2,2}] or [regards{main,2}]\n" +
+      "![regards{main#,1}] or [regards{main#2,1}]\n" +
+      "![regards{main#2,1}] or [regards{main#,1}]\n" +
+      "![regards{main#,2}] or [regards{main#2,2}]\n" +
+      "![regards{main#2,2}] or [regards{main#,2}]\n" +
       // usability requirements
       "![regards{helper#1,1}] or [usable_{f2}]\n" +
       "![regards{helper2#2,1}] or [usable_{h0}]\n" +
