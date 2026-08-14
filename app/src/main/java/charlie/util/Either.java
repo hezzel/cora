@@ -17,6 +17,6 @@ package charlie.util;
 
 /** An Either class, representing one of two different type options. */
 public sealed interface Either<L,R> permits Either.Left, Either.Right {
-  public record Left<L,R>(L elem) implements Either<L,R> {}
-  public record Right<L,R>(R elem) implements Either<L,R> {}
+  record Left<L,R>(L elem) implements Either<L,R> {}
+  record Right<L,R>(R elem) implements Either<L,R> {}
 }

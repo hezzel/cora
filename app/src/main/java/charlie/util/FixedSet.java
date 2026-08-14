@@ -92,11 +92,14 @@ public class FixedSet<T> implements Iterable<T> {
   private class ImmutableIterator<T> implements Iterator<T> {
     Iterator<T> _mine;
     private ImmutableIterator(Iterator<T> mine) { _mine = mine; }
+    @Override
     public boolean hasNext() { return _mine.hasNext(); }
+    @Override
     public T next() { return _mine.next(); }
     // we explicitly do NOT provide remove
   }
 
+  @Override
   public Iterator<T> iterator() { return new ImmutableIterator<T>(_myset.iterator()); }
 
   /** Creates a Builder that generates a FixedSet functioning like a TreeSet */

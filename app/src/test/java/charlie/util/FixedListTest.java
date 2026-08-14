@@ -102,7 +102,7 @@ class FixedListTest {
   @Test
   public void testCreateCopyWithNull() {
     LinkedList<String> empty = null;
-    assertThrows(NullStorageException.class, () -> FixedList.<String>copy(empty));
+    assertThrows(NullPointerException.class, () -> FixedList.<String>copy(empty));
     LinkedList<String> llst = new LinkedList<String>();
     llst.add(null);
     llst.add("There");

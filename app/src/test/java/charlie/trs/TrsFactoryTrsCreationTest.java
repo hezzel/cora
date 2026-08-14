@@ -159,7 +159,7 @@ public class TrsFactoryTrsCreationTest {
     ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
     FunctionSymbol f = TermFactory.createConstant("f", type("a → b → b"));
     symbols.add(f);
-    assertThrows(NullStorageException.class, () ->
+    assertThrows(NullPointerException.class, () ->
       TrsFactory.createTrs(new Alphabet(symbols), null, TrsFactory.LCSTRS));
   }
 

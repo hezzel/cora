@@ -57,13 +57,15 @@ public interface FunctionSymbol extends Term, Comparable<FunctionSymbol> {
    *
    * <p>Infix symbols are not required to be binary: they may have any arity ≥ 1.  The immediate
    * consequences for printing an infix symbol of arity n are (by default):</p>
-   * <li>if an infix symbol occurs with too few arguments, so f(s1,...,sk) with k < n, then it is
+   * <ul>
+   *   <li>if an infix symbol occurs with too few arguments, so f(s1,...,sk) with k < n, then it is
    *   printed in the usual functional notation but the symbol f may be printed differently, e.g.,
    *   [f](s1,...,sk)</li>
-   * <li>if an infix symbol occurs fully applied and n = 1, so f(s), then it is printed as f s
+   *   <li>if an infix symbol occurs fully applied and n = 1, so f(s), then it is printed as f s
    *   (with brackets around s only if needed according to queryIncludeBrackets)</li>
-   * <li>if an infix symbol occurs fully applied and n ≥ 2, so f(s1,...,sn), then it is printed
+   *   <li>if an infix symbol occurs fully applied and n ≥ 2, so f(s1,...,sn), then it is printed
    *   in an infix notation, so s1 f ... f sn</li>
+   * </ul>
    *
    * <p>Alternative term printers may deal with infix symbols differently or ignore infix notation
    * altogether!</p>

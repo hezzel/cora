@@ -40,8 +40,7 @@ public class ProcessCaller {
   public ProcessCaller(List<String> cmd, int timeout) {
     _timeout = timeout;
 
-    List<String> systemCommands =
-      ProcessCaller.callSystemBash();
+    List<String> systemCommands = ProcessCaller.callSystemBash();
     systemCommands.addAll(cmd);
 
     _processBuilder = new ProcessBuilder(systemCommands);
@@ -54,8 +53,7 @@ public class ProcessCaller {
    * stream can be read.
    */
   private Process callProcess() throws IOException, InterruptedException {
-    Process process = null;
-    process = _processBuilder.start();
+    Process process = _processBuilder.start();
 
     final boolean exited = process.waitFor(_timeout, TimeUnit.SECONDS);
     if (!exited) {
@@ -94,7 +92,7 @@ public class ProcessCaller {
   /**
    * Helper function for getResultAsString: this reads the given input stream into a String.
    */
-  private static String bufferToString(InputStream inputStream) throws IOException {
+  private static String bufferToString(InputStream inputStream) {
     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
     return reader.lines().collect(Collectors.joining(System.lineSeparator()));
   }
@@ -118,5 +116,4 @@ public class ProcessCaller {
     }
     return echoString;
   }
-
 }

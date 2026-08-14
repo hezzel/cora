@@ -19,7 +19,7 @@ import java.util.Optional;
 
 public class SystemUtils {
 
-  public static enum SUPPORTED_OS { WINDOWS, LINUX, MAC }
+  public enum SUPPORTED_OS { WINDOWS, LINUX, MAC }
 
   private static final String WIN_NAME_PREFIX = "Windows";
 
@@ -81,4 +81,3 @@ public class SystemUtils {
     return Optional.empty();
   }
 }
-

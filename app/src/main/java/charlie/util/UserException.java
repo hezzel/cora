@@ -16,19 +16,22 @@
 package charlie.util;
 
 /**
- * There are two kinds of Exceptions used in Charlie (and Cora):
- * - Exceptions that really only occur if the programmer screwed up, such as storing null arguments
- * - Exceptions that may -- at least in some cases -- be caused by the user doing something wrong /
- *   unexpected.
+ * <p>There are two kinds of Exceptions used in Charlie (and Cora):</p>
+ * <ul>
+ *   <li>Exceptions that really only occur if the programmer screwed up, such as storing null
+ *   arguments</li>
+ *   <li>Exceptions that may -- at least in some cases -- be caused by the user doing something
+ *   wrong or unexpected.</li>
+ * </ul>
  *
- * The latter kind may need to be printed to the user in an elegant way.  For such errors (or: when
- * in doubt), a UserException can be used.  This kind of exception collects not merely a message,
- * but the objects making up the exception, which may be printed in different ways depending on
- * user settings.  For example, an exception might be given a type, which should be printed
- * differently depending on whether the user is expecting ascii output or html output.
+ * <p>The latter kind may need to be printed to the user in an elegant way.  For such errors (or:
+ * when in doubt), a UserException can be used.  This kind of exception collects not merely a
+ * message, but the objects making up the exception, which may be printed in different ways
+ * depending on user settings.  For example, an exception might be given a type, which should be
+ * printed differently depending on whether the user is expecting ASCII output or HTML output.</p>
  *
- * By default, the message is just the toString() of all arguments combined, but printers might
- * make a different choice.
+ * <p>By default, the message is just the toString() of all arguments combined, but printers might
+ * make a different choice.</p>
  */
 public class UserException extends RuntimeException {
   private Object[] _components;
@@ -56,4 +59,3 @@ public class UserException extends RuntimeException {
     return _components.clone();
   }
 }
-

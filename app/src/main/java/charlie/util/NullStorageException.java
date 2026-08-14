@@ -16,12 +16,12 @@
 package charlie.util;
 
 /**
- * A NullStorageException is thrown when either we try to create an object with a null argument, or
- * an existing object is updated with a null argument.  Either way, a null object would be stored
- * where null is not expected, which could cause problems later in the program.
+ * <p>A NullStorageException is thrown when either we try to create an object with a null
+ * argument, or an existing object is updated with a null argument.  Either way, a null object
+ * would be stored where null is not expected, which could cause problems later in the program.</p>
  *
- * Note: a NullStorageException is NOT a UserException, because this really is always a mistake by
- * the programmer.  Hence, the message is also very programmer-focused.
+ * <p>Note: a NullStorageException is NOT a UserException, because this really is always a
+ * mistake by the programmer.  Hence, the message is also very programmer-focused.</p>
  */
 public class NullStorageException extends RuntimeException {
   public NullStorageException(String classname, String message) {

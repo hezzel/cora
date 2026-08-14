@@ -42,7 +42,6 @@ public class FixedList<T> implements Iterable<T> {
 
   /** Create a fixed copy of the given collection */
   public static <T> FixedList<T> copy(Collection<T> args) {
-    if (args == null) throw new NullStorageException("FixedList", "list to be copied");
     final ArrayList<T> result = new ArrayList<T>(args.size());
     for (T x : args) {
       if (x == null) throw new NullStorageException("FixedList", "element in copy constructor");
@@ -64,20 +63,6 @@ public class FixedList<T> implements Iterable<T> {
     return new FixedList<T>(result);
   }
 
-  /** Create a binary FixedList */
-  public static <T> FixedList<T> of(T arg1, T arg2) {
-    final ArrayList<T> result = new ArrayList<T>(2);
-    if (arg1 == null) {
-      throw new NullStorageException("FixedList", "element 1 in binary constructor");
-    }
-    if (arg2 == null) {
-      throw new NullStorageException("FixedList", "element 2 in binary constructor");
-    }
-    result.add(arg1);
-    result.add(arg2);
-    return new FixedList<T>(result);
-  }
-  
   /** Create the list of a given (fixed) series of arguments */
   @SafeVarargs
   public static <T> FixedList<T>of(T ...args) {
@@ -116,11 +101,14 @@ public class FixedList<T> implements Iterable<T> {
   private class ImmutableIterator<T> implements Iterator<T> {
     Iterator<T> _mine;
     private ImmutableIterator(Iterator<T> mine) { _mine = mine; }
+    @Override
     public boolean hasNext() { return _mine.hasNext(); }
+    @Override
     public T next() { return _mine.next(); }
     // we explicitly do NOT provide remove
   }
 
+  @Override
   public Iterator<T> iterator() { return new ImmutableIterator<T>(_mylist.iterator()); }
 
   public static class Builder<T> {
