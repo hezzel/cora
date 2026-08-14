@@ -21,6 +21,8 @@ import java.util.function.Consumer;
 import charlie.types.*;
 import charlie.terms.*;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.smt.*;
 import charlie.trs.TrsProperties.*;
 import charlie.theorytranslation.TermSmtTranslator;
@@ -206,7 +208,7 @@ public class IntegerMappingProcessor implements Processor {
     FunctionSymbol fSharp = term.queryRoot();
     for (Term cand : _candidates.get(fSharp)) {
       Term inst = instantiateCandidate(cand, term);
-      if (!inst.isTheoryTerm()) continue;
+      if (!Theory.isTheory(inst)) continue;
       boolean badvar = false;
       for (Variable x : inst.vars()) {
         if (!theoryVars.contains(x)) { badvar = true; break; }

@@ -16,6 +16,7 @@
 package cora.confluence;
 
 import charlie.terms.Term;
+import charlie.theory.Theory;
 import charlie.printer.PrintableObject;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
@@ -35,7 +36,7 @@ public record CriticalPeak(Term top, Term lhs, Term rhs, Term constraint)
       printer.symbApprox(), " ",
       Printer.makePrintable(rhs, renaming));
     /* | constraint */
-    if (!constraint.isValue() || !constraint.toValue().getBool()) {
+    if (!Theory.isTrue(constraint)) {
       printer.add(" | ", Printer.makePrintable(constraint, renaming));
     }
     /* ⟩ */

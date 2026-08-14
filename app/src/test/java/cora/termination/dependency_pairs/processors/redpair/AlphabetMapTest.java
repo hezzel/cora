@@ -19,7 +19,7 @@ import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TermFactory;
-import charlie.terms.TheoryFactory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.Alphabet;
 import charlie.reader.CoraInputReader;
 

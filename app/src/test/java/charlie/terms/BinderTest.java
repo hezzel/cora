@@ -138,16 +138,6 @@ public class BinderTest extends TermTestFoundation {
   }
 
   @Test
-  public void testTheory() {
-    Variable x = new Binder("x", baseType("aa"));
-    Variable y = new Binder("y", TypeFactory.boolSort);
-    assertFalse(x.isTheoryTerm());
-    assertTrue(y.isTheoryTerm());
-    assertFalse(y.isValue());
-    assertTrue(y.toValue() == null);
-  }
-
-  @Test
   public void testTermVarFreeReplaceables() {
     Variable x = new Binder("x", baseType("oo"));
     ReplaceableSet lst = x.freeReplaceables();

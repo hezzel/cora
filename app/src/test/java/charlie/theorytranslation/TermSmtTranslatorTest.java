@@ -22,8 +22,8 @@ import charlie.types.TypeFactory;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.TermFactory;
-import charlie.terms.TheoryFactory;
 import charlie.terms.TypingException;
+import charlie.theory.TheoryFactory;
 import charlie.smt.*;
 
 public class TermSmtTranslatorTest {

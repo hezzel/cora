@@ -23,6 +23,8 @@ import java.math.BigInteger;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
 import charlie.substitution.Substitution;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 
 public class TermAnalyserTest {
   @Test
@@ -33,8 +35,8 @@ public class TermAnalyserTest {
 
   @Test
   public void testAndOrCalculate() {
-    CalculationSymbol a = TheoryFactory.andSymbol;
-    CalculationSymbol o = TheoryFactory.orSymbol;
+    FunctionSymbol a = TheoryFactory.andSymbol;
+    FunctionSymbol o = TheoryFactory.orSymbol;
 
     Term tr = TheoryFactory.createValue(true);
     Term fa = TheoryFactory.createValue(false);
@@ -59,7 +61,7 @@ public class TermAnalyserTest {
 
   @Test
   public void testPlusCalculate() {
-    CalculationSymbol p = TheoryFactory.plusSymbol;
+    FunctionSymbol p = TheoryFactory.plusSymbol;
     Term x = TheoryFactory.createVar("x", TypeFactory.intSort);
 
     // +(x, 1)
@@ -74,7 +76,7 @@ public class TermAnalyserTest {
   // TODO: enable with an internal SmtSolver
   // @Test
   public void testSatisfy() {
-    CalculationSymbol p = TheoryFactory.plusSymbol;
+    FunctionSymbol p = TheoryFactory.plusSymbol;
     Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
 
@@ -83,8 +85,8 @@ public class TermAnalyserTest {
     Term c = TheoryFactory.greaterSymbol.apply(t).apply(TheoryFactory.createValue(12));
     switch (TermAnalyser.satisfy(c, new ProcessSmtSolver())) {
       case TermAnalyser.Result.YES(Substitution subst):
-        assertTrue(subst.get(x).toValue().getInteger().add(subst.get(y).toValue().getInteger())
-          .compareTo(BigInteger.valueOf(12)) > 0);
+        assertTrue(Theory.toIntegerValue(subst.get(x)).getInteger().add(
+          Theory.toIntegerValue(subst.get(y)).getInteger()).compareTo(BigInteger.valueOf(12)) > 0);
         break;
       case TermAnalyser.Result.NO():
         assertTrue(false);

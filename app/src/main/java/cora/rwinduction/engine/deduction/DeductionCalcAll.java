@@ -25,6 +25,7 @@ import charlie.util.Pair;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
 import charlie.theorytranslation.TermAnalyser;

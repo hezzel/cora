@@ -20,6 +20,8 @@ import charlie.terms.position.PositionPrinter;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
 import charlie.printer.PrinterFactory;
@@ -141,7 +143,7 @@ public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars)
                 printer.symbThickArrow(), " ",
                 printer.makePrintable(this.rhs, naming));
     // | constraint
-    if (!this.constraint.isValue() || this.constraint.toValue().getBool()) {
+    if (!Theory.isTrue(this.constraint)) {
       printer.add(" | ", printer.makePrintable(this.constraint, naming));
     }
     // { x1, ..., xn }

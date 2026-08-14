@@ -26,6 +26,7 @@ import charlie.types.*;
 import charlie.parser.CoraParser;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 
 public class MatcherTest {
   private Type type(String str) {

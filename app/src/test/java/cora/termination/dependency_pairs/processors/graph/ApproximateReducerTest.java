@@ -23,6 +23,7 @@ package cora.termination.dependency_pairs.processors.graph;
 import charlie.util.FixedList;
 import charlie.types.*;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 import charlie.trs.*;
 import charlie.reader.CoraInputReader;
 import cora.termination.dependency_pairs.DP;

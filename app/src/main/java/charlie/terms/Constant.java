@@ -45,26 +45,6 @@ class Constant extends FunctionSymbolInherit implements FunctionSymbol {
     return false;
   }
 
-  /** @return false, since theory symbols use a different class */
-  public boolean isTheorySymbol() {
-    return false;
-  }
-
-  /** @return false, since this is not a theory symbol */
-  public boolean isTheoryTerm() {
-    return false;
-  }
-
-  /** @return false, since values use a different class */
-  public boolean isValue() {
-    return false;
-  }
-
-  /** @return null, since this is not a calculation symbol */
-  public CalculationSymbol toCalculationSymbol() {
-    return null;
-  }
-
   /** @return a new constant, with the current constant's type substituted */
   public FunctionSymbol substituteType(Type.ISubstitution typeMapping) {
     return new Constant(queryName(), queryType().substitute(typeMapping));

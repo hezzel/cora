@@ -26,7 +26,7 @@ import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TermFactory;
-import charlie.terms.TheoryFactory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.TRS;
 import charlie.smt.*;
 import charlie.parser.CoraParser;

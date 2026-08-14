@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,15 +13,17 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.types.TypeFactory;
 import charlie.types.Type;
+import charlie.terms.Variable;
+import charlie.terms.Term;
 
-public class EqualSymbolsTest extends TermTestFoundation {
+public class EqualSymbolsTest {
   @Test
   public void testIntegerEqualityBasics() {
     CalculationSymbol s = TheoryFactory.intEqualSymbol;

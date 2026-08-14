@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 import charlie.trs.Rule;
 import charlie.trs.TrsFactory;
 import charlie.reader.CoraInputReader;

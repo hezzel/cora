@@ -22,6 +22,7 @@ import charlie.util.Pair;
 import charlie.terms.replaceable.*;
 import charlie.terms.Term;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.Theory;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.DeductionStep;
 import cora.rwinduction.engine.deduction.DeductionDisproveRoot;
@@ -66,8 +67,8 @@ public class CommandDisprove extends DeductionCommand {
   /** Helper function for suggestNext: used if the user has supplied only "disprove". */
   private void addNoArgumentsSuggestions(ArrayList<TabSuggestion> ret) {
     ret.add(endOfCommandSuggestion());
-    if (_proof.getProofState().getTopEquation().getLhs().isTheoryTerm() &&
-        _proof.getProofState().getTopEquation().getRhs().isTheoryTerm() &&
+    if (Theory.isTheory(_proof.getProofState().getTopEquation().getLhs()) &&
+        Theory.isTheory(_proof.getProofState().getTopEquation().getRhs()) &&
         _proof.getProofState().getTopEquation().getLhs().queryType().isBaseType()) {
       ret.add(new TabSuggestion("theory", "keyword"));
     }
@@ -123,7 +124,7 @@ public class CommandDisprove extends DeductionCommand {
           keyNames.getName(x));
         return null;
       }
-      if (!subst.get(x).isGround() || !subst.get(x).isTheoryTerm()) {
+      if (!subst.get(x).isGround() || !Theory.isTheory(subst.get(x))) {
         _module.println("Illegal mapping [%a := %a]: the substitution should map to ground " +
           "theory terms.", keyNames.getName(x), new Pair<Term,Renaming>(subst.get(x), valueNames));
         return null;

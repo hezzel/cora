@@ -169,12 +169,6 @@ class Application extends TermInherit {
     return _head.isAbstraction();
   }
 
-  /** Returns whether the head and all arguments are theory terms. */
-  @Override
-  public boolean isTheoryTerm() {
-    return _head.isTheoryTerm() && _args.stream().allMatch(Term::isTheoryTerm);
-  }
-
   /** Adds all function symbols in the present term to storage. */
   @Override
   public void storeFunctionSymbols(Set<FunctionSymbol> storage) {

@@ -21,6 +21,7 @@ import charlie.util.Pair;
 import charlie.terms.position.Position;
 import charlie.terms.Term;
 import charlie.substitution.Substitution;
+import charlie.theory.Theory;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 import cora.rwinduction.engine.deduction.DeductionContext;
@@ -96,7 +97,7 @@ public final class AutomaticProver {
       AutoDeleter.EndingStep step = categorise(left, right, constraint, leftbound, rightbound,
                                                state, context, incomplete);
       if (step == null) {
-        if (left.isTheoryTerm() && right.isTheoryTerm()) tricky.add(p);
+        if (Theory.isTheory(left) && Theory.isTheory(right)) tricky.add(p);
         else rest.add(p);
       }
       else if (step.requiresCompleteness() && incomplete) tricky.add(p);
@@ -128,7 +129,7 @@ public final class AutomaticProver {
                                            boolean incomplete) {
     // if it's pure theory, and first-order to boot, we should be able to manage it with the
     // SMT-solver
-    if (left.isTheoryTerm() && right.isTheoryTerm() &&
+    if (Theory.isTheory(left) && Theory.isTheory(right) &&
         left.isFirstOrder() && right.isFirstOrder()) {
       return AutoDeleter.seekFODisproveOrEqdelete(left, right, constraint);
     }

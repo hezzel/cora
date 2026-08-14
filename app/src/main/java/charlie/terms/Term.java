@@ -77,16 +77,6 @@ public interface Term {
   /** Returns whether the set of meta-variables is empty. */
   boolean isTrueTerm();
 
-  /**
-   * Returns whether the current term is a theory term (also known as logical term).  That is, it
-   * is a true term (no meta-variables other than variables), its function symbols are all theory
-   * symbols, and its variables all have a theory type.
-   */
-  boolean isTheoryTerm();
-  
-  /** Returns whether the current term is a value (which implies that it is a theory term). */
-  boolean isValue();
-
   /** Returns true if each free variable or meta-variable occurs only once. */
   boolean isLinear();
 
@@ -168,9 +158,6 @@ public interface Term {
    */
   MetaVariable queryMetaVariable();
 
-  /** If the current term is a value, returns it; if not returns null. */
-  Value toValue();
-  
    /**
    * Returns true if this term is first-order (so: the subterms at all positions have base type,
    * and no abstractions or variable applications are used), false otherwise.

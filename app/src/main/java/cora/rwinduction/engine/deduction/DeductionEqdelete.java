@@ -23,6 +23,8 @@ import charlie.util.Pair;
 import charlie.terms.position.Position;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.printer.Printer;
 import charlie.theorytranslation.TermSmtTranslator;
 import cora.config.Settings;
@@ -179,14 +181,15 @@ public final class DeductionEqdelete extends DeductionStep {
     if (left.equals(right)) return true;
     
     if (left.isConstant() && right.isConstant()) {
-      String kind = left.isValue() ? "values" : "constants";
+      String kind = Theory.isValue(left) ? "values" : "constants";
       module.ifPresent(o -> o.println("Failed to equate distinct %a (%a and %a).",
         kind, Printer.makePrintable(left, renaming), Printer.makePrintable(right, renaming)));
       return false;
     }
       
-    if ( (!left.isVariable() && !left.isValue()) || (!right.isVariable() && !right.isValue()) ) {
-      Term bad = (left.isVariable() || left.isValue()) ? right : left;
+    if ( (!left.isVariable() && !Theory.isValue(left)) ||
+         (!right.isVariable() && !Theory.isValue(right)) ) {
+      Term bad = (left.isVariable() || Theory.isValue(left)) ? right : left;
       module.ifPresent(o -> o.println("Failed to equate %a and %a: they cannot be moved into " +
         "the constraint because %a is not a theory term.",
         Printer.makePrintable(left, renaming), Printer.makePrintable(right, renaming),

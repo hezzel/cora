@@ -29,6 +29,7 @@ import charlie.types.Type;
 import charlie.terms.replaceable.*;
 import charlie.terms.*;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.Theory;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import charlie.smt.Valuation;
@@ -172,8 +173,8 @@ class DeductionDisproveRootTest {
     Pair<FunctionSymbol,FunctionSymbol> pair =
       DeductionDisproveRoot.checkDifferentSemiconstructors(lhs, rhs, pp.getContext());
     assertTrue(!pair.fst().equals(pair.snd()));
-    assertTrue(pair.fst().toCalculationSymbol() != null);
-    assertTrue(pair.snd().toCalculationSymbol() != null);
+    assertTrue(Theory.isCalculationSymbol(pair.fst()));
+    assertTrue(Theory.isCalculationSymbol(pair.snd()));
     assertTrue(pair.fst().queryType().toString().equals("Int → Int → Int"));
   }
 

@@ -13,37 +13,40 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 import java.util.Map;
+import charlie.types.Base;
+import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.terms.FunctionSymbolInherit;
 
 /** BooleanValues are the function symbols true and false (which are both theory symbols). */
-final class BooleanValue extends ValueInherit {
+public final class BooleanValue extends FunctionSymbolInherit implements Value {
   private final boolean _value;
 
   BooleanValue(boolean b) {
-    super(b ? "true" : "false", TypeFactory.boolSort);
+    super(b ? "true" : "false", TypeFactory.boolSort, Value.SPECIALNAME);
     _value = b;
   }
 
-  @Override
-  public int hashCode(Map<Variable,Integer> mu) {
-    return _value ? 19 : 11;
-  }
-
-  @Override
+  /** Returns the boolean value corresponding to this Boolean Value */
   public boolean getBool() {
     return _value;
   }
 
+  /** @return the boolean sort */
   @Override
-  public String getString() {
-    throw new InappropriatePatternDataException("BooleanValue", "getString", "string values");
-  }
+  public final Base queryType() { return TypeFactory.boolSort; }
 
   @Override
-  public java.math.BigInteger getInteger() {
-    throw new InappropriatePatternDataException("BooleanValue", "getInteger", "integer values");
-  }
+  public int hashCode(Map mu) { return _value ? 19 : 11; }
+
+  /** @return false, since nullary constants cannot be infix */
+  @Override
+  public boolean isInfixSymbol() { return false; }
+
+  /** @return this, since a value is not polymorphic, so substituting has no effect */
+  public final BooleanValue substituteType(Type.ISubstitution typeMapping) { return this; }
 }
+

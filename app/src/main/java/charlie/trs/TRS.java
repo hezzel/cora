@@ -31,6 +31,7 @@ import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
 import charlie.terms.NameGenerator;
+import charlie.theory.Theory;
 import charlie.trs.TrsProperties.*;
 
 /**
@@ -423,7 +424,7 @@ public class TRS {
     for (var pair : term.querySubterms()) {
       Term sub = pair.fst();
       // if theories are not included, no theory symbols may occur
-      if (!_theoriesIncluded && sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) {
+      if (!_theoriesIncluded && sub.isFunctionalTerm() && Theory.isTheory(sub.queryRoot())) {
         return false;
       }
       // if the TRS is monomorphic, then all types occurring in it must be
@@ -517,7 +518,7 @@ public class TRS {
     boolean first = true;
     int ret = 0;
     if (_functionRules == null) computeRulesCache();
-    if (f.isTheorySymbol()) { ret = f.queryArity(); first = false; }
+    if (Theory.isTheory(f)) { ret = f.queryArity(); first = false; }
     if (!_functionRules.containsKey(f)) return ret;
     for (Rule rule : _functionRules.get(f)) {
       if (first) { ret = rule.queryLeftSide().numberArguments(); first = false; }

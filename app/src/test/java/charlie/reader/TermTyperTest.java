@@ -23,6 +23,8 @@ import charlie.types.TypeFactory;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.CoraParser;
 import charlie.terms.*;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 
 public class TermTyperTest {
   private Type type(String str) {
@@ -724,9 +726,8 @@ public class TermTyperTest {
   public void testReadSimpleNot() {
     Term t = readTerm("¬x", null, true, null, "");
     assertTrue(t.isFunctionalTerm());
-    assertTrue(t.queryRoot().isTheorySymbol());
+    assertTrue(Theory.isTheory(t.queryRoot()));
     assertTrue(t.vars().size() == 1);
-    System.out.println(t);
     assertTrue(t.toString().equals("¬(x)"));
   }
 
@@ -828,7 +829,7 @@ public class TermTyperTest {
     data.addMetaVariable(TermFactory.createMetaVar("Z", type("a → Int"), 1));
     Term t = readTerm("q(x) < y /\\ y > Z[aa] + -13 * z +9", "Bool", true, data, "");
     assertTrue(t.isFunctionalTerm());
-    assertFalse(t.isTheoryTerm());
+    assertFalse(Theory.isTheory(t));
     assertTrue(t.toString().equals("q(x) < y ∧ y > Z⟨aa⟩ + -13 * z + 9"));
     assertTrue(data.lookupVariable("x").queryType().toString().equals("b"));
     assertTrue(data.lookupVariable("z").queryType().toString().equals("Int"));

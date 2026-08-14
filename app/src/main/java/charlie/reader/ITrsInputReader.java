@@ -34,6 +34,7 @@ import charlie.parser.Parser;
 import charlie.parser.Parser.*;
 import charlie.parser.ITrsParser;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 import charlie.trs.*;
 
 /**

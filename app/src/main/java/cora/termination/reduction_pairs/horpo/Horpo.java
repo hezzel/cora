@@ -18,6 +18,7 @@ package cora.termination.reduction_pairs.horpo;
 import charlie.util.Pair;
 import charlie.types.*;
 import charlie.terms.*;
+import charlie.theory.Theory;
 import charlie.trs.TrsProperties.*;
 import charlie.smt.*;
 import charlie.theorytranslation.TermSmtTranslator;
@@ -141,8 +142,8 @@ public class Horpo implements ReductionPair {
     BigWrapper wrapper = new BigWrapper(BigInteger.valueOf(500));
     for (Term term : getAllTerms(problem)) {
       term.visitSubterms( (s,p) -> {
-        if (s.isValue() && s.queryType().equals(TypeFactory.intSort)) {
-          BigInteger abs = s.toValue().getInteger().abs();
+        if (Theory.isIntegerValue(s)) {
+          BigInteger abs = Theory.toIntegerValue(s).getInteger().abs();
           if (abs.compareTo(wrapper.num) > 0) wrapper.num = abs;
         }
       });
@@ -161,7 +162,7 @@ public class Horpo implements ReductionPair {
       Set<Variable> set = p.snd();
       p.fst().visitSubterms( (s,pos) -> {
         if (s.isFunctionalTerm()) {
-          if (s.isTheoryTerm() && s.queryType().isBaseType()) {
+          if (Theory.isTheory(s) && s.queryType().isBaseType()) {
             for (Variable x : s.vars()) {
               if (!set.contains(x)) { symbs.add(s.queryRoot()); break; }
             }

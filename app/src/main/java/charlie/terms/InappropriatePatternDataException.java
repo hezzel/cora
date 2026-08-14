@@ -25,8 +25,8 @@ package charlie.terms;
  * thrown.  This is not a UserException, since calling the wrong pattern on an instance of an
  * interface is always a programming error.
  */
-class InappropriatePatternDataException extends RuntimeException {
-  public InappropriatePatternDataException(String classname, String functionname, String expected) {
+public class InappropriatePatternDataException extends RuntimeException {
+  InappropriatePatternDataException(String classname, String functionname, String expected) {
     super("Inappropriate pattern data request: calling " + classname + "::" + functionname +
       " while this function should only be called on " + expected + ".");
   }

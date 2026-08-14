@@ -27,6 +27,8 @@ import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.substitution.Substitution;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
 import charlie.theorytranslation.TermAnalyser;
@@ -73,7 +75,7 @@ public final class DeductionCase extends DeductionStep {
   private static boolean createBooleanCases(Term caseterm, Renaming renaming,
                                             Optional<OutputModule> module,
                                             ArrayList<ExtraInfo> ret) {
-    if (!caseterm.isTheoryTerm() || !caseterm.isFirstOrder()) {
+    if (!Theory.isTheory(caseterm) || !caseterm.isFirstOrder()) {
       module.ifPresent(m -> m.println("Cannot do case analysis on %a: this is a boolean term, " +
         "but not a first-order theory term, so it cannot be added to the constraint.",
         Printer.makePrintable(caseterm, renaming)));
@@ -93,7 +95,7 @@ public final class DeductionCase extends DeductionStep {
   private static boolean createIntegerCases(Term caseterm, Renaming renaming,
                                             Optional<OutputModule> module,
                                             ArrayList<ExtraInfo> ret) {
-    if (!caseterm.isTheoryTerm() || !caseterm.isFirstOrder()) {
+    if (!Theory.isTheory(caseterm) || !caseterm.isFirstOrder()) {
       module.ifPresent(o -> o.println("Cannot do case analysis on %a: this is an integer term, " +
         "but not a first-order theory term, so it cannot be included in the constraint.",
         Printer.makePrintable(caseterm, renaming)));

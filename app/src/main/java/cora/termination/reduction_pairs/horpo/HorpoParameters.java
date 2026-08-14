@@ -23,6 +23,7 @@ import java.util.TreeSet;
 import java.util.Collections;
 import charlie.util.Pair;
 import charlie.terms.FunctionSymbol;
+import charlie.theory.Theory;
 import charlie.smt.*;
 import cora.termination.reduction_pairs.ArgumentFilter;
 
@@ -66,7 +67,7 @@ class HorpoParameters {
 
     for (FunctionSymbol f : symbols) {
       // values are always mapped to 0
-      if (f.isValue()) {
+      if (Theory.isValue(f)) {
         if (valuevar == null) {
           valuevar = _problem.createIntegerVariable("zero");
           _problem.require(SmtFactory.createEqual(valuevar, zero));

@@ -17,10 +17,11 @@ package cora.rwinduction.engine.deduction;
 
 import java.util.Optional;
 import charlie.terms.Term;
-import charlie.terms.Value;
-import charlie.terms.TheoryFactory;
 import charlie.substitution.Substitution;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.Value;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.printer.PrinterFactory;
 import charlie.printer.Printer;
 import charlie.theorytranslation.TermAnalyser;
@@ -59,13 +60,12 @@ public class DeductionDisproveTheory extends DeductionStep {
     Term left = ec.getLhs().substitute(subst);
     Term right = ec.getRhs().substitute(subst);
     Term constr = ec.getConstraint().substitute(subst);
-    if (!left.isGround() || !right.isGround() || !constr.isGround() || !constr.isTheoryTerm()) {
+    if (!left.isGround() || !right.isGround() || !constr.isGround() || !Theory.isTheory(constr)) {
       m.ifPresent(o -> o.println("The substitution does not map all variables in the equation " +
         "to ground theory terms."));
       return null;
     }
-    if (!left.isTheoryTerm() || !right.isTheoryTerm() ||
-        !left.queryType().isBaseTheoryType()) {
+    if (!Theory.isTheory(left) || !Theory.isTheory(right) || !left.queryType().isBaseTheoryType()) {
       m.ifPresent(o -> o.println("The left- and right-hand sides of the equation do not have " +
         "base type."));
       return null;

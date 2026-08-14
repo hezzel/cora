@@ -17,6 +17,7 @@ package charlie.trs;
 
 import charlie.util.UserException;
 import charlie.terms.Term;
+import charlie.theory.Theory;
 
 /**
  * An IllegalRuleException is thrown when something tries to construct a certain kind of rule in a
@@ -33,8 +34,7 @@ public class IllegalRuleException extends UserException {
   }
 
   private static Object[] makeArray(Term left, Term right, Term constraint, Object[] problem) {
-    boolean printConstraint =
-      constraint != null && (!constraint.isValue() || !constraint.toValue().getBool());
+    boolean printConstraint = constraint != null && !Theory.isTrue(constraint);
     Object[] parts = new Object[printConstraint ? 7 + problem.length : 5 + problem.length];
     parts[0] = "Illegal rule [";
     parts[1] = left;

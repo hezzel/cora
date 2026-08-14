@@ -27,6 +27,8 @@ import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -128,7 +130,7 @@ class ConstrainedSimplifierTest {
     var gamma = simp.querySubstitution();
     assertTrue(gamma.get(renaming.getReplaceable("a")) == eqnaming.getReplaceable("x"));
     assertTrue(gamma.get(renaming.getReplaceable("b")) == eqnaming.getReplaceable("y"));
-    assertTrue(gamma.get(renaming.getReplaceable("c")).isValue());
+    assertTrue(Theory.isValue(gamma.get(renaming.getReplaceable("c"))));
     assertTrue(gamma.get(renaming.getReplaceable("d")) == eqnaming.getReplaceable("z"));
     assertTrue(gamma.get(renaming.getReplaceable("e")) == eqnaming.getReplaceable("a"));
     Function<Variable,Pair<Variable,String>> myfun = x -> new Pair<Variable,String>(x, "");
@@ -147,12 +149,12 @@ class ConstrainedSimplifierTest {
       pp.getProofState().getTopEquation().getConstraint()));
     var gamma = simp.querySubstitution();
     assertTrue(gamma.domain().size() == 4);
-    assertTrue(gamma.get(simp.queryRenaming().getReplaceable("i")).toValue().getInteger()
-      .equals(BigInteger.ZERO));
-    assertTrue(gamma.get(simp.queryRenaming().getReplaceable("a")).toValue().getInteger()
-      .equals(BigInteger.ONE));
-    assertTrue(gamma.get(simp.queryRenaming().getReplaceable("z")).toValue().getInteger()
-      .intValueExact() == 0);
+    assertTrue(Theory.toIntegerValue(gamma.get(simp.queryRenaming().getReplaceable("i")))
+      .getInteger().equals(BigInteger.ZERO));
+    assertTrue(Theory.toIntegerValue(gamma.get(simp.queryRenaming().getReplaceable("a")))
+      .getInteger().equals(BigInteger.ONE));
+    assertTrue(Theory.toIntegerValue(gamma.get(simp.queryRenaming().getReplaceable("z")))
+      .getInteger().intValueExact() == 0);
     assertTrue(!gamma.domain().contains(simp.queryRenaming().getReplaceable("y")));
   }
 

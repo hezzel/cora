@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,15 +13,18 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.types.TypeFactory;
 import charlie.types.Type;
+import charlie.terms.Variable;
+import charlie.terms.Term;
+import charlie.terms.TermFactory;
 
-public class ComparisonSymbolTest extends TermTestFoundation {
+public class ComparisonSymbolTest {
   @Test
   public void testGeqBasics() {
     CalculationSymbol s = TheoryFactory.geqSymbol;
@@ -63,7 +66,7 @@ public class ComparisonSymbolTest extends TermTestFoundation {
     Value v = new IntegerValue(12);
     assertTrue(s.apply(v).toString().equals("[>](12)"));
 
-    Var w = new Var("x", TypeFactory.intSort);
+    Variable w = TermFactory.createVar("x", TypeFactory.intSort);
     ArrayList<Term> args = new ArrayList<Term>();
     args.add(v);
     args.add(w);
@@ -73,28 +76,28 @@ public class ComparisonSymbolTest extends TermTestFoundation {
   @Test
   public void testToStringWithComplexChildren() {
     CalculationSymbol s = TheoryFactory.geqSymbol;
-    Variable x = new Var("x", TypeFactory.intSort);
-    Variable y = new Binder("y", TypeFactory.intSort);
-    Term t = s.apply(new Application(TheoryFactory.plusSymbol, x, y))
-              .apply(new Application(TheoryFactory.timesSymbol, y, x));
+    Variable x = TermFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TermFactory.createBinder("y", TypeFactory.intSort);
+    Term t = s.apply(TermFactory.createApp(TheoryFactory.plusSymbol, x, y))
+              .apply(TermFactory.createApp(TheoryFactory.timesSymbol, y, x));
     assertTrue(t.toString().equals("x + y ≥ y * x"));
   }
 
   @Test
   public void testToStringWithNot() {
     CalculationSymbol s = TheoryFactory.greaterSymbol;
-    Variable x = new Var("x", TypeFactory.intSort);
-    Variable y = new Binder("y", TypeFactory.intSort);
-    Term t = s.apply(new Application(TheoryFactory.plusSymbol, x, y)).apply(x);
+    Variable x = TermFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TermFactory.createBinder("y", TypeFactory.intSort);
+    Term t = s.apply(TermFactory.createApp(TheoryFactory.plusSymbol, x, y)).apply(x);
     t = TheoryFactory.notSymbol.apply(t);
     assertTrue(t.toString().equals("¬(x + y > x)"));
   }
 
   @Test
   public void testEqualityEquality() {
-    FunctionSymbol a = TheoryFactory.smallerSymbol;
-    FunctionSymbol b = TheoryFactory.leqSymbol;
-    FunctionSymbol c = new Constant("<", a.queryType());
+    Term a = TheoryFactory.smallerSymbol;
+    Term b = TheoryFactory.leqSymbol;
+    Term c = TermFactory.createConstant("<", a.queryType());
     assertTrue(a.equals(TheoryFactory.smallerSymbol));
     assertFalse(a.equals(b));
     assertFalse(a.equals(c));

@@ -22,6 +22,7 @@ import charlie.terms.position.*;
 import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;
 import charlie.substitution.Substitution;
+import charlie.theory.Theory;
 import charlie.trs.Rule;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
@@ -127,7 +128,7 @@ public final class AutoSimplifier {
         return s.queryHead().apply(args);
       }
       DeductionStep step;
-      if (s.queryRoot().toCalculationSymbol() != null && s.queryType().isBaseType()) {
+      if (Theory.isCalculationSymbol(s.queryRoot()) && s.queryType().isBaseType()) {
         step = findCalculation(proof, side, pos, args);
       }
       else step = findHeadSimplification(proof, s.queryRoot(), s.numberArguments(),
@@ -146,7 +147,7 @@ public final class AutoSimplifier {
   private static DeductionCalc findCalculation(PartialProof proof, EquationPosition.Side side,
                                                LinkedList<Integer> pos, ArrayList<Term> args) {
     for (Term term : args) {
-      if (!term.isValue() && !term.isVariable()) return null;
+      if (!Theory.isValue(term) && !term.isVariable()) return null;
     }
     Optional<OutputModule> empty = Optional.empty();
     DeductionCalc ret = DeductionCalc.createStep(proof, empty, List.of(makePos(side, pos, 0)));

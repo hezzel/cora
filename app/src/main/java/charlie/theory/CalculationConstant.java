@@ -13,13 +13,15 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 import java.util.Map;
 import charlie.types.Type;
 import charlie.types.TVar;
 import charlie.types.TVarSet;
 import charlie.terms.replaceable.ReplaceableSet;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.FunctionSymbolInherit;
 
 /** A Constant that happens to be a Calculation Symbol. */
 public class CalculationConstant extends FunctionSymbolInherit implements CalculationSymbol {
@@ -50,7 +52,7 @@ public class CalculationConstant extends FunctionSymbolInherit implements Calcul
    */
   @Override
   public boolean queryIncludeBrackets(FunctionSymbol subroot, int argument) {
-    CalculationSymbol root = subroot.toCalculationSymbol();
+    CalculationSymbol root = Theory.toCalculationSymbol(subroot);
     if (root == null) return false;
     if (root.equals(this)) {
       if (_assoc.equals(Associativity.ASSOC_LEFT) ||
@@ -74,24 +76,8 @@ public class CalculationConstant extends FunctionSymbolInherit implements Calcul
   @Override
   public int queryInfixPriority() { return _priority; }
 
-  /** @return true, since calculation symbols are guaranteed to be theory symbols. */
-  @Override
-  public boolean isTheorySymbol() { return true; }
-
-  /** @return true, since calculation symbols are theory terms */
-  @Override
-  public boolean isTheoryTerm() { return true; }
-
-  /** @return false */
-  @Override
-  public boolean isValue() { return false; }
-
-  /** @return this */
-  @Override
-  public CalculationSymbol toCalculationSymbol() { return this; }
-
   /** @return this, since a calculation symbol is not polymorphic, so substituting has no effect */
   @Override
-  public FunctionSymbol substituteType(Type.ISubstitution typeMapping) { return this; }
+  public CalculationSymbol substituteType(Type.ISubstitution typeMapping) { return this; }
 }
 

@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
@@ -23,30 +23,30 @@ import charlie.types.TypeFactory;
 public class TheoryFactoryTest {
   @Test
   public void testIntegerValues() {
-    TreeSet<Value> set = new TreeSet<Value>();
-    Value v = TheoryFactory.getNewIntValue(set);
+    TreeSet<IntegerValue> set = new TreeSet<IntegerValue>();
+    IntegerValue v = TheoryFactory.getNewIntegerValue(set);
     assertTrue(v.getInteger().intValueExact() == 0);
     set.add(v);
-    v = TheoryFactory.getNewIntValue(set);
+    v = TheoryFactory.getNewIntegerValue(set);
     assertTrue(v.getInteger().intValueExact() == 1);
     set.add(v);
-    v = TheoryFactory.getNewIntValue(set);
+    v = TheoryFactory.getNewIntegerValue(set);
     assertTrue(v.getInteger().intValueExact() == -1);
     set.add(v);
-    v = TheoryFactory.getNewIntValue(set);
+    v = TheoryFactory.getNewIntegerValue(set);
     assertTrue(v.getInteger().intValueExact() == 2);
     set.add(v);
-    v = TheoryFactory.getNewIntValue(set);
+    v = TheoryFactory.getNewIntegerValue(set);
     assertTrue(v.getInteger().intValueExact() == -2);
     set.add(v);
-    v = TheoryFactory.getNewIntValue(set);
+    v = TheoryFactory.getNewIntegerValue(set);
     assertTrue(v.getInteger().intValueExact() == 3);
   }
 
   @Test
   public void testStringValues() {
-    TreeSet<Value> set = new TreeSet<Value>();
-    Value v = TheoryFactory.getNewStringValue(set);
+    TreeSet<StringValue> set = new TreeSet<StringValue>();
+    StringValue v = TheoryFactory.getNewStringValue(set);
     assertTrue(v.getString().equals(""));
     set.add(v);
     v = TheoryFactory.getNewStringValue(set);
@@ -68,10 +68,10 @@ public class TheoryFactoryTest {
     TreeSet<Value> set = new TreeSet<Value>();
     set.add(TheoryFactory.zeroValue);
     Value v = TheoryFactory.getNewValue(TypeFactory.boolSort, set);
-    assertTrue(v.getBool());
+    assertTrue(Theory.toBooleanValue(v).getBool());
     set.add(v);
     v = TheoryFactory.getNewValue(TypeFactory.boolSort, set);
-    assertFalse(v.getBool());
+    assertFalse(Theory.isTrue(v));
     set.add(v);
     v = TheoryFactory.getNewValue(TypeFactory.boolSort, set);
     assertTrue(v == null);

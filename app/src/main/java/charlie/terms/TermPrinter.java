@@ -15,13 +15,8 @@
 
 package charlie.terms;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.Set;
-import java.util.function.Predicate;
-import charlie.types.Type;
+
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
@@ -110,7 +105,7 @@ public class TermPrinter {
 
   /**
    * The main print function: it adds a string representation of the given term to the given string
-   * builder, using the two given renamings to print names for variables.
+   * builder, using the two given Renamings to print names for variables.
    *
    * Here, the boundNaming is intended to be used for terms that occurred bound in the original
    * term.  Hence, it should only contain mappings for binder variables, and is used as leading
@@ -378,11 +373,11 @@ public class TermPrinter {
   }
 
   /**
-   * Called by printRecursive() to print an application where the head is not a function symbol or variable,
-   * and called by the default implementation of printVarTerm, printFunctionalTerm and
-   * printPartialTheoryTerm to print an application where the head is a function symbol or variable
-   * (with the exception of base-type applications with the head a calculation symbol, which are
-   * handled through the default implementation of printFullTheoryTerm).
+   * Called by printRecursive() to print an application where the head is not a function symbol or
+   * variable, and called by the default implementation of printVarTerm and printFunctionalTerm to
+   * print an application where the head is a function symbol or variable (with the exception of
+   * base-type applications with the head an infix symbol, which are handled through the default
+   * implementation of printInfixTerm.
    *
    * The default functionality prints head(arg1,...,argn), or (head)(arg1,...,argn) if head is an
    * abstraction.

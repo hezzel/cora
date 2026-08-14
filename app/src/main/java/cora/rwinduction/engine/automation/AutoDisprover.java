@@ -23,6 +23,8 @@ import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.substitution.Substitution;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.printer.Printer;
 import charlie.theorytranslation.TermAnalyser;
 import cora.config.Settings;
@@ -47,7 +49,7 @@ public final class AutoDisprover {
     Term left = ec.getLhs();
     Term right = ec.getRhs();
 
-    if (left.queryType().isBaseType() && left.isTheoryTerm() && right.isTheoryTerm()) {
+    if (left.queryType().isBaseType() && Theory.isTheory(left) && Theory.isTheory(right)) {
       Substitution subst = findContradictingTheorySubstitution(left, right, ec.getConstraint(),
                                                                module, ec.getRenaming());
       if (subst == null) return null;
@@ -88,7 +90,7 @@ public final class AutoDisprover {
         "equation have base type."));
         return null;
     }
-    if (!l.isTheoryTerm() || !r.isTheoryTerm()) {
+    if (!Theory.isTheory(l) || !Theory.isTheory(r)) {
       module.ifPresent(o -> o.println("Theory disproves can only be done if both sides of the " +
         "equation are theory terms."));
         return null;

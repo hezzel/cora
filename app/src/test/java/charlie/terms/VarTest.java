@@ -92,16 +92,6 @@ public class VarTest extends TermTestFoundation {
   }
 
   @Test
-  public void testTheory() {
-    Variable x = new Var("x", baseType("aa"));
-    Variable y = new Var("y", arrowType(TypeFactory.intSort, TypeFactory.stringSort));
-    assertFalse(x.isTheoryTerm());
-    assertTrue(y.isTheoryTerm());
-    assertFalse(y.isValue());
-    assertTrue(y.toValue() == null);
-  }
-
-  @Test
   public void testTermVarReplaceables() {
     Variable x = new Var("x", baseType("oo"));
     ReplaceableSet lst = x.freeReplaceables();

@@ -25,6 +25,7 @@ import charlie.types.TypeFactory;
 import charlie.parser.CoraParser;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 import charlie.trs.TrsProperties.*;
 
 public class RuleTest {

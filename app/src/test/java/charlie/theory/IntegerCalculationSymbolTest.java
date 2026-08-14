@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,15 +13,19 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import charlie.types.TypeFactory;
 import charlie.types.Type;
+import charlie.terms.Term;
+import charlie.terms.Variable;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.TermFactory;
 
-public class IntegerCalculationSymbolTest extends TermTestFoundation {
+public class IntegerCalculationSymbolTest {
   @Test
   public void testPlusBasics() {
     CalculationSymbol p = TheoryFactory.plusSymbol;
@@ -114,7 +118,7 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
     assertTrue(f.toString().equals("[~]"));
     Value v = new IntegerValue(3);
     assertTrue(f.apply(v).toString().equals("~(3)"));
-    Var x = new Var("x", TypeFactory.intSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
     assertTrue(f.apply(x).toString().equals("~(x)"));
   }
 
@@ -128,8 +132,8 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
 
   @Test
   public void testMinusWithComplexArgument() {
-    Var x = new Var("x", TypeFactory.intSort);
-    Var y = new Var("y", TypeFactory.intSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
     Term s = TheoryFactory.minusSymbol.apply(TheoryFactory.plusSymbol.apply(x).apply(y));
     assertTrue(s.toString().equals("[-](x + y)"));
     s = TheoryFactory.negateSymbol.apply(TheoryFactory.timesSymbol.apply(x).apply(y));
@@ -138,120 +142,120 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
 
   @Test
   public void testPrintPlusNegativeValue() {
-    Var x = new Var("x", TypeFactory.intSort);
-    Term s = new Application(TheoryFactory.plusSymbol, x, new IntegerValue(-3));
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Term s = TermFactory.createApp(TheoryFactory.plusSymbol, x, new IntegerValue(-3));
     assertTrue(s.toString().equals("x + -3"));
   }
 
   @Test
   public void testPrintMinus() {
-    Var x = new Var("x", TypeFactory.intSort);
-    Var y = new Var("y", TypeFactory.intSort);
-    Var z = new Var("z", TypeFactory.intSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
+    Variable z = TheoryFactory.createVar("z", TypeFactory.intSort);
     CalculationSymbol p = TheoryFactory.plusSymbol;
-    Term s = new Application(TheoryFactory.minusSymbol, x, new Application(p, y, z));
+    Term s = TermFactory.createApp(TheoryFactory.minusSymbol, x, TermFactory.createApp(p, y, z));
     assertTrue(s.toString().equals("x - (y + z)"));
   }
 
   @Test
   public void testPrintMinusMultiplication() {
-    Var x = new Var("x", TypeFactory.intSort);
-    Var y = new Var("y", TypeFactory.intSort);
-    Var z = new Var("z", TypeFactory.intSort);
-    Term s = new Application(TheoryFactory.minusSymbol, x,
-      new Application(TheoryFactory.timesSymbol, y, z));
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
+    Variable z = TheoryFactory.createVar("z", TypeFactory.intSort);
+    Term s = TermFactory.createApp(TheoryFactory.minusSymbol, x,
+      TermFactory.createApp(TheoryFactory.timesSymbol, y, z));
     assertTrue(s.toString().equals("x - y * z"));
   }
 
   @Test
   public void testPlusLeftAssociativity() {
-    Var x = new Var("x", TypeFactory.intSort);
-    Var y = new Var("y", TypeFactory.intSort);
-    Var z = new Var("z", TypeFactory.intSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
+    Variable z = TheoryFactory.createVar("z", TypeFactory.intSort);
     CalculationSymbol plus = TheoryFactory.plusSymbol;
-    Term s = new Application(plus, new Application(plus, x, y), z);
+    Term s = TermFactory.createApp(plus, TermFactory.createApp(plus, x, y), z);
     assertTrue(s.toString().equals("x + y + z"));
   }
 
   @Test
   public void testPlusNotRightAssociative() {
-    Var x = new Var("x", TypeFactory.intSort);
-    Var y = new Var("y", TypeFactory.intSort);
-    Var z = new Var("z", TypeFactory.intSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
+    Variable z = TheoryFactory.createVar("z", TypeFactory.intSort);
     CalculationSymbol plus = TheoryFactory.plusSymbol;
-    Term s = new Application(plus, x, new Application(plus, y, z));
+    Term s = TermFactory.createApp(plus, x, TermFactory.createApp(plus, y, z));
     assertTrue(s.toString().equals("x + (y + z)"));
   }
 
   @Test
   public void testTimesLeftAssociativity() {
-    Var x = new Var("x", TypeFactory.intSort);
-    Var y = new Var("y", TypeFactory.intSort);
-    Var z = new Var("z", TypeFactory.intSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
+    Variable z = TheoryFactory.createVar("z", TypeFactory.intSort);
     CalculationSymbol times = TheoryFactory.timesSymbol;
-    Term s = new Application(times, new Application(times, x, y), z);
+    Term s = TermFactory.createApp(times, TermFactory.createApp(times, x, y), z);
     assertTrue(s.toString().equals("x * y * z"));
   }
 
   @Test
   public void testTimesNotRightAssociative() {
-    Var x = new Var("x", TypeFactory.intSort);
-    Var y = new Var("y", TypeFactory.intSort);
-    Var z = new Var("z", TypeFactory.intSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
+    Variable z = TheoryFactory.createVar("z", TypeFactory.intSort);
     CalculationSymbol times = TheoryFactory.timesSymbol;
-    Term s = new Application(times, x, new Application(times, y, z));
+    Term s = TermFactory.createApp(times, x, TermFactory.createApp(times, y, z));
     assertTrue(s.toString().equals("x * (y * z)"));
   }
 
   @Test
   public void testPlusInTimes() {
-    Var x = new Var("x", TypeFactory.intSort);
-    Var y = new Var("y", TypeFactory.intSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
     CalculationSymbol plus = TheoryFactory.plusSymbol;
     CalculationSymbol times = TheoryFactory.timesSymbol;
-    Term s = new Application(times, new Application(plus, x, y), new Application(plus, y, x));
+    Term s = TermFactory.createApp(times, TermFactory.createApp(plus, x, y), TermFactory.createApp(plus, y, x));
     assertTrue(s.toString().equals("(x + y) * (y + x)"));
   }
 
   @Test
   public void testTimesInPlus() {
-    Var x = new Var("x", TypeFactory.intSort);
-    Var y = new Var("y", TypeFactory.intSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
     CalculationSymbol plus = TheoryFactory.plusSymbol;
     CalculationSymbol times = TheoryFactory.timesSymbol;
-    Term s = new Application(plus, new Application(times, x, y), new Application(times, y, x));
+    Term s = TermFactory.createApp(plus, TermFactory.createApp(times, x, y), TermFactory.createApp(times, y, x));
     assertTrue(s.toString().equals("x * y + y * x"));
   }
 
   @Test
   public void testComplexIntegerExpressionToString() {
     // (1 * (x + y)) * ( (x + -3) + ((y + x * 0) + z) )
-    Var x = new Var("x", TypeFactory.intSort);
-    Var y = new Var("y", TypeFactory.intSort);
-    Var z = new Var("z", TypeFactory.intSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
+    Variable z = TheoryFactory.createVar("z", TypeFactory.intSort);
     CalculationSymbol plus = TheoryFactory.plusSymbol;
     CalculationSymbol times = TheoryFactory.timesSymbol;
     CalculationSymbol minus = TheoryFactory.minusSymbol;
-    Term a = new Application(times, new IntegerValue(1), new Application(plus, x, y));
-    Term b = new Application(plus, x, new IntegerValue(-3));
-    Term c = new Application(minus, y, new Application(times, x, new IntegerValue(0)));
-    Term d = new Application(plus, b, new Application(plus, c, z));
-    Term s = new Application(times, a, d);
+    Term a = TermFactory.createApp(times, new IntegerValue(1), TermFactory.createApp(plus, x, y));
+    Term b = TermFactory.createApp(plus, x, new IntegerValue(-3));
+    Term c = TermFactory.createApp(minus, y, TermFactory.createApp(times, x, new IntegerValue(0)));
+    Term d = TermFactory.createApp(plus, b, TermFactory.createApp(plus, c, z));
+    Term s = TermFactory.createApp(times, a, d);
     assertTrue(s.toString().equals("1 * (x + y) * (x + -3 + (y - x * 0 + z))"));
   }
 
   @Test
   public void testDivModNoAssociativity() {
     // x / (y / z) and (x / y) / z
-    Var x = new Var("x", TypeFactory.intSort);
-    Var y = new Var("y", TypeFactory.intSort);
-    Var z = new Var("z", TypeFactory.intSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
+    Variable z = TheoryFactory.createVar("z", TypeFactory.intSort);
     CalculationSymbol div = TheoryFactory.divSymbol;
     CalculationSymbol mod = TheoryFactory.modSymbol;
-    Term a = new Application(div, x, new Application(div, y, z));
-    Term b = new Application(div, new Application(div, x, y), z);
-    Term c = new Application(mod, x, new Application(mod, y, z));
-    Term d = new Application(mod, new Application(mod, x, y), z);
+    Term a = TermFactory.createApp(div, x, TermFactory.createApp(div, y, z));
+    Term b = TermFactory.createApp(div, TermFactory.createApp(div, x, y), z);
+    Term c = TermFactory.createApp(mod, x, TermFactory.createApp(mod, y, z));
+    Term d = TermFactory.createApp(mod, TermFactory.createApp(mod, x, y), z);
     assertTrue(a.toString().equals("x / (y / z)"));
     assertTrue(b.toString().equals("(x / y) / z"));
     assertTrue(c.toString().equals("x % (y % z)"));
@@ -260,38 +264,38 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
 
   @Test
   public void testDivModTimesInteraction() {
-    Var x = new Var("x", TypeFactory.intSort);
-    Var y = new Var("y", TypeFactory.intSort);
-    Var z = new Var("z", TypeFactory.intSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.intSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.intSort);
+    Variable z = TheoryFactory.createVar("z", TypeFactory.intSort);
     CalculationSymbol div = TheoryFactory.divSymbol;
     CalculationSymbol mod = TheoryFactory.modSymbol;
     CalculationSymbol times = TheoryFactory.timesSymbol;
     // x * y / z
-    Term s = new Application(times, x, new Application(div, y, z));
-    Term t = new Application(div, new Application(times, x, y), z);
+    Term s = TermFactory.createApp(times, x, TermFactory.createApp(div, y, z));
+    Term t = TermFactory.createApp(div, TermFactory.createApp(times, x, y), z);
     assertTrue(s.toString().equals("x * (y / z)"));
     assertTrue(t.toString().equals("(x * y) / z"));
     // x / y % z
-    s = new Application(div, x, new Application(mod, y, z));
-    t = new Application(mod, new Application(div, x, y), z);
+    s = TermFactory.createApp(div, x, TermFactory.createApp(mod, y, z));
+    t = TermFactory.createApp(mod, TermFactory.createApp(div, x, y), z);
     assertTrue(s.toString().equals("x / (y % z)"));
     assertTrue(t.toString().equals("(x / y) % z"));
     // x % y * z
-    s = new Application(mod, x, new Application(times, y, z));
-    t = new Application(times, new Application(mod, x, y), z);
+    s = TermFactory.createApp(mod, x, TermFactory.createApp(times, y, z));
+    t = TermFactory.createApp(times, TermFactory.createApp(mod, x, y), z);
     assertTrue(s.toString().equals("x % (y * z)"));
     assertTrue(t.toString().equals("(x % y) * z"));
     // x / y * z % u
-    Var u = new Var("u", TypeFactory.intSort);
-    s = new Application(div, x, new Application(times, y, new Application(mod, z, u)));
-    t = new Application(times, new Application(div, x, y), new Application(mod, z, u));
+    Variable u = TheoryFactory.createVar("u", TypeFactory.intSort);
+    s = TermFactory.createApp(div, x, TermFactory.createApp(times, y, TermFactory.createApp(mod, z, u)));
+    t = TermFactory.createApp(times, TermFactory.createApp(div, x, y), TermFactory.createApp(mod, z, u));
     assertTrue(s.toString().equals("x / (y * (z % u))"));
     assertTrue(t.toString().equals("(x / y) * (z % u)"));
-    s = new Application(div, x, new Application(mod, new Application(times, y, z), u));
+    s = TermFactory.createApp(div, x, TermFactory.createApp(mod, TermFactory.createApp(times, y, z), u));
     assertTrue(s.toString().equals("x / ((y * z) % u)"));
     // x * y * z / u
-    s = new Application(times, new Application(times, x, y), new Application(div, z, u));
-    t = new Application(div, new Application(times, new Application(times, x, y), z), u);
+    s = TermFactory.createApp(times, TermFactory.createApp(times, x, y), TermFactory.createApp(div, z, u));
+    t = TermFactory.createApp(div, TermFactory.createApp(times, TermFactory.createApp(times, x, y), z), u);
     assertTrue(s.toString().equals("x * y * (z / u)"));
     assertTrue(t.toString().equals("(x * y * z) / u"));
   }
@@ -306,11 +310,11 @@ public class IntegerCalculationSymbolTest extends TermTestFoundation {
     theory.add(TheoryFactory.modSymbol);
     ArrayList<FunctionSymbol> fake = new ArrayList<FunctionSymbol>();
     Type in = TypeFactory.intSort;
-    fake.add(new Constant("+", arrowType(in, arrowType(in, in))));
-    fake.add(new Constant("*", arrowType(in, arrowType(in, in))));
-    fake.add(new Constant("-", arrowType(in, in)));
-    fake.add(new Constant("/", arrowType(in, arrowType(in, in))));
-    fake.add(new Constant("%", arrowType(in, arrowType(in, in))));
+    fake.add(TermFactory.createConstant("+", TypeFactory.createArrow(in, TypeFactory.createArrow(in, in))));
+    fake.add(TermFactory.createConstant("*", TypeFactory.createArrow(in, TypeFactory.createArrow(in, in))));
+    fake.add(TermFactory.createConstant("-", TypeFactory.createArrow(in, in)));
+    fake.add(TermFactory.createConstant("/", TypeFactory.createArrow(in, TypeFactory.createArrow(in, in))));
+    fake.add(TermFactory.createConstant("%", TypeFactory.createArrow(in, TypeFactory.createArrow(in, in))));
 
     assertTrue(theory.get(0).equals(TheoryFactory.plusSymbol));
     assertTrue(theory.get(1).equals(TheoryFactory.timesSymbol));

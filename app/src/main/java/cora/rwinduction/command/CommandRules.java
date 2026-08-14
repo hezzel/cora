@@ -23,6 +23,8 @@ import charlie.types.Type;
 import charlie.types.Arrow;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
@@ -102,8 +104,8 @@ public class CommandRules extends Command {
 
   /** Helper function for run: prints a calculation rule with the required start symbol */
   private void printCalculationRule(FunctionSymbol start) {
-    Term left = start == null ? null : start.toCalculationSymbol();
-    if (left == null) return;         // nothing to do
+    if (start == null || !Theory.isCalculationSymbol(start)) return;
+    Term left = start;
     for (int i = 1; left.queryType() instanceof Arrow(Type in, Type out); i++) {
       left = left.apply(TermFactory.createVar("x" + i, in));
     }

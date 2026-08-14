@@ -23,6 +23,7 @@ import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.parser.CoraParser;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 
 public class TrsFactoryRuleCreationTest {
   private Type type(String text) {

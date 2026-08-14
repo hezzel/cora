@@ -22,7 +22,8 @@ import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
-import charlie.terms.TheoryFactory;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
 import cora.io.OutputModule;
@@ -120,7 +121,7 @@ public final class DeductionAlterDefinitions extends DeductionStep {
       }
     }
     // the value should be a first-order theory term
-    if (!value.isFirstOrder() || !value.isTheoryTerm()) {
+    if (!value.isFirstOrder() || !Theory.isTheory(value)) {
       module.ifPresent(o -> o.println("Value %a is not a (first-order) theory term, so does not " +
         "belong in the constraint!", Printer.makePrintable(value, renaming)));
       return false;

@@ -25,6 +25,7 @@ import charlie.terms.position.FinalPos;
 import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;
 import charlie.substitution.Substitution;
+import charlie.theory.Theory;
 import charlie.trs.TRS;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
@@ -128,7 +129,7 @@ public final class AutoHypothesis {
    */
   private static int leftOfOrderingRequirementScore(TRS trs, Term term) {
     if (!term.isFunctionalTerm()) return 0;
-    if (term.queryRoot().toCalculationSymbol() != null) return 1;
+    if (Theory.isCalculationSymbol(term.queryRoot())) return 1;
     if (!trs.isDefined(term.queryRoot())) return 2;
     return 3;
   }

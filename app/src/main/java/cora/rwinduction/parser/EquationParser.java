@@ -28,6 +28,7 @@ import charlie.parser.CoraParser;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 import charlie.trs.TRS;
 import charlie.printer.Printer;
 import charlie.reader.CoraInputReader;

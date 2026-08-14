@@ -24,7 +24,8 @@ import java.util.function.BiFunction;
 
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
-import charlie.terms.TheoryFactory;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.smt.BVar;
@@ -85,7 +86,7 @@ public class ReductionPairProofObjectTest {
     OrderingProblem problem = createProblem(trs);
     ReductionPairProofObject rppo = new MyClass(problem, Set.of(12), Set.of(0), (f,i) -> {
       if (f.queryName().equals("sum")) return i == 1;
-      if (f.isTheorySymbol()) return i == 2;
+      if (Theory.isTheory(f)) return i == 2;
       return false;
     });
     FunctionSymbol sum = trs.lookupSymbol("sum");

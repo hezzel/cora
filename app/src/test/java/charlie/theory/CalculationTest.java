@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,8 +21,13 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import charlie.types.*;
 import charlie.terms.position.*;
+import charlie.terms.InvalidPositionException;
+import charlie.terms.InappropriatePatternDataException;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.Term;
+import charlie.terms.TermFactory;
 
-public class CalculationTest extends TermTestFoundation {
+public class CalculationTest {
   @Test
   public void testBasics() {
     CalculationSymbol p = TheoryFactory.plusSymbol;
@@ -40,16 +45,16 @@ public class CalculationTest extends TermTestFoundation {
     assertTrue(p.isGround());
     assertTrue(t.isClosed());
     assertTrue(a.isTrueTerm());
-    assertTrue(o.isTheoryTerm());
-    assertTrue(p.isTheorySymbol());
-    assertFalse(t.isValue());
+    assertTrue(Theory.isTheory(p));
+    assertTrue(Theory.isTheory((Term)p));
+    assertFalse(Theory.isValue(t));
     assertTrue(a.numberArguments() == 0);
     assertTrue(o.numberMetaArguments() == 0);
     assertTrue(p.queryArguments().size() == 0);
     assertTrue(t.queryHead() == t);
     assertTrue(a.queryRoot() == a);
-    assertTrue(o.toValue() == null);
-    assertTrue(p.toCalculationSymbol() == p);
+    assertTrue(Theory.toValue(o) == null);
+    assertTrue(Theory.toCalculationSymbol(p) == p);
     assertFalse(t.isFirstOrder());
     assertTrue(a.isPattern());
     assertTrue(o.isApplicative());
@@ -130,7 +135,8 @@ public class CalculationTest extends TermTestFoundation {
   public void testBadPositionReplacement() {
     FunctionSymbol plus = TheoryFactory.plusSymbol;
     assertThrows(InvalidPositionException.class, () ->
-      plus.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a"))));
+      plus.replaceSubterm(new ArgumentPos(1, Position.empty),
+      TermFactory.createConstant("a", TypeFactory.createSort("a"))));
   }
 
   @Test

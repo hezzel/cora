@@ -27,6 +27,7 @@ import charlie.terms.position.Position;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
 import charlie.theorytranslation.TermAnalyser;
@@ -187,7 +188,7 @@ public final class DeductionCalc extends DeductionStep {
       constraint = TheoryFactory.createConjunction(constraint, newconstr);
     }
 
-    if (constraint.isValue()) constraint = null;
+    if (constraint.isConstant()) constraint = null;
 
     return new DeductionCalc(proof.getProofState(), proof.getContext(), posses,
                              replacements, constraint, newvars);

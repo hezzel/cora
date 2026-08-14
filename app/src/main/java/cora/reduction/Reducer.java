@@ -27,6 +27,7 @@ import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.position.Position;
+import charlie.theory.Theory;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.trs.TRS.RuleScheme;
@@ -97,12 +98,12 @@ public class Reducer {
 
     while (!parts.isEmpty()) {
       Term sub = parts.pop();
-      if (sub.isVariable() || sub.isValue()) continue;
+      if (sub.isVariable() || Theory.isValue(sub)) continue;
       for (int i = 1; i <= sub.numberArguments(); i++) parts.add(sub.queryArgument(i));
       if (sub.isAbstraction() || hasBinder(sub)) continue;
       if (!sub.isFunctionalTerm()) return false;
       FunctionSymbol root = sub.queryRoot();
-      if (root.isTheorySymbol()) {
+      if (Theory.isTheory(root)) {
         if (!root.queryType().isArrowType()) return false;
       }
       else if (_arity.containsKey(root)) {

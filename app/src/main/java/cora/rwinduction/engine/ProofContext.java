@@ -24,6 +24,7 @@ import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Variable;
 import charlie.terms.NameGenerator;
+import charlie.theory.Theory;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.util.Pair;
@@ -86,7 +87,7 @@ public class ProofContext {
   private void createConstructorInfo() {
     for (FunctionSymbol f : _trs.queryAlphabet().getSymbols()) {
       if (_trs.isDefined(f)) continue;
-      if (f.isTheorySymbol()) continue;
+      if (Theory.isTheory(f)) continue;
       Type t = f.queryType().queryOutputType();
       Set<FunctionSymbol> set = _constructors.get(t);
       if (set == null) {
@@ -186,7 +187,7 @@ public class ProofContext {
    */
   public int queryRuleArity(FunctionSymbol symbol) {
     if (_arities.containsKey(symbol)) return _arities.get(symbol);
-    if (symbol.isTheorySymbol() && !symbol.isValue()) return symbol.queryArity();
+    if (Theory.isTheory(symbol) && !Theory.isValue(symbol)) return symbol.queryArity();
     return symbol.queryArity() + 1;
   }
 

@@ -30,6 +30,7 @@ import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.substitution.Substitution;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.TheoryFactory;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.trs.TrsFactory;

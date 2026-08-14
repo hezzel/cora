@@ -28,6 +28,7 @@ import charlie.util.LookupMap;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 import charlie.trs.TrsProperties.*;
 import charlie.trs.TRS.RuleScheme;
 import charlie.reader.CoraInputReader;

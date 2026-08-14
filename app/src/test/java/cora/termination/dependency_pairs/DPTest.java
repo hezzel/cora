@@ -18,6 +18,7 @@ package cora.termination.dependency_pairs;
 import charlie.types.TypeFactory;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 import charlie.trs.TRS;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
@@ -74,7 +75,7 @@ public class DPTest {
     Term lhs = CoraInputReader.readTermAndUpdateNaming("eval(x, x)", renaming, trs);
     Term rhs = CoraInputReader.readTerm("eval(x-1, y)", renaming, trs);
     DP dp = new DP(lhs, rhs);
-    assertTrue(dp.ustr().equals("eval(x, x) ➡ eval(x - 1, y) | true"));
+    assertTrue(dp.ustr().equals("eval(x, x) ➡ eval(x - 1, y)"));
   }
 
   @Test

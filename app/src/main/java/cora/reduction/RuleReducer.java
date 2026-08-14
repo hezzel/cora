@@ -20,6 +20,7 @@ import java.util.Map;
 import charlie.types.Type;
 import charlie.terms.Term;
 import charlie.terms.Variable;
+import charlie.theory.Theory;
 import charlie.substitution.Substitution;
 import charlie.substitution.MutableSubstitution;
 import charlie.substitution.Matcher;
@@ -61,10 +62,10 @@ class RuleReducer implements ReduceObject {
     Substitution subst = Matcher.match(_rule.queryLeftSide(), head);
     if (subst == null) return false;
     for (Variable x : _rule.queryConstraint().vars()) {
-      if (subst.get(x) != null && !subst.get(x).isValue()) return false;
+      if (subst.get(x) != null && !Theory.isValue(subst.get(x))) return false;
     }
     Term csub = _rule.queryConstraint().substitute(subst);
-    if (csub.isGround()) return TermAnalyser.evaluate(csub).getBool();
+    if (csub.isGround()) return TermAnalyser.evaluateConstraint(csub).getBool();
     else return TermAnalyser.satisfy(csub, Settings.smtSolver) instanceof TermAnalyser.Result.YES;
   }
 
@@ -82,11 +83,11 @@ class RuleReducer implements ReduceObject {
 
     // check the constraint and rhs variables
     for (Variable x : _rule.queryConstraint().vars()) {
-      if (subst.get(x) != null && !subst.get(x).isValue()) return null;
+      if (subst.get(x) != null && !Theory.isValue(subst.get(x))) return null;
     }
     Term csub = _rule.queryConstraint().substitute(subst);
     if (csub.isGround()) {
-      if (!TermAnalyser.evaluate(csub).getBool()) return null;
+      if (!TermAnalyser.evaluateConstraint(csub).getBool()) return null;
     }
     else {
       Substitution result = null;

@@ -21,7 +21,6 @@ import charlie.util.Pair;
 import charlie.terms.position.Position;
 import charlie.terms.position.ArgumentPos;
 import charlie.terms.Term;
-import charlie.terms.TheoryFactory;
 import charlie.substitution.Substitution;
 import charlie.theorytranslation.TermAnalyser;
 import cora.config.Settings;
@@ -112,7 +111,7 @@ public final class AutoContexter {
       Term right = pairs.get(i).snd();
 
       // for first-order theory terms, we can handle several cases at once
-      if (left.isTheoryTerm() && right.isTheoryTerm() && left.isFirstOrder() &&
+      if (Theory.isTheory(left) && Theory.isTheory(right) && left.isFirstOrder() &&
           right.isFirstOrder()) {
         checkFOTheoryDisprove(p, left, right, constraint, complete, disprovable, eqdeletable, tricky);
         return;
@@ -127,7 +126,7 @@ public final class AutoContexter {
         hdeletable.add(new Pair<Position,Pair<Hypothesis,Boolean>>(p, pair));
         return;
       }
-      if (left.isTheoryTerm() && right.isTheoryTerm()) tricky.add(p);
+      if (Theory.isTheory(left) && Theory.isTheory(right)) tricky.add(p);
       else rest.add(p);
     }
   }

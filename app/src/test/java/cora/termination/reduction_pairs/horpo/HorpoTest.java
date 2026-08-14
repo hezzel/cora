@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.terms.FunctionSymbol;
-import charlie.terms.TheoryFactory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 

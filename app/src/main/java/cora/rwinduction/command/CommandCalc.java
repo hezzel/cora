@@ -21,6 +21,7 @@ import java.util.Optional;
 import charlie.util.FixedList;
 import charlie.terms.position.PositionFormatException;
 import charlie.terms.Term;
+import charlie.theory.Theory;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
 import cora.io.OutputModule;
@@ -114,7 +115,7 @@ public class CommandCalc extends DeductionCommand {
                                         ArrayList<TabSuggestion> suggestions) {
     Printer printer = PrinterFactory.createParseablePrinter(_proof.getContext().getTRS());
     term.visitSubterms( (s,p) -> {
-      if (s.isApplication() && s.isTheoryTerm() && s.isFirstOrder()) {
+      if (s.isApplication() && Theory.isTheory(s) && s.isFirstOrder()) {
         EquationPosition pos = new EquationPosition(side, p);
         pos.print(printer);
         suggestions.add(new TabSuggestion(printer.toString(), "position"));

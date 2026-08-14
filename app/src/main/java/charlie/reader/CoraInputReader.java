@@ -31,6 +31,7 @@ import charlie.parser.Parser.*;
 import charlie.parser.CoraParser;
 import charlie.terms.replaceable.*;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 import charlie.trs.*;
 import charlie.trs.TrsFactory.TrsKind;
 

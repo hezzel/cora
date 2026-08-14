@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 /**
  * An IncorrectStringException is thrown when a user-supplied string is parsed, yet it contains

@@ -19,7 +19,8 @@ import charlie.terms.replaceable.Renaming;
 import charlie.terms.Term;
 import charlie.terms.InvalidPositionException;
 import charlie.terms.TermPrinter;
-import charlie.terms.TheoryFactory;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
 import charlie.printer.PrinterFactory;
@@ -61,8 +62,7 @@ public final class Equation {
   }
 
   public boolean isConstrained() {
-    if (_constraint.toValue() == null) return true;
-    return !_constraint.toValue().getBool();
+    return !Theory.isTrue(_constraint);
   }
 
   /**

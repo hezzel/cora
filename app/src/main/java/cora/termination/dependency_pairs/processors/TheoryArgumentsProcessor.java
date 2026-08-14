@@ -9,7 +9,8 @@ import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Variable;
 import charlie.terms.Term;
-import charlie.terms.TheoryFactory;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.TrsProperties.*;
 import cora.io.OutputModule;
 import cora.config.Settings;
@@ -63,7 +64,7 @@ public class TheoryArgumentsProcessor implements Processor {
   }
 
   /**
-   * This ensures that an argument position is only in targs if no non-theory symbol is every
+   * This ensures that an argument position is only in targs if no non-theory symbol is ever
    * passed to that argument.
    */
   private void imposeMinimalLimitations(Problem dpp) {
@@ -76,7 +77,11 @@ public class TheoryArgumentsProcessor implements Processor {
       FunctionSymbol root = term.queryRoot();
       TreeSet<Integer> rootset = _targs.get(root);
       for (int i = 1; i <= term.numberArguments(); i++) {
-        if (rootset.contains(i) && !term.queryArgument(i).isTheoryTerm()) rootset.remove(i);
+        if (rootset.contains(i) && !Theory.isTheory(term.queryArgument(i))) {
+          // note that rootset IS the pointer to _targets.get(root), so changing it directly
+          // affects _targs!
+          rootset.remove(i);
+        }
       }
     }
   }

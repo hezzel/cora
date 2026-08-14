@@ -21,6 +21,8 @@ import charlie.util.Pair;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.TrsProperties.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
@@ -158,15 +160,15 @@ class ApproximateReducer {
       // CASE 1: from is a base-type theory term whose variables are all instantiated by ground
       // theory terms ==> to must either be its value, or have the same shape (in which case we
       // fall through to case 6)
-      if (from.isTheoryTerm() && from.queryType().isBaseType() &&
+      if (Theory.isTheory(from) && from.queryType().isBaseType() &&
           allVarsInTheory(from.vars(), dp1.lvars())) {
-        if (!to.isTheoryTerm()) return false;
-        if (to.isValue() || to.isVariable()) {
+        if (!Theory.isTheory(to)) return false;
+        if (Theory.isValue(to) || to.isVariable()) {
           requirements = makeAnd(requirements, TheoryFactory.createEquality(from, to));
           continue;
         }
         else {
-          if (from.isValue()) return false;
+          if (Theory.isValue(from)) return false;
           if (from.isVariable() && dp1.constraint().vars().contains(from.queryVariable())) {
             return false;
           }
@@ -186,12 +188,12 @@ class ApproximateReducer {
       if (ruleArity.containsKey(f) && ruleArity.get(f) <= from.numberArguments()) continue;
 
       // CASE 5: from is headed by a calculation symbol; then we allow it to reduce to any value
-      if (f.isTheorySymbol() && from.queryType().isBaseType() && to.isValue()) continue;
+      if (Theory.isTheory(f) && from.queryType().isBaseType() && Theory.isValue(to)) continue;
 
       // CASE 6: from is a base-type theory term (whose root symbol is not a defined symbol), but
       // not necessarily instantiated to a _ground_ theory term -- then it can in principle reduce
       // to any value
-      if (from.isTheoryTerm() && (to.isValue() || to.isVariable())) continue;
+      if (Theory.isTheory(from) && (Theory.isValue(to) || to.isVariable())) continue;
 
       // CASE 7: from is a term f s1 ... sn that isn't going to be reduced at the root, and to is a
       // functional term as well ==> then to should have the same form f t1 ... tn with each si γ

@@ -26,6 +26,10 @@ import charlie.terms.*;
 import charlie.substitution.Substitution;
 import charlie.substitution.MutableSubstitution;
 import charlie.substitution.Matcher;
+import charlie.theory.Value;
+import charlie.theory.CalculationSymbol;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
 import charlie.smt.SmtSolver;
@@ -109,7 +113,7 @@ class ConstrainedSimplifier {
   private Term splitEqualities(Term constraint, ArrayList<Pair<Variable,Term>> equalities) {
     if (!constraint.isFunctionalTerm()) return constraint;
     if (constraint.numberArguments() != 2) return constraint;
-    CalculationSymbol calc = constraint.queryRoot().toCalculationSymbol();
+    CalculationSymbol calc = Theory.toCalculationSymbol(constraint.queryRoot());
     if (calc == null) return constraint;
     if (calc.queryKind() == CalculationSymbol.Kind.AND) {
       Term a = splitEqualities(constraint.queryArgument(1), equalities);
@@ -154,8 +158,7 @@ class ConstrainedSimplifier {
 
   /** This returns whether the constraint for the underlying rule is True. */
   boolean constraintIsTrue() {
-    return _constraint.isValue() && _constraint.toValue().getBool() &&
-           _definitions.isEmpty();
+    return Theory.isTrue(_constraint) && _definitions.isEmpty();
   }
 
   /**
@@ -194,7 +197,7 @@ class ConstrainedSimplifier {
         Term t = pair.fst();
         if (!t.isFunctionalTerm()) continue;
         FunctionSymbol f = t.queryRoot();
-        if (f.toCalculationSymbol() == null && !context.getTRS().isDefined(f)) continue;
+        if (!Theory.isCalculationSymbol(f) && !context.getTRS().isDefined(f)) continue;
         if (context.queryRuleArity(f) <= t.numberArguments()) return false;
       }
     }
@@ -325,7 +328,7 @@ class ConstrainedSimplifier {
    * (Helper function for matchEqualitiesInConstraint.)
    */
   private Value calculateGroundTerm(Term t) {
-    if (t.isGround() && t.isTheoryTerm() && t.queryType().isBaseType()) {
+    if (t.isGround() && Theory.isTheory(t) && t.queryType().isBaseType()) {
       return TermAnalyser.evaluate(t);
     }
     return null;
@@ -394,7 +397,7 @@ class ConstrainedSimplifier {
           "%a is not mapped to anything.", _renaming.getName(x)));
         return false;
       }
-      if (!t.isValue() && !t.isVariable()) {
+      if (!Theory.isValue(t) && !t.isVariable()) {
         module.ifPresent(o -> o.println("The " + kind + " does not apply: constraint variable " +
           "%a is instantiated by %a, which is not a value or variable.",
           _renaming.getName(x), Printer.makePrintable(t, equationNaming)));
@@ -438,7 +441,7 @@ class ConstrainedSimplifier {
   private void storeUnsatisfiedConstraints(Term premise, Term conclusion,
                                            ArrayList<Term> storage, SmtSolver solver) {
     if (conclusion.isFunctionalTerm()) {
-      CalculationSymbol calc = conclusion.queryRoot().toCalculationSymbol();
+      CalculationSymbol calc = Theory.toCalculationSymbol(conclusion.queryRoot());
       if (calc != null && calc.queryKind() == CalculationSymbol.Kind.AND) {
         for (int i = 1; i <= conclusion.numberArguments(); i++) {
           storeUnsatisfiedConstraints(premise, conclusion.queryArgument(i), storage, solver);

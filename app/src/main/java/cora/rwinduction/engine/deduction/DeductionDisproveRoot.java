@@ -21,6 +21,8 @@ import charlie.util.Pair;
 import charlie.types.Base;
 import charlie.types.Type;
 import charlie.terms.*;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 
@@ -84,7 +86,7 @@ public class DeductionDisproveRoot extends DeductionStep {
 
     Pair<FunctionSymbol,FunctionSymbol> p = checkDifferentSemiconstructors(left, right, context);
     if (p == null) {
-      if (left.isTheoryTerm() && right.isTheoryTerm() && left.queryType().isBaseTheoryType()) {
+      if (Theory.isTheory(left) && Theory.isTheory(right) && left.queryType().isBaseTheoryType()) {
         m.ifPresent(o -> o.println("This case should be handled using DISPROVE THEORY rather " +
           "than DISPROVE ROOT."));
       }

@@ -13,16 +13,21 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 import java.util.Map;
+import charlie.types.Base;
+import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.terms.InappropriatePatternDataException;
+import charlie.terms.FunctionSymbolInherit;
 
 /**
  * StringValues are strings, which can be printed to the user when using a logically constrained
- * TRS as a kind of proramming language.
+ * TRS as a kind of programming language.  Strings have an underlying string (the *actual* string)
+ * and a representation with escape characters (the name).
  */
-final class StringValue extends ValueInherit {
+public final class StringValue extends FunctionSymbolInherit implements Value {
   private final String _value;
 
   private static String makePrintable(String str) {
@@ -36,13 +41,25 @@ final class StringValue extends ValueInherit {
    * presented as is; there should not be surrounding quotes or escape sequences in there.
    */
   StringValue(String str) {
-    super(makePrintable(str), TypeFactory.stringSort);
+    super(makePrintable(str), TypeFactory.stringSort, Value.SPECIALNAME);
     _value = str;
   }
 
+  /**
+   * This returns the actual string representing this term, for instance including newlines, not
+   * its printable version where newlines are replaced with \n (the printable version is its name).
+   */
+  public String getString() {
+    return _value;
+  }
+
+  /** @return the string sort */
+  @Override
+  public final Base queryType() { return TypeFactory.stringSort; }
+
   /** Helper constructor for parseUserStringValue */
   private StringValue(String str, String escaped) {
-    super(escaped, TypeFactory.stringSort);
+    super(escaped, TypeFactory.stringSort, Value.SPECIALNAME);
     _value = str;
   }
 
@@ -70,22 +87,12 @@ final class StringValue extends ValueInherit {
   }
 
   @Override
-  public int hashCode(Map<Variable,Integer> mu) {
-    return _value.hashCode();
-  }
+  public int hashCode(Map mu) { return _value.hashCode(); }
 
+  /** @return false, since nullary constants cannot be infix */
   @Override
-  public java.math.BigInteger getInteger() {
-    throw new InappropriatePatternDataException("StringValue", "getInteger", "integer values");
-  }
+  public boolean isInfixSymbol() { return false; }
 
-  @Override
-  public String getString() {
-    return _value;
-  }
-
-  @Override
-  public boolean getBool() {
-    throw new InappropriatePatternDataException("StringValue", "getBool", "boolean values");
-  }
+  /** @return this, since a value is not polymorphic, so substituting has no effect */
+  public StringValue substituteType(Type.ISubstitution typeMapping) { return this; }
 }

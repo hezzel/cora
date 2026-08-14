@@ -17,6 +17,7 @@ package cora.reduction;
 
 import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;
+import charlie.theory.Theory;
 import charlie.theorytranslation.TermAnalyser;
 
 /** This class implements the calculation rule scheme. */
@@ -25,16 +26,16 @@ class CalcReducer implements ReduceObject {
     if (!t.queryType().isBaseTheoryType()) return false;
     if (!t.isFunctionalTerm()) return false;
     FunctionSymbol root = t.queryRoot();
-    if (root == null || !root.isTheorySymbol() || root.isValue()) return false;
+    if (root == null || !Theory.isCalculationSymbol(root)) return false;
     for (int i = 1; i <= t.numberArguments(); i++) {
-      if (!t.queryArgument(i).isValue()) return false;
+      if (!Theory.isValue(t.queryArgument(i))) return false;
     }
     return true;
   }
 
   public Term apply(Term t) {
     if (!t.queryType().isBaseType() || !t.queryType().isTheoryType()) return null;
-    if (t.isValue() || !t.isGround() || !t.isTheoryTerm()) return null;
+    if (Theory.isValue(t) || !t.isGround() || !Theory.isTheory(t)) return null;
     return TermAnalyser.calculate(t);
   }
 

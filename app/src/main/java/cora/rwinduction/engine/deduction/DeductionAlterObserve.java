@@ -19,8 +19,9 @@ import java.util.Optional;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.Term;
 import charlie.terms.Variable;
-import charlie.terms.TheoryFactory;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.theorytranslation.TermSmtTranslator;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
@@ -65,7 +66,7 @@ public final class DeductionAlterObserve extends DeductionStep {
         "type (given: %a versus %a).", original.queryType(), replacement.queryType()));
       return null;
     }
-    if (!replacement.isVariable() && !replacement.isValue()) {
+    if (!replacement.isVariable() && !Theory.isValue(replacement)) {
       Renaming renaming = state.getTopEquation().getRenaming();
       module.ifPresent(o -> o.println("Replacement in ALTER OBSERVE should be a variable or " +
         "value; %a is neither!", Printer.makePrintable(replacement, renaming)));

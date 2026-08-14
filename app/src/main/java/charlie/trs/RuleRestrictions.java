@@ -25,6 +25,7 @@ import charlie.terms.Variable;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.ReplaceableSet;
 import charlie.terms.position.Position;
+import charlie.theory.Theory;
 import charlie.trs.TrsProperties.*;
 
 /**
@@ -114,15 +115,15 @@ class RuleRestrictions {
     else _pattern = Lhs.NONPATTERN;
     // root status
     if (!left.isFunctionalTerm()) _rootStatus = Root.ANY;
-    else if (left.queryRoot().isTheorySymbol()) _rootStatus = Root.THEORY;
+    else if (Theory.isTheory(left.queryRoot())) _rootStatus = Root.THEORY;
     else _rootStatus = Root.FUNCTION;
     // theories
     List<Pair<Term,Position>> subterms = left.querySubterms();
     subterms.addAll(right.querySubterms());
-    _theories = (!constraint.isValue() || !constraint.toValue().getBool());
+    _theories = !Theory.isTrue(constraint);
     for (int i = 0; i < subterms.size() && !_theories; i++) {
       Term sub = subterms.get(i).fst();
-      if (sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) _theories = true;
+      if (sub.isFunctionalTerm() && Theory.isTheory(sub.queryRoot())) _theories = true;
     }
     // type level
     _types = TypeLevel.SIMPLE;

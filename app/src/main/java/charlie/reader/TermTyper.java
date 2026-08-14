@@ -27,6 +27,10 @@ import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
 import charlie.parser.CoraParser;
 import charlie.terms.*;
+import charlie.theory.IncorrectStringException;
+import charlie.theory.IntegerValue;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 
 /**
  * This class takes a ParserTerm, and turns it into a proper term -- assuming that it is
@@ -123,7 +127,7 @@ class TermTyper {
   private Term confirmType(Token token, Term term, Type expected) {
     if (expected == null || expected.equals(term.queryType())) return term;
     String kind = "term ";
-    if (term.isValue()) kind = "value ";
+    if (Theory.isValue(term)) kind = "value ";
     else if (term.isConstant()) kind = "function symbol ";
     else if (term.isVariable()) kind = "variable ";
     storeError(token, "Expected term of type ", expected, ", but got " + kind,
@@ -499,12 +503,10 @@ class TermTyper {
     }
     if (args.size() == 1) {
       Term child = targs.get(0);
-      if (child.isValue()) {
-        Value v = child.toValue();
-        if (v.isIntegerValue() && v.getInteger().signum() > 0) {
-          return confirmType(token,
-                             TheoryFactory.createValue(child.toValue().getInteger().negate()),
-                             expected);
+      if (Theory.isIntegerValue(child)) {
+        IntegerValue v = Theory.toIntegerValue(child);
+        if (v.getInteger().signum() > 0) {
+          return confirmType(token, TheoryFactory.createValue(v.getInteger().negate()), expected);
         }
       }
       return confirmType(token, TheoryFactory.negateSymbol.apply(targs.get(0)), expected);

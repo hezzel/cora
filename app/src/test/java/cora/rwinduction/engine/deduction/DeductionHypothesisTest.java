@@ -28,6 +28,7 @@ import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.TheoryFactory;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import charlie.smt.SmtProblem;

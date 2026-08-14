@@ -29,6 +29,7 @@ import charlie.types.Type;
 import charlie.terms.replaceable.*;
 import charlie.terms.*;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.TheoryFactory;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import charlie.smt.Valuation;

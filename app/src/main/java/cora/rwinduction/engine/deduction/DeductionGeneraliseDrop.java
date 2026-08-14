@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Stack;
 import charlie.terms.Term;
-import charlie.terms.TheoryFactory;
+import charlie.theory.TheoryFactory;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
 import cora.io.OutputModule;

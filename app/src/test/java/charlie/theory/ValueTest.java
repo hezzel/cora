@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 import java.util.ArrayList;
 import java.util.TreeMap;
@@ -24,9 +24,15 @@ import charlie.types.Type;
 import charlie.types.TVar;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
+import charlie.terms.InappropriatePatternDataException;
+import charlie.terms.Term;
+import charlie.terms.Variable;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.TermFactory;
+
 import charlie.types.TestSubstitution;
 
-public class ValueTest extends TermTestFoundation {
+public class ValueTest {
   @Test
   public void testValueBasics() {
     Value v = new IntegerValue(-37);
@@ -46,14 +52,14 @@ public class ValueTest extends TermTestFoundation {
     assertTrue(s.isGround());
     assertTrue(v.isClosed());
     assertTrue(b.isTrueTerm());
-    assertTrue(s.isTheoryTerm());
-    assertTrue(v.isValue());
+    assertTrue(Theory.isValue(v));
+    assertTrue(Theory.isTheory(v));
     assertTrue(b.numberArguments() == 0);
     assertTrue(s.numberMetaArguments() == 0);
     assertTrue(v.queryImmediateHeadSubterm(0) == v);
     assertTrue(b.queryHead() == b);
     assertTrue(s.queryRoot() == s);
-    assertTrue(v.toValue() == v);
+    assertTrue(Theory.toValue(v) == v);
     assertTrue(b.isFirstOrder());
     assertTrue(s.isPattern());
     assertTrue(v.isApplicative());
@@ -89,7 +95,8 @@ public class ValueTest extends TermTestFoundation {
   @Test
   public void testValueApply() {
     Value v = new IntegerValue(13);
-    assertThrows(TypingException.class, () -> v.apply(new Constant("a", baseType("o"))));
+    assertThrows(charlie.terms.TypingException.class, () ->
+      v.apply(TermFactory.createConstant("a", TypeFactory.createSort("o"))));
   }
 
   @Test
@@ -108,9 +115,9 @@ public class ValueTest extends TermTestFoundation {
     assertTrue(b.equals(new BooleanValue(false)));
     assertFalse(b.equals(new BooleanValue(true)));
     assertFalse(b.equals(s));
-    FunctionSymbol f = new Constant("42", TypeFactory.intSort);
-    Term bb = new Constant("false", TypeFactory.boolSort);
-    Term ss = new Constant("\"test\"", TypeFactory.stringSort);
+    FunctionSymbol f = TermFactory.createConstant("42", TypeFactory.intSort);
+    Term bb = TermFactory.createConstant("false", TypeFactory.boolSort);
+    Term ss = TermFactory.createConstant("\"test\"", TypeFactory.stringSort);
     assertFalse(n.equals(f));
     assertFalse(f.equals(n));
     assertFalse(b.equals(bb));
@@ -155,20 +162,22 @@ public class ValueTest extends TermTestFoundation {
   @Test
   public void testArgumentPositionRequest() {
     Term v = new StringValue("333");
-    assertThrows(InvalidPositionException.class, () ->
+    assertThrows(charlie.terms.InvalidPositionException.class, () ->
       v.querySubterm(new ArgumentPos(1, Position.empty)));
   }
 
   @Test
   public void testHeadPositionRequest() {
     Term v = new IntegerValue(31);
-    assertThrows(InvalidPositionException.class, () -> v.querySubterm(new FinalPos(1)));
+    assertThrows(charlie.terms.InvalidPositionException.class, () ->
+      v.querySubterm(new FinalPos(1)));
   }
 
   @Test
   public void testBadPositionReplacement() {
     Term v = new BooleanValue(true);
-    assertThrows(InvalidPositionException.class, () ->
-      v.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a"))));
+    assertThrows(charlie.terms.InvalidPositionException.class, () ->
+      v.replaceSubterm(new ArgumentPos(1, Position.empty),
+      TermFactory.createConstant("a", TypeFactory.createSort("a"))));
   }
 }

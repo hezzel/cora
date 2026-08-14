@@ -26,6 +26,9 @@ import charlie.types.TypeFactory;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
+import charlie.theory.Value;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.TrsProperties.*;
 
 /**
@@ -149,9 +152,7 @@ public class Rule {
    * is anything other than the value true.
    */
   public boolean isConstrained() {
-    Value value = _constraint.toValue();
-    if (value == null) return true;
-    return !value.getBool();
+    return !Theory.isTrue(_constraint);
   }
 
   /** This returns whether both left- and right-hand side of the rule are first-order. */
@@ -197,7 +198,7 @@ public class Rule {
   /** Gives a string representation of the current rule (debug functionality). */
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    TermPrinter printer = TheoryPrinter.DEBUGPRINTER;
+    TermPrinter printer = TermPrinter.DEBUGPRINTER;
     Renaming renaming =
       printer.queryNameGenerator().generateUniqueNaming(_left, _right, _constraint);
     printer.print(_left, renaming, builder);
@@ -276,7 +277,7 @@ public class Rule {
       if (!t.queryType().isTheoryType()) couldBeTheory = false;
       else if (t.isVariable() || t.isMetaApplication()) continue;
         // the arguments of a meta-variable may be ignored by the instantiation
-      else if (t.isConstant()) couldBeTheory = t.queryRoot().isTheorySymbol();
+      else if (t.isConstant()) couldBeTheory = Theory.isTheory(t.queryRoot());
       else if (t.isAbstraction()) parts.add(t.queryAbstractionSubterm());
       else if (t.isApplication()) {
         parts.add(t.queryHead());
@@ -284,7 +285,7 @@ public class Rule {
       }
     }
     if (couldBeTheory) {
-      if (_left.isTheoryTerm()) {
+      if (Theory.isTheory(_left)) {
         throw new IllegalRuleException(_left, _right, _constraint, "the left-hand side is a " +
           "theory term!");
       }
@@ -297,7 +298,7 @@ public class Rule {
 
   /** Checks that the constraint is a theory term. */
   private void checkConstraintTheory() {
-    if (!_constraint.isTheoryTerm()) {
+    if (!Theory.isTheory(_constraint)) {
       throw new IllegalRuleException(_left, _right, _constraint,
         "the constraint is not a theory term.");
     }

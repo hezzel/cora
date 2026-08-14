@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 
 public class CalcReducerTest {
   private Term plus() { return TheoryFactory.plusSymbol; }

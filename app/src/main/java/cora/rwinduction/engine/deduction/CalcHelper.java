@@ -22,6 +22,9 @@ import java.util.Optional;
 import java.util.Stack;
 
 import charlie.terms.*;
+import charlie.theory.CalculationSymbol;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 
@@ -37,7 +40,7 @@ final class CalcHelper {
   static boolean calculatable(Term term) {
     return term.isFunctionalTerm() &&
            term.isApplication() &&
-           term.isTheoryTerm() &&
+           Theory.isTheory(term) &&
            term.isFirstOrder();
   }
 
@@ -59,7 +62,7 @@ final class CalcHelper {
         term = term.queryArgument(1);
       }
       if (!term.isFunctionalTerm() || term.numberArguments() != 2) continue;
-      CalculationSymbol f = term.queryRoot().toCalculationSymbol();
+      CalculationSymbol f = Theory.toCalculationSymbol(term.queryRoot());
       if (f == null) continue;
       if (f.queryKind() != CalculationSymbol.Kind.EQUALS &&
           f.queryKind() != CalculationSymbol.Kind.IFF) continue;

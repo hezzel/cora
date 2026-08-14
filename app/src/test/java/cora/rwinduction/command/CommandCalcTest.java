@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Optional;
 import java.util.Set;
 
-import charlie.terms.TheoryFactory;
 import charlie.parser.lib.ParsingStatus;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;

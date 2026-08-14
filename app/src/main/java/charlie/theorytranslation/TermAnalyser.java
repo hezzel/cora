@@ -21,10 +21,9 @@ import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.Term;
 import charlie.terms.Variable;
-import charlie.terms.Value;
-import charlie.terms.TheoryFactory;
 import charlie.substitution.Substitution;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.*;
 import charlie.smt.*;
 import charlie.smt.SmtSolver.Answer;
 
@@ -50,18 +49,25 @@ public class TermAnalyser {
       "type ", type, " because this theory sort is not yet supported by the SMT module.");
   }
 
+  /** Given a ground constraint, this fully evaluates it to a BooleanValue. */
+  public static BooleanValue evaluateConstraint(Term t) {
+    TermSmtTranslator translator = new TermSmtTranslator();
+    Constraint c = translator.translateConstraint(t);
+    return TheoryFactory.createValue(c.evaluate());
+  }
+
+  /** Given a ground theory term of type Int, this fully evaluates it to an IntegerValue. */
+  public static IntegerValue evaluateInteger(Term t) {
+    TermSmtTranslator translator = new TermSmtTranslator();
+    IntegerExpression e = translator.translateIntegerExpression(t);
+    return TheoryFactory.createValue(e.evaluate());
+  }
+
   /** Given a ground theory term, this fully evaluates it to a Value. */
   public static Value evaluate(Term t) {
-    TermSmtTranslator translator = new TermSmtTranslator();
-    if (t.queryType().equals(TypeFactory.intSort)) {
-      IntegerExpression e = translator.translateIntegerExpression(t);
-      return TheoryFactory.createValue(e.evaluate());
-    }
-    if (t.queryType().equals(TypeFactory.boolSort)) {
-      Constraint c = translator.translateConstraint(t);
-      return TheoryFactory.createValue(c.evaluate());
-    }
-    if (t.isValue()) return t.toValue();
+    if (t.queryType().equals(TypeFactory.intSort)) return evaluateInteger(t);
+    if (t.queryType().equals(TypeFactory.boolSort)) return evaluateConstraint(t);
+    if (Theory.isValue(t)) return Theory.toValue(t);
     throw new UnsupportedTheoryException("Failed to translate ", t, " to SMT: its type (",
       t.queryType(), ") is not a supported theory sort.");
   }
@@ -73,9 +79,9 @@ public class TermAnalyser {
    * UnsupportedTheoryException is thrown.
    */
   public static Value calculate(Term t) {
-    if (!t.isFunctionalTerm() || t.queryRoot().toCalculationSymbol() == null) return null;
+    if (!t.isFunctionalTerm() || !Theory.isCalculationSymbol(t.queryRoot())) return null;
     for (int i = 1; i <= t.numberArguments(); i++) {
-      if (!t.queryArgument(i).isValue()) return null;
+      if (!Theory.isValue(t.queryArgument(i))) return null;
     }
     return evaluate(t);
   }

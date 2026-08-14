@@ -33,7 +33,6 @@ import charlie.terms.Variable;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TypingException;
 import charlie.terms.TermFactory;
-import charlie.terms.TheoryFactory;
 
 public class SubstitutionTest {
   private Type type(String str) {

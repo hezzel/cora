@@ -18,9 +18,9 @@ package charlie.printer;
 import java.util.Set;
 import charlie.types.Type;
 import charlie.terms.NameGenerator;
-import charlie.terms.TheoryPrinter;
-import charlie.terms.CalculationSymbol;
-import charlie.terms.CalculationSymbol.Kind;
+import charlie.theory.CalculationSymbol;
+import charlie.theory.CalculationSymbol.Kind;
+import charlie.theory.TheoryPrinter;
 
 /** The PlainTermPrinter adapts the standard TermPrinter to avoid unicode symbols. */
 public class PlainTermPrinter extends TheoryPrinter {

@@ -60,7 +60,7 @@ class DPGeneratorTest {
     assertFalse(prob.hasExtraRules());
     assertTrue(prob.getDPList().size() == 1);
     assertTrue(prob.getDPList().get(0).ustr().equals(
-      "append#(cons(x, y), z) ➡ append#(y, z) | true"));
+      "append#(cons(x, y), z) ➡ append#(y, z)"));
   }
 
   @Test
@@ -105,8 +105,8 @@ class DPGeneratorTest {
       "(Int → Int) → list → dpsort"));
     assertTrue(prob.isPrivate(0));
     assertFalse(prob.isPrivate(1));
-    assertTrue(prob.getDPList().get(0).ustr().equals("map#(F, cons(x, y)) ➡ map#(F, y) | true"));
-    assertTrue(prob.getDPList().get(1).ustr().equals("start#(arg1) ➡ map#([+](2), arg1) | true"));
+    assertTrue(prob.getDPList().get(0).ustr().equals("map#(F, cons(x, y)) ➡ map#(F, y)"));
+    assertTrue(prob.getDPList().get(1).ustr().equals("start#(arg1) ➡ map#([+](2), arg1)"));
   }
 
   @Test

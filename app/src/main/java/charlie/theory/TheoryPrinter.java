@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2025--2026 Cynthia Kop
+ Copyright 2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,18 +13,15 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.Set;
-import java.util.function.Predicate;
 import charlie.types.Type;
-import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
+import charlie.terms.Term;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.NameGenerator;
+import charlie.terms.TermPrinter;
 
 /**
  * A TermPrinter specialised to printing theory terms (and: to be inherited so that theory terms
@@ -41,13 +38,13 @@ public class TheoryPrinter extends TermPrinter {
    * that occurs as the root of a *partially applied* functional term [f](s1,...,sn) (with arity(f)
    * ≥ n+1).
    *
-   * If the given symbol is a calculation symbol, then this deviates from the default functionality
-   * by printing [calcname], where calcname is the result of the function queryCalculationName for
-   * the given constant.
+   * If the given symbol is a calculation symbol, then this deviates from the default TermPrinter
+   * functionality by printing [calcname], where calcname is the result of the function
+   * queryCalculationName for the given constant.
    */
   @Override
   protected void printSoloInfixSymbol(FunctionSymbol constant, StringBuilder builder) {
-    CalculationSymbol calc = constant.toCalculationSymbol();
+    CalculationSymbol calc = Theory.toCalculationSymbol(constant);
     if (calc == null) {
       super.printSoloInfixSymbol(constant, builder);
       return;
@@ -67,7 +64,7 @@ public class TheoryPrinter extends TermPrinter {
   @Override
   protected void printPrefixTerm(FunctionSymbol root, Term arg, Renaming freeNaming,
                                  MutableRenaming boundNaming, StringBuilder builder) {
-    CalculationSymbol calc = root.toCalculationSymbol();
+    CalculationSymbol calc = Theory.toCalculationSymbol(root);
     if (calc == null || (calc.queryKind() != CalculationSymbol.Kind.NOT &&
                          calc.queryKind() != CalculationSymbol.Kind.NEGATE)) {
       super.printPrefixTerm(root, arg, freeNaming, boundNaming, builder);
@@ -107,9 +104,9 @@ public class TheoryPrinter extends TermPrinter {
   protected void printIntegerNegation(Term arg, Renaming freeNaming, MutableRenaming boundNaming,
                                       StringBuilder builder, String calcname) {
     boolean brackets = arg.isFunctionalTerm() && arg.queryRoot().isInfixSymbol();
-    if (!brackets && arg.isValue()) {
-      Value v = arg.toValue();
-      if (v.isIntegerValue() && v.getInteger().signum() < 0) brackets = true;
+    if (!brackets && Theory.isIntegerValue(arg)) {
+      IntegerValue v = Theory.toIntegerValue(arg);
+      if (v.getInteger().signum() < 0) brackets = true;
     }
     builder.append(calcname);
     if (brackets) builder.append("(");
@@ -126,7 +123,7 @@ public class TheoryPrinter extends TermPrinter {
    */
   @Override
   protected void printInfixOperator(FunctionSymbol f, int index, StringBuilder builder) {
-    CalculationSymbol calc = f.toCalculationSymbol();
+    CalculationSymbol calc = Theory.toCalculationSymbol(f);
     if (calc == null) super.printInfixOperator(f, index, builder);
     else {
       builder.append(" ");

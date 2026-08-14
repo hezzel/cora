@@ -19,6 +19,8 @@ import charlie.util.Pair;
 import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.terms.*;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.*;
 import charlie.trs.TrsProperties.*;
 import charlie.smt.*;
@@ -74,7 +76,7 @@ public class URWrtRedPairProcessor implements Processor {
    */
   private Term translateTerm(AlphabetMap amap, TreeMap<Variable,Variable> vmap, Term t,
                              Set<Variable> lvar) {
-    if (t.queryType().isBaseTheoryType() && t.isTheoryTerm() && t.isFirstOrder()) {
+    if (t.queryType().isBaseTheoryType() && Theory.isTheory(t) && t.isFirstOrder()) {
       boolean ok = true;
       for (Variable x : t.vars()) {
         if (!lvar.contains(x)) { ok = false; break; }
@@ -188,7 +190,7 @@ public class URWrtRedPairProcessor implements Processor {
     for (DP dp : dpp.getDPList()) dps.add(translateDP(amap, dp));
     for (Rule rho : dpp.getRuleList()) translateAndStoreRule(amap, rho, constrained, rules);
     for (Pair<Pair<FunctionSymbol,Integer>,FunctionSymbol> p : amap.getAll()) {
-      if (p.fst().fst().isTheorySymbol() && p.fst().snd() == p.fst().fst().queryArity()) {
+      if (Theory.isTheory(p.fst().fst()) && p.fst().snd() == p.fst().fst().queryArity()) {
         storeFilteredCalculationRule(p.fst().fst(), p.snd(), rules);
       }
     }
@@ -274,7 +276,7 @@ public class URWrtRedPairProcessor implements Processor {
     if (term.isVariable()) return;
     
     // don't add requirements for theory terms that are going to get normalised to a value
-    if (term.queryType().isBaseTheoryType() && term.isTheoryTerm() && term.isFirstOrder()) {
+    if (term.queryType().isBaseTheoryType() && Theory.isTheory(term) && term.isFirstOrder()) {
       boolean ok = true;
       for (Variable x : term.vars()) {
         if (!lvar.contains(x)) { ok = false; break; }

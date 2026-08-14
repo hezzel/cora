@@ -18,6 +18,8 @@ package cora.termination.transformation;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.*;
 
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ public class CallByValueModifier {
     }
     // we're not applicable if term values of theory sort cannot be assumed to be theory values
     for (FunctionSymbol f : trs.queryAlphabet().getSymbols()) {
-      if (f.isTheorySymbol()) continue;
+      if (Theory.isTheory(f)) continue;
       if (trs.isDefined(f)) continue;
       Type type = f.queryType().queryOutputType();
       if (type.isBaseTheoryType()) return false;

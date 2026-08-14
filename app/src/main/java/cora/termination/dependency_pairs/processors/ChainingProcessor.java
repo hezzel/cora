@@ -20,6 +20,8 @@ import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.substitution.MutableSubstitution;
 import charlie.substitution.Matcher;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.TRS;
 import cora.io.OutputModule;
 import cora.config.Settings;
@@ -223,7 +225,7 @@ public class ChainingProcessor implements Processor {
     for (Replaceable var : replaceables) {
       // replacement should not be null: var is in the domain of matcher
       Term replacement = matcher.get(var);
-      if (! replacement.isTheoryTerm()) {
+      if (!Theory.isTheory(replacement)) {
         return Optional.empty();
       }
     }

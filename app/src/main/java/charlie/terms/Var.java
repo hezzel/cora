@@ -73,9 +73,6 @@ final class Var extends LeafTermInherit implements Variable, MetaVariable {
   /** @return true */
   public boolean isApplicative() { return true; }
 
-  /** @return true if and only if the type is a theory type */
-  public boolean isTheoryTerm() { return queryType().isTheoryType(); }
-
   /** @return 0 */
   public int queryArity() { return 0; }
 

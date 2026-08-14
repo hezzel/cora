@@ -22,6 +22,8 @@ import charlie.terms.position.Position;
 import charlie.terms.position.FinalPos;
 import charlie.terms.*;
 import charlie.substitution.MutableSubstitution;
+import charlie.theory.Theory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.trs.TrsFactory;
@@ -64,11 +66,11 @@ public class CriticalPeaksFinder {
     // so a variable.)
     for (var x : target.queryLVars()) {
       var t = subst.getReplacement(x);
-      if (!t.isValue() && !t.isVariable()) return;
+      if (!Theory.isValue(t) && !t.isVariable()) return;
     }
     for (var x : source.queryLVars()) {
       var t = subst.getReplacement(x);
-      if (!t.isValue() && !t.isVariable()) return;
+      if (!Theory.isValue(t) && !t.isVariable()) return;
     }
 
     // the combined constraint must be satisfiable for this to give a critical pair
@@ -114,8 +116,8 @@ public class CriticalPeaksFinder {
     }
 
     /* For calculation symbols, a critical pair is generated more "lightly". */
-    if (root.isTheorySymbol() && nargs > 0 && subterm.queryType().isBaseType() &&
-        subterm.queryArguments().stream().allMatch(t -> t.isValue() || t.isVariable())) {
+    if (Theory.isTheory(root) && nargs > 0 && subterm.queryType().isBaseType() &&
+        subterm.queryArguments().stream().allMatch(t -> Theory.isValue(t) || t.isVariable())) {
       /* The name _z is arbitrary and included for testing. */
       var z = TermFactory.createVar("_z", subterm.queryType());
       _cps.add(new CriticalPeak(

@@ -22,6 +22,7 @@ import java.util.Set;
 
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
+import charlie.theory.TheoryFactory;
 import charlie.trs.*;
 import charlie.reader.CoraInputReader;
 

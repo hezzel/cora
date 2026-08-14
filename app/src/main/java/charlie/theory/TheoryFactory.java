@@ -13,14 +13,18 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 import java.math.BigInteger;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import charlie.types.*;
-import charlie.terms.CalculationSymbol.Kind;
-import charlie.terms.CalculationSymbol.Associativity;
+import charlie.terms.Term;
+import charlie.terms.Variable;
+import charlie.terms.TermFactory;
+import charlie.theory.CalculationSymbol.Kind;
+import charlie.theory.CalculationSymbol.Associativity;
 
 /**
  * A factory only to create theory terms and symbols.
@@ -45,41 +49,41 @@ public class TheoryFactory {
       throw new IllegalArgumentException("TheoryFactory::createVar is given type " + type +
         " which is not a theory sort.");
     }
-    return new Var(name, type);
+    return TermFactory.createVar(name, type);
   }
 
   /** Create a non-binder boolean variable with the given name. */
   public static Variable createBoolVar(String name) {
-    return new Var(name, TypeFactory.boolSort);
+    return TermFactory.createVar(name, TypeFactory.boolSort);
   }
 
   /** Create a non-binder integer variable with the given name. */
   public static Variable createIntVar(String name) {
-    return new Var(name, TypeFactory.intSort);
+    return TermFactory.createVar(name, TypeFactory.intSort);
   }
 
   /** Create an Integer Value */
-  public static Value createValue(long n) {
+  public static IntegerValue createValue(long n) {
     return new IntegerValue(n);
   }
 
   /** Create an Integer Value from an arbitrary-precision integer */
-  public static Value createValue(BigInteger n) {
+  public static IntegerValue createValue(BigInteger n) {
     return new IntegerValue(n);
   }
 
   /** Create a Boolean Value */
-  public static Value createValue(boolean b) {
+  public static BooleanValue createValue(boolean b) {
     return new BooleanValue(b);
   }
 
   /** Create a String Value */
-  public static Value createValue(String s) {
+  public static StringValue createValue(String s) {
     return new StringValue(s);
   }
 
   /** Create a String Value with a string in quotes, and potentially with escape characters in it */
-  public static Value createEscapedStringValue(String s) throws IncorrectStringException {
+  public static StringValue createEscapedStringValue(String s) throws IncorrectStringException {
     return StringValue.parseUserStringValue(s);
   }
 
@@ -94,13 +98,13 @@ public class TheoryFactory {
         "different types!");
     }
     if (a.queryType().equals(TypeFactory.boolSort)) {
-      return new Application(iffSymbol, a, b);
+      return TermFactory.createApp(iffSymbol, a, b);
     }
     if (a.queryType().equals(TypeFactory.intSort)) {
-      return new Application(intEqualSymbol, a, b);
+      return TermFactory.createApp(intEqualSymbol, a, b);
     }
     if (a.queryType().equals(TypeFactory.stringSort)) {
-      return new Application(stringEqualSymbol, a, b);
+      return TermFactory.createApp(stringEqualSymbol, a, b);
     }
     throw new IllegalArgumentException("Cannot create an equality for terms of type " +
       a.queryType().toString());
@@ -124,7 +128,7 @@ public class TheoryFactory {
       if (((BooleanValue)b).getBool()) return a;
       else return b;
     }
-    return new Application(andSymbol, a, b);
+    return TermFactory.createApp(andSymbol, a, b);
   }
 
   /** The binary symbol for addition */
@@ -216,13 +220,13 @@ public class TheoryFactory {
     CalculationSymbol.INFIX_COMPARISON);
 
   /** The value for truth */
-  public static final Value trueValue = new BooleanValue(true);
+  public static final BooleanValue trueValue = new BooleanValue(true);
   /** The value for falsehood */
-  public static final Value falseValue = new BooleanValue(false);
+  public static final BooleanValue falseValue = new BooleanValue(false);
   /** The value for 0 */
-  public static final Value zeroValue = new IntegerValue(BigInteger.ZERO);
+  public static final IntegerValue zeroValue = new IntegerValue(BigInteger.ZERO);
   /** The value for the empty string */
-  public static final Value emptyStringValue = new StringValue("");
+  public static final StringValue emptyStringValue = new StringValue("");
 
   /** This returns the set of all calculation symbols that are currently supported. */
   public static LinkedHashSet<CalculationSymbol> queryAllCalculationSymbols() {
@@ -250,17 +254,17 @@ public class TheoryFactory {
   }
 
   /** This returns an IntegerValue not included in the given set. */
-  public static Value getNewIntValue(Set<Value> exclude) {
+  public static IntegerValue getNewIntegerValue(Set<IntegerValue> exclude) {
     if (!exclude.contains(zeroValue)) return zeroValue;
     for (long i = 1; ; i++) {
       for (long j = 1; j > -2; j -= 2) {
-        Value v = new IntegerValue(i * j);
+        IntegerValue v = new IntegerValue(i * j);
         if (!exclude.contains(v)) return v;
       }
     }
   }
 
-  public static Value getNewStringValue(Set<Value> exclude) {
+  public static StringValue getNewStringValue(Set<StringValue> exclude) {
     if (!exclude.contains(emptyStringValue)) return emptyStringValue;
     for (long i = 1; ; i++) {
       StringBuilder builder = new StringBuilder();
@@ -270,7 +274,7 @@ public class TheoryFactory {
         if (k <= 26) break;
         k = (k - 1) / 26;
       }
-      Value v = new StringValue(builder.toString());
+      StringValue v = new StringValue(builder.toString());
       if (!exclude.contains(v)) return v;
     }
   }
@@ -287,8 +291,20 @@ public class TheoryFactory {
       if (!exclude.contains(falseValue)) return falseValue;
       return null;
     }
-    if (sort.equals(TypeFactory.intSort)) return getNewIntValue(exclude);
-    if (sort.equals(TypeFactory.stringSort)) return getNewStringValue(exclude);
+    if (sort.equals(TypeFactory.intSort)) {
+      Set<IntegerValue> s = new HashSet<IntegerValue>();
+      for (Value v : exclude) {
+        if (v instanceof IntegerValue i) s.add(i);
+      }
+      return getNewIntegerValue(s);
+    }
+    if (sort.equals(TypeFactory.stringSort)) {
+      Set<StringValue> s = new HashSet<StringValue>();
+      for (Value v : exclude) {
+        if (v instanceof StringValue i) s.add(i);
+      }
+      return getNewStringValue(s);
+    }
     return null;
   }
 }

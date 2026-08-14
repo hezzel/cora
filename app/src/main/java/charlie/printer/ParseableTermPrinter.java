@@ -21,9 +21,9 @@ import charlie.types.Type;
 import charlie.types.TypePrinter;
 import charlie.terms.Variable;
 import charlie.terms.NameGenerator;
-import charlie.terms.TheoryPrinter;
-import charlie.terms.CalculationSymbol;
-import charlie.terms.CalculationSymbol.Kind;
+import charlie.theory.CalculationSymbol;
+import charlie.theory.CalculationSymbol.Kind;
+import charlie.theory.TheoryPrinter;
 
 /**
  * The ParseableTermPrinter specifically prints terms in such a way that the result can be parsed

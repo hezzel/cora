@@ -72,14 +72,6 @@ class Abstraction extends TermInherit {
     return true;
   }
 
-  /**
-   * @return whether the immediate subterm is a theory term, and the variable has a theory type.
-   */
-  @Override
-  public boolean isTheoryTerm() {
-    return _binder.queryType().isTheoryType() && _subterm.isTheoryTerm();
-  }
-
   /** Adds all function symbols in the present term to storage. */
   @Override
   public void storeFunctionSymbols(Set<FunctionSymbol> storage) {

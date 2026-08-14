@@ -20,6 +20,7 @@ import charlie.util.Pair;
 import charlie.types.*;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.*;
+import charlie.theory.Theory;
 import charlie.smt.*;
 import charlie.theorytranslation.TermSmtTranslator;
 import cora.config.Settings;
@@ -123,7 +124,7 @@ class HorpoSimplifier {
 
     Term c = req.constraint();
     TreeSet<Variable> v = req.theoryVariables();
-    if (l.isTheoryTerm()) {
+    if (Theory.isTheory(l)) {
       _smt.requireImplication(req.variable(), _hcl.store(l, HRelation.GREATERTHEORY, r, c, v));
     }
     else {
@@ -153,7 +154,7 @@ class HorpoSimplifier {
       _smt.requireImplication(req.variable(), _hcl.store(l, HRelation.GEQEQUAL, r, c, v));
     }
     // otherwise, for theory terms, only GEQTHEORY can apply
-    else if (l.isTheoryTerm()) {
+    else if (Theory.isTheory(l)) {
       _smt.requireImplication(req.variable(), _hcl.store(l, HRelation.GEQTHEORY, r, c, v));
     }
     // for non-theory terms, only the other options apply; instead of GREATER we immediately go to
@@ -185,7 +186,7 @@ class HorpoSimplifier {
       _smt.requireImplication(req.variable(), _hcl.store(l, HRelation.GEQNOGREQUAL, r, c, v));
     }
     // otherwise, for theory terms, only GEQNOGRTHEORY can apply
-    else if (l.isTheoryTerm()) {
+    else if (Theory.isTheory(l)) {
       _smt.requireImplication(req.variable(), _hcl.store(l, HRelation.GEQNOGRTHEORY, r, c, v));
     }
     else {
@@ -252,7 +253,7 @@ class HorpoSimplifier {
 
   /** Returns whether s is a base-type theory term with all its variables in theoryVariables */
   private boolean isTheory(Term s, TreeSet<Variable> theoryVariables) {
-    if (!s.isTheoryTerm() || !s.queryType().isBaseType() ||
+    if (!Theory.isTheory(s) || !s.queryType().isBaseType() ||
         !s.queryType().isTheoryType()) return false;
     for (Replaceable x : s.freeReplaceables()) {
       if (!theoryVariables.contains(x)) return false;
@@ -615,7 +616,7 @@ class HorpoSimplifier {
    * the requirement satisfies the conditions to be used in ▷.
    */
   private void handleGrRpo(HorpoRequirement req) {
-    if (!req.left().isFunctionalTerm() || req.left().isTheoryTerm()) {
+    if (!req.left().isFunctionalTerm() || Theory.isTheory(req.left())) {
       _smt.require(req.variable().negate());
     }
     else {
@@ -725,7 +726,7 @@ class HorpoSimplifier {
    */
   private void handleRpoTh(HorpoRequirement req) {
     Term r = req.right();
-    boolean isgood = r.isTheoryTerm();
+    boolean isgood = Theory.isTheory(r);
     if (isgood) {
       for (Variable x : r.vars()) {
         if (!req.theoryVariables().contains(x)) { isgood = false; break; }

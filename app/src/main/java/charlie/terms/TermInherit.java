@@ -360,8 +360,6 @@ abstract class TermInherit implements Term {
   public boolean isMetaApplication() { return false; }
   public boolean isTuple() { return false; }
   public boolean isBetaRedex() { return false; }
-  public boolean isValue() { return false; }
-  public Value toValue() { return null; }
   public int numberArguments() { return 0; }
   public int numberMetaArguments() { return 0; }
   public int numberTupleArguments() { return 0; }

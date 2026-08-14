@@ -24,6 +24,7 @@ import java.util.Collections;
 
 import charlie.terms.Term;
 import charlie.terms.Variable;
+import charlie.theory.Theory;
 import charlie.trs.Rule;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
@@ -66,7 +67,7 @@ public record OrderingRequirement(Term left, Term right, Term constraint, Relati
     });
     components.add(" ");
     components.add(right);
-    if (!constraint.isValue() || !constraint.toValue().getBool()) {
+    if (!Theory.isTrue(constraint)) {
       components.add(" | ");
       components.add(constraint);
     }

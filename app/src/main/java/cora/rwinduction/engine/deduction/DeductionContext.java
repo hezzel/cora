@@ -21,6 +21,7 @@ import charlie.terms.position.Position;
 import charlie.terms.position.ArgumentPos;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
+import charlie.theory.Theory;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
 import cora.config.Settings;
@@ -387,7 +388,7 @@ public final class DeductionContext extends DeductionStep {
       return;
     }
     FunctionSymbol f = _equ.getEquation().getLhs().queryRoot();
-    if (_pcontext.getTRS().isDefined(f) || f.toCalculationSymbol() != null) {
+    if (_pcontext.getTRS().isDefined(f) || Theory.isCalculationSymbol(f)) {
       module.println("We apply SEMICONSTRUCTOR to %a, since the rule arity of %a is %a and only " +
         "%a arguments are present.", _equ.getName(), f, _pcontext.queryRuleArity(f),
         _equ.getEquation().getLhs().numberArguments());

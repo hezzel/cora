@@ -17,7 +17,7 @@ package cora.termination;
 
 import charlie.terms.Term;
 import charlie.terms.Variable;
-import charlie.terms.TheoryFactory;
+import charlie.theory.TheoryFactory;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.trs.TrsFactory;

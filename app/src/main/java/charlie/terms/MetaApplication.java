@@ -98,10 +98,6 @@ class MetaApplication extends TermInherit {
     return false;
   }
 
-  public boolean isTheoryTerm() {
-    return false;
-  }
-
   /** Adds all function symbols in the present term to storage. */
   public void storeFunctionSymbols(Set<FunctionSymbol> storage) {
     for (Term t : _args) t.storeFunctionSymbols(storage);

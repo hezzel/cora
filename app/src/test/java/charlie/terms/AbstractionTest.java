@@ -199,8 +199,6 @@ class AbstractionTest extends TermTestFoundation {
     assertFalse(abs.queryAbstractionSubterm().isClosed());
     assertFalse(abs.queryAbstractionSubterm().isGround());
     assertTrue(abs.isTrueTerm());
-    assertFalse(abs.isValue());
-    assertFalse(abs.isTheoryTerm());
     assertTrue(abs.isLinear());
     assertEquals("(λx.f(x, λy.y))(u)", abs.apply(constantTerm("u", arrowType("o", "o"))).toString());
   }
@@ -225,22 +223,6 @@ class AbstractionTest extends TermTestFoundation {
     assertTrue(set.contains(g));
     assertTrue(set.contains(pair));
     assertTrue(set.size() == 3);
-  }
-
-  @Test
-  public void testTheory() {
-    // λx::Int.x + 1
-    Variable x = new Binder("x", TypeFactory.intSort);
-    Term abs = new Abstraction(x, new Application(TheoryFactory.plusSymbol, x, new IntegerValue(1)));
-    assertEquals("λx.x + 1", abs.toString());
-    assertTrue(abs.isTheoryTerm());
-    assertFalse(abs.isValue());
-    assertNull(abs.toValue());
-
-    // λy::o.0
-    Variable y = new Binder("y", TypeFactory.defaultSort);
-    abs = new Abstraction(y, new IntegerValue(0));
-    assertFalse(abs.isTheoryTerm());
   }
 
   @Test

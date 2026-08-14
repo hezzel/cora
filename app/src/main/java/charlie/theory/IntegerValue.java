@@ -13,11 +13,14 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 import java.math.BigInteger;
 import java.util.Map;
+import charlie.types.Base;
+import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.terms.FunctionSymbolInherit;
 
 /**
  * IntegerValues are the function symbols 0, 1, 2, ..., -1, -2, ...
@@ -25,11 +28,11 @@ import charlie.types.TypeFactory;
  * Z of integer numbers.  Since Z is unbounded, the value is stored as an arbitrary-precision
  * BigInteger.
  */
-final class IntegerValue extends ValueInherit {
+public final class IntegerValue extends FunctionSymbolInherit implements Value {
   private final BigInteger _value;
 
   IntegerValue(BigInteger i) {
-    super(i.toString(), TypeFactory.intSort);
+    super(i.toString(), TypeFactory.intSort, Value.SPECIALNAME);
     _value = i;
   }
 
@@ -38,24 +41,24 @@ final class IntegerValue extends ValueInherit {
     this(BigInteger.valueOf(i));
   }
 
-  @Override
-  public int hashCode(Map<Variable,Integer> mu) {
-    return _value.hashCode();
-  }
-
-  @Override
+  /** Returns the integer value corresponding to this Integer Value */
   public BigInteger getInteger() {
     return _value;
   }
 
+  /** @return the integer sort */
   @Override
-  public String getString() {
-    throw new InappropriatePatternDataException("IntegerValue", "getString", "string values");
-  }
+  public final Base queryType() { return TypeFactory.intSort; }
 
   @Override
-  public boolean getBool() {
-    throw new InappropriatePatternDataException("IntegerValue", "getBool", "boolean values");
-  }
+  public int hashCode(Map mu) { return _value.hashCode(); }
+
+  /** @return false, since nullary constants cannot be infix */
+  @Override
+  public boolean isInfixSymbol() { return false; }
+
+  /** @return this, since a value is not polymorphic, so substituting has no effect */
+  public IntegerValue substituteType(Type.ISubstitution typeMapping) { return this; }
+
 }
 

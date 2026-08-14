@@ -226,30 +226,6 @@ class MetaApplicationTest extends TermTestFoundation {
   }
 
   @Test
-  public void testTheory() {
-    // X[0] with X :: Int → a
-    Term zero = new IntegerValue(0);
-    Term s = makeMeta("X", zero, baseType("a"));
-    assertFalse(s.isTheoryTerm());
-    assertFalse(s.isValue());
-
-    // Y[o] with Y :: Int → Int but o not a theory term
-    Type i = zero.queryType();
-    s = makeMeta("Y", new Constant("o", i), i);
-    assertFalse(s.isTheoryTerm());
-    assertTrue(s.toValue() == null);
-
-    // Z[λx.x,y] with Z :: (Int → Int) → String → Bool
-    Variable x = new Binder("x", i);
-    Variable y = new Var("y", TypeFactory.stringSort);
-    Term abs = new Abstraction(x, x);
-    s = makeMeta("Z", abs, y, TypeFactory.boolSort);
-    assertFalse(s.isTheoryTerm());
-    assertFalse(s.isValue());
-    assertTrue(s.toValue() == null);
-  }
-
-  @Test
   public void testMetaArguments() {
     // create: Z[f(x), λy.f(y)]
     Variable x = TermFactory.createVar("x", baseType("A"));

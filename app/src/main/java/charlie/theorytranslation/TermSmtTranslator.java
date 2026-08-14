@@ -18,6 +18,7 @@ package charlie.theorytranslation;
 import java.util.TreeMap;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
+import charlie.theory.*;
 import charlie.smt.*;
 
 /**
@@ -85,7 +86,7 @@ public class TermSmtTranslator {
         "neither a variable nor a functional term.");
     }
     FunctionSymbol root = t.queryRoot();
-    CalculationSymbol calc = root.toCalculationSymbol();
+    CalculationSymbol calc = Theory.toCalculationSymbol(root);
     if (calc == null) {
       throw new UnsupportedTheoryException("Failed to translate the term ", t, " to SMT: its " +
                                            "root ", root, " is not a calculation symbol");
@@ -169,13 +170,12 @@ public class TermSmtTranslator {
         "variable of type ", t.queryType(), " which can neither be translated to an SMT " +
         "expression nor to a constraint.");
     }
-    if (t.isValue()) {
-      Value v = t.toValue();
-      if (v.isIntegerValue()) return new Exp.I(SmtFactory.createValue(v.getInteger()));
-      if (v.isStringValue()) return new Exp.S(SmtFactory.createValue(v.getString()));
-      if (v.isBooleanValue()) return new Exp.B(SmtFactory.createValue(v.getBool()));
-      throw new UnsupportedTheoryException("Failed to translate term ", t, " to SMT: this is a " +
-        "value, but not an integer, boolean or string value.");
+    if (Theory.isValue(t)) {
+      return switch(Theory.toValue(t)) {
+        case IntegerValue i -> new Exp.I(SmtFactory.createValue(i.getInteger()));
+        case StringValue s -> new Exp.S(SmtFactory.createValue(s.getString()));
+        case BooleanValue b -> new Exp.B(SmtFactory.createValue(b.getBool()));
+      };
     }
     CalculationSymbol calc = getCalculationRoot(t);
     return switch (calc.queryKind()) {
@@ -282,8 +282,9 @@ public class TermSmtTranslator {
   private void assertArgumentCount(Term t, int numArgs) {
     if (t.numberArguments() != numArgs) {
       throw new UnsupportedTheoryException("Failed to translate term ", t, " to SMT: the root " +
-        "symbol ", t.queryRoot(), " (of kind ", t.queryRoot().toCalculationSymbol().queryKind(),
-        ") is expected to take " + numArgs + " arguments, not " + t.numberArguments() + ".");
+        "symbol ", t.queryRoot(), " (of kind ",
+        Theory.toCalculationSymbol(t.queryRoot()).queryKind(), ") is expected to take " + numArgs +
+        " arguments, not " + t.numberArguments() + ".");
     }
   }
 

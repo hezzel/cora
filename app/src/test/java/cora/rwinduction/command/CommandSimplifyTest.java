@@ -22,7 +22,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import charlie.util.FixedList;
-import charlie.terms.TheoryFactory;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
 import cora.io.OutputModule;

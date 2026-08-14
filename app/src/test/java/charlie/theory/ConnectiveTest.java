@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -13,15 +13,19 @@
  See the License for the specific language governing permissions and limitations under the License.
  *************************************************************************************************/
 
-package charlie.terms;
+package charlie.theory;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import charlie.types.TypeFactory;
 import charlie.types.Type;
+import charlie.terms.Term;
+import charlie.terms.Variable;
+import charlie.terms.FunctionSymbol;
+import charlie.terms.TermFactory;
 
-public class ConnectiveTest extends TermTestFoundation {
+public class ConnectiveTest {
   @Test
   public void testAndBasics() {
     CalculationSymbol a = TheoryFactory.andSymbol;
@@ -86,7 +90,7 @@ public class ConnectiveTest extends TermTestFoundation {
   public void testSimpleOrToString() {
     CalculationSymbol f = TheoryFactory.orSymbol;
     assertTrue(f.toString().equals("[∨]"));
-    Term v = new Var("x", TypeFactory.boolSort);
+    Term v = TheoryFactory.createVar("x", TypeFactory.boolSort);
     assertTrue(f.apply(v).toString().equals("[∨](x)"));
     Value w = new BooleanValue(true);
     assertTrue(f.apply(List.of(v,w)).toString().equals("x ∨ true"));
@@ -96,7 +100,7 @@ public class ConnectiveTest extends TermTestFoundation {
   public void testSimpleNotToString() {
     CalculationSymbol f = TheoryFactory.notSymbol;
     assertTrue(f.toString().equals("[¬]"));
-    Term v = new Var("x", TypeFactory.boolSort);
+    Term v = TheoryFactory.createVar("x", TypeFactory.boolSort);
     assertTrue(f.apply(v).toString().equals("¬(x)"));
   }
 
@@ -130,52 +134,52 @@ public class ConnectiveTest extends TermTestFoundation {
 
   @Test
   public void testAndLeftAssociative() {
-    Var x = new Var("x", TypeFactory.boolSort);
-    Var y = new Var("y", TypeFactory.boolSort);
-    Var z = new Var("z", TypeFactory.boolSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.boolSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.boolSort);
+    Variable z = TheoryFactory.createVar("z", TypeFactory.boolSort);
     CalculationSymbol a = TheoryFactory.andSymbol;
-    Term s = new Application(a, new Application(a, x, y), z);
+    Term s = TermFactory.createApp(a, TermFactory.createApp(a, x, y), z);
     assertTrue(s.toString().equals("x ∧ y ∧ z"));
   }
 
   @Test
   public void testOrNotRightAssociative() {
-    Var x = new Var("x", TypeFactory.boolSort);
-    Var y = new Var("y", TypeFactory.boolSort);
-    Var z = new Var("z", TypeFactory.boolSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.boolSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.boolSort);
+    Variable z = TheoryFactory.createVar("z", TypeFactory.boolSort);
     CalculationSymbol o = TheoryFactory.orSymbol;
-    Term s = new Application(o, x, new Application(o, y, z));
+    Term s = TermFactory.createApp(o, x, TermFactory.createApp(o, y, z));
     assertTrue(s.toString().equals("x ∨ (y ∨ z)"));
   }
 
   @Test
   public void testNotInAndInOr() {
-    Var x = new Var("x", TypeFactory.boolSort);
-    Var y = new Var("y", TypeFactory.boolSort);
-    Term notx = new Application(TheoryFactory.notSymbol, x);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.boolSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.boolSort);
+    Term notx = TermFactory.createApp(TheoryFactory.notSymbol, x);
     CalculationSymbol a = TheoryFactory.andSymbol;
     CalculationSymbol o = TheoryFactory.orSymbol;
-    Term s = new Application(o, new Application(a, notx, y), new Application(a, y, notx));
+    Term s = TermFactory.createApp(o, TermFactory.createApp(a, notx, y), TermFactory.createApp(a, y, notx));
     assertTrue(s.toString().equals("(¬(x) ∧ y) ∨ (y ∧ ¬(x))"));
   }
 
   @Test
   public void testOrInAndInNot() {
-    Var x = new Var("x", TypeFactory.boolSort);
-    Var y = new Var("y", TypeFactory.boolSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.boolSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.boolSort);
     CalculationSymbol a = TheoryFactory.andSymbol;
     CalculationSymbol o = TheoryFactory.orSymbol;
     CalculationSymbol n = TheoryFactory.notSymbol;
-    Term s = new Application(a, new Application(o, x, y), new Application(o, y, x));
-    Term t = new Application(n, s);
+    Term s = TermFactory.createApp(a, TermFactory.createApp(o, x, y), TermFactory.createApp(o, y, x));
+    Term t = TermFactory.createApp(n, s);
     assertTrue(t.toString().equals("¬((x ∨ y) ∧ (y ∨ x))"));
   }
 
   @Test
   public void testIffAndXorNotAssociative() {
-    Var x = new Var("x", TypeFactory.boolSort);
-    Var y = new Var("y", TypeFactory.boolSort);
-    Var z = new Var("z", TypeFactory.boolSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.boolSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.boolSort);
+    Variable z = TheoryFactory.createVar("z", TypeFactory.boolSort);
     CalculationSymbol i = TheoryFactory.iffSymbol;
     CalculationSymbol o = TheoryFactory.xorSymbol;
 
@@ -197,8 +201,8 @@ public class ConnectiveTest extends TermTestFoundation {
 
   @Test
   public void testAndOrInIffXor() {
-    Var x = new Var("x", TypeFactory.boolSort);
-    Var y = new Var("y", TypeFactory.boolSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.boolSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.boolSort);
     CalculationSymbol a = TheoryFactory.andSymbol;
     CalculationSymbol o = TheoryFactory.orSymbol;
     Term s = a.apply(List.of(x, y));
@@ -211,8 +215,8 @@ public class ConnectiveTest extends TermTestFoundation {
 
   @Test
   public void testIffXorInnd() {
-    Var x = new Var("x", TypeFactory.boolSort);
-    Var y = new Var("y", TypeFactory.boolSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.boolSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.boolSort);
     CalculationSymbol a = TheoryFactory.andSymbol;
     CalculationSymbol i = TheoryFactory.iffSymbol;
     CalculationSymbol o = TheoryFactory.xorSymbol;
@@ -222,8 +226,8 @@ public class ConnectiveTest extends TermTestFoundation {
 
   @Test
   public void testIffWithNot() {
-    Var x = new Var("x", TypeFactory.boolSort);
-    Var y = new Var("y", TypeFactory.boolSort);
+    Variable x = TheoryFactory.createVar("x", TypeFactory.boolSort);
+    Variable y = TheoryFactory.createVar("y", TypeFactory.boolSort);
     Term s = TheoryFactory.andSymbol.apply(List.of(x, y));
     Term t = TheoryFactory.notSymbol.apply(s);
     Term u = TheoryFactory.iffSymbol.apply(List.of(s, t));
@@ -236,7 +240,8 @@ public class ConnectiveTest extends TermTestFoundation {
     FunctionSymbol a = TheoryFactory.andSymbol;
     FunctionSymbol o = TheoryFactory.orSymbol;
     Type b = TypeFactory.boolSort;
-    FunctionSymbol fakeand = new Constant("∧", arrowType(b, arrowType(b, b)));
+    FunctionSymbol fakeand = TermFactory.createConstant("∧",
+      TypeFactory.createArrow(b, TypeFactory.createArrow(b, b)));
     assertTrue(a.equals(TheoryFactory.andSymbol));
     assertFalse(a.equals(o));
     assertFalse(a.equals(fakeand));
@@ -246,8 +251,8 @@ public class ConnectiveTest extends TermTestFoundation {
   @Test
   public void testNotEquality() {
     FunctionSymbol n = TheoryFactory.notSymbol;
-    FunctionSymbol fakenot =
-      new Constant("¬", arrowType(TypeFactory.boolSort, TypeFactory.boolSort));
+    FunctionSymbol fakenot = TermFactory.createConstant("¬",
+      TypeFactory.createArrow(TypeFactory.boolSort, TypeFactory.boolSort));
     assertTrue(n.equals(n));
     assertFalse(n.equals(TheoryFactory.orSymbol));
     assertFalse(n.equals(fakenot));
@@ -259,7 +264,8 @@ public class ConnectiveTest extends TermTestFoundation {
     FunctionSymbol i = TheoryFactory.iffSymbol;
     FunctionSymbol o = TheoryFactory.orSymbol;
     Type b = TypeFactory.boolSort;
-    FunctionSymbol fakeiff = new Constant("⇔", arrowType(b, arrowType(b, b)));
+    FunctionSymbol fakeiff = TermFactory.createConstant("⇔",
+      TypeFactory.createArrow(b, TypeFactory.createArrow(b, b)));
     assertTrue(i.equals(TheoryFactory.iffSymbol));
     assertFalse(i.equals(o));
     assertFalse(i.equals(fakeiff));
