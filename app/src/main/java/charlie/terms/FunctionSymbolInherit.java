@@ -21,10 +21,14 @@ import charlie.types.Type;
 import charlie.types.TVarSet;
 import charlie.terms.replaceable.ReplaceableSet;
 
-/** An inheritable that can be used by all kinds of function symbol. */
+/**
+ * An inheritable that can be used by all kinds of function symbol.  It handles most of the
+ * default Term functionality, but allows inheriting classes to set the "special" value, infix
+ * properties, and to define class-specific additional functionality.
+ * */
 public abstract class FunctionSymbolInherit extends LeafTermInherit implements FunctionSymbol {
-  private String _name;
-  private String _special;
+  private final String _name;
+  private final String _special;
 
   protected FunctionSymbolInherit(String name, Type type, String special) {
     super(type);
@@ -130,4 +134,3 @@ public abstract class FunctionSymbolInherit extends LeafTermInherit implements F
     return _name.hashCode();
   }
 }
-

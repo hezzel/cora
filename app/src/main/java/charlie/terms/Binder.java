@@ -47,64 +47,62 @@ final class Binder extends LeafTermInherit implements Variable {
     setVariables(new ReplaceableSet(this), TVarSet.of(type));
   }
 
-  /** Create a binder variable without a name; a name will be automatically generated. */
-  Binder(Type type) {
-    super(type);
-    _name = "x{" + COUNTER + "}";
-    _index = COUNTER;
-    COUNTER++;
-    setVariables(new ReplaceableSet(this), TVarSet.of(type));
-  }
-
   /** @return true */
+  @Override
   public boolean isVariable() { return true; }
 
   /** @return true */
+  @Override
   public boolean isVarTerm() { return true; }
 
   /** @return false */
+  @Override
   public boolean isMetaApplication() { return false; }
 
   /** @return true */
+  @Override
   public boolean isBinderVariable() { return true; }
 
   /** @return false (binder variables do not occur in applicative terms) */
+  @Override
   public boolean isApplicative() { return false; }
 
   /** @return false (binder variables do not occur in first-order terms) */
+  @Override
   public boolean isFirstOrder() { return false; }
 
   /** Returns the name this variable was set up with. */
+  @Override
   public String queryName() {
     return _name;
   }
 
   /** @return Kind.BINDER */
+  @Override
   public Kind queryReplaceableKind() {
     return Replaceable.Kind.BINDER;
   }
 
   /** @return an integer uniquely identifying this binder variable */
+  @Override
   public int queryIndex() {
     return _index;
   }
 
   /** @return 0, since only meta-variables have an arity */
+  @Override
   public int queryArity() {
     return 0;
   }
 
   /** @return this */
+  @Override
   public Variable queryVariable() {
     return this;
   }
 
-  /** @return this */
-  public Term makeTerm() {
-    return this;
-  }
-
   /** @throws InappropriatePatternDataException, as a binder variable cannot be a meta-variable */
+  @Override
   public MetaVariable queryMetaVariable() {
     throw new InappropriatePatternDataException("Binder", "queryMetaVariable",
       "meta-variable applications");
@@ -114,6 +112,7 @@ final class Binder extends LeafTermInherit implements Variable {
    * Returns renaming[this], or returns an error if that's not a variable of the same type.
    * (If renaming is not set for this binder, then the binder is returned unmodified.)
    */
+  @Override
   public Variable renameAndRefreshBinders(Map<Variable,Variable> renaming) {
     Variable ret = renaming.get(this);
     if (ret == null) return this;
@@ -128,34 +127,40 @@ final class Binder extends LeafTermInherit implements Variable {
    * Alpha-equality of a binder to another binder holds if either mu[this] = xi[that], or both
    * mu[this] and xi[that] are undefined and they are the same Variable.
    */
-  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
+  @Override
+  public boolean alphaEquals(Term term, Map<Variable,Integer> mu,
+                             Map<Variable,Integer> xi, int k) {
     if (!term.isVariable()) return false;
     if (mu.containsKey(this)) return mu.get(this).equals(xi.get(term.queryVariable()));
     else if (xi.containsKey(term.queryVariable())) return false;
     return equals(term.queryVariable());
   }
 
-  /** Implements a total ordering on replaceables using the kind, index and type. */
+  /** Implements a total ordering on Replaceables using the kind, index and type. */
+  @Override
   public int compareTo(Replaceable other) {
     if (other == this) return 0;  // shortcut
     int d = other.queryReplaceableKind().compareTo(queryReplaceableKind());
     if (d != 0) return d;
     if (_index < other.queryIndex()) return -1;
     if (_index > other.queryIndex()) return 1;
-    return queryType().toString().compareTo(other.queryType().toString());
+    return queryType().compareTo(other.queryType());
   }
 
   /** Shortcut: two replaceables are equal if and only if they are the same object. */
+  @Override
   public boolean equals(Replaceable other) {
     return other == this;
   }
 
   /** Shortcut: two variables are equal if and only if they are the same object. */
+  @Override
   public boolean equals(Variable other) {
     return other == this;
   }
 
   /** Returns a hashcode that (uniquely) identifies this Binder */
+  @Override
   public int hashCode(Map<Variable,Integer> mu) {
     if (mu != null && mu.containsKey(this)) return 3 * mu.get(this) + 1;
     return 3 * _index + 1;

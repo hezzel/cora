@@ -20,14 +20,15 @@ import java.util.Set;
 /**
  * Renamings are one-to-one mappings between Replaceables and Strings, giving each Replaceable a
  * unique name.  These are useful both in printing (ensuring that the same replaceable is printed
- * consistently with the same name) and in parsing (ensuring that a string refers 
+ * consistently with the same name) and in parsing (ensuring that a string always refers to the
+ * same replaceable).
  */
 public interface Renaming {
   /** Returns the replaceables this Renaming gives a name to. */
   Set<Replaceable> domain();
 
   /** Returns the names used in this Renaming. */
-  public Set<String> range();
+  Set<String> range();
 
   /** Returns the chosen name for the given replaceable, or null if it's not in the domain. */
   String getName(Replaceable x);
@@ -47,9 +48,4 @@ public interface Renaming {
    * cannot cause alterations to either it or the underlying Renaming.
    */
   Renaming makeImmutable();
-
-  static MutableRenaming createEmptyRenaming(Set<String> avoid) {
-    return new MutableRenaming(avoid);
-  }
 }
-

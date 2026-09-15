@@ -199,7 +199,7 @@ public class TermTyperTest {
   @Test
   public void testReadFullApplication() {
     Term t = readTerm("f(aa,bb,cc)", null, true, null, "");
-    assertTrue(t.vars().size() == 0);
+    assertTrue(t.queryFreeVariables().size() == 0);
     assertTrue(t.toString().equals("f(aa, bb, cc)"));
     assertTrue(t.queryType().toString().equals("d"));
   }
@@ -207,7 +207,7 @@ public class TermTyperTest {
   @Test
   public void testReadIncompleteApplication() {
     Term t = readTerm("f(aa,x)", null, false, null, "");
-    assertTrue(t.vars().size() == 1);
+    assertTrue(t.queryFreeVariables().size() == 1);
     assertTrue(t.toString().equals("f(aa, x)"));
     assertTrue(t.queryType().toString().equals("c → d"));
   }
@@ -216,7 +216,7 @@ public class TermTyperTest {
   public void testReadApplicationWithTooManyArgsNoTypeGiven() {
     Term t = readTerm("h(aa, bb)", null, false, null,
       "1:1: Arity error: h has type (c → d) → b, but 2 arguments are given.\n");
-    assertTrue(t.vars().size() == 0);
+    assertTrue(t.queryFreeVariables().size() == 0);
     assertTrue(t.toString().equals("h(aa, bb)"));
     assertTrue(t.queryHead().equals(TermFactory.createConstant("h", type("a → b → b"))));
   }
@@ -245,7 +245,7 @@ public class TermTyperTest {
     assertTrue(t.toString().equals("f(x, cc, y)"));
     assertTrue(t.queryHead().equals(TermFactory.createConstant("f", type("a → b → c → d"))));
     assertTrue(t.queryType().toString().equals("d"));
-    assertTrue(t.vars().size() == 2);
+    assertTrue(t.queryFreeVariables().size() == 2);
   }
 
   @Test
@@ -264,7 +264,7 @@ public class TermTyperTest {
     Term t = readTerm("f(x, bb, x)", null, false, null, "1:10: Expected term of type c, " +
       "but got variable x which has type a.\n");
     assertTrue(t.toString().equals("f(x, bb, x)"));
-    assertTrue(t.vars().size() == 1);
+    assertTrue(t.queryFreeVariables().size() == 1);
   }
 
   @Test
@@ -272,7 +272,7 @@ public class TermTyperTest {
     Term t = readTerm("f(x,h(f(x, bb)),cc)", null, true, null, "");
     assertTrue(t.toString().equals("f(x, h(f(x, bb)), cc)"));
     assertTrue(t.queryType().equals(type("d")));
-    assertTrue(t.vars().size() == 1);
+    assertTrue(t.queryFreeVariables().size() == 1);
   }
 
   @Test
@@ -282,7 +282,7 @@ public class TermTyperTest {
     Term t = readTerm("new(3,true,\"test\",aa)", null, true, data, "");
     assertTrue(t.toString().equals("new(3, true, \"test\", aa)"));
     assertTrue(t.queryType().toString().equals("b"));
-    assertTrue(t.vars().size() == 0);
+    assertTrue(t.queryFreeVariables().size() == 0);
   }
 
   @Test
@@ -328,7 +328,7 @@ public class TermTyperTest {
   public void testReadBasicAbstraction() {
     Term t = readTerm("λx :: a. f(x, bb, y)", null, false, null, "");
     assertTrue(t.toString().equals("λx.f(x, bb, y)"));
-    assertTrue(t.vars().size() == 1);
+    assertTrue(t.queryFreeVariables().size() == 1);
     assertTrue(t.queryType().toString().equals("a → d"));
   }
 
@@ -336,7 +336,7 @@ public class TermTyperTest {
   public void testReadMultipleAbstractionWithBinderDeclarations() {
     Term t = readTerm("λx :: a, y ::c. f(x, bb, y)", null, false, null, "");
     assertTrue(t.toString().equals("λx.λy.f(x, bb, y)"));
-    assertTrue(t.vars().size() == 0);
+    assertTrue(t.queryFreeVariables().size() == 0);
     assertTrue(t.queryType().toString().equals("a → c → d"));
   }
 
@@ -344,14 +344,14 @@ public class TermTyperTest {
   public void testReadAbstractionWithoutBinderDeclaration() {
     Term t = readTerm("h(\\x.f(aa,bb,x))", null, true, null, "");
     assertTrue(t.toString().equals("h(λx.f(aa, bb, x))"));
-    assertTrue(t.vars().size() == 0);
+    assertTrue(t.queryFreeVariables().size() == 0);
   }
 
   @Test
   public void testReadAbstractionWithTypeExpectationGivenButUnnecessary() {
     Term t = readTerm("\\x::a.f(x,bb, cc)", "a -> d", true, null, "");
     assertTrue(t.toString().equals("λx.f(x, bb, cc)"));
-    assertTrue(t.vars().size() == 0);
+    assertTrue(t.queryFreeVariables().size() == 0);
     assertTrue(t.queryType().toString().equals("a → d"));
   }
 
@@ -359,7 +359,7 @@ public class TermTyperTest {
   public void testReadAbstractionWithTypeExpectationGivenAndNecessary() {
     Term t = readTerm("λx.f(x,bb, cc)", "a -> d", true, null, "");
     assertTrue(t.toString().equals("λx.f(x, bb, cc)"));
-    assertTrue(t.vars().size() == 0);
+    assertTrue(t.queryFreeVariables().size() == 0);
     assertTrue(t.queryType().toString().equals("a → d"));
   }
 
@@ -369,8 +369,8 @@ public class TermTyperTest {
       "1:2: Type error: expected subterm of type b → d, but got abstraction with variable of type a.\n" +
       "1:9: Expected term of type a, but got variable x which has type b.\n");
     assertTrue(t.toString().equals("λx.f(x, bb, cc)"));
-    assertTrue(t.vars().size() == 0);
-    assertTrue(t.queryAbstractionSubterm().vars().size() == 0);
+    assertTrue(t.queryFreeVariables().size() == 0);
+    assertTrue(t.queryAbstractionSubterm().queryFreeVariables().size() == 0);
     assertTrue(t.queryType().toString().equals("b → d"));
   }
 
@@ -379,7 +379,7 @@ public class TermTyperTest {
     Term t = readTerm("\\x::a.f(x,bb, cc)", "a -> c", false, null,
       "1:7: Type error: expected term of type c, but got f(x, bb, cc) of type d.\n");
     assertTrue(t.toString().equals("λx.f(x, bb, cc)"));
-    assertTrue(t.vars().size() == 0);
+    assertTrue(t.queryFreeVariables().size() == 0);
     assertTrue(t.queryType().toString().equals("a → c"));
   }
 
@@ -389,7 +389,7 @@ public class TermTyperTest {
       "1:10: Cannot derive type of binder y from context; it should be denoted directly in the "+
         "abstraction.\n");
     assertTrue(t.toString().equals("λx.λy__1.λz.f(x, y, z)"));
-    assertTrue(t.vars().size() == 1);
+    assertTrue(t.queryFreeVariables().size() == 1);
     assertTrue(t.queryType().toString().equals("a → o → c → d"));
   }
 
@@ -727,7 +727,7 @@ public class TermTyperTest {
     Term t = readTerm("¬x", null, true, null, "");
     assertTrue(t.isFunctionalTerm());
     assertTrue(Theory.isTheory(t.queryRoot()));
-    assertTrue(t.vars().size() == 1);
+    assertTrue(t.queryFreeVariables().size() == 1);
     assertTrue(t.toString().equals("¬(x)"));
   }
 
@@ -762,7 +762,7 @@ public class TermTyperTest {
   public void testReadInfixWithLeftToRightPriority() {
     Term t = readTerm("1/2+3  > x", null, true, null, "");
     assertTrue(t.toString().equals("1 / 2 + 3 > x"));
-    assertTrue(t.vars().size() == 1);
+    assertTrue(t.queryFreeVariables().size() == 1);
     assertTrue(t.queryType().toString().equals("Bool"));
   }
 
@@ -770,7 +770,7 @@ public class TermTyperTest {
   public void testReadInfixWithRightToLeftPriority() {
     Term t = readTerm("x >= 3 + y * 2", null, true, null, "");
     assertTrue(t.toString().equals("x ≥ 3 + y * 2"));
-    assertTrue(t.vars().size() == 2);
+    assertTrue(t.queryFreeVariables().size() == 2);
     assertTrue(t.queryType().toString().equals("Bool"));
   }
 
@@ -817,7 +817,7 @@ public class TermTyperTest {
   public void testReadComplexMinuses() {
     Term t = readTerm("x -3 * 5 + 1 < -1-y", null, true, null, "");
     assertTrue(t.toString().equals("x - 3 * 5 + 1 < -1 - y"));
-    assertTrue(t.vars().size() == 2);
+    assertTrue(t.queryFreeVariables().size() == 2);
     assertTrue(t.queryArgument(1).queryArgument(1).toString().equals("x - 3 * 5"));
     assertTrue(t.queryArgument(1).queryArgument(1).queryArgument(2).toString().equals("3 * 5"));
   }

@@ -20,25 +20,27 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Type ::= Base(String) | Arrow(Type, Type) | Data(String, Type, ..., Type) | TVar(String).
+ * <p>Type ::= Base(String) | Arrow(Type, Type) | Data(String, Type, ..., Type) | TVar(String).</p>
  *
- * Here, there are two kinds of sorts:
- * - base types: represented by a single name
- * - data types: represented by a constructor (a name) and a non-empty list of arguments
+ * <p>Here, there are two kinds of sorts:</p>
+ * <ul>
+ * <li>base types: represented by a single name</li>
+ * <li>data types: represented by a constructor (a name) and a non-empty list of arguments</li>
+ * </ul>
  *
- * In first-order term rewriting, all types are Base.
+ * <p>In first-order term rewriting, all types are Base.</p>
  *
- * In simply-typed rewriting, all types are Base or Arrow.
+ * <p>In simply-typed rewriting, all types are Base or Arrow.</p>
  *
- * Typically, data types that take arguments are used in polymorphic settings that also consider
+ * <p>Typically, data types that take arguments are used in polymorphic settings that also consider
  * type variables.  However, this is not mandatory; data types can also be useful for instance to
- * represent product types.
+ * represent product types.</p>
  *
- * Writing Arrow as the right-associative operator →, we can write all types in a form
- * σ1 → ... → σm → τ, where all σi are Types and τ is a sort or type variable.  This will often
- * be used for inductive reasoning.
+ * <p>Writing Arrow as the right-associative operator →, we can write all types in a form
+ * σ1 → ... → σm → τ, where all σi are Types and τ is a sort or type variable.  This is often
+ * used for inductive reasoning.</p>
  *
- * Note: all instances of Type must (and can be expected to) be immutable.
+ * <p>Note: all instances of Type are immutable.</p>
  */
 public sealed interface Type extends Comparable<Type> permits
   Base, Arrow, Data, TVar {
@@ -73,17 +75,6 @@ public sealed interface Type extends Comparable<Type> permits
    */
   boolean isMonomorphic();
 
-  /**
-   * Returns true if the type is built entirely from theory sorts and arrows; type variables and
-   * other base and data types are not permitted.
-   * Theory sorts are the base types specifically created as theory, accessible from the type
-   * factory.
-   */
-  boolean isTheoryType();
-
-  /** Returns true if this is one of the pre-defined theory base types (e.g., Int, Bool). */
-  default boolean isBaseTheoryType() { return isTheoryType() && isBaseType(); }
-
   /** For σ1 → ,,, → σm → τ with τ not an arrow type, returns m. */
   default int queryArity() { return 0; }
 
@@ -115,65 +106,67 @@ public sealed interface Type extends Comparable<Type> permits
   int queryTypeOrder();
 
   /**
-   * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function stores the type variables that occur in the
-   * present type, into the given set.
+   * <p>ONLY RELEVANT FOR POLYMORPHIC TYPES: this function stores the type variables that occur in
+   * the present type, into the given set.</p>
    *
-   * Since the given set is meant to be updated, it should be a mutable set.
+   * <p>Since the given set is meant to be updated, it should be a mutable set.</p>
    *
-   * Complexity: linear in the size of the type.
+   * <p>Complexity: linear in the size of the type.</p>
    *
-   * (For non-polymorphic types, this just doesn't do anything, but it does still cost linear time.)
+   * <p>(For non-polymorphic types, this just doesn't do anything, but it does still cost linear
+   * time.)</p>
    */
   void storeTypeVariables(Set<TVar> storage);
 
   /**
-   * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function returns the type variables that occur in
-   * the present type.
+   * <p>ONLY RELEVANT FOR POLYMORPHIC TYPES: this function returns the type variables that occur in
+   * the present type.</p>
    *
-   * Complexity: linear in the size of the type.
+   * <p>Complexity: linear in the size of the type.</p>
    *
-   * (For non-polymorphic types, this returns an empty set, but it does still cost linear time.)
+   * <p>(For non-polymorphic types, this returns an empty set, but it does still cost linear
+   * time.)</p>
    */
-  default TreeSet<TVar> getTypeVariables() {
+  default TreeSet<TVar> listTypeVariables() {
     TreeSet<TVar> set = new TreeSet<TVar>();
     storeTypeVariables(set);
     return set;
   }
 
   /** Instantiated by Substitution (used to avoid a two-way dependency between packages). */
-  public interface ISubstitution {
+  interface ISubstitution {
     /** Returns null for type variables not in the domain and a Type for variables in the domain. */
-    public Type get(TVar alpha);
+    Type get(TVar alpha);
   }
 
   /** Instantiated by MutableSubstitution (used to avoid a two-way dependency between packages). */
-  public interface MSubstitution extends ISubstitution {
+  interface MSubstitution extends ISubstitution {
     /**
      * If key is not in the domain, adds key:=v to the domain and returns true.
-     * (It does not matter what happens if key *is* in the domain.)
+     * (It will never be called with a key that *is* in the domain.)
      */
-    public boolean extend(TVar key, Type v);
+    boolean extend(TVar key, Type v);
   }
 
   /**
-   * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function returns the type that is obtained by
+   * <p>ONLY RELEVANT FOR POLYMORPHIC TYPES: this function returns the type that is obtained by
    * replacing each occurrence of a type variable alpha in this type, by substitution.get(alpha).
-   * Type variables that do not occur in the domain of the substitution are left unaltered.
+   * Type variables that do not occur in the domain of the substitution are left unaltered.</p>
    *
-   * (Since types are immutable, this does not affect the current type; it only computes and
-   * returns the substituted type).
+   * <p>(Since types are immutable, this does not affect the current type; it only computes and
+   * returns the substituted type).</p>
    *
-   * The given substitution will not be updated, so it is fine for the argument to be
-   * immutable.
+   * <p>The given substitution will not be updated, so it is fine for the argument to be
+   * immutable.</p>
    *
-   * (For non-polymorphic types, this just returns a copy of the type.)
+   * <p>(For non-polymorphic types, this just returns a copy of the type.)</p>
    */
   Type substitute(ISubstitution substitution);
 
   /**
    * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function tries to extend substitution so that
-   * this.instantiate(substitution) equals instance.  If successful, true is returned (and
-   * substitution is fully updated as needed).  If unsuccessful, false is returned, but it is
+   * this.instantiate(substitution) equals instance.  If successful, true is returned, and
+   * substitution is fully updated as needed.  If unsuccessful, false is returned, but it is
    * possible that the substitution is still changed.
    */
   boolean match(Type instance, MSubstitution substitution);
@@ -181,4 +174,3 @@ public sealed interface Type extends Comparable<Type> permits
   /** Returns whether the given Type is equal to us. */
   boolean equals(Type type);
 }
-

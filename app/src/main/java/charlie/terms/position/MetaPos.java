@@ -32,10 +32,8 @@ public record MetaPos(int index, Position tail) implements Position {
   public String toString() { return toStringDefault(); }
 
   public boolean equals(Position other) {
-    switch (other) {
-      case MetaPos(int id, Position tl): return index == id && tail.equals(tl);
-      default: return false;
-    }
+    if (other instanceof MetaPos(int id, Position tl)) return index == id && tail.equals(tl);
+    return false;
   }
 
   public boolean equals(Object other) {

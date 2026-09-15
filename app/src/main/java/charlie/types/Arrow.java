@@ -54,11 +54,6 @@ public record Arrow(Type left, Type right) implements Type {
     return this.left.isMonomorphic() && this.right.isMonomorphic();
   }
 
-  @Override
-  public boolean isTheoryType() {
-    return this.left.isTheoryType() && this.right.isTheoryType();
-  }
-
   /** For σ1 → ,,, → σm → τ, returns m. */
   @Override
   public int queryArity() {
@@ -125,7 +120,7 @@ public record Arrow(Type left, Type right) implements Type {
 
   @Override
   public String toString() {
-    return (new TypePrinter()).print(this);
+    return TypePrinter.DEBUGPRINTER.print(this);
   }
 
   @Override
@@ -135,10 +130,10 @@ public record Arrow(Type left, Type right) implements Type {
 
   @Override
   public boolean equals(Type type) {
-    return switch (type) {
-      case Arrow(Type l, Type r) -> this.left.equals(l) && this.right.equals(r);
-      default -> false;
-    };
+    if (type instanceof Arrow(Type l, Type r)) {
+      return this.left.equals(l) && this.right.equals(r);
+    }
+    return false;
   }
 
   @Override
@@ -146,4 +141,3 @@ public record Arrow(Type left, Type right) implements Type {
     return other instanceof Type t && equals(t);
   }
 }
-

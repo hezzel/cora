@@ -16,14 +16,14 @@
 package charlie.terms;
 
 /**
- * Terms are defined by an interface which can have various patterns, which are queried through
+ * <p>Terms are defined by an interface which can have various patterns, which are queried through
  * functions rather than through pattern matching.  Hence, it is possible that someone may call a
  * function that makes no sense for a given pattern; for example queryAbstractionSubterm() on a
- * term that is not an abstraction.
+ * term that is not an abstraction.</p>
  *
- * In such cases, for recognisability of the issue, an InappropriatePatternDataException will be
+ * <p>In such cases, for recognisability of the issue, an InappropriatePatternDataException will be
  * thrown.  This is not a UserException, since calling the wrong pattern on an instance of an
- * interface is always a programming error.
+ * interface is always a programming error.</p>
  */
 public class InappropriatePatternDataException extends RuntimeException {
   InappropriatePatternDataException(String classname, String functionname, String expected) {
@@ -31,4 +31,3 @@ public class InappropriatePatternDataException extends RuntimeException {
       " while this function should only be called on " + expected + ".");
   }
 }
-

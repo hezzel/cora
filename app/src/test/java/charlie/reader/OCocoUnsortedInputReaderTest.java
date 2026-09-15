@@ -67,7 +67,7 @@ public class OCocoUnsortedInputReaderTest {
     Term term = OCocoUnsortedInputReader.readTerm("f(g(x, y), h(x, u(), g(a, y)))",
                                                   "x y u v");
     assertTrue(term.toString().equals("f(g(x, y), h(x, u, g(a, y)))"));
-    assertTrue(term.vars().size() == 3);
+    assertTrue(term.queryFreeVariables().size() == 3);
   }
 
   @Test

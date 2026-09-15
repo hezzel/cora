@@ -112,7 +112,7 @@ class ConstrainedSimplifier {
    */
   private Term splitEqualities(Term constraint, ArrayList<Pair<Variable,Term>> equalities) {
     if (!constraint.isFunctionalTerm()) return constraint;
-    if (constraint.numberArguments() != 2) return constraint;
+    if (constraint.queryNumberArguments() != 2) return constraint;
     CalculationSymbol calc = Theory.toCalculationSymbol(constraint.queryRoot());
     if (calc == null) return constraint;
     if (calc.queryKind() == CalculationSymbol.Kind.AND) {
@@ -167,18 +167,18 @@ class ConstrainedSimplifier {
   */
   TreeSet<Replaceable> queryMissingReplaceables() {
     TreeSet<Replaceable> missing = new TreeSet<Replaceable>();
-    for (Replaceable x : _left.freeReplaceables()) {
+    for (Replaceable x : _left.queryFreeReplaceables()) {
       if (_substitution.get(x) == null) missing.add(x);
     }
-    for (Replaceable x : _right.freeReplaceables()) {
+    for (Replaceable x : _right.queryFreeReplaceables()) {
       if (_substitution.get(x) == null) missing.add(x);
     }
-    for (Replaceable x : _constraint.freeReplaceables()) {
+    for (Replaceable x : _constraint.queryFreeReplaceables()) {
       if (_substitution.get(x) == null) missing.add(x);
     }
     for (Pair<Variable,Term> pair : _definitions) {
       if (_substitution.get(pair.fst()) == null) missing.add(pair.fst());
-      for (Replaceable x : pair.snd().freeReplaceables()) {
+      for (Replaceable x : pair.snd().queryFreeReplaceables()) {
         if (_substitution.get(x) == null) missing.add(x);
       }
     }
@@ -193,12 +193,12 @@ class ConstrainedSimplifier {
   boolean checkSemiConstructorSubstitution(ProofContext context) {
     for (Replaceable x : _substitution.domain()) {
       Term result = _substitution.get(x);
-      for (var pair : result.querySubterms()) {
+      for (var pair : result.listSubterms()) {
         Term t = pair.fst();
         if (!t.isFunctionalTerm()) continue;
         FunctionSymbol f = t.queryRoot();
         if (!Theory.isCalculationSymbol(f) && !context.getTRS().isDefined(f)) continue;
-        if (context.queryRuleArity(f) <= t.numberArguments()) return false;
+        if (context.queryRuleArity(f) <= t.queryNumberArguments()) return false;
       }
     }
     return true;
@@ -316,7 +316,7 @@ class ConstrainedSimplifier {
    * (Helper function for matchEqualitiesInConstraint.)
    */
   private boolean allSubstituted(Term t) {
-    for (Variable y : t.vars()) {
+    for (Variable y : t.queryFreeVariables()) {
       if (_substitution.get(y) == null) return false;
     }
     return true;
@@ -385,10 +385,10 @@ class ConstrainedSimplifier {
   private boolean checkConstraintVariables(Term equationConstraint, Renaming equationNaming,
                                            Optional<OutputModule> module, String kind) {
     TreeSet<Variable> vars = new TreeSet<Variable>();
-    for (Variable x : _constraint.vars()) vars.add(x);
+    for (Variable x : _constraint.queryFreeVariables()) vars.add(x);
     for (Pair<Variable,Term> pair : _definitions) {
       vars.add(pair.fst());
-      for (Variable x : pair.snd().vars()) vars.add(x);
+      for (Variable x : pair.snd().queryFreeVariables()) vars.add(x);
     }
     for (Variable x : vars) {
       Term t = _substitution.get(x);
@@ -443,7 +443,7 @@ class ConstrainedSimplifier {
     if (conclusion.isFunctionalTerm()) {
       CalculationSymbol calc = Theory.toCalculationSymbol(conclusion.queryRoot());
       if (calc != null && calc.queryKind() == CalculationSymbol.Kind.AND) {
-        for (int i = 1; i <= conclusion.numberArguments(); i++) {
+        for (int i = 1; i <= conclusion.queryNumberArguments(); i++) {
           storeUnsatisfiedConstraints(premise, conclusion.queryArgument(i), storage, solver);
         }
         return;

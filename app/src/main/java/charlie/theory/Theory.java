@@ -15,6 +15,7 @@
 
 package charlie.theory;
 
+import charlie.types.*;
 import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;
 
@@ -23,6 +24,30 @@ import charlie.terms.FunctionSymbol;
  * identify symbols and terms as theory, as well as casting symbols.
  */
 public class Theory {
+  /**
+   * Returns true if the given Type is one of the pre-defined theory base types (e.g., Int,
+   * Bool).
+   */
+  public static boolean isBaseTheoryType(Type type) {
+    return
+      type == TypeFactory.intSort  ||
+      type == TypeFactory.boolSort ||
+      type == TypeFactory.stringSort;
+  }
+  /**
+   * Returns true if the given type is built entirely from theory sorts and arrows; type variables
+   * and other base and data types are not permitted.
+   * Theory sorts are the base types specifically created as theory, accessible from the theory
+   * factory.
+   */
+  public static boolean isTheory(Type type) {
+    return switch(type) {
+      case Base b -> isBaseTheoryType(b);
+      case Arrow a -> isTheory(a.querySubtype(1)) && isTheory(a.querySubtype(2));
+      default -> false;
+    };
+  }
+
   /** Returns true if the given Term is a Value, false if it is not. */
   public static boolean isValue(Term t) {
     return t instanceof Value;
@@ -94,15 +119,15 @@ public class Theory {
    * theory symbols, and its variables all have a theory type.
    */
   public static boolean isTheory(Term t) {
-    if (t.isVariable()) return t.queryType().isTheoryType();
+    if (t.isVariable()) return isTheory(t.queryType());
     if (t.isConstant()) return isValue(t.queryRoot()) || isCalculationSymbol(t.queryRoot());
     if (t.isAbstraction()) {
-      return t.queryVariable().queryType().isTheoryType() &&
+      return isTheory(t.queryVariable().queryType()) &&
              isTheory(t.queryAbstractionSubterm());
     }
     if (t.isApplication()) {
       if (!isTheory(t.queryHead())) return false;
-      for (int i = 1; i <= t.numberArguments(); i++) {
+      for (int i = 1; i <= t.queryNumberArguments(); i++) {
         if (!isTheory(t.queryArgument(i))) return false;
       }
       return true;

@@ -15,8 +15,6 @@
 
 package cora.termination.dependency_pairs;
 
-import charlie.types.TypePrinter;
-import charlie.terms.position.PositionPrinter;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.substitution.MutableSubstitution;
@@ -26,9 +24,7 @@ import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
 import charlie.printer.PrinterFactory;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -49,7 +45,7 @@ public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars)
                                                                        implements PrintableObject {
   /** This verifies that all variables in the constraint are in the list */
   private static boolean initialVarSetCondition(Term constraint, Set<Variable> set) {
-    return set.containsAll(constraint.vars().toSet());
+    return set.containsAll(constraint.queryFreeVariables().toSet());
   }
 
   /**
@@ -77,7 +73,7 @@ public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars)
    * variables will automatically be set to the variables occurring in the constraint.
    */
   public DP(Term lhs, Term rhs, Term constraint) {
-    this(lhs, rhs, constraint, constraint.vars().toSet());
+    this(lhs, rhs, constraint, constraint.queryFreeVariables().toSet());
   }
 
   /** Creates a new DP of the form s ⇒ t | true {}, to be used for unconstrained rewriting. */
@@ -90,9 +86,9 @@ public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars)
    */
   public LinkedHashSet<Variable> getAllVariables() {
     LinkedHashSet<Variable> result = new LinkedHashSet<>();
-    for (Variable x : this.lhs.vars()) result.add(x);
-    for (Variable x : this.rhs.vars()) result.add(x);
-    for (Variable x : this.constraint.vars()) result.add(x);
+    for (Variable x : this.lhs.queryFreeVariables()) result.add(x);
+    for (Variable x : this.rhs.queryFreeVariables()) result.add(x);
+    for (Variable x : this.constraint.queryFreeVariables()) result.add(x);
     return result;
   }
 
@@ -149,13 +145,13 @@ public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars)
     // { x1, ..., xn }
     boolean anynew = false;
     for (Variable x : this.lvars) {
-      if (!this.constraint.freeReplaceables().contains(x)) anynew = true;
+      if (!this.constraint.queryFreeReplaceables().contains(x)) anynew = true;
     }
     if (!anynew) return;
     boolean first = true;
     for (Variable x : this.lvars) {
       if (naming.getName(x) == null) continue;
-      if (constraint.vars().contains(x)) continue;
+      if (constraint.queryFreeVariables().contains(x)) continue;
       if (first) printer.add(" { ");
       else printer.add(", ");
       first = false;

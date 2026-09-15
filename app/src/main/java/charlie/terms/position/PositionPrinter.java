@@ -17,9 +17,16 @@ package charlie.terms.position;
 
 /**
  * PositionPrinters are used in the overall output process of the tool.  This class provides a
- * default implementation, but is meant to be inherited.
+ * default implementation, but is designed to allow for inheriting.
  */
 public class PositionPrinter {
+  /**
+   * The default printer used in Position.toString(), so typically only for debug output and unit
+   * testing.  Like TypePrinter.DEBUGPRINTER and TermPrinter.DEBUGPRINTER, this is intended as a
+   * convenient default, but may be changed (typically only once at the start of a program or test)
+   * to get debug output in a different shape.
+   */
+  public static PositionPrinter DEBUGPRINTER = new PositionPrinter();
   /**
    * Returns a string representation of the given position (using the other print method).
    * This is only supplied as a public access function, and is not meant to be overridden.
@@ -31,13 +38,13 @@ public class PositionPrinter {
   }
 
   /**
-   * This is the main public access function.  Call this to ensure that the given position is
-   * printed to the given string builder.
+   * <p>This is the main public access function.  Call this to ensure that the given position is
+   * printed to the given string builder.</p>
    * 
-   * To define your own PositionPrinter, you can either override this method directly -- in which
+   * <p>To define your own PositionPrinter, you can either override this method directly -- in which
    * case there is no need to override any of the other methods in the class -- or directly override
    * (some of) the functions it calls, which are printEmptyPos, printChopPos, printArgumentPos,
-   * printLambdaPos, printMetaPos and printTail.
+   * printLambdaPos, printMetaPos and printTail.</p>
    */
   public void print(Position pos, StringBuilder builder) {
     switch (pos) {
@@ -139,4 +146,3 @@ public class PositionPrinter {
     return ".";
   }
 }
-

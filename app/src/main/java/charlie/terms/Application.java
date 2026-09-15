@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
+
 import charlie.util.NullStorageException;
 import charlie.util.Pair;
 import charlie.types.Arrow;
@@ -31,75 +31,60 @@ import charlie.terms.replaceable.ReplaceableSet;
 
 /** An Application is a term of the form h(s1,...,sn) where h is not an application. */
 class Application extends TermInherit {
-  public Term _head;
-  public ArrayList<Term> _args;
-  public Type _outputType;
+  public final Term _head;
+  public final ArrayList<Term> _args;
+  public final Type _outputType;
 
   //  Construction Phase ------------------------------------------------------
+
+  /**
+   * Helper function for the constructors: given the head and arguments, this checks that the
+   * typing is correct, and returns the output type if so (if not, an appropriate TypingException
+   * is thrown).
+   */
+  private Type checkType(Term head, List<Term> args) {
+    Type type = head.queryType();
+    for (int i = 0; i < args.size(); i++) {
+      Term arg = args.get(i);
+      if (arg == null) {
+        throw new NullStorageException("Application", "passing a null argument to " + head + ".");
+      }
+      if (type instanceof Arrow(Type inp, Type out)) {
+        if (!inp.equals(arg.queryType())) {
+          throw new TypingException("Could not construct application headed by ", head, ": " +
+            "argument " + (i + 1) + " of the head has type ", inp, " while the given argument to " +
+            "be applied, ", arg, ", has type ", arg.queryType(), ".");
+        }
+        type = out;
+      }
+      else {
+        throw new TypingException("Could not construct application headed by ", head, " with " +
+          args.size() + " arguments: the head has type " + head.queryType(), ", which only " +
+          "permits " + i + " arguments!");
+      }
+    }
+    return type;
+  }
 
   /**
    * Sets up the lists of free, bound and meta-variables used in this term, and builds _args from
    * the given set args (perhaps renaming bound variables in some of them).
    * Meant for use in the constructors, so it cannot use the freeReplaceables() function, but
    * rather, sets up the result of that function.
-   * This assumes hat _outputType has already been set!
+   * This assumes that _outputType and _args have already been set, and returns the value for _head.
    */
-  private void setupReplaceables(List<Term> args) {
-    ReplaceableSet frees = calculateFreeReplaceablesForSubterms(args, _head.freeReplaceables());
-    ReplaceableSet bounds = _head.boundVars();
+  private Term setupReplaceables(Term head, List<Term> args) {
+    ReplaceableSet frees =
+      calculateFreeReplaceablesForSubterms(args, head.queryFreeReplaceables());
+    ReplaceableSet bounds = head.queryBoundVars();
     if (bounds.size() > 0 && !bounds.getOverlap(frees).isEmpty()) {
-      _head = _head.renameAndRefreshBinders(new TreeMap<Variable,Variable>());
-      bounds = _head.boundVars();
+      head = head.renameAndRefreshBinders(new TreeMap<Variable,Variable>());
+      bounds = head.queryBoundVars();
     }
-    _args = new ArrayList<Term>();
     bounds = calculateBoundVariablesAndRefreshSubs(args, bounds, frees, _args);
     setVariables(frees, bounds,
-                 calculateTypeVariablesForSubterms(args, _head.queryTypeVars()));
-  }
-
-  /**
-   * This helper function handles the functionality for the constructors to set up _head, _args
-   * and _outputType, and store the variables and meta-variables.  The given set args is not
-   * assumed to be our property, so will not be changed.
-   * If there are any problems -- such as the head or an argument being null, or the types not
-   * checking out -- an appropriate Exception is thrown. However, it *is* assumed that args is not
-   * null.
-   */
-  private void construct(Term head, List<Term> args) {
-    if (head == null) throw new NullStorageException("Application", "head");
-
-    Type type = head.queryType();
-    for (int i = 0; i < args.size(); i++) {
-      Term arg = args.get(i);
-      if (arg == null) {
-        throw new NullStorageException("Application", "passing a null argument to " +
-          head.toString() + ".");
-      }
-      switch (type) {
-        case Arrow(Type inp, Type out):
-          if (!inp.equals(arg.queryType())) {
-            throw new TypingException("Could not construct application headed by ", head, ": " +
-              "argument " + (i+1) + " of the head has type ", inp, " while the given argument to " +
-              "be applied, ", arg, ", has type ", arg.queryType(), ".");
-          }
-          type = out;
-          break;
-        default:
-          throw new TypingException("Could not construct application headed by ", head, " with " +
-            args.size() + " arguments: the head has type " + head.queryType(), ", which only " +
-            "permits " + i + " arguments!");
-      }
-    }
-
-    _outputType = type;
-    _head = head;
-    if (_head.isApplication()) {
-      _head = head.queryHead();
-      ArrayList<Term> newArgs = head.queryArguments();
-      newArgs.addAll(args);
-      args = newArgs;
-    }
-    setupReplaceables(args);
+                 calculateTypeVariablesForSubterms(args, head.queryTypeVars()));
+    return head;
   }
 
   /**
@@ -107,9 +92,7 @@ class Application extends TermInherit {
    * Throws an error if the head is null or does not have arity ≥ 1, or the argument is null.
    */
   Application(Term head, Term arg) {
-    ArrayList<Term> args = new ArrayList<Term>();
-    args.add(arg);
-    construct(head, args);
+    this(head, List.of(arg));
   }
 
   /**
@@ -117,10 +100,7 @@ class Application extends TermInherit {
    * Throws an error if the head does not have arity ≥ 2, or one of the arguments is null.
    */
   Application(Term head, Term arg1, Term arg2) {
-    ArrayList<Term> args = new ArrayList<Term>();
-    args.add(arg1);
-    args.add(arg2);
-    construct(head, args);
+    this(head, List.of(arg1, arg2));
   }
 
   /**
@@ -129,12 +109,19 @@ class Application extends TermInherit {
    * types of the arguments are not the expected input types of the head.
    */
   Application(Term head, List<Term> args) {
-    if (args == null) throw new NullStorageException("Application", "argument list");
-    if (args.size() == 0) {
+    if (args.isEmpty()) {
       throw new IllegalArgumentException("Application::constructor --  creating an " +
         "Application with no arguments.");
     }
-    construct(head, args);
+    _outputType = checkType(head, args);
+    if (head.isApplication()) {
+      ArrayList<Term> newArgs = head.listArguments();
+      head = head.queryHead();
+      newArgs.addAll(args);
+      args = newArgs;
+    }
+    _args = new ArrayList<Term>();
+    _head = setupReplaceables(head, args);
   }
 
   //  Main functionality ------------------------------------------------------
@@ -177,29 +164,33 @@ class Application extends TermInherit {
   }
   
   /** For a term h(s1,...,sn), this returns n. */
-  public int numberArguments() {
+  public int queryNumberArguments() {
     return _args.size();
   }
 
   /** For a term h(s1,...,sn), this returns h.numberMetaArguments(). */
-  public int numberMetaArguments() {
-    return _head.numberMetaArguments();
+  public int queryNumberMetaArguments() {
+    return _head.queryNumberMetaArguments();
   }
 
   /** Returns the list of all arguments, so [s1,...,sn] for h(s1,...,sn). */
-  public ArrayList<Term> queryArguments() {
+  public ArrayList<Term> listArguments() {
     return new ArrayList<Term>(_args);
   }
 
-  public ArrayList<Term> queryMetaArguments() {
-    return _head.queryMetaArguments();
+  /** Returns the list of meta-arguments of the head. */
+  public ArrayList<Term> listMetaArguments() {
+    return _head.listMetaArguments();
   }
 
-  /** For a term head(s1,...,sn), this returns si if 1 <= i <= n, and throws an error otherwise. */
+  /**
+   * For a term head(s1,...,sn), this returns si if 1 <= i <= n, and throws an exception
+   * otherwise.
+   */
   public Term queryArgument(int i) {
     if (i <= 0 || i > _args.size()) {
       throw new IndexOutOfBoundsException("Application::queryArgument(" + i + ") called on " +
-        "application with " + _args.size() + " arguments. (" + toString() + ")");
+        "application with " + _args.size() + " arguments. (" + this + ")");
     }
     return _args.get(i-1);
   }
@@ -213,8 +204,8 @@ class Application extends TermInherit {
   public Term queryImmediateHeadSubterm(int i) {
     if (i < 0 || i > _args.size()) {
       throw new IndexOutOfBoundsException("Application::queryImmediateHeadSubterm(" + i + ") " +
-        "called on application with " + _args.size() + " arguments (" + toString() + ")");
-    }   
+        "called on application with " + _args.size() + " arguments (" + this + ")");
+    }
     if (i == 0) return _head;
     return new Application(_head, _args.subList(0, i));
   }
@@ -256,8 +247,7 @@ class Application extends TermInherit {
 
   /**
    * Returns true if this application is a functional term, or variable term whose variable
-   * is a binder,
-   * and the arguments are all patterns.
+   * is a binder, and the arguments are all patterns.
    */
   public boolean isPattern() {
     if (!_head.isConstant() && !_head.isVariable()) return false;
@@ -284,14 +274,14 @@ class Application extends TermInherit {
    * Returns the full subterms and their positions of this term, from left to right, followed by
    * the empty position.
    */
-  public List<Pair<Term,Position>> querySubterms() {
-    List<Pair<Term,Position>> ret = _head.querySubterms();
-    ret.remove(ret.size()-1); // remove the empty position
+  public List<Pair<Term,Position>> listSubterms() {
+    List<Pair<Term,Position>> ret = _head.listSubterms();
+    ret.removeLast(); // remove the empty position
     for (int i = 0; i < _args.size(); i++) {
-      List<Pair<Term,Position>> subposses = _args.get(i).querySubterms();
-      for (int j = 0; j < subposses.size(); j++) {
-        ret.add(new Pair<Term,Position>(subposses.get(j).fst(),
-                                        new ArgumentPos(i+1, subposses.get(j).snd())));
+      List<Pair<Term,Position>> subposses = _args.get(i).listSubterms();
+      for (Pair<Term, Position> pair : subposses) {
+        ret.add(new Pair<Term, Position>(pair.fst(),
+          new ArgumentPos(i + 1, pair.snd())));
       }
     }
     ret.add(new Pair<Term,Position>(this, Position.empty));
@@ -300,22 +290,23 @@ class Application extends TermInherit {
 
   /** @return the subterm at the given (non-empty) position */
   public Term querySubtermMain(Position pos) {
-    switch (pos) {
-      case FinalPos(int k):
+    return switch (pos) {
+      case FinalPos(int k) -> {
         if (k > _args.size()) {
           throw new InvalidPositionException(this, pos,
             "querying subterm with excessive chop count in application");
         }
-        return _head.apply(_args.subList(0, _args.size() - k));
-      case ArgumentPos(int index, Position tail):
+        yield _head.apply(_args.subList(0, _args.size() - k));
+      }
+      case ArgumentPos(int index, Position tail) -> {
         if (index > _args.size()) {
           throw new InvalidPositionException(this, pos,
             "querying subterm in non-existing argument of application");
         }
-        return _args.get(index-1).querySubterm(tail);
-      default:
-        return _head.querySubterm(pos);
-    }
+        yield _args.get(index - 1).querySubterm(tail);
+      }
+      default -> _head.querySubterm(pos);
+    };
   }
 
   /**
@@ -380,7 +371,7 @@ class Application extends TermInherit {
   public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
     if (!term.isApplication()) return false;
     if (!_head.alphaEquals(term.queryHead(), mu, xi, k)) return false;
-    if (_args.size() != term.numberArguments()) return false;
+    if (_args.size() != term.queryNumberArguments()) return false;
     for (int i = 0; i < _args.size(); i++) {
       if (!_args.get(i).alphaEquals(term.queryArgument(i+1), mu, xi, k)) return false;
     }
@@ -390,7 +381,7 @@ class Application extends TermInherit {
   /** This method returns a hashCode that maps alpha-equal terms to the same code. */
   public int hashCode(Map<Variable,Integer> mu) {
     int ret = _head.hashCode(mu);
-    for (int i = 0; i < _args.size(); i++) ret = 31 * ret + _args.get(i).hashCode(mu);
+    for (Term arg : _args) ret = 31 * ret + arg.hashCode(mu);
     return ret;
   }
 }

@@ -23,19 +23,19 @@ import charlie.util.FixedList;
  * used to access the unique theory types which are tracked by the program.
  */
 public class TypeFactory {
-  /** The theory sort Int, representing the set of integer numbers. */
-  public static final Base intSort = UniqueTypes.intSort;
+  /** The theory sort Int, representing the commonly used set of integer numbers. */
+  public static final Base intSort = new Base("Int");
 
   /** The theory sort Bool, representing the set of boolean values {true, false}. */
-  public static final Base boolSort = UniqueTypes.boolSort;
+  public static final Base boolSort = new Base("Bool");
 
   /** The theory sort String, representing the set of Strings. */
-  public static final Base stringSort = UniqueTypes.stringSort;
+  public static final Base stringSort = new Base("String");
 
-  /** The default sort is the unique sort that is used for "unsorted" term rewriting. */
-  public static final Base defaultSort = UniqueTypes.defaultSort;
+  /** The default sort, used for instance as the unique sort in "unsorted" term rewriting. */
+  public static final Base defaultSort = new Base("o");
 
-  /** Creates a basic (non-theory) type by the given name. */
+  /** Creates a basic type by the given name. */
   public static Base createSort(String name) {
     return new Base(name);
   }

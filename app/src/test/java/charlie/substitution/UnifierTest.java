@@ -152,7 +152,7 @@ class UnifierTest {
     var z = read("z", renaming, trs);
     var g = read("g", renaming, trs);
     assertEquals(sub.applySubstitution(z).queryHead(), g);
-    assertEquals(sub.applySubstitution(z).numberArguments(), 1);
+    assertEquals(sub.applySubstitution(z).queryNumberArguments(), 1);
     assertTrue(sub.applySubstitution(z).queryArgument(1).isVariable());
   }
 

@@ -45,7 +45,7 @@ public class TheoryFactory {
 
   /** Create a non-binder variable with the given name and base sort. */
   public static Variable createVar(String name, Base type) {
-    if (!type.isTheoryType()) {
+    if (!Theory.isTheory(type)) {
       throw new IllegalArgumentException("TheoryFactory::createVar is given type " + type +
         " which is not a theory sort.");
     }

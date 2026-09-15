@@ -19,15 +19,15 @@ import charlie.types.Type;
 import charlie.terms.replaceable.Replaceable;
 
 /**
- * Meta-variables are used in matching.  They take zero or more arguments to create a
- * meta-application.
+ * <p>Meta-variables are used in matching.  They take zero or more arguments to create a
+ * meta-application.</p>
  *
- * Multiple distinct meta-variables are allowed to share the same name.  In practice, we expect
+ * <p>Multiple distinct meta-variables are allowed to share the same name.  In practice, we expect
  * multiple meta-variables within the same term or rule to have distinct names, but this is not
  * required.  Like variables, meta-variables may be renamed in pretty printing.  Hence,
- * meta-variable equality is not defined by their name, but rather by an internally kept index.
+ * meta-variable equality is not defined by their name, but rather by an internally kept index.</p>
  *
- * Note: all instances of MetaVariable must (and can be expected to) be immutable.
+ * <p>Note: all instances of MetaVariable must (and can be expected to) be immutable.</p>
  */
 public interface MetaVariable extends Replaceable {
   /**
@@ -54,4 +54,3 @@ public interface MetaVariable extends Replaceable {
   /** @return σ_1 → ... → σ_k → τ if the current meta-variable has a type [σ_1 x ... x σ_k] → τ */
   Type queryType();
 }
-

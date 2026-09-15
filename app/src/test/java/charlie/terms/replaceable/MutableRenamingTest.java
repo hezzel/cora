@@ -18,45 +18,12 @@ package charlie.terms.replaceable;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
-import charlie.util.Pair;
 import charlie.types.Type;
-import charlie.types.TVarSet;
 import charlie.parser.CoraParser;
 
-/**
- * Not too many tests here, because most testing is actually done through the toString() functions
- * of the various kinds of terms.
- */
 public class MutableRenamingTest {
   private MutableRenaming makeRenaming() {
     return new MutableRenaming(Set.of("ban", "uu", "var"));
-  }
-
-  private static int _counter = 0;
-
-  private class MyReplaceable implements Replaceable {
-    int _index;
-    String _name;
-    Type _type;
-    int _arity;
-    
-    MyReplaceable(String name, Type type, int arity) {
-      _counter++;
-      _index = _counter;
-      _name = name;
-      _type = type;
-      _arity = arity;
-    }
-
-    public Kind queryReplaceableKind() { return _arity == 0 ? Kind.BASEVAR : Kind.METAVAR; }
-    public String queryName() { return _name; }
-    public Type queryType() { return _type; }
-    public boolean isMonomorphic() { return _type.isMonomorphic(); }
-    public int queryArity() { return _arity; }
-    public int queryIndex() { return _index; }
-    public boolean equals(Replaceable x) { return x.queryIndex() == _index; }
-    public int compareTo(Replaceable x) { return _index - x.queryIndex(); }
-    public TVarSet queryTypeVars() { return TVarSet.EMPTY; }
   }
 
   private Replaceable makeVar(String name, Type type) {
@@ -254,4 +221,3 @@ public class MutableRenamingTest {
     assertTrue(renaming.getReplaceable("y") == null);
   }
 }
-

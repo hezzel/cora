@@ -17,7 +17,6 @@ package cora.termination.reduction_pairs;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Collections;
@@ -75,8 +74,8 @@ public record OrderingRequirement(Term left, Term right, Term constraint, Relati
       components.add(" { ");
       for (Variable x : tvar) {
         // only show the variables that actually occur
-        if (!left.vars().contains(x) && !right.vars().contains(x) &&
-            !constraint.vars().contains(x)) continue;
+        if (!left.queryFreeVariables().contains(x) && !right.queryFreeVariables().contains(x) &&
+            !constraint.queryFreeVariables().contains(x)) continue;
         components.add(x);
         components.add(" ");
       }
@@ -91,8 +90,8 @@ public record OrderingRequirement(Term left, Term right, Term constraint, Relati
    */
   private boolean allVarsInConstraint() {
     for (Variable x : tvar) {
-      if (!constraint.vars().contains(x)) {
-        if (left.vars().contains(x) || right.vars().contains(x)) return false;
+      if (!constraint.queryFreeVariables().contains(x)) {
+        if (left.queryFreeVariables().contains(x) || right.queryFreeVariables().contains(x)) return false;
       }
     }
     return true;

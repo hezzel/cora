@@ -19,37 +19,37 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
- * Positions are a tool to refer to a specific location in a term.
+ * <p>Positions are a tool to refer to a specific location in a term.</p>
  *
- * Inherently, a Position is nothing more than a sequence that has one of two forms:
- * <p><ul>
+ * <p>Inherently, a Position is nothing more than a sequence that has one of two forms:</p>
+ * <ul>
  *   <li> [item_1].[item_2]...[item_n].ε (called a full position)
  *   <li> [item_1].[item_2]...[item_n].☆k with k ≥ 1 (called a partial position)
- * </ul></p>
- * where each item [item_i] is an integer.  Negative integers are denoted !i instead of -i in
- * printing and parsing.
+ * </ul>
+ * <p>where each item [item_i] is an integer.  Negative integers are denoted !i instead of -i in
+ * printing and parsing.</p>
  *
- * Positions are implemented essentially as a list, meaning a Position has one of the following
- * shapes:
- * <p><ul>
+ * <p>Positions are implemented essentially as a list, meaning a Position has one of the following
+ * shapes:</p>
+ * <ul>
  *  <li> ε or ☆k with k ≥ 1 (final positions); we say that ε is the empty position
  *  <li> i.p; we refer to i as the head and to p as the tail
- *  </ul></p>
- * <p>
+ *  </ul>
  *
- * Positions gain their meaning in the context of terms: for a given term, certain positions refer
- * to specific subterms (and not all positions refer to a subterm)!  Specifically:
- * <p><ul>
+ * <p>Positions gain their meaning in the context of terms: for a given term, certain positions
+ * refer to specific subterms (and not all positions refer to a subterm)!  Specifically:</p>
+ * <ul>
  *   <li> for a term h(s1,...,sn), i.p refers ro the subterm at position p in si if 0 < i ≤ n
  *   <li> for a term λx.t or (λx.t)(s1,...,sn), 0.p refers to the subterm at position p in t
  *   <li> for a term Z⟨t1,...,tk⟩(s1,...,sn), !i.p refers to the subterm at position p in ti if
  *     0 < i ≤ k
  *   <li> for any term s, ε refers to s itself
  *   <li> for a term h(s{1},...,s{n}), ☆k refers to h(s{1},...,s{n-k})
- * </ul></p>
+ * </ul>
  *
- * <b>Note:</b> all instances of Position must (and can be expected to) be immutable.
- * Positions are ordered in lexicograph order, with final positions coming before non-final ones.
+ * <p><b>Note:</b> all instances of Position must (and can be expected to) be immutable.
+ * Positions are ordered in lexicographical order, with final positions coming before non-final
+ * ones.</p>
  */
 
 public sealed interface Position extends Comparable<Position> permits
@@ -59,7 +59,7 @@ public sealed interface Position extends Comparable<Position> permits
   boolean equals(Position other);
 
   /** Gives a unique string representation for the position. */
-  default String toStringDefault() { return (new PositionPrinter()).print(this); }
+  default String toStringDefault() { return PositionPrinter.DEBUGPRINTER.print(this); }
 
   /** Returns a copy of the current position with p appended to the end. */
   Position append(Position p);
@@ -97,8 +97,8 @@ public sealed interface Position extends Comparable<Position> permits
    * full position), or .☆k with k ≥ 1 (for a partial position).  If omitted, the ending .ε is
    * assumed.  Instead of supplying a negative number, also !i with i ≥ 1 may be used.
    */
-  public static Position parse(String text) throws PositionFormatException {
-    if (text.equals("")) return empty;
+  static Position parse(String text) throws PositionFormatException {
+    if (text.isEmpty()) return empty;
 
     // find chop count, if any, and remove that part from the text
     int chp = 0, n;
@@ -124,7 +124,7 @@ public sealed interface Position extends Comparable<Position> permits
       if (dot == n-1) throw new PositionFormatException(dot+1, text, "empty position index");
       String part = text.substring(dot+1, n);
       boolean meta = false;
-      if (part.length() > 0 && part.charAt(0) == '!') {
+      if (!part.isEmpty() && part.charAt(0) == '!') {
         meta = true;
         part = part.substring(1);
       }
@@ -152,7 +152,7 @@ public sealed interface Position extends Comparable<Position> permits
    * positive integers as ArgumentPos, negative integers as MetaPos, and 0 as LambdaPos.  Note that
    * this will only create full positions, not partial positions.
    */
-  public static Position of(LinkedList<Integer> indexes) {
+  static Position of(LinkedList<Integer> indexes) {
     return of(indexes, empty);
   }
 
@@ -161,7 +161,7 @@ public sealed interface Position extends Comparable<Position> permits
    * positive integers as ArgumentPos, negative integers as MetaPos, and 0 as LambdaPos.  Then
    * ending is appended to the result.
    */
-  public static Position of(LinkedList<Integer> indexes, Position ending) {
+  static Position of(LinkedList<Integer> indexes, Position ending) {
     Position p = ending;
     Iterator<Integer> iterator = indexes.descendingIterator();
     while (iterator.hasNext()) {
@@ -173,4 +173,3 @@ public sealed interface Position extends Comparable<Position> permits
     return p;
   }
 }
-

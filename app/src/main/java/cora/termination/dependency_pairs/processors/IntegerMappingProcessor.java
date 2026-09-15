@@ -16,7 +16,6 @@
 package cora.termination.dependency_pairs.processors;
 
 import java.util.*;
-import java.util.function.Consumer;
 
 import charlie.types.*;
 import charlie.terms.*;
@@ -26,10 +25,8 @@ import charlie.theory.TheoryFactory;
 import charlie.smt.*;
 import charlie.trs.TrsProperties.*;
 import charlie.theorytranslation.TermSmtTranslator;
-import cora.io.OutputModule;
 import cora.config.Settings;
 import cora.termination.dependency_pairs.DP;
-import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
 
 public class IntegerMappingProcessor implements Processor {
@@ -105,9 +102,9 @@ public class IntegerMappingProcessor implements Processor {
       // let subst be the substitution such that, if left = f l1 ... ln and li is a variable of
       // theory sort, then subst[li] = x_i^f
       MutableSubstitution subst = new MutableSubstitution();
-      for (int i = 1; i <= lhs.numberArguments(); i++) {
+      for (int i = 1; i <= lhs.queryNumberArguments(); i++) {
         Term argi = lhs.queryArgument(i);
-        if (argi.isVariable() && argi.queryType().isBaseTheoryType()) {
+        if (argi.isVariable() && Theory.isBaseTheoryType(argi.queryType())) {
           subst.extend(argi.queryVariable(), _fnToFreshVar.get(root).get(i-1));
         }
       }
@@ -119,7 +116,7 @@ public class IntegerMappingProcessor implements Processor {
       // candidates!
       for (Term s : suggestions) {
         boolean ok = true;
-        for (Variable x : s.vars()) {
+        for (Variable x : s.queryFreeVariables()) {
           if (subst.get(x) == null) { ok = false; break; }
         }
         if (ok) _candidates.get(root).add(s.substitute(subst));
@@ -136,11 +133,11 @@ public class IntegerMappingProcessor implements Processor {
     if (!constraint.isFunctionalTerm()) return;
     FunctionSymbol f = constraint.queryRoot();
     if (f.equals(TheoryFactory.andSymbol) || f.equals(TheoryFactory.orSymbol)) {
-      for (int i = 1; i <= constraint.numberArguments(); i++) {
+      for (int i = 1; i <= constraint.queryNumberArguments(); i++) {
         addAllComparisonFunctions(constraint.queryArgument(i), ret);
       }
     }
-    if (constraint.numberArguments() != 2) return;
+    if (constraint.queryNumberArguments() != 2) return;
     Term left = constraint.queryArgument(1);
     Term right = constraint.queryArgument(2);
     // left ≥ right  =>  left - right
@@ -210,7 +207,7 @@ public class IntegerMappingProcessor implements Processor {
       Term inst = instantiateCandidate(cand, term);
       if (!Theory.isTheory(inst)) continue;
       boolean badvar = false;
-      for (Variable x : inst.vars()) {
+      for (Variable x : inst.queryFreeVariables()) {
         if (!theoryVars.contains(x)) { badvar = true; break; }
       }
       if (!badvar) updatedCandidates.add(cand);

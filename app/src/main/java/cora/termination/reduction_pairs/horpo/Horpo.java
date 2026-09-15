@@ -16,16 +16,13 @@
 package cora.termination.reduction_pairs.horpo;
 
 import charlie.util.Pair;
-import charlie.types.*;
 import charlie.terms.*;
 import charlie.theory.Theory;
 import charlie.trs.TrsProperties.*;
 import charlie.smt.*;
-import charlie.theorytranslation.TermSmtTranslator;
 import cora.config.Settings;
 import cora.termination.reduction_pairs.*;
 import cora.termination.reduction_pairs.horpo.HorpoConstraintList.HRelation;
-import cora.termination.reduction_pairs.horpo.HorpoConstraintList.HorpoRequirement;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -163,7 +160,7 @@ public class Horpo implements ReductionPair {
       p.fst().visitSubterms( (s,pos) -> {
         if (s.isFunctionalTerm()) {
           if (Theory.isTheory(s) && s.queryType().isBaseType()) {
-            for (Variable x : s.vars()) {
+            for (Variable x : s.queryFreeVariables()) {
               if (!set.contains(x)) { symbs.add(s.queryRoot()); break; }
             }
           }

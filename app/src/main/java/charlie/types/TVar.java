@@ -46,9 +46,6 @@ public record TVar(String name) implements Type {
   public boolean isMonomorphic() { return false; }
 
   @Override
-  public boolean isTheoryType() { return false; }
-
-  @Override
   public int queryNumberSubtypes() { return 0; }
 
   @Override
@@ -95,10 +92,8 @@ public record TVar(String name) implements Type {
 
   @Override
   public boolean equals(Type type) {
-    return switch (type) {
-      case TVar(String othername) -> this.name.equals(othername);
-      default -> false;
-    };
+    if (type instanceof TVar(String othername)) return this.name.equals(othername);
+    return false;
   }
 
   @Override

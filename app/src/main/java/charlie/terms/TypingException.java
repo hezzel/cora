@@ -16,12 +16,10 @@
 package charlie.terms;
 
 import charlie.util.UserException;
-import charlie.types.Type;
 
 /**
- * A TypingException is thrown when the typing of some term fails, for example because something
- * tries to assign a non-integer type to an integer value, or when a function of type A → B → C
- * is applied on two arguments of type A.
+ * A TypingException is thrown when the typing of some term fails, for example when a function
+ * of\ type A → B → C is applied on two arguments of type A.
  */
 public class TypingException extends UserException {
   public TypingException(Object ...parts) {

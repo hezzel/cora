@@ -16,18 +16,18 @@
 package charlie.terms.position;
 
 /**
- * Rather than using a lexer and parser, positions may be read through a custom parser defined in
- * Position.parse. If a position is malformed, then a PositionFormatException will be thrown by
- * this parsing function.
+ * <p>Rather than using a lexer and parser, positions may be read through a custom parser defined
+ * in Position.parse. If a position is malformed, then a PositionFormatException will be thrown by
+ * this parsing function.</p>
  *
- * This is not marked as a UserException because while a PositionFormatException is definitely
+ * <p>This is not marked as a UserException because while a PositionFormatException is definitely
  * something that may occur as the result of user errors, it is not a RuntimeException: it should
- * be explicitly handled or passed on.
+ * be explicitly handled or passed on.</p>
  */
 public class PositionFormatException extends Exception {
-  private int _pos;
-  private String _problem;
-  private String _explanation;
+  private final int _pos;
+  private final String _problem;
+  private final String _explanation;
 
   public PositionFormatException(int pos, String positionText, String explanation) {
     super(pos + ": Could not parse position [" + positionText + "]: " + explanation);
@@ -46,6 +46,7 @@ public class PositionFormatException extends Exception {
     return _problem;
   }
 
+  /** The explanation of the issue. */
   public String queryExplanation() {
     return _explanation;
   }

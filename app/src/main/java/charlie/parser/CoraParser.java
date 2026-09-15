@@ -764,7 +764,7 @@ public class CoraParser {
       ParserDeclaration decl = readDeclarationForm(sort, forcePrivate);
       if (decl != null) {
         decs.add(decl);
-        for (TVar alpha : decl.type().getTypeVariables()) {
+        for (TVar alpha : decl.type().listTypeVariables()) {
           if (!tvars.contains(alpha)) {
             _status.storeError(new ParsingErrorMessage(decl.token(), "Type ", decl.type(),
               " for function symbol " + decl.name() + " contains a type variable ", alpha,

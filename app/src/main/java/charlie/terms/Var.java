@@ -23,16 +23,16 @@ import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.ReplaceableSet;
 
 /**
- * Non-binder variables are both used as parts of constraints, as generic expressions in terms, and
- * as open spots for matching in rules; this class represents all those kinds of variables.
+ * <p>Non-binder variables are both used as parts of constraints, as generic expressions in terms,
+ * and as open spots for matching in rules; this class represents all those kinds of variables.</p>
  *
- * Variables have a name for printing purposes, but are not uniquely defined by it (distinct
+ * <p>Variables have a name for printing purposes, but are not uniquely defined by it (distinct
  * variables may have the same name and type, although this will typically be avoided within a
  * single term).  Rather, variables are uniquely identified by an internally kept index (along with
  * their binder/non-binder status).  By construction, no non-binder variables with an index greater
- * than COUNTER can exist in the program.
+ * than COUNTER can exist in the program.</p>
  *
- * A non-binder variable is also a meta-variable with arity 0.
+ * <p>A non-binder variable is also a meta-variable with arity 0.</p>
  */
 final class Var extends LeafTermInherit implements Variable, MetaVariable {
   private static int COUNTER = 0;
@@ -59,97 +59,114 @@ final class Var extends LeafTermInherit implements Variable, MetaVariable {
   }
 
   /** @return true */
+  @Override
   public boolean isVariable() { return true; }
 
   /** @return true */
+  @Override
   public boolean isVarTerm() { return true; }
 
   /** @return true */
+  @Override
   public boolean isMetaApplication() { return true; }
 
   /** @return false */
+  @Override
   public boolean isBinderVariable() { return false; }
 
   /** @return true */
+  @Override
   public boolean isApplicative() { return true; }
 
   /** @return 0 */
+  @Override
   public int queryArity() { return 0; }
 
   /** @return true if the type has order 0 */
+  @Override
   public boolean isFirstOrder() {
     return queryType().isZeroSort();
   }
 
   /** Returns the name this variable was set up with. */
+  @Override
   public String queryName() {
     return _name;
   }
 
   /** @return an integer uniquely identifying this non-binder variable */
+  @Override
   public int queryIndex() {
     return _index;
   }
 
+  @Override
   public Kind queryReplaceableKind() {
     return Replaceable.Kind.BASEVAR;
   }
 
   /** @return the type of this variable */
+  @Override
   public Type queryOutputType() {
     return queryType();
   }
 
   /** @throws IndexOutOfBoundsException, since there are no arguments */
+  @Override
   public Type queryInputType(int index) {
     throw new IndexOutOfBoundsException("Var::queryInputType(" + index + ") called");
   }
 
   /** @return this */
+  @Override
   public Variable queryVariable() {
     return this;
   }
 
   /** @return this */
+  @Override
   public MetaVariable queryMetaVariable() {
     return this;
   }
 
-  public Term makeTerm() {
-    return this;
-  }
-
   /** Two variables are equal if and only if they are the same object. */
+  @Override
   public boolean equals(Variable other) {
     return other == this;
   }
 
   /** We are equal to another replaceable if and only if it is the same as us. */
+  @Override
   public boolean equals(Replaceable other) {
     return other == this;
   }
 
   /** This function replaces binders, so doesn't do anything with a non-binder variable! */
+  @Override
   public Var renameAndRefreshBinders(Map<Variable,Variable> renaming) {
     return this;
   }
 
   /** Alpha-equality of a non-binder variable to another variable holds iff they are the same. */
-  public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
+  @Override
+  public boolean alphaEquals(Term term, Map<Variable,Integer> mu,
+                             Map<Variable,Integer> xi, int k) {
     return term.isVariable() && equals(term.queryVariable());
   }
 
   /** Implements a total ordering on replaceables using the kind, type and index. */
+  @Override
   public int compareTo(Replaceable other) {
     if (other == this) return 0;    // shortcut
     int d = other.queryReplaceableKind().compareTo(queryReplaceableKind());
     if (d != 0) return d;
     if (_index < other.queryIndex()) return -1; 
     if (_index > other.queryIndex()) return 1;
-    return queryType().toString().compareTo(other.queryType().toString());
+    return queryType().compareTo(other.queryType());
   }
 
   /** Returns a hashcode that (uniquely) identifies this Var */
+  @Override
   public int hashCode(Map<Variable,Integer> mu) {
     return 3 * _index;
   }

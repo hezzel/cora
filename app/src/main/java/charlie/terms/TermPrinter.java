@@ -24,23 +24,24 @@ import charlie.terms.replaceable.MutableRenaming;
 /**
  * TermPrinters are used in the overall output process of the tool.  This class provides a default
  * implementation, but is meant to be inherited.  You can for instance instantiate the term printer
- * to use unicode symbols, ascii-art, html, print smt-style or whatever is needed.
+ * to use Unicode symbols, ascii-art, HTML, to print smt-style or whatever is needed.
  */
 public class TermPrinter {
-  private NameGenerator _nameGenerator;   // used to generate names for free (meta-)variables
+  private final NameGenerator _nameGenerator;   // used to generate names for free (meta-)variables
 
   /**
-   * A default term printer that can be used for debugging and unit testing purposes.  This is used
-   * by the default toString() functionality in Term, which exists exactly for those two purposes.
+   * <p>A default term printer that can be used for debugging and unit testing purposes.  This is
+   * used by the default toString() functionality in Term, which exists exactly for those two
+   * purposes.</p>
    *
-   * ### It is not meant to be used for anything else! ###
+   * <p><b>It is not meant to be used for anything else!</b></p>
    *
-   * In particular, this uses a default name generator that does not consider the names of any
+   * <p>In particular, this uses a default name generator that does not consider the names of any
    * function symbols (and thus, might inadvertently give a variable a name that is already used by
-   * a function symbol).  It also does not respect user settings.
+   * a function symbol).  It also does not respect user settings.</p>
    *
-   * Note that while the DEBUGPRINTER is not final, the main intention is that you set it at the
-   * start of the program (but can do so from a settings / debugging class).
+   * <p>Note that while the DEBUGPRINTER is not final, the main intention is that you set it once at
+   * the start of the program (but can do so from a settings / debugging class).</p>
    */
   public static TermPrinter DEBUGPRINTER = new TermPrinter(new NameGenerator(Set.of()));
 
@@ -58,9 +59,8 @@ public class TermPrinter {
   }
 
   /**
-   * Returns a string representation of the given term (using the print function that takes two
+   * Returns a string representation of the given term (using the print function that takes three
    * arguments).
-   * This is only supplied as a public access function, and is not meant to be overridden.
    */
   public final String print(Term term) {
     StringBuilder builder = new StringBuilder();
@@ -70,9 +70,8 @@ public class TermPrinter {
 
   /**
    * Returns a string representation of the given term using the given Renaming (and using the
-   * print function that takes two arguments).  Note that the renaming is expected to have all
+   * print function that takes three arguments).  Note that the renaming is expected to have all
    * free replaceables of the given term in its domain, or the output may be confusing.
-   * This is only supplied as a public access function, and is not meant to be overridden.
    */
   public final String print(Term term, Renaming naming) {
     StringBuilder builder = new StringBuilder();
@@ -83,7 +82,6 @@ public class TermPrinter {
   /**
    * Adds a string representation of the given term to the given string builder (using the print
    * function that takes two arguments).
-   * This is only supplied as a public access function, and is not meant to be overridden.
    */
   public final void print(Term term, StringBuilder builder) {
     print(term, _nameGenerator.generateUniqueNaming(term), builder);
@@ -94,7 +92,6 @@ public class TermPrinter {
    * Renaming to print names for variables.  Note that the renaming should have every free
    * (meta-)variable in term in its domain; if this is not the case, it is possible that some
    * distinct variables will be printed with the same name.
-   * This is only supplied as a public access function, and is not meant to be overridden.
    */
   public final void print(Term term, Renaming naming, StringBuilder builder) {
     MutableRenaming mren = _nameGenerator.generateUniqueNaming();
@@ -104,17 +101,17 @@ public class TermPrinter {
   }
 
   /**
-   * The main print function: it adds a string representation of the given term to the given string
-   * builder, using the two given Renamings to print names for variables.
+   * <p>The main print function: it adds a string representation of the given term to the given
+   * string builder, using the two given Renamings to print names for variables.</p>
    *
-   * Here, the boundNaming is intended to be used for terms that occurred bound in the original
-   * term.  Hence, it should only contain mappings for binder variables, and is used as leading
-   * when deciding what name to use for a variable.  If some variable does not occur in boundNaming,
-   * then it is looked up in freeNaming (as are all meta-variables).
+   * <p>Here, the boundNaming is intended to be used for variables that occurred bound in the
+   * original term.  Hence, it should only contain mappings for binder variables, and is used as
+   * leading when deciding what name to use for a variable.  If some variable does not occur in
+   * boundNaming, then it is looked up in freeNaming (as are all meta-variables).</p>
    *
-   * To define a custom TermPrinter, you can either override this method directly -- in which case
-   * there is no need to override any of the other methods in the class -- or directly override
-   * (some of) the functions it calls: these are the functions print<Something>.
+   * <p>To define a custom TermPrinter, you can either override this method directly -- in which
+   * case there is no need to override any of the other methods in the class -- or directly override
+   * (some of) the functions it calls: these are the functions print<Something>.</p>
    */
   protected final void printRecursive(Term term, Renaming freeNaming, MutableRenaming boundNaming,
                                       StringBuilder builder) {
@@ -128,7 +125,7 @@ public class TermPrinter {
     else if (term.isFunctionalTerm()) {
       FunctionSymbol root = term.queryRoot();
       if (root.isInfixSymbol() && !term.queryType().isArrowType()) {
-        if (term.numberArguments() == 1) {
+        if (term.queryNumberArguments() == 1) {
           printPrefixTerm(term.queryRoot(), term.queryArgument(1),
                           freeNaming, boundNaming, builder);
         }
@@ -144,65 +141,64 @@ public class TermPrinter {
   }
 
   /**
-   * Called by printRecursive() to print a (binder or free) variable.
-   *
-   * When using the default implementations of printVarTerm and printApplication, it is also called
-   * to print the head x of a var term x(s1,...,sn).
+   * <p>Called by printRecursive() to print a (binder or free) variable.
+   * When using the default implementations of printVarTerm and printApplication, it is also
+   * called to print the head x of a var term x(s1,...,sn).
    * (If you only want to use this function to print stand-alone variables, then override the
-   * default implementation of printVarTerm.)
+   * default implementation of printVarTerm.)</p>
    *
-   * The default implementation uses the name for the variable in boundNaming, or if that doesn't
+   * <p>The default implementation uses the name for the variable in boundNaming, or if that doesn't
    * exist, the name in freeNaming.  If there is no name set in either Renaming, then it uses the
-   * variable's base name, but marks it as undefined using ??.
+   * variable's base name, but marks it as undefined using ??.</p>
    */
   protected void printVariable(Variable variable, Renaming freeNaming, MutableRenaming boundNaming,
                                StringBuilder builder) {
     String name = boundNaming.getName(variable);
     if (name == null) name = freeNaming.getName(variable);
-    if (name == null) builder.append("??" + variable.queryName());
+    if (name == null) builder.append("??").append(variable.queryName());
     else builder.append(name);
   }
 
   /**
-   * This prints the given replaceable to the string builder in the same way it would be done by
+   * <p>This prints the given replaceable to the string builder in the same way it would be done by
    * printVariable or printMetaApplication, but considers only one renaming (so the given
-   * replaceable is not expected to occur bound in the original term).
+   * replaceable is not expected to occur bound in the original term).</p>
    *
-   * The default implementation uses the renaming, and if no renaming for this Replaceable is
-   * defined then it uses its base name.
+   * <p>The default implementation uses the renaming, and if no renaming for this Replaceable is
+   * defined then it uses its base name but marked with ??.</p>
    */
   public void printReplaceable(Replaceable r, Renaming naming, StringBuilder builder) {
     String name = naming.getName(r);
-    if (name == null) builder.append("??" + r.queryName());
+    if (name == null) builder.append("??").append(r.queryName());
     else builder.append(name);
   }
 
   /**
-   * Called by printRecursive() to print a standalone, non-infix function symbol.
-   *
+   * <p>Called by printRecursive() to print a standalone, non-infix function symbol.
    * When using the default implementations of printFunctionalTerm and printApplication, it is also
-   * called to print the root symbol f of a functional term f(s1,...,sn), so long as f is non-infix.
+   * called to print the root symbol f of a functional term f(s1,...,sn), so long as f is not an
+   * infix symbol.</p>
    *
-   * (If you only want to use this function to print stand-alone constants, then override the
-   * default implementation of printFunctionalTerm.)
+   * <p>(If you only want to use this function to print stand-alone constants, then override the
+   * default implementation of printFunctionalTerm.)</p>
    *
-   * The default functionality just prints the constant's name.
+   * <p>The default functionality just prints the constant's name.</p>
    */
   protected void printConstant(FunctionSymbol constant, StringBuilder builder) {
     builder.append(constant.queryName());
   }
 
   /**
-   * Called by printRecursive() to print an infix symbol that is used standalone, and by the
+   * <p>Called by printRecursive() to print an infix symbol that is used standalone, and by the
    * default implementations of printFunctionalTerm and printApplication also for an infix symbol
-   * that occurs as the root of a *partially applied* functional term [f](s1,...,sn) (with arity(f)
-   * ≥ n+1).  Fully applied terms [f](s1,...,sn) with [f] an infix symbol are handled through
-   * printInfixTerm.
+   * that occurs as the root of a <b>partially applied</b> functional term [f](s1,...,sn) (with
+   * arity(f) ≥ n+1).  Fully applied terms [f](s1,...,sn) with [f] an infix symbol are handled
+   * through printInfixTerm.</p>
    *
-   * (If you only want to use this function to print stand-alone infix symbols, then override the
-   * default implementation of printFunctionalTerm.)
+   * <p>(If you only want to use this function to print stand-alone infix symbols, then override the
+   * default implementation of printFunctionalTerm.)</p>
    *
-   * The default functionality prints [name].
+   * <p>The default functionality prints [name].</p>
    */
   protected void printSoloInfixSymbol(FunctionSymbol constant, StringBuilder builder) {
     builder.append("[");
@@ -211,10 +207,10 @@ public class TermPrinter {
   }
 
   /**
-   * Called by printRecursive() to print a var-term that is not a variable: an application whose
-   * head is a variable, and which takes at least 1 argument.
+   * <p>Called by printRecursive() to print a var-term that is not a variable: an application whose
+   * head is a variable, and which takes at least 1 argument.</p>
    *
-   * The default implementation just calls printApplication.
+   * <p>The default implementation just calls printApplication.</p>
    */
   protected void printVarTerm(Term term, Renaming freeNaming, MutableRenaming boundNaming,
                               StringBuilder builder) {
@@ -222,14 +218,14 @@ public class TermPrinter {
   }
   
   /**
-   * Called by printRecursive() to print a standard functional term: an application whose head is a
-   * function symbol, and which takes at least 1 argument.  This is NOT called for maximally applied
-   * infix symbols; these are printed using printInfixTerm.
+   * <p>Called by printRecursive() to print a standard functional term: an application whose head
+   * is a function symbol, and which takes at least 1 argument.  This is NOT called for maximally
+   * applied infix symbols; these are printed using printInfixTerm.</p>
    *
-   * The default functionality just calls printApplication.
+   * <p>The default functionality just calls printApplication.</p>
    *
-   * Note that functional terms with no arguments are printed through printConstant or
-   * printSoloInfixSymbol instead.
+   * <p>Note that functional terms with no arguments are printed through printConstant or
+   * printSoloInfixSymbol instead.</p>
    */
   protected void printFunctionalTerm(Term term, Renaming freeNaming, MutableRenaming boundNaming,
                                      StringBuilder builder) {
@@ -237,16 +233,16 @@ public class TermPrinter {
   }
 
   /**
-   * Called by printRecursive() to print a base-type functional term f(s) where f is marked as an
-   * infix symbol (so essentially, it is a prefix symbol).
+   * <p>Called by printRecursive() to print a base-type functional term f(s) where f is marked as an
+   * infix symbol (so essentially, it is a prefix symbol).</p>
    *
-   * The default functionality simply prints f(s), so putting the arguments in brackets and not
-   * adding extra spaces.
+   * <p>The default functionality simply prints f(s), so putting the arguments in brackets and not
+   * adding extra spaces.</p>
    *
-   * Note that functional terms with an infix symbol as root but which are not fully applied
+   * <p>Note that functional terms with an infix symbol as root but which are not fully applied
    * are printed through printFunctionalTerm or (if they have no arguments) through
    * printSoloInfixSymbol.  So a functional term f(s) with f an infix symbol but which does NOT have
-   * base type would by default be printed as [f](s) instead of f(s).
+   * base type would by default be printed as [f](s) instead of f(s).</p>
    */
   protected void printPrefixTerm(FunctionSymbol root, Term arg, Renaming freeNaming,
                                  MutableRenaming boundNaming, StringBuilder builder) {
@@ -257,23 +253,23 @@ public class TermPrinter {
   }
 
   /**
-   * Called by printRecursive() to print a base-type functional term f(s1,...,sn) whose root symbol
-   * is an infix symbol, and which has n ≥ 2.
+   * <p>Called by printRecursive() to print a base-type functional term f(s1,...,sn) whose root
+   * symbol is an infix symbol, and which has n ≥ 2.</p>
    *
-   * The default functionality prints s1 f ... f sn.  Each of the arguments si may be in brackets
+   * <p>The default functionality prints s1 f ... f sn.  Each of the arguments si may be in brackets
    * if the root of si itself is also an infix symbol; this is then decided by
    * f.queryIncludeBrackets.  The printing of " f " itself is done through a call to
-   * printInfixOperator.
+   * printInfixOperator.</p>
    *
-   * Note that functional terms with an infix symbol as root but which are not fully applied
+   * <p>Note that functional terms with an infix symbol as root but which are not fully applied
    * are printed through printFunctionalTerm or (if they have no arguments) through
-   * printSoloInfixSymbol.
+   * printSoloInfixSymbol.</p>
    */
   protected void printInfixTerm(Term term, Renaming freeNaming, MutableRenaming boundNaming,
                                 StringBuilder builder) {
     FunctionSymbol root = term.queryRoot();
 
-    for (int i = 1; i <= term.numberArguments(); i++) {
+    for (int i = 1; i <= term.queryNumberArguments(); i++) {
       if (i > 1) printInfixOperator(root, i, builder);
       Term sub = term.queryArgument(i);
       boolean brackets = false;
@@ -288,10 +284,10 @@ public class TermPrinter {
   }
 
   /**
-   * Called by the default implementation of printInfixTerm to print the infix symbol f before
-   * argument index (so index is at least 2).
+   * <p>Called by the default implementation of printInfixTerm to print the infix symbol f before
+   * argument index (so index is at least 2).</p>
    *
-   * By default this just prints " f ", where f is the name of the symbol.
+   * <p>By default, this just prints " f ", where f is the name of the symbol.</p>
    */
   protected void printInfixOperator(FunctionSymbol f, int index, StringBuilder builder) {
     builder.append(" ");
@@ -300,24 +296,28 @@ public class TermPrinter {
   }
 
   /**
-   * Called by printRecursive() to print an abstraction.
+   * <p>Called by printRecursive() to print an abstraction.</p>
    *
-   * The default functionality prints LAMBDA <varname>.subterm, where LAMBDA is the symbol given by
-   * queryLambda().  To print the varname, there are three options:
-   *
-   * - if the variable does not occur in freeNaming or boundNaming yet, we use the underlying
+   * <p>The default functionality prints LAMBDA [var].subterm, where LAMBDA is the symbol
+   * given by queryLambda().  To print the name of [var], there are three options:</p>
+   * <ul>
+   * <li>if the variable does not occur in freeNaming or boundNaming yet, we use the underlying
    *   NameGenerator to generate a new name for this bound variable, store it in boundNaming in
    *   order to print the subterm, and then remove it again before the function returns
-   *   (in normal calls to print(), this is the only case that will typically occur)
-   * - if the variable occurs in freeNaming (but not in boundNaming), then we don't choose a new
+   *   (in normal calls to print(), this is the only case that will typically occur)</li>
+   * <li>if the variable occurs in freeNaming (but not in boundNaming), then we don't choose a new
    *   name but simply use the existing choice
    *   (due to the well-behavedness property this will typically only happen if someone calls print
    *   with a renaming that has explicitly had mappings for the bound variables added, so we
-   *   respect their choice)
-   * - if the variable occurs in boundNaming, we also don't choose a new name but instead use the
+   *   respect their choice)</p>
+   * <li>if the variable occurs in boundNaming, we also don't choose a new name but instead use the
    *   existing mapping; the binder is also not removed from boundNaming afterwards
    *   (due to the well-behavedness property this actually should never happen, but it might occur
-   *   due to shenanigans in inheriting classes)
+   *   due to shenanigans in inheriting classes)</p>
+   * </ul>
+   *
+   * <p>After choosing the name, the variable itself is printed through a call to
+   * printAbstractionBinder.</p>
    */
   protected void printAbstraction(Term term, Renaming freeNaming, MutableRenaming boundNaming,
                                   StringBuilder builder) {
@@ -342,30 +342,33 @@ public class TermPrinter {
   }
 
   /**
-   * Called by printAbstraction() to print the binder variable in an abstraction.
-   * The default functionality just prints the chosen name.
+   * <p>Called by printAbstraction() to print the binder variable in an abstraction.
+   * The default functionality just prints the chosen name (which is not necessarily the same as the
+   * variable's default name!)</p>
    */
   protected void printAbstractionBinder(Variable binder, String chosenName, StringBuilder builder) {
     builder.append(chosenName);
   }
 
   /**
-   * Called by printRecursive() to print a meta-application with at least one argument.
+   * <p>Called by printRecursive() to print a meta-application with at least one argument.</p>
    *
-   * The default functionality prints <metaname><metaopen>arg1, ..., argn<metaclose>, where
-   * - <metaname> is given by the renaming; if the meta-variable does not occur in the naming then
-   *   its base name is used instead
-   * - <metaopen> is given by queryMetaOpenBracket()
-   * - <metaclose> is given by queryMetaCloseBracket()
+   * <p>The default functionality prints <metaname><metaopen>arg1, ..., argn<metaclose>, where</p>
+   * <ul>
+   * <li><metaname> is given by the renaming; if the meta-variable does not occur in the naming
+   *   then its base name is used instead<, but marked with ??/li>
+   * <li><metaopen> is given by queryMetaOpenBracket()</li>
+   * <li><metaclose> is given by queryMetaCloseBracket()</li>
+   * </ul>
    */
   protected void printMetaApplication(Term term, Renaming freeNaming, MutableRenaming boundNaming,
                                       StringBuilder builder) {
     MetaVariable mvar = term.queryMetaVariable();
     String name = freeNaming.getName(mvar);
-    if (name == null) builder.append(mvar.queryName());
+    if (name == null) builder.append("??").append(mvar.queryName());
     else builder.append(name);
     builder.append(queryMetaOpenBracket());
-    for (int i = 1; i <= term.numberMetaArguments(); i++) {
+    for (int i = 1; i <= term.queryNumberMetaArguments(); i++) {
       if (i != 1) builder.append(", ");
       printRecursive(term.queryMetaArgument(i), freeNaming, boundNaming, builder);
     }
@@ -373,14 +376,14 @@ public class TermPrinter {
   }
 
   /**
-   * Called by printRecursive() to print an application where the head is not a function symbol or
-   * variable, and called by the default implementation of printVarTerm and printFunctionalTerm to
-   * print an application where the head is a function symbol or variable (with the exception of
-   * base-type applications with the head an infix symbol, which are handled through the default
-   * implementation of printInfixTerm.
+   * <p>Called by printRecursive() to print an application where the head is not a function
+   * symbol or variable, and called by the default implementation of printVarTerm and
+   * printFunctionalTerm to print an application where the head is a function symbol or variable
+   * (with the exception of base-type applications with the head an infix symbol, which are
+   * handled through the default implementation of printInfixTerm).
    *
-   * The default functionality prints head(arg1,...,argn), or (head)(arg1,...,argn) if head is an
-   * abstraction.
+   * <p>The default functionality prints head(arg1,...,argn), or (head)(arg1,...,argn) if head is an
+   * abstraction.</p>
    */
   protected void printApplication(Term term, Renaming freeNaming, MutableRenaming boundNaming,
                                   StringBuilder builder) {
@@ -389,7 +392,7 @@ public class TermPrinter {
     printRecursive(head, freeNaming, boundNaming, builder);
     if (head.isAbstraction()) builder.append(")");
     builder.append("(");
-    for (int i = 1; i <= term.numberArguments(); i++) {
+    for (int i = 1; i <= term.queryNumberArguments(); i++) {
       if (i > 1) builder.append(", ");
       printRecursive(term.queryArgument(i), freeNaming, boundNaming, builder);
     }
@@ -412,4 +415,3 @@ public class TermPrinter {
    */
   protected String queryMetaCloseBracket() { return "⟩"; }
 }
-

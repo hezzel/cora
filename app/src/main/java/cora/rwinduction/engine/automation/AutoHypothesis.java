@@ -16,8 +16,6 @@
 package cora.rwinduction.engine.automation;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Optional;
 import charlie.util.Pair;
 import charlie.terms.position.Position;
@@ -68,7 +66,7 @@ public final class AutoHypothesis {
     // applied, if possible
     ArrayList<DeductionHypothesis> options = new ArrayList<DeductionHypothesis>();
     int count = 0;
-    for (Pair<Term,Position> pair : a.querySubterms()) {
+    for (Pair<Term,Position> pair : a.listSubterms()) {
       tryStep(pair.fst(), aside, pair.snd(), proof, options);
       if (options.size() == count + 1) return options.get(count);
       count = options.size();
@@ -77,7 +75,7 @@ public final class AutoHypothesis {
     // if we haven't found any good position in the priority side, or we have found multiple and the
     // non-priority side is just as good, try that side, too
     if (options.size() == 0 || ascore == bscore) {
-      for (Pair<Term,Position> pair : b.querySubterms()) {
+      for (Pair<Term,Position> pair : b.listSubterms()) {
         tryStep(pair.fst(), bside, pair.snd(), proof, options);
         if (options.size() == count + 1) return options.get(count);
         count = options.size();

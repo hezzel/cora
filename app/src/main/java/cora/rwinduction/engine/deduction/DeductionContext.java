@@ -24,7 +24,6 @@ import charlie.terms.*;
 import charlie.theory.Theory;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
-import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 
@@ -66,7 +65,7 @@ public final class DeductionContext extends DeductionStep {
     _subtermsAtPositions = new ArrayList<Pair<Term,Term>>();
     Term left = state.getTopEquation().getLhs();
     Term right = state.getTopEquation().getRhs();
-    for (int i = 1; i <= left.numberArguments(); i++) {
+    for (int i = 1; i <= left.queryNumberArguments(); i++) {
       _positions.add(new ArgumentPos(i, Position.empty));
       _subtermsAtPositions.add(new Pair<Term,Term>(left.queryArgument(i), right.queryArgument(i)));
     }
@@ -154,7 +153,7 @@ public final class DeductionContext extends DeductionStep {
     int best = 2;
     int k = 0;
     ArrayList<Pair<Integer,Position>> subposses = new ArrayList<Pair<Integer,Position>>();
-    for (int i = 1; i <= left.numberArguments(); i++) {
+    for (int i = 1; i <= left.queryNumberArguments(); i++) {
       subposses.clear();
       for (; k < positions.size() && positions.get(k).snd().queryHead() == i; k++) {
         subposses.add(new Pair<Integer,Position>(positions.get(k).fst(),
@@ -179,7 +178,7 @@ public final class DeductionContext extends DeductionStep {
     // if we're still complete, check if we can keep that
     if (best == 2) {
       if (!left.isFunctionalTerm() ||
-          left.numberArguments() >= context.queryRuleArity(left.queryRoot())) best = 1;
+          left.queryNumberArguments() >= context.queryRuleArity(left.queryRoot())) best = 1;
     }
     return best;
   }
@@ -210,8 +209,8 @@ public final class DeductionContext extends DeductionStep {
         Printer.makePrintable(right.queryHead(), renaming)));
       return false;
     }
-    int n = left.numberArguments();
-    if (n != right.numberArguments()) {
+    int n = left.queryNumberArguments();
+    if (n != right.queryNumberArguments()) {
       module.ifPresent(o -> o.println("The context rule is not applicable, since the subterms " +
         "at position %a have a different number of arguments.", Position.of(curpos)));
       return false;
@@ -259,7 +258,7 @@ public final class DeductionContext extends DeductionStep {
         "two sides of the equation do not have the same head."));
       return null;
     }
-    if (ec.getLhs().numberArguments() != ec.getRhs().numberArguments()) {
+    if (ec.getLhs().queryNumberArguments() != ec.getRhs().queryNumberArguments()) {
       module.ifPresent(o -> o.println("The " + name + " rule cannot be applied, because the " +
         "two sides of the equation do not have the same number of arguments."));
       return null;
@@ -285,7 +284,7 @@ public final class DeductionContext extends DeductionStep {
     Term left = equation.getLhs();
     if (!left.isFunctionalTerm()) return false;
     FunctionSymbol f = left.queryRoot();
-    int n = left.numberArguments();
+    int n = left.queryNumberArguments();
     int k = pcontext.queryRuleArity(f);
     return n < k;
   }
@@ -305,14 +304,14 @@ public final class DeductionContext extends DeductionStep {
                                       posses, ArrayList<Pair<Term,Term>> pairs) {
     // If the heads are not the same, we clearly are not part of a context surrounding a difference
     // (as we only consider argument contexts, not head contexts), so store [(ε,(s,t))].
-    if (!s.queryHead().equals(t.queryHead()) || s.numberArguments() != t.numberArguments()) {
+    if (!s.queryHead().equals(t.queryHead()) || s.queryNumberArguments() != t.queryNumberArguments()) {
       posses.add(Position.empty);
       pairs.add(new Pair<Term,Term>(s,t));
       return;
     }
     // similarly, if we're not a semi-constructor context, we must return either [(ε,(s,t))] (if
     // s and t are unequal) or [] (if they are equal)
-    if (!s.isFunctionalTerm() || s.numberArguments() >= context.queryRuleArity(s.queryRoot())) {
+    if (!s.isFunctionalTerm() || s.queryNumberArguments() >= context.queryRuleArity(s.queryRoot())) {
       if (!s.equals(t)) {
         posses.add(Position.empty);
         pairs.add(new Pair<Term,Term>(s,t));
@@ -320,7 +319,7 @@ public final class DeductionContext extends DeductionStep {
       return;
     }
     // otherwise, recursively descend into the children and detect differences there
-    int n = s.numberArguments();
+    int n = s.queryNumberArguments();
     int k = posses.size();
     for (int i = 1; i <= n; i++) {
       storeDifferences(s.queryArgument(i), t.queryArgument(i), context, posses, pairs);
@@ -391,7 +390,7 @@ public final class DeductionContext extends DeductionStep {
     if (_pcontext.getTRS().isDefined(f) || Theory.isCalculationSymbol(f)) {
       module.println("We apply SEMICONSTRUCTOR to %a, since the rule arity of %a is %a and only " +
         "%a arguments are present.", _equ.getName(), f, _pcontext.queryRuleArity(f),
-        _equ.getEquation().getLhs().numberArguments());
+        _equ.getEquation().getLhs().queryNumberArguments());
     }
     else module.println("We apply SEMICONSTRUCTOR to %a since %a is a constructor symbol.",
       _equ.getName(), f.queryName());

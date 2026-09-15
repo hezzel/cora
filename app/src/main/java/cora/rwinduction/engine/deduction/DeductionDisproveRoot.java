@@ -18,7 +18,6 @@ package cora.rwinduction.engine.deduction;
 import java.util.HashSet;
 import java.util.Optional;
 import charlie.util.Pair;
-import charlie.types.Base;
 import charlie.types.Type;
 import charlie.terms.*;
 import charlie.theory.Theory;
@@ -86,7 +85,8 @@ public class DeductionDisproveRoot extends DeductionStep {
 
     Pair<FunctionSymbol,FunctionSymbol> p = checkDifferentSemiconstructors(left, right, context);
     if (p == null) {
-      if (Theory.isTheory(left) && Theory.isTheory(right) && left.queryType().isBaseTheoryType()) {
+      if (Theory.isTheory(left) && Theory.isTheory(right) &&
+          Theory.isBaseTheoryType(left.queryType())) {
         m.ifPresent(o -> o.println("This case should be handled using DISPROVE THEORY rather " +
           "than DISPROVE ROOT."));
       }
@@ -119,21 +119,21 @@ public class DeductionDisproveRoot extends DeductionStep {
     FunctionSymbol f = null, g = null;
     if (left.isFunctionalTerm()) {
       f = left.queryRoot();
-      if (left.numberArguments() >= context.queryRuleArity(f)) return null;
+      if (left.queryNumberArguments() >= context.queryRuleArity(f)) return null;
     }
     if (right.isFunctionalTerm()) {
       g = right.queryRoot();
-      if (right.numberArguments() >= context.queryRuleArity(g)) return null;
+      if (right.queryNumberArguments() >= context.queryRuleArity(g)) return null;
     }
     if (f != null && g != null) return new Pair<FunctionSymbol,FunctionSymbol>(f, g);
 
     // at least one side is (headed by) a variable -- see if there are different function symbols
     // that may be used to instantiate the head variables
     if (f == null) {
-      f = findSemiConstructor(context, left.queryHead().queryType(), left.numberArguments(), g);
+      f = findSemiConstructor(context, left.queryHead().queryType(), left.queryNumberArguments(), g);
     }
     if (g == null) {
-      g = findSemiConstructor(context, right.queryHead().queryType(), right.numberArguments(), f);
+      g = findSemiConstructor(context, right.queryHead().queryType(), right.queryNumberArguments(), f);
     }
     if (f != null && g != null) return new Pair<FunctionSymbol,FunctionSymbol>(f, g);
     return null;

@@ -184,7 +184,7 @@ public class CoraInputReaderTest {
   public void testCorrectFirstOrderRule() {
     Rule rule = CoraInputReader.readRule("h(x, y) -> h(x, h(aa, y))", generateTRS());
     assertTrue(rule.toString().equals("h(x, y) → h(x, h(aa, y))"));
-    assertTrue(rule.queryLeftSide().vars().size() == 2);
+    assertTrue(rule.queryLeftSide().queryFreeVariables().size() == 2);
     assertTrue(rule.queryLeftSide().queryType().equals(TypeFactory.intSort));
     assertTrue(rule.isFirstOrder());
   }
@@ -194,7 +194,7 @@ public class CoraInputReaderTest {
     Rule rule =
       CoraInputReader.readRule("{ F :: a -> a } h(F(aa), bb) -> f(F(i(bb)))", generateTRS());
     assertTrue(rule.toString().equals("h(F(aa), bb) → f(F(i(bb)))"));
-    assertTrue(rule.queryLeftSide().vars().size() == 1);
+    assertTrue(rule.queryLeftSide().queryFreeVariables().size() == 1);
     assertFalse(rule.queryLeftSide().isPattern());
   }
 
@@ -203,7 +203,7 @@ public class CoraInputReaderTest {
     Rule rule = CoraInputReader.readRule("map(λx.F[x], cons(H, T)) → " +
                                          "cons(F[H], map(λx::nat.F[x], T))", generateTRS());
     assertTrue(rule.toString().equals("map(λx.F⟨x⟩, cons(H, T)) → cons(F⟨H⟩, map(λx.F⟨x⟩, T))"));
-    assertTrue(rule.queryLeftSide().mvars().size() == 3);
+    assertTrue(rule.queryLeftSide().queryMetaVariables().size() == 3);
   }
 
   @Test

@@ -15,18 +15,13 @@
 
 package cora.rwinduction.engine.deduction;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Optional;
 import java.util.Stack;
 
 import charlie.terms.*;
 import charlie.theory.CalculationSymbol;
 import charlie.theory.Theory;
 import charlie.theory.TheoryFactory;
-import cora.io.OutputModule;
-import cora.rwinduction.engine.*;
 
 /**
  * This class contains a number of static functions for use by the Calc and CalcAll commands.
@@ -57,11 +52,11 @@ final class CalcHelper {
     while (!todo.isEmpty()) {
       Term term = todo.pop();
       while (term.isFunctionalTerm() && term.queryRoot().equals(TheoryFactory.andSymbol) &&
-             term.numberArguments() == 2) {
+             term.queryNumberArguments() == 2) {
         todo.push(term.queryArgument(2));
         term = term.queryArgument(1);
       }
-      if (!term.isFunctionalTerm() || term.numberArguments() != 2) continue;
+      if (!term.isFunctionalTerm() || term.queryNumberArguments() != 2) continue;
       CalculationSymbol f = Theory.toCalculationSymbol(term.queryRoot());
       if (f == null) continue;
       if (f.queryKind() != CalculationSymbol.Kind.EQUALS &&

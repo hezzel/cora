@@ -22,13 +22,14 @@ import charlie.types.*;
 import charlie.parser.lib.ParsingException;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
+import charlie.theory.Theory;
 
 public class CoraTypesParsingTest {
   @Test
   public void testReadConstantBaseType() {
     Type t = CoraParser.readType("aKKaO");
     assertTrue(t.isBaseType());
-    assertFalse(t.isTheoryType());
+    assertFalse(Theory.isTheory(t));
     assertTrue(t.toString().equals("aKKaO"));
   }
 
@@ -36,26 +37,26 @@ public class CoraTypesParsingTest {
   public void testReadInt() {
     Type t = CoraParser.readType("Int");
     assertTrue(t.toString().equals("Int"));
-    assertTrue(t.isTheoryType());
-    assertTrue(CoraParser.readType("Int", true, null).isTheoryType());
-    assertFalse(CoraParser.readType("Int", false, null).isTheoryType());
+    assertTrue(Theory.isTheory(t));
+    assertTrue(Theory.isTheory(CoraParser.readType("Int", true, null)));
+    assertFalse(Theory.isTheory(CoraParser.readType("Int", false, null)));
   }
 
   @Test
   public void testReadBool() {
     Type t = CoraParser.readType("Bool", true, null);
     assertTrue(t.toString().equals("Bool"));
-    assertTrue(t.isTheoryType());
+    assertTrue(Theory.isTheory(t));
     t = CoraParser.readType("Bool", false, null);
     assertTrue(t.toString().equals("Bool"));
-    assertFalse(t.isTheoryType());
+    assertFalse(Theory.isTheory(t));
   }
 
   @Test
   public void testReadString() {
     Type t = CoraParser.readType("String");
     assertTrue(t.toString().equals("String"));
-    assertTrue(t.isTheoryType());
+    assertTrue(Theory.isTheory(t));
   }
 
   @Test
@@ -166,7 +167,7 @@ public class CoraTypesParsingTest {
   public void testReadTheoryArrowType() {
     Type t = CoraParser.readType("Int -> (Bool -> Int) → String");
     assertTrue(t.toString().equals("Int → (Bool → Int) → String"));
-    assertTrue(t.isTheoryType());
+    assertTrue(Theory.isTheory(t));
   }
 
   @Test
@@ -197,7 +198,7 @@ public class CoraTypesParsingTest {
     ErrorCollector collector = new ErrorCollector();
     Type t = CoraParser.readType("-> Int", true, collector);
     assertTrue(t.toString().equals("Int"));
-    assertTrue(t.isTheoryType());
+    assertTrue(Theory.isTheory(t));
     assertTrue(collector.toString().equals(
       "1:1: Expected a type (started by a sort constructor or bracket) but got ARROW (->).\n"));
   }
@@ -235,7 +236,7 @@ public class CoraTypesParsingTest {
     Type t = CoraParser.readType("String -> ()", false, collector);
     assertTrue(t.toString().equals("String"));
     assertTrue(t.isBaseType());
-    assertFalse(t.isTheoryType());
+    assertFalse(Theory.isTheory(t));
     assertTrue(collector.toString().equals("1:12: Expected a type (started by a sort " +
       "constructor or bracket) but got BRACKETCLOSE ()).\n"));
   }

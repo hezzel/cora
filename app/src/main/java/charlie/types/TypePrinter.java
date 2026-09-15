@@ -20,36 +20,31 @@ import charlie.util.FixedList;
 /**
  * TypePrinters are used in the overall output process of the tool.  This class provides a default
  * implementation, but is meant to be inherited.  You can for instance instantiate the type printer
- * to use unicode symbols, ascii-art, html, print smt-style or whatever is needed.
+ * to use Unicode symbols, ascii-art, HTML, print SMT-style or whatever is needed.
  */
 public class TypePrinter {
-  private static boolean DEFAULT_UNICODE = true;
-  private boolean _unicodeArrows;
+  private final boolean _unicodeArrows;
 
   /**
-   * Create a type printer which either uses the unicode arrow → (if supportUnicode = true), or an
-   * ascii arrow -> (if supportUnicode = false).
+   * Create a type printer which either uses the Unicode arrow → (if supportUnicode = true), or an
+   * ASCII arrow -> (if supportUnicode = false).
    */
   public TypePrinter(boolean supportUnicode) {
     _unicodeArrows = supportUnicode;
   }
 
   /**
-   * The default type printer, which is used in particular by Type::toString() and consequently
-   * produces a lot of debug output or IDEA program traces, and which is used in unit testing,
-   * supports unicode (that is, the default arrow is →).  If you do not want this, this function
-   * sets the default to non-unicode instead.
+   * <p>The default type printer, which is used in particular by Type::toString() and consequently
+   * produces a lot of debug output or runtime information in the IDE, and which is used in unit
+   * testing.  The output from the default printer <i>should</i>, with correct use of Charlie,
+   * never appear in user output.</p>
+   *
+   * <p>Note that while the DEBUGPRINTER is not final, the main intention is that you either leave
+   * it alone or set it once, at the start of the program (which can be done from a settings /
+   * debugging class).  This could for instance be used if you want to avoid Unicode in debug
+   * output (by default, the DEBUGPRINTER uses Unicode arrows).</p>
    */
-  public static void disableDefaultUnicode() {
-    DEFAULT_UNICODE = false;
-  }
-
-  /**
-   * Constructor for use within the charlie.types packages.  This creates a default type printer.
-   */
-  TypePrinter() {
-    _unicodeArrows = DEFAULT_UNICODE;
-  }
+  public static TypePrinter DEBUGPRINTER  = new TypePrinter(true);
 
   /**
    * Returns a string representation of the given type (using the other print method).
@@ -62,13 +57,13 @@ public class TypePrinter {
   }
 
   /**
-   * This is the main public access function.  Call this to ensure that the given type is printed
-   * to the given string builder.
+   * <p>This is the main public access function.  Call this to ensure that the given type is
+   * printed to the given string builder.</p>
    * 
-   * To define your own TypePrinter, you can either override this method directly -- in which
-   * case there is no need to override any of the other methods in the class -- or override (some
-   * of) the functions it calls, which are printBaseType, printArrowType, printDataType and
-   * printVariableType, directly.
+   * <p>To define your own TypePrinter, you can either override this method directly -- in which
+   * case there is no need to override any of the other methods in the class -- or directly
+   * override (some of) the functions it calls, which are printBaseType, printArrowType,
+   * printDataType and printVariableType.</p>
    */
   public void print(Type t, StringBuilder builder) {
     switch (t) {
@@ -80,7 +75,8 @@ public class TypePrinter {
   }
 
   /**
-   * Override this function to change how base types are printed (if printType is left unmasked).
+   * Override this function to change how base types are printed (if the main print function is
+   * left unmasked).
    * The default functionality is just to add the name to the string builder unmodified.
    */
   protected void printBaseType(String name, StringBuilder builder) {
@@ -88,7 +84,8 @@ public class TypePrinter {
   }
 
   /**
-   * Override this function to change how arrow types are printed (if printType is left unmasked).
+   * Override this function to change how arrow types are printed (if the main print function is
+   * left unmasked).
    * The default functionality is to print <bracketed left> <type arrow> <unbracketed right>.  If
    * you only want to change the type arrow, override the function queryArrowSymbol() instead.
    */
@@ -103,9 +100,9 @@ public class TypePrinter {
   }
 
   /**
-   * Override this function to change how data types are printed (if printType is left unmasked).
-   * The default functionality is to print the name, followed by the elements in brackets, separated
-   * by commas.
+   * Override this function to change how data types are printed (if the main print function is
+   * left unmasked).  The default functionality is to print the name, followed by the elements in
+   * brackets, separated by commas.
    */
   protected void printDataType(String name, FixedList<Type> args, StringBuilder builder) {
     builder.append(name);
@@ -118,9 +115,8 @@ public class TypePrinter {
   }
 
   /**
-   * Override this function to change how type variables are printed (if printType is left
-   * unmasked).  The default functionality is to print $<name>.
-   * based on the index.
+   * Override this function to change how type variables are printed (if the main print function is
+   * left unmasked).  The default functionality is to print $<name>.
    */
   protected void printVariableType(String name, StringBuilder builder) {
     builder.append("$");
@@ -128,13 +124,12 @@ public class TypePrinter {
   }
 
   /**
-   * Override this function to change how the type arrow is printed if both printType and
-   * printArrowType are left unmasked.
-   * The default functionality is a unicode arrow.
+   * Override this function to change how the type arrow is printed if both the main print function
+   * and printArrowType are left unmasked.
+   * The default functionality is a Unicode arrow.
    */
   protected String queryArrowSymbol() {
     if (_unicodeArrows) return "→";
     else return "->";
   }
 }
-

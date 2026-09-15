@@ -17,7 +17,7 @@ package cora.rwinduction.command;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Optional;
+
 import charlie.util.FixedList;
 import charlie.util.Pair;
 import charlie.terms.position.PositionFormatException;
@@ -118,7 +118,7 @@ public class CommandContext extends DeductionCommand {
     Term lhs = _proof.getProofState().getTopEquation().getLhs();
     Term rhs = _proof.getProofState().getTopEquation().getRhs();
     Printer printer = PrinterFactory.createParseablePrinter(_proof.getContext().getTRS());
-    for (Position p : lhs.queryPositions(false)) {
+    for (Position p : lhs.listPositions(false)) {
       if (p.isEmpty() || given.contains(p)) continue;
       if (samePath(lhs, rhs, p)) {
         printer.add(p);
@@ -150,7 +150,7 @@ public class CommandContext extends DeductionCommand {
     if (p.isFinal()) return true;
     if (!s.queryHead().equals(t.queryHead())) return false;
     int k = p.queryHead();
-    if (k <= 0 || k > s.numberArguments() || k > t.numberArguments()) return false;
+    if (k <= 0 || k > s.queryNumberArguments() || k > t.queryNumberArguments()) return false;
     return samePath(s.queryArgument(k), t.queryArgument(k), p.queryTail());
   }
 }

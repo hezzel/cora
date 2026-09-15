@@ -153,12 +153,12 @@ public final class AutoDeleter {
     ArrayList<Pair<Position,Pair<Term,Term>>> ret = null;
     // If the heads are not the same, we clearly are not part of a context surrounding a difference
     // (as we only consider argument contexts, not head contexts), so return [(ε,(s,t))].
-    if (!s.queryHead().equals(t.queryHead()) || s.numberArguments() != t.numberArguments()) {
+    if (!s.queryHead().equals(t.queryHead()) || s.queryNumberArguments() != t.queryNumberArguments()) {
       ret = new ArrayList<Pair<Position,Pair<Term,Term>>>();
       ret.add(new Pair<Position,Pair<Term,Term>>(Position.empty, new Pair<Term,Term>(s,t)));
       return ret;
     }   
-    int n = s.numberArguments();
+    int n = s.queryNumberArguments();
     // We have f(s1,...,sn) and f(t1,...,tn); find the first argument i where si != ti.
     int i = 1;
     for (; i <= n; i++) {

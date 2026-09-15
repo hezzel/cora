@@ -245,4 +245,3 @@ public class PositionTest {
     assertTrue(arg2.compareTo(arg1) > 0);
   }
 }
-

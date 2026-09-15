@@ -85,7 +85,7 @@ public final class AutoDisprover {
    */
   public static Substitution findContradictingTheorySubstitution(Term l, Term r, Term c,
                                        Optional<OutputModule> module, Renaming renaming) {
-    if (!l.queryType().isBaseTheoryType()) {
+    if (!Theory.isBaseTheoryType(l.queryType())) {
       module.ifPresent(o -> o.println("Theory disproves can only be done if both sides of the " +
         "equation have base type."));
         return null;
@@ -200,8 +200,8 @@ public final class AutoDisprover {
       ret.extend(x, gamma.get(x).substitute(delta));
     }
     for (Replaceable x : delta.domain()) {
-      if (l.freeReplaceables().contains(x) || r.freeReplaceables().contains(x) ||
-          c.freeReplaceables().contains(x)) {
+      if (l.queryFreeReplaceables().contains(x) || r.queryFreeReplaceables().contains(x) ||
+          c.queryFreeReplaceables().contains(x)) {
         ret.extend(x, delta.get(x));
       }
     }
@@ -214,11 +214,11 @@ public final class AutoDisprover {
    */
   private static ArrayList<Variable> getHOVars(Term left, Term right) {
     ArrayList<Variable> variables = new ArrayList<Variable>();
-    for (Variable x : left.vars()) {
+    for (Variable x : left.queryFreeVariables()) {
       if (!x.queryType().isBaseType()) variables.add(x);
     }
-    for (Variable x : right.vars()) {
-      if (!left.freeReplaceables().contains(x) && !x.queryType().isBaseType()) variables.add(x);
+    for (Variable x : right.queryFreeVariables()) {
+      if (!left.queryFreeReplaceables().contains(x) && !x.queryType().isBaseType()) variables.add(x);
     }
     return variables;
   }

@@ -48,7 +48,7 @@ public final class DeductionGeneraliseDrop extends DeductionStep {
     while (!todo.isEmpty()) {
       Term term = todo.pop();
       while (term.isFunctionalTerm() && term.queryRoot().equals(TheoryFactory.andSymbol) &&
-             term.numberArguments() == 2) {
+             term.queryNumberArguments() == 2) {
         todo.push(term.queryArgument(2));
         term = term.queryArgument(1);
       }

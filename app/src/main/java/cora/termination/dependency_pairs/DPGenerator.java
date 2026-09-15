@@ -162,7 +162,7 @@ public class DPGenerator {
    */
   private Term generateSharpTm(Term tm) {
     FunctionSymbol newHead = generateSharpFn(tm.queryRoot());
-    return newHead.apply(tm.queryArguments());
+    return newHead.apply(tm.listArguments());
   }
 
   /**
@@ -207,7 +207,7 @@ public class DPGenerator {
     Term ctr = rule.queryConstraint();
 
     // flatten left- and right-hand side to base type by adding extra variables
-    ArrayList<Term> xs = generateFlatteningVars(lhs.queryType(), "arg", lhs.numberArguments()+1);
+    ArrayList<Term> xs = generateFlatteningVars(lhs.queryType(), "arg", lhs.queryNumberArguments()+1);
     lhs = lhs.apply(xs);
     rhs = rhs.apply(xs);
 

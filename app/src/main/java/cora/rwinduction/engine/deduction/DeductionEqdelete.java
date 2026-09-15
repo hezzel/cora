@@ -19,9 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
 import charlie.util.Pair;
 import charlie.terms.position.Position;
 import charlie.terms.replaceable.Renaming;
+import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.theory.Theory;
 import charlie.theory.TheoryFactory;
@@ -60,7 +62,7 @@ public final class DeductionEqdelete extends DeductionStep {
    * This function checks if the equation left = right | constraint is eq-deletable.
    */
   public static boolean checkApplicability(Term left, Term right, Term constraint) {
-    Renaming renaming = Renaming.createEmptyRenaming(Set.of());
+    Renaming renaming = new MutableRenaming(Set.of());
     Term requirement = createMainStep(left, right, constraint, Optional.empty(), renaming);
     if (requirement == null) return false;
     TermSmtTranslator translator = new TermSmtTranslator();
@@ -107,7 +109,7 @@ public final class DeductionEqdelete extends DeductionStep {
    * an ArrayList.
    */
   private static ArrayList<Pair<Term,Position>> getSubtermInfo(Term t) {
-    List<Pair<Term,Position>> info = t.querySubterms();
+    List<Pair<Term,Position>> info = t.listSubterms();
     if (info instanceof ArrayList<Pair<Term,Position>> a) return a;
     else return new ArrayList<Pair<Term,Position>>(info);
   }
@@ -146,7 +148,7 @@ public final class DeductionEqdelete extends DeductionStep {
   private static boolean checkSameShape(Term left, Term right, Renaming renaming,
                                         Optional<OutputModule> module) {
     if (left.isApplication()) {
-      if (right.isApplication() && left.numberArguments() == right.numberArguments() &&
+      if (right.isApplication() && left.queryNumberArguments() == right.queryNumberArguments() &&
           left.queryHead().equals(right.queryHead())) return true;
     }
     else if (left.isVariable() || left.isConstant()) {
@@ -197,7 +199,7 @@ public final class DeductionEqdelete extends DeductionStep {
       return false;
     }
 
-    if (!left.queryType().isBaseTheoryType()) {
+    if (!Theory.isBaseTheoryType(left.queryType())) {
       module.ifPresent(o -> o.println("Failed to equate %a and %a: they cannot be moved into " +
         "the constraint because the type %a is not a theory sort.",
         Printer.makePrintable(left, renaming), Printer.makePrintable(right, renaming),

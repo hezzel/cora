@@ -17,11 +17,10 @@ package cora.termination.reduction_pairs.horpo;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.ArrayList;
+
 import java.util.Set;
 import java.util.TreeSet;
 
-import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.position.Position;
 import charlie.terms.*;
@@ -29,7 +28,6 @@ import charlie.smt.*;
 import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.reader.CoraInputReader;
-import cora.config.Settings;
 import cora.termination.reduction_pairs.horpo.HorpoConstraintList.HRelation;
 
 public class HorpoConstraintListTest {
@@ -75,7 +73,7 @@ public class HorpoConstraintListTest {
                         rule.queryRightSide(), rule.queryConstraint());
     rule = CoraInputReader.readRule("f(x, d(y)) -> g(x,x) | x > 0", trs);
     TreeSet<Variable> vars = new TreeSet<Variable>();
-    for (Variable x : rule.queryRightSide().vars()) vars.add(x);
+    for (Variable x : rule.queryRightSide().queryFreeVariables()) vars.add(x);
     vars.add(TermFactory.createVar("z", type("Int")));
     BVar x2 = lst.store(rule.queryLeftSide(), HRelation.GREATER,
                         rule.queryRightSide(), rule.queryConstraint(), vars);

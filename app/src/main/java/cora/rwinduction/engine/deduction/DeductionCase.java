@@ -18,7 +18,7 @@ package cora.rwinduction.engine.deduction;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
-import charlie.util.Pair;
+
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.replaceable.Replaceable;
@@ -31,8 +31,6 @@ import charlie.theory.Theory;
 import charlie.theory.TheoryFactory;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
-import charlie.theorytranslation.TermAnalyser;
-import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 
@@ -125,7 +123,7 @@ public final class DeductionCase extends DeductionStep {
         Printer.makePrintable(caseterm, renaming), caseterm.queryType()));
       return false;
     }
-    if (caseterm.queryType().isTheoryType()) {
+    if (Theory.isTheory(caseterm.queryType())) {
       module.ifPresent(o -> o.println("Cannot do a case analysis on a variable of type %a.",
         caseterm.queryType()));
       return false;
@@ -163,7 +161,7 @@ public final class DeductionCase extends DeductionStep {
   @Override
   public boolean verify(Optional<OutputModule> module) {
     Renaming renaming = _state.getTopEquation().getRenaming();
-    for (Replaceable x : _term.freeReplaceables()) {
+    for (Replaceable x : _term.queryFreeReplaceables()) {
       if (renaming.getName(x) == null) {
         if (x == _term) {
           module.ifPresent(o -> o.println("Cannot do a case analysis on a variable that does " +

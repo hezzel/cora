@@ -20,34 +20,34 @@ import java.util.Collection;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import charlie.types.Type;
+
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 
 /**
- * NameGenerators are used to create Renamings by assigning a suitable name for every replaceable
- * in a given set (or: in a given set of terms).
+ * <p>NameGenerators are used to create Renamings by assigning a suitable name for every
+ * replaceable in a given set (or: in a given set of terms).</p>
  *
- * While NameGenerators are designed to be inherited, the default NameGenerator is intended to
+ * <p>While NameGenerators are designed to be inherited, the default NameGenerator is intended to
  * suffice for many practical purposes: it keeps the original name of replaceables where this can
- * be done without ambiguity (so as to keep them in line with user expectations), and if there are
- * multiple replaceables of the same name (or if the variable's original name is blocked for some
- * reason) adds a subscript to this name.  It will also avoid a given (finite!) set of names.  This
- * is primarily intended to be used to avoid the names of function symbols, but may also be used
- * for other purposes.  If a replaceable is renamed then its original name is also marked as
- * "avoid" to prevent confusion.
+ * be done without ambiguity (in order to keep them in line with user expectations), and if there
+ * are multiple replaceables of the same name (or if the variable's original name is blocked for
+ * some reason) adds a subscript to this name.  It will also avoid a given (finite!) set of names.
+ * This is primarily intended to be used to avoid the names of function symbols, but may also be
+ * used for other purposes.  If a replaceable is renamed then its original name is also marked as
+ * "avoid" to prevent confusion.</p>
  *
- * For alternative behaviour, programmers can inherit the NameGenerator and override some of the
- * public or protected functions as needed.  Instructions are provided in the comments.
+ * <p>For alternative behaviour, programmers can inherit the NameGenerator and override some of
+ * the public or protected functions as needed.  Instructions are provided in the comments.</p>
  *
- * (Note that if the alphabet is infinite, it is the responsibility of the programmer to use a
+ * <p>Note that if the alphabet is infinite, it is the responsibility of the programmer to use a
  * NameGenerator that avoids all function symbol names.  For example, the default functionality
  * will avoid using integers or strings as variable names, but inheriting classes might make their
- * own choices in this regard.)
+ * own choices in this regard.)</p>
  */
 public class NameGenerator {
-  private TreeSet<String> _blockedNames;  // the names that may not be used as variable names
+  private final TreeSet<String> _blockedNames;  // the names that may not be used as variable names
 
   /**
    * Generates a NameGenerator that does not avoid any names (unless added by avoidAdditional).
@@ -66,7 +66,7 @@ public class NameGenerator {
 
   /**
    * Adds a single name to the list of names to avoid when generating names.  Note that this does
-   * not affect existing renamings that have been created with this NameGenerator, only new ones!
+   * not affect existing Renamings that have been created with this NameGenerator, only new ones!
    */
   public final void avoidAdditional(String name) {
     _blockedNames.add(name);
@@ -74,7 +74,7 @@ public class NameGenerator {
 
   /**
    * Adds names to the list of strings to avoid when generating variable names.
-   * Note that this does not affect existing renamings (even if you have not generated any names
+   * Note that this does not affect existing Renamings (even if you have not generated any names
    * with them yet), only ones that will be created after this function was called!
    */
   public final void avoidAdditional(Collection<String> names) {
@@ -90,24 +90,25 @@ public class NameGenerator {
   }
 
   /**
-   * This function generates a renaming for all the free variables and meta-variables in the given
-   * set of terms.  This means all distinct replaceables will be given a distinct name in the
-   * result, regardless of their default name.
+   * <p>This function generates a Renaming for all the free variables and meta-variables in the
+   * given set of terms.  This means all distinct replaceables will be given a distinct name in the
+   * result, regardless of their default name.</p>
    *
-   * Bound variables are not included, as these are handled through the generateBoundName function.
-   * If you do want them included, add all the bound variables as separate terms to the list
-   * (but note that in that case, they will be named in the same way as free binder variables).
+   * <p>Bound variables are not included, as these are handled through the generateBoundName
+   * function.  If you do want them included, add all the bound variables as separate terms to
+   * the list (but note that in that case, they will be named in the same way as free binder
+   * variables).</p>
    *
-   * The default implementation tries to use the given name of the replacable for every replaceable
-   * whose name occurs only once in the given set of terms, and if that name is not available (or
-   * there are multiple free replaceables with the same name) it tries the first occurrence of
-   * createSubscript(nae, index) that works (where index ≥ 1).  This is altered if the name is
-   * prohibited for instance because it's not alpha-numeric, or is an integer.
+   * <p>The default implementation tries to use the given name of the replacable for every
+   * replaceable whose name occurs only once in the given set of terms, and if that name is not
+   * available (or there are multiple free replaceables with the same name) it tries the first
+   * occurrence of createSubscript(nae, index) that works (where index ≥ 1).  This is altered if
+   * the name is prohibited for instance because it's not alpha-numeric, or is an integer.</p>
    *
-   * For inheriting classes: the default implementation just creates a new MutableRenaming using
+   * <p>For inheriting classes: the default implementation just creates a new MutableRenaming using
    * the known blocked names, and then calls extendShared.  If an inheriting class wants
    * generateUniqueNaming and extend to behave differently, mask these individual functions;
-   * otherwise just mask extendShared!
+   * otherwise just mask extendShared!</p>
    */
   public MutableRenaming generateUniqueNaming(List<Term> terms) {
     MutableRenaming ret = new MutableRenaming(_blockedNames);
@@ -116,56 +117,66 @@ public class NameGenerator {
   }
 
   /**
-   * This function extends the given renaming by adding names for all the free variables and
+   * <p>This function extends the given renaming by adding names for all the free variables and
    * meta-variables in the given set of terms (which do not already occur in the given renaming).
+   * </p>
    *
-   * This means that:
-   * - all existing replaceables will keep their current name
-   * - additional replaceables will be given a new name, distinct from the existing ones and
-   *   each other (and choosing only names that are not blocked in the given renaming).
+   * <p>This means that:</p>
+   * <ul>
+   *   <li>all existing replaceables will keep their current name</li>
+   *   <li>additional replaceables will be given a new name, distinct from the existing ones and
+   *     each other (and choosing only names that are not blocked in the given renaming).</li>
+   * </ul>
    *
-   * Bound variables are not included, as these are handled through the generateBoundName function.
-   * If you do want them included, add all the bound variables as separate terms to the list
-   * (but note that in that case, they will be named in the same way as free binder variables).
+   * <p>Bound variables are not included, as these are handled through the generateBoundName
+   * function.  If you do want them included, add all the bound variables as separate terms to the
+   * list (but note that in that case, they will be named in the same way as free binder
+   * variables).</p>
    *
-   * The default implementation tries to use the given name of the replacable for every replaceable
-   * whose name occurs only once in the given set of terms, and if that name is not available (or
-   * there are multiple new replaceables with that name) it tries the first occurrence of
-   * createSubscript(name, index) that works (where index ≥ 1).  This is altered if the name is
-   * prohibited for instance because it's not alpha-numeric, or is an integer.
+   * <p>The default implementation tries to use the given name of the replacable for every
+   * replaceable whose name occurs only once in the given set of terms, and if that name is not
+   * available (or there are multiple new replaceables with that name) it tries the first
+   * occurrence of createSubscript(name, index) that works (where index ≥ 1).  This is altered if
+   * the name is prohibited for instance because it's not alpha-numeric, or is an integer.</p>
    *
-   * For inheriting classes: the default implementation just calls extendShared.  If an inheriting
-   * class wants generateUniqueNaming and extend to behave differently, mask these individual
-   * functions; otherwise just mask extendShared.
+   * <p>For inheriting classes: the default implementation just calls extendShared.  If an
+   * inheriting class wants generateUniqueNaming and extend to behave differently, mask these
+   * individual functions; otherwise just mask extendShared.</p>
    */
   public void extend(MutableRenaming renaming, List<Term> terms) {
     extendShared(renaming, terms);
   }
 
   /**
-   * This method implements the default functionality of generateUniqueNaming and extend.
+   * <p>This method implements the default functionality of generateUniqueNaming and extend.</p>
    *
-   * This works as follows:
-   * - first, all names that occur only once, and whose default name is permitted (according to
-   *   queryPermittedName()), it is given the name returned by chooseNameForUniqueReplaceable()
-   *   so long as this name is available (and the function does not return null)
-   * - second, for names that occur only once, but which are not permitted according to
+   * <p>This works as follows:</p>
+   * <ul>
+   * <li>first, all names that occur only once, and whose default name is permitted (according to
+   *   queryPermittedName()), are given the name returned by chooseNameForUniqueReplaceable()
+   *   so long as this name is available (and the function does not return null)</li>
+   * <li>second, for names that occur only once, but which are not permitted according to
    *   queryPermittedName(), we choose a variant of their name using fixNonPermittedName() and
    *   then assign it the name returned by chooseNameForUniqueReplaceable() so long as this name
-   *   is available (and the function does not return null)
-   * - third, for all remaining replaceables:
-   *   + we let prefix be their default name if this is permitted according to
+   *   is available (and the function does not return null)</p>
+   * <li>third, for all remaining replaceables:
+   *   <ul>
+   *   <li>>we let prefix be their default name if this is permitted according to
    *     queryPermittedName(); otherwise we let prefix be a variant chosen by fixNonPermittedName()
-   *   + we iterate from 1 upwards, and return the first result of chooseNameForAmbiguousReplaceable
-   *     that returns non-null and is available!
+   *     </li>
+   *   <li>we iterate from 1 upwards, and return the first result of
+   *     chooseNameForAmbiguousReplaceable that returns non-null and is available!</li>
+   *   </ul>
+   * </li>
+   * </ul>
    *
-   * Moreover, all original names of replaceables which are not used as names are marked as blocked
-   * in the renaming.
+   * <p>Moreover, all original names of replaceables which are not used as names are marked as
+   * blocked in the Renaming.</p>
    *
-   * If this default functionality suffices, inheriting classes can simply override
+   * <p>If this default functionality suffices, inheriting classes can simply override
    * queryPermittedName(), fixNonPermittedName(), chooseNameForUniqueReplaceable() and
    * chooseNameForAmbiguousReplaceable().  If it does not, they should override this function and
-   * can leave the others alone (as they are only called by this method).
+   * can leave the others alone (as they are only called by this method).</p>
    */
   protected void extendShared(MutableRenaming renaming, List<Term> terms) {
     TreeSet<Replaceable> allNewReplaceables = getAllNewReplaceables(terms, renaming);
@@ -175,15 +186,18 @@ public class NameGenerator {
   }
 
   /**
-   * This function will return a suggested name for a bound variable.  This will always be a name
-   * that is still available in the given renaming.  The name will be immediately stored in the
-   * renaming.
+   * <p>This function will return a suggested name for a bound variable.  This will always be a name
+   * that is still available in the given Renaming.  The name will be immediately stored in the
+   * renaming.</p>
    *
-   * By default, this will return the binder's name (or its fixed variant if this name is not
+   * <p>By default, this will return the binder's name (or its fixed variant if this name is not
    * permitted) if this is available, otherwise createSubscript(name, index), where index is the
-   * first integer so that this subscript-name is still available.
+   * first integer so that this subscript-name is still available.</p>
+   *
+   * <p>If the binder is already in the domain of the renaming, then null is returned instead.</p>
    */
   public String generateBoundName(MutableRenaming renaming, Variable binder) {
+    if (renaming.getName(binder) != null) return null;
     String n = binder.queryName();
     if (!queryPermittedName(n)) n = fixNonPermittedName(binder);
     if (renaming.isAvailable(n)) {
@@ -261,14 +275,14 @@ public class NameGenerator {
 
 
   /**
-   * Helper function for the default implementation of extendShared.  This checks if it's a good
+   * <p>Helper function for the default implementation of extendShared.  This checks if it's a good
    * idea to use name unmodified as either a full name for a (meta-)variable or as the "original"
-   * name in a call to chooseNameForAmbiguousReplaceable.
+   * name in a call to chooseNameForAmbiguousReplaceable.</p>
    *
-   * If you override this, also override fixNonPermittedName to match!
+   * <p>If you override this, also override fixNonPermittedName to match!</p>
    */
   protected boolean queryPermittedName(String name) {
-    if (name == null || name.equals("")) return false;
+    if (name == null || name.isEmpty()) return false;
     char c = name.charAt(0);
     return (c == '#' || c == '?' || c == '_' || c >= 128 ||
              (c >= 'A' && c <= 'Z') ||
@@ -278,36 +292,37 @@ public class NameGenerator {
 
   /**
    * Helper function for the default implementation of extendShared.
-   *
    * Given that queryPermittedName(r.queryName()) returns false, this function is tasked to come up
    * with a new name for the given replaceable.  This name may be used either directly, or as the
    * "original" name in a call to chooseNameForAmbiguousReplaceable.
+   * The default implementation just puts an underscore in front of the name.
    */
   protected String fixNonPermittedName(Replaceable r) {
     String name = r.queryName();
-    if (name == null || name.equals("")) return "VAR";
+    if (name == null || name.isEmpty()) return "VAR";
     return "_" + name;
   }
 
   /**
-   * Helper function for the default implementation of extendShared.  This function returns a name
-   * for a variable or meta-variable that *could* be given the given name (which is either its own
-   * original name or derived from it) without ambiguity, so long as it's available.
+   * <p>Helper function for the default implementation of extendShared.  This function returns a
+   * name for a variable or meta-variable that <b>could</b> be given the given name (which is
+   * either  its own original name or derived from it) without ambiguity, so long as it's
+   * available.</p>
    *
-   * The default functionality is to simply return this name.  However, overriding classes may wish
-   * to do something different (e.g., add extra information).
+   * <p>The default functionality is to simply return this name.  However, overriding classes may
+   * wish to do something different (e.g., add extra information).</p>
    */
   protected String chooseNameForUniqueReplaceable(Replaceable r, String name) {
     return name;
   }
 
   /**
-   * Helper function for the default implementation of extendShared.  This function returns a name
-   * for a variable or meta-variable that should probably not be given its original name, as it
+   * <p>Helper function for the default implementation of extendShared.  This function returns a
+   * name for a variable or meta-variable that should probably not be given its original name, as it
    * would lead to ambiguity.  Instead, for every increasing index a different name should be
-   * returned.
+   * returned.</p>
    *
-   * The default implementation is just to return createSubscript(name, index).
+   * <p>The default implementation is just to return createSubscript(name, index).</p>
    *
    * @param r the (meta-)variable to be named
    * @param name the name of the variable, possible altered through fixNonPermittedName
@@ -336,7 +351,7 @@ public class NameGenerator {
   protected final TreeSet<Replaceable> getAllNewReplaceables(List<Term> terms, Renaming renaming) {
     TreeSet<Replaceable> ret = new TreeSet<Replaceable>();
     for (Term t : terms) {
-      for (Replaceable x : t.freeReplaceables()) {
+      for (Replaceable x : t.queryFreeReplaceables()) {
         if (renaming.getName(x) == null) ret.add(x);
       }
     }
@@ -364,4 +379,3 @@ public class NameGenerator {
     return uniques.values();
   }
 }
-

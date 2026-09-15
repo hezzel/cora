@@ -32,10 +32,10 @@ public class Debugging {
   }
 
   /**
-   * By default, the toString() function in terms and types will often include unicode symbols.
-   * If you call this function, this will be changed to avoid unicode where possible.
+   * By default, the toString() function in terms and types will often include Unicode symbols.
+   * If you call this function, this will be changed to avoid Unicode where possible.
    */
   public static void disableUnicode() {
-    TypePrinter.disableDefaultUnicode();
+    TypePrinter.DEBUGPRINTER = new TypePrinter(false);
   }
 }

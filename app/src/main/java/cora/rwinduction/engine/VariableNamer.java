@@ -162,7 +162,7 @@ public class VariableNamer {
    */
   public TreeSet<Variable> getSuitableVariablesForDerivative(Term term) {
     TreeSet<Variable> set = new TreeSet<Variable>();
-    for (Variable x : term.vars()) {
+    for (Variable x : term.queryFreeVariables()) {
       if (x.queryType().equals(term.queryType())) set.add(x);
     }
     return set;

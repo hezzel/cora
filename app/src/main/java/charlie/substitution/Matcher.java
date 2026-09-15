@@ -174,7 +174,7 @@ public class Matcher {
   private static ArrayList<Variable> checkMetaPattern(Term metaApp, Substitution gamma) {
     ArrayList<Variable> ret = new ArrayList<Variable>();
     TreeSet<Variable> sofar = new TreeSet<Variable>();
-    for (int i = 1; i <= metaApp.numberMetaArguments(); i++) {
+    for (int i = 1; i <= metaApp.queryNumberMetaArguments(); i++) {
       if (!metaApp.queryMetaArgument(i).isVariable()) throw new PatternRequiredException(metaApp,
         "matching", i+1, "is not a variable (let alone a bound variable)");
       Variable x = metaApp.queryMetaArgument(i).queryVariable();
@@ -202,12 +202,12 @@ public class Matcher {
       return new MatchFailure(Set.of(3), Set.of(1),
         "The term ", instance, " does not instantiate ", pattern, " as it is not an application.");
     }
-    if (instance.numberArguments() < pattern.numberArguments()) {
+    if (instance.queryNumberArguments() < pattern.queryNumberArguments()) {
       return new MatchFailure(Set.of(3), Set.of(1), "The term ", instance,
         " does not instantiate ", pattern, " as it has too few arguments.");
     }
-    int i = instance.numberArguments();
-    int j = pattern.numberArguments();
+    int i = instance.queryNumberArguments();
+    int j = pattern.queryNumberArguments();
     for (; j > 0; i--, j--) {
       Term patsub = pattern.queryArgument(j);
       Term inssub = instance.queryArgument(i);
@@ -262,9 +262,9 @@ public class Matcher {
     if (ret != null) return ret;
 
     // if we have not failed yet, check that y ∉ FV( γ(a) ) for any a ∈ FV(s) \ {x} = FV(λx.s)
-    for (Replaceable z : pattern.freeReplaceables()) {
+    for (Replaceable z : pattern.queryFreeReplaceables()) {
       Term gammaz = gamma.get(z);
-      if (gammaz != null && gammaz.freeReplaceables().contains(y)) {
+      if (gammaz != null && gammaz.queryFreeReplaceables().contains(y)) {
         return new MatchFailure(Set.of(1, 5), Set.of(3, 7),
           "Abstraction ", pattern, " is not instantiated by ", instance,
           " because the induced mapping [", z, " := ", gammaz, "] contains the binder variable of ",

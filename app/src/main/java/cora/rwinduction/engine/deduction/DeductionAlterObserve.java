@@ -56,7 +56,7 @@ public final class DeductionAlterObserve extends DeductionStep {
     ProofState state = proof.getProofState();
 
     if (!original.queryType().isBaseType() ||
-        !original.queryType().isTheoryType()) {
+        !Theory.isTheory(original.queryType())) {
       module.ifPresent(o -> o.println("The input type should be a theory sort, but is %a.",
         original.queryType()));
       return null;
@@ -72,8 +72,8 @@ public final class DeductionAlterObserve extends DeductionStep {
         "value; %a is neither!", Printer.makePrintable(replacement, renaming)));
       return null;
     }
-    if (!state.getTopEquation().getLhs().freeReplaceables().contains(original) &&
-        !state.getTopEquation().getRhs().freeReplaceables().contains(original)) {
+    if (!state.getTopEquation().getLhs().queryFreeReplaceables().contains(original) &&
+        !state.getTopEquation().getRhs().queryFreeReplaceables().contains(original)) {
       Renaming renaming = state.getTopEquation().getRenaming();
       module.ifPresent(o -> o.println("Variable %a does not occur in the left- or right-hand " +
         "side of the equation!", renaming.getName(original)));

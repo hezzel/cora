@@ -45,9 +45,6 @@ public record Base(String name) implements Type {
   public boolean isMonomorphic() { return true; }
 
   @Override
-  public boolean isTheoryType() { return UniqueTypes.isTheoryType(this); }
-
-  @Override
   public int queryNumberSubtypes() { return 0; }
 
   @Override
@@ -71,24 +68,19 @@ public record Base(String name) implements Type {
 
   @Override
   public int compareTo(Type other) {
-    return switch(other) {
-      case Base(String n) -> this.name.compareTo(n);
-      default -> -1;
-    };
+    if (other instanceof Base(String n)) return this.name.compareTo(n);
+    return -1;
   }
 
   @Override
-  public String toString() { return this.name; }
+  public String toString() { return TypePrinter.DEBUGPRINTER.print(this); }
 
   @Override
   public int hashCode() { return name.hashCode(); }
 
   @Override
   public boolean equals(Type type) {
-    return switch (type) {
-      case Base(String x) -> this.name.equals(x);
-      default -> false;
-    };
+    return type instanceof Base(String x) && this.name.equals(x);
   }
 
   @Override
@@ -96,4 +88,3 @@ public record Base(String name) implements Type {
     return other instanceof Type t && equals(t);
   }
 }
-

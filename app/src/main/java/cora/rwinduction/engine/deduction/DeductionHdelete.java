@@ -15,7 +15,6 @@
 
 package cora.rwinduction.engine.deduction;
 
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.Optional;
 import charlie.terms.position.Position;
@@ -148,10 +147,10 @@ public final class DeductionHdelete extends DeductionStep {
     Term right = equation.getRhs();
     while (pos instanceof ArgumentPos p) {
       if (!left.isApplication() || !right.isApplication() ||
-          left.numberArguments() != right.numberArguments() ||
+          left.queryNumberArguments() != right.queryNumberArguments() ||
           !left.queryHead().equals(right.queryHead())) return false;
       int index = p.queryHead();
-      for (int i = 1; i <= left.numberArguments(); i++) {
+      for (int i = 1; i <= left.queryNumberArguments(); i++) {
         if (i != index && !left.queryArgument(i).equals(right.queryArgument(i))) return false;
       }
       left = left.queryArgument(index);
@@ -162,10 +161,10 @@ public final class DeductionHdelete extends DeductionStep {
     if (pos instanceof FinalPos f) {
       if (!left.isApplication() || !right.isApplication()) return false;
       int chop = f.queryChopCount();
-      if (left.numberArguments() < chop || right.numberArguments() < chop) return false;
+      if (left.queryNumberArguments() < chop || right.queryNumberArguments() < chop) return false;
       for (int i = 0; i < chop; i++) {
-        if (!left.queryArgument(left.numberArguments()-i).equals(
-              right.queryArgument(right.numberArguments()-i))) return false;
+        if (!left.queryArgument(left.queryNumberArguments()-i).equals(
+              right.queryArgument(right.queryNumberArguments()-i))) return false;
       }
       return true;
     }

@@ -25,6 +25,38 @@ import charlie.terms.*;
 
 class TheoryCheckTest {
   @Test
+  void testBaseType() {
+    assertTrue(Theory.isTheory(TypeFactory.intSort));
+    assertTrue(Theory.isTheory(TypeFactory.boolSort));
+    assertTrue(Theory.isTheory(TypeFactory.stringSort));
+    assertFalse(Theory.isTheory(TypeFactory.defaultSort));
+    assertFalse(Theory.isTheory(TypeFactory.createSort("Int")));
+  }
+
+  @Test
+  public void testDataType() {
+    Type prod = TypeFactory.createSort("c", TypeFactory.intSort);
+    assertFalse(Theory.isTheory(prod));
+    prod = TypeFactory.createSort("Bool", TypeFactory.intSort);
+    assertFalse(Theory.isTheory(prod));
+  }
+
+  @Test
+  public void testVariableType() {
+    assertFalse(Theory.isTheory(TypeFactory.createVariable("Int")));
+  }
+
+  @Test
+  public void testArrowType() {
+    Type abc = TypeFactory.createArrow(TypeFactory.createArrow(
+      TypeFactory.createSort("a"), TypeFactory.createSort("b")),
+      TypeFactory.createSort("c"));
+    assertFalse(Theory.isTheory(abc));
+    Type ib = TypeFactory.createArrow(TypeFactory.boolSort, TypeFactory.intSort);
+    assertTrue(Theory.isTheory(ib));
+  }
+
+  @Test
   public void testConstant() {
     FunctionSymbol f = TermFactory.createConstant("0", TypeFactory.intSort);
     assertFalse(Theory.isTheory(f));

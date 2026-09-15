@@ -109,4 +109,3 @@ public class TVarSet implements Iterable<TVar> {
     return _elements.toString();
   }
 }
-

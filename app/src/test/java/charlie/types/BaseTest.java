@@ -66,16 +66,6 @@ class BaseTest {
   }
 
   @Test
-  void testTheoryType() {
-    assertTrue(UniqueTypes.isTheoryType(TypeFactory.intSort));
-    assertTrue(TypeFactory.boolSort.isTheoryType());
-    assertTrue(TypeFactory.stringSort.isTheoryType());
-    assertFalse(TypeFactory.defaultSort.isTheoryType());
-    // despite the name, Int is only a theory type if it was created as such!
-    assertFalse(intType().isTheoryType());
-  }
-
-  @Test
   void testTypeOrder() {
     assertEquals(0, (new Base("b")).queryTypeOrder());
   }
@@ -121,4 +111,3 @@ class BaseTest {
     assertTrue(a.hashCode() == b.hashCode());
   }
 }
-

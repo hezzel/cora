@@ -15,20 +15,16 @@
 
 package charlie.terms;
 
-import java.util.Map;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
-import charlie.types.TVar;
-import charlie.types.TVarSet;
-import charlie.terms.replaceable.ReplaceableSet;
 
 /**
- * Constants are the default kind of FunctionSymbol, typically used for user-defined function
- * symbols rather than in-built symbols or symbols specifically created for analysis.
+ * <p>Constants are the default kind of FunctionSymbol, typically used for user-defined function
+ * symbols rather than in-built symbols or symbols specifically created for analysis.</p>
  *
- * They are called Constants because they can also be seen as constant terms.
+ * <p>They are called Constants because they can also be seen as constant terms.</p>
  */
-class Constant extends FunctionSymbolInherit implements FunctionSymbol {
+final class Constant extends FunctionSymbolInherit implements FunctionSymbol {
   /**
    * A constant is always identified by the combination of its name and its type.
    * Throws an error if the name or type is null, or if name is the empty string.
@@ -36,7 +32,7 @@ class Constant extends FunctionSymbolInherit implements FunctionSymbol {
   Constant(String name, Type type) {
     super(name, type, "");
     if (name == null) throw new NullStorageException("Constant", "name");
-    if (name.equals("")) throw new IllegalArgumentException("Constant::constructor -- " +
+    if (name.isEmpty()) throw new IllegalArgumentException("Constant::constructor -- " +
       "Function Symbol created with empty name.");
   }
 

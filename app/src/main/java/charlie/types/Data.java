@@ -30,7 +30,7 @@ public record Data(String name, FixedList<Type> args) implements Type {
   public Data {
     if (name == null) throw new NullStorageException("Data", "name");
     if (args == null) throw new NullStorageException("Data", "arguments list");
-    if (args.size() < 1) throw new IllegalArgumentException("arguments list is empty; " +
+    if (args.isEmpty()) throw new IllegalArgumentException("arguments list is empty; " +
       "to create a data type with no arguments, you should construct a Base instead");
   }
 
@@ -57,11 +57,6 @@ public record Data(String name, FixedList<Type> args) implements Type {
   @Override
   public boolean isMonomorphic() {
     return args.stream().allMatch(Type::isMonomorphic);
-  }
-
-  @Override
-  public boolean isTheoryType() {
-    return false;
   }
 
   @Override
@@ -109,24 +104,22 @@ public record Data(String name, FixedList<Type> args) implements Type {
 
   @Override
   public int compareTo(Type other) {
-    return switch(other) {
-      case Data(String n, FixedList<Type> l) -> {
-        int k = this.name.compareTo(n);
-        if (k == 0) k = this.args.size() - l.size();
-        if (k != 0) yield k;
-        for (int i = 0; i < this.args.size(); i++) {
-          k = this.args.get(i).compareTo(l.get(i));
-          if (k != 0) yield k;
-        }
-        yield 0;
+    if (other instanceof Data(String n, FixedList<Type> l)) {
+      int k = this.name.compareTo(n);
+      if (k == 0) k = this.args.size() - l.size();
+      if (k != 0) return k;
+      for (int i = 0; i < this.args.size(); i++) {
+        k = this.args.get(i).compareTo(l.get(i));
+        if (k != 0) return k;
       }
-      default -> 1;
-    };
+      return 0;
+    }
+    return 1;
   }
 
   @Override
-  public String toString(){
-    return (new TypePrinter()).print(this);
+  public String toString() {
+    return TypePrinter.DEBUGPRINTER.print(this);
   }
 
   @Override
@@ -136,11 +129,10 @@ public record Data(String name, FixedList<Type> args) implements Type {
 
   @Override
   public boolean equals(Type type) {
-    switch (type) {
-      case Data(String name, FixedList<Type> argTypes):
-        return this.name.equals(name) && this.args.equals(argTypes);
-      default: return false;
+    if (type instanceof Data(String n, FixedList<Type> argTypes)) {
+      return this.name.equals(n) && this.args.equals(argTypes);
     }
+    return false;
   }
 
   @Override
@@ -148,4 +140,3 @@ public record Data(String name, FixedList<Type> args) implements Type {
     return other instanceof Type t && equals(t);
   }
 }
-

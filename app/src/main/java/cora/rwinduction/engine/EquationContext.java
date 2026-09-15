@@ -15,9 +15,8 @@
 
 package cora.rwinduction.engine;
 
-import java.util.ArrayList;
 import java.util.Optional;
-import java.util.Set;
+
 import charlie.terms.replaceable.*;
 import charlie.terms.*;
 import charlie.printer.Printer;
@@ -56,10 +55,10 @@ public class EquationContext implements PrintableObject {
     _rightGeq = Optional.of(rightgr);
     _index = index;
     MutableRenaming varnaming = naming.copy();
-    varnaming.limitDomain(leftgr.freeReplaceables(), rightgr.freeReplaceables(),
-                          _equation.getLhs().freeReplaceables(),
-                          _equation.getRhs().freeReplaceables(),
-                          _equation.getConstraint().freeReplaceables());
+    varnaming.limitDomain(leftgr.queryFreeReplaceables(), rightgr.queryFreeReplaceables(),
+                          _equation.getLhs().queryFreeReplaceables(),
+                          _equation.getRhs().queryFreeReplaceables(),
+                          _equation.getConstraint().queryFreeReplaceables());
     _varNaming = varnaming.makeImmutable();
     checkReplaceableNaming();
     checkIndex();
@@ -79,9 +78,9 @@ public class EquationContext implements PrintableObject {
     _rightGeq = Optional.empty();
     _index = index;
     MutableRenaming varnaming = naming.copy();
-    varnaming.limitDomain(_equation.getLhs().freeReplaceables(),
-                          _equation.getRhs().freeReplaceables(),
-                          _equation.getConstraint().freeReplaceables());
+    varnaming.limitDomain(_equation.getLhs().queryFreeReplaceables(),
+                          _equation.getRhs().queryFreeReplaceables(),
+                          _equation.getConstraint().queryFreeReplaceables());
     _varNaming = varnaming.makeImmutable();
     checkReplaceableNaming();
     checkIndex();
@@ -100,12 +99,12 @@ public class EquationContext implements PrintableObject {
     _index = index;
     MutableRenaming varnaming = naming.copy();
     varnaming.limitDomain(leftgr.isEmpty() ? ReplaceableSet.EMPTY
-                                           : leftgr.get().freeReplaceables(),
-                          _equation.getLhs().freeReplaceables(),
-                          _equation.getRhs().freeReplaceables(),
-                          _equation.getConstraint().freeReplaceables(),
+                                           : leftgr.get().queryFreeReplaceables(),
+                          _equation.getLhs().queryFreeReplaceables(),
+                          _equation.getRhs().queryFreeReplaceables(),
+                          _equation.getConstraint().queryFreeReplaceables(),
                           rightgr.isEmpty() ? ReplaceableSet.EMPTY
-                                            : rightgr.get().freeReplaceables());
+                                            : rightgr.get().queryFreeReplaceables());
     _varNaming = varnaming.makeImmutable();
     checkReplaceableNaming();
     checkIndex();
@@ -129,7 +128,7 @@ public class EquationContext implements PrintableObject {
    * are all in the naming.
    */
   private void checkReplaceablesIn(Term t, String location) {
-    for (Replaceable x : t.freeReplaceables()) {
+    for (Replaceable x : t.queryFreeReplaceables()) {
       if (_varNaming.getName(x) == null) {
         throw new IllegalArgumentException("Unknown replaceable in " + location + ": " + x);
       }

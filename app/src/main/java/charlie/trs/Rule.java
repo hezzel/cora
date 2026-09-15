@@ -15,7 +15,6 @@
 
 package charlie.trs;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.LinkedList;
@@ -26,7 +25,6 @@ import charlie.types.TypeFactory;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
-import charlie.theory.Value;
 import charlie.theory.Theory;
 import charlie.theory.TheoryFactory;
 import charlie.trs.TrsProperties.*;
@@ -54,7 +52,7 @@ public class Rule {
     _right = right;
     _constraint = constraint;
     checkCorrectness();
-    _lvars = Collections.unmodifiableSet(constraint.vars().toSet());
+    _lvars = Collections.unmodifiableSet(constraint.queryFreeVariables().toSet());
     _tvars = null;
     _properties = new RuleRestrictions(_left, _right, _constraint, _lvars);
   }
@@ -104,8 +102,8 @@ public class Rule {
     // as a small optimisation, we only compute this if we actually need it
     if (_tvars == null) {
       _tvars = new TreeSet<Variable>();
-      for (Variable x : _constraint.vars()) {
-        if (_left.freeReplaceables().contains(x) || _right.freeReplaceables().contains(x)) {
+      for (Variable x : _constraint.queryFreeVariables()) {
+        if (_left.queryFreeReplaceables().contains(x) || _right.queryFreeReplaceables().contains(x)) {
           _tvars.add(x);
         }
       }
@@ -120,10 +118,10 @@ public class Rule {
    */
   public Set<Replaceable> queryAllReplaceables() {
     Set<Replaceable> ret = new TreeSet<Replaceable>();
-    for (Replaceable x : _left.freeReplaceables()) ret.add(x);
-    for (Replaceable x : _constraint.freeReplaceables()) ret.add(x);
+    for (Replaceable x : _left.queryFreeReplaceables()) ret.add(x);
+    for (Replaceable x : _constraint.queryFreeReplaceables()) ret.add(x);
     if (_properties.rightReplaceablePolicy() == TrsProperties.FreshRight.ANY) {
-      for (Replaceable x : _right.freeReplaceables()) ret.add(x);
+      for (Replaceable x : _right.queryFreeReplaceables()) ret.add(x);
     }
     return ret;
   }
@@ -245,7 +243,7 @@ public class Rule {
         _left.queryType(), " while right-hand side ", _right," has type ", _right.queryType(), ".");
     }
     Type t = _constraint.queryType();
-    if (!t.equals(TypeFactory.boolSort) || !t.isTheoryType()) {
+    if (!t.equals(TypeFactory.boolSort) || !Theory.isTheory(t)) {
       throw new IllegalRuleException(_left, _right, _constraint, "the constraint does not have " +
         "type Bool (it has type ", t, ").");
     }
@@ -274,14 +272,14 @@ public class Rule {
     boolean couldBeTheory = true;
     while (!parts.isEmpty() && couldBeTheory) {
       Term t = parts.pop();
-      if (!t.queryType().isTheoryType()) couldBeTheory = false;
+      if (!Theory.isTheory(t.queryType())) couldBeTheory = false;
       else if (t.isVariable() || t.isMetaApplication()) continue;
         // the arguments of a meta-variable may be ignored by the instantiation
       else if (t.isConstant()) couldBeTheory = Theory.isTheory(t.queryRoot());
       else if (t.isAbstraction()) parts.add(t.queryAbstractionSubterm());
       else if (t.isApplication()) {
         parts.add(t.queryHead());
-        for (int i = 1; i <= t.numberArguments(); i++) parts.add(t.queryArgument(i));
+        for (int i = 1; i <= t.queryNumberArguments(); i++) parts.add(t.queryArgument(i));
       }
     }
     if (couldBeTheory) {

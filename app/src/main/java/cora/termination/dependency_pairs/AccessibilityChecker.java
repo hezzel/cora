@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.TreeMap;
-import java.util.Map;
 
 import charlie.util.Pair;
 import cora.io.OutputModule;
@@ -117,13 +116,13 @@ public class AccessibilityChecker {
       return;
     }
     Base output = (Base)type;
-    if (argtypes.size() < s.numberArguments()) {
+    if (argtypes.size() < s.queryNumberArguments()) {
       throw new Error("allVarsAcc; this shouldn't happen due to type restrictions");
     }
     // check all the arguments with variables in them!
-    for (int i = 1; i <= s.numberArguments(); i++) {
+    for (int i = 1; i <= s.queryNumberArguments(); i++) {
       Term arg = s.queryArgument(i);
-      if (arg.freeReplaceables().size() == 0) continue;
+      if (arg.queryFreeReplaceables().size() == 0) continue;
       Type argtype = argtypes.get(i-1);
       _problem.require(posGeq(output, argtype));
       requireAllVarsAcc(arg);
@@ -137,7 +136,7 @@ public class AccessibilityChecker {
   private void generateTrsConstraints() {
     for (int i = 0; i < _trs.queryRuleCount(); i++) {
       Term left = _trs.queryRule(i).queryLeftSide();
-      for (int j = 1; j <= left.numberArguments(); j++) {
+      for (int j = 1; j <= left.queryNumberArguments(); j++) {
         requireAllVarsAcc(left.queryArgument(j));
       }
     }

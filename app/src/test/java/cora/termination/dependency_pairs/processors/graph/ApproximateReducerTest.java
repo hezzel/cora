@@ -28,7 +28,6 @@ import charlie.trs.*;
 import charlie.reader.CoraInputReader;
 import cora.termination.dependency_pairs.DP;
 
-import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -60,11 +59,11 @@ class ApproximateApproximateReducerTest {
     Variable x2 = dp2.lvars().iterator().next();
     assertTrue(x != x2);
     assertTrue(y != y2);
-    assertTrue(dp2.lhs().vars().size() == 2);
-    assertTrue(dp2.lhs().vars().contains(x2));
-    assertTrue(dp2.lhs().vars().contains(y2));
-    assertTrue(dp2.rhs().vars().size() == 1);
-    assertTrue(dp2.rhs().vars().contains(x2));
+    assertTrue(dp2.lhs().queryFreeVariables().size() == 2);
+    assertTrue(dp2.lhs().queryFreeVariables().contains(x2));
+    assertTrue(dp2.lhs().queryFreeVariables().contains(y2));
+    assertTrue(dp2.rhs().queryFreeVariables().size() == 1);
+    assertTrue(dp2.rhs().queryFreeVariables().contains(x2));
   }
   
   @Test

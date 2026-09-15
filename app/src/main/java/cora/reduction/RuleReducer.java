@@ -16,7 +16,7 @@
 package cora.reduction;
 
 import java.util.ArrayList;
-import java.util.Map;
+
 import charlie.types.Type;
 import charlie.terms.Term;
 import charlie.terms.Variable;
@@ -55,13 +55,13 @@ class RuleReducer implements ReduceObject {
 
   /** This returns whether our rule can be applied to t at the head. */
   public boolean applicable(Term t) {
-    int n = t.numberArguments();
+    int n = t.queryNumberArguments();
     int k = findHeadAdditions(t);
     if (k == -1 || n < k) return false;
     Term head = t.queryImmediateHeadSubterm(n-k);
     Substitution subst = Matcher.match(_rule.queryLeftSide(), head);
     if (subst == null) return false;
-    for (Variable x : _rule.queryConstraint().vars()) {
+    for (Variable x : _rule.queryConstraint().queryFreeVariables()) {
       if (subst.get(x) != null && !Theory.isValue(subst.get(x))) return false;
     }
     Term csub = _rule.queryConstraint().substitute(subst);
@@ -74,7 +74,7 @@ class RuleReducer implements ReduceObject {
    * reduction; otherwise it returns null.
    */
   public Term apply(Term t) {
-    int n = t.numberArguments();
+    int n = t.queryNumberArguments();
     int k = findHeadAdditions(t);
     if (k == -1 || n < k) return null;
     Term head = t.queryImmediateHeadSubterm(n-k);
@@ -82,7 +82,7 @@ class RuleReducer implements ReduceObject {
     if (subst == null) return null;
 
     // check the constraint and rhs variables
-    for (Variable x : _rule.queryConstraint().vars()) {
+    for (Variable x : _rule.queryConstraint().queryFreeVariables()) {
       if (subst.get(x) != null && !Theory.isValue(subst.get(x))) return null;
     }
     Term csub = _rule.queryConstraint().substitute(subst);
@@ -96,11 +96,11 @@ class RuleReducer implements ReduceObject {
         case TermAnalyser.Result.MAYBE(String reason): return null;
         case TermAnalyser.Result.YES(Substitution gamma): result = gamma;
       };
-      for (Variable x : csub.vars()) {
+      for (Variable x : csub.queryFreeVariables()) {
         if (!subst.extend(x, result.get(x))) return null;
       }
     }
-    for (Variable x : _rule.queryRightSide().vars()) {
+    for (Variable x : _rule.queryRightSide().queryFreeVariables()) {
       if (subst.get(x) == null) subst.extend(x, TermAnalyser.chooseRandomValue(x.queryType()));
     }
 

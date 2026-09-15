@@ -18,12 +18,14 @@ package charlie.trs;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Stack;
+
 import charlie.util.FixedList;
 import charlie.util.LookupMap;
 import charlie.util.NullStorageException;
 import charlie.types.*;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TypingException;
+import charlie.theory.Theory;
 import charlie.trs.TrsProperties.TypeLevel;
 
 /**
@@ -182,7 +184,7 @@ public class Alphabet {
       Type t = stack.pop();
       switch (t) {
         case Base(String name):
-          if (t.isBaseTheoryType()) continue;
+          if (Theory.isBaseTheoryType(t)) continue;
           k = storeSortConstructor(builder, name, 0);
           if (k != 0) {
             throw new InconsistentSortException(name, "function symbol " + f.queryName(), k, 0);
@@ -244,7 +246,7 @@ public class Alphabet {
       Type t = stack.pop();
       switch (t) {
         case Base(String name):
-          if (t.isBaseTheoryType()) continue;
+          if (Theory.isBaseTheoryType(t)) continue;
           if (!_sorts.containsKey(name)) return name;
           if (_sorts.get(name) != 0) return name;
           continue;

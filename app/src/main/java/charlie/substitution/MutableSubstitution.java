@@ -16,7 +16,6 @@
 package charlie.substitution;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 import charlie.util.NullStorageException;
@@ -269,10 +268,10 @@ public class MutableSubstitution implements Substitution, Type.MSubstitution {
     if (term.isVariable()) return substituteVariable(term.queryVariable());
     else if (term.isConstant()) return substituteConstant(term.queryRoot());
     else if (term.isMetaApplication()) {
-      return substituteMetaApplication(term.queryMetaVariable(), term.queryMetaArguments());
+      return substituteMetaApplication(term.queryMetaVariable(), term.listMetaArguments());
     }
     else if (term.isApplication()) {
-      return substituteApplication(term.queryHead(), term.queryArguments());
+      return substituteApplication(term.queryHead(), term.listArguments());
     }
     else if (term.isAbstraction()) {
       return substituteAbstraction(term.queryVariable(), term.queryAbstractionSubterm());

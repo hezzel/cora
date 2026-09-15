@@ -32,7 +32,6 @@ class TVarTest {
     assertFalse(t.isSort());
     assertFalse(t.isSimple());
     assertFalse(t.isMonomorphic());
-    assertFalse(t.isTheoryType());
     assertFalse(t.isZeroSort());
     assertTrue(t.equals(new TVar("β")));
     assertFalse(t.equals(new TVar("δ")));
@@ -109,4 +108,3 @@ class TVarTest {
     assertTrue(a.hashCode() == b.hashCode());
   }
 }
-

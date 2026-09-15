@@ -26,6 +26,7 @@ import charlie.util.FixedList;
 import charlie.types.Type;
 import charlie.parser.lib.ParsingException;
 import charlie.terms.FunctionSymbol;
+import charlie.theory.Theory;
 import charlie.trs.TRS;
 import charlie.trs.TrsProperties.*;
 import cora.io.OutputModule;
@@ -269,7 +270,7 @@ public class InteractiveRewritingInducter {
     for (FunctionSymbol f : trs.queryAlphabet().getSymbols()) {
       if (trs.isDefined(f)) continue;
       Type output = f.queryType().queryOutputType();
-      if (!output.isBaseType() || output.isTheoryType()) {
+      if (!output.isBaseType() || Theory.isTheory(output)) {
         return "The TRS does not satisfy the requirements of the present implementation: " +
           "all constructors other than values should have a non-theory sort as output type " +
           "(this is not the case for " + f.queryName() + ").";

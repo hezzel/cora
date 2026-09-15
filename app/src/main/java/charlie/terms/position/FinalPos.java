@@ -26,10 +26,8 @@ public record FinalPos(int chopcount) implements Position {
   public String toString() { return toStringDefault(); }
 
   public boolean equals(Position other) {
-    switch (other) {
-      case FinalPos(int k): return chopcount == k;
-      default: return false;
-    }
+    if (other instanceof FinalPos(int k)) return chopcount == k;
+    return false;
   }
 
   public boolean equals(Object other) {

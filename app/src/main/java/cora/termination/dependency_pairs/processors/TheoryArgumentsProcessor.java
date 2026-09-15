@@ -58,7 +58,7 @@ public class TheoryArgumentsProcessor implements Processor {
       Type t = f.queryType();
       for (int i = 1; t.isArrowType(); i++, t = t.querySubtype(2)) {
         Type argtype = t.querySubtype(1);
-        if (argtype.isBaseTheoryType()) _targs.get(f).add(i);
+        if (Theory.isBaseTheoryType(argtype)) _targs.get(f).add(i);
       }
     }
   }
@@ -76,7 +76,7 @@ public class TheoryArgumentsProcessor implements Processor {
     for (Term term : terms) {
       FunctionSymbol root = term.queryRoot();
       TreeSet<Integer> rootset = _targs.get(root);
-      for (int i = 1; i <= term.numberArguments(); i++) {
+      for (int i = 1; i <= term.queryNumberArguments(); i++) {
         if (rootset.contains(i) && !Theory.isTheory(term.queryArgument(i))) {
           // note that rootset IS the pointer to _targets.get(root), so changing it directly
           // affects _targs!
@@ -96,14 +96,14 @@ public class TheoryArgumentsProcessor implements Processor {
       TreeSet<Variable> goodvars = new TreeSet<Variable>(dp.lvars());
       FunctionSymbol f = dp.lhs().queryRoot();
       for (int i : _targs.get(f)) {
-        for (Variable x : dp.lhs().queryArgument(i).vars()) {
+        for (Variable x : dp.lhs().queryArgument(i).queryFreeVariables()) {
           goodvars.add(x);
         }
       }
       FunctionSymbol g = dp.rhs().queryRoot();
       TreeSet<Integer> badindexes = new TreeSet<Integer>();
       for (int j : _targs.get(g)) {
-        for (Variable x : dp.rhs().queryArgument(j).vars()) {
+        for (Variable x : dp.rhs().queryArgument(j).queryFreeVariables()) {
           if (!goodvars.contains(x)) { badindexes.add(j); break; }
         }
       }
@@ -117,7 +117,7 @@ public class TheoryArgumentsProcessor implements Processor {
     FunctionSymbol f = lhs.queryRoot();
     for (int i : _targs.get(f)) {
       Term arg = lhs.queryArgument(i);
-      for (Variable x : arg.vars()) {
+      for (Variable x : arg.queryFreeVariables()) {
         if (!dp.lvars().contains(x)) return false;
       }
     }
@@ -132,7 +132,7 @@ public class TheoryArgumentsProcessor implements Processor {
     TreeSet<Integer> bad = new TreeSet<Integer>();
     for (int i : rootset) {
       Term arg = lhs.queryArgument(i);
-      for (Variable x : arg.vars()) {
+      for (Variable x : arg.queryFreeVariables()) {
         if (!dp.lvars().contains(x)) {
           bad.add(i);
           break;
@@ -153,7 +153,7 @@ public class TheoryArgumentsProcessor implements Processor {
     Term constraint = dp.constraint();
     for (int i : _targs.get(f)) {
       Term arg = lhs.queryArgument(i);
-      for (Variable x : arg.vars()) {
+      for (Variable x : arg.queryFreeVariables()) {
         newvars.add(x);
         if (innermost) {
           Term eq = TheoryFactory.createEquality(x, x);

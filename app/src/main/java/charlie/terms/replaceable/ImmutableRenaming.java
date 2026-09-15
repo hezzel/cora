@@ -23,16 +23,26 @@ import java.util.Set;
  * wrapper, one may ensure that other objects can only use it as intended.
  */
 public class ImmutableRenaming implements Renaming {
-  private MutableRenaming _wrapped;
+  private final MutableRenaming _wrapped;
 
   // the constructor is not public, since we should be created through makeImmutable()
   ImmutableRenaming(MutableRenaming wrapme) { _wrapped = wrapme; }
 
+  @Override
   public Set<Replaceable> domain() { return _wrapped.domain(); }
+
+  @Override
   public Set<String> range() { return _wrapped.range(); }
+
+  @Override
   public String getName(Replaceable x) { return _wrapped.getName(x); }
+
+  @Override
   public Replaceable getReplaceable(String name) { return _wrapped.getReplaceable(name); }
+
+  @Override
   public MutableRenaming copy() { return _wrapped.copy(); }
+
+  @Override
   public Renaming makeImmutable() { return this; }
 }
-

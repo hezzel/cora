@@ -15,19 +15,15 @@
 
 package cora.rwinduction.engine.deduction;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
-import java.util.Stack;
 
 import charlie.util.Pair;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.theory.TheoryFactory;
-import charlie.printer.Printer;
-import charlie.printer.PrinterFactory;
 import charlie.theorytranslation.TermAnalyser;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
@@ -173,7 +169,7 @@ public final class DeductionCalcAll extends DeductionStep {
                                              VariableNamer namer) {
     Term head = term.queryHead();
     ArrayList<Term> args = null;
-    for (int i = 1; i <= term.numberArguments(); i++) {
+    for (int i = 1; i <= term.queryNumberArguments(); i++) {
       Term arg = term.queryArgument(i);
       Pair<FunctionSymbol,Integer> parent = head.isConstant() ?
         new Pair<FunctionSymbol,Integer>(head.queryRoot(), i) : null;

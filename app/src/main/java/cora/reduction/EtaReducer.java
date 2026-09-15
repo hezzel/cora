@@ -27,12 +27,12 @@ class EtaReducer implements ReduceObject {
     if (!s.isAbstraction()) return false;
     Variable x = s.queryVariable();
     Term main = s.queryAbstractionSubterm();
-    List<Term> parts = main.queryArguments();
+    List<Term> parts = main.listArguments();
     if (parts.size() == 0) return false;
     if (!parts.get(parts.size()-1).equals(x)) return false;
-    if (main.queryHead().vars().contains(x)) return false;
+    if (main.queryHead().queryFreeVariables().contains(x)) return false;
     for (int i = 0; i < parts.size()-1; i++) {
-      if (parts.get(i).vars().contains(x)) return false;
+      if (parts.get(i).queryFreeVariables().contains(x)) return false;
     }
     return true;
   }
@@ -43,12 +43,12 @@ class EtaReducer implements ReduceObject {
     Variable x = s.queryVariable();
     Term main = s.queryAbstractionSubterm();
     Term head = main.queryHead();
-    List<Term> args = main.queryArguments();
+    List<Term> args = main.listArguments();
     if (args.size() == 0 || !args.get(args.size()-1).equals(x)) return null;
     args = args.subList(0, args.size()-1);
     Term ret = TermFactory.createApp(head, args);
-    if (ret.vars().contains(x)) return null;
-    args = t.queryArguments();
+    if (ret.queryFreeVariables().contains(x)) return null;
+    args = t.listArguments();
     if (args.size() > 0) ret = TermFactory.createApp(ret, args);
     return ret;
   }

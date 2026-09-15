@@ -65,7 +65,8 @@ public class DeductionDisproveTheory extends DeductionStep {
         "to ground theory terms."));
       return null;
     }
-    if (!Theory.isTheory(left) || !Theory.isTheory(right) || !left.queryType().isBaseTheoryType()) {
+    if (!Theory.isTheory(left) || !Theory.isTheory(right) ||
+        !Theory.isBaseTheoryType(left.queryType())) {
       m.ifPresent(o -> o.println("The left- and right-hand sides of the equation do not have " +
         "base type."));
       return null;

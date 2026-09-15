@@ -118,8 +118,8 @@ class RuleRestrictions {
     else if (Theory.isTheory(left.queryRoot())) _rootStatus = Root.THEORY;
     else _rootStatus = Root.FUNCTION;
     // theories
-    List<Pair<Term,Position>> subterms = left.querySubterms();
-    subterms.addAll(right.querySubterms());
+    List<Pair<Term,Position>> subterms = left.listSubterms();
+    subterms.addAll(right.listSubterms());
     _theories = !Theory.isTrue(constraint);
     for (int i = 0; i < subterms.size() && !_theories; i++) {
       Term sub = subterms.get(i).fst();
@@ -134,9 +134,9 @@ class RuleRestrictions {
     }
     // fresh (meta-)variables
     _fresh = FreshRight.NONE;
-    ReplaceableSet inleft = left.freeReplaceables();
-    ReplaceableSet incons = constraint.freeReplaceables();
-    for (Replaceable x : right.freeReplaceables()) {
+    ReplaceableSet inleft = left.queryFreeReplaceables();
+    ReplaceableSet incons = constraint.queryFreeReplaceables();
+    for (Replaceable x : right.queryFreeReplaceables()) {
       if (!inleft.contains(x)) {
         if (incons.contains(x)) _fresh = FreshRight.CVARS;
         else { _fresh = FreshRight.ANY; break; }

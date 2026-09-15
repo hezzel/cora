@@ -18,19 +18,19 @@ package charlie.terms;
 import charlie.terms.replaceable.Replaceable;
 
 /**
- * Variables are both used as parts of constraints, as binders in an abstraction, as generic
- * expression in terms and as open spots for matching in rules.
+ * <p>Variables are both used as parts of constraints, as binders in an abstraction, as generic
+ * expressions in terms and as open spots for matching in rules.</p>
  *
- * There are two kinds of variables: binder variables and non-binder variables.  The former are
+ * <p>There are two kinds of variables: binder variables and non-binder variables.  The former are
  * used as binders in abstraction; the latter are used for matching.  In true terms, both can be
- * used as free variables.
+ * used as free variables.</p>
  *
- * Multiple distinct variables are allowed to share the same name.  In practice, this name is
+ * <p>Multiple distinct variables are allowed to share the same name.  In practice, this name is
  * intended to be used to define the basis of the actual variable name in pretty printing (although
  * it is also used directly in printing).  Thus, variables are not defined by their name, but
- * rather by an internally kept index.
+ * rather by an internally kept index.</p>
  *
- * Note: all instances of Variable must (and can be expected to) be immutable.
+ * <p>Note: all instances of Variable must (and can be expected to) be immutable.<?p></?p>
  */
 public interface Variable extends Term, Replaceable {
   /**
@@ -43,6 +43,6 @@ public interface Variable extends Term, Replaceable {
   boolean equals(Variable x);
 
   /** Returns true if this is a binder variable, false if it is a non-binder variable. */
-  public boolean isBinderVariable();
+  boolean isBinderVariable();
 }
 

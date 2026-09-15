@@ -26,17 +26,20 @@ import charlie.types.Type;
 import charlie.types.TVar;
 import charlie.types.TypeFactory;
 import charlie.types.TestSubstitution;
+import charlie.parser.CoraParser;
 import charlie.terms.position.*;
 
-public class ConstantTest extends TermTestFoundation {
+public class ConstantTest  {
+  private Type type(String desc) { return CoraParser.readType(desc); }
+
   @Test
   public void testConstantNullName() {
-    assertThrows(NullStorageException.class, () -> new Constant(null, baseType("o")));
+    assertThrows(NullStorageException.class, () -> new Constant(null, type("o")));
   }
 
   @Test
   public void testConstantEmptyName() {
-    assertThrows(IllegalArgumentException.class, () -> new Constant("", baseType("o")));
+    assertThrows(IllegalArgumentException.class, () -> new Constant("", type("o")));
   }
 
   @Test
@@ -46,53 +49,43 @@ public class ConstantTest extends TermTestFoundation {
 
   @Test
   public void testBaseConstantApply() {
-    FunctionSymbol c = new Constant("c", baseType("o"));
-    assertThrows(TypingException.class, () -> c.apply(new Constant("a", baseType("o"))));
+    FunctionSymbol c = new Constant("c", type("o"));
+    assertThrows(TypingException.class, () -> c.apply(new Constant("a", type("o"))));
   }
 
   @Test
   public void testIllTypedApply() {
-    Type a = baseType("a");
-    Type b = baseType("b");
-    Type c = baseType("c3");
-    Type combi = arrowType(a, arrowType(b, c));
-    FunctionSymbol f = new Constant("ff", combi);
+    FunctionSymbol f = new Constant("ff", type("a -> b -> c"));
     ArrayList<Term> args = new ArrayList<Term>();
-    args.add(new Constant("aa", a));
-    args.add(new Constant("bb", a));
+    args.add(new Constant("aa", type("a")));
+    args.add(new Constant("bb", type("a")));
     assertThrows(TypingException.class, () -> f.apply(args));
   }
 
   @Test
   public void testFunctionSymbolBasics() {
-    Type a = baseType("a");
-    Type b = baseType("b");
-    Type c = baseType("c3");
-    Type combi = arrowType(a, arrowType(b, c));
-    FunctionSymbol f = new Constant("ff", combi);
+    Type abc = type("a -> b -> c3");
+    FunctionSymbol f = new Constant("ff", abc);
     assertTrue(f.queryName().equals("ff"));
     assertTrue(f.toString().equals("ff"));
-    assertTrue(f.queryType().equals(combi));
+    assertTrue(f.queryType().equals(abc));
     assertTrue(f.isClosed());
     assertTrue(f.isGround());
     assertFalse(f.isApplication());
     assertTrue(f.isApplicative());
     ArrayList<Term> args = new ArrayList<Term>();
-    args.add(new Constant("aa", a));
-    args.add(new Constant("bb", b));
+    args.add(new Constant("aa", type("a")));
+    args.add(new Constant("bb", type("b")));
     assertTrue(f.apply(args).toString().equals("ff(aa, bb)"));
   }
 
   @Test
   public void testFunctionSymbolEquality() {
-    Type a = baseType("a");
-    Type b = baseType("b");
-    Type c = baseType("c3");
-    Type combi = arrowType(a, arrowType(b, c));
-    FunctionSymbol f = new Constant("ff", combi);
-    FunctionSymbol g = new Constant("ff", combi);
-    FunctionSymbol h = new Constant("f", combi);
-    FunctionSymbol i = new Constant("f", arrowType(a,c));
+    Type abc = type("a -> b -> c");
+    FunctionSymbol f = new Constant("ff", abc);
+    FunctionSymbol g = new Constant("ff", abc);
+    FunctionSymbol h = new Constant("f", abc);
+    FunctionSymbol i = new Constant("f", type("a -> c"));
 
     assertTrue(f.equals(g));
     assertTrue(f.hashCode() == g.hashCode());
@@ -103,100 +96,87 @@ public class ConstantTest extends TermTestFoundation {
 
   @Test
   public void testVariableRequest() {
-    Term f = new Constant("f", baseType("a"));
+    Term f = new Constant("f", type("a"));
     assertThrows(InappropriatePatternDataException.class, () -> f.queryVariable());
   }
 
   @Test
   public void testAbstractionSubtermRequest() {
-    Constant f = new Constant("a", arrowType("o", "O"));
+    Constant f = new Constant("a", type("o -> O"));
     assertThrows(InappropriatePatternDataException.class, () -> f.queryAbstractionSubterm());
   }
 
   @Test
   public void testArgumentPositionRequest() {
-    Type a = baseType("a");
-    Type b = baseType("b");
-    Type combi = arrowType(a, b);
-    Constant f = new Constant("f", combi);
+    Constant f = new Constant("f", type("a -> b"));
     assertThrows(InvalidPositionException.class, () ->
       f.querySubterm(new ArgumentPos(1, Position.empty)));
   }
 
   @Test
   public void testPartialPositionRequest() {
-    Type a = baseType("a");
-    Type b = baseType("b");
-    Type combi = arrowType(a, b);
-    Constant f = new Constant("f", combi);
+    Constant f = new Constant("f", type("a -> b"));
     assertThrows(InvalidPositionException.class, () ->
       f.querySubterm(new FinalPos(1)));
   }
 
   @Test
   public void testBadPositionReplacement() {
-    Type a = baseType("a");
-    Type b = baseType("b");
-    Type combi = arrowType(a, b);
-    Constant f = new Constant("f", combi);
+    Constant f = new Constant("f", type("a -> b"));
     assertThrows(InvalidPositionException.class, () -> 
-      f.replaceSubterm(new LambdaPos(Position.empty), new Constant("a", a)));
+      f.replaceSubterm(new LambdaPos(Position.empty), new Constant("a", type("a"))));
   }
 
   @Test
   public void testBadPartialPositionReplacement() {
-    Constant f = new Constant("f", baseType("a"));
+    Constant f = new Constant("f", type("a"));
     assertThrows(InvalidPositionException.class, () -> 
-      f.replaceSubterm(new FinalPos(1), new Constant("a", baseType("a"))));
+      f.replaceSubterm(new FinalPos(1), new Constant("a", type("a"))));
   }
 
   @Test
   public void testTermBasics() {
-    Type a = baseType("a");
-    Type b = baseType("b");
-    Type c = TypeFactory.createVariable("c");
-    Type combi = arrowType(a, arrowType(b, c));
-    Term f = new Constant("ff", combi);
-    Variable x = new Var("ff", combi);
+    Type abc = type("a -> $b -> c");
+    Term f = new Constant("ff", abc);
+    Variable x = new Var("ff", abc);
 
-    assertTrue(f.queryType().equals(combi));
+    assertTrue(f.queryType().equals(abc));
     assertTrue(f.isConstant());
     assertTrue(f.isFunctionalTerm());
     assertFalse(f.isVariable());
     assertFalse(f.isVarTerm());
-    assertTrue(f.numberArguments() == 0);
-    assertTrue(f.queryArguments().size() == 0);
+    assertTrue(f.queryNumberArguments() == 0);
+    assertTrue(f.listArguments().isEmpty());
     assertTrue(f.queryRoot().equals(f));
     assertTrue(f.queryRoot().equals(f));
     assertFalse(f.isFirstOrder());
     assertTrue(f.isPattern());
     assertTrue(f.renameAndRefreshBinders(new TreeMap<Variable,Variable>()) == f);
-    assertTrue(f.freeReplaceables().size() == 0);
-    assertTrue(f.boundVars().size() == 0);
+    assertTrue(f.queryFreeReplaceables().size() == 0);
+    assertTrue(f.queryBoundVars().size() == 0);
     assertTrue(f.queryTypeVars().size() == 1);
     assertTrue(f.hasSubterm(f));
-    Term aa = new Constant("g", a);
+    Term aa = new Constant("g", type("a"));
     assertTrue(aa.isFirstOrder());
     assertTrue(aa.isPattern());
     String s = null;
+    assertFalse(f.equals(x));
     assertFalse(f.equals(s));
     assertFalse(f.hasSubterm(aa));
   }
 
   @Test
   public void testTermPositions() {
-    Type a = baseType("a");
-    Type b = baseType("b");
-    Type c = baseType("c3");
-    Type combi = arrowType(a, arrowType(b, c));
-    Term f = new Constant("ff", combi);
-    Variable x = new Var("ff", combi);
+    Type abc = type("a -> b -> c");
+    Term f = new Constant("ff", abc);
+    Variable x = new Var("ff", abc);
 
-    assertTrue(f.querySubterms().size() == 1);
-    assertTrue(f.querySubterms().get(0).fst() == f);
-    assertTrue(f.querySubterms().get(0).snd().isEmpty());
-    assertTrue(f.queryPositions(true).size() == 1);
-    assertTrue(f.queryPositions(false).size() == 1);
+    var subs = f.listSubterms();
+    assertTrue(subs.size() == 1);
+    assertTrue(subs.getFirst().fst() == f);
+    assertTrue(subs.getFirst().snd().isEmpty());
+    assertTrue(f.listPositions(true).size() == 1);
+    assertTrue(f.listPositions(false).size() == 1);
 
     assertTrue(f.querySubterm(Position.empty).equals(f));
     assertTrue(f.replaceSubterm(Position.empty, x).equals(x));
@@ -204,16 +184,16 @@ public class ConstantTest extends TermTestFoundation {
 
   @Test
   public void testTermEquality() {
-    Type a = baseType("a");
-    Type b = baseType("b");
-    Type combi = arrowType(a, b);
-    Constant f = new Constant("f", combi);
-    Constant g = new Constant("f", combi);
-    Constant h = new Constant("h", combi);
+    Type ab = type("a -> b");
+    Constant f = new Constant("f", ab);
+    Constant g = new Constant("f", ab);
+    Constant h = new Constant("h", ab);
+    Constant i = new Constant("i", type("a -> c"));
 
     assertTrue(f.equals((Term)f));
     assertTrue(f.equals((Term)g));
     assertFalse(f.equals((Term)h));
+    assertFalse(f.equals((Term)i));
 
     TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
     TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
@@ -221,11 +201,11 @@ public class ConstantTest extends TermTestFoundation {
     assertFalse(f.alphaEquals(h, mu, xi, 1));
 
     ArrayList<Term> args = new ArrayList<Term>();
-    args.add(new Constant("aa", a));
+    args.add(new Constant("aa", type("a")));
     Term fa = new Application(f, args);
 
     assertFalse(f.equals(fa));
-    assertTrue(fa.equals(g.apply(new Constant("aa", a))));
+    assertTrue(fa.equals(g.apply(new Constant("aa", type("a")))));
   }
 
   @Test
@@ -238,9 +218,8 @@ public class ConstantTest extends TermTestFoundation {
     // LinkedHashMap rely on this contract). This contract that method
     // hashCode() must be consistent with equals(Object) is inherited by all
     // Java classes.
-    Type b = TypeFactory.createSort("b");
-    FunctionSymbol a1 = TermFactory.createConstant("a", b);
-    FunctionSymbol a2 = TermFactory.createConstant("a", b);
+    FunctionSymbol a1 = TermFactory.createConstant("a", type("b"));
+    FunctionSymbol a2 = TermFactory.createConstant("a", type("b"));
     assertEquals(a1, a2);
     assertEquals(a1.hashCode(), a2.hashCode());
   }
@@ -279,7 +258,7 @@ public class ConstantTest extends TermTestFoundation {
     TVar beta = TypeFactory.createVariable("beta");
     TVar eta = TypeFactory.createVariable("eta");
     Type it = TypeFactory.intSort;
-    Type itb = TypeFactory.createArrow(baseType("Bool"), it);
+    Type itb = TypeFactory.createArrow(TypeFactory.boolSort, it);
     Type ab = TypeFactory.createArrow(alpha, beta);
     Type result = TypeFactory.createArrow(it, itb);
     FunctionSymbol f1 = TermFactory.createConstant("f", ab);

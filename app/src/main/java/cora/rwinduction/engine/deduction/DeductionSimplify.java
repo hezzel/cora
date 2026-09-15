@@ -17,7 +17,6 @@ package cora.rwinduction.engine.deduction;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.TreeSet;
 import java.util.function.Function;
 import charlie.util.Pair;
 import charlie.terms.replaceable.Renaming;
@@ -28,7 +27,6 @@ import charlie.substitution.Substitution;
 import charlie.trs.Rule;
 import charlie.printer.Printer;
 import charlie.printer.PrinterFactory;
-import charlie.theorytranslation.TermSmtTranslator;
 import cora.config.Settings;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
@@ -91,7 +89,7 @@ public final class DeductionSimplify extends DeductionStep {
 
   /** Returns true if all variables in the constraint are substituted by subst. */
   private static boolean constraintFullySubstituted(Term constraint, Substitution subst) {
-    for (Variable x : constraint.vars()) {
+    for (Variable x : constraint.queryFreeVariables()) {
       if (subst.get(x) == null) return false;
     }
     return true;

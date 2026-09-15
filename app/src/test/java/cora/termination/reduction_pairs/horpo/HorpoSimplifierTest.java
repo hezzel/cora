@@ -16,18 +16,15 @@
 package cora.termination.reduction_pairs.horpo;
 
 import java.math.BigInteger;
-import org.junit.jupiter.api.Assertions;
+
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.ArrayList;
-import java.util.Set;
+
 import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.types.Type;
-import charlie.terms.position.Position;
 import charlie.terms.*;
 import charlie.smt.*;
-import charlie.trs.Rule;
 import charlie.trs.TRS;
 import charlie.trs.TrsFactory;
 import charlie.reader.CoraInputReader;
@@ -71,7 +68,7 @@ public class HorpoSimplifierTest {
     Variable y = term.queryArgument(3).queryVariable();
     TreeSet<Variable> tvar = new TreeSet<Variable>();
     tvar.add(y);
-    for (Variable x : constraint.vars()) tvar.add(x);
+    for (Variable x : constraint.queryFreeVariables()) tvar.add(x);
     lst.store(left, relation, right, constraint, tvar);
     smt.clear();
     simplifier.simplify(lst.get(0));
@@ -110,7 +107,7 @@ public class HorpoSimplifierTest {
     Term right = trs.queryRule(0).queryRightSide().queryArgument(1);
     Term constraint = trs.queryRule(0).queryConstraint();
     TreeSet<Variable> tvar = new TreeSet<Variable>();
-    for (Variable x : constraint.vars()) tvar.add(x);
+    for (Variable x : constraint.queryFreeVariables()) tvar.add(x);
     lst.store(left, relation, right, constraint, tvar);
     smt.clear();
     simplifier.simplify(lst.get(0));

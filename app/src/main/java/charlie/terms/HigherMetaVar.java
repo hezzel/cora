@@ -15,7 +15,6 @@
 
 package charlie.terms;
 
-import java.util.ArrayList;
 import charlie.util.FixedList;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
@@ -44,7 +43,7 @@ final class HigherMetaVar implements MetaVariable {
     if (name == null) throw new NullStorageException("HigherMetaVar", "name");
     if (inputs == null) throw new NullStorageException("HigherMetaVar", "inputs");
     if (output == null) throw new NullStorageException("HigherMetaVar", "output");
-    if (inputs.size() == 0) {
+    if (inputs.isEmpty()) {
       throw new IllegalArgumentException("HigherMetaVar::constructor -- empty inputs list " +
         "given: a meta-variable without arguments should be constructed as a Var instead.");
     }
@@ -55,22 +54,27 @@ final class HigherMetaVar implements MetaVariable {
     _typeVars = TVarSet.of(_mytype);
   }
 
+  @Override
   public String queryName() {
     return _name;
   }
 
+  @Override
   public int queryIndex() {
     return _index;
   }
 
+  @Override
   public int queryArity() {
     return _inputs.size();
   }
 
+  @Override
   public Kind queryReplaceableKind() {
     return Replaceable.Kind.METAVAR;
   }
 
+  @Override
   public Type queryInputType(int i) {
     if (i <= 0 || i > _inputs.size()) {
       throw new IndexOutOfBoundsException("HigherMetaVar::queryInputType(" + i + ") called on " +
@@ -79,34 +83,27 @@ final class HigherMetaVar implements MetaVariable {
     return _inputs.get(i-1);
   }
 
+  @Override
   public Type queryOutputType() {
     return _output;
   }
 
+  @Override
   public Type queryType() {
     return _mytype;
   }
 
+  @Override
   public TVarSet queryTypeVars() {
     return _typeVars;
   }
 
+  @Override
   public boolean isMonomorphic() {
     return _typeVars.isEmpty();
   }
 
-  public Term makeTerm() {
-    ArrayList<Term> args = new ArrayList<Term>();
-    for (int i = 0; i < _inputs.size(); i++) {
-      args.add(new Binder("b" + (i+1), _inputs.get(i)));
-    }
-    Term ret = new MetaApplication(this, args);
-    for (int i = args.size()-1; i >= 0; i--) {
-      ret = new Abstraction(args.get(i).queryVariable(), ret);
-    }
-    return ret;
-  }
-
+  @Override
   public int compareTo(Replaceable other) {
     if (other == this) return 0;    // shortcut
     int d = other.queryReplaceableKind().compareTo(queryReplaceableKind());
@@ -116,19 +113,22 @@ final class HigherMetaVar implements MetaVariable {
     d = _inputs.size() - other.queryArity();
     if (d != 0) return d;
     // we really shouldn't get here, but just in case...
-    return _mytype.toString().compareTo(other.queryType().toString());
+    return _mytype.compareTo(other.queryType());
   }
 
   /** Two replaceables are equal if and only if they are the same object. */
+  @Override
   public boolean equals(Replaceable other) {
     return other == this;
   }
 
   /** Returns a hashcode that (uniquely) identifies this meta-variable */
+  @Override
   public int hashCode() {
     return 3 * _index + 2;
   }
 
+  @Override
   public String toString() {
     return _name;
   }

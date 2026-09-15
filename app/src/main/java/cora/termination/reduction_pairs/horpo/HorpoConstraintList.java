@@ -15,17 +15,14 @@
 
 package cora.termination.reduction_pairs.horpo;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
-import charlie.types.*;
+
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.smt.*;
-import charlie.theorytranslation.TermSmtTranslator;
-import cora.config.Settings;
 
 /**
  * The HorpoConstraintList keeps track of a number of requirements, each indexed by a unique
@@ -81,7 +78,7 @@ class HorpoConstraintList {
    */
   BVar store(Term left, HRelation relation, Term right, Term constraint) {
     TreeSet<Variable> constraintvars = new TreeSet<Variable>();
-    for (Variable x : constraint.vars()) constraintvars.add(x);
+    for (Variable x : constraint.queryFreeVariables()) constraintvars.add(x);
     return store(left, relation, right, constraint, constraintvars);
   }
 
@@ -98,7 +95,7 @@ class HorpoConstraintList {
     // let myvars be the restriction of tvar to those variables that occur in left or right
     TreeSet<Variable> myvars = new TreeSet<Variable>();
     for (Variable x : tvar) {
-      if (left.vars().contains(x) || right.vars().contains(x)) myvars.add(x);
+      if (left.queryFreeVariables().contains(x) || right.queryFreeVariables().contains(x)) myvars.add(x);
     }
     // find the defining variable, or create a new one (in which case the constraint is stored)
     String representation = reqToString(left, relation, right, constraint, myvars);

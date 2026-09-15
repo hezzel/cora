@@ -53,7 +53,7 @@ public class Reducer {
       _components.add(new RuleReducer(rule));
       if (!rule.queryLeftSide().isFunctionalTerm()) { _arity = null; break; }
       FunctionSymbol f = rule.queryLeftSide().queryRoot();
-      int k = rule.queryLeftSide().numberArguments();
+      int k = rule.queryLeftSide().queryNumberArguments();
       if (!_arity.containsKey(f) || _arity.get(f) > k) _arity.put(f, k);
     }
   }
@@ -75,7 +75,7 @@ public class Reducer {
 
   /** This returns true if FV(t) contains a binder variable. */
   private boolean hasBinder(Term t) {
-    for (Variable x : t.vars()) {
+    for (Variable x : t.queryFreeVariables()) {
       if (x.isBinderVariable()) return true;
     }
     return false;
@@ -94,12 +94,12 @@ public class Reducer {
     if (_arity == null) return true;    // call-by-value is not well-defined in this TRS!
 
     LinkedList<Term> parts = new LinkedList<Term>();
-    for (int i = 1; i <= t.numberArguments(); i++) parts.add(t.queryArgument(i));
+    for (int i = 1; i <= t.queryNumberArguments(); i++) parts.add(t.queryArgument(i));
 
     while (!parts.isEmpty()) {
       Term sub = parts.pop();
       if (sub.isVariable() || Theory.isValue(sub)) continue;
-      for (int i = 1; i <= sub.numberArguments(); i++) parts.add(sub.queryArgument(i));
+      for (int i = 1; i <= sub.queryNumberArguments(); i++) parts.add(sub.queryArgument(i));
       if (sub.isAbstraction() || hasBinder(sub)) continue;
       if (!sub.isFunctionalTerm()) return false;
       FunctionSymbol root = sub.queryRoot();
@@ -107,7 +107,7 @@ public class Reducer {
         if (!root.queryType().isArrowType()) return false;
       }
       else if (_arity.containsKey(root)) {
-        if (sub.numberArguments() >= _arity.get(root)) return false;
+        if (sub.queryNumberArguments() >= _arity.get(root)) return false;
       }
     }
     return true;
@@ -122,7 +122,7 @@ public class Reducer {
     // shuffle the list of all rules and rule schemes to get some randomness
     Collections.shuffle(_components);
     // handle the strategy by deciding on the (order of the) list of positions
-    List<Pair<Term,Position>> subterms = s.querySubterms();
+    List<Pair<Term,Position>> subterms = s.listSubterms();
     switch (Settings.queryRewritingStrategy()) {
       case Settings.Strategy.Full:
         // for full rewriting, any redex is valid, so we just consider a random order

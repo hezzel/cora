@@ -25,6 +25,7 @@ import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.TermFactory;
+import charlie.theory.Theory;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.DeductionStep;
 import cora.rwinduction.engine.VariableNamer;
@@ -291,8 +292,8 @@ public class CommandAlter extends DeductionCommand {
     Term right = _proof.getProofState().getTopEquation().getRhs();
     for (String name : renaming.range()) {
       var x = renaming.getReplaceable(name);
-      if (left.freeReplaceables().contains(x) || right.freeReplaceables().contains(x)) {
-        if (x.queryType().isTheoryType() && x.queryType().isBaseType()) {
+      if (left.queryFreeReplaceables().contains(x) || right.queryFreeReplaceables().contains(x)) {
+        if (Theory.isTheory(x.queryType()) && x.queryType().isBaseType()) {
           ret.add(new TabSuggestion(name, "existing theory variable"));
         }
       }

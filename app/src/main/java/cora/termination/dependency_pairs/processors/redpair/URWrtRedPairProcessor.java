@@ -16,7 +16,6 @@
 package cora.termination.dependency_pairs.processors.redpair;
 
 import charlie.util.Pair;
-import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.terms.*;
 import charlie.theory.Theory;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.Map;
 
 public class URWrtRedPairProcessor implements Processor {
   private ReductionPair _redpair;
@@ -76,9 +74,9 @@ public class URWrtRedPairProcessor implements Processor {
    */
   private Term translateTerm(AlphabetMap amap, TreeMap<Variable,Variable> vmap, Term t,
                              Set<Variable> lvar) {
-    if (t.queryType().isBaseTheoryType() && Theory.isTheory(t) && t.isFirstOrder()) {
+    if (Theory.isBaseTheoryType(t.queryType()) && Theory.isTheory(t) && t.isFirstOrder()) {
       boolean ok = true;
-      for (Variable x : t.vars()) {
+      for (Variable x : t.queryFreeVariables()) {
         if (!lvar.contains(x)) { ok = false; break; }
       }
       if (ok) return t;
@@ -93,9 +91,9 @@ public class URWrtRedPairProcessor implements Processor {
     }
 
     if (t.isFunctionalTerm()) {
-      FunctionSymbol f = amap.getTranslation(t.queryRoot(), t.numberArguments());
-      ArrayList<Term> args = new ArrayList<Term>(t.numberArguments());
-      for (int i = 1; i <= t.numberArguments(); i++) {
+      FunctionSymbol f = amap.getTranslation(t.queryRoot(), t.queryNumberArguments());
+      ArrayList<Term> args = new ArrayList<Term>(t.queryNumberArguments());
+      for (int i = 1; i <= t.queryNumberArguments(); i++) {
         args.add(translateTerm(amap, vmap, t.queryArgument(i), lvar));
       }
       return f.apply(args);
@@ -123,7 +121,7 @@ public class URWrtRedPairProcessor implements Processor {
     Term lhs = rule.queryLeftSide();
     Term rhs = rule.queryRightSide();
     TreeSet<Variable> lvar = new TreeSet<Variable>(rule.queryLVars());
-    for (int k = lhs.numberArguments() + 1; ; k++) {
+    for (int k = lhs.queryNumberArguments() + 1; ; k++) {
       Term l = translateTerm(amap, vmap, lhs, lvar);
       Term r = translateTerm(amap, vmap, rhs, lvar);
       Rule rho = constrained
@@ -243,7 +241,7 @@ public class URWrtRedPairProcessor implements Processor {
     }
     for (Rule rho : dpp.getRuleList()) {
       FunctionSymbol f = rho.queryRoot();
-      int k = rho.queryLeftSide().numberArguments();
+      int k = rho.queryLeftSide().queryNumberArguments();
       Term rhs = rho.queryRightSide();
       for (int n = k; n <= f.queryArity(); n++) {
         FunctionSymbol g = amap.getTranslation(f, n);
@@ -276,9 +274,9 @@ public class URWrtRedPairProcessor implements Processor {
     if (term.isVariable()) return;
     
     // don't add requirements for theory terms that are going to get normalised to a value
-    if (term.queryType().isBaseTheoryType() && Theory.isTheory(term) && term.isFirstOrder()) {
+    if (Theory.isBaseTheoryType(term.queryType()) && Theory.isTheory(term) && term.isFirstOrder()) {
       boolean ok = true;
-      for (Variable x : term.vars()) {
+      for (Variable x : term.queryFreeVariables()) {
         if (!lvar.contains(x)) { ok = false; break; }
       }
       if (ok) return;
@@ -286,7 +284,7 @@ public class URWrtRedPairProcessor implements Processor {
 
     if (term.isFunctionalTerm()) {
       FunctionSymbol f = term.queryRoot();
-      int n = term.numberArguments();
+      int n = term.queryNumberArguments();
       FunctionSymbol g = amap.getTranslation(f, n);
       BVar bvar = conditions.get(g);
       if (bvar != null) {
@@ -294,7 +292,7 @@ public class URWrtRedPairProcessor implements Processor {
         smt.require(SmtFactory.createDisjunction(sofar));
         sofar.remove(sofar.size()-1);
       }
-      int k = term.numberArguments();
+      int k = term.queryNumberArguments();
       for (int i = 1; i <= k; i++) {
         sofar.add(filter.regards(g, i).negate());
         addUsableRequirements(term.queryArgument(i), sofar, filter, conditions, amap, lvar, smt);
@@ -320,7 +318,7 @@ public class URWrtRedPairProcessor implements Processor {
       Term lhs = rule.queryLeftSide(), rhs = rule.queryRightSide();
       if (rhs.queryType().isBaseType() || !rhs.isFunctionalTerm()) continue;
       FunctionSymbol f = lhs.queryRoot(), g = rhs.queryRoot();
-      int k = rule.queryLeftSide().numberArguments(), p = rhs.numberArguments();
+      int k = rule.queryLeftSide().queryNumberArguments(), p = rhs.queryNumberArguments();
       for (int n = k + 1; n <= f.queryArity(); n++) {
         FunctionSymbol fn = amap.getTranslation(f, n);
         for (int i = k + 1; i <= n; i++) {

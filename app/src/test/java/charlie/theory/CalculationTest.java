@@ -17,7 +17,7 @@ package charlie.theory;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.TreeMap;
+
 import java.util.TreeSet;
 import charlie.types.*;
 import charlie.terms.position.*;
@@ -48,9 +48,9 @@ public class CalculationTest {
     assertTrue(Theory.isTheory(p));
     assertTrue(Theory.isTheory((Term)p));
     assertFalse(Theory.isValue(t));
-    assertTrue(a.numberArguments() == 0);
-    assertTrue(o.numberMetaArguments() == 0);
-    assertTrue(p.queryArguments().size() == 0);
+    assertTrue(a.queryNumberArguments() == 0);
+    assertTrue(o.queryNumberMetaArguments() == 0);
+    assertTrue(p.listArguments().size() == 0);
     assertTrue(t.queryHead() == t);
     assertTrue(a.queryRoot() == a);
     assertTrue(Theory.toValue(o) == null);
@@ -58,11 +58,11 @@ public class CalculationTest {
     assertFalse(t.isFirstOrder());
     assertTrue(a.isPattern());
     assertTrue(o.isApplicative());
-    assertTrue(p.queryPositions(false).size() == 1);
-    assertTrue(t.queryPositions(true).size() == 1);
-    assertTrue(a.vars().size() == 0);
-    assertTrue(o.mvars().size() == 0);
-    assertTrue(p.freeReplaceables().size() == 0);
+    assertTrue(p.listPositions(false).size() == 1);
+    assertTrue(t.listPositions(true).size() == 1);
+    assertTrue(a.queryFreeVariables().size() == 0);
+    assertTrue(o.queryMetaVariables().size() == 0);
+    assertTrue(p.queryFreeReplaceables().size() == 0);
   }
 
   @Test

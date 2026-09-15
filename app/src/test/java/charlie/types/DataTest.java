@@ -32,17 +32,15 @@ class DataTest {
     args.add(null);
     FixedList<Type> lst = null;
     assertThrows(NullStorageException.class, () -> new Data("c", lst));
-    assertThrows(charlie.util.NullStorageException.class,
-      () -> TypeFactory.createSort("c", args));
-    assertThrows(charlie.util.NullStorageException.class,
-      () -> new Data("c", FixedList.copy(args)));
-    assertThrows(charlie.util.NullStorageException.class,
+    assertThrows(NullStorageException.class, () -> TypeFactory.createSort("c", args));
+    assertThrows(NullStorageException.class, () -> new Data("c", FixedList.copy(args)));
+    assertThrows(NullStorageException.class,
       () -> TypeFactory.createSort("c", FixedList.copy(args)));
-    assertThrows(charlie.util.NullStorageException.class,
+    assertThrows(NullStorageException.class,
       () -> TypeFactory.createSort("c", null, new Base("z")));
-    assertThrows(charlie.util.NullStorageException.class,
+    assertThrows(NullStorageException.class,
       () -> TypeFactory.createSort(null, new Base("z")));
-    assertThrows(charlie.util.NullStorageException.class,
+    assertThrows(NullStorageException.class,
       () -> TypeFactory.createSort("c", new Base("z"), new Base("q"), null));
   }
 
@@ -68,7 +66,6 @@ class DataTest {
     assertFalse(prod.isSimple());
     assertTrue(prod.isMonomorphic());
     assertFalse(prod2.isMonomorphic());
-    assertFalse(prod.isTheoryType());
     assertTrue(prod.queryArity() == 0);
     assertTrue(prod.queryOutputType() == prod);
     assertTrue(prod.queryNumberSubtypes() == 2);
@@ -86,12 +83,6 @@ class DataTest {
     assertFalse(b.isZeroSort());
     Type c = TypeFactory.createSort("a", TypeFactory.createArrow(new Base("a"), new Base("b")));
     assertFalse(c.isZeroSort());
-  }
-
-  @Test
-  public void testTheory() {
-    Type prod = TypeFactory.createSort("c", TypeFactory.intSort);
-    assertFalse(prod.isTheoryType());
   }
 
   @Test

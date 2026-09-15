@@ -49,7 +49,7 @@ public final class DeductionAlterConstraint extends DeductionStep {
     ProofState state = proof.getProofState();
     EquationContext original = state.getTopEquation();
     Renaming renaming = original.getRenaming();
-    for (Replaceable x : newConstraint.freeReplaceables()) {
+    for (Replaceable x : newConstraint.queryFreeReplaceables()) {
       if (renaming.getName(x) == null) {
         module.ifPresent(o -> o.println("Fresh occurrence of " + x.queryName() + " is not " +
           "allowed in this application of the ALTER command (use alter ADD to add new variables " +

@@ -20,16 +20,17 @@ import charlie.types.Type;
 import charlie.types.TVarSet;
 
 /**
- * A Replaceable is an object with an index, arity and type.  In particular, this is an object that
- * can be substituted, as well as renamed.
+ * <p>A Replaceable is an object with an index, arity and type.  In particular, this is an object
+ * that can be substituted, as well as renamed.</p>
  *
- * Although Replaceable is not *explicitly* sealed, this is only done to avoid a massive circular
- * dependency.  In practice, we do require that the only instances of Replaceable are instances of
- * either Variable or MetaVariable.  These two interfaces are defined in the cora.terms package.
- * Creating any other instance will cause problems, in particular with TermFactory::makeTerm.
+ * <p>Although Replaceable is not <b>explicitly</b> sealed, this is only done to avoid a large
+ * circular dependency.  In practice, we do require that the only instances of Replaceable are
+ * instances of either Variable or MetaVariable.  These two interfaces are defined in the
+ * cora.terms package.  Creating any other instance will cause problems, in particular with
+ * TermFactory::makeTerm.</p>
  */
 public interface Replaceable extends Comparable<Replaceable> {
-  public enum Kind { BINDER, BASEVAR, METAVAR }
+  enum Kind { BINDER, BASEVAR, METAVAR }
 
   /**
    * @return the kind of Replaceable this is (one of KIND_BINDER, KIND_BASEVAR or KIND_METAVAR)
@@ -63,12 +64,11 @@ public interface Replaceable extends Comparable<Replaceable> {
   boolean equals(Replaceable x);
 
   /**
-   * A replaceable object is uniquely defined by the combination of its kind, type, and ID.
+   * A replaceable object is uniquely defined by the combination of its kind, type, and index.
    * This is mostly intended for internal use, to support a total ordering on replaceables.
    */
   int queryIndex();
 
-  /** @return a cached set of type variables occurring in queryType() */
+  /** @return a cached set of all the type variables that occur in queryType() */
   TVarSet queryTypeVars();
 }
-

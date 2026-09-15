@@ -51,7 +51,7 @@ public final class DeductionAlterGeneraliseConstraint extends DeductionStep {
   private static boolean checkNoFreshVariables(EquationContext original, Term newConstraint,
                                                String cmd, Optional<OutputModule> module) {
     Renaming renaming = original.getRenaming();
-    for (Replaceable x : newConstraint.freeReplaceables()) {
+    for (Replaceable x : newConstraint.queryFreeReplaceables()) {
       if (renaming.getName(x) == null) {
         module.ifPresent(o -> o.println("Fresh occurrence of " + x.queryName() + " is not " +
           "allowed in this application of the " + cmd + " command (use ALTER ADD to add new " +

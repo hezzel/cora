@@ -58,7 +58,7 @@ public class CriticalPeaksFinder {
                                           Rule source, Rule target) {
     // Find subst so that (f l1 ... lk) subst = (f t1 ... tk) subst
     var taLhs = target.queryLeftSide();
-    var subst = Unifier.mgu(taLhs, subterm.queryImmediateHeadSubterm(taLhs.numberArguments()));
+    var subst = Unifier.mgu(taLhs, subterm.queryImmediateHeadSubterm(taLhs.queryNumberArguments()));
     if (subst == null) return;
 
     // We require that all constraint-variables of both source and target are instantiated by
@@ -82,7 +82,7 @@ public class CriticalPeaksFinder {
 
     // all requirements are satisfied; compute the critical pair
     var lhs = source.queryLeftSide().replaceSubterm(
-      position.append(new FinalPos(subterm.numberArguments() - taLhs.numberArguments())),
+      position.append(new FinalPos(subterm.queryNumberArguments() - taLhs.queryNumberArguments())),
       target.queryRightSide().substitute(subst));
     var rhs = source.queryRightSide().substitute(subst);
     if (_nontrivial && lhs.equals(rhs)) return;
@@ -103,13 +103,13 @@ public class CriticalPeaksFinder {
   private void generateCriticalPairsForSubterm(Term subterm, Position pos, TRS trs, Rule rule) {
     if (!subterm.isFunctionalTerm()) return;
     FunctionSymbol root = subterm.queryRoot();
-    int nargs = subterm.numberArguments();
+    int nargs = subterm.queryNumberArguments();
 
     /* Here only nonempty positions are considered for defined symbols;
      * empty ones are handled separately. */
     if (!pos.isEmpty()) {
       trs.queryRulesForSymbol(root, false).forEach(target -> {
-        if (nargs >= target.queryLeftSide().numberArguments()) {
+        if (nargs >= target.queryLeftSide().queryNumberArguments()) {
           generateCpForDefinedSymbol(subterm, pos, rule, target);
         }
       });
@@ -117,7 +117,7 @@ public class CriticalPeaksFinder {
 
     /* For calculation symbols, a critical pair is generated more "lightly". */
     if (Theory.isTheory(root) && nargs > 0 && subterm.queryType().isBaseType() &&
-        subterm.queryArguments().stream().allMatch(t -> Theory.isValue(t) || t.isVariable())) {
+        subterm.listArguments().stream().allMatch(t -> Theory.isValue(t) || t.isVariable())) {
       /* The name _z is arbitrary and included for testing. */
       var z = TermFactory.createVar("_z", subterm.queryType());
       _cps.add(new CriticalPeak(
@@ -147,7 +147,7 @@ public class CriticalPeaksFinder {
   private void generateCriticalPairsForRootOverlap(Rule rule1, Rule rule2) {
     /* Note that it is vital to check which rule's lhs has more arguments than the other's
      * before calling generateCpForDefinedSymbol, due to possible partial application. */
-    if (rule1.queryLeftSide().numberArguments() >= rule2.queryLeftSide().numberArguments()) {
+    if (rule1.queryLeftSide().queryNumberArguments() >= rule2.queryLeftSide().queryNumberArguments()) {
       generateCpForDefinedSymbol(rule1.queryLeftSide(), new FinalPos(0), rule1, rule2);
     }
     else {

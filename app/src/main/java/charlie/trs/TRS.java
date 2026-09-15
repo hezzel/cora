@@ -421,7 +421,7 @@ public class TRS {
     else if (isApplicative()) {
       if (!term.isApplicative()) return false;
     }
-    for (var pair : term.querySubterms()) {
+    for (var pair : term.listSubterms()) {
       Term sub = pair.fst();
       // if theories are not included, no theory symbols may occur
       if (!_theoriesIncluded && sub.isFunctionalTerm() && Theory.isTheory(sub.queryRoot())) {
@@ -521,8 +521,8 @@ public class TRS {
     if (Theory.isTheory(f)) { ret = f.queryArity(); first = false; }
     if (!_functionRules.containsKey(f)) return ret;
     for (Rule rule : _functionRules.get(f)) {
-      if (first) { ret = rule.queryLeftSide().numberArguments(); first = false; }
-      else if (ret != rule.queryLeftSide().numberArguments()) return -1;
+      if (first) { ret = rule.queryLeftSide().queryNumberArguments(); first = false; }
+      else if (ret != rule.queryLeftSide().queryNumberArguments()) return -1;
     }
     return ret;
   }

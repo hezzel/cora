@@ -15,8 +15,6 @@
 
 package cora.termination.reduction_pairs.horpo;
 
-import java.math.BigInteger;
-import charlie.util.Pair;
 import charlie.types.*;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.*;
@@ -30,8 +28,6 @@ import cora.termination.reduction_pairs.horpo.HorpoConstraintList.HorpoRequireme
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
@@ -254,8 +250,8 @@ class HorpoSimplifier {
   /** Returns whether s is a base-type theory term with all its variables in theoryVariables */
   private boolean isTheory(Term s, TreeSet<Variable> theoryVariables) {
     if (!Theory.isTheory(s) || !s.queryType().isBaseType() ||
-        !s.queryType().isTheoryType()) return false;
-    for (Replaceable x : s.freeReplaceables()) {
+        !Theory.isTheory(s.queryType())) return false;
+    for (Replaceable x : s.queryFreeReplaceables()) {
       if (!theoryVariables.contains(x)) return false;
     }
     return true;
@@ -364,9 +360,9 @@ class HorpoSimplifier {
   private void handleVar(HorpoRequirement req) {
     Term left = req.left();
     Term right = req.right();
-    int n = left.numberArguments();
+    int n = left.queryNumberArguments();
 
-    if (!left.isVarTerm() || n != right.numberArguments() ||
+    if (!left.isVarTerm() || n != right.queryNumberArguments() ||
         !left.queryHead().equals(right.queryHead())) {
       _smt.require(req.variable().negate());
       return;
@@ -404,15 +400,15 @@ class HorpoSimplifier {
     Term right = req.right();
     if (!left.isFunctionalTerm() || !right.isFunctionalTerm() ||
         isTheory(right, req.theoryVariables()) ||
-        (left.numberArguments() == 0 && req.relation() == HRelation.GREATERFUN)) {
+        (left.queryNumberArguments() == 0 && req.relation() == HRelation.GREATERFUN)) {
       _smt.require(req.variable().negate());
       return;
     }
 
     FunctionSymbol f = left.queryRoot();
     FunctionSymbol g = right.queryRoot();
-    int k = left.numberArguments();
-    int n = right.numberArguments();
+    int k = left.queryNumberArguments();
+    int n = right.queryNumberArguments();
     _counter++;  // update the fresh variable counter, since some fresh variables are going to
                  // be created (e.g., for χ), and we want to give them a new name
     requireOr(req.variable().negate(), SmtFactory.createEqual(_parameters.getPrecedence(f),
@@ -624,7 +620,7 @@ class HorpoSimplifier {
         FunctionSymbol f = req.left().queryRoot();
         // all additional parameters should be regarded
         int m = f.queryArity();
-        for (int i = req.left().numberArguments() + 1; i <= m; i++) {
+        for (int i = req.left().queryNumberArguments() + 1; i <= m; i++) {
           _smt.requireImplication(req.variable(), _filter.regards(f, i));
         }
       }
@@ -642,10 +638,10 @@ class HorpoSimplifier {
   private void handleSelect(HorpoRequirement req) {
     Term l = req.left();
     FunctionSymbol f = l.queryRoot();
-    int k = l.numberArguments();
+    int k = l.queryNumberArguments();
 
     Term r = req.right();
-    int n = r.numberArguments();
+    int n = r.queryNumberArguments();
     int rest = r.queryType().queryArity();
     int m = n + rest; // total arity of h
 
@@ -690,7 +686,7 @@ class HorpoSimplifier {
     Term l = req.left();
     Term r = req.right();
     FunctionSymbol g = r.queryRoot();
-    for (int i = 1; i <= r.numberArguments(); i++) {
+    for (int i = 1; i <= r.queryNumberArguments(); i++) {
       BVar subreq = _hcl.store(l, HRelation.RPO, r.queryArgument(i), req.constraint(),
                                req.theoryVariables());
       BVar regards = _filter.regards(g, i);
@@ -728,7 +724,7 @@ class HorpoSimplifier {
     Term r = req.right();
     boolean isgood = Theory.isTheory(r);
     if (isgood) {
-      for (Variable x : r.vars()) {
+      for (Variable x : r.queryFreeVariables()) {
         if (!req.theoryVariables().contains(x)) { isgood = false; break; }
       }
     }
@@ -754,14 +750,14 @@ class HorpoSimplifier {
   private void handleExt(HorpoRequirement req) {
     Term l = req.left();
     Term r = req.right();
-    int k = l.numberArguments();
+    int k = l.queryNumberArguments();
     if (!r.isFunctionalTerm() || isTheory(r, req.theoryVariables()) || k == 0) {
       _smt.require(req.variable().negate());
       return;
     }
     FunctionSymbol f = l.queryRoot();
     FunctionSymbol g = r.queryRoot();
-    int n = r.numberArguments();
+    int n = r.queryNumberArguments();
     int m = g.queryArity();
     _counter++;
 

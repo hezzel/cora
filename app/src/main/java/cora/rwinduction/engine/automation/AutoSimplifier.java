@@ -23,7 +23,6 @@ import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;
 import charlie.substitution.Substitution;
 import charlie.theory.Theory;
-import charlie.trs.Rule;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
 import cora.rwinduction.engine.deduction.DeductionSimplify;
@@ -38,12 +37,12 @@ public final class AutoSimplifier {
    */
   public static DeductionSimplify createSingleStep(PartialProof proof, OutputModule module) {
     EquationContext ec = proof.getProofState().getTopEquation();
-    for (Pair<Term,Position> pair : ec.getLhs().querySubterms()) {
+    for (Pair<Term,Position> pair : ec.getLhs().listSubterms()) {
       DeductionSimplify step =
         createSingleStepAtPosition(proof, EquationPosition.Side.Left, pair.snd(), pair.fst());
       if (step != null) return step;
     }
-    for (Pair<Term,Position> pair : ec.getRhs().querySubterms()) {
+    for (Pair<Term,Position> pair : ec.getRhs().listSubterms()) {
       DeductionSimplify step =
         createSingleStepAtPosition(proof, EquationPosition.Side.Right, pair.snd(), pair.fst());
       if (step != null) return step;
@@ -64,7 +63,7 @@ public final class AutoSimplifier {
     Function<Integer,EquationPosition> positionMaker = i ->
       i > 0 ? new EquationPosition(side, pos.append(new FinalPos(i)))
             : new EquationPosition(side, pos);
-    return findHeadSimplification(proof, sub.queryRoot(), sub.numberArguments(), positionMaker);
+    return findHeadSimplification(proof, sub.queryRoot(), sub.queryNumberArguments(), positionMaker);
   }
 
   /**
@@ -117,8 +116,8 @@ public final class AutoSimplifier {
     while (true) {
       // first simplify the arguments and replace s accordingly
       int count = steps.size();
-      ArrayList<Term> args = new ArrayList<Term>(s.numberArguments());
-      for (int i = 1; i <= s.numberArguments(); i++) {
+      ArrayList<Term> args = new ArrayList<Term>(s.queryNumberArguments());
+      for (int i = 1; i <= s.queryNumberArguments(); i++) {
         pos.add(i);
         args.add(simplifyFully(proof, s.queryArgument(i), side, pos, steps));
         pos.removeLast();
@@ -131,7 +130,7 @@ public final class AutoSimplifier {
       if (Theory.isCalculationSymbol(s.queryRoot()) && s.queryType().isBaseType()) {
         step = findCalculation(proof, side, pos, args);
       }
-      else step = findHeadSimplification(proof, s.queryRoot(), s.numberArguments(),
+      else step = findHeadSimplification(proof, s.queryRoot(), s.queryNumberArguments(),
                                         i -> makePos(side, pos, i));
       if (step == null || !step.execute(proof, Optional.empty())) return s.queryHead().apply(args);
       steps.add(step);

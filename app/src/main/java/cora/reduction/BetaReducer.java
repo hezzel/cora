@@ -28,7 +28,7 @@ class BetaReducer implements ReduceObject {
 
   public Term apply(Term t) {
     Term head = t.queryHead();
-    List<Term> args = t.queryArguments();
+    List<Term> args = t.listArguments();
     if (!head.isAbstraction() || args.size() < 1) return null;
     Term a = head.queryAbstractionSubterm();
     Variable x = head.queryVariable();

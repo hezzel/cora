@@ -49,7 +49,6 @@ class ArrowTest {
     assertFalse(t.isSort());
     assertTrue(t.isSimple());
     assertTrue(t.isMonomorphic());
-    assertFalse(t.isTheoryType());
     assertTrue(t.queryNumberSubtypes() == 2); 
     Type t2 = new Arrow(boolType(), t); 
     assertTrue(t2.querySubtype(1).equals(boolType()));
@@ -95,15 +94,6 @@ class ArrowTest {
     assertTrue(at1.toString().equals("Bool → Int"));
     assertTrue(at2.toString().equals("(Bool → Int) → Array"));
     assertTrue(at3.toString().equals("(Bool → Int) → Bool → Int"));
-  }
-
-  @Test
-  public void testTheory() {
-    Arrow abc =
-      new Arrow(new Arrow(new Base("a"), new Base("b")), new Base("c"));
-    assertFalse(abc.isTheoryType());
-    Arrow ib = new Arrow(UniqueTypes.boolSort, UniqueTypes.intSort);
-    assertTrue(ib.isTheoryType());
   }
 
   @Test

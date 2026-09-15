@@ -148,7 +148,7 @@ public class OCocoSortedInputReaderTest {
                  ")";
     TRS trs = OCocoUnsortedInputReader.readTrsFromString(str);
     Term t = OCocoSortedInputReader.readTerm("append(cons(x, nil), lst)", trs);
-    assertTrue(t.vars().size() == 2);
+    assertTrue(t.queryFreeVariables().size() == 2);
   }
 
   @Test
@@ -174,7 +174,7 @@ public class OCocoSortedInputReaderTest {
     TRS trs = OCocoSortedInputReader.readTrsFromString(str);
     assertTrue(trs.queryRuleCount() == 1);
     assertTrue(trs.queryRule(0).toString().equals("+(x, s(y)) → s(+(y, x))"));
-    assertTrue(trs.queryRule(0).queryRightSide().vars().size() == 2);
+    assertTrue(trs.queryRule(0).queryRightSide().queryFreeVariables().size() == 2);
   }
 
   @Test

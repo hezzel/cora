@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2025 Cynthia Kop
+ Copyright 2019--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -23,89 +23,111 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import charlie.util.Pair;
-import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.types.TVarSet;
+import charlie.parser.CoraParser;
 import charlie.terms.position.*;
 import charlie.terms.replaceable.ReplaceableSet;
 
-public class ApplicationTest extends TermTestFoundation {
+public class ApplicationTest {
+  private Type type(String desc) { return CoraParser.readType(desc); }
+
+  protected Term unaryTerm(String name, Type output, Term arg) {
+    Type arrtype = TypeFactory.createArrow(arg.queryType(), output);
+    FunctionSymbol f = new Constant(name, arrtype);
+    return new Application(f, arg);
+  }
+
+  protected Term twoArgVarTerm() {
+    Variable x = TermFactory.createVar("x", type("a -> b -> a"));
+    Term arg1 = new Constant("c", type("a"));
+    Term arg2 = unaryTerm("g", type("b"), TermFactory.createVar("y", type("b")));
+    return new Application(x, arg1, arg2);
+  }
+
+  protected Term twoArgFuncTerm() {
+    FunctionSymbol f = new Constant("f", type("a -> b -> a"));
+    Term arg1 = new Constant("c", type("a"));
+    Term arg2 = unaryTerm("g", type("b"), new Constant("d", type("b")));
+    return new Application(f, arg1, arg2);
+  }
+
   @Test
   public void testUnaryWithNullArg() {
-    Variable head = new Binder("x", arrowType("a", "b"));
+    Variable head = new Binder("x", type("a -> b"));
     Term arg = null;
-    assertThrows(NullStorageException.class, () ->new Application(head, arg));
+    assertThrows(NullPointerException.class, () ->new Application(head, arg));
   }
 
   @Test
   public void testBinaryWithNullHead() {
-    assertThrows(NullStorageException.class, () ->
-      new Application(null, constantTerm("a", baseType("b")),
-                            constantTerm("a", baseType("c"))));
+    assertThrows(NullPointerException.class, () ->
+      new Application(null, new Constant("a", type("b")),
+                            new Constant("a", type("c"))));
   }
 
   @Test
   public void testNullArgs() {
-    Constant f = new Constant("f", arrowType("a", "b"));
+    Constant f = new Constant("f", type("a -> b"));
     List<Term> args = null;
-    assertThrows(NullStorageException.class, () -> new Application(f, args));
+    assertThrows(NullPointerException.class, () -> new Application(f, args));
   }
 
   @Test
   public void testTooManyArgs() {
-    Type type = arrowType(baseType("a"), arrowType("b", "a"));
+    Type type = type("a -> b -> a");
     Variable x = new Binder("x", type);
     List<Term> args = new ArrayList<Term>();
-    args.add(constantTerm("c", baseType("a")));
-    args.add(constantTerm("d", baseType("b")));
-    args.add(constantTerm("e", baseType("a")));
+    args.add(new Constant("c", type("a")));
+    args.add(new Constant("d", type("b")));
+    args.add(new Constant("e", type("a")));
     assertThrows(TypingException.class, () -> new Application(x, args));
   }
 
   @Test
   public void testTooManyArgsToApplication() {
-    Type type = arrowType(baseType("a"), arrowType("b", "a"));
+    Type type = type("a -> b -> a");
     Variable x = new Binder("x", type);
-    Term head = x.apply(constantTerm("c", baseType("a")));
+    Term head = x.apply(new Constant("c", type("a")));
     List<Term> args = new ArrayList<Term>();
-    args.add(constantTerm("d", baseType("b")));
-    args.add(constantTerm("e", baseType("a")));
+    args.add(new Constant("d", type("b")));
+    args.add(new Constant("e", type("a")));
     assertThrows(TypingException.class, () -> new Application(head, args));
   }
 
   @Test
-  public void testConstructorBadArgType() {
-    Type type = arrowType(baseType("a"), arrowType("b", "a"));
-    Term head = constantTerm("f", type);
+  public void testConstructorBadArgTypeToListApplication() {
+    Type type = type("a -> b -> a");
+    Term head = new Constant("f", type);
     List<Term> args = new ArrayList<Term>();
-    args.add(constantTerm("c", baseType("a")));
-    args.add(constantTerm("d", baseType("a")));
+    args.add(new Constant("c", type("a")));
+    args.add(new Constant("d", type("a")));
     assertThrows(TypingException.class, () -> new Application(head, args));
   }
 
   @Test
-  public void testConstructorBadArgTypeToApplication() {
-    Type type = arrowType(baseType("a"), arrowType("b", "a"));
-    Term head = constantTerm("f", type).apply(constantTerm("c", baseType("a")));
+  public void testConstructorBadArgTypeToSingleApplication() {
+    Type type = type("a -> b -> a");
+    Term head = new Constant("f", type).apply(new Constant("c", type("a")));
     assertThrows(TypingException.class, () ->
-      new Application(head, constantTerm("d", baseType("a"))));
+      new Application(head, new Constant("d", type("a"))));
   }
 
   @Test
   public void testCreateEmptyApplication() {
-    Term head = new Var("x", arrowType(baseType("a"), arrowType("b", "a")));
+    Term head = new Var("x", type("a -> b -> a"));
     List<Term> args = new ArrayList<Term>();
     assertThrows(IllegalArgumentException.class, () -> new Application(head, args));
   }
 
   @Test
   public void testConstructApplicationFromApplicationHead() {
-    Type type = arrowType(baseType("a"), arrowType("b", "a"));
-    Term head = constantTerm("f", type).apply(constantTerm("c", baseType("a")));
-    Term t = new Application(head, constantTerm("d", baseType("b")));
+    Type type = type("a -> b -> a");
+    Term head = new Constant("f", type).apply(new Constant("c", type("a")));
+    Term t = new Application(head, new Constant("d", type("b")));
     assertTrue(t.toString().equals("f(c, d)"));
-    assertTrue(t.queryType().equals(baseType("a")));
+    assertTrue(t.queryType().equals(type("a")));
 
     Term s = TermFactory.createApp(t, new ArrayList<Term>());
     assertTrue(s.equals(t));
@@ -114,7 +136,6 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testFunctionalTermBasics() {
     Term t = twoArgFuncTerm();
-    Type type = arrowType(baseType("a"), arrowType("b", "a"));
     assertTrue(t.isApplication());
     assertTrue(t.isApplicative());
     assertTrue(t.isFunctionalTerm());
@@ -123,10 +144,10 @@ public class ApplicationTest extends TermTestFoundation {
     assertFalse(t.isVarTerm());
     assertTrue(t.isPattern());
     assertTrue(t.isApplication());
-    assertTrue(t.queryRoot().equals(new Constant("f", type)));
+    assertTrue(t.queryRoot().equals(new Constant("f", type("a -> b-> a"))));
     assertTrue(t.queryHead().equals(t.queryRoot()));
     assertTrue(t.queryHead().queryType().toString().equals("a → b → a"));
-    assertTrue(t.queryType().equals(baseType("a")));
+    assertTrue(t.queryType().equals(type("a")));
     assertTrue(t.isClosed());
     assertTrue(t.isGround());
     assertTrue(t.isTrueTerm());
@@ -139,7 +160,6 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testVarTermBasics() {
     Term t = twoArgVarTerm();
-    Type type = arrowType(baseType("a"), arrowType("b", "a"));
     assertTrue(t.isApplication());
     assertTrue(t.isApplicative());
     assertTrue(t.isVarTerm());
@@ -151,7 +171,7 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.queryVariable().toString().equals("x"));
     assertTrue(t.queryHead().equals(t.queryVariable()));
     assertTrue(t.queryHead().queryType().toString().equals("a → b → a"));
-    assertTrue(t.queryType().equals(baseType("a")));
+    assertTrue(t.queryType().equals(type("a")));
     assertTrue(t.toString().equals("x(c, g(y))"));
     assertTrue(t.isClosed());
     assertFalse(t.isGround());
@@ -162,15 +182,14 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testLinearity() {
-    Type oo = arrowType("o", "o");
-    Term f = constantTerm("f", arrowType(baseType("o"), oo));
-    Term g = constantTerm("g", arrowType(oo, arrowType(oo, baseType("o"))));
-    Term h = constantTerm("h", arrowType(baseType("o"), arrowType(baseType("o"), oo)));
-    Variable x = TermFactory.createVar("x", baseType("o"));
-    Variable y = TermFactory.createBinder("y", baseType("o"));
-    Variable z = TermFactory.createBinder("z", baseType("o"));
-    MetaVariable zz = TermFactory.createMetaVar("Z", arrowType("o", "o"), 1);
-    MetaVariable hh = TermFactory.createMetaVar("h", arrowType("o", "o"), 1);
+    Term f = new Constant("f", type("o -> o -> o"));
+    Term g = new Constant("g", type("(o -> o) -> (o -> o) -> o"));
+    Term h = new Constant("h", type("o -> o -> o -> o"));
+    Variable x = TermFactory.createVar("x", type("o"));
+    Variable y = TermFactory.createBinder("y", type("o"));
+    Variable z = TermFactory.createBinder("z", type("o"));
+    MetaVariable zz = TermFactory.createMetaVar("Z", type("o -> o"), 1);
+    MetaVariable hh = TermFactory.createMetaVar("h", type("o -> o"), 1);
     Term zy = TermFactory.createMeta(zz, y);
     Term hy = TermFactory.createMeta(hh, y);
     Term hz = TermFactory.createMeta(hh, z);
@@ -189,8 +208,8 @@ public class ApplicationTest extends TermTestFoundation {
   public void testStoreFunctionSymbols() {
     Term t = twoArgFuncTerm();
     TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
-    set.add(new Constant("c", baseType("a")));
-    set.add(new Constant("f", baseType("b")));
+    set.add(new Constant("c", type("a")));
+    set.add(new Constant("f", type("b")));
     t.storeFunctionSymbols(set);
     assertTrue(set.size() == 5);
     assertTrue(set.toString().equals("[c, d, f, f, g]"));
@@ -198,9 +217,9 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testAbstractionTermBasics() {
-    Variable x = new Binder("x", baseType("o"));
+    Variable x = new Binder("x", type("o"));
     Term abs = new Abstraction(x, x);
-    Term t = new Application(abs, constantTerm("a", baseType("o")));
+    Term t = new Application(abs, new Constant("a", type("o")));
     assertTrue(t.isApplication());
     assertFalse(t.isApplicative());
     assertFalse(t.isVarTerm());
@@ -217,11 +236,10 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testPatternWithAbstractionBasics() {
     // x(y, λz.f(z))
-    Variable x = new Binder("x", arrowType(baseType("A"), arrowType(
-      arrowType("B", "A"), baseType("B"))));
-    Variable y = new Var("y", baseType("A"));
-    Variable z = new Binder("z", baseType("B"));
-    Constant f = new Constant("f", arrowType("B", "A"));
+    Variable x = new Binder("x", type("A -> (B -> A) -> B"));
+    Variable y = new Var("y", type("A"));
+    Variable z = new Binder("z", type("B"));
+    Constant f = new Constant("f", type("B -> A"));
     Term abs = new Abstraction(z, new Application(f, z));
     Term t = new Application(x, y, abs);
 
@@ -231,7 +249,7 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.isVarTerm());
     assertTrue(t.queryVariable() == x);
     assertTrue(t.queryHead() == x);
-    assertTrue(t.queryType().equals(baseType("B")));
+    assertTrue(t.queryType().equals(type("B")));
     assertTrue(t.toString().equals("x(y, λz.f(z))"));
   }
 
@@ -245,10 +263,10 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testArguments() {
     Term t = twoArgFuncTerm();
-    assertTrue(t.numberArguments() == 2);
-    assertTrue(t.queryArgument(1).equals(constantTerm("c", baseType("a"))));
+    assertTrue(t.queryNumberArguments() == 2);
+    assertTrue(t.queryArgument(1).equals(new Constant("c", type("a"))));
     assertTrue(t.queryArgument(2).toString().equals("g(d)"));
-    List<Term> args = t.queryArguments();
+    List<Term> args = t.listArguments();
     assertTrue(args.get(0) == t.queryArgument(1));
     assertTrue(args.get(1) == t.queryArgument(2));
     assertTrue(args.size() == 2);
@@ -257,17 +275,17 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testMetaArguments() {
     // z⟨a,b⟩(c,d,e)
-    Type o = baseType("o");
-    Type type = arrowType(o, arrowType(o, arrowType(o, arrowType(o, arrowType(o, o)))));
+    Type o = type("o");
+    Type type = type("o -> o -> o -> o -> o -> o");
     MetaVariable z = TermFactory.createMetaVar("Z", type, 2);
-    Term zab = TermFactory.createMeta(z, constantTerm("a", o), constantTerm("b", o));
+    Term zab = TermFactory.createMeta(z, new Constant("a", o), new Constant("b", o));
     Term term =
-      zab.apply(constantTerm("c", o)).apply(constantTerm("d", o)).apply(constantTerm("e", o));
-    assertTrue(term.numberArguments() == 3);
-    assertTrue(term.numberMetaArguments() == 2);
-    assertTrue(term.queryMetaArgument(1).equals(constantTerm("a", o)));
-    assertTrue(term.queryMetaArgument(2).equals(constantTerm("b", o)));
-    assertTrue(term.queryArgument(1).equals(constantTerm("c", o)));
+      zab.apply(new Constant("c", o)).apply(new Constant("d", o)).apply(new Constant("e", o));
+    assertTrue(term.queryNumberArguments() == 3);
+    assertTrue(term.queryNumberMetaArguments() == 2);
+    assertTrue(term.queryMetaArgument(1).equals(new Constant("a", o)));
+    assertTrue(term.queryMetaArgument(2).equals(new Constant("b", o)));
+    assertTrue(term.queryArgument(1).equals(new Constant("c", o)));
   }
 
   @Test
@@ -298,18 +316,18 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testGoodAbstractionSubtermRequest() {
-    Variable x = new Binder("x", baseType("o"));
+    Variable x = new Binder("x", type("o"));
     Term abs = new Abstraction(x, x);
-    Term term = new Application(abs, constantTerm("a", baseType("o")));
+    Term term = new Application(abs, new Constant("a", type("o")));
     assertTrue(term.queryAbstractionSubterm() == x);
   }
 
   @Test
   public void testFirstOrderFunctionalTerm() {
-    Type aa = arrowType("a", "a");
+    Type aa = type("a -> a");
     Term s = twoArgFuncTerm();
-    Term t = unaryTerm("h", aa, new Var("x", baseType("b")));
-    Type utype = arrowType(baseType("a"), arrowType(aa, baseType("b")));
+    Term t = unaryTerm("h", aa, new Var("x", type("b")));
+    Type utype = type("a -> (a -> a) -> b");
     Term q = new Application(new Constant("u", utype), s, t); 
     assertTrue(s.isFirstOrder());
     assertFalse(t.isFirstOrder());
@@ -318,16 +336,16 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testFirstOrderVarTerm() {
-    Variable y = new Binder("y", arrowType("o", "o"));
-    Term x3 = new Application(y, constantTerm("c", baseType("o")));
+    Variable y = new Binder("y", type("o -> o"));
+    Term x3 = new Application(y, new Constant("c", type("o")));
     assertFalse(x3.isFirstOrder());
   }
 
   @Test
   public void testNonPatternDueToVariableApplication() {
-    Variable x = new Var("x", arrowType("A", "B"));
-    Term xa = new Application(x, constantTerm("a", baseType("A")));
-    Term f = new Constant("f", arrowType("B", "B"));
+    Variable x = new Var("x", type("A -> B"));
+    Term xa = new Application(x, new Constant("a", type("A")));
+    Term f = new Constant("f", type("B -> B"));
     Term fxa = new Application(f, xa);
     assertFalse(fxa.isPattern());
     assertTrue(fxa.isSemiPattern());
@@ -335,10 +353,10 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testBinderPattern() {
-    Variable x = new Binder("x", arrowType(baseType("b"), arrowType("b", "a")));
-    Variable y = new Var("y", baseType("b"));
-    Variable z = new Var("z", arrowType("b", "b"));
-    Term ba = new Constant("bb", arrowType("a", "b")).apply(constantTerm("aa", baseType("a")));
+    Variable x = new Binder("x", type("b -> b -> a"));
+    Variable y = new Var("y", type("b"));
+    Variable z = new Var("z", type("b -> b"));
+    Term ba = new Constant("bb", type("a -> b")).apply(new Constant("aa", type("a")));
     List<Term> args = new ArrayList<Term>();
     args.add(y);
     args.add(ba);
@@ -352,11 +370,10 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testSemiNonPattern() {
-    MetaVariable z = TermFactory.createMetaVar("Z", baseType("o"), arrowType("o", "o"));
-    MetaVariable y = TermFactory.createMetaVar("Z", baseType("o"), arrowType("o", "o"));
-    Term u = new Constant("u", baseType("o"));
-    Term v = new Constant("v", arrowType(arrowType("o", "o"), baseType("o")));
-    Variable x = new Binder("x", baseType("o"));
+    MetaVariable z = TermFactory.createMetaVar("Z", type("o"), type("o -> o"));
+    Term u = new Constant("u", type("o"));
+    Term v = new Constant("v", type("(o -> o) -> o"));
+    Variable x = new Binder("x", type("o"));
     Term zx = TermFactory.createMeta(z, x);
     Term zu = TermFactory.createMeta(z, u);
     // z[x](u)
@@ -379,12 +396,12 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testSubterms() {
-    Type type = arrowType(baseType("a"), arrowType("b", "a"));
+    Type type = type("a -> b ->a");
     Variable z = new Binder("Z", type);
-    Term arg1 = unaryTerm("g", baseType("a"), new Var("x", baseType("b")));
-    Term arg2 = constantTerm("c", baseType("b"));
+    Term arg1 = unaryTerm("g", type("a"), new Var("x", type("b")));
+    Term arg2 = new Constant("c", type("b"));
     Term term = new Application(z, arg1, arg2);    // Z(g(x),c)
-    List<Pair<Term,Position>> lst = term.querySubterms();
+    List<Pair<Term,Position>> lst = term.listSubterms();
     assertTrue(lst.size() == 4);
     assertTrue(lst.get(0).snd().toString().equals("1.1"));
     assertTrue(lst.get(0).fst().toString().equals("x"));
@@ -398,10 +415,10 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testVisitor() {
-    Type type = arrowType(baseType("a"), arrowType("b", "a"));
+    Type type = type("a -> b ->a");
     Variable z = new Binder("Z", type);
-    Term arg1 = unaryTerm("g", baseType("a"), new Var("x", baseType("b")));
-    Term arg2 = constantTerm("c", baseType("b"));
+    Term arg1 = unaryTerm("g", type("a"), new Var("x", type("b")));
+    Term arg2 = new Constant("c", type("b"));
     Application term = new Application(z, arg1, arg2);    // Z(g(x),c)
     ArrayList<String> parts = new ArrayList<String>();
     term.visitSubterms( (s,p) -> parts.add(s.toString()));
@@ -414,12 +431,12 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testFullPositionsForBetaRedex() {
-    Variable x = new Binder("x", baseType("A"));
-    Constant a = new Constant("a", baseType("A"));
-    Constant b = new Constant("b", baseType("B"));
-    Constant f = new Constant("f", arrowType(baseType("A"), arrowType("B", "C")));
+    Variable x = new Binder("x", type("A"));
+    Constant a = new Constant("a", type("A"));
+    Constant b = new Constant("b", type("B"));
+    Constant f = new Constant("f", type("A -> B ->C"));
     Term term = new Application(new Abstraction(x, f.apply(x)), a, b); // (λx.f(x))(a, b)
-    List<Position> lst = term.queryPositions(false);
+    List<Position> lst = term.listPositions(false);
     assertTrue(lst.size() == 5);
     assertTrue(lst.get(0).toString().equals("0.1"));
     assertTrue(lst.get(1).toString().equals("0"));
@@ -430,12 +447,12 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testPartialPositions() {
-    Type type = arrowType(baseType("a"), arrowType("b", "a"));
+    Type type = type("a -> b -> a");
     Variable z = new Binder("Z", type);
-    Term arg1 = unaryTerm("g", baseType("a"), new Var("x", baseType("b")));
-    Term arg2 = constantTerm("c", baseType("b"));
+    Term arg1 = unaryTerm("g", type("a"), new Var("x", type("b")));
+    Term arg2 = new Constant("c", type("b"));
     Term term = new Application(z, arg1, arg2);    // Z(g(x),c)
-    List<Position> lst = term.queryPositions(true);
+    List<Position> lst = term.listPositions(true);
     assertTrue(lst.size() == 7);
     assertTrue(lst.get(0).toString().equals("1.1"));
     assertTrue(lst.get(1).toString().equals("1.☆1"));
@@ -450,18 +467,18 @@ public class ApplicationTest extends TermTestFoundation {
   public void testFreeReplaceables() {
     // let's create: Z(Z(x,h(λz.c(z))),g(J[y],x)), where Z, x and y are variables and J is a
     // meta-variable
-    Variable z = new Binder("Z", arrowType(baseType("a"),arrowType("b","a")));
-    FunctionSymbol g = new Constant("g", arrowType(baseType("b"),arrowType("a","b")));
-    FunctionSymbol c = new Constant("c", arrowType("o", "o"));
-    FunctionSymbol h = new Constant("h", arrowType(arrowType("o", "o"), baseType("b")));
-    Variable x = new Binder("x", baseType("a"));
-    Variable y = new Var("y", baseType("b"));
-    Variable z2 = new Binder("z", baseType("o"));
-    MetaVariable j = TermFactory.createMetaVar("J", arrowType("b", "b"), 1);
+    Variable z = new Binder("Z", type("a -> b -> a"));
+    FunctionSymbol g = new Constant("g", type("b -> a -> b"));
+    FunctionSymbol c = new Constant("c", type("o -> o"));
+    FunctionSymbol h = new Constant("h", type("(o -> o) -> b"));
+    Variable x = new Binder("x", type("a"));
+    Variable y = new Var("y", type("b"));
+    Variable z2 = new Binder("z", type("o"));
+    MetaVariable j = TermFactory.createMetaVar("J", type("b -> b"), 1);
     Term jy = TermFactory.createMeta(j, y);
     Term hlambdazcz = new Application(h, new Abstraction(z2, c.apply(z2)));
     Term s = new Application(z, new Application(z, x, hlambdazcz), new Application(g, jy, x));
-    ReplaceableSet lst = s.freeReplaceables();
+    ReplaceableSet lst = s.queryFreeReplaceables();
     assertTrue(lst.contains(x));
     assertTrue(lst.contains(y));
     assertTrue(lst.contains(z));
@@ -472,38 +489,36 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testFreeReplaceablesReuse() {
     // let's create: f(g(x), h(y,y))
-    Variable x = new Var("x", baseType("o"));
-    Variable y = new Var("x", baseType("o"));
-    Term gx = unaryTerm("g", baseType("o"), x);
+    Variable x = new Var("x", type("o"));
+    Variable y = new Var("x", type("o"));
+    Term gx = unaryTerm("g", type("o"), x);
     Term hyy = TermFactory.createConstant("h", 2).apply(y).apply(y);
     Term term = TermFactory.createConstant("f", 2).apply(gx).apply(hyy);
-    assertTrue(gx.freeReplaceables() == x.freeReplaceables());
-    assertTrue(hyy.freeReplaceables() == y.freeReplaceables());
-    assertTrue(term.freeReplaceables().size() == 2);
+    assertTrue(gx.queryFreeReplaceables() == x.queryFreeReplaceables());
+    assertTrue(hyy.queryFreeReplaceables() == y.queryFreeReplaceables());
+    assertTrue(term.queryFreeReplaceables().size() == 2);
   }
 
   @Test
   public void testBoundVars() {
     // let's create: f(λx.Z(x), Y, g(λz.z, λx,u.h(x,y)))
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    Variable z = new Binder("z", baseType("o"));
-    Variable u = new Binder("u", baseType("o"));
-    Variable bZ = new Var("Z", arrowType("o", "o"));
-    Variable bY = new Var("Y", baseType("o"));
-    FunctionSymbol h = new Constant("h", arrowType(baseType("o"), arrowType("o", "o")));
-    FunctionSymbol g = new Constant("g", arrowType(arrowType("o", "o"),
-      arrowType(arrowType(baseType("o"), arrowType("o", "o")), baseType("o"))));
-    FunctionSymbol f = new Constant("f",
-      arrowType(arrowType("o", "o"), arrowType(baseType("o"), arrowType("o", "o"))));
+    Variable x = new Binder("x", type("o"));
+    Variable y = new Binder("y", type("o"));
+    Variable z = new Binder("z", type("o"));
+    Variable u = new Binder("u", type("o"));
+    Variable bZ = new Var("Z", type("o -> o"));
+    Variable bY = new Var("Y", type("o"));
+    FunctionSymbol h = new Constant("h", type("o -> o -> o"));
+    FunctionSymbol g = new Constant("g", type("(o -> o) -> (o -> o -> o) -> o"));
+    FunctionSymbol f = new Constant("f",  type("(o -> o) -> o -> o -> o"));
     Term ahxy = new Abstraction(x, new Abstraction(u, new Application(h, x, y)));
     Term az = new Abstraction(z, z);
     Term gterm = new Application(g, az, ahxy);
     Term aZx = new Abstraction(x, new Application(bZ, x));
     Term fterm = new Application(f, aZx, bY).apply(gterm);
 
-    ReplaceableSet freeVars = fterm.freeReplaceables();
-    ReplaceableSet boundVars = fterm.boundVars();
+    ReplaceableSet freeVars = fterm.queryFreeReplaceables();
+    ReplaceableSet boundVars = fterm.queryBoundVars();
     assertTrue(freeVars.size() == 3);
     assertTrue(boundVars.size() == 3);
     assertTrue(boundVars.contains(x));
@@ -516,59 +531,58 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testBoundVarsReuse() {
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    Variable bY = new Var("Y", baseType("o"));
-    Type oo = arrowType("o", "o");
-    Constant f = new Constant("f", arrowType(baseType("o"), oo));
-    Constant g = new Constant("g", arrowType(oo, baseType("o")));
-    Constant h = new Constant("h", arrowType(baseType("o"), arrowType(oo, oo)));
-    Constant i = new Constant("i", arrowType(oo, arrowType(oo, oo)));
-    Constant b = new Constant("B", baseType("o"));
+    Variable x = new Binder("x", type("o"));
+    Variable y = new Binder("y", type("o"));
+    Variable bY = new Var("Y", type("o"));
+    Constant f = new Constant("f", type("o -> o -> o"));
+    Constant g = new Constant("g", type("(o -> o) -> o"));
+    Constant h = new Constant("h", type("o -> (o -> o) -> o -> o"));
+    Constant i = new Constant("i", type("(o -> o) -> (o -> o) -> o -> o"));
+    Constant b = new Constant("B", type("o"));
     // let's create: (λxy.f(x,y))(g(λx.x), g(λy.y))
     Term ax = new Abstraction(x, x);
     Term gx = g.apply(ax);
     Term gy = g.apply(new Abstraction(y, y));
     Term head = new Abstraction(x, new Abstraction(y, new Application(f, x, y)));
     Term term1 = new Application(head, gx, gy);
-    assertTrue(ax.boundVars() == gx.boundVars());
-    assertTrue(term1.boundVars() == head.boundVars());
+    assertTrue(ax.queryBoundVars() == gx.queryBoundVars());
+    assertTrue(term1.queryBoundVars() == head.queryBoundVars());
     // let's create: h(Y, λx.x, B)
     Term term2 = (new Application(h, bY, ax)).apply(b);
-    assertTrue(term2.boundVars() == ax.boundVars());
+    assertTrue(term2.queryBoundVars() == ax.queryBoundVars());
     // let's create: i(λx.x, λy.f(g(λx.x), y))
     Term fterm = new Application(f, gx, y);
     Term afterm = new Abstraction(y, fterm);
     Term term3 = new Application(i, ax, afterm);
-    assertTrue(term3.boundVars() == afterm.boundVars());
-    assertFalse(afterm.boundVars() == fterm.boundVars());
+    assertTrue(term3.queryBoundVars() == afterm.queryBoundVars());
+    assertFalse(afterm.queryBoundVars() == fterm.queryBoundVars());
   }
 
   @Test
   public void testMVars() {
     // let's create: a(f(Z[X], X), Y[b])
-    Variable a = new Binder("a", arrowType(baseType("o"), arrowType("o", "o")));
-    Variable b = new Binder("b", baseType("o"));
-    Var x = new Var("Y", baseType("o"));
-    MetaVariable y = TermFactory.createMetaVar("Y", arrowType("o", "o"), 1);
-    MetaVariable z = TermFactory.createMetaVar("Z", arrowType("o", "o"), 1);
+    Variable a = new Binder("a", type("o -> o -> o"));
+    Variable b = new Binder("b", type("o"));
+    Var x = new Var("Y", type("o"));
+    MetaVariable y = TermFactory.createMetaVar("Y", type("o -> o"), 1);
+    MetaVariable z = TermFactory.createMetaVar("Z", type("o -> o"), 1);
     Term zx = TermFactory.createMeta(z, x);
-    Term f = constantTerm("f", arrowType(baseType("o"), arrowType("o", "o")));
+    Term f = new Constant("f", type("o -> o -> o"));
     Term fzxx = TermFactory.createApp(f, zx, x);
     Term yb = TermFactory.createMeta(y, b);
     Term term = TermFactory.createApp(a, fzxx, yb);
     // let's see if all the mvars are as expected!
-    Environment<MetaVariable> mvars = term.mvars();
+    Environment<MetaVariable> mvars = term.queryMetaVariables();
     assertTrue(mvars.size() == 3);
     assertTrue(mvars.contains(x));
     assertTrue(mvars.contains(y));
     assertTrue(mvars.contains(z));
-    mvars = fzxx.mvars();
+    mvars = fzxx.queryMetaVariables();
     assertTrue(mvars.size() == 2);
     assertTrue(mvars.contains(x));
     assertFalse(mvars.contains(y));
     assertTrue(mvars.contains(z));
-    mvars = yb.mvars();
+    mvars = yb.queryMetaVariables();
     assertTrue(mvars.size() == 1);
   }
 
@@ -576,15 +590,12 @@ public class ApplicationTest extends TermTestFoundation {
   public void testTypeVars() {
     // let's create f(x_alpha, g(y_{d(beta)}, z_alpha)) :: gamma
     Type a = TypeFactory.createVariable("alpha");
-    Type b = TypeFactory.createVariable("beta");
-    Type c = TypeFactory.createVariable("gamma");
-    Type d = TypeFactory.createSort("d", b);
     Type o = TypeFactory.createSort("o");
     Variable x = new Binder("x", a);
-    Variable y = new Var("y", d);
+    Variable y = new Var("y", type("d($beta)"));
     Variable z = new Var("z", a);
-    FunctionSymbol g = new Constant("g", arrowType(d, arrowType(a, o)));
-    FunctionSymbol f = new Constant("f", arrowType(a, arrowType(o, c)));
+    FunctionSymbol g = new Constant("g", type("d($beta) -> $alpha -> o"));
+    FunctionSymbol f = new Constant("f", type("$alpha -> o -> $gamma"));
     Term gterm = new Application(g, y, z);
     Term fterm = new Application(f, x, gterm);
     TVarSet tvars = fterm.queryTypeVars();
@@ -604,7 +615,7 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(tvars.contains(TypeFactory.createVariable("gamma")));
 
     // check reuse as well
-    FunctionSymbol h = new Constant("h", arrowType(a, arrowType(o, o)));
+    FunctionSymbol h = new Constant("h", type("$alpha -> o -> o"));
     Term hterm = new Application(h, x, gterm);
     tvars = hterm.queryTypeVars();
     assertTrue(tvars.size() == 2);
@@ -618,9 +629,9 @@ public class ApplicationTest extends TermTestFoundation {
     p = Position.empty;
     assertTrue(s.querySubterm(p).equals(s));
     p = new ArgumentPos(1, Position.empty);
-    assertTrue(s.querySubterm(p).equals(constantTerm("c", baseType("a"))));
+    assertTrue(s.querySubterm(p).equals(new Constant("c", type("a"))));
     p = new ArgumentPos(2, new ArgumentPos(1, Position.empty));
-    assertTrue(s.querySubterm(p).equals(constantTerm("d", baseType("b"))));
+    assertTrue(s.querySubterm(p).equals(new Constant("d", type("b"))));
   }
 
   @Test
@@ -635,9 +646,9 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testSubtermInHead() {
     // (λx.f(x))(a)
-    Variable x = new Binder("x", baseType("o"));
-    Term s = new Application(new Abstraction(x, unaryTerm("f", baseType("o"), x)),
-                             constantTerm("a", baseType("o")));
+    Variable x = new Binder("x", type("o"));
+    Term s = new Application(new Abstraction(x, unaryTerm("f", type("o"), x)),
+                             new Constant("a", type("o")));
     assertTrue(s.querySubterm(new LambdaPos(new ArgumentPos(1, Position.empty))) == x);
   }
 
@@ -657,8 +668,8 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testSubtermReplacementGood() {
-    Variable z = new Var("Z", arrowType("Int", "Int"));
-    Term s = new Application(z, constantTerm("37", baseType("Int")));
+    Variable z = new Var("Z", type("Int -> Int"));
+    Term s = new Application(z, new Constant("37", type("Int")));
     Term t = s.replaceSubterm(new ArgumentPos(1, Position.empty), s);
     assertTrue(s.toString().equals("Z(37)"));
     assertTrue(t.queryArgument(1).equals(s));
@@ -668,13 +679,12 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testSubtermInHeadReplacementGood() throws PositionFormatException {
     // (λxy.f(y,x))(a, b)
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    Term f = constantTerm("f", arrowType(baseType("o"), arrowType("o", "o")));
-    Term a = constantTerm("a", baseType("o"));
-    Term b = constantTerm("b", baseType("o"));
-    Term s = new Application(new Abstraction(x, new Abstraction(y, new Application(f, y, x))),
-                             a, b);
+    Variable x = new Binder("x", type("o"));
+    Variable y = new Binder("y", type("o"));
+    Term f = new Constant("f", type("o -> o -> o"));
+    Term a = new Constant("a", type("o"));
+    Term b = new Constant("b", type("o"));
+    Term s = new Application(new Abstraction(x, new Abstraction(y, new Application(f,y,x))), a, b);
     
     // replace y in f(y,x) by x
     Term t = s.replaceSubterm(Position.parse("0.0.1"), x);
@@ -689,63 +699,63 @@ public class ApplicationTest extends TermTestFoundation {
   public void testSubtermHeadReplacementGood() {
     Term s = twoArgFuncTerm();  // f(c, g(d))
     Position pos = new ArgumentPos(2, new FinalPos(1));
-    Term a = constantTerm("a", baseType("A"));
-    Variable x = new Binder("x", arrowType(baseType("A"), arrowType("b", "b")));
+    Term a = new Constant("a", type("A"));
+    Variable x = new Binder("x", type("A -> b -> b"));
     Term t = s.replaceSubterm(pos, x.apply(a));
     assertTrue(t.toString().equals("f(c, x(a, d))"));
     Term q = t.replaceSubterm(pos, x.apply(a));
     assertTrue(t.equals(q));
     pos = new ArgumentPos(2, Position.empty);
-    t = s.replaceSubterm(pos, constantTerm("B", baseType("b")));
+    t = s.replaceSubterm(pos, new Constant("B", type("b")));
     assertTrue(t.toString().equals("f(c, B)"));
     assertTrue(s.toString().equals("f(c, g(d))"));
   }
 
   @Test
   public void testSubtermReplacementBadPosition() {
-    Variable z = new Var("Z", arrowType("Int", "Int"));
-    Term s = new Application(z, constantTerm("37", baseType("Int")));
+    Variable z = new Var("Z", type("Int -> Int"));
+    Term s = new Application(z, new Constant("37", type("Int")));
     assertThrows(InvalidPositionException.class, () ->
       s.replaceSubterm(new ArgumentPos(2, Position.empty), s));
   }
 
   @Test
   public void testSubtermHeadReplacementBadPosition() {
-    Variable z = new Var("Z", arrowType("Int", "Int"));
-    Term s = new Application(z, constantTerm("37", baseType("Int")));
+    Variable z = new Var("Z", type("Int -> Int"));
+    Term s = new Application(z, new Constant("37", type("Int")));
     assertThrows(InvalidPositionException.class, () ->
       s.replaceSubterm(new ArgumentPos(2, new FinalPos(1)), s));
   }
 
   @Test
   public void testSubtermHeadReplacementBadHeadPosition() {
-    Constant f = new Constant("f", arrowType("Int", "Int"));
-    Term s = new Application(f, constantTerm("37", baseType("Int")));
+    Constant f = new Constant("f", type("Int -> Int"));
+    Term s = new Application(f, new Constant("37", type("Int")));
     assertThrows(InvalidPositionException.class, () ->
-      s.replaceSubterm(new FinalPos(2), constantTerm("a", baseType("B"))));
+      s.replaceSubterm(new FinalPos(2), new Constant("a", type("B"))));
   }
 
   @Test
   public void testSubtermReplacementBadTypeSub() {
-    Constant f = new Constant("f", arrowType("Int", "Bool"));
-    Term s = new Application(f, constantTerm("37", baseType("Int")));
+    Constant f = new Constant("f", type("Int -> Bool"));
+    Term s = new Application(f, new Constant("37", type("Int")));
     assertThrows(TypingException.class, () ->
       s.replaceSubterm(new ArgumentPos(1, Position.empty), s));
   }
 
   @Test
   public void testSubtermReplacementBadTypeTop() {
-    Variable z = new Binder("Z", arrowType("Int", "Bool"));
-    Term s = new Application(z, constantTerm("37", baseType("Int")));
+    Variable z = new Binder("Z", type("Int -> Bool"));
+    Term s = new Application(z, new Constant("37", type("Int")));
     assertThrows(TypingException.class, () ->
-      s.replaceSubterm(Position.empty, constantTerm("42", baseType("Int"))));
+      s.replaceSubterm(Position.empty, new Constant("42", type("Int"))));
   }
 
   @Test
   public void testSubtermHeadReplacementBadType() {
-    Variable z = new Binder("Z", arrowType("Int", "Bool"));
-    Term s = new Application(z, constantTerm("37", baseType("Int")));
-    Term replacement = constantTerm("f", arrowType("Int", "Int"));
+    Variable z = new Binder("Z", type("Int -> Bool"));
+    Term s = new Application(z, new Constant("37", type("Int")));
+    Term replacement = new Constant("f", type("Int -> Int"));
     assertThrows(TypingException.class, () ->
       s.replaceSubterm(new FinalPos(1), replacement));
   }
@@ -753,48 +763,44 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testApplyingBaseTerm() {
     Term s = twoArgVarTerm();
-    Term t = constantTerm("37", baseType("Int"));
+    Term t = new Constant("37", type("Int"));
     assertThrows(TypingException.class, () -> s.apply(t));
   }
 
   @Test
   public void testApplyingBadType() {
-    Type o = baseType("o");
-    Type a = baseType("a");
-    Type type = arrowType(a, arrowType(o, a));
-    Term c = constantTerm("c", a);
-    FunctionSymbol f = new Constant("f", type);
+    Type ty = type("a -> o -> a");
+    Term c = new Constant("c", type("a"));
+    FunctionSymbol f = new Constant("f", ty);
     Term fc = new Application(f, c);
     assertThrows(TypingException.class, () -> fc.apply(c));
   }
 
   @Test
   public void testCorrectApplication() {
-    Type o = baseType("o");
-    Type a = baseType("a");
-    Type type = arrowType(a, arrowType(o, a));
-    Term c = constantTerm("c", arrowType(a, a));
-    Term d = constantTerm("d", a);
-    Variable x = new Var("x", type);
+    Type ty = type("a -> o -> a");
+    Term c = new Constant("c", type("a -> a"));
+    Term d = new Constant("d", type("a"));
+    Variable x = new Var("x", ty);
     Term xc = new Application(x, c.apply(d));
-    Term xcb = xc.apply(constantTerm("b", o));
+    Term xcb = xc.apply(new Constant("b", type("o")));
     assertTrue(xcb.toString().equals("x(c(d), b)"));
   }
 
   @Test
   public void testRefreshBinders() {
     // (λxy.f(x,y))(g(λz.z), g(λz.z))
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("x", baseType("o"));
-    Variable z = new Binder("x", baseType("o"));
-    Term f = constantTerm("f", arrowType(baseType("o"), arrowType("o", "o")));
-    Term g = constantTerm("g", arrowType(arrowType("o", "o"), baseType("o")));
+    Variable x = new Binder("x", type("o"));
+    Variable y = new Binder("x", type("o"));
+    Variable z = new Binder("x", type("o"));
+    Term f = new Constant("f", type("o -> o -> o"));
+    Term g = new Constant("g", type("(o -> o) -> o"));
     Term zz = new Abstraction(z, z);
     Term abs = new Abstraction(x, new Abstraction(y, new Application(f, x, y)));
     Term term = new Application(abs, new Application(g, zz), new Application(g, zz));
 
     TreeMap<Variable,Variable> map = new TreeMap<Variable,Variable>();
-    map.put(y, new Var("y", baseType("o")));
+    map.put(y, new Var("y", type("o")));
     Term t = term.renameAndRefreshBinders(map);
     assertTrue(t.equals(term));
     Variable a = t.queryVariable();
@@ -817,16 +823,12 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testWellbehaved() {
     // f(x, λy.g(y, x), λx.x, λz.z, y)
-    Variable x = new Binder("x", baseType("a"));
-    Variable y = new Binder("y", arrowType("b", "b"));
-    Variable z = new Binder("z", baseType("c"));
-    Term g = new Constant("g", arrowType(arrowType("b", "b"), arrowType("a", "d")));
-    Term f = new Constant("f", arrowType(
-      baseType("a"), arrowType(
-      arrowType(arrowType("b", "b"), baseType("d")), arrowType(
-      arrowType("a", "a"), arrowType(
-      arrowType("c", "c"), arrowType(
-      arrowType("b", "b"), baseType("e")))))));
+    Variable x = new Binder("x", type("a"));
+    Variable y = new Binder("y", type("b -> b"));
+    Variable z = new Binder("z", type("c"));
+    Term g = new Constant("g", type("(b -> b) -> a -> d"));
+    Term f =
+      new Constant("f", type("a -> ((b -> b) -> d) -> (a -> a) -> (c -> c) -> (b -> b) -> e"));
     Term arg2 = new Abstraction(y, new Application(g, y, x));
     Term arg3 = new Abstraction(x, x);
     Term arg4 = new Abstraction(z, z);
@@ -845,10 +847,9 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testVarTermEquality() {
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Var("y", arrowType(baseType("o"), arrowType("o", "o")));
-    Variable x2 = new Binder("x2", baseType("o"));
-    List<Term> empty = new ArrayList<Term>();
+    Variable x = new Binder("x", type("o"));
+    Variable y = new Var("y", type("o -> o -> o"));
+    Variable x2 = new Binder("x2", type("o"));
     Term s1 = x;
     Term s2 = y;
     Term s3 = new Application(y, x);
@@ -874,25 +875,24 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testFunctionalTermEquality() {
-    Term s1 = constantTerm("x", baseType("o"));
-    Term s2 = unaryTerm("x", baseType("o"), constantTerm("y", baseType("a")));
-    Term s3 = unaryTerm("x", baseType("o"), constantTerm("y", baseType("a")));
-    Term s4 = unaryTerm("x", baseType("a"), constantTerm("y", baseType("a")));
+    Term s1 = new Constant("x", type("o"));
+    Term s2 = unaryTerm("x", type("o"), new Constant("y", type("a")));
+    Term s3 = unaryTerm("x", type("o"), new Constant("y", type("a")));
+    Term s4 = unaryTerm("x", type("a"), new Constant("y", type("a")));
     assertFalse(s1.equals(s2));
     assertFalse(s2.equals(s1));
     assertTrue(s2.equals(s3));
     assertFalse(s2.equals(s4));
-    assertFalse(s1.equals(new Var("x", baseType("o"))));
+    assertFalse(s1.equals(new Var("x", type("o"))));
   }
 
   @Test
   public void testAlphaEquality() {
     // (λx.x) (f(y, λx.x)) =[y:=1,z:=1] (λy.y) (f(z, λx.x))
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    Variable z = new Binder("z", baseType("o"));
-    Constant f = new Constant("f", arrowType(baseType("o"), arrowType(
-      arrowType("o", "o"), baseType("o"))));
+    Variable x = new Binder("x", type("o"));
+    Variable y = new Binder("y", type("o"));
+    Variable z = new Binder("z", type("o"));
+    Constant f = new Constant("f", type("o -> (o -> o) -> o"));
     TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
     TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
     mu.put(y, 1);
@@ -907,9 +907,9 @@ public class ApplicationTest extends TermTestFoundation {
 
   @Test
   public void testFreeVariableRenaming() {
-    Variable a = new Binder("x", arrowType(baseType("o"), arrowType("o", "o")));
-    Variable b = new Var("x", baseType("o"));
-    Variable c = new Var("x", baseType("o"));
+    Variable a = new Binder("x", type("o -> o -> o"));
+    Variable b = new Var("x", type("o"));
+    Variable c = new Var("x", type("o"));
     Term combi = new Application(a, b, c);
     assertTrue(combi.toString().equals("x__3(x__1, x__2)"));
   }
@@ -917,15 +917,13 @@ public class ApplicationTest extends TermTestFoundation {
   @Test
   public void testCorrectPrintingWithoundVariables() {
     // (λx0.x0)(f(g(x1, x2), λx3.g(x2, x3), λx4.λx3.g(x3,x4)))
-    Variable x0 = new Binder("x", baseType("o"));
-    Variable x1 = new Binder("x", baseType("o"));
-    Variable x2 = new Binder("x", baseType("o"));
-    Variable x3 = new Binder("x", baseType("o"));
-    Variable x4 = new Binder("x", baseType("o"));
-    Term g = constantTerm("g", arrowType(baseType("o"), arrowType("o", "o")));
-    Term f = constantTerm("f", arrowType(baseType("o"), arrowType(
-      arrowType("o", "o"), arrowType(arrowType(baseType("o"), arrowType("o", "o")),
-      baseType("o")))));
+    Variable x0 = new Binder("x", type("o"));
+    Variable x1 = new Binder("x", type("o"));
+    Variable x2 = new Binder("x", type("o"));
+    Variable x3 = new Binder("x", type("o"));
+    Variable x4 = new Binder("x", type("o"));
+    Term g = new Constant("g", type("o -> o -> o"));
+    Term f = new Constant("f", type("o -> (o -> o) -> (o -> o -> o) -> o"));
     Term abs = new Abstraction(x0,x0);
     Term arg1 = new Application(g, x1, x2);
     Term arg2 = new Abstraction(x3, new Application(g, x2, x3));

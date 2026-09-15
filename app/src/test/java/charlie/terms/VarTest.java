@@ -17,48 +17,54 @@ package charlie.terms;
 
 import java.util.List;
 import java.util.TreeMap;
+
+import charlie.types.Type;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.util.Pair;
 import charlie.util.NullStorageException;
-import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.parser.CoraParser;
 import charlie.terms.position.*;
 import charlie.terms.replaceable.ReplaceableSet;
 
-public class VarTest extends TermTestFoundation {
+public class VarTest {
+  private Type type(String desc) { return CoraParser.readType(desc); }
+
   @Test
   public void testNullInitialisation() {
-    assertThrows(NullStorageException.class, () -> new Var(null, baseType("o")));
+    assertThrows(NullStorageException.class, () -> new Var(null, type("o")));
     assertThrows(NullStorageException.class, () -> new Var("x", null));
   }
 
   @Test
   public void testRootRequest() {
-    Variable x = new Var("x", baseType("o"));
+    Variable x = new Var("x", type("o"));
     assertThrows(InappropriatePatternDataException.class, () -> x.queryRoot());
   }
 
   @Test
   public void testSubtermRequest() {
-    Variable x = new Var("x", baseType("o"));
+    Variable x = new Var("x", type("o"));
     assertThrows(IndexOutOfBoundsException.class, () -> x.queryArgument(1));
   }
 
   @Test
   public void testBaseVariableApplication() {
-    Term t = new Var("x", baseType("Int"));
-    assertThrows(TypingException.class, () -> t.apply(t)); }
+    Term t = new Var("x", type("Int"));
+    assertThrows(TypingException.class, () -> t.apply(t));
+  }
+
   @Test
   public void testIllegalTypeApplication() {
-    Term t = new Var("x", arrowType("a", "b"));
-    Term q = constantTerm("c", baseType("b"));
+    Term t = new Var("x", type("a -> b"));
+    Term q = new Constant("c", type("b"));
     assertThrows(TypingException.class, () -> t.apply(q));
   }
 
   @Test
   public void testTermVarBasics() {
-    Variable x = new Var("x", baseType("o"));
+    Variable x = new Var("x", type("o"));
     Term s = x;
     assertTrue(s.isVariable());
     assertTrue(s.isVarTerm());
@@ -67,8 +73,8 @@ public class VarTest extends TermTestFoundation {
     assertTrue(s.queryVariable().equals(x));
     assertTrue(s.queryHead().equals(x));
     assertTrue(s.toString().equals("x"));
-    assertTrue(s.numberArguments() == 0);
-    assertTrue(s.queryArguments().size() == 0);
+    assertTrue(s.queryNumberArguments() == 0);
+    assertTrue(s.listArguments().size() == 0);
     assertTrue(s.isPattern());
     assertTrue(s.isFirstOrder());
     assertFalse(s.isApplication());
@@ -77,27 +83,27 @@ public class VarTest extends TermTestFoundation {
     assertFalse(s.isGround());
     TreeMap<Variable,Variable> map = new TreeMap<Variable,Variable>();
     assertTrue(s.renameAndRefreshBinders(map) == s);
-    map.put(x, new Var("y", baseType("o")));
+    map.put(x, new Var("y", type("o")));
     assertTrue(s.renameAndRefreshBinders(map) == s);
     assertFalse(x.isBinderVariable());
-    Variable z = new Var("z", arrowType("o", "o"));
+    Variable z = new Var("z", type("o -> o"));
     assertFalse(z.isFirstOrder());
     assertTrue(z.isPattern());
     assertTrue(z.isApplicative());
     assertTrue(z.apply(x).equals(new Application(z, x)));
     assertFalse(z.apply(x).isPattern());
     assertTrue(s.isLinear());
-    Variable y = new Binder("x", baseType("o"));
-    assertTrue(x.compareTo(y) == -1);
+    Variable y = new Binder("x", type("o"));
+    assertTrue(x.compareTo(y) < 0);
   }
 
   @Test
   public void testTermVarReplaceables() {
-    Variable x = new Var("x", baseType("oo"));
-    ReplaceableSet lst = x.freeReplaceables();
+    Variable x = new Var("x", type("oo"));
+    ReplaceableSet lst = x.queryFreeReplaceables();
     assertTrue(lst.size() == 1);
     assertTrue(lst.contains(x));
-    assertTrue(x.boundVars().size() == 0);
+    assertTrue(x.queryBoundVars().size() == 0);
   }
 
   @Test
@@ -109,10 +115,10 @@ public class VarTest extends TermTestFoundation {
 
   @Test
   public void testTermVarEquality() {
-    Var x = new Var("x", baseType("o"));
+    Var x = new Var("x", type("o"));
     Term s1 = x;
-    Term s2 = new Var("x", baseType("o"));
-    Term s3 = new Binder("x", baseType("o"));
+    Term s2 = new Var("x", type("o"));
+    Term s3 = new Binder("x", type("o"));
     assertTrue(s1.equals(s1));
     assertFalse(s1.equals(s2));
     assertFalse(s1.equals(null));
@@ -126,8 +132,8 @@ public class VarTest extends TermTestFoundation {
 
   @Test
   public void testAlphaEquality() {
-    Var x = new Var("x", baseType("o"));
-    Var z = new Var("z", baseType("o"));
+    Var x = new Var("x", type("o"));
+    Var z = new Var("z", type("o"));
     TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
     TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
     assertTrue(x.alphaEquals(x, mu, xi, 2));
@@ -140,16 +146,16 @@ public class VarTest extends TermTestFoundation {
 
   @Test
   public void testVarOrFunctionalTerm() {
-    Term s1 = new Var("x", baseType("o"));
-    Term s2 = constantTerm("x", baseType("o"));
+    Term s1 = new Var("x", type("o"));
+    Term s2 = new Constant("x", type("o"));
     assertFalse(s1.equals(s2));
     assertTrue(s1.toString().equals(s2.toString()));
   }
 
   @Test
   public void testSubterms() {
-    Term s = new Var("x", baseType("o"));
-    List<Pair<Term,Position>> lst = s.querySubterms();
+    Term s = new Var("x", type("o"));
+    List<Pair<Term,Position>> lst = s.listSubterms();
     assertTrue(lst.size() == 1);
     assertTrue(lst.get(0).fst() == s);
     assertTrue(lst.get(0).snd().toString().equals("ε"));
@@ -157,43 +163,43 @@ public class VarTest extends TermTestFoundation {
 
   @Test
   public void testPositions() {
-    Term s = new Var("x", baseType("o"));
-    List<Position> posses = s.queryPositions(true);
+    Term s = new Var("x", type("o"));
+    List<Position> posses = s.listPositions(true);
     assertTrue(posses.size() == 1);
     assertTrue(posses.get(0).isEmpty());
   }
 
   @Test
   public void testSubtermGood() {
-    Term s = new Var("x", baseType("o"));
+    Term s = new Var("x", type("o"));
     Position p = Position.empty;
     assertTrue(s.querySubterm(p).equals(s));
   }
 
   @Test
   public void testSubtermBad() {
-    Term s = new Var("x", baseType("o"));
+    Term s = new Var("x", type("o"));
     Position p = new ArgumentPos(1, Position.empty);
     assertThrows(InvalidPositionException.class, () -> s.querySubterm(p));
   }
 
   @Test
   public void testHeadSubtermBad() {
-    Term s = new Var("x", baseType("o"));
+    Term s = new Var("x", type("o"));
     Position p = new ArgumentPos(1, Position.empty);
     assertThrows(InvalidPositionException.class, () -> s.querySubterm(p));
   }
 
   @Test
   public void testAbstractionSubtermRequest() {
-    Term s = new Var("x", arrowType("o", "O"));
+    Term s = new Var("x", type("o -> O"));
     assertThrows(InappropriatePatternDataException.class, () -> s.queryAbstractionSubterm());
   }
 
   @Test
   public void testSubtermReplacementGood() {
-    Term s = new Var("x", baseType("a"));
-    Term t = twoArgVarTerm();
+    Term s = new Var("x", type("a"));
+    Term t = new Constant("a", type("a"));
     Position p = Position.empty;
     assertTrue(s.replaceSubterm(p, t).equals(t));
     assertTrue(s.toString().equals("x"));
@@ -201,16 +207,17 @@ public class VarTest extends TermTestFoundation {
 
   @Test
   public void testSubtermReplacementBad() {
-    Term s = new Var("x", baseType("o"));
+    Term s = new Var("x", type("o"));
     Position p = new MetaPos(1, Position.empty);
-    assertThrows(InvalidPositionException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
+    assertThrows(InvalidPositionException.class,
+      () -> s.replaceSubterm(p, new Var("a", type("a"))));
   }
 
   @Test
   public void testHeadSubtermReplacementBad() {
-    Term s = new Var("x", baseType("o"));
+    Term s = new Var("x", type("o"));
     Position p = new FinalPos(1);
-    assertThrows(InvalidPositionException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
+    assertThrows(InvalidPositionException.class,
+      () -> s.replaceSubterm(p, new Constant("f", type("a"))));
   }
 }
-

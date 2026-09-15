@@ -81,7 +81,7 @@ public class HelperFunctionTransformer {
       Term l = rule.queryLeftSide();
       if (!l.isFunctionalTerm()) { _applicable = false; return; }
       FunctionSymbol f = l.queryRoot();
-      int num = l.numberArguments();
+      int num = l.queryNumberArguments();
       if (!_ruleArity.containsKey(f)) _ruleArity.put(f, num);
       else {
         int k = _ruleArity.get(f);
@@ -117,8 +117,8 @@ public class HelperFunctionTransformer {
    */
   private boolean isHeadOf(Term v, Term u) {
     if (!v.isFunctionalTerm() || !v.queryRoot().equals(u.queryRoot())) return false;
-    if (u.numberArguments() <= v.numberArguments()) return false;
-    return u.queryImmediateHeadSubterm(v.numberArguments()).equals(v);
+    if (u.queryNumberArguments() <= v.queryNumberArguments()) return false;
+    return u.queryImmediateHeadSubterm(v.queryNumberArguments()).equals(v);
   }
   
   /**
@@ -131,13 +131,13 @@ public class HelperFunctionTransformer {
       Rule rule = _trs.queryRule(j);
       Term left = rule.queryLeftSide();
       FunctionSymbol f = left.queryRoot();
-      int k = left.numberArguments();
+      int k = left.queryNumberArguments();
       rule.queryRightSide().visitSubterms((s,p) -> {
         if (!s.isFunctionalTerm()) return;
         FunctionSymbol g = s.queryRoot();
-        for (int i = 1; i <= s.numberArguments(); i++) {
+        for (int i = 1; i <= s.queryNumberArguments(); i++) {
           Term arg = s.queryArgument(i);
-          int n = arg.numberArguments();
+          int n = arg.queryNumberArguments();
           if (isHeadOf(arg, left) && n < _ruleArity.get(f)) add(ret, g, i, f, n);
         }
       });
@@ -163,7 +163,7 @@ public class HelperFunctionTransformer {
       Term constraint = _trs.queryRule(j).queryConstraint();
       if (null != left.findSubterm((s,p) -> { // return true if the subterm is unsuitable
         if (!s.isFunctionalTerm() || !s.queryRoot().equals(g)) return false;
-        if (s.numberArguments() < i) return true;
+        if (s.queryNumberArguments() < i) return true;
         Term arg = s.queryArgument(i);
         if (arg.isVariable() || arg.isAbstraction()) return false;
         // we could probably handle this case as well, but for now, the theory does not allow it
@@ -207,7 +207,7 @@ public class HelperFunctionTransformer {
   private ArrayList<Substitution> getReplacementSubstitutions(Term term, ReplaceableSet okay,
                                                               List<Candidate> cands) {
     ArrayList<Substitution> ret = new ArrayList<Substitution>();
-    for (Pair<Term,Position> sub : term.querySubterms()) {
+    for (Pair<Term,Position> sub : term.listSubterms()) {
       Term subterm = sub.fst();
       if (!subterm.isFunctionalTerm()) continue;
       for (int j = 0; j < cands.size(); j++) {
@@ -254,14 +254,14 @@ public class HelperFunctionTransformer {
    */
   Term renameSymbolsInsideCandidates(Term term, List<Candidate> candidates,
                                      TreeMap<FunctionSymbol,FunctionSymbol> renamings) {
-    for (Pair<Term,Position> p : term.querySubterms()) {
+    for (Pair<Term,Position> p : term.listSubterms()) {
       Term subterm = p.fst();
       if (!subterm.isFunctionalTerm()) continue;
       FunctionSymbol g = subterm.queryRoot();
       for (Candidate cand : candidates) {
         if (!g.equals(cand.below())) continue;
         int index = cand.argument();
-        if (subterm.numberArguments() < index) continue;
+        if (subterm.queryNumberArguments() < index) continue;
         Term arg = subterm.queryArgument(index);
         if (!arg.isFunctionalTerm() || !arg.queryRoot().equals(cand.main())) continue;
         Position pos = p.snd().append(new ArgumentPos(index, new FinalPos(cand.numArgs())));
@@ -292,7 +292,7 @@ public class HelperFunctionTransformer {
   ArrayList<Rule> getInstantiatedCopies(Rule rule, List<Candidate> candidates,
                                         TreeMap<FunctionSymbol,FunctionSymbol> renamings) {
     ArrayList<Substitution> updates = getReplacementSubstitutions(rule.queryLeftSide(),
-                                 rule.queryRightSide().freeReplaceables(), candidates);
+                                 rule.queryRightSide().queryFreeReplaceables(), candidates);
     ArrayList<Rule> rulecopies = new ArrayList<Rule>();
     rulecopies.add(rule);
     applyAllUpdates(rulecopies, updates);

@@ -80,7 +80,7 @@ public class TermAnalyser {
    */
   public static Value calculate(Term t) {
     if (!t.isFunctionalTerm() || !Theory.isCalculationSymbol(t.queryRoot())) return null;
-    for (int i = 1; i <= t.numberArguments(); i++) {
+    for (int i = 1; i <= t.queryNumberArguments(); i++) {
       if (!Theory.isValue(t.queryArgument(i))) return null;
     }
     return evaluate(t);
@@ -97,7 +97,7 @@ public class TermAnalyser {
     return switch (solver.checkSatisfiability(translator.queryProblem())) {
       case Answer.YES(Valuation val) -> {
           MutableSubstitution ret = new MutableSubstitution();
-          for (Variable x : t.vars()) {
+          for (Variable x : t.queryFreeVariables()) {
             if (x.queryType().equals(TypeFactory.boolSort)) {
               BVar bvar = translator.getBVar(x);
               ret.extend(x, TheoryFactory.createValue(val.queryAssignment(bvar)));

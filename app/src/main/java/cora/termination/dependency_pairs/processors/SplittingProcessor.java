@@ -46,7 +46,7 @@ public class SplittingProcessor implements Processor {
     if (!constraint.isFunctionalTerm()) sofar.add(constraint);
     else if (!constraint.queryRoot().equals(root)) sofar.add(constraint);
     else {
-      for (int i = 1; i <= constraint.numberArguments(); i++) {
+      for (int i = 1; i <= constraint.queryNumberArguments(); i++) {
         addJunctionParts(constraint.queryArgument(i), root, sofar);
       }
     }
@@ -67,7 +67,7 @@ public class SplittingProcessor implements Processor {
   private Optional<ArrayList<Term>> split(Term constraint) {
     if (!constraint.isFunctionalTerm()) return Optional.empty();
     if (constraint.queryRoot().equals(TheoryFactory.intDistinctSymbol) &&
-        constraint.numberArguments() == 2) {
+        constraint.queryNumberArguments() == 2) {
       Term arg1 = constraint.queryArgument(1);
       Term arg2 = constraint.queryArgument(2);
       ArrayList<Term> ret = new ArrayList<Term>();

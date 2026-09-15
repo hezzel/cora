@@ -16,7 +16,7 @@
 package cora.rwinduction.engine;
 
 import java.util.*;
-import charlie.util.FixedList;
+
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.terms.replaceable.Renaming;
@@ -73,7 +73,7 @@ public class ProofContext {
       _ruleRenamings.add(renaming);
       if (rule.queryLeftSide().isFunctionalTerm()) {
         FunctionSymbol f = rule.queryLeftSide().queryRoot();
-        if (!_arities.containsKey(f)) _arities.put(f, rule.queryLeftSide().numberArguments());
+        if (!_arities.containsKey(f)) _arities.put(f, rule.queryLeftSide().queryNumberArguments());
         if (!_rulesBySymbol.containsKey(f)) _rulesBySymbol.put(f, new TreeSet<String>());
         _rulesBySymbol.get(f).add(name);
       }
@@ -124,10 +124,10 @@ public class ProofContext {
   private void addSubtermInfo(ArrayList<Pair<Pair<FunctionSymbol,Integer>,String>> info,
                               Term s, Renaming renaming) {
     // does s have the form f s1 ... sn?
-    if (!s.isFunctionalTerm() || s.numberArguments() == 0) return;
+    if (!s.isFunctionalTerm() || s.queryNumberArguments() == 0) return;
 
     // go over all the arguments
-    for (int j = 1; j <= s.numberArguments(); j++) {
+    for (int j = 1; j <= s.queryNumberArguments(); j++) {
       if (!s.queryArgument(j).isVariable()) continue; // only interested in variable arguments
       Variable x = s.queryArgument(j).queryVariable();
       String name = renaming.getName(x);

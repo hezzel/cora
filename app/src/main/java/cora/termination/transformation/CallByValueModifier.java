@@ -16,7 +16,6 @@
 package cora.termination.transformation;
 
 import charlie.types.Type;
-import charlie.types.TypeFactory;
 import charlie.terms.*;
 import charlie.theory.Theory;
 import charlie.theory.TheoryFactory;
@@ -46,7 +45,7 @@ public class CallByValueModifier {
       if (Theory.isTheory(f)) continue;
       if (trs.isDefined(f)) continue;
       Type type = f.queryType().queryOutputType();
-      if (type.isBaseTheoryType()) return false;
+      if (Theory.isBaseTheoryType(type)) return false;
     }
     return true;
   }
@@ -63,10 +62,10 @@ public class CallByValueModifier {
       Term left = rho.queryLeftSide();
       Term right = rho.queryRightSide();
       Term constraint = rho.queryConstraint();
-      Environment<Variable> cvars = constraint.vars();
+      Environment<Variable> cvars = constraint.queryFreeVariables();
       Term newconstraint = constraint;
-      for (Variable x : left.vars()) {
-        if (!x.queryType().isBaseType() || !x.queryType().isTheoryType()) continue;
+      for (Variable x : left.queryFreeVariables()) {
+        if (!x.queryType().isBaseType() || !Theory.isTheory(x.queryType())) continue;
         if (cvars.contains(x)) continue;
         Term eq = TheoryFactory.createEquality(x, x);
         newconstraint = TheoryFactory.createConjunction(newconstraint, eq);

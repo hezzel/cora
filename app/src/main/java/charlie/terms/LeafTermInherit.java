@@ -27,46 +27,52 @@ import charlie.terms.position.Position;
  * This inherit provides default functionality for such terms.
  */
 abstract class LeafTermInherit extends TermInherit {
-  private Type _type;
+  private final Type _type;
 
   protected LeafTermInherit(Type type) {
     if (type == null) throw new NullStorageException(queryMyClassName(), "type");
     _type = type;
   }
 
+  @Override
   public Type queryType() {
     return _type;
   }
 
+  @Override
   public boolean isPattern() {
     return true;
   }
 
+  @Override
   public boolean isSemiPattern() {
     return true;
   }
 
   /** if the current term is a function symbol, it is added to storage; otherwise nothing is done */
+  @Override
   public void storeFunctionSymbols(Set<FunctionSymbol> storage) {
     if (isFunctionalTerm()) storage.add(queryRoot());
   }
 
   /** @return a list containing only the current term with the empty Position. */
-  public ArrayList<Pair<Term,Position>> querySubterms() {
+  @Override
+  public ArrayList<Pair<Term,Position>> listSubterms() {
     ArrayList<Pair<Term,Position>> ret = new ArrayList<Pair<Term,Position>>();
     ret.add(new Pair<Term,Position>(this, Position.empty));
     return ret;
   }
 
   /** Throws an error, since there are no non-empty positions in a leaf term */
+  @Override
   public Term querySubtermMain(Position pos) {
     throw new InvalidPositionException(this, pos, "cannot query a strict subterm of a leaf term.");
   }
 
   /** Throws an error, since there are no non-empty positions in a leaf term */
+  @Override
   public Term replaceSubtermMain(Position pos, Term replacement) {
     throw new InvalidPositionException(this, pos,
       "cannot replace a strict subterm of a leaf term.");
   }
 }
-

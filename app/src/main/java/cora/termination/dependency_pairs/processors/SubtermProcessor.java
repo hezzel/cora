@@ -15,7 +15,6 @@
 
 package cora.termination.dependency_pairs.processors;
 
-import charlie.util.Pair;
 import charlie.smt.*;
 import charlie.trs.TrsProperties.*;
 import cora.io.OutputModule;
@@ -25,7 +24,6 @@ import cora.termination.dependency_pairs.Problem;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
 
-import java.util.Optional;
 import java.util.*;
 
 public class SubtermProcessor implements Processor {
@@ -83,8 +81,8 @@ public class SubtermProcessor implements Processor {
       FunctionSymbol f = lhs.queryRoot();
       Term rhs = dp.rhs();
       FunctionSymbol g = rhs.queryRoot();
-      for (int i = 1; i <= lhs.numberArguments(); i++) {
-        for (int j = 1; j <= rhs.numberArguments(); j++) {
+      for (int i = 1; i <= lhs.queryNumberArguments(); i++) {
+        for (int j = 1; j <= rhs.queryNumberArguments(); j++) {
           if (f.equals(g) && i != j) continue;
           Term si = lhs.queryArgument(i);
           Term tj = rhs.queryArgument(j);

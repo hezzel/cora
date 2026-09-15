@@ -16,7 +16,6 @@
 package cora.termination.dependency_pairs.processors;
 
 import charlie.util.FixedList;
-import charlie.util.Pair;
 import charlie.terms.*;
 import charlie.trs.Rule;
 import charlie.trs.TrsProperties.*;
@@ -76,10 +75,10 @@ public class UsableRulesProcessor implements Processor {
     while (!todo.isEmpty() && !containsBad.b) {
       Term t = todo.pop();
       t.visitSubterms( (s,p) -> {
-        if (s.isVarTerm() && s.numberArguments() > 0) containsBad.b = true;
+        if (s.isVarTerm() && s.queryNumberArguments() > 0) containsBad.b = true;
         if (s.isFunctionalTerm()) {
           FunctionSymbol f = s.queryRoot();
-          updateUsableSymbols(f, s.numberArguments(), index.get(f), ret, todo);
+          updateUsableSymbols(f, s.queryNumberArguments(), index.get(f), ret, todo);
         }
       });
       if (containsBad.b) return null;
@@ -110,7 +109,7 @@ public class UsableRulesProcessor implements Processor {
 
     // add the appropriate right-hand sides to the todo list
     for (Rule rule : rules) {
-      int k = rule.queryLeftSide().numberArguments();
+      int k = rule.queryLeftSide().queryNumberArguments();
       if (k <= n) {
         Term t = rule.queryRightSide();
         for (; k < n; k++) {
@@ -144,7 +143,7 @@ public class UsableRulesProcessor implements Processor {
   private Rule getUsableForm(Rule rho, TreeSet<Integer> usableIndexes) {
     Term left = rho.queryLeftSide();
     FunctionSymbol f = left.queryRoot();
-    int k = left.numberArguments();
+    int k = left.queryNumberArguments();
     for (int n : usableIndexes) { // it's a TreeSet, so we go through this set from small to large
       if (n < k) continue;
       if (n == k) return rho;

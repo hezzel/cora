@@ -27,14 +27,13 @@ import charlie.types.TypeFactory;
 import charlie.types.TVarSet;
 import charlie.terms.position.Position;
 import charlie.terms.position.LambdaPos;
-import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.ReplaceableSet;
 
 /** Abstractions are terms of the form λx.s where x is a variable and s a term. */
-class Abstraction extends TermInherit {
-  private Variable _binder;
-  private Term _subterm;
-  private Type _type;
+final class Abstraction extends TermInherit {
+  private final Variable _binder;
+  private final Term _subterm;
+  private final Type _type;
 
   /**
    * Generates the abstraction λ<binder>.<subterm>.
@@ -48,14 +47,14 @@ class Abstraction extends TermInherit {
         binder.queryName() + " is not marked as a binder.");
     }
     // to guarantee well-behavedness, make sure that subterm does not already bind the binder
-    if (subterm.boundVars().contains(binder)) {
+    if (subterm.queryBoundVars().contains(binder)) {
       subterm = subterm.renameAndRefreshBinders(new TreeMap<Variable,Variable>());
     }
     _binder = binder;
     _subterm = subterm;
     _type = TypeFactory.createArrow(binder.queryType(), subterm.queryType());
-    ReplaceableSet frees = subterm.freeReplaceables().remove(binder);
-    ReplaceableSet bounds = subterm.boundVars().add(binder);
+    ReplaceableSet frees = subterm.queryFreeReplaceables().remove(binder);
+    ReplaceableSet bounds = subterm.queryBoundVars().add(binder);
     TVarSet tvars = subterm.queryTypeVars().add(binder.queryType());
     setVariables(frees, bounds, tvars);
   }
@@ -85,32 +84,38 @@ class Abstraction extends TermInherit {
   }
 
   /** @throws InappropriatePatternDataException, as an abstraction is not a meta-application */
+  @Override
   public MetaVariable queryMetaVariable() {
     throw new InappropriatePatternDataException("Abstraction", "queryMetaVariable",
       "meta-variable applications or terms with meta-variable applications as the head");
   }
 
   /** @return the binder of the abstraction */
+  @Override
   public Variable queryVariable() {
     return _binder;
   }
 
   /** @return false, since an abstraction is not first-ordre */
+  @Override
   public boolean isFirstOrder() {
     return false;
   }
 
   /** @return whether this abstraction is a pattern (if and only if the immediate subterm is) */
+  @Override
   public boolean isPattern() {
     return _subterm.isPattern();
   }
 
   /** @return whether this abstraction is a semi-pattern (iff the immediate subterm is) */
+  @Override
   public boolean isSemiPattern() {
     return _subterm.isSemiPattern();
   }
 
   /** @return false, as an applicative term cannot include abstractions. */
+  @Override
   public boolean isApplicative() {
     return false;
   }
@@ -119,35 +124,34 @@ class Abstraction extends TermInherit {
    * @return the list of all (full) subterms in this term along with their positions, in
    * innermost-left order
    */
-  public List<Pair<Term,Position>> querySubterms() {
-    List<Pair<Term,Position>> ret = _subterm.querySubterms();
-    for (int i = 0; i < ret.size(); i++) {
-      ret.set(i, new Pair<Term,Position>(ret.get(i).fst(), new LambdaPos(ret.get(i).snd())));
-    }
+  @Override
+  public List<Pair<Term,Position>> listSubterms() {
+    List<Pair<Term,Position>> ret = _subterm.listSubterms();
+    ret.replaceAll(pair ->
+      new Pair<Term, Position>(pair.fst(), new LambdaPos(pair.snd())));
     ret.add(new Pair<Term,Position>(this, Position.empty));
     return ret;
   }
 
   /** @return the subterm at the given (non-empty) position */
+  @Override
   public Term querySubtermMain(Position pos) {
-    switch (pos) {
-      case LambdaPos(Position tail):
-        return _subterm.querySubterm(tail);
-      default:
-        throw new InvalidPositionException(this, pos, "querying subterm of an abstraction");
-    }
+    if (pos instanceof LambdaPos(Position tail)) return _subterm.querySubterm(tail);
+    throw new InvalidPositionException(this, pos, "querying subterm of an abstraction");
   }
 
-  /** @return the current term with the subterm at pos replaced by replacement (pos is non-empty) */
+  /**
+   * @return the current term with the subterm at pos replaced by replacement (pos is non-empty)
+   */
+  @Override
   public Term replaceSubtermMain(Position pos, Term replacement) {
-    switch (pos) {
-      case LambdaPos(Position tail):
-        return new Abstraction(_binder, _subterm.replaceSubterm(pos.queryTail(), replacement));
-      default:  
-        throw new InvalidPositionException(this, pos, "replacing subterm of an abstraction");
+    if (pos instanceof LambdaPos(Position tail)) {
+      return new Abstraction(_binder, _subterm.replaceSubterm(pos.queryTail(), replacement));
     }
+    throw new InvalidPositionException(this, pos, "replacing subterm of an abstraction");
   }
 
+  @Override
   public Term renameAndRefreshBinders(Map<Variable,Variable> renaming) {
     Variable freshvar = new Binder(_binder.queryName(), _binder.queryType());
     Variable previous = renaming.get(_binder);
@@ -158,18 +162,19 @@ class Abstraction extends TermInherit {
     return new Abstraction(freshvar, subtermSubstitute);
   }
 
+  @Override
   public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
     if (!term.isAbstraction()) return false;
     Variable x = _binder;
     Variable y = term.queryVariable();
     if (!x.queryType().equals(y.queryType())) return false;
     if (mu.containsKey(x)) {
-      throw new IllegalArgumentException("Calling Abstraction::alphaEquals when mu already maps " +
-        x.toString() + ".");
+      throw new IllegalArgumentException("Calling Abstraction::alphaEquals when mu already " +
+        "maps source binder " + x + ".");
     }   
     if (xi.containsKey(y)) {
-      throw new IllegalArgumentException("Calling Abstraction::alphaEquals when xi already maps " +
-        y.toString() + ".");
+      throw new IllegalArgumentException("Calling Abstraction::alphaEquals when xi already " +
+        "maps target binder " + y + ".");
     }   
     mu.put(x, k); 
     xi.put(y, k); 
@@ -180,6 +185,7 @@ class Abstraction extends TermInherit {
   }
 
   /** Returns a hashcode compatible with alpha-equivalence */
+  @Override
   public int hashCode(Map<Variable,Integer> mu) {
     if (mu == null) mu = new TreeMap<Variable,Integer>();
     mu.put(_binder, mu.size()+1);
@@ -188,4 +194,3 @@ class Abstraction extends TermInherit {
     return ret;
   }
 }
-

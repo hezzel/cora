@@ -18,7 +18,6 @@ package cora.termination.dependency_pairs.processors.graph;
 import charlie.util.FixedList;
 import charlie.util.NullStorageException;
 import charlie.util.Pair;
-import charlie.types.TypeFactory;
 import charlie.terms.*;
 import charlie.substitution.MutableSubstitution;
 import charlie.theory.Theory;
@@ -86,13 +85,13 @@ class ApproximateReducer {
    */
   static DP rename(DP dp) {
     MutableSubstitution subst = new MutableSubstitution();
-    for (Variable x : dp.lhs().vars()) {
+    for (Variable x : dp.lhs().queryFreeVariables()) {
       if (subst.get(x) == null) subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }
-    for (Variable x : dp.rhs().vars()) {
+    for (Variable x : dp.rhs().queryFreeVariables()) {
       if (subst.get(x) == null) subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }
-    for (Variable x : dp.constraint().vars()) {
+    for (Variable x : dp.constraint().queryFreeVariables()) {
       if (subst.get(x) == null) subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }
     Term newleft = dp.lhs().substitute(subst);
@@ -120,7 +119,7 @@ class ApproximateReducer {
     TreeMap<FunctionSymbol,Integer> ret = new TreeMap<FunctionSymbol,Integer>();
     for (Rule rule : _rules) {
       FunctionSymbol f = rule.queryLeftSide().queryRoot();
-      int k = rule.queryLeftSide().numberArguments();
+      int k = rule.queryLeftSide().queryNumberArguments();
       if (!ret.containsKey(f) || ret.get(f) > k) ret.put(f, k);
     }
     return ret;
@@ -161,7 +160,7 @@ class ApproximateReducer {
       // theory terms ==> to must either be its value, or have the same shape (in which case we
       // fall through to case 6)
       if (Theory.isTheory(from) && from.queryType().isBaseType() &&
-          allVarsInTheory(from.vars(), dp1.lvars())) {
+          allVarsInTheory(from.queryFreeVariables(), dp1.lvars())) {
         if (!Theory.isTheory(to)) return false;
         if (Theory.isValue(to) || to.isVariable()) {
           requirements = makeAnd(requirements, TheoryFactory.createEquality(from, to));
@@ -169,7 +168,7 @@ class ApproximateReducer {
         }
         else {
           if (Theory.isValue(from)) return false;
-          if (from.isVariable() && dp1.constraint().vars().contains(from.queryVariable())) {
+          if (from.isVariable() && dp1.constraint().queryFreeVariables().contains(from.queryVariable())) {
             return false;
           }
         }
@@ -185,7 +184,7 @@ class ApproximateReducer {
 
       // CASE 4: from is headed by a defined symbol, and applied to enough arguments that a rule
       // may be applied => we assume that it can reduce to anything
-      if (ruleArity.containsKey(f) && ruleArity.get(f) <= from.numberArguments()) continue;
+      if (ruleArity.containsKey(f) && ruleArity.get(f) <= from.queryNumberArguments()) continue;
 
       // CASE 5: from is headed by a calculation symbol; then we allow it to reduce to any value
       if (Theory.isTheory(f) && from.queryType().isBaseType() && Theory.isValue(to)) continue;
@@ -200,8 +199,8 @@ class ApproximateReducer {
       // reducing to ti δ
       if (to.isFunctionalTerm()) {
         if (!f.equals(to.queryRoot())) return false;
-        if (from.numberArguments() != to.numberArguments()) return false;
-        for (int i = from.numberArguments(); i > 0; i--) {
+        if (from.queryNumberArguments() != to.queryNumberArguments()) return false;
+        for (int i = from.queryNumberArguments(); i > 0; i--) {
           todo.push(new Pair<Term,Term>(from.queryArgument(i), to.queryArgument(i)));
         }
         continue;
@@ -210,11 +209,11 @@ class ApproximateReducer {
       // CASE 8: in the only remaining case, from is a term f s1 ... sn (with n < arity(f)) and to
       // is a var term F t1 ... tm. While this should not really happen (since it means that the
       // left-hand side of dp2 is not a pattern), let's account for it anyway
-      if (to.numberArguments() > from.numberArguments()) return false;
+      if (to.queryNumberArguments() > from.queryNumberArguments()) return false;
       if (!to.queryHead().isVariable()) return false;
-      for (int i = 0; i < to.numberArguments(); i++) {
-        Term a = from.queryArgument(from.numberArguments()-i);
-        Term b = to.queryArgument(to.numberArguments()-i);
+      for (int i = 0; i < to.queryNumberArguments(); i++) {
+        Term a = from.queryArgument(from.queryNumberArguments()-i);
+        Term b = to.queryArgument(to.queryNumberArguments()-i);
         if (!a.queryType().equals(b.queryType())) return false;
         todo.push(new Pair<Term,Term>(a, b));
       }

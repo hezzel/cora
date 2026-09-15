@@ -22,8 +22,8 @@ import charlie.types.Type;
  * <p>FunctionSymbols are the primary ingredient to construct terms.</p>
  *
  * <p>Function symbols are defined by (1) their name, (2) their type, and (3) a "special" field
- * that indicates what sort of symbol this is.  For example, the special field could indicate that a
- * symbol is a temporary fresh copy of a symbol used in analysis, or that it belongs to a theory.
+ * that indicates what sort of symbol this is.  For example, the special field could indicate that
+ * a symbol is a temporary fresh copy of a symbol used in analysis, or that it belongs to a theory.
  * </p>
  *
  * <p>Note that function symbol equality is defined by the combination of the three points above.
@@ -38,9 +38,6 @@ public interface FunctionSymbol extends Term, Comparable<FunctionSymbol> {
    * They are not necessarily identified uniquely by their name.
    */
   String queryName();
-
-  /** <p>All function symbols have a type, which restricts how the symbol can be applied.</p> */
-  Type queryType();
 
   /**
    * Function symbols have a (possibly empty) "special" field, which is used to group symbols of
@@ -111,4 +108,3 @@ public interface FunctionSymbol extends Term, Comparable<FunctionSymbol> {
    */
   boolean match(FunctionSymbol instance, Type.MSubstitution typeSubstitution);
 }
-

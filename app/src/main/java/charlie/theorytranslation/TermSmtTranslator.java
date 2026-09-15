@@ -280,11 +280,11 @@ public class TermSmtTranslator {
 
   /** This function throws an UnsupportedTheoryException if t.numberArguments() is not numArgs. */
   private void assertArgumentCount(Term t, int numArgs) {
-    if (t.numberArguments() != numArgs) {
+    if (t.queryNumberArguments() != numArgs) {
       throw new UnsupportedTheoryException("Failed to translate term ", t, " to SMT: the root " +
         "symbol ", t.queryRoot(), " (of kind ",
         Theory.toCalculationSymbol(t.queryRoot()).queryKind(), ") is expected to take " + numArgs +
-        " arguments, not " + t.numberArguments() + ".");
+        " arguments, not " + t.queryNumberArguments() + ".");
     }
   }
 

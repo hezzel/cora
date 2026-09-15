@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,6 +15,7 @@
 
 package charlie.terms;
 
+import charlie.parser.CoraParser;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
@@ -30,10 +31,25 @@ import charlie.types.TVarSet;
 import charlie.terms.position.*;
 import charlie.terms.replaceable.ReplaceableSet;
 
-class MetaApplicationTest extends TermTestFoundation {
+class MetaApplicationTest {
+  private Type type(String desc) { return CoraParser.readType(desc); }
+
+  protected Term unaryTerm(String name, Type output, Term arg) {
+    Type arrtype = TypeFactory.createArrow(arg.queryType(), output);
+    FunctionSymbol f = new Constant(name, arrtype);
+    return new Application(f, arg);
+  }
+
+  protected Term twoArgVarTerm() {
+    Variable x = TermFactory.createVar("x", type("a -> b -> a"));
+    Term arg1 = new Constant("c", type("a"));
+    Term arg2 = unaryTerm("g", type("b"), TermFactory.createVar("y", type("b")));
+    return new Application(x, arg1, arg2);
+  }
+
   @Test
   public void testUnaryWithNullArg() {
-    MetaVariable z = TermFactory.createMetaVar("z", baseType("a"), baseType("b"));
+    MetaVariable z = TermFactory.createMetaVar("z", type("a"), type("b"));
     Term arg = null;
     assertThrows(java.lang.NullPointerException.class, () -> TermFactory.createMeta(z, arg));
   }
@@ -41,37 +57,37 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testBinaryWithNullHead() {
     assertThrows(NullStorageException.class, () ->
-      TermFactory.createMeta(null, constantTerm("a", baseType("b")),
-                                   constantTerm("a", baseType("c"))));
+      TermFactory.createMeta(null, new Constant("a", type("b")),
+                                   new Constant("a", type("c"))));
   }
 
   @Test
   public void testNullArgs() {
-    MetaVariable z = TermFactory.createMetaVar("z", baseType("a"), baseType("b"));
+    MetaVariable z = TermFactory.createMetaVar("z", type("a"), type("b"));
     ArrayList<Term> args = null;
-    assertThrows(NullStorageException.class, () -> TermFactory.createMeta(z, args));
+    assertThrows(NullPointerException.class, () -> TermFactory.createMeta(z, args));
   }
 
   @Test
   public void testIncorrectArgsCount() {
     ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(baseType("a"));
-    inputs.add(baseType("a"));
-    inputs.add(baseType("a"));
-    MetaVariable z = TermFactory.createMetaVar("z", inputs, baseType("a"));
-    Term s = constantTerm("s", baseType("a"));
+    inputs.add(type("a"));
+    inputs.add(type("a"));
+    inputs.add(type("a"));
+    MetaVariable z = TermFactory.createMetaVar("z", inputs, type("a"));
+    Term s = new Constant("s", type("a"));
     assertThrows(TypingException.class, () -> TermFactory.createMeta(z, s, s));
     ArrayList<Term> args = new ArrayList<Term>();
-    args.add(constantTerm("a", baseType("a")));
-    args.add(constantTerm("a", baseType("a")));
-    args.add(constantTerm("a", baseType("a")));
-    args.add(constantTerm("a", baseType("a")));
+    args.add(new Constant("a", type("a")));
+    args.add(new Constant("a", type("a")));
+    args.add(new Constant("a", type("a")));
+    args.add(new Constant("a", type("a")));
     assertThrows(TypingException.class, () -> TermFactory.createMeta(z, args));
   }
 
   @Test
   public void testNoArgs() {
-    MetaVariable z = new Var("z", arrowType("a", "a"));
+    MetaVariable z = new Var("z", type("a -> a"));
     ArrayList<Term> args = new ArrayList<Term>();
     assertThrows(IllegalArgumentException.class, () -> new MetaApplication(z, args));
   }
@@ -79,26 +95,26 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testBadArgumentType() {
     ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(baseType("a"));
-    inputs.add(baseType("a"));
-    MetaVariable z = TermFactory.createMetaVar("z", inputs, arrowType("a", "a"));
+    inputs.add(type("a"));
+    inputs.add(type("a"));
+    MetaVariable z = TermFactory.createMetaVar("z", inputs, type("a -> a"));
     ArrayList<Term> args = new ArrayList<Term>();
-    args.add(constantTerm("a", baseType("a")));
-    args.add(constantTerm("b", baseType("b")));
+    args.add(new Constant("a", type("a")));
+    args.add(new Constant("b", type("b")));
     assertThrows(TypingException.class, () -> TermFactory.createMeta(z, args));
   }
 
   @Test
   public void testNoArgsBecomesVar() {
-    MetaVariable z = new Var("z", arrowType("a", "a"));
+    MetaVariable z = new Var("z", type("a -> a"));
     ArrayList<Term> args = new ArrayList<Term>();
     Term t = TermFactory.createMeta(z, args);
     assertTrue(t == z);
   }
 
-  private Term makeMeta(String name, Term arg, Type output) {
+  private Term makeMeta(Term arg, Type output) {
     FixedList<Type> inputs = FixedList.of(arg.queryType());
-    MetaVariable z = new HigherMetaVar(name, inputs, output);
+    MetaVariable z = new HigherMetaVar("Z", inputs, output);
     return TermFactory.createMeta(z, arg);
   }
 
@@ -109,17 +125,17 @@ class MetaApplicationTest extends TermTestFoundation {
 
   private Term makeSample() {
     // create: Z[f(x), λy.f(y)]
-    Variable x = TermFactory.createVar("x", baseType("A"));
-    Variable y = TermFactory.createBinder("y", baseType("A"));
-    Term arg1 = unaryTerm("f", baseType("B"), x);
-    Term arg2 = TermFactory.createAbstraction(y, unaryTerm("f", baseType("B"), y));
-    return makeMeta("Z", arg1, arg2, baseType("A"));
+    Variable x = TermFactory.createVar("x", type("A"));
+    Variable y = TermFactory.createBinder("y", type("A"));
+    Term arg1 = unaryTerm("f", type("B"), x);
+    Term arg2 = TermFactory.createAbstraction(y, unaryTerm("f", type("B"), y));
+    return makeMeta("Z", arg1, arg2, type("A"));
   }
 
   @Test
   public void testBasics() {
     Term t = makeSample();
-    assertTrue(t.queryType().equals(baseType("A")));
+    assertTrue(t.queryType().equals(type("A")));
     assertFalse(t.isConstant());
     assertFalse(t.isVariable());
     assertFalse(t.isAbstraction());
@@ -134,11 +150,11 @@ class MetaApplicationTest extends TermTestFoundation {
     assertTrue(t.isClosed());   // Z is not a binder
     assertFalse(t.isGround());
     assertFalse(t.isTrueTerm());
-    assertTrue(t.numberArguments() == 0);
-    assertTrue(t.numberMetaArguments() == 2);
-    assertTrue(t.queryArguments().size() == 0);
-    assertTrue(t.queryMetaArguments().size() == 2);
-    assertTrue(t.queryMetaArguments().get(0).toString().equals("f(x)"));
+    assertTrue(t.queryNumberArguments() == 0);
+    assertTrue(t.queryNumberMetaArguments() == 2);
+    assertTrue(t.listArguments().isEmpty());
+    assertTrue(t.listMetaArguments().size() == 2);
+    assertTrue(t.listMetaArguments().get(0).toString().equals("f(x)"));
     assertTrue(t.queryHead() == t);
     assertTrue(t.queryImmediateHeadSubterm(0) == t);
     assertTrue(t.toString().equals("Z⟨f(x), λy.f(y)⟩"));
@@ -159,68 +175,67 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testSingleVariableSets() {
     // create: Z[f(x), λy.f(y)]
-    Variable x = TermFactory.createVar("x", baseType("A"));
-    Variable y = TermFactory.createBinder("y", baseType("A"));
-    Term arg1 = unaryTerm("f", baseType("B"), x);
-    Term arg2 = unaryTerm("g", baseType("C"),
-      TermFactory.createAbstraction(y, unaryTerm("f", baseType("B"), y)));
-    Term s = makeMeta("Z", arg1, arg2, baseType("A"));
+    Variable x = TermFactory.createVar("x", type("A"));
+    Variable y = TermFactory.createBinder("y", type("A"));
+    Term arg1 = unaryTerm("f", type("B"), x);
+    Term arg2 = unaryTerm("g", type("C"),
+      TermFactory.createAbstraction(y, unaryTerm("f", type("B"), y)));
+    Term s = makeMeta("Z", arg1, arg2, type("A"));
     // no variable merging needed, but we still need to create a new free replaceable set due to
     // the addition of the meta-variable
-    assertTrue(arg1.freeReplaceables().size() == 1);
-    assertTrue(s.freeReplaceables().size() == 2);
+    assertTrue(arg1.queryFreeReplaceables().size() == 1);
+    assertTrue(s.queryFreeReplaceables().size() == 2);
     // bound variable set stays the same, however
-    assertTrue(s.boundVars() == arg2.boundVars());
+    assertTrue(s.queryBoundVars() == arg2.queryBoundVars());
   }
 
   @Test
   public void testProperlyMergeReplaceableSets() {
     // create: H[Z[x, Z[f(x, λu.u), g(y)]], f(z, λu.u)]
-    Variable x = TermFactory.createVar("x", baseType("B"));
-    Variable y = TermFactory.createVar("y", baseType("Y"));
-    Variable z = TermFactory.createVar("z", baseType("B"));
-    Variable u = TermFactory.createBinder("u", baseType("U"));
-    FunctionSymbol f = TermFactory.createConstant("f", arrowType(baseType("B"),
-      arrowType(arrowType("U", "U"), baseType("B"))));
+    Variable x = TermFactory.createVar("x", type("B"));
+    Variable y = TermFactory.createVar("y", type("Y"));
+    Variable z = TermFactory.createVar("z", type("B"));
+    Variable u = TermFactory.createBinder("u", type("U"));
+    FunctionSymbol f = TermFactory.createConstant("f", type("B -> (U -> U) -> B"));
     Term abs = TermFactory.createAbstraction(u, u);
     Term fabs = TermFactory.createApp(f, x, abs);
-    Term gy = unaryTerm("g", baseType("A"), y);
-    MetaVariable m = TermFactory.createMetaVar("Z", baseType("B"), baseType("A"), baseType("A"));
+    Term gy = unaryTerm("g", type("A"), y);
+    MetaVariable m = TermFactory.createMetaVar("Z", type("B"), type("A"), type("A"));
     Term sub1 = TermFactory.createMeta(m, fabs, gy);
     Term sub2 = TermFactory.createMeta(m, x, sub1);
     Term sub3 = TermFactory.createApp(f, z, abs);
-    Term top = makeMeta("H", sub2, sub3, baseType("C"));
+    Term top = makeMeta("H", sub2, sub3, type("C"));
 
     // in Z[f(x, λu.u), g(y)], the free replaceable sets are merged and Z is added
-    assertTrue(sub1.freeReplaceables().contains(m));
-    assertTrue(sub1.freeReplaceables().size() == 3);
-    assertTrue(sub1.freeReplaceables().contains(x));
-    assertTrue(sub1.freeReplaceables().contains(y));
-    assertFalse(sub1.freeReplaceables().contains(u));
+    assertTrue(sub1.queryFreeReplaceables().contains(m));
+    assertTrue(sub1.queryFreeReplaceables().size() == 3);
+    assertTrue(sub1.queryFreeReplaceables().contains(x));
+    assertTrue(sub1.queryFreeReplaceables().contains(y));
+    assertFalse(sub1.queryFreeReplaceables().contains(u));
     // in Z[x, Z[f(x, λu.u), g(y)]], no additional merging needs to happen
-    assertTrue(sub1.freeReplaceables() == sub2.freeReplaceables());
+    assertTrue(sub1.queryFreeReplaceables() == sub2.queryFreeReplaceables());
     // but in the top term, we have a merged set again
-    assertTrue(top.freeReplaceables().size() == 5);
-    assertTrue(top.freeReplaceables().contains(x));
-    assertTrue(top.freeReplaceables().contains(y));
-    assertTrue(top.freeReplaceables().contains(z));
-    assertTrue(sub1.freeReplaceables().contains(m));
+    assertTrue(top.queryFreeReplaceables().size() == 5);
+    assertTrue(top.queryFreeReplaceables().contains(x));
+    assertTrue(top.queryFreeReplaceables().contains(y));
+    assertTrue(top.queryFreeReplaceables().contains(z));
+    assertTrue(sub1.queryFreeReplaceables().contains(m));
     // as for the bound variable sets, no renaming or merging is done
-    assertTrue(top.boundVars() == abs.boundVars());
+    assertTrue(top.queryBoundVars() == abs.queryBoundVars());
 
     // create: H[Z[x, Z[f(x, λu.u), g(y)]], f(z, λu'.u')]
-    Variable v = TermFactory.createBinder("u", baseType("U"));
+    Variable v = TermFactory.createBinder("u", type("U"));
     Term abs2 = TermFactory.createAbstraction(v, v);
     Term sub3alter = TermFactory.createApp(f, z, abs2);
-    Term topalter = makeMeta("H", sub2, sub3alter, baseType("C"));
-    assertTrue(topalter.boundVars().size() == 2);
-    assertTrue(topalter.boundVars().contains(u));
-    assertTrue(topalter.boundVars().contains(v));
+    Term topalter = makeMeta("H", sub2, sub3alter, type("C"));
+    assertTrue(topalter.queryBoundVars().size() == 2);
+    assertTrue(topalter.queryBoundVars().contains(u));
+    assertTrue(topalter.queryBoundVars().contains(v));
   }
 
   @Test
   public void testMetaApplicationCannotBeGround() {
-    Term t = makeMeta("Z", constantTerm("a", baseType("o")), baseType("o"));
+    Term t = makeMeta(new Constant("a", type("o")), type("o"));
     assertFalse(t.isGround());
     assertTrue(t.isClosed());
   }
@@ -228,11 +243,11 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testMetaArguments() {
     // create: Z[f(x), λy.f(y)]
-    Variable x = TermFactory.createVar("x", baseType("A"));
-    Variable y = TermFactory.createBinder("y", baseType("A"));
-    Term arg1 = unaryTerm("f", baseType("B"), x);
-    Term arg2 = TermFactory.createAbstraction(y, unaryTerm("f", baseType("B"), y));
-    Term t = makeMeta("Z", arg1, arg2, baseType("A"));
+    Variable x = TermFactory.createVar("x", type("A"));
+    Variable y = TermFactory.createBinder("y", type("A"));
+    Term arg1 = unaryTerm("f", type("B"), x);
+    Term arg2 = TermFactory.createAbstraction(y, unaryTerm("f", type("B"), y));
+    Term t = makeMeta("Z", arg1, arg2, type("A"));
     assertTrue(t.queryMetaVariable().queryArity() == 2);
     assertTrue(t.queryMetaArgument(1) == arg1);
     assertTrue(t.queryMetaArgument(2) == arg2);
@@ -241,12 +256,12 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testPattern() {
     ArrayList<Type> inputs = new ArrayList<Type>();
-    for (int i = 0; i < 3; i++) inputs.add(baseType("A"));
+    for (int i = 0; i < 3; i++) inputs.add(type("A"));
     ArrayList<Term> args = new ArrayList<Term>();
-    args.add(TermFactory.createBinder("x", baseType("A")));
-    args.add(TermFactory.createBinder("y", baseType("A")));
-    args.add(TermFactory.createBinder("z", baseType("A")));
-    MetaVariable z = TermFactory.createMetaVar("mvar", inputs, baseType("B"));
+    args.add(TermFactory.createBinder("x", type("A")));
+    args.add(TermFactory.createBinder("y", type("A")));
+    args.add(TermFactory.createBinder("z", type("A")));
+    MetaVariable z = TermFactory.createMetaVar("mvar", inputs, type("B"));
     Term t = TermFactory.createMeta(z, args);
     assertTrue(t.isPattern());
     assertFalse(t.isFirstOrder());
@@ -258,17 +273,16 @@ class MetaApplicationTest extends TermTestFoundation {
 
   /** @return Z⟨g(x),c⟩ :: a → b */
   private Term createTestTerm() {
-    Type type = arrowType(baseType("a"), arrowType(baseType("b"), arrowType("a", "b")));
-    MetaVariable z = TermFactory.createMetaVar("Z", type, 2);
-    Term arg1 = unaryTerm("g", baseType("a"), new Var("x", baseType("b")));
-    Term arg2 = constantTerm("c", baseType("b"));
+    MetaVariable z = TermFactory.createMetaVar("Z", type("a -> b -> a -> b"), 2);
+    Term arg1 = unaryTerm("g", type("a"), new Var("x", type("b")));
+    Term arg2 = new Constant("c", type("b"));
     return TermFactory.createMeta(z, arg1, arg2);
   }
 
   @Test
   public void testSubterms() {
     Term term = createTestTerm();
-    List<Pair<Term,Position>> lst = term.querySubterms();
+    List<Pair<Term,Position>> lst = term.listSubterms();
     assertTrue(lst.size() == 4);
     assertTrue(lst.get(0).snd().toString().equals("!1.1"));
     assertTrue(lst.get(1).snd().toString().equals("!1"));
@@ -281,8 +295,8 @@ class MetaApplicationTest extends TermTestFoundation {
 
   @Test
   public void testSubtermsInApplication() {
-    Term term = createTestTerm().apply(constantTerm("a", baseType("a")));
-    List<Pair<Term,Position>> lst = term.querySubterms();
+    Term term = createTestTerm().apply(new Constant("a", type("a")));
+    List<Pair<Term,Position>> lst = term.listSubterms();
     assertTrue(lst.size() == 5);
     assertTrue(lst.get(0).snd().toString().equals("!1.1"));
     assertTrue(lst.get(1).snd().toString().equals("!1"));
@@ -292,13 +306,13 @@ class MetaApplicationTest extends TermTestFoundation {
     assertTrue(lst.get(4).snd().toString().equals("ε"));
     assertTrue(term.hasSubterm(lst.get(3).fst()));
     assertTrue(term.hasSubterm(lst.get(4).fst()));
-    assertFalse(term.hasSubterm(TermFactory.createVar("x", baseType("b"))));
+    assertFalse(term.hasSubterm(TermFactory.createVar("x", type("b"))));
   }
 
   @Test
   public void testPartialPositions() {
-    Term term = createTestTerm().apply(constantTerm("a", baseType("a")));
-    List<Position> lst = term.queryPositions(true);
+    Term term = createTestTerm().apply(new Constant("a", type("a")));
+    List<Position> lst = term.listPositions(true);
     assertTrue(lst.size() == 7);
     assertTrue(lst.get(0).toString().equals("!1.1"));   // x
     assertTrue(lst.get(1).toString().equals("!1.☆1"));  // g
@@ -312,7 +326,7 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testSubtermGood() {
     // term Z⟨g(x),c⟩(a)
-    Term term = createTestTerm().apply(constantTerm("a", baseType("a")));
+    Term term = createTestTerm().apply(new Constant("a", type("a")));
     // position !1.1
     Position pos = new MetaPos(1, new ArgumentPos(1, new FinalPos(0)));
     assertTrue(term.querySubterm(pos) instanceof Var);
@@ -345,7 +359,7 @@ class MetaApplicationTest extends TermTestFoundation {
   public void testSubtermReplacementGood() throws PositionFormatException {
     Term term = createTestTerm();
     Position pos = Position.parse("!1.1");
-    Term replacement = constantTerm("42", baseType("b"));
+    Term replacement = new Constant("42", type("b"));
     Term s = term.replaceSubterm(pos, replacement);
     assertTrue(s.toString().equals("Z⟨g(42), c⟩"));
     assertTrue(term.toString().equals("Z⟨g(x), c⟩"));
@@ -354,10 +368,10 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testHeadSubtermReplacementGood() {
     // term Z⟨g(x),c⟩(a)
-    Term term = createTestTerm().apply(constantTerm("a", baseType("a")));
+    Term term = createTestTerm().apply(new Constant("a", type("a")));
     // replacement λx.a
-    Variable x = new Binder("x", baseType("b"));
-    Term replacement = new Abstraction(x, constantTerm("a", baseType("a")));
+    Variable x = new Binder("x", type("b"));
+    Term replacement = new Abstraction(x, new Constant("a", type("a")));
     // position !1.☆1
     Position pos = new MetaPos(1, new FinalPos(1));
     // replacement Z⟨(λx1.a)(x),c⟩(a)
@@ -369,7 +383,7 @@ class MetaApplicationTest extends TermTestFoundation {
   public void testSubtermReplacementBadPositionKind() throws PositionFormatException {
     Term term = createTestTerm();
     Position pos = Position.parse("2");
-    Term replacement = constantTerm("uu", baseType("b"));
+    Term replacement = new Constant("uu", type("b"));
     assertThrows(InvalidPositionException.class, () -> term.replaceSubterm(pos, replacement));
   }
 
@@ -377,7 +391,7 @@ class MetaApplicationTest extends TermTestFoundation {
   public void testSubtermReplacementBadPositionRange() throws PositionFormatException {
     Term term = createTestTerm();
     Position pos = Position.parse("!3");
-    Term replacement = constantTerm("uu", baseType("b"));
+    Term replacement = new Constant("uu", type("b"));
     assertThrows(InvalidPositionException.class, () -> term.replaceSubterm(pos, replacement));
   }
 
@@ -385,7 +399,7 @@ class MetaApplicationTest extends TermTestFoundation {
   public void testSubtermReplacementBadHeadPosition() throws PositionFormatException {
     Term term = createTestTerm();
     Position pos = Position.parse("☆1");
-    Term replacement = constantTerm("uu", arrowType("a", "b"));
+    Term replacement = new Constant("uu", type("a -> b"));
     assertThrows(InvalidPositionException.class, () -> term.replaceSubterm(pos, replacement));
   }
 
@@ -393,7 +407,7 @@ class MetaApplicationTest extends TermTestFoundation {
   public void testSubtermReplacementBadType() {
     Term term = createTestTerm();
     Position pos = Position.empty;
-    Term replacement = constantTerm("uu", baseType("x"));
+    Term replacement = new Constant("uu", type("x"));
     assertThrows(TypingException.class, () -> term.replaceSubterm(pos, replacement));
   }
 
@@ -408,11 +422,11 @@ class MetaApplicationTest extends TermTestFoundation {
 
   @Test
   public void testAppliedMetaApp() {
-    Variable x = TermFactory.createBinder("x", baseType("o"));
-    Variable y = TermFactory.createBinder("x", baseType("a"));
-    Variable z = TermFactory.createBinder("z", baseType("a"));
-    Type output = arrowType(baseType("a"), arrowType("a", "b"));
-    MetaVariable m = TermFactory.createMetaVar("Z", baseType("o"), output);
+    Variable x = TermFactory.createBinder("x", type("o"));
+    Variable y = TermFactory.createBinder("x", type("a"));
+    Variable z = TermFactory.createBinder("z", type("a"));
+    Type output = type("a -> a -> b");
+    MetaVariable m = TermFactory.createMetaVar("Z", type("o"), output);
     Term zx = TermFactory.createMeta(m, x);
     Term total = TermFactory.createApp(zx, y, z);
     assertTrue(total.toString().equals("Z⟨x__1⟩(x__2, z)"));
@@ -421,17 +435,16 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testAlphaEquality() {
     // M[λx.x, λx.f(x), u]
-    Variable x = TermFactory.createBinder("x", baseType("o"));
-    Variable y = TermFactory.createBinder("y", baseType("o"));
-    Variable z = TermFactory.createBinder("z", baseType("o"));
-    Variable u = TermFactory.createBinder("u", baseType("o"));
-    Type o = baseType("o");
-    Term fx = unaryTerm("f", o, x);
+    Variable x = TermFactory.createBinder("x", type("o"));
+    Variable y = TermFactory.createBinder("y", type("o"));
+    Variable z = TermFactory.createBinder("z", type("o"));
+    Variable u = TermFactory.createBinder("u", type("o"));
+    Type o = type("o");
     ArrayList<Type> inputs = new ArrayList<Type>();
-    inputs.add(arrowType("o", "o"));
-    inputs.add(arrowType("o", "o"));
-    inputs.add(baseType("o"));
-    MetaVariable m = TermFactory.createMetaVar("M", inputs, baseType("o"));
+    inputs.add(type("o -> o"));
+    inputs.add(type("o -> o"));
+    inputs.add(type("o"));
+    MetaVariable m = TermFactory.createMetaVar("M", inputs, type("o"));
     ArrayList<Term> args1 = new ArrayList<Term>();
     args1.add(TermFactory.createAbstraction(x, x));
     args1.add(TermFactory.createAbstraction(x, unaryTerm("f", o, x)));
@@ -441,7 +454,7 @@ class MetaApplicationTest extends TermTestFoundation {
     args2.add(TermFactory.createAbstraction(y, y));
     args2.add(TermFactory.createAbstraction(z, unaryTerm("f", o, z)));
     args2.add(u);
-    Term t = TermFactory.createMeta(m, args1);
+    Term t = TermFactory.createMeta(m, args2);
     assertTrue(s.equals(t));
     assertTrue(t.equals(s));
     assertTrue(s.hashCode() == t.hashCode());
@@ -456,9 +469,9 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testInequalityDifferentMetaVariables() {
     // M⟨x⟩
-    Variable x = TermFactory.createBinder("x", baseType("o"));
-    MetaVariable m1 = TermFactory.createMetaVar("M", arrowType("o", "o"), 1);
-    MetaVariable m2 = TermFactory.createMetaVar("M", arrowType("o", "o"), 1);
+    Variable x = TermFactory.createBinder("x", type("o"));
+    MetaVariable m1 = TermFactory.createMetaVar("M", type("o -> o"), 1);
+    MetaVariable m2 = TermFactory.createMetaVar("M", type("o -> o"), 1);
     Term term1 = TermFactory.createMeta(m1, x);
     Term term2 = TermFactory.createMeta(m2, x);
     assertFalse(term1.equals(term2));
@@ -467,9 +480,9 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testInequalityDifferentArguments() {
     // M⟨x⟩
-    Variable x1 = TermFactory.createBinder("x", baseType("o"));
-    Variable x2 = TermFactory.createBinder("x", baseType("o"));
-    MetaVariable m = TermFactory.createMetaVar("M", arrowType("o", "o"), 1);
+    Variable x1 = TermFactory.createBinder("x", type("o"));
+    Variable x2 = TermFactory.createBinder("x", type("o"));
+    MetaVariable m = TermFactory.createMetaVar("M", type("o -> o"), 1);
     Term term1 = TermFactory.createMeta(m, x1);
     Term term2 = TermFactory.createMeta(m, x2);
     assertFalse(term1.equals(term2));
@@ -478,13 +491,12 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testRenaming() {
     // Z⟨λx.a(x,y),F⟩ -- except all variables and meta-variables are called "v"
-    Variable x = new Binder("x", baseType("A"));
-    Variable f = new Binder("x", arrowType("A", "A"));
-    Variable y = new Binder("x", baseType("B"));
-    Term a = constantTerm("a", arrowType(baseType("A"), arrowType("B", "A")));
+    Variable x = new Binder("x", type("A"));
+    Variable f = new Binder("x", type("A -> A"));
+    Variable y = new Binder("x", type("B"));
+    Term a = new Constant("a", type("A -> B -> A"));
     Term abs = new Abstraction(x, TermFactory.createApp(a, x, y));
-    MetaVariable z = TermFactory.createMetaVar("x", arrowType(abs.queryType(),
-      arrowType(f.queryType(), baseType("A"))), 2);
+    MetaVariable z = TermFactory.createMetaVar("x", type("(A -> A) -> (A -> A) -> A"), 2);
     Term term = TermFactory.createMeta(z, abs, f);
     assertTrue(term.toString().equals("x__1⟨λx__4.a(x__4, x__3), x__2⟩"));
   }
@@ -492,62 +504,60 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testReplaceables() {
     // let's create: Z⟨Z⟨x,h(λz.c(z))⟩,g(y,x)⟩, where x and y are variables
-    MetaVariable z = TermFactory.createMetaVar("Z", arrowType(baseType("a"),arrowType("b","a")), 2);
-    FunctionSymbol g = new Constant("g", arrowType(baseType("b"),arrowType("a","b")));
-    FunctionSymbol c = new Constant("c", arrowType("o", "o"));
-    FunctionSymbol h = new Constant("h", arrowType(arrowType("o", "o"), baseType("b")));
-    Variable x = new Binder("x", baseType("a"));
-    Variable y = new Var("y", baseType("b"));
-    Variable z2 = new Binder("z", baseType("o"));
+    MetaVariable z = TermFactory.createMetaVar("Z", type("a -> b -> a"), 2);
+    FunctionSymbol g = new Constant("g", type("b -> a -> b"));
+    FunctionSymbol c = new Constant("c", type("o -> o"));
+    FunctionSymbol h = new Constant("h", type("(o -> o) -> b"));
+    Variable x = new Binder("x", type("a"));
+    Variable y = new Var("y", type("b"));
+    Variable z2 = new Binder("z", type("o"));
     Term hlambdazcz = new Application(h, new Abstraction(z2, c.apply(z2)));
     Term t = TermFactory.createMeta(z, x, hlambdazcz);
     Term s = TermFactory.createMeta(z, t, new Application(g, y, x));
-    ReplaceableSet lst = s.freeReplaceables();
+    ReplaceableSet lst = s.queryFreeReplaceables();
     assertTrue(lst.contains(x));
     assertTrue(lst.contains(y));
     assertTrue(lst.contains(z));
 
-    Environment<Variable> env = s.vars();
+    Environment<Variable> env = s.queryFreeVariables();
     assertTrue(env.contains(x));
     assertTrue(env.contains(y));
     assertTrue(env.size() == 2);
 
-    Environment<MetaVariable> menv = s.mvars();
+    Environment<MetaVariable> menv = s.queryMetaVariables();
     assertTrue(menv.contains(z));
     assertTrue(menv.size() == 2);
-    assertTrue(t.mvars().size() == 1);
-    assertTrue(hlambdazcz.mvars().size() == 0);
+    assertTrue(t.queryMetaVariables().size() == 1);
+    assertTrue(hlambdazcz.queryMetaVariables().size() == 0);
   }
 
   @Test
   public void testReplaceablesReuse() {
     // let's create: Z⟨g(x), Z⟨x,y⟩⟩
-    Variable x = new Var("x", baseType("o"));
-    Variable y = new Var("x", baseType("o"));
-    Term gx = unaryTerm("g", baseType("o"), x);
+    Variable x = new Var("x", type("o"));
+    Variable y = new Var("x", type("o"));
+    Term gx = unaryTerm("g", type("o"), x);
     MetaVariable z =
-      TermFactory.createMetaVar("Z", arrowType(baseType("o"), arrowType("o", "o")), 2);
+      TermFactory.createMetaVar("Z", type("o -> o -> o"), 2);
     Term zxy = TermFactory.createMeta(z, x, y);
     Term term = TermFactory.createMeta(z, gx, zxy);
-    assertTrue(gx.freeReplaceables() == x.freeReplaceables());
-    assertTrue(zxy.freeReplaceables() == term.freeReplaceables());
-    assertTrue(term.freeReplaceables().size() == 3);
+    assertTrue(gx.queryFreeReplaceables() == x.queryFreeReplaceables());
+    assertTrue(zxy.queryFreeReplaceables() == term.queryFreeReplaceables());
+    assertTrue(term.queryFreeReplaceables().size() == 3);
   }
 
   @Test
   public void testBoundVars() {
     // let's create: F⟨λx.Z(x), Y, G⟨λz.z, λx,u.h(x,y)⟩⟩
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("o"));
-    Variable z = new Binder("z", baseType("o"));
-    Variable u = new Binder("u", baseType("o"));
-    Variable bZ = new Var("Z", arrowType("o", "o"));
-    Variable bY = new Var("Y", baseType("o"));
-    FunctionSymbol h = new Constant("h", arrowType(baseType("o"), arrowType("o", "o")));
-    MetaVariable g = TermFactory.createMetaVar("G", arrowType(arrowType("o", "o"),
-      arrowType(arrowType(baseType("o"), arrowType("o", "o")), baseType("o"))), 2);
-    MetaVariable f = TermFactory.createMetaVar("F",
-      arrowType(arrowType("o", "o"), arrowType(baseType("o"), arrowType("o", "o"))), 3);
+    Variable x = new Binder("x", type("o"));
+    Variable y = new Binder("y", type("o"));
+    Variable z = new Binder("z", type("o"));
+    Variable u = new Binder("u", type("o"));
+    Variable bZ = new Var("Z", type("o -> o"));
+    Variable bY = new Var("Y", type("o"));
+    FunctionSymbol h = new Constant("h", type("o -> o -> o"));
+    MetaVariable g = TermFactory.createMetaVar("G", type("(o -> o) -> (o -> o -> o) -> o"), 2);
+    MetaVariable f = TermFactory.createMetaVar("F", type("(o -> o) -> o -> o -> o"), 3);
     Term ahxy = new Abstraction(x, new Abstraction(u, new Application(h, x, y)));
     Term az = new Abstraction(z, z);
     Term gterm = TermFactory.createMeta(g, az, ahxy);
@@ -558,8 +568,8 @@ class MetaApplicationTest extends TermTestFoundation {
     args.add(gterm);
     Term fterm = new MetaApplication(f, args);
 
-    ReplaceableSet frees = fterm.freeReplaceables();
-    ReplaceableSet boundVars = fterm.boundVars();
+    ReplaceableSet frees = fterm.queryFreeReplaceables();
+    ReplaceableSet boundVars = fterm.queryBoundVars();
     assertTrue(frees.size() == 5);
     assertTrue(boundVars.size() == 3);
     assertTrue(boundVars.contains(x));
@@ -575,13 +585,12 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testBoundVarsReuse() {
     // let's create: Z⟨λx.x, λx.x⟩
-    Variable x = new Binder("x", baseType("o"));
-    MetaVariable z = TermFactory.createMetaVar("Z", arrowType(arrowType("o", "o"),
-      arrowType(arrowType("o", "o"), baseType("o"))), 2);
+    Variable x = new Binder("x", type("o"));
+    MetaVariable z = TermFactory.createMetaVar("Z", type("(o -> o) -> (o -> o) -> o"), 2);
     Term abs1 = new Abstraction(x, x);
     Term abs2 = new Abstraction(x, x);
     Term term = TermFactory.createMeta(z, abs1, abs2);
-    assertTrue(term.boundVars() == abs1.boundVars());
+    assertTrue(term.queryBoundVars() == abs1.queryBoundVars());
   }
 
   @Test
@@ -589,9 +598,8 @@ class MetaApplicationTest extends TermTestFoundation {
     // let's create Z⟨f(x),y)
     Variable x = new Binder("x", TypeFactory.createVariable("alpha"));
     Variable y = new Var("y", TypeFactory.createVariable("beta"));
-    Term sub = unaryTerm("f", baseType("A"), x);
-    MetaVariable z = TermFactory.createMetaVar("Z", arrowType(baseType("A"),
-      arrowType(TypeFactory.createVariable("beta"), TypeFactory.createVariable("gamma"))), 2);
+    Term sub = unaryTerm("f", type("A"), x);
+    MetaVariable z = TermFactory.createMetaVar("Z", type("A -> $beta -> $gamma"), 2);
     Term term = TermFactory.createMeta(z, sub, y);
     assertTrue(term.queryTypeVars().size() == 3);
     assertTrue(term.queryTypeVars().contains(TypeFactory.createVariable("beta")));
@@ -602,43 +610,35 @@ class MetaApplicationTest extends TermTestFoundation {
     // a monomorphic term should have THE empty set of type variables
     assertTrue(twoArgVarTerm().queryTypeVars() == TVarSet.EMPTY);
     // let's create Z⟨x,f(x,y,u),y)
-    Type alpha = TypeFactory.createVariable("alpha");
-    Type beta = TypeFactory.createVariable("beta");
-    Type gamma = TypeFactory.createVariable("gamma");
-    Type o = baseType("o");
     Variable x = new Binder("x", TypeFactory.createVariable("alpha"));
     Variable y = new Var("y", TypeFactory.createVariable("beta"));
     Variable u = new Var("u", TypeFactory.createVariable("gamma"));
-    FunctionSymbol f = new Constant("f", arrowType(alpha, arrowType(beta, arrowType(gamma, o))));
+    FunctionSymbol f = new Constant("f", type("$alpha -> $beta -> $gamma -> o"));
     Term sub = new Application(f, x, y).apply(u);
-    MetaVariable z = TermFactory.createMetaVar("Z", arrowType(alpha, arrowType(o,
-      arrowType(beta, TypeFactory.createSort("pair", o, alpha)))), 3);
+    MetaVariable z =
+      TermFactory.createMetaVar("Z", type("$alpha -> o -> $beta -> pair(o, $alpha)"), 3);
     Term term = TermFactory.createMeta(z, List.of(x, sub, y));
     assertTrue(term.queryTypeVars() == sub.queryTypeVars());
   }
 
   @Test
   public void testCorrectApplication() {
-    Type o = baseType("o");
-    Type a = baseType("a");
-    Type type = arrowType(a, arrowType(o, a));
-    MetaVariable x = TermFactory.createMetaVar("X", type, 1);
-    Term c = constantTerm("c", arrowType(a, a));
-    Term d = constantTerm("d", a);
+    MetaVariable x = TermFactory.createMetaVar("X", type("a -> o -> a"), 1);
+    Term c = new Constant("c", type("a -> a"));
+    Term d = new Constant("d", type("a"));
     Term xc = TermFactory.createMeta(x, c.apply(d));
-    Term xcb = xc.apply(constantTerm("b", o));
+    Term xcb = xc.apply(new Constant("b", type("o")));
     assertTrue(xcb.toString().equals("X⟨c(d)⟩(b)"));
   }
 
   @Test
   public void testRefreshBinders() {
     // Z⟨λx.x, λx.x, y⟩
-    Variable x = new Binder("x", baseType("o"));
-    Variable y = new Binder("y", baseType("b"));
-    Variable y2 = new Binder("y", baseType("b"));
+    Variable x = new Binder("x", type("o"));
+    Variable y = new Binder("y", type("b"));
+    Variable y2 = new Binder("y", type("b"));
     Term xx = new Abstraction(x, x);
-    MetaVariable z = TermFactory.createMetaVar("Z", arrowType(arrowType("o", "o"),
-      arrowType(arrowType("o", "o"), arrowType("b", "a"))), 3);
+    MetaVariable z = TermFactory.createMetaVar("Z", type("(o -> o) -> (o -> o) -> b -> a"), 3);
     Term term = TermFactory.createMeta(z, List.of(xx, xx, y));
 
     // for now, the binders are the same
@@ -675,7 +675,7 @@ class MetaApplicationTest extends TermTestFoundation {
     x1 = t.queryMetaArgument(1).queryVariable();
     x2 = t.queryMetaArgument(2).queryVariable();
     assertTrue(x1 != term.queryMetaArgument(1).queryVariable());
-    assertTrue(x1 != t.queryMetaArgument(2).queryVariable());
+    assertTrue(x1 != x2);
     assertTrue(x1 != y2);
     map.remove(x);
 
@@ -689,14 +689,12 @@ class MetaApplicationTest extends TermTestFoundation {
   @Test
   public void testWellbehaved() {
     // Z⟨λx.x, x⟩
-    Variable x = new Binder("x", baseType("a"));
+    Variable x = new Binder("x", type("a"));
     Term abs = new Abstraction(x, x);
-    MetaVariable z = TermFactory.createMetaVar("Z", arrowType(arrowType("a", "a"),
-      arrowType("a", "a")), 2);
+    MetaVariable z = TermFactory.createMetaVar("Z", type("(a -> a) -> a -> a"), 2);
     Term term = TermFactory.createMeta(z, abs, x);
     assertTrue(term.toString().equals("Z⟨λx__1.x__1, x⟩"));
     assertFalse(term.queryMetaArgument(1).queryVariable().equals(
                   term.queryMetaArgument(2).queryVariable()));
   }
 }
-

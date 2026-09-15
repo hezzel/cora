@@ -15,6 +15,7 @@
 
 package charlie.terms;
 
+import charlie.types.Type;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
@@ -23,13 +24,16 @@ import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.util.NullStorageException;
 import charlie.types.TypeFactory;
+import charlie.parser.CoraParser;
 import charlie.terms.position.*;
 import charlie.terms.replaceable.ReplaceableSet;
 
-public class BinderTest extends TermTestFoundation {
+public class BinderTest {
+  private Type type(String desc) { return CoraParser.readType(desc); }
+
   @Test
   public void testNullName() {
-    assertThrows(NullStorageException.class, () -> new Binder(null, baseType("o")));
+    assertThrows(NullStorageException.class, () -> new Binder(null, type("o")));
   }
 
   @Test
@@ -39,33 +43,33 @@ public class BinderTest extends TermTestFoundation {
 
   @Test
   public void testRootRequest() {
-    Variable x = new Binder("x", baseType("o"));
+    Variable x = new Binder("x", type("o"));
     assertThrows(InappropriatePatternDataException.class, () -> x.queryRoot());
   }
 
   @Test
   public void testSubtermRequest() {
-    Variable x = new Binder("x", baseType("o"));
+    Variable x = new Binder("x", type("o"));
     assertThrows(IndexOutOfBoundsException.class, () -> x.queryArgument(1));
   }
 
   @Test
   public void testBaseVariableApplication() {
-    Term t = new Binder("x", baseType("Int"));
+    Term t = new Binder("x", type("Int"));
     assertThrows(TypingException.class, () -> t.apply(t));
   }
 
   @Test
   public void testIllegalTypeApplication() {
-    Term t = new Binder("x", arrowType("a", "b"));
-    Term q = constantTerm("c", baseType("b"));
+    Term t = new Binder("x", type("a -> b"));
+    Term q = new Constant("c", type("b"));
     assertThrows(TypingException.class, () -> t.apply(q));
   }
 
   @Test
   public void testTermVarBasics() {
-    Variable x = new Binder("x", baseType("o"));
-    Variable other = new Binder("x", baseType("o"));
+    Variable x = new Binder("x", type("o"));
+    Variable other = new Binder("x", type("o"));
     Term s = x;
     assertTrue(s.isVariable());
     assertTrue(s.isVarTerm());
@@ -74,8 +78,8 @@ public class BinderTest extends TermTestFoundation {
     assertTrue(s.queryVariable().equals(x));
     assertTrue(s.queryHead().equals(x));
     assertTrue(s.toString().equals("x"));
-    assertTrue(s.numberArguments() == 0);
-    assertTrue(s.queryArguments().size() == 0);
+    assertTrue(s.queryNumberArguments() == 0);
+    assertTrue(s.listArguments().isEmpty());
     assertTrue(s.isPattern());
     assertFalse(s.isFirstOrder());
     assertFalse(s.isApplication());
@@ -84,38 +88,38 @@ public class BinderTest extends TermTestFoundation {
     assertFalse(s.isGround());
     assertTrue(x.isBinderVariable());
     assertTrue(x.queryIndex() != other.queryIndex());
-    Variable z = new Binder("z", arrowType("o", "o"));
+    Variable z = new Binder("z", type("o -> o"));
     assertFalse(z.isFirstOrder());
     assertFalse(z.isApplicative());
     assertTrue(z.isBinderVariable());
     assertTrue(z.isPattern());
     assertTrue(z.apply(x).equals(new Application(z, x)));
     assertTrue(x.compareTo(x) == 0);
-    assertTrue(x.compareTo(z) == -1);
-    assertTrue(x.compareTo(new Var("y", baseType("o"))) == 1);
+    assertTrue(x.compareTo(z) < 0);
+    assertTrue(x.compareTo(new Var("y", type("o"))) > 0);
   }
 
   @Test
   public void testRefreshBinders() {
-    Variable x = new Binder("x", baseType("o"));
-    Variable other = new Binder("x", baseType("o"));
+    Variable x = new Binder("x", type("o"));
+    Variable other = new Binder("x", type("o"));
     TreeMap<Variable,Variable> map = new TreeMap<Variable,Variable>();
     assertTrue(x.renameAndRefreshBinders(map) == x);
     map.put(x, other);
     assertTrue(x.renameAndRefreshBinders(map) == other);
-    map.put(x, new Binder("x", baseType("a")));
+    map.put(x, new Binder("x", type("a")));
     assertThrows(TypingException.class, () -> x.renameAndRefreshBinders(map));
     map.put(other, x);
-    Variable y = new Var("y", baseType("o"));
+    Variable y = new Var("y", type("o"));
     map.put(x, y);
     assertTrue(x.renameAndRefreshBinders(map) == y);
   }
 
   @Test
   public void testHashCode() {
-    Variable x = new Binder("x", baseType("o"));
-    Variable other = new Binder("x", baseType("o"));
-    Variable y = new Var("x", baseType("o"));
+    Variable x = new Binder("x", type("o"));
+    Variable other = new Binder("x", type("o"));
+    Variable y = new Var("x", type("o"));
     assertTrue(x.hashCode() != other.hashCode());
     assertTrue(x.hashCode() != y.hashCode());
     TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
@@ -126,11 +130,11 @@ public class BinderTest extends TermTestFoundation {
 
   @Test
   public void testFunctions() {
-    FunctionSymbol a = new Constant("a", baseType("aa"));
+    FunctionSymbol a = new Constant("a", type("aa"));
     TreeSet<FunctionSymbol> symbols = new TreeSet<FunctionSymbol>();
-    Variable x = new Binder("x", baseType("bb"));
+    Variable x = new Binder("x", type("bb"));
     x.storeFunctionSymbols(symbols);
-    assertTrue(symbols.size() == 0);
+    assertTrue(symbols.isEmpty());
     symbols.add(a);
     x.storeFunctionSymbols(symbols);
     assertTrue(symbols.size() == 1);
@@ -139,17 +143,17 @@ public class BinderTest extends TermTestFoundation {
 
   @Test
   public void testTermVarFreeReplaceables() {
-    Variable x = new Binder("x", baseType("oo"));
-    ReplaceableSet lst = x.freeReplaceables();
+    Variable x = new Binder("x", type("oo"));
+    ReplaceableSet lst = x.queryFreeReplaceables();
     assertTrue(lst.size() == 1);
     assertTrue(lst.contains(x));
-    assertTrue(x.boundVars().size() == 0);
+    assertTrue(x.queryBoundVars().size() == 0);
   }
 
   @Test
   public void testTermVarVars() {
-    Variable x = new Binder("x", baseType("oo"));
-    Environment<Variable> vars = x.vars();
+    Variable x = new Binder("x", type("oo"));
+    Environment<Variable> vars = x.queryFreeVariables();
     int counter = 0;
     for (Variable v : vars) {
       counter++;
@@ -160,10 +164,9 @@ public class BinderTest extends TermTestFoundation {
 
   @Test
   public void testTypeVariables() {
-    Variable x = new Binder("x", baseType("oo"));
-    assertTrue(x.queryTypeVars().size() == 0);
-    Variable y = new Binder("y", arrowType(TypeFactory.createVariable("alpha"),
-                                           TypeFactory.createVariable("beta")));
+    Variable x = new Binder("x", type("oo"));
+    assertTrue(x.queryTypeVars().isEmpty());
+    Variable y = new Binder("y", type("$alpha -> $beta"));
     assertTrue(y.queryTypeVars().size() == 2);
     assertTrue(y.queryTypeVars().contains(TypeFactory.createVariable("alpha")));
     assertTrue(y.queryTypeVars().contains(TypeFactory.createVariable("beta")));
@@ -172,9 +175,9 @@ public class BinderTest extends TermTestFoundation {
 
   @Test
   public void testTermVarEquality() {
-    Term s1 = new Binder("x", baseType("o"));
-    Term s2 = new Binder("x", baseType("o"));
-    Term s3 = new Var("x", baseType("o"));
+    Term s1 = new Binder("x", type("o"));
+    Term s2 = new Binder("x", type("o"));
+    Term s3 = new Var("x", type("o"));
     assertTrue(s1.equals(s1));
     assertFalse(s1.equals(s2));
     assertFalse(s1.equals(null));
@@ -183,9 +186,9 @@ public class BinderTest extends TermTestFoundation {
   }
 
   @Test
-  public void testAlpaEquality() {
-    Variable x = new Binder("x", baseType("o"));
-    Variable z = new Binder("z", baseType("o"));
+  public void testAlphaEquality() {
+    Variable x = new Binder("x", type("o"));
+    Variable z = new Binder("z", type("o"));
     TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
     TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();
     assertFalse(x.alphaEquals(z, mu, xi, 2));
@@ -204,77 +207,78 @@ public class BinderTest extends TermTestFoundation {
 
   @Test
   public void testVarOrFunctionalTerm() {
-    Term s1 = new Binder("x", baseType("o"));
-    Term s2 = constantTerm("x", baseType("o"));
+    Term s1 = new Binder("x", type("o"));
+    Term s2 = new Constant("x", type("o"));
     assertFalse(s1.equals(s2));
     assertTrue(s1.toString().equals(s2.toString()));
   }
 
   @Test
   public void testSubterms() {
-    Term s = new Binder("x", baseType("o"));
-    List<Pair<Term,Position>> lst = s.querySubterms();
+    Term s = new Binder("x", type("o"));
+    List<Pair<Term,Position>> lst = s.listSubterms();
     assertTrue(lst.size() == 1);
-    assertTrue(lst.get(0).fst() == s);
-    assertTrue(lst.get(0).snd().toString().equals("ε"));
+    assertTrue(lst.getFirst().fst() == s);
+    assertTrue(lst.getFirst().snd().toString().equals("ε"));
   }
 
   @Test
   public void testPositions() {
-    Term s = new Binder("x", arrowType("a", "b"));
-    assertTrue(s.queryPositions(true).size() == 1);
-    assertTrue(s.queryPositions(false).size() == 1);
-    assertTrue(s.queryPositions(false).get(0).toString().equals("ε"));
+    Term s = new Binder("x", type("a -> b"));
+    assertTrue(s.listPositions(true).size() == 1);
+    assertTrue(s.listPositions(false).size() == 1);
+    assertTrue(s.listPositions(false).getFirst().toString().equals("ε"));
   }
 
   @Test
   public void testSubtermGood() {
-    Term s = new Binder("x", baseType("o"));
+    Term s = new Binder("x", type("o"));
     Position p = Position.empty;
     assertTrue(s.querySubterm(p).equals(s));
   }
 
   @Test
   public void testSubtermBad() {
-    Term s = new Binder("x", baseType("o"));
+    Term s = new Binder("x", type("o"));
     Position p = new ArgumentPos(1, Position.empty);
     assertThrows(InvalidPositionException.class, () -> s.querySubterm(p));
   }
 
   @Test
   public void testHeadSubtermBad() {
-    Term s = new Binder("x", baseType("o"));
+    Term s = new Binder("x", type("o"));
     Position p = new FinalPos(1);
     assertThrows(InvalidPositionException.class, () -> s.querySubterm(p));
   }
 
   @Test
   public void testAbstractionSubtermRequest() {
-    Term s = new Binder("x", arrowType("o", "O"));
+    Term s = new Binder("x", type("b -> O"));
     assertThrows(InappropriatePatternDataException.class, () -> s.queryAbstractionSubterm());
   }
 
   @Test
   public void testSubtermReplacementGood() {
-    Term s = new Binder("x", baseType("a"));
-    Term t = twoArgVarTerm();
+    Term s = new Binder("x", type("a"));
+    Term t = new Var("y", type("a"));
     Position p = Position.empty;
-    assertTrue(s.replaceSubterm(p, t).equals(t));
+    assertTrue(s.replaceSubterm(p, t) == t);
     assertTrue(s.toString().equals("x"));
   }
 
   @Test
   public void testSubtermReplacementBad() {
-    Term s = new Binder("x", baseType("o"));
+    Term s = new Binder("x", type("o"));
     Position p = new ArgumentPos(1, Position.empty);
-    assertThrows(InvalidPositionException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
+    assertThrows(InvalidPositionException.class,
+      () -> s.replaceSubterm(p, new Var("y", type("a"))));
   }
 
   @Test
   public void testHeadSubtermReplacementBad() {
-    Term s = new Binder("x", baseType("o"));
+    Term s = new Binder("x", type("o"));
     Position p = new FinalPos(3);
-    assertThrows(InvalidPositionException.class, () -> s.replaceSubterm(p, twoArgVarTerm()));
+    assertThrows(InvalidPositionException.class,
+      () -> s.replaceSubterm(p, new Constant("g", type("o"))));
   }
 }
-

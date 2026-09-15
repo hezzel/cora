@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,8 +18,8 @@ package charlie.terms;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
-import charlie.types.*;
-import charlie.terms.replaceable.Renaming;
+import charlie.types.Type;
+import charlie.parser.CoraParser;
 import charlie.terms.replaceable.MutableRenaming;
 
 /**
@@ -27,16 +27,15 @@ import charlie.terms.replaceable.MutableRenaming;
  * of the various kinds of terms.
  */
 public class TermPrinterTest {
+  private Type type(String desc) { return CoraParser.readType(desc); }
+
   @Test
   public void testBoundVariableRenaming() {
-    Type o = TypeFactory.defaultSort;
-    Variable x = new Binder("x", o);
-    Variable y = new Binder("y", o);
+    Variable x = new Binder("x", type("o"));
+    Variable y = new Binder("y", type("o"));
     Term abs1 = new Abstraction(x, x);
     Term abs2 = new Abstraction(y, y);
-    Type oo = TypeFactory.createArrow(o, o);
-    Term f =
-      TermFactory.createConstant("f", TypeFactory.createArrow(oo, TypeFactory.createArrow(oo, o)));
+    Term f = TermFactory.createConstant("f", type("(o -> o) -> (o -> o) -> o"));
     Term term = TermFactory.createApp(f, abs1, abs2); // f(λx.x, λy.y)
 
     NameGenerator generator = new NameGenerator(Set.of());
@@ -58,16 +57,15 @@ public class TermPrinterTest {
 
   @Test
   public void testIncompleteRenamingUsedWithAbstraction() {
-    Type o = TypeFactory.createSort("o");
+    Type o = type("o");
     // λx.λy.λu.f(g(z2,u),z1,x) where x and u have the same name, and z1 and z2 too
     Variable x = new Binder("x", o);
     Variable y = new Binder("y", o);
     Variable z1 = new Binder("z", o);
     Variable z2 = new Binder("z", o);
     Variable u = new Binder("x", o);
-    Constant f = new Constant("f", TypeFactory.createArrow(o, TypeFactory.createArrow(o,
-      TypeFactory.createArrow(o, o))));
-    Constant g = new Constant("g", TypeFactory.createArrow(o, TypeFactory.createArrow(o, o)));
+    Constant f = new Constant("f", type("o -> o -> o -> o"));
+    Constant g = new Constant("g", type("o ->o -> o"));
     Term main = (new Application(f, new Application(g, z2, u), z1)).apply(x);
     Term abs = new Abstraction(x, new Abstraction(y, new Abstraction(u, main)));
 
@@ -82,4 +80,3 @@ public class TermPrinterTest {
     assertEquals("λx__1.λy.λx__2.f(g(??z, x__2), ??z, x__1)", printer.print(abs, naming));
   }
 }
-

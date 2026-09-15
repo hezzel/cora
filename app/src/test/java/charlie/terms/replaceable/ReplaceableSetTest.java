@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -17,21 +17,25 @@ package charlie.terms.replaceable;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
+
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import charlie.types.Type;
 import charlie.types.TypeFactory;
-import charlie.terms.*;
 
 public class ReplaceableSetTest {
-  private MetaVariable makeMetaVar(String name) {
-    return TermFactory.createMetaVar(name,
-      TypeFactory.createArrow(TypeFactory.createSort("a"), TypeFactory.createSort("a")), 1);
+  private Replaceable makeVar(String name, Type type) {
+    return new MyReplaceable(name, type, 0);
+  }
+
+  private Replaceable makeMetaVar(String name) {
+    return new MyReplaceable(name, TypeFactory.createSort("a"), 1);
   }
 
   @Test
   public void testCreationWithThreeSimilarVariables() {
-    Variable x = TermFactory.createVar("x", TypeFactory.createSort("a"));
-    Variable y = TermFactory.createBinder("x", TypeFactory.createSort("a"));
+    Replaceable x = makeVar("x", TypeFactory.createSort("a"));
+    Replaceable y = makeVar("x", TypeFactory.createSort("a"));
     ArrayList<Replaceable> vars = new ArrayList<Replaceable>();
     vars.add(x);
     vars.add(y);
@@ -40,13 +44,13 @@ public class ReplaceableSetTest {
     assertTrue(lst.contains(x));
     assertTrue(lst.contains(y));
     assertTrue(lst.size() == 2);
-    vars.add(TermFactory.createVar("z"));
+    vars.add(makeVar("z", TypeFactory.defaultSort));
     assertTrue(lst.size() == 2);
   }
 
   @Test
   public void testSingleCreation() {
-    MetaVariable x = makeMetaVar("x");
+    Replaceable x = makeMetaVar("x");
     ReplaceableSet lst = new ReplaceableSet(x);
     assertTrue(lst.contains(x));
     assertTrue(lst.size() == 1);
@@ -54,9 +58,9 @@ public class ReplaceableSetTest {
 
   @Test
   public void testAdd() {
-    Variable x = TermFactory.createVar("x", TypeFactory.createSort("a"));
+    Replaceable x = makeVar("x", TypeFactory.createSort("a"));
     Replaceable y = makeMetaVar("y");
-    Replaceable z = TermFactory.createVar("z", TypeFactory.createSort("a"));
+    Replaceable z = makeVar("z", TypeFactory.createSort("a"));
     ReplaceableSet lst1 = new ReplaceableSet(x);
     ReplaceableSet lst2 = lst1.add(y);
     ReplaceableSet lst3 = lst2.add(z);
@@ -69,9 +73,9 @@ public class ReplaceableSetTest {
 
   @Test
   public void testRemove() {
-    Variable x = TermFactory.createVar("x", TypeFactory.createSort("a"));
-    Variable y = TermFactory.createVar("y", TypeFactory.createSort("a"));
-    Variable z = TermFactory.createVar("z", TypeFactory.createSort("a"));
+    Replaceable x = makeVar("x", TypeFactory.createSort("a"));
+    Replaceable y = makeVar("y", TypeFactory.createSort("a"));
+    Replaceable z = makeVar("z", TypeFactory.createSort("a"));
     ArrayList<Replaceable> vars = new ArrayList<Replaceable>();
     vars.add(x);
     vars.add(y);
@@ -88,8 +92,8 @@ public class ReplaceableSetTest {
 
   @Test
   public void testCombineEquals() {
-    Variable x = TermFactory.createVar("x", TypeFactory.createSort("a"));
-    Variable y = TermFactory.createVar("y", TypeFactory.createSort("a"));
+    Replaceable x = makeVar("x", TypeFactory.createSort("a"));
+    Replaceable y = makeVar("y", TypeFactory.createSort("a"));
     Replaceable z = makeMetaVar("z");
     ArrayList<Replaceable> reps = new ArrayList<Replaceable>();
     reps.add(x);
@@ -104,8 +108,8 @@ public class ReplaceableSetTest {
   @Test
   public void testTrueCombination() {
     Replaceable x = makeMetaVar("x");
-    Replaceable y = TermFactory.createVar("y", TypeFactory.createSort("a"));
-    Replaceable z = TermFactory.createVar("z", TypeFactory.createSort("a"));
+    Replaceable y = makeVar("y", TypeFactory.createSort("a"));
+    Replaceable z = makeVar("z", TypeFactory.createSort("a"));
     ArrayList<Replaceable> reps = new ArrayList<Replaceable>();
     reps.add(x);
     reps.add(y);
@@ -123,10 +127,10 @@ public class ReplaceableSetTest {
 
    @Test
    public void testOverlap() {
-    Replaceable x = TermFactory.createVar("x", TypeFactory.createSort("a"));
+    Replaceable x = makeVar("x", TypeFactory.createSort("a"));
     Replaceable y = makeMetaVar("y");
-    Replaceable z = TermFactory.createVar("x", TypeFactory.createSort("a"));
-    Replaceable u = TermFactory.createBinder("u", TypeFactory.createSort("b"));
+    Replaceable z = makeVar("x", TypeFactory.createSort("a"));
+    Replaceable u = makeVar("u", TypeFactory.createSort("b"));
     ArrayList<Replaceable> reps1 = new ArrayList<Replaceable>();
     reps1.add(x);
     reps1.add(y);
@@ -144,4 +148,3 @@ public class ReplaceableSetTest {
     assertTrue(overlap.contains(u));
   }
 }
-

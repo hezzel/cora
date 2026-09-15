@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -236,7 +235,7 @@ public class ChainingProcessor implements Processor {
     Set<Variable> resultTheoryVars = new LinkedHashSet<>(dp1.lvars());
     for (Variable x : dp2.lvars()) {
       Term xReplacement = matcher.get(x);
-      Environment<Variable> env = xReplacement.vars();
+      Environment<Variable> env = xReplacement.queryFreeVariables();
       for (Variable v : env) {
         resultTheoryVars.add(v);
       }

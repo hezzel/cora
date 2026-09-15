@@ -18,9 +18,7 @@ package charlie.terms.replaceable;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Set;
-import charlie.util.Pair;
 import charlie.util.NullStorageException;
-import charlie.terms.replaceable.Replaceable;
 
 /**
  * A MutableRenaming is a finite Renaming that can be changed, both with items added and removed.
@@ -30,11 +28,11 @@ import charlie.terms.replaceable.Replaceable;
  */
 public class MutableRenaming implements Renaming {
   /** Maps the (meta-)variables in the domain of this renaming to unique names. */
-  private TreeMap<Replaceable,String> _repToName;
+  private final TreeMap<Replaceable,String> _repToName;
   /** Maps the names to their corresponding (meta-)variable. */
-  private TreeMap<String,Replaceable> _nameToRep;
+  private final TreeMap<String,Replaceable> _nameToRep;
   /** Names that may not be used in an assignment. */
-  private TreeSet<String> _avoid;
+  private final TreeSet<String> _avoid;
   
   /**
    * Creates a renaming that avoids the given set of names.
@@ -48,23 +46,23 @@ public class MutableRenaming implements Renaming {
   }
 
   /**
-   * Adds a name to the list of names that should be avoided (that is, the names that will be
-   * blocked in setName, and for which isAvailable should return false).
+   * <p>Adds a name to the list of names that should be avoided (that is, the names that will be
+   * blocked in setName, and for which isAvailable should return false).</p>
    *
-   * Note that marking a name as avoidable will not remove it from the mapping if there's already
-   * a Replaceable with that name.
+   * <p>Note that marking a name as avoidable will not remove it from the mapping if there's
+   * already a Replaceable with that name.</p>
    */
   public void avoid(String name) {
     _avoid.add(name);
   }
 
   /**
-   * This tries to set the name of the given replaceable to the given name.  If this is not
+   * <p>This tries to set the name of the given replaceable to the given name.  If this is not
    * possible -- either because the given name is already in use, or because it's blocked -- then
-   * false is returned. If it is possible, then the name is set and true is returned.
+   * false is returned. If it is possible, then the name is set and true is returned.</p>
    *
-   * Note that this works both if x already has a name (in which case the name is changed, and the
-   * old name becomes available again), and if x is new to the Renaming.
+   * <p>Note that this works both if x already has a name (in which case the name is changed, and
+   * the old name becomes available again), and if x is new to the Renaming.</p>
    */
   public boolean setName(Replaceable x, String name) {
     if (x == null || name == null) {
@@ -93,21 +91,25 @@ public class MutableRenaming implements Renaming {
   }
   
   /** Returns the chosen name for the given replaceable, or null if it's not in the domain. */
+  @Override
   public String getName(Replaceable x) {
     return _repToName.get(x);
   }
 
   /** Returns the replaceable with the given name, if there is one; null if not. */
+  @Override
   public Replaceable getReplaceable(String name) {
     return _nameToRep.get(name);
   }
 
   /** Returns the replaceables this Renaming gives a name to. */
+  @Override
   public Set<Replaceable> domain() {
     return _repToName.keySet();
   }
 
   /** Returns the names used in this Renaming. */
+  @Override
   public Set<String> range() {
     return _nameToRep.keySet();
   }
@@ -115,14 +117,14 @@ public class MutableRenaming implements Renaming {
   /**
    * Returns whether the given name is available to be used for further renamings.
    * (The renaming is set up so that any name that is already in use is not available, along
-   * with the "avoid" names given in the TermPrinter's constructor, and potentially some other
-   * names).
+   * with the "avoid" names given in the constructor, and those marked as "avoid" afterwards.
    */
   public boolean isAvailable(String name) {
-    return !_avoid.contains(name) && _nameToRep.get(name) == null;
+    return _nameToRep.get(name) == null && !_avoid.contains(name);
   }
 
   /** Makes a copy of the current renaming, so one can be changed without affecting the other. */
+  @Override
   public MutableRenaming copy() {
     MutableRenaming ret = new MutableRenaming(_avoid);
     ret._repToName.putAll(_repToName);
@@ -131,6 +133,7 @@ public class MutableRenaming implements Renaming {
   }
 
   /** Puts a wrapper around the current Renaming to make it immutable. */
+  @Override
   public Renaming makeImmutable() {
     return new ImmutableRenaming(this);
   }
@@ -151,4 +154,3 @@ public class MutableRenaming implements Renaming {
     for (Replaceable r : remove) unsetName(r);
   }
 }
-

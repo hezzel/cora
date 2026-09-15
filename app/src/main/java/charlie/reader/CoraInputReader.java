@@ -25,12 +25,12 @@ import charlie.util.UserException;
 import charlie.types.*;
 import charlie.parser.lib.Token;
 import charlie.parser.lib.ParsingErrorMessage;
-import charlie.parser.lib.ParsingException;
 import charlie.parser.lib.ErrorCollector;
 import charlie.parser.Parser.*;
 import charlie.parser.CoraParser;
 import charlie.terms.replaceable.*;
 import charlie.terms.*;
+import charlie.theory.Theory;
 import charlie.theory.TheoryFactory;
 import charlie.trs.*;
 import charlie.trs.TrsFactory.TrsKind;
@@ -116,16 +116,16 @@ public class CoraInputReader extends TermTyper {
    */
   private Term moveFreshVariablesIntoConstraint(Term left, Term right, Term constr, TrsKind kind,
                                                 Token token) {
-    for (Variable x : right.vars()) {
-      if (left.freeReplaceables().contains(x)) continue;
-      if (!x.queryType().isTheoryType() || !x.queryType().isBaseType()) {
+    for (Variable x : right.queryFreeVariables()) {
+      if (left.queryFreeReplaceables().contains(x)) continue;
+      if (!Theory.isTheory(x.queryType()) || !x.queryType().isBaseType()) {
         storeError(token, "right-hand side of rule has a fresh variable " + x.queryName() +
           " of type ", x.queryType(), " which does not occur on the left; only variables of " +
           "theory sorts may occur fresh (and that only in some kinds of TRSs).");
         continue;
       }
       if (constr == null) constr = TheoryFactory.createEquality(x, x);
-      else if (!constr.freeReplaceables().contains(x)) {
+      else if (!constr.queryFreeReplaceables().contains(x)) {
         constr = TheoryFactory.createConjunction(constr, TheoryFactory.createEquality(x, x));
       }
     }
@@ -282,7 +282,7 @@ public class CoraInputReader extends TermTyper {
    * this case, an error is stored in the collector since this is unexpected bheaviour.
    */
   private static void updateRenaming(MutableRenaming naming, Term t, ErrorCollector collector) {
-    for (Replaceable r : t.freeReplaceables()) {
+    for (Replaceable r : t.queryFreeReplaceables()) {
       if (naming.getName(r) == null) {
         if (!naming.setName(r, r.queryName())) {
           collector.addError(new ParsingErrorMessage(null, "(meta-)variable " + r.queryName() +

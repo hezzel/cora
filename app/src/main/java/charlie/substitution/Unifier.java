@@ -18,7 +18,6 @@ package charlie.substitution;
 import java.util.LinkedList;
 import charlie.util.Pair;
 import charlie.terms.Term;
-import charlie.terms.TermFactory;
 import charlie.terms.Variable;
 
 /**
@@ -43,7 +42,7 @@ public class Unifier {
    * @return false if x occurs in t, and true otherwise.
    */
   private boolean eliminateVariable(Variable x, Term t) {
-    if (t.vars().contains(x)) return false;
+    if (t.queryFreeVariables().contains(x)) return false;
     MutableSubstitution sub = new MutableSubstitution();
     sub.extend(x, t);
     /* Update remaining equations. */
@@ -68,8 +67,8 @@ public class Unifier {
    * @param l and r must be applications.
    */
   private void reduceTerm(Term l, Term r) {
-    int i = l.numberArguments();
-    int j = r.numberArguments();
+    int i = l.queryNumberArguments();
+    int j = r.queryNumberArguments();
     while (i > 0 && j > 0) {
       _equations.push(new Pair<Term,Term>(l.queryArgument(i--), r.queryArgument(j--)));
     }

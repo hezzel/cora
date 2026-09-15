@@ -28,10 +28,8 @@ public record LambdaPos(Position tail) implements Position {
   public String toString() { return toStringDefault(); }
 
   public boolean equals(Position other) {
-    switch (other) {
-      case LambdaPos(Position tl): return tail.equals(tl);
-      default: return false;
-    }
+    if (other instanceof LambdaPos(Position tl)) return tail.equals(tl);
+    return false;
   }
 
   public boolean equals(Object other) {

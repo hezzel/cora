@@ -16,29 +16,23 @@
 package charlie.terms;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.TreeSet;
+
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import charlie.types.Type;
-import charlie.types.TypeFactory;
+import charlie.parser.CoraParser;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.ReplaceableSet;
 
 public class VariableEnvironmentTest {
-  private Type baseType(String name) {
-    return TypeFactory.createSort(name);
-  }
-  
-  private Type arrowType(String l, String r) {
-    return TypeFactory.createArrow(baseType(l), baseType(r));
-  }
-  
+  private Type type(String desc) { return CoraParser.readType(desc); }
+
   @Test
   public void testEnvironmentWithJustVariables() {
-    Variable x = new Binder("x", baseType("a"));
-    Variable y = new Var("x", baseType("a"));
-    Variable z = new Var("z", arrowType("a", "b"));
+    Variable x = new Binder("x", type("a"));
+    Variable y = new Var("x", type("a"));
+    Variable z = new Var("z", type("a -> b"));
     TreeSet<Replaceable> set = new TreeSet<Replaceable>();
     set.add(x);
     set.add(z);
@@ -55,10 +49,11 @@ public class VariableEnvironmentTest {
 
   @Test
   public void testEnvironmentWithJustMetavariables() {
-    MetaVariable x = TermFactory.createMetaVar("x", arrowType("a", "a"), 1);
-    MetaVariable y = TermFactory.createMetaVar("x", arrowType("a", "a"), 1);
-    MetaVariable z = TermFactory.createMetaVar("x", arrowType("a", "a"), 1);
+    MetaVariable x = TermFactory.createMetaVar("x", type("a -> a"), 1);
+    MetaVariable y = TermFactory.createMetaVar("x", type("a -> a"), 1);
+    MetaVariable z = TermFactory.createMetaVar("x", type("a -> a"), 1);
     TreeSet<Replaceable> set = new TreeSet<Replaceable>();
+    set.add(x);
     set.add(y);
     set.add(z);
     VariableEnvironment env = new VariableEnvironment(new ReplaceableSet(set));
@@ -68,9 +63,9 @@ public class VariableEnvironmentTest {
 
   @Test
   public void testEnvironmentWithBothMetaAndNot() {
-    Replaceable x = new Binder("x", baseType("a"));
-    Replaceable y = new Var("y", baseType("b"));
-    Replaceable z = TermFactory.createMetaVar("z", arrowType("a", "b"), 1);
+    Replaceable x = new Binder("x", type("a"));
+    Replaceable y = new Var("y", type("b"));
+    Replaceable z = TermFactory.createMetaVar("z", type("a -> b"), 1);
     TreeSet<Replaceable> set = new TreeSet<Replaceable>();
     set.add(x);
     set.add(y);
@@ -83,4 +78,3 @@ public class VariableEnvironmentTest {
     assertTrue(parts.get(1) == x);
   }
 }
-

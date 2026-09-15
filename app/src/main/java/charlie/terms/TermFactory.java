@@ -22,20 +22,21 @@ import charlie.types.*;
 import charlie.terms.replaceable.Replaceable;
 
 public class TermFactory {
-  /** Create a non-binder variable with the given name and type. */
+  /** Create a variable (not marked as a binder) with the given name and type. */
   public static Variable createVar(String name, Type type) {
     return new Var(name, type);
   }
 
   /**
-   * Create a non-binder variable with the given name and the default sort, for use in unsorted
-   * rewriting.
+   * Create a variable with the given name and the default sort, for use in unsorted rewriting.
    */
   public static Variable createVar(String name) {
     return new Var(name, TypeFactory.defaultSort);
   }
 
-  /** Create a non-binder variable without a name; a name will be automatically generated. */
+  /** Create a variable (not marked as binder) without a name; a name will be automatically
+   * generated.
+   * */
   public static Variable createVar(Type type) {
     return new Var(type);
   }
@@ -57,14 +58,12 @@ public class TermFactory {
 
   /** Create an essentially unsorted function symbol with the given name and arity. */
   public static FunctionSymbol createConstant(String name, int arity) {
-    Type type = TypeFactory.defaultSort;
-    for (int i = 0; i < arity; i++) type = TypeFactory.createArrow(TypeFactory.defaultSort, type);
-    return new Constant(name, type);
+    return new Constant(name, TypeFactory.createDefaultArrow(arity));
   }
 
   /** Creates a functional term f(args) */
   public static Term createFunctionalTerm(FunctionSymbol f, List<Term> args) {
-    if (args == null || args.size() == 0) return f;
+    if (args == null || args.isEmpty()) return f;
     return new Application(f, args);
   }
 
@@ -76,14 +75,13 @@ public class TermFactory {
     FixedList.Builder<Type> builder = new FixedList.Builder<Type>();
     Type tmp = type;
     for (int i = 0; i < arity; i++) {
-      switch (tmp) {
-        case Arrow(Type inp, Type out):
-          builder.add(inp);
-          tmp = out;
-          break;
-        default: throw new TypingException("Cannot construct meta-variable with type ", type,
+      if (tmp instanceof Arrow(Type inp, Type out)) {
+        builder.add(inp);
+        tmp = out;
+      } else {
+        throw new TypingException("Cannot construct meta-variable with type ", type,
           " and arity " + arity + " since the arity may not be larger than the number of input " +
-          "arguments to the type.");
+            "arguments to the type.");
       }
     }
     return new HigherMetaVar(name, builder.build(), tmp);
@@ -91,13 +89,13 @@ public class TermFactory {
 
   /** Creates a meta-variable X with arity k */
   public static MetaVariable createMetaVar(String name, FixedList<Type> inputs, Type output) {
-    if (inputs.size() == 0) return new Var(name, output);
+    if (inputs.isEmpty()) return new Var(name, output);
     return new HigherMetaVar(name, inputs, output);
   }
 
   /** Creates a meta-variable X with arity k */
   public static MetaVariable createMetaVar(String name, List<Type> inputs, Type output) {
-    if (inputs.size() == 0) return new Var(name, output);
+    if (inputs.isEmpty()) return new Var(name, output);
     return new HigherMetaVar(name, FixedList.copy(inputs), output);
   }
 
@@ -132,7 +130,7 @@ public class TermFactory {
    * given arguments are just appended to the existing argument list.
    */
   public static Term createApp(Term head, List<Term> args) {
-    if (args.size() == 0) return head;
+    if (args.isEmpty()) return head;
     return head.apply(args);
   }
 
@@ -143,7 +141,7 @@ public class TermFactory {
 
   /** Creates a meta-application Z[args] */
   public static Term createMeta(MetaVariable mv, List<Term> args) {
-    if (args != null && args.size() == 0 && (mv instanceof Var)) return (Var)mv;
+    if (args != null && args.isEmpty() && mv instanceof Var x) return x;
     return new MetaApplication(mv, args);
   }
 
@@ -178,4 +176,3 @@ public class TermFactory {
       "neither a term nor a higher meta-variable!");
   }
 }
-

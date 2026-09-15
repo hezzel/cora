@@ -25,16 +25,22 @@ import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.types.TVarSet;
 import charlie.terms.position.Position;
-import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.ReplaceableSet;
 
 /**
- * Terms are the main object to be rewritten, or used to construct rules.  There are various kinds
- * of terms: functional terms f(s1,...,sn), var terms x(s1,...,xn), abstractions λx.s and
+ * <p>Terms are the main object to be rewritten, or used to construct rules.  There are various
+ * kinds of terms: functional terms f(s1,...,sn), var terms x(s1,...,xn), abstractions λx.s and
  * meta-applications Z⟨s1,...,sk⟩.  (The latter would traditionally be a considered a _meta_term
- * rather than a term, but it is convenient to use the same interface for it.)
+ * rather than a term, but it is convenient to use the same interface for it.)</p>
  *
- * Note: all instances of Term must (and can be expected to) be immutable.
+ * <p>Note: all instances of Term must (and can be expected to) be immutable.</p>
+ *
+ * <p>While it is technically possible to create your own variations of Term, this is not really
+ * expected because all terms should follow the formalism on which terms exist. For example, if a
+ * kind of term is defined that does not have one of the above forms, then some functionalities
+ * will no longer work. It is, however, very possible to provide different implementations for the
+ * kinds of terms supported by the formalism; in particular, it is common to define different
+ * kinds of function symbols.</p>
  */
 
 public interface Term {
@@ -88,10 +94,10 @@ public interface Term {
   * application.  Note that this returns 0 both for abstractions λx.t and for meta-applications
   * Z⟨t1,...,tk⟩.
   */
-  int numberArguments();
+  int queryNumberArguments();
 
   /** Returns the number of meta-arguments; that is, k for a term Z⟨t1,...,tk⟩(s1,...,sn). */
-  int numberMetaArguments();
+  int queryNumberMetaArguments();
 
   /**
    * Returns the list of arguments; that is, [s1,...,sn] for a term h(s1,...,sn) with h not an
@@ -99,17 +105,17 @@ public interface Term {
    * Note also that this creates a copy of the actual arguments, so it costs more memory to
    * iterate over the arguments in this way than using numberArguments() and queryArgument(int i).
    */
-  ArrayList<Term> queryArguments();
+  ArrayList<Term> listArguments();
 
   /**
    * For a term of the form Z⟨t1,...,tk⟩(s1,...,sn), returns the list [t1,...,tk.]
    * Warning: this creates a copy of the actual meta-arguments, so does cost some memory.
    */
-  ArrayList<Term> queryMetaArguments();
+  ArrayList<Term> listMetaArguments();
 
   /**
    * If 1 <= i <= numberArguments, this returns the thus indexed argument.
-   * @throws java.lang.IndexOutOfBoundsException if i is negative or > numberArguments.
+   * @throws java.lang.IndexOutOfBoundsException if i is 0, negative or > queryNumberArguments.
    */
   Term queryArgument(int i);
 
@@ -136,7 +142,7 @@ public interface Term {
    */
   Term queryImmediateHeadSubterm(int i);
 
-  /** Writing the term as an application h(s1,...,sn) with h not an application, returns h. */
+  /** Writing the term as an application h(s1,...,sn) with h not an application, this returns h. */
   Term queryHead();
 
    /**
@@ -182,28 +188,28 @@ public interface Term {
   boolean isApplicative();
 
   /**
-   * Returns true if the current term has other as a subterm.  Here,  subterms below an abstraction
+   * Returns true if the current term has other as a subterm.  Here, subterms below an abstraction
    * which contain the binder variable are not counted, since they are not guaranteed to be a
    * subterm under alpha-conversion.
    */
   boolean hasSubterm(Term other);
 
   /**
-   * Returns the set of all full positions in the current Term, in leftmost innermost order.
+   * <p>Returns the set of all full positions in the current Term, in leftmost innermost order.
    * Note that this set is non-empty as it always contains the empty position (representing the
    * current term), and does not contain partial positions (e.g., the position for f(x) in a term
-   * f(x,y)).
+   * f(x,y)).</p>
    *
    * This is a mutable list.  Altering it does not affect the term.
    */
-  List<Pair<Term,Position>> querySubterms();
+  List<Pair<Term,Position>> listSubterms();
 
   /**
    * Returns either the list of full positions (if partial == false), or partial and full
    * positions (if partial == true) in this term.  Note that this is a non-empty function as it
    * always contains at least the empty position.
    */
-  List<Position> queryPositions(boolean partial);
+  List<Position> listPositions(boolean partial);
 
   /**
    * Runs the given function on every subterm and corresponding position.
@@ -212,33 +218,33 @@ public interface Term {
   void visitSubterms(BiConsumer<Term,Position> visitor);
 
   /**
-   * Runs the given function on every subterm and corresponding position, and returns the frist for
+   * Runs the given function on every subterm and corresponding position, and returns the first for
    * which the function returns true.  If it never returns true, then null is returned instead.
    */
   Pair<Term,Position> findSubterm(BiFunction<Term,Position,Boolean> visitor);
 
   /**
-   * Returns the set of all variables occurring freely in the current term.  This may be both binder
-   * variables and free variables.
-   * Note that two α-equal terms will have the same set of variables.
+   * Returns the set of all variables occurring freely in the current term.  This may be both
+   * binder variables and free variables.
+   * Note that two α-equal terms will have the same set of free variables.
    */
-  Environment<Variable> vars();
+  Environment<Variable> queryFreeVariables();
 
   /**
    * Returns the set of all meta-variables that occur in the current term.  Note that, for closed
    * terms, this includes vars(), but it may also include higher meta-variables.
    */
-  Environment<MetaVariable> mvars();
+  Environment<MetaVariable> queryMetaVariables();
 
   /** 
    * Returns the set of all variables that occur freely in the current term, alongside all
    * meta-variables that occur in it.  All are cast as Replaceables (the parent class for
    * Variable and MetaVariable).
    * This is efficient, as it returns a cached set.
-   * This function is primarily meant for package-internal use, but may be used outside the package
-   * by some classes.  If you want either variables or meta-variables, use vars() or mvars().
+   * If you want either variables or meta-variables, use queryFreeVariables() or
+   * queryMetaVariables().
    */
-  ReplaceableSet freeReplaceables();
+  ReplaceableSet queryFreeReplaceables();
 
   /**
    * Returns the set of all type variables that occur anywhere in the current term.
@@ -288,17 +294,17 @@ public interface Term {
   Term apply(Term other);
 
   /** Instantiated by Substitution (used to avoid a two-way dependency between packages). */
-  public interface ISubstitution { public Term applySubstitution(Term term); }
+  interface ISubstitution { Term applySubstitution(Term term); }
 
   /** Applies the given substitution to the current term and yields the result. */
   Term substitute(ISubstitution subst);
 
   /**
-   * Provides a string representation of the current term.  Here, variables and meta-variables are
-   * renamed as needed to avoid distinct (meta-)variables having the same name.
+   * <p>Provides a string representation of the current term.  Here, variables and meta-variables
+   * are renamed as needed to avoid distinct (meta-)variables having the same name.</p>
    *
-   * NOTE: this is only meant as a default, for unit testing and debugging.  For player-visible
-   * output, a suitable TermPrinter should be used.
+   * <p>NOTE: this is only meant as a default, for unit testing and debugging.  For user-visible
+   * output, a suitable TermPrinter should be used.</p>
    */
   String toString();
 
@@ -312,8 +318,8 @@ public interface Term {
 
   /**
    * Replaces all the binders in lambdas by fresh variables.  Here, Map must be mutable.
-   * (This method is mostly intended for internal use in the terms package, to guarantee that all
-   * terms are well-behaved.  If you want to rename variables in general, it is better to use a
+   * (This method is intended for internal use in the terms package, to guarantee that all terms
+   * are well-behaved.  If you want to rename variables in general, it is better to use a
    * Substitution.)
    */
   Term renameAndRefreshBinders(Map<Variable,Variable> renaming);
@@ -321,9 +327,11 @@ public interface Term {
   /**
    * Returns the set of all variables that occur bound in the current term, cast as Replaceables.
    * This is efficient, as it returns a cached set.
-   * It is meant for package-internal use only.  Use vars() or mvars() outside the package.
+   * It is meant for package-internal use only, because bound variables may be quietly renamed as
+   * needed when constructing terms derived from the current one.  To obtain free (meta-)variables,
+   * use ueryFreeVariables() or queryMetaVariables() or queryFreeReplaceables().
    */
-  ReplaceableSet boundVars();
+  ReplaceableSet queryBoundVars();
 
   /** Determines the =_α^{μ,ξ,k} relation as described in the documentation. */
   boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k);
