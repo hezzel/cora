@@ -33,12 +33,6 @@ import charlie.terms.replaceable.Replaceable;
  * <p>Note: all instances of Variable must (and can be expected to) be immutable.<?p></?p>
  */
 public interface Variable extends Term, Replaceable {
-  /**
-   * @return a string representation of the variable.
-   * Variable names are not unique, and variables are not identified by their name.
-   */
-  String queryName();
-
   /** @return equality to another Variable */
   boolean equals(Variable x);
 
