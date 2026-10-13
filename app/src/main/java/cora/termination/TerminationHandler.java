@@ -57,6 +57,13 @@ public class TerminationHandler {
     return new WrapperProofObject(framework.run(), trs, "universal computability");
   }
 
+  /** Main access function for proving termination using HORPO directly. */
+  public static ProofObject proveHorpoTermination(TRS trs) {
+      ReductionPairTerminationProver prover = new ReductionPairTerminationProver(new Horpo(true));
+      ProofObject ret = prover.proveTermination(trs);
+      return new WrapperProofObject(ret, trs, "termination");
+  }
+
   /**
    * Based on the reduction strategy and logical variables, we include all variables into the
    * constraints of the rules that we can assume will be instantiated by values.

@@ -41,7 +41,7 @@ public class CommandCheck extends Command {
 
   @Override
   public FixedList<String> callDescriptor() {
-    return FixedList.of(":check", ":check brief", ":check verbose");
+    return FixedList.of(":check [horpo] [brief|verbose]");
   }
 
   @Override
@@ -49,15 +49,18 @@ public class CommandCheck extends Command {
     module.println("Checks if the ordering requirements so far are satisfied.  This is not " +
       "complete: there may be false negatives.  But if this answers that the requirements are " +
       "satisfiable, they are.");
-    module.println("The verbosity parameter indicates whether the full proof should be printed.  " +
-      "By default, it is not.");
+    module.println("If the keyword \"horpo\" is provided, the prover will try to find a " +
+      "recursive path ordering to orient the requirements; if not, a proof using the dependency " +
+      "framework will be sough.  The verbosity parameter indicates whether the full proof " +
+      "should be printed.  By default, it is not.");
   }
 
   @Override
   public ArrayList<TabSuggestion> suggestNext(String args) {
     ArrayList<TabSuggestion> ret = new ArrayList<TabSuggestion>();
     ret.add(endOfCommandSuggestion());
-    if (!args.equals("")) return ret;// they already gave one argument; we don't need another
+    if (args.equals("")) ret.add(new TabSuggestion("horpo", "keyword"));
+    if (!args.equals("") && !args.equals("horpo")) return ret;
     ret.add(new TabSuggestion("brief", "keyword"));
     ret.add(new TabSuggestion("verbose", "keyword"));
     return ret;
@@ -67,6 +70,11 @@ public class CommandCheck extends Command {
   protected boolean run(CommandParsingStatus input) {
     String txt = input.nextWord();
     int brevity;
+    boolean useHorpo = false;
+    if (txt != null && txt.equals("horpo")) {
+      useHorpo = true;
+      txt = input.nextWord();
+    }
     if (txt == null || txt.equals("")) brevity = 1;
     else if (txt.equals("brief")) brevity = 0;
     else if (txt.equals("verbose")) brevity = 2;
@@ -75,13 +83,12 @@ public class CommandCheck extends Command {
       return false;
     }
     if (!input.commandEnded()) {
-      _module.println("Unexpected argument at position %a: :check takes at most 1 argument.",
-        input.currentPosition());
+      _module.println("Unexpected argument at position %a.", input.currentPosition());
       return false;
     }
 
     if (brevity > 0) _module.println("Sending proof request to termination checker...");
-    ProofObject po = createTerminationProof();
+    ProofObject po = createTerminationProof(useHorpo);
     switch (po.queryAnswer()) {
       case ProofObject.Answer.YES:
         _module.println("The current set of ordering requirements is indeed orientable.");
@@ -96,7 +103,7 @@ public class CommandCheck extends Command {
   }
 
   /** This does a proof attempt for termination, and returns the result. */
-  private ProofObject createTerminationProof() {
+  private ProofObject createTerminationProof(boolean forceHorpo) {
     ArrayList<Rule> rules = new ArrayList<Rule>();
     for (Rule rule : _proof.getContext().getTRS().queryRules()) rules.add(rule);
     for (OrdReq req : _proof.getProofState().getOrderingRequirements()) {
@@ -112,6 +119,7 @@ public class CommandCheck extends Command {
       }
     }
     TRS trs = _proof.getContext().getTRS().createDerivative(rules);
+    if (forceHorpo) return TerminationHandler.proveHorpoTermination(trs);
     return TerminationHandler.proveTermination(trs);
   }
 
