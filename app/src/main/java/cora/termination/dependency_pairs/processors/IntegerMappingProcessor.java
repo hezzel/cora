@@ -72,6 +72,10 @@ public class IntegerMappingProcessor implements Processor {
     return TermFactory.createApp(TheoryFactory.plusSymbol, a, b);
   }
 
+  private Term makeMinus(Term a, Term b) {
+    return TermFactory.createApp(TheoryFactory.minusSymbol, a, b);
+  }
+
   /** This creates an empty set of candidates for every root symbol of interest. */
   private void initiateCandidates(Problem dpp) {
     Set<FunctionSymbol> allSharps = dpp.getHeads();
@@ -144,16 +148,13 @@ public class IntegerMappingProcessor implements Processor {
     if (f.equals(TheoryFactory.geqSymbol) || f.equals(TheoryFactory.intEqualSymbol) ||
         f.equals(TheoryFactory.greaterSymbol)) {
       if (right.equals(TheoryFactory.createValue(0))) ret.add(left);
-      else {
-        Term minright = TheoryFactory.minusSymbol.apply(right);
-        ret.add(makePlus(left, minright));
-      }
+      else ret.add(makeMinus(left, right));
     }
     // left > right  =>  left - right - 1
     if (f.equals(TheoryFactory.greaterSymbol)) {
-      Term minright = TheoryFactory.minusSymbol.apply(right);
-      Term leftminright = makePlus(left, minright);
+      Term leftminright;
       if (right.equals(TheoryFactory.createValue(0))) leftminright = left;
+      else leftminright = makeMinus(left, right);
       Term minone = TheoryFactory.createValue(-1);
       ret.add(makePlus(leftminright, minone));
     }
@@ -161,16 +162,13 @@ public class IntegerMappingProcessor implements Processor {
     if (f.equals(TheoryFactory.leqSymbol) || f.equals(TheoryFactory.intEqualSymbol) ||
         f.equals(TheoryFactory.smallerSymbol)) {
       if (left.equals(TheoryFactory.createValue(0))) ret.add(right);
-      else {
-        Term minleft = TheoryFactory.minusSymbol.apply(left);
-        ret.add(makePlus(right, minleft));
-      }
+      else ret.add(makeMinus(right, left));
     }
     // left < right  =>  right - left - 1
     if (f.equals(TheoryFactory.smallerSymbol)) {
-      Term minleft = TheoryFactory.minusSymbol.apply(left);
-      Term rightminleft = makePlus(right, minleft);
+      Term rightminleft;
       if (left.equals(TheoryFactory.createValue(0))) rightminleft = right;
+      else rightminleft = makeMinus(right, left);
       Term minone = TheoryFactory.createValue(-1);
       ret.add(makePlus(rightminleft, minone));
     }

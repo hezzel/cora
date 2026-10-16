@@ -76,7 +76,7 @@ public class HorpoTest {
     Horpo horpo = new Horpo(trs);
     FunctionSymbol f = trs.queryAlphabet().lookup("f");
     FunctionSymbol g = trs.queryAlphabet().lookup("g");
-    FunctionSymbol minus = TheoryFactory.minusSymbol;
+    FunctionSymbol minus = TheoryFactory.negateSymbol;
     assertTrue(horpo.getPrecedenceFor(f).queryIndex() == 1);
     assertTrue(horpo.getPrecedenceFor(minus).queryIndex() == 2);
     assertTrue(horpo.getPrecedenceFor(f).queryIndex() == 1);
