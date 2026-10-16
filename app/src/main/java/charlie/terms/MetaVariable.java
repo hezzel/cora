@@ -31,18 +31,6 @@ import charlie.terms.replaceable.Replaceable;
  */
 public interface MetaVariable extends Replaceable {
   /**
-   * @return a string representation of the metavariable.
-   * Metavariable names are not unique, and metavariables are not identified by their name.
-   */
-  String queryName();
-
-  /**
-   * @return the number of arguments the current meta-variable takes.
-   * This is guaranteed to be a non-negative integer.
-   */
-  int queryArity();
-
-  /**
    * @return σ_i if the current meta-variable has a type [σ_1 x ... x σ_k] → τ
    * (and 1 ≤ i ≤ k = queryArity())
    */
