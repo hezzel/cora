@@ -297,11 +297,11 @@ public class ChainingProcessor implements Processor {
       _chainedToOriginalDPs.forEach(
         (c, p) -> {
           Renaming renaming = getRenaming(module, c, p.fst(), p.snd());
-          module.nextColumn("%a", new Pair<DP,Renaming>(c, renaming));
+          module.nextColumn("%a", c.makePrintableWith(renaming));
           module.nextColumn(" is obtained by chaining ");
-          module.nextColumn("%a", new Pair<DP,Renaming>(p.fst(), renaming));
+          module.nextColumn("%a", p.fst().makePrintableWith(renaming));
           module.nextColumn("and");
-          module.nextColumn("%a", new Pair<DP,Renaming>(p.snd(), renaming));
+          module.nextColumn("%a", p.snd().makePrintableWith(renaming));
           module.println();
         }
       );
