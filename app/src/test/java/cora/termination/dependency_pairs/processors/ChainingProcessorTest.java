@@ -5,6 +5,7 @@ import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.substitution.Matcher;
 import charlie.trs.TRS;
+import cora.io.OutputModule;
 import cora.termination.dependency_pairs.DP;
 import cora.termination.dependency_pairs.DPGenerator;
 import cora.termination.dependency_pairs.Problem;
@@ -127,5 +128,18 @@ public class ChainingProcessorTest {
     // they're equal modulo renaming
     assertTrue(Matcher.match(expectedRhsArg, actualRhsArg) != null &&
                Matcher.match(actualRhsArg, expectedRhsArg) != null);
+  }
+
+  @Test
+  public void testJustifyPrintsChainedDPs() {
+    TRS trs = makeTRSWithTwoDPsChain();
+    Problem p = new DPGenerator(trs).queryProblem(true, false);
+    ProcessorProofObject proof = new ChainingProcessor(true).processDPP(p);
+    assertTrue(proof.applicable());
+    OutputModule module = OutputModule.createPlainModule(trs);
+    proof.justify(module);
+    String output = module.toString();
+    assertTrue(output.contains("is obtained by chaining"), output);
+    assertTrue(output.contains("By chaining, we added 1 DPs and removed 2 DPs."), output);
   }
 }
